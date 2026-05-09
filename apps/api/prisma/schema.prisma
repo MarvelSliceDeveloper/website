@@ -7,29 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Tenant {
-  id         String   @id @default(uuid())
-  name       String
-  slug       String   @unique
-  msTenantId String?  @unique
-  plan       String   @default("free") // free, pro, enterprise
-  brandColor String?
-  logo       String?
-  features   Json?    @default("{}")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
 
-  users          User[]
-  courses        Course[]
-  calendarEvents CalendarEvent[]
-}
 
 model User {
   id             String   @id @default(uuid())
-  tenantId       String
-  tenant         Tenant   @relation(fields: [tenantId], references: [id])
   name           String
-  email          String
+  email          String   @unique
   password       String?  // nullable because of MS OAuth
   role           String   @default("STUDENT") // STUDENT, INSTRUCTOR, ADMIN, SUPER_ADMIN
   avatar         String?
@@ -47,12 +30,10 @@ model User {
   replies      DiscussionReply[]
   notifications Notification[]
 
-  @@unique([tenantId, email])
 }
 
 model Category {
   id        String   @id @default(uuid())
-  tenantId  String
   name      String
   slug      String   @unique
   createdAt DateTime @default(now())
@@ -61,8 +42,6 @@ model Category {
 
 model Course {
   id           String   @id @default(uuid())
-  tenantId     String
-  tenant       Tenant   @relation(fields: [tenantId], references: [id])
   title        String
   description  String
   instructorId String
@@ -82,7 +61,6 @@ model Course {
   payments     Payment[]
   discussions  Discussion[]
 
-  @@index([tenantId])
   @@index([instructorId])
 }
 
@@ -147,8 +125,6 @@ model Recording {
 
 model CalendarEvent {
   id        String       @id @default(uuid())
-  tenantId  String
-  tenant    Tenant       @relation(fields: [tenantId], references: [id])
   msEventId String       @unique
   title     String
   startAt   DateTime
@@ -159,7 +135,7 @@ model CalendarEvent {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
-  @@index([tenantId, startAt])
+  @@index([startAt])
 }
 
 model Enrollment {

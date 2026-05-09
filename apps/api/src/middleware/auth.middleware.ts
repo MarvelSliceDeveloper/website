@@ -7,7 +7,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_min_32_chars_long!
 export interface AuthRequest extends Request {
   user?: {
     userId: string;
-    tenantId: string;
     role: UserRole;
     email: string;
   };
@@ -47,23 +46,4 @@ export const requireRole = (roles: UserRole[]) => {
 
     next();
   };
-};
-
-export const requireTenant = (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-
-  const requestedTenantId = req.params.tenantId || req.body.tenantId;
-  
-  // Super Admins bypass tenant checks
-  if (req.user.role === UserRole.SUPER_ADMIN) {
-    return next();
-  }
-
-  if (requestedTenantId && requestedTenantId !== req.user.tenantId) {
-    return res.status(403).json({ error: 'You do not have access to this tenant' });
-  }
-
-  next();
 };

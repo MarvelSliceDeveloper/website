@@ -1,12 +1,17 @@
-# Phase 3 — Multi-Tenancy
+# Phase 3 — Multi-Tenancy (CANCELLED)
 
-> ⏱️ **Duration**: Weeks 4–5 (2 weeks)  
-> 📌 **Status**: Not Started  
+> [!IMPORTANT]
+> This phase has been **CANCELLED**.
+> The project has pivoted from a B2B Multi-Tenant SaaS to a **Centralized Content Marketplace** (similar to Udemy).
+> Data isolation at the tenant level is no longer required as all users and courses exist within a single platform context.
+
+> ⏱️ **Original Duration**: Weeks 4–5 (2 weeks)  
+> 📌 **Status**: Cancelled / Not Applicable  
 > 🔗 **Depends on**: Phase 2
 
 ---
 
-## 🎯 Objective
+## 🎯 Objective (Original)
 
 Implement complete multi-tenant architecture with full data isolation, tenant-aware routing, and an onboarding flow for new organisations.
 

@@ -17,18 +17,18 @@ Implement a complete authentication system supporting both email/password and Mi
 
 ### 2.1 — Email/Password Authentication
 
-- [ ] Create registration endpoint: `POST /api/auth/register`
+- [x] Create registration endpoint: `POST /api/auth/register`
   - Accept: name, email, password, tenantSlug
   - Validate with Zod schemas
   - Hash password with **bcrypt** (salt rounds: 12)
   - Check for duplicate email within tenant
   - Create User record in database
   - Return JWT token
-- [ ] Create login endpoint: `POST /api/auth/login`
+- [x] Create login endpoint: `POST /api/auth/login`
   - Validate credentials against bcrypt hash
   - Issue JWT (include: userId, tenantId, role)
   - Set HTTP-only secure cookie + return token in response body
-- [ ] Create logout endpoint: `POST /api/auth/logout`
+- [x] Create logout endpoint: `POST /api/auth/logout`
   - Clear HTTP-only cookie
   - Optionally: add token to Redis blacklist (for immediate revocation)
 - [ ] Create password reset flow:
@@ -41,7 +41,7 @@ Implement a complete authentication system supporting both email/password and Mi
 
 ### 2.2 — JWT Token System
 
-- [ ] Implement JWT issuance with the following payload:
+- [x] Implement JWT issuance with the following payload:
   ```typescript
   {
     userId: string;
@@ -52,20 +52,20 @@ Implement a complete authentication system supporting both email/password and Mi
     exp: number;
   }
   ```
-- [ ] Set token expiry: **Access token = 15 minutes**, **Refresh token = 7 days**
+- [x] Set token expiry: **Access token = 15 minutes**, **Refresh token = 7 days**
 - [ ] Create `POST /api/auth/refresh` endpoint for token refresh
 - [ ] Store refresh tokens in database or Redis with expiry
 - [ ] Implement refresh token rotation (invalidate old on use)
 
 ### 2.3 — Authentication Middleware
 
-- [ ] Create `authMiddleware` — validates JWT from Authorization header or cookie
+- [x] Create `authMiddleware` — validates JWT from Authorization header or cookie
   - Extract token → verify signature → attach `req.user`
   - Return 401 on missing/invalid/expired token
-- [ ] Create `requireRole(roles: UserRole[])` middleware
+- [x] Create `requireRole(roles: UserRole[])` middleware
   - Check `req.user.role` against allowed roles
   - Return 403 on insufficient permissions
-- [ ] Create `tenantMiddleware` — extract tenant from URL/header, verify user belongs to tenant
+- [x] Create `tenantMiddleware` — extract tenant from URL/header, verify user belongs to tenant
 - [ ] **🆕 Create CSRF protection middleware** for state-changing requests
 - [ ] **🆕 Create rate limiting per-route** (e.g., 5 login attempts per 15 min per IP)
 
@@ -93,10 +93,10 @@ Implement a complete authentication system supporting both email/password and Mi
 
 ### 2.5 — Token Encryption (MS Tokens)
 
-- [ ] Implement **AES-256-GCM** encryption for storing MS access/refresh tokens
+- [x] Implement **AES-256-GCM** encryption for storing MS access/refresh tokens
   - Encryption key from `TOKEN_ENCRYPTION_KEY` env var
   - Store encrypted value + IV + auth tag in database
-- [ ] Create utility functions:
+- [x] Create utility functions:
   - `encryptToken(plaintext: string): EncryptedData`
   - `decryptToken(encrypted: EncryptedData): string`
 - [ ] Never log or expose raw MS tokens in error messages or responses

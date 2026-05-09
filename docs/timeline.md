@@ -11,7 +11,7 @@
 | 0 | **Pre-Build Foundation** (🆕) | 0 | 1 week | *not in original* |
 | 1 | Foundation & Setup | 1 | 1 week | 1 week ✓ |
 | 2 | Authentication | 2–4 | 3 weeks | 2 weeks ⬆️ |
-| 3 | Multi-Tenancy | 4–5 | 2 weeks | 2 weeks ✓ |
+| 3 | Multi-Tenancy (Cancelled) | — | — | N/A |
 | 4 | Azure AD & Graph API Setup | 5–7 | 3 weeks | 2 weeks ⬆️ |
 | 5 | Calendar Sync & UI | 7–8 | 2 weeks | 2 weeks ✓ |
 | 6 | Live Sessions | 9–11 | 3 weeks | 2 weeks ⬆️ |
@@ -123,10 +123,10 @@ Use this section to track actual progress against the plan:
 
 | Phase | Planned Start | Actual Start | Planned End | Actual End | Status |
 |-------|-------------|-------------|------------|-----------|--------|
-| 0 | Week 0 | — | Week 0 | — | ⬜ Not Started |
-| 1 | Week 1 | — | Week 1 | — | ⬜ Not Started |
-| 2 | Week 2 | — | Week 4 | — | ⬜ Not Started |
-| 3 | Week 4 | — | Week 5 | — | ⬜ Not Started |
+| 0 | Week 0 | Week 0 | Week 0 | Week 0 | ✅ Completed |
+| 1 | Week 1 | Week 1 | Week 1 | Week 1 | ✅ Completed |
+| 2 | Week 2 | Week 2 | Week 4 | — | 🔄 In Progress |
+| 3 | Week 4 | — | Week 5 | — | ❌ Cancelled |
 | 4 | Week 5 | — | Week 7 | — | ⬜ Not Started |
 | 5 | Week 7 | — | Week 8 | — | ⬜ Not Started |
 | 6 | Week 9 | — | Week 11 | — | ⬜ Not Started |

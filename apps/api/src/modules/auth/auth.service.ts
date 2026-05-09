@@ -11,30 +11,22 @@ export const RegisterSchema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email(),
   password: z.string().min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
-  tenantSlug: z.string(),
 });
 
 export const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string(),
-  tenantSlug: z.string(),
 });
 
 export const authService = {
   async register(data: z.infer<typeof RegisterSchema>) {
-    const { name, email, password, tenantSlug } = data;
-
-    const tenant = await prisma.tenant.findUnique({
-      where: { slug: tenantSlug }
-    });
-
-    if (!tenant) throw new Error('Tenant not found');
+    const { name, email, password } = data;
 
     const existingUser = await prisma.user.findUnique({
-      where: { tenantId_email: { tenantId: tenant.id, email } }
+      where: { email }
     });
 
-    if (existingUser) throw new Error('Email already registered in this tenant');
+    if (existingUser) throw new Error('Email already registered');
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
@@ -43,7 +35,6 @@ export const authService = {
         name,
         email,
         password: hashedPassword,
-        tenantId: tenant.id,
       }
     });
 
@@ -51,16 +42,10 @@ export const authService = {
   },
 
   async login(data: z.infer<typeof LoginSchema>) {
-    const { email, password, tenantSlug } = data;
-
-    const tenant = await prisma.tenant.findUnique({
-      where: { slug: tenantSlug }
-    });
-
-    if (!tenant) throw new Error('Invalid credentials');
+    const { email, password } = data;
 
     const user = await prisma.user.findUnique({
-      where: { tenantId_email: { tenantId: tenant.id, email } }
+      where: { email }
     });
 
     if (!user || !user.password) throw new Error('Invalid credentials');
@@ -74,7 +59,6 @@ export const authService = {
   generateTokens(user: any) {
     const payload = {
       userId: user.id,
-      tenantId: user.tenantId,
       role: user.role,
       email: user.email,
     };
