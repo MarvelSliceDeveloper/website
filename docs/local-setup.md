@@ -2,6 +2,20 @@
 
 You can run this LMS project locally in two ways depending on whether you have Docker installed on your computer.
 
+## 0. Initial Setup
+
+Before running the application using either method below, you must clone the repository and install the dependencies.
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/your-username/lms-portal.git
+cd lms-portal
+
+# 2. Install dependencies (Using pnpm)
+npm install -g pnpm  # If you don't have pnpm installed
+pnpm install
+```
+
 ---
 
 ## Method 1: Using Docker (Recommended)
