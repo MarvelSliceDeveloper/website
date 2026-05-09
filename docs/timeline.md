@@ -1,138 +1,124 @@
-# LMS Portal — Timeline & Milestones
+# LMS Portal — Revised Implementation Plan & Timeline
+
+**11 Phases · 17 Weeks · ~4.5 Months**
+
+> Note: This timeline has been updated to reflect the single-organisation, cohort/batch-based model with Admin-driven live sessions.
+
+| # | Phase | Weeks | Duration |
+|---|---|---|---|
+| 1 | Foundation & Setup | 1 | 1 week |
+| 2 | Authentication | 2–3 | 2 weeks |
+| 3 | Batch & Enrollment Management | 3–4 | 2 weeks |
+| 4 | Azure AD + Graph API Setup | 4–5 | 2 weeks |
+| 5 | Calendar Sync + UI | 5–6 | 2 weeks |
+| 6 | Live Sessions (Admin-driven) | 7–8 | 2 weeks |
+| 7 | Recordings | 9–10 | 2 weeks |
+| 8 | LMS Core (Courses, Progress, Dashboard) | 11–12 | 2 weeks |
+| 9 | Payments (Razorpay) | 13 | 1 week |
+| 10 | Quizzes + Certificates | 14–15 | 2 weeks |
+| 11 | Admin Panel + Launch | 16–17 | 2 weeks |
 
 ---
 
-## 📊 Revised Timeline Overview
+## Phase Detail
 
-> ⚠️ The original plan estimated **17 weeks**. After detailed task analysis, the realistic estimate is **23 weeks (~5.5 months)** including Phase 0 and buffers for complex integration phases.
+### Phase 1 — Foundation & Setup (Week 1)
+- Initialise Turborepo + pnpm monorepo
+- Create shared types package (User, Course, Batch, Session…)
+- Set up Prisma with full PostgreSQL schema
+- Zod env validation, ESLint, Prettier, Husky
+- Docker Compose for local dev (Postgres + Redis)
 
-| # | Phase | Weeks | Duration | Original |
-|---|-------|-------|----------|----------|
-| 0 | **Pre-Build Foundation** (🆕) | 0 | 1 week | *not in original* |
-| 1 | Foundation & Setup | 1 | 1 week | 1 week ✓ |
-| 2 | Authentication | 2–4 | 3 weeks | 2 weeks ⬆️ |
-| 3 | Multi-Tenancy (Cancelled) | — | — | N/A |
-| 4 | Azure AD & Graph API Setup | 5–7 | 3 weeks | 2 weeks ⬆️ |
-| 5 | Calendar Sync & UI | 7–8 | 2 weeks | 2 weeks ✓ |
-| 6 | Live Sessions | 9–11 | 3 weeks | 2 weeks ⬆️ |
-| 7 | Recordings | 11–12 | 2 weeks | 2 weeks ✓ |
-| 8 | LMS Core | 13–16 | 4 weeks | 2 weeks ⬆️⬆️ |
-| 9 | Payments (Razorpay) | 16–17 | 2 weeks | 1 week ⬆️ |
-| 10 | Quizzes & Certificates | 18–19 | 2 weeks | 2 weeks ✓ |
-| 11 | Admin Panel & Launch | 20–23 | 4 weeks | 2 weeks ⬆️⬆️ |
-| | **Total** | | **23 weeks** | **17 weeks** |
+### Phase 2 — Authentication (Week 2–3)
+- Email/password for students (bcrypt + JWT)
+- Microsoft OAuth via MSAL.js + NextAuth for Admins & Instructors
+- AES-256 token encryption in DB
+- Role-based middleware (STUDENT / INSTRUCTOR / ADMIN)
+- Token refresh background job
 
-### Why the Extensions?
+### Phase 3 — Batch & Enrollment Management (Week 3–4)
+- Batch CRUD (create batch, link to course, assign instructor, set dates)
+- Admin: enrollment request review (approve → assign to batch / reject)
+- Instructor: view assigned batches and student lists
+- Student: view batch sessions and materials after approval
 
-| Phase | Added Time | Reason |
-|-------|-----------|--------|
-| Phase 0 | +1 week | CI/CD, testing, monitoring setup — not in original plan |
-| Phase 2 | +1 week | MS OAuth + MSAL + NextAuth + token encryption + role middleware + refresh jobs |
-| Phase 4 | +1 week | Azure AD debugging, admin consent flows, Graph API client with retry logic |
-| Phase 6 | +1 week | Webhook debugging, ngrok, subscription renewal, attendance tracking |
-| Phase 8 | +2 weeks | This is the entire LMS: 6+ pages, courses, enrollment, dashboard, catalog, search, uploads |
-| Phase 9 | +1 week | 3 monetisation models, webhook verification, refunds, invoices |
-| Phase 11 | +2 weeks | Full deployment, monitoring, security hardening, load testing, email system, forums |
+### Phase 4 — Azure AD + Graph API Setup (Week 4–5)
+- Register multi-tenant Azure AD app
+- Configure permissions: `Calendars.Read`, `OnlineMeetings.ReadWrite`, `OnlineMeetingRecording.Read.All`, `CallRecords.Read.All`
+- Build Graph API client module using Admin's stored token
+- Test MS token exchange end-to-end
 
----
+### Phase 5 — Calendar Sync + UI (Week 5–6)
+- Poll `GET /me/calendarView` to fetch events into CalendarEvent table
+- Calendar UI with monthly/weekly view
+- Live Now badge logic
+- Optional: Graph webhook for real-time sync (production)
 
-## 📈 Gantt Chart (Text)
+### Phase 6 — Live Sessions / Admin-driven (Week 7–8)
+- Admin session form → `POST /me/onlineMeetings` → stored against batch
+- Join URL displayed to all students in the batch
+- Graph webhook for Teams-created meetings (createdFrom: TEAMS)
+- ngrok setup for local webhook testing
 
-```
-Week  0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23
-      ├──┤
- P0   █████  Pre-Build Foundation
-         ├──┤
- P1      █████  Foundation & Setup
-            ├────────┤
- P2         ██████████████  Authentication
-                     ├──────┤
- P3                  █████████  Multi-Tenancy
-                        ├──────────┤
- P4                     ████████████████  Azure AD + Graph
-                                 ├──────┤
- P5                              █████████  Calendar Sync
-                                       ├──────────┤
- P6                                    ████████████████  Live Sessions
-                                                ├──────┤
- P7                                             █████████  Recordings
-                                                      ├──────────────┤
- P8                                                   ████████████████████  LMS Core
-                                                                     ├──────┤
- P9                                                                  █████████  Payments
-                                                                           ├──────┤
- P10                                                                       █████████  Quizzes+Certs
-                                                                                 ├──────────────┤
- P11                                                                             ████████████████████  Admin+Launch
-```
+### Phase 7 — Recordings (Week 9–10)
+- Bull job triggers 30 min after session ends
+- Fetch call records + SharePoint signed URL
+- Store in Recording table; re-fetch on every play
+- Video player with HLS/signed URL streaming
+- Watched-seconds progress tracking
 
----
+### Phase 8 — LMS Core (Week 11–12)
+- Course CRUD (create, edit, publish, archive)
+- Module and lesson management
+- Student dashboard (batches, progress bars, upcoming sessions)
+- Landing page with course catalogue
 
-## 🏁 Key Milestones
+### Phase 9 — Payments (Week 13)
+- `POST /payments/create-order` → Razorpay order
+- Frontend Razorpay checkout widget
+- Webhook → HMAC verify → create EnrollmentRequest (PENDING)
+- Admin approval → batch assignment → course access granted
 
-| # | Milestone | Target | Verification Criteria |
-|---|-----------|--------|----------------------|
-| M1 | **Dev Infrastructure Ready** | End of Week 0 | CI/CD pipeline running, tests configured, Sentry active |
-| M2 | **Auth + Tenant Shell Live** | End of Week 5 | Users can register/login (email + MS OAuth), routed to their tenant |
-| M3 | **MS Calendar Integrated** | End of Week 8 | Calendar page shows events synced from MS Calendar, "Live Now" badge works |
-| M4 | **Live Sessions + Recordings E2E** | End of Week 12 | Instructors schedule meetings, students join live and watch recordings after |
-| M5 | **Full LMS Core Working** | End of Week 16 | Courses, modules, enrollment, progress, dashboard, catalog — all functional |
-| M6 | **Payments Live** | End of Week 17 | Students purchase via Razorpay, auto-enrolled on payment |
-| M7 | **Production Launch** 🚀 | End of Week 23 | Full platform deployed, admin panels live, monitored, hardened |
+### Phase 10 — Quizzes + Certificates (Week 14–15)
+- Quiz builder per module (MCQ + short answer)
+- Auto-grading and score recording
+- Auto-issue PDF certificate on 100% course completion
+- Certificate verification page (public URL)
+
+### Phase 11 — Admin Panel + Launch (Week 16–17)
+- Full admin dashboard: all courses, batches, users, payments
+- Production deploy: Vercel (web) + EC2 (API) + Supabase (DB)
+- DNS, SSL, monitoring (Sentry, Upstash)
+- Load testing and security hardening
+- Go live!
 
 ---
 
-## 🔄 Phase Dependencies
+## Key Milestones
 
-```
-Phase 0 (Pre-Build)
-  └──▶ Phase 1 (Foundation)
-         ├──▶ Phase 2 (Auth)
-         │      └──▶ Phase 3 (Multi-Tenancy)
-         │             └──▶ Phase 4 (Azure AD + Graph)
-         │                    ├──▶ Phase 5 (Calendar)
-         │                    │      └──▶ Phase 6 (Live Sessions)
-         │                    │             └──▶ Phase 7 (Recordings)
-         │                    │                    └──▶ Phase 8 (LMS Core)
-         │                    │                           ├──▶ Phase 9 (Payments)
-         │                    │                           └──▶ Phase 10 (Quizzes + Certs)
-         │                    │                                  └──▶ Phase 11 (Admin + Launch)
-         │                    └──▶ (Graph client used by Phases 5, 6, 7)
-         └──▶ (Schema used by all phases)
-```
+| Milestone | Target | Description |
+|---|---|---|
+| **Auth + Batch Shell Live** | End of Week 4 | Users can register/login, admins can create batches and assign instructors |
+| **MS Calendar Integrated** | End of Week 6 | Calendar page shows MS Calendar events with Live Now badge |
+| **Live Sessions + Recordings End-to-End** | End of Week 10 | Admin schedules Teams meeting for a batch; students join live; recordings auto-sync |
+| **Full LMS Core Working** | End of Week 12 | Courses, modules, batches, enrollment approval, progress tracking all functional |
+| **Payments Live** | End of Week 13 | Students pay → pending → admin approves → batch access granted |
+| **Production Launch** | End of Week 17 | Full platform deployed; admin panels live; monitored and hardened |
 
 ---
 
-## ⚠️ Risk Factors
-
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| MS Graph API changes / deprecations | High | Pin API version (`v1.0`), monitor MS Graph changelogs |
-| Azure AD admin consent delays | Medium | Start consent process early (Phase 4), have test tenant ready |
-| Razorpay webhook failures in production | High | Idempotent processing, dead-letter queue, manual retry endpoint |
-| SharePoint URL expiry edge cases | Medium | Always re-fetch on play, Redis cache with 50-min TTL |
-| Multi-tenancy data leak | Critical | RLS + Prisma middleware + extensive testing |
-| Scope creep (new features during build) | High | Stick to phase plan, park new ideas in backlog |
-| Single developer bottleneck | Medium | Document everything, keep code modular, write tests |
-
----
-
-## 📝 Progress Tracking
-
-Use this section to track actual progress against the plan:
+## Progress Tracking
 
 | Phase | Planned Start | Actual Start | Planned End | Actual End | Status |
 |-------|-------------|-------------|------------|-----------|--------|
-| 0 | Week 0 | Week 0 | Week 0 | Week 0 | ✅ Completed |
 | 1 | Week 1 | Week 1 | Week 1 | Week 1 | ✅ Completed |
-| 2 | Week 2 | Week 2 | Week 4 | — | 🔄 In Progress |
-| 3 | Week 4 | — | Week 5 | — | ❌ Cancelled |
-| 4 | Week 5 | — | Week 7 | — | ⬜ Not Started |
-| 5 | Week 7 | — | Week 8 | — | ⬜ Not Started |
-| 6 | Week 9 | — | Week 11 | — | ⬜ Not Started |
-| 7 | Week 11 | — | Week 12 | — | ⬜ Not Started |
-| 8 | Week 13 | — | Week 16 | — | ⬜ Not Started |
-| 9 | Week 16 | — | Week 17 | — | ⬜ Not Started |
-| 10 | Week 18 | — | Week 19 | — | ⬜ Not Started |
-| 11 | Week 20 | — | Week 23 | — | ⬜ Not Started |
-
+| 2 | Week 2 | Week 2 | Week 3 | Week 3 | ✅ Completed |
+| 3 | Week 3 | — | Week 4 | — | 🔄 Pending |
+| 4 | Week 4 | — | Week 5 | — | 🔄 Pending |
+| 5 | Week 5 | — | Week 6 | — | 🔄 Pending |
+| 6 | Week 7 | — | Week 8 | — | 🔄 Pending |
+| 7 | Week 9 | — | Week 10 | — | 🔄 Pending |
+| 8 | Week 11 | — | Week 12 | — | 🔄 Pending |
+| 9 | Week 13 | — | Week 13 | — | 🔄 Pending |
+| 10 | Week 14 | — | Week 15 | — | 🔄 Pending |
+| 11 | Week 16 | — | Week 17 | — | 🔄 Pending |

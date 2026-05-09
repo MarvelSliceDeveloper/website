@@ -1,7 +1,7 @@
 # Phase 7 — Recordings
 
 > ⏱️ **Duration**: Weeks 11–12 (2 weeks)  
-> 📌 **Status**: Not Started  
+> 📌 **Status**: 🔄 In Progress  
 > 🔗 **Depends on**: Phase 6
 
 ---
@@ -57,7 +57,7 @@ Automatically sync session recordings from Teams/SharePoint after sessions end, 
 
 ### 7.3 — Video Player Page
 
-- [ ] Build recording player page: `/(tenant)/[tenantSlug]/learn/[sessionId]`
+- [ ] Build recording player page: `/learn/[sessionId]`
 - [ ] Video player component:
   - Use **video.js** or **Plyr** for the player
   - HLS/DASH streaming support (if SharePoint provides progressive download, use native `<video>`)
@@ -96,7 +96,7 @@ Automatically sync session recordings from Teams/SharePoint after sessions end, 
 
 ### 7.5 — Recording List Pages
 
-- [ ] Instructor recordings page: `/(instructor)/[tenantSlug]/panel/recordings`
+- [ ] Instructor recordings page: `/(instructor)/panel/recordings`
   - List all recordings across instructor's courses
   - Show: session title, course, date, duration, view count
   - Sort by: date, views, course

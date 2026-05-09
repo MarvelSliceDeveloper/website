@@ -18,15 +18,15 @@ Implement a complete authentication system supporting both email/password and Mi
 ### 2.1 — Email/Password Authentication
 
 - [x] Create registration endpoint: `POST /api/auth/register`
-  - Accept: name, email, password, tenantSlug
+  - Accept: name, email, password, platformSlug
   - Validate with Zod schemas
   - Hash password with **bcrypt** (salt rounds: 12)
-  - Check for duplicate email within tenant
+  - Check for duplicate email within platform
   - Create User record in database
   - Return JWT token
 - [x] Create login endpoint: `POST /api/auth/login`
   - Validate credentials against bcrypt hash
-  - Issue JWT (include: userId, tenantId, role)
+  - Issue JWT (include: userId, , role)
   - Set HTTP-only secure cookie + return token in response body
 - [x] Create logout endpoint: `POST /api/auth/logout`
   - Clear HTTP-only cookie
@@ -45,7 +45,7 @@ Implement a complete authentication system supporting both email/password and Mi
   ```typescript
   {
     userId: string;
-    tenantId: string;
+    : string;
     role: UserRole;
     email: string;
     iat: number;
@@ -65,7 +65,7 @@ Implement a complete authentication system supporting both email/password and Mi
 - [x] Create `requireRole(roles: UserRole[])` middleware
   - Check `req.user.role` against allowed roles
   - Return 403 on insufficient permissions
-- [x] Create `tenantMiddleware` — extract tenant from URL/header, verify user belongs to tenant
+- [x] Create `platformMiddleware` — extract platform from URL/header, verify user belongs to platform
 - [ ] **🆕 Create CSRF protection middleware** for state-changing requests
 - [ ] **🆕 Create rate limiting per-route** (e.g., 5 login attempts per 15 min per IP)
 
@@ -86,7 +86,7 @@ Implement a complete authentication system supporting both email/password and Mi
   6. Backend issues own JWT for all subsequent API calls
 - [ ] Handle first-time MS user:
   - Create User record with `msUserId`
-  - Prompt to select/confirm tenant
+  - Prompt to select/confirm platform
 - [ ] Handle existing user linking MS account:
   - `POST /api/auth/link-microsoft` — link MS identity to existing account
 - [ ] Create `/ms-callback` page for handling the OAuth redirect
@@ -123,7 +123,7 @@ Implement a complete authentication system supporting both email/password and Mi
   - Redirect to dashboard on success
 - [ ] **Registration page** (`/register`)
   - Name, email, password, confirm password
-  - Tenant selection (dropdown or slug input)
+  - platform selection (dropdown or slug input)
   - "Sign up with Microsoft" option
   - Email verification notice after submission
 - [ ] **MS Callback page** (`/ms-callback`)

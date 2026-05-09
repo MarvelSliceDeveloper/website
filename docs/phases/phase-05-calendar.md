@@ -1,7 +1,7 @@
 # Phase 5 — Calendar Sync & UI
 
 > ⏱️ **Duration**: Weeks 7–8 (2 weeks)  
-> 📌 **Status**: Not Started  
+> 📌 **Status**: 🔄 In Progress  
 > 🔗 **Depends on**: Phase 4
 
 ---
@@ -22,9 +22,9 @@ Sync Microsoft Calendar events into the LMS database and build a calendar UI wit
   - Upserts events into `CalendarEvent` table (match by `msEventId`)
   - Handle deleted events (mark as deleted or remove)
 - [ ] Create background sync job: `calendarSync.job.ts`
-  - Runs every 15 minutes per active tenant
+  - Runs every 15 minutes per active platform
   - Syncs next 30 days of events for all users with MS tokens
-  - Uses Bull queue for parallel processing per tenant
+  - Uses Bull queue for parallel processing per platform
   - **🆕 Retry policy**: 3 retries with exponential backoff, dead-letter after failure
 - [ ] Create API endpoints:
   - `GET /api/calendar/events?start=...&end=...` — fetch events for current user
@@ -54,7 +54,7 @@ Sync Microsoft Calendar events into the LMS database and build a calendar UI wit
   - Returns true if `now` is between `startAt` and `endAt`
   - Add 15-min buffer after `endAt` (sessions often run over)
 - [ ] Create API endpoint: `GET /api/sessions/live`
-  - Returns currently active sessions for the user's tenant
+  - Returns currently active sessions for the user's platform
   - Used by dashboard and calendar for real-time badge updates
 - [ ] Frontend: Create `LiveBadge` component
   - Pulsing green dot animation
@@ -63,7 +63,7 @@ Sync Microsoft Calendar events into the LMS database and build a calendar UI wit
 
 ### 5.4 — Calendar UI Page
 
-- [ ] Build calendar page at `/(tenant)/[tenantSlug]/calendar`
+- [ ] Build calendar page at `/calendar`
 - [ ] Implement **monthly view**:
   - Grid of days, events shown as colored pills
   - Click day → expand to see event details

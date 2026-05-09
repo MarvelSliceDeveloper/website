@@ -25,7 +25,7 @@ Build the full course management system, student enrollment flow, progress dashb
   - `PATCH /api/courses/:id/publish` — publish/unpublish
   - `DELETE /api/courses/:id` — archive course (soft delete)
 - [ ] Course data model:
-  - Required: title, description, instructorId, tenantId
+  - Required: title, description, instructorId, 
   - Optional: price (0 = free), thumbnail, category, tags, level (beginner/intermediate/advanced)
   - Status: draft → published → archived
 - [ ] Course validation:
@@ -33,9 +33,9 @@ Build the full course management system, student enrollment flow, progress dashb
   - Must have a description (min 50 chars)
   - Price validation (non-negative, in INR)
 - [ ] **🆕 Course categories & tags**:
-  - Create `Category` table: id, tenantId, name, slug
+  - Create `Category` table: id, , name, slug
   - Allow tagging courses for filtering
-  - `GET /api/categories` — list categories for tenant
+  - `GET /api/categories` — list categories for platform
 
 ### 8.2 — Module & Lesson Management
 
@@ -57,7 +57,7 @@ Build the full course management system, student enrollment flow, progress dashb
 
 ### 8.3 — Instructor Course Management UI
 
-- [ ] Instructor courses page: `/(instructor)/[tenantSlug]/panel/courses`
+- [ ] Instructor courses page: `/(instructor)/panel/courses`
   - List all instructor's courses with status badge (draft/published/archived)
   - Stats per course: enrolled students, completion rate, revenue
   - Actions: edit, publish, unpublish, duplicate, archive
@@ -86,7 +86,7 @@ Build the full course management system, student enrollment flow, progress dashb
 - [ ] Enrollment constraints:
   - Check course is published
   - Check user isn't already enrolled
-  - Check tenant plan allows more enrollments
+  - Check platform plan allows more enrollments
   - **🆕 Check enrollment capacity** (if course has a max enrollment limit)
 - [ ] **🆕 Enrollment notifications**:
   - Send welcome email on enrollment
@@ -108,13 +108,13 @@ Build the full course management system, student enrollment flow, progress dashb
 
 ### 8.6 — Student Dashboard
 
-- [ ] Build dashboard page: `/(tenant)/[tenantSlug]/dashboard`
+- [ ] Build dashboard page: `/dashboard`
 - [ ] Dashboard sections:
   - **Continue Watching** — last 3 recordings in progress (with progress bar)
   - **Enrolled Courses** — grid of enrolled courses with progress bars
   - **Upcoming Live Sessions** — next 5 sessions with join buttons
   - **Recently Completed** — last 3 completed courses with certificates
-  - **🆕 Announcements** — tenant-wide announcements from admin
+  - **🆕 Announcements** — platform-wide announcements from admin
   - **🆕 Quick Stats** — total courses enrolled, hours watched, certificates earned
 - [ ] Dashboard data API:
   - `GET /api/dashboard` — aggregated dashboard data in single response
@@ -122,7 +122,7 @@ Build the full course management system, student enrollment flow, progress dashb
 
 ### 8.7 — Course Detail Page
 
-- [ ] Build course detail page: `/(tenant)/[tenantSlug]/courses/[courseId]`
+- [ ] Build course detail page: `/courses/[courseId]`
 - [ ] Page sections:
   - **Hero** — thumbnail, title, instructor, rating, price, "Enroll" CTA
   - **Description** — full course description (rich text)
@@ -138,7 +138,7 @@ Build the full course management system, student enrollment flow, progress dashb
 
 ### 8.8 — Landing Page & Course Catalog
 
-- [ ] Build landing page: `/(tenant)/[tenantSlug]` (root)
+- [ ] Build landing page: `/(platform)/[platformSlug]` (root)
 - [ ] Landing page sections:
   - **Hero** — headline, subheadline, CTA button, hero image
   - **Featured Courses** — carousel of top/featured courses
@@ -146,7 +146,7 @@ Build the full course management system, student enrollment flow, progress dashb
   - **Stats** — total courses, students, live hours (animated counters)
   - **Testimonials** (future) — placeholder
   - **CTA** — "Get Started" / "Browse Courses"
-- [ ] Course catalog page: `/(tenant)/[tenantSlug]/courses`
+- [ ] Course catalog page: `/courses`
   - Grid of course cards
   - Filters: category, level, price (free/paid), instructor
   - Sort: newest, popular, price (low/high)

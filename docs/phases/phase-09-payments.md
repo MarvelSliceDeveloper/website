@@ -130,7 +130,7 @@ Integrate Razorpay for course payments supporting one-time purchase, monthly sub
 
 - [ ] Generate PDF invoice on successful payment:
   - Student name, course name, amount, payment ID, date
-  - Tenant's GST number (if configured)
+  - platform's GST number (if configured)
   - Download link in payment confirmation email
 - [ ] Store invoices on cloud storage (S3/R2)
 - [ ] Invoice accessible from student's payment history

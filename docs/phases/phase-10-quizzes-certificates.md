@@ -56,7 +56,7 @@ Build a per-module quiz engine with auto-grading, and auto-issue PDF certificate
 
 ### 10.3 — Quiz Taking (Student)
 
-- [ ] Quiz page: `/(tenant)/[tenantSlug]/quiz/[quizId]`
+- [ ] Quiz page: `/quiz/[quizId]`
   - Display questions one at a time or all at once (configurable)
   - Timer countdown (if time limit set)
   - Progress indicator (question X of Y)
@@ -108,7 +108,7 @@ Build a per-module quiz engine with auto-grading, and auto-issue PDF certificate
     - Student name
     - Course title
     - Instructor name
-    - Tenant/organisation name and logo
+    - platform/organisation name and logo
     - Completion date
     - Unique verification code (6-char alphanumeric)
     - **🆕 QR code** linking to verification page
@@ -122,7 +122,7 @@ Build a per-module quiz engine with auto-grading, and auto-issue PDF certificate
 
 - [ ] Public verification page: `/verify/[verificationCode]`
   - No authentication required (public URL)
-  - Display: student name, course title, issued date, tenant name
+  - Display: student name, course title, issued date, platform name
   - "This certificate is valid" or "Certificate not found"
   - **🆕 Anti-fraud**: Show certificate image preview to match visual design
 - [ ] API endpoint: `GET /api/certificates/verify/:code`
@@ -142,7 +142,7 @@ Build a per-module quiz engine with auto-grading, and auto-issue PDF certificate
 
 ### 10.8 — 🆕 Student Achievement Page
 
-- [ ] Student certificates page: `/(tenant)/[tenantSlug]/certificates`
+- [ ] Student certificates page: `/certificates`
   - Grid of earned certificates with course thumbnails
   - Download PDF button for each
   - Share button (copy verification URL)

@@ -34,7 +34,7 @@ export const authService = {
       data: {
         name,
         email,
-        password: hashedPassword,
+        passwordHash: hashedPassword,
       }
     });
 
@@ -48,9 +48,9 @@ export const authService = {
       where: { email }
     });
 
-    if (!user || !user.password) throw new Error('Invalid credentials');
+    if (!user || !user.passwordHash) throw new Error('Invalid credentials');
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) throw new Error('Invalid credentials');
 
     return this.generateTokens(user);
@@ -63,8 +63,8 @@ export const authService = {
       email: user.email,
     };
 
-    const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
-    const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+    const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY as any });
+    const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' as any });
 
     return { accessToken, refreshToken, user: payload };
   }

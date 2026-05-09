@@ -1,15 +1,15 @@
 # Phase 4 — Azure AD & Graph API Setup
 
 > ⏱️ **Duration**: Weeks 5–7 (3 weeks)  
-> 📌 **Status**: Not Started  
-> 🔗 **Depends on**: Phase 2, Phase 3  
+> 📌 **Status**: 🔄 In Progress  
+> 🔗 **Depends on**: Phase 2  
 > ⚠️ **Extended from original 2 weeks → 3 weeks** (Azure AD debugging + admin consent flows take longer than expected)
 
 ---
 
 ## 🎯 Objective
 
-Register a multi-tenant Azure AD application, configure all required Graph API permissions, build a reusable Graph client module, and verify end-to-end token exchange works.
+Register a multi-platform Azure AD application, configure all required Graph API permissions, build a reusable Graph client module, and verify end-to-end token exchange works.
 
 ---
 
@@ -17,16 +17,16 @@ Register a multi-tenant Azure AD application, configure all required Graph API p
 
 ### 4.1 — Azure AD App Registration
 
-- [ ] Register a **single multi-tenant** app in Azure Portal
+- [ ] Register a **single multi-platform** app in Azure Portal
   - App type: Web application
-  - Supported account types: "Accounts in any organizational directory" (multi-tenant)
+  - Supported account types: "Accounts in any organizational directory" (multi-platform)
   - Redirect URI: `https://yourlms.com/api/auth/callback/azure-ad` (production) + `http://localhost:3000/api/auth/callback/azure-ad` (dev)
 - [ ] Generate client secret and store securely
 - [ ] Store in environment variables:
   ```env
   MS_CLIENT_ID=<application-id>
   MS_CLIENT_SECRET=<client-secret>
-  MS_TENANT_ID=common  # "common" for multi-tenant
+  MS_platform_ID=common  # "common" for multi-platform
   MS_REDIRECT_URI=http://localhost:3000/api/auth/callback/azure-ad
   ```
 - [ ] Document the exact steps for app registration (with screenshots) for future reference
@@ -45,7 +45,7 @@ Register a multi-tenant Azure AD application, configure all required Graph API p
   - `CallRecords.Read.All` — for recording sync job
   - `OnlineMeetingRecording.Read.All` — for recording fetch
 - [ ] Document which permissions require **admin consent** and how to grant it
-- [ ] Create an admin consent URL for tenant admins:
+- [ ] Create an admin consent URL for platform admins:
   ```
   https://login.microsoftonline.com/common/adminconsent
     ?client_id=<app-id>
@@ -62,7 +62,7 @@ Register a multi-tenant Azure AD application, configure all required Graph API p
   - Handle token expiry — attempt refresh, throw if both fail
 - [ ] Create token acquisition utilities:
   - `getTokenForUser(userId)` — decrypt stored token, check expiry, refresh if needed
-  - `getAppToken(tenantId)` — client credentials flow for background jobs
+  - `getAppToken()` — client credentials flow for background jobs
 - [ ] Implement **retry logic** with exponential backoff:
   - Retry on 429 (rate limited) — respect `Retry-After` header
   - Retry on 503 (service unavailable) — max 3 retries
@@ -102,18 +102,18 @@ Register a multi-tenant Azure AD application, configure all required Graph API p
   1. Wait for access token to expire (or mock expiry)
   2. Background job refreshes token
   3. Verify new token works for Graph API calls
-- [ ] Test with multiple tenants:
-  1. User from Tenant A authenticates
-  2. User from Tenant B authenticates
+- [ ] Test with multiple platforms:
+  1. User from platform A authenticates
+  2. User from platform B authenticates
   3. Verify isolated token storage
 
 ### 4.6 — 🆕 Admin Consent Flow UI
 
-- [ ] Create admin consent page for tenant admins:
+- [ ] Create admin consent page for platform admins:
   - Explain what permissions are needed and why
   - "Grant Permissions" button redirects to MS admin consent URL
   - Callback page confirms consent was granted
-- [ ] Track consent status per tenant in DB
+- [ ] Track consent status per platform in DB
 - [ ] Show banner on dashboard if consent not yet granted
 
 ### 4.7 — 🆕 Graph API Rate Limit Strategy
@@ -122,7 +122,7 @@ Register a multi-tenant Azure AD application, configure all required Graph API p
   - Per-app: ~2000 requests per second (varies by API)
   - Per-user: ~10000 requests per 10 minutes
 - [ ] Implement request queuing for bulk operations
-- [ ] Add telemetry: track Graph API call counts per tenant
+- [ ] Add telemetry: track Graph API call counts per platform
 - [ ] Set up alerts if approaching rate limits
 
 ---
@@ -137,7 +137,7 @@ Register a multi-tenant Azure AD application, configure all required Graph API p
 | Token exchange works | `GET /me` returns user profile |
 | Token refresh works | Expired tokens refreshed automatically |
 | Retry logic | 429 responses handled with backoff |
-| Admin consent flow | Tenant admin can grant permissions |
+| Admin consent flow | platform admin can grant permissions |
 | Graph sub-modules | All 5 sub-modules created and exported |
 
 ---
@@ -161,5 +161,5 @@ Register a multi-tenant Azure AD application, configure all required Graph API p
 > - **Admin consent can take up to 24 hours** to propagate across MS services
 > - **Delegated vs Application permissions** behave differently — test both paths
 > - **Token caching matters** — don't hit MS token endpoint on every API call
-> - **Multi-tenant apps need `common` authority**, not a specific tenant ID
+> - **Multi-platform apps need `common` authority**, not a specific platform ID
 

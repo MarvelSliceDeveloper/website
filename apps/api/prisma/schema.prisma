@@ -7,292 +7,164 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-
-model User {
-  id             String   @id @default(uuid())
-  name           String
-  email          String   @unique
-  password       String?  // nullable because of MS OAuth
-  role           String   @default("STUDENT") // STUDENT, INSTRUCTOR, ADMIN, SUPER_ADMIN
-  avatar         String?
-  msUserId       String?
-  msAccessToken  String?
-  msRefreshToken String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  enrollments  Enrollment[]
-  progress     Progress[]
-  certificates Certificate[]
-  payments     Payment[]
-  discussions  Discussion[]
-  replies      DiscussionReply[]
-  notifications Notification[]
-
+enum Role {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
 }
 
-model Category {
-  id        String   @id @default(uuid())
-  name      String
-  slug      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum EnrollmentStatus {
+  PENDING // paid, waiting admin approval
+  APPROVED // admin approved, assigned to batch
+  REJECTED
+}
+
+model User {
+  id             String              @id @default(cuid())
+  name           String
+  email          String              @unique
+  passwordHash   String? // null for MS OAuth users
+  msUserId       String? // Microsoft Object ID
+  msAccessToken  String? // AES-256 encrypted
+  msRefreshToken String? // AES-256 encrypted
+  role           Role                @default(STUDENT)
+  enrollments    EnrollmentRequest[]
+  progress       Progress[]
+  certificates   Certificate[]
+  instructorOf   Batch[]             @relation("BatchInstructor")
 }
 
 model Course {
-  id           String   @id @default(uuid())
-  title        String
-  description  String
-  instructorId String
-  price        Float    @default(0)
-  isPublished  Boolean  @default(false)
-  thumbnail    String?
-  category     String?
-  level        String?
-  tags         String[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  modules      Module[]
-  enrollments  Enrollment[]
-  liveSessions LiveSession[]
-  certificates Certificate[]
-  payments     Payment[]
-  discussions  Discussion[]
-
-  @@index([instructorId])
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  price       Float
+  isPublished Boolean  @default(false)
+  modules     Module[]
+  batches     Batch[]
 }
 
 model Module {
-  id        String   @id @default(uuid())
-  courseId  String
-  course    Course   @relation(fields: [courseId], references: [id])
-  title     String
-  order     Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id       String        @id @default(cuid())
+  courseId String
+  title    String
+  order    Int
+  course   Course        @relation(fields: [courseId], references: [id])
   sessions LiveSession[]
-  lessons  Lesson[]
   quizzes  Quiz[]
 }
 
-model Lesson {
-  id        String   @id @default(uuid())
-  moduleId  String
-  module    Module   @relation(fields: [moduleId], references: [id])
-  title     String
-  type      String   // video, text, quiz
-  order     Int
-  content   String?  @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// A Batch is a course cohort — e.g. "Python Batch Jan 2025"
+model Batch {
+  id           String              @id @default(cuid())
+  courseId     String
+  instructorId String // Assigned mentor/instructor
+  name         String // e.g. "Python Batch Jan 2025"
+  startDate    DateTime
+  endDate      DateTime
+  isActive     Boolean             @default(true)
+  course       Course              @relation(fields: [courseId], references: [id])
+  instructor   User                @relation("BatchInstructor", fields: [instructorId], references: [id])
+  enrollments  EnrollmentRequest[]
+  sessions     LiveSession[]
 }
 
+// Student applies → pays → pending → admin approves → assigned to batch
+model EnrollmentRequest {
+  id         String           @id @default(cuid())
+  userId     String
+  courseId   String // Which course they paid for
+  batchId    String? // Filled by admin on approval
+  status     EnrollmentStatus @default(PENDING)
+  payment    Payment?
+  appliedAt  DateTime         @default(now())
+  reviewedAt DateTime?
+  user       User             @relation(fields: [userId], references: [id])
+  batch      Batch?           @relation(fields: [batchId], references: [id])
+}
+
+// Admin creates Teams meeting → assigns to a batch
 model LiveSession {
-  id             String   @id @default(uuid())
-  courseId       String
-  course         Course   @relation(fields: [courseId], references: [id])
-  moduleId       String
-  module         Module   @relation(fields: [moduleId], references: [id])
-  teamsMeetingId String   @unique
+  id             String         @id @default(cuid())
+  batchId        String // Which batch this session is for
+  moduleId       String?
+  teamsMeetingId String         @unique
   joinUrl        String
   scheduledAt    DateTime
   endedAt        DateTime?
-  createdFrom    String   // LMS, TEAMS
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
+  createdFrom    String // LMS, TEAMS
+  createdBy      String // Admin user ID
+  batch          Batch          @relation(fields: [batchId], references: [id])
+  module         Module?        @relation(fields: [moduleId], references: [id])
   recording      Recording?
-  calendarEvents CalendarEvent[]
+  calendarEvent  CalendarEvent?
 }
 
 model Recording {
-  id               String      @id @default(uuid())
+  id               String      @id @default(cuid())
   sessionId        String      @unique
-  session          LiveSession @relation(fields: [sessionId], references: [id])
   teamsRecordingId String
-  sharePointUrl    String
-  duration         Int
-  viewCount        Int         @default(0)
+  sharePointUrl    String // Expires ~1hr — re-fetch on every play
+  duration         Int // seconds
   syncedAt         DateTime
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
-
   progress         Progress[]
+  session          LiveSession @relation(fields: [sessionId], references: [id])
 }
 
 model CalendarEvent {
-  id        String       @id @default(uuid())
+  id        String       @id @default(cuid())
   msEventId String       @unique
   title     String
   startAt   DateTime
   endAt     DateTime
   joinUrl   String?
-  sessionId String?
+  sessionId String?      @unique
   session   LiveSession? @relation(fields: [sessionId], references: [id])
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-
-  @@index([startAt])
-}
-
-model Enrollment {
-  id         String   @id @default(uuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  courseId   String
-  course     Course   @relation(fields: [courseId], references: [id])
-  enrolledAt DateTime @default(now())
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@unique([userId, courseId])
 }
 
 model Progress {
-  id             String    @id @default(uuid())
+  id             String    @id @default(cuid())
   userId         String
-  user           User      @relation(fields: [userId], references: [id])
   recordingId    String
-  recording      Recording @relation(fields: [recordingId], references: [id])
-  watchedSeconds Int       @default(0)
+  watchedSeconds Int
   completedAt    DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  user           User      @relation(fields: [userId], references: [id])
+  recording      Recording @relation(fields: [recordingId], references: [id])
 
   @@unique([userId, recordingId])
 }
 
 model Certificate {
-  id               String   @id @default(uuid())
-  userId           String
-  user             User     @relation(fields: [userId], references: [id])
-  courseId         String
-  course           Course   @relation(fields: [courseId], references: [id])
-  issuedAt         DateTime @default(now())
-  verificationCode String   @unique
-  pdfUrl           String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id       String   @id @default(cuid())
+  userId   String
+  courseId String
+  issuedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id])
 }
 
 model Payment {
-  id                String   @id @default(uuid())
-  userId            String
-  user              User     @relation(fields: [userId], references: [id])
-  courseId          String
-  course            Course   @relation(fields: [courseId], references: [id])
+  id                String            @id @default(cuid())
+  enrollmentId      String            @unique
   razorpayOrderId   String
   razorpayPaymentId String?
-  status            String   // created, paid, failed, refunded
+  status            String // created | paid | failed
   amount            Float
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime          @default(now())
+  enrollment        EnrollmentRequest @relation(fields: [enrollmentId], references: [id])
 }
 
 model Quiz {
-  id           String   @id @default(uuid())
-  moduleId     String
-  module       Module   @relation(fields: [moduleId], references: [id])
-  title        String
-  passingScore Int      @default(70)
-  timeLimit    Int?     
-  isPublished  Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  questions    Question[]
-  attempts     QuizAttempt[]
+  id        String     @id @default(cuid())
+  moduleId  String
+  title     String
+  questions Question[]
+  module    Module     @relation(fields: [moduleId], references: [id])
 }
 
 model Question {
-  id            String   @id @default(uuid())
-  quizId        String
-  quiz          Quiz     @relation(fields: [quizId], references: [id])
-  type          String   // multiple_choice, short_answer, true_false
-  text          String
-  options       Json
-  correctAnswer String
-  points        Int      @default(1)
-  order         Int
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-
-model QuizAttempt {
-  id          String   @id @default(uuid())
-  userId      String
-  quizId      String
-  quiz        Quiz     @relation(fields: [quizId], references: [id])
-  score       Float
-  totalPoints Float
-  passed      Boolean
-  startedAt   DateTime
-  completedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  responses   QuestionResponse[]
-}
-
-model QuestionResponse {
-  id             String      @id @default(uuid())
-  attemptId      String
-  attempt        QuizAttempt @relation(fields: [attemptId], references: [id])
-  questionId     String
-  selectedAnswer String
-  isCorrect      Boolean
-  pointsEarned   Float
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-}
-
-model Discussion {
-  id        String   @id @default(uuid())
-  courseId  String
-  course    Course   @relation(fields: [courseId], references: [id])
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  title     String
-  content   String   @db.Text
-  isPinned  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  replies   DiscussionReply[]
-}
-
-model DiscussionReply {
-  id           String     @id @default(uuid())
-  discussionId String
-  discussion   Discussion @relation(fields: [discussionId], references: [id])
-  userId       String
-  user         User       @relation(fields: [userId], references: [id])
-  content      String     @db.Text
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-}
-
-model Notification {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  type      String
-  title     String
-  message   String
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Attendance {
-  id        String   @id @default(uuid())
-  sessionId String
-  userId    String
-  joinedAt  DateTime
-  leftAt    DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id      String @id @default(cuid())
+  quizId  String
+  text    String
+  options Json // [{label, isCorrect}]
+  quiz    Quiz   @relation(fields: [quizId], references: [id])
 }

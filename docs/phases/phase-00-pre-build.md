@@ -45,7 +45,7 @@ Set up the development infrastructure, quality gates, and observability layer **
   - Configure with TypeScript paths
   - Set up coverage reporting (target: 80%+ for critical modules)
 - [ ] Install and configure **Playwright** for E2E tests
-  - Create base test fixtures (authenticated user, tenant context)
+  - Create base test fixtures (authenticated user, platform context)
   - Set up test database seeding/teardown scripts
 - [ ] Install **MSW (Mock Service Worker)** for mocking MS Graph API in tests
 - [ ] Define testing conventions:
@@ -75,7 +75,7 @@ Set up the development infrastructure, quality gates, and observability layer **
   - JSON format for production
   - Pretty print for development
   - Log levels: `error`, `warn`, `info`, `debug`
-  - Include `tenantId`, `userId`, `requestId` in all log entries
+  - Include ``, `userId`, `requestId` in all log entries
 - [ ] Set up **health check endpoints** (`/health`, `/ready`)
 - [ ] Plan for metrics (Prometheus/Grafana or Datadog) — implement in Phase 11
 
@@ -101,7 +101,7 @@ Set up the development infrastructure, quality gates, and observability layer **
 | Playwright configured | `pnpm test:e2e` runs |
 | ESLint + Prettier + Husky | Pre-commit hook triggers on commit |
 | Sentry project | Error tracking dashboard accessible |
-| Structured logging | Logger module created with tenant context |
+| Structured logging | Logger module created with platform context |
 | `.env.example` | All required vars documented |
 
 ---

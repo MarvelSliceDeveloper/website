@@ -1,7 +1,7 @@
 # Phase 6 — Live Sessions
 
 > ⏱️ **Duration**: Weeks 9–11 (3 weeks)  
-> 📌 **Status**: Not Started  
+> 📌 **Status**: 🔄 In Progress  
 > 🔗 **Depends on**: Phase 4, Phase 5  
 > ⚠️ **Extended from original 2 weeks → 3 weeks** (webhook debugging + ngrok setup is non-trivial)
 
@@ -45,7 +45,7 @@ Enable instructors to create Teams meetings from the LMS, automatically sync mee
 
 ### 6.2 — Session Management (Instructor)
 
-- [ ] Create instructor sessions page: `/(instructor)/[tenantSlug]/panel/sessions`
+- [ ] Create instructor sessions page: `/(instructor)/panel/sessions`
   - List all sessions for instructor's courses
   - Status indicators: Scheduled, Live, Completed, Cancelled
   - Sort by date (upcoming first)
@@ -97,7 +97,7 @@ Enable instructors to create Teams meetings from the LMS, automatically sync mee
 
 ### 6.5 — Student Join Experience
 
-- [ ] Create live session page: `/(tenant)/[tenantSlug]/live/[meetingId]`
+- [ ] Create live session page: `/live/[meetingId]`
   - Display: session title, course, instructor, scheduled time
   - Large "Join Meeting" button (opens Teams meeting URL)
   - Show "Session is Live" with pulsing indicator during active session

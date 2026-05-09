@@ -42,8 +42,8 @@ Scaffold the full monorepo, configure the database schema, set up shared package
   ```
   /app
     /(auth)          → /login, /register, /ms-callback
-    /(tenant)/[tenantSlug]
-    /(instructor)/[tenantSlug]/panel
+    /(platform)/[platformSlug]
+    /(instructor)/panel
     /(admin)/dashboard
   /components        → ui / course / calendar / video / layout
   /lib               → msal.ts, api.ts, auth.ts
@@ -61,7 +61,7 @@ Scaffold the full monorepo, configure the database schema, set up shared package
   /src
     /modules
       /auth        → routes, controller, service, middleware
-      /tenants
+      /platforms
       /users
       /courses
       /sessions
@@ -87,13 +87,13 @@ Scaffold the full monorepo, configure the database schema, set up shared package
 
 - [ ] Install Prisma and initialize with PostgreSQL provider
 - [ ] Define **all core tables** in `schema.prisma`:
-  - `Tenant` — id, name, slug (unique), msTenantId (unique), plan (free/pro/enterprise)
-  - `User` — id, tenantId, name, email, msUserId, msAccessToken (encrypted), msRefreshToken (encrypted), role (STUDENT/INSTRUCTOR/ADMIN), avatar
-  - `Course` — id, tenantId, title, description, instructorId, price, isPublished, thumbnail, category, tags
+  - `platform` — id, name, slug (unique), msplatformId (unique), plan (free/pro/enterprise)
+  - `User` — id, , name, email, msUserId, msAccessToken (encrypted), msRefreshToken (encrypted), role (STUDENT/INSTRUCTOR/ADMIN), avatar
+  - `Course` — id, , title, description, instructorId, price, isPublished, thumbnail, category, tags
   - `Module` — id, courseId, title, order
   - `LiveSession` — id, courseId, moduleId, teamsMeetingId (unique), joinUrl, scheduledAt, endedAt, createdFrom (LMS/TEAMS)
   - `Recording` — id, sessionId (unique), teamsRecordingId, sharePointUrl, duration, syncedAt
-  - `CalendarEvent` — id, tenantId, msEventId, title, startAt, endAt, joinUrl, sessionId
+  - `CalendarEvent` — id, , msEventId, title, startAt, endAt, joinUrl, sessionId
   - `Enrollment` — id, userId, courseId, enrolledAt
   - `Progress` — id, userId, recordingId, watchedSeconds, completedAt
   - `Certificate` — id, userId, courseId, issuedAt, verificationCode (unique)
@@ -102,18 +102,18 @@ Scaffold the full monorepo, configure the database schema, set up shared package
   - **🆕 `Discussion`** — id, courseId, userId, title, content, createdAt
   - **🆕 `DiscussionReply`** — id, discussionId, userId, content, createdAt
 - [ ] Add database indexes:
-  - `User`: composite index on `(tenantId, email)`
-  - `Course`: index on `tenantId`, `instructorId`
+  - `User`: composite index on `(, email)`
+  - `Course`: index on ``, `instructorId`
   - `Enrollment`: unique constraint on `(userId, courseId)`
   - `Progress`: unique constraint on `(userId, recordingId)`
-  - `CalendarEvent`: index on `(tenantId, startAt)`
+  - `CalendarEvent`: index on `(, startAt)`
 - [ ] Run `prisma migrate dev` to create initial migration
-- [ ] Seed script with sample tenant + admin user for development
+- [ ] Seed script with sample platform + admin user for development
 
 ### 1.5 — Shared Packages
 
 - [ ] `/packages/types` — Define TypeScript interfaces:
-  - User, Tenant, Course, Module, Session, Recording, Enrollment, etc.
+  - User, platform, Course, Module, Session, Recording, Enrollment, etc.
   - API response types: `ApiResponse<T>`, `PaginatedResponse<T>`, `ErrorResponse`
   - Role enums: `UserRole`, `CoursePlan`, `PaymentStatus`
 - [ ] `/packages/config` — Zod env validation schemas:
@@ -153,7 +153,7 @@ Scaffold the full monorepo, configure the database schema, set up shared package
   # Microsoft Azure AD
   MS_CLIENT_ID=
   MS_CLIENT_SECRET=
-  MS_TENANT_ID=
+  MS_platform_ID=
   MS_REDIRECT_URI=
 
   # Razorpay

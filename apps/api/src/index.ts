@@ -9,6 +9,11 @@ const logger = pino({
 
 import cookieParser from 'cookie-parser';
 import { authRouter } from './modules/auth/auth.routes';
+import { calendarRouter } from './modules/calendar/calendar.routes';
+import { webhookRouter } from './modules/calendar/webhook.routes';
+import { sessionRouter } from './modules/sessions/session.routes';
+import { recordingRouter } from './modules/recordings/recording.routes';
+import { eventsWebhookController } from './modules/sessions/events-webhook.controller';
 
 const app = express();
 
@@ -21,6 +26,13 @@ app.use(cors({
 
 // Mount Modular Routes
 app.use('/api/auth', authRouter);
+app.use('/api/calendar', calendarRouter);
+app.use('/api/sessions', sessionRouter);
+app.use('/api/recordings', recordingRouter);
+app.use('/api/webhooks', webhookRouter);
+
+// Events webhook — for Teams-created meetings (no auth required)
+app.post('/api/webhooks/events', eventsWebhookController.handleEventsWebhook);
 
 // Rate Limiting
 const limiter = rateLimit({

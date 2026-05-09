@@ -9,7 +9,7 @@
 
 ## 🎯 Objective
 
-Build Super Admin and Tenant Admin panels, deploy to production, set up monitoring, perform security hardening, load testing, and launch.
+Build Super Admin and platform Admin panels, deploy to production, set up monitoring, perform security hardening, load testing, and launch.
 
 ---
 
@@ -19,55 +19,41 @@ Build Super Admin and Tenant Admin panels, deploy to production, set up monitori
 
 - [ ] Build super admin pages: `/(admin)/dashboard`
 - [ ] Dashboard overview:
-  - Total tenants (active/inactive)
-  - Total users across all tenants
-  - Total revenue (all time, this month)
-  - Active live sessions right now
-  - System health status
-- [ ] Tenant management: `/(admin)/dashboard/tenants`
-  - List all tenants with: name, slug, plan, user count, course count, created date
-  - Search/filter tenants
-  - Actions: view details, edit plan, enable/disable, delete (with confirmation)
-  - **🆕 Impersonate**: Super admin can switch into tenant admin view
+- [ ] System health status
 - [ ] User management: `/(admin)/dashboard/users`
-  - List all users across tenants
+  - List all users
   - Search by name/email
-  - Filter by: tenant, role, status
+  - Filter by: role, status
   - Actions: view profile, change role, disable account, reset password
   - **🆕 Export user list** (CSV download)
 - [ ] Revenue dashboard: `/(admin)/dashboard/payments`
   - Total revenue chart (monthly trend)
-  - Revenue by tenant breakdown
-  - Payment list with filters (status, date, tenant)
+  - Payment list with filters (status, date)
   - Refund management
   - **🆕 Revenue export** (CSV for accounting)
 
-### 11.2 — Tenant Admin Dashboard
+### 11.2 — Admin Features
 
-- [ ] Build tenant admin section (accessible by ADMIN role within their tenant)
-- [ ] Tenant dashboard:
-  - Total users in organisation
+- [ ] Build admin section
+- [ ] Dashboard:
+  - Total users
   - Total courses
   - Active enrollments
-  - Monthly revenue (if paid courses exist)
-- [ ] User management (own org only):
-  - List users in tenant
-  - Invite new users (send invitation email)
-  - Change roles (student ↔ instructor)
-  - Remove user from organisation
+  - Monthly revenue
+- [ ] User management:
+  - List all users
+  - Change roles (student ↔ instructor ↔ admin)
   - **🆕 Bulk invite** via CSV upload (name, email, role)
-- [ ] Course management (own org only):
-  - List all courses in tenant
+- [ ] Course management:
+  - List all courses
   - Publish/unpublish courses
   - View enrollment stats
   - Archive courses
-- [ ] **🆕 Tenant settings**:
-  - Organisation name and logo
-  - Custom branding (primary color, accent color)
+- [ ] **🆕 Platform settings**:
+  - Global platform name and logo
   - Feature toggles (enable/disable quizzes, forums, certificates)
-  - **🆕 Custom domain** configuration (CNAME setup instructions)
 - [ ] **🆕 Announcements**:
-  - Create tenant-wide announcements
+  - Create platform-wide announcements
   - Show on student/instructor dashboards
   - Expiry date for auto-removal
 
@@ -85,7 +71,7 @@ Build Super Admin and Tenant Admin panels, deploy to production, set up monitori
   - New announcement
   - Invitation email (admin invites user)
 - [ ] Email templates using **React Email** or similar:
-  - Consistent branding with tenant logo and colors
+  - Consistent branding with platform logo and colors
   - Mobile responsive
   - Unsubscribe link
 - [ ] In-app notification system:
@@ -157,11 +143,9 @@ Build Super Admin and Tenant Admin panels, deploy to production, set up monitori
 - [ ] Configure production domain:
   - Primary domain: `yourlms.com`
   - API subdomain: `api.yourlms.com`
-  - If using subdomain tenancy: wildcard `*.yourlms.com`
 - [ ] SSL certificates:
   - Vercel handles SSL for frontend automatically
   - Let's Encrypt for API server (via Certbot)
-  - Wildcard SSL if using subdomain tenancy (via DNS challenge)
 
 ### 11.7 — Monitoring & Alerting
 
@@ -270,8 +254,7 @@ Build Super Admin and Tenant Admin panels, deploy to production, set up monitori
 
 | Deliverable | Verification |
 |-------------|-------------|
-| Super Admin dashboard | All tenants, users, revenue visible |
-| Tenant Admin dashboard | Own org management functional |
+| Admin dashboard | Users, revenue, and courses visible |
 | Email notification system | All transactional emails sending |
 | In-app notifications | Bell icon with unread count |
 | Discussion forums | Students can create threads, reply |
@@ -287,12 +270,12 @@ Build Super Admin and Tenant Admin panels, deploy to production, set up monitori
 
 ## 🧪 Tests to Write
 
-- [ ] Integration: Super admin CRUD on tenants
-- [ ] Integration: Tenant admin can only access own org data
+- [ ] Integration: Super admin CRUD on platforms
+- [ ] Integration: platform admin can only access own org data
 - [ ] Integration: Notification created on enrollment
 - [ ] Integration: Email sent on registration
 - [ ] Integration: Discussion thread CRUD
-- [ ] E2E: Super admin creates tenant → admin logs in → invites user
+- [ ] E2E: Super admin creates platform → admin logs in → invites user
 - [ ] E2E: Full student journey from registration to certificate
 - [ ] Load: 100 concurrent users browsing catalog
 - [ ] Security: OWASP ZAP scan returns no high-severity issues
