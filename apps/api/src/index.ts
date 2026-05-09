@@ -7,12 +7,17 @@ const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
 });
 
+import cookieParser from 'cookie-parser';
 import { authRouter } from './modules/auth/auth.routes';
 
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser());
+app.use(cors({
+  origin: process.env.WEB_URL || 'http://localhost:3000',
+  credentials: true
+}));
 
 // Mount Modular Routes
 app.use('/api/auth', authRouter);

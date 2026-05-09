@@ -22,6 +22,7 @@
 | [Phase 10 — Quizzes & Certificates](./phases/phase-10-quizzes-certificates.md) | Quiz builder, auto-grading, PDF certificate generation |
 | [Phase 11 — Admin Panel & Launch](./phases/phase-11-admin-launch.md) | Super admin, tenant admin, deploy, go live |
 | [Architecture Overview](./architecture.md) | Tech stack, folder structure, DB schema, integration flows |
+| [Auth API Endpoints](./auth-api.md) | Endpoints for Login, Register, Logout & Security features |
 | [Timeline & Milestones](./timeline.md) | Gantt overview, key milestones, risk buffer |
 | [Local Setup Guide](./local-setup.md) | How to run the project locally (with or without Docker) |
 | [Command Reference](./commands.md) | Every CLI command for dev, testing, building, deploying |
