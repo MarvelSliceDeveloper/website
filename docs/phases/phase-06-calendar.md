@@ -1,4 +1,4 @@
-# Phase 5 — Calendar Sync & UI
+# Phase 6 — Calendar Sync & UI
 
 > ⏱️ **Duration**: Weeks 7–8 (2 weeks)  
 > 📌 **Status**: 🔄 In Progress  

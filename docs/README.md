@@ -12,15 +12,17 @@
 | [Phase 0 — Pre-Build Foundation](./phases/phase-00-pre-build.md) | CI/CD, testing, monitoring, dev environment — **before any code** |
 | [Phase 1 — Foundation & Setup](./phases/phase-01-foundation.md) | Monorepo, Prisma, shared types, env config |
 | [Phase 2 — Authentication](./phases/phase-02-authentication.md) | JWT, Microsoft OAuth, MSAL, token encryption |
-| [Phase 3 — Multi-Tenancy (CANCELLED)](./phases/phase-03-multi-tenancy.md) | Phase Cancelled - Switched to Unified Marketplace |
-| [Phase 4 — Azure AD & Graph API Setup](./phases/phase-04-azure-graph.md) | App registration, API permissions, token exchange |
-| [Phase 5 — Calendar Sync & UI](./phases/phase-05-calendar.md) | MS Calendar sync, CalendarView, Live Now badge |
-| [Phase 6 — Live Sessions](./phases/phase-06-live-sessions.md) | Create meetings, webhooks, join URL display |
-| [Phase 7 — Recordings](./phases/phase-07-recordings.md) | Post-session sync, SharePoint streaming, video player |
-| [Phase 8 — LMS Core](./phases/phase-08-lms-core.md) | Courses, modules, enrollment, progress, dashboard |
-| [Phase 9 — Payments (Razorpay)](./phases/phase-09-payments.md) | Orders, webhook, enrollment unlock, subscriptions |
-| [Phase 10 — Quizzes & Certificates](./phases/phase-10-quizzes-certificates.md) | Quiz builder, auto-grading, PDF certificate generation |
-| [Phase 11 — Admin Panel & Launch](./phases/phase-11-admin-launch.md) | Admin features, platform deploy, go live |
+| [Phase 3 — Student UI & Dashboard](./phases/phase-03-student-ui.md) | Prioritized Student Dashboard, progression bar, 1-on-1 requests |
+| [Phase 4 — Batch & Enrollment Management](./phases/phase-04-batch.md) | Cohorts, manual approvals, instructor assignment |
+| [Phase 5 — Azure AD & Graph API Setup](./phases/phase-05-azure-graph.md) | App registration, API permissions, token exchange |
+| [Phase 6 — Calendar Sync & UI](./phases/phase-06-calendar.md) | MS Calendar sync, CalendarView, Live Now badge |
+| [Phase 7 — Live Sessions](./phases/phase-07-live-sessions.md) | Create meetings, webhooks, join URL display |
+| [Phase 8 — Recordings & Video](./phases/phase-08-recordings.md) | Pre-recorded videos, post-session sync, video player |
+| [Phase 9 — LMS Core](./phases/phase-09-lms-core.md) | Courses, modules, assignments, progress |
+| [Phase 10 — Payments](./phases/phase-10-payments.md) | Manual payments, deferred Razorpay |
+| [Phase 11 — Quizzes & Certificates](./phases/phase-11-quizzes-certificates.md) | Quiz builder, auto-grading, PDF certificate generation |
+| [Phase 12 — Admin Panel & Launch](./phases/phase-12-admin-launch.md) | Admin features, platform deploy, go live |
+| [Mentorship Feature](./mentorship.md) | 1-on-1 mentorship system with admin management |
 | [Architecture Overview](./architecture.md) | Tech stack, folder structure, DB schema, integration flows |
 | [Auth API Endpoints](./auth-api.md) | Endpoints for Login, Register, Logout & Security features |
 | [Calendar & Graph API](./calendar-api.md) | Calendar sync, live sessions, webhooks, Graph module reference |
@@ -36,7 +38,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Phases | 12 (Phase 0–11) |
+| Total Phases | 13 (Phase 0–12) |
 | Estimated Duration | 22–26 weeks (~5.5–6.5 months) |
 | Key Milestones | 7 |
 | User Roles | Student · Instructor · Admin |

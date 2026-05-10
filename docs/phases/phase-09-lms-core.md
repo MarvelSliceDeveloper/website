@@ -1,4 +1,4 @@
-# Phase 8 — LMS Core
+# Phase 9 — LMS Core
 
 > ⏱️ **Duration**: Weeks 13–16 (4 weeks)  
 > 📌 **Status**: Not Started  

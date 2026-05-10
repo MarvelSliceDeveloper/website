@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const navItems = [
-  { label: "Dashboard", href: "/student/dashboard", icon: "📊" },
-  { label: "Calendar", href: "/student/calendar", icon: "📅" },
-  { label: "Courses", href: "/student/courses", icon: "📚" },
-  { label: "Live Sessions", href: "/student/sessions", icon: "🎥" },
-  { label: "1-on-1 Mentorship", href: "/student/mentorship", icon: "🤝" },
-  { label: "Certificates", href: "/student/certificates", icon: "🏆" },
+const adminNavItems = [
+  { label: "Dashboard", href: "/admin/dashboard", icon: "📊" },
+  { label: "Mentorship", href: "/admin/mentorship", icon: "🤝" },
+  { label: "Courses", href: "/admin/courses", icon: "📚" },
+  { label: "Users", href: "/admin/users", icon: "👥" },
+  { label: "Batches", href: "/admin/batches", icon: "📅" },
+  { label: "Live Sessions", href: "/admin/sessions", icon: "🎥" },
 ];
 
-export default function Sidebar() {
+export default function AdminSidebar() {
   const pathname = usePathname();
 
   return (
@@ -23,12 +23,15 @@ export default function Sidebar() {
           L
         </div>
         <span className="text-lg font-bold gradient-text">LMS Portal</span>
+        <span className="ml-auto rounded bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary">
+          Admin
+        </span>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="space-y-1">
-          {navItems.map((item) => {
+          {adminNavItems.map((item) => {
             const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
             return (
               <li key={item.href}>
@@ -53,11 +56,11 @@ export default function Sidebar() {
       <div className="border-t border-border p-4">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/20 text-primary text-sm font-semibold">
-            U
+            A
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">User</p>
-            <p className="text-xs text-muted truncate">Student</p>
+            <p className="text-sm font-medium text-foreground truncate">Admin</p>
+            <p className="text-xs text-muted truncate">Administrator</p>
           </div>
         </div>
       </div>

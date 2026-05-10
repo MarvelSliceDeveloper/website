@@ -1,4 +1,4 @@
-# Phase 11 — Admin Panel & Launch
+# Phase 12 — Admin Panel & Launch
 
 > ⏱️ **Duration**: Weeks 20–23 (4 weeks)  
 > 📌 **Status**: Not Started  

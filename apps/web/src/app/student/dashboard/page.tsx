@@ -73,6 +73,44 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* 1-on-1 Mentorship CTA */}
+      <div className="glass-card p-6 bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/20 text-2xl">
+              🤝
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-foreground">
+                Need personalized help?
+              </h3>
+              <p className="text-sm text-muted mt-0.5">
+                Request a 1-on-1 mentorship session with an expert instructor
+              </p>
+            </div>
+          </div>
+          <a
+            href="/mentorship"
+            className="btn-primary flex items-center gap-2"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Request Session
+          </a>
+        </div>
+      </div>
+
       {/* Progress Section */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="glass-card p-6">

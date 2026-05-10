@@ -8,7 +8,8 @@
 > - ✅ Batch = Course Cohort (e.g. "Python Batch Jan 2025")
 > - ✅ Admin creates batches, assigns Mentor/Instructor per batch
 > - ✅ Admin schedules all Microsoft Teams live sessions (not the instructor)
-> - ✅ Students self-enroll → pay via Razorpay → Admin approves → assigned to batch
+> - ✅ Students self-enroll → Manual payment (Razorpay optional) → Admin approves → assigned to batch
+> - ✅ Student Dashboard UI prioritized first (includes 1-on-1 session ticket requests)
 
 ---
 
@@ -16,7 +17,7 @@
 
 ```
 Student browses course catalogue
-    → clicks Enroll → pays via Razorpay
+    → clicks Enroll → Manual payment (Razorpay optional)
     → Enrollment Request created (status: pending)
     ↓
 Admin reviews & approves request
@@ -30,7 +31,11 @@ Instructor conducts live session
     ↓
 Recording auto-syncs from SharePoint (30 min after session ends)
     ↓
-Students watch recordings, take quizzes, earn certificate
+Students watch pre-recorded videos & live recordings, take quizzes, submit assignments, track progress via progression bar, and earn certificate
+    ↓
+(Optional) Student requests 1-on-1 session from Dashboard
+    → Email & notification sent to Admin (Ticket creation)
+    → Admin assigns a mentor to the student
 ```
 
 ---
@@ -58,10 +63,11 @@ Students watch recordings, take quizzes, earn certificate
 | **Live Sessions** | Admin schedules Teams meeting from LMS → assigned to a batch → join URL shown to all students in that batch |
 | **Recorded Content** | Auto-synced from SharePoint/Teams 30 min after session ends, streamed via signed URL |
 | **Calendar View** | Synced with Microsoft Calendar; Live Now badge on active sessions |
-| **Quizzes & Assessments** | Per-module quiz builder with auto-grading |
-| **Progress Tracking** | Watched-seconds per recording, completion status per student |
+| **Quizzes & Assignments** | Per-module quiz builder and assignment submissions |
+| **Progress Tracking** | Progression bar for students, watched-seconds tracking, completion status |
 | **Certificates** | Auto-issued PDF on 100% course completion |
-| **Payments** | Razorpay — one-time purchase per course; enrollment request unlocked on payment, access granted after admin approval |
+| **Payments** | Initial Stage: Manual payment (admin decides). Razorpay integration is optional. |
+| **1-on-1 Sessions** | Student dashboard ticket request → notifies Admin via email → Admin assigns mentor |
 | **Admin Panel** | Full control: users, courses, batches, enrollments, sessions, payments |
 | **Discussion Forums** | Course-level discussion boards (Phase 8+) |
 
@@ -466,21 +472,15 @@ Bull job triggers 30 min after session.scheduledAt + estimated duration
 ```
 Student clicks "Enroll" on Course Detail page
   ↓
-POST /payments/create-order
-  → Backend creates Razorpay order → returns { orderId, amount, currency }
-  ↓
-Frontend opens Razorpay checkout widget
-  ↓
-Student pays → Razorpay fires webhook to POST /payments/webhook
-  ↓
-Backend verifies HMAC signature
-  → Creates EnrollmentRequest { status: PENDING }
+Enrollment Request created (status: PENDING)
+(Initial Stage: Manual payment process; Razorpay optional)
   ↓
 Admin sees pending request in /admin/enrollments
+  → Admin verifies payment manually
   → Admin approves + assigns to a Batch
   → EnrollmentRequest { status: APPROVED, batchId: "..." }
   ↓
-Student gets access to batch sessions, recordings, and materials
+Student gets access to batch sessions, pre-recorded videos, and materials
 ```
 
 ---
@@ -490,8 +490,9 @@ Student gets access to batch sessions, recordings, and materials
 **Student**
 - Course catalogue (landing / browse)
 - Course detail + Enroll CTA
-- Student dashboard — enrolled batches, upcoming sessions, progress
-- Batch session page — join URL, recordings list
+- Student dashboard — enrolled batches, upcoming sessions, progression bar
+- 1-on-1 Mentorship request — button to create ticket/email to Admin
+- Batch session page — join URL, pre-recorded videos, live recordings list, assignments
 - Recording player (SharePoint stream)
 - Calendar — MS Calendar sync with Live Now badge
 - Certificate download page
@@ -539,21 +540,22 @@ Student gets access to batch sessions, recordings, and materials
 
 ## 15 — Project Plan & Timeline
 
-**11 Phases · 17 Weeks · ~4.5 Months**
+**12 Phases · 18 Weeks · ~4.5 Months**
 
 | # | Phase | Weeks | Duration |
 |---|---|---|---|
 | 1 | Foundation & Setup | 1 | 1 week |
 | 2 | Authentication | 2–3 | 2 weeks |
-| 3 | Batch & Enrollment Management | 3–4 | 2 weeks |
-| 4 | Azure AD + Graph API Setup | 4–5 | 2 weeks |
-| 5 | Calendar Sync + UI | 5–6 | 2 weeks |
-| 6 | Live Sessions (Admin-driven) | 7–8 | 2 weeks |
-| 7 | Recordings | 9–10 | 2 weeks |
-| 8 | LMS Core (Courses, Progress, Dashboard) | 11–12 | 2 weeks |
-| 9 | Payments (Razorpay) | 13 | 1 week |
-| 10 | Quizzes + Certificates | 14–15 | 2 weeks |
-| 11 | Admin Panel + Launch | 16–17 | 2 weeks |
+| 3 | Student User Interface & Dashboard | 4-5 | 2 weeks |
+| 4 | Batch & Enrollment Management | 6–7 | 2 weeks |
+| 5 | Azure AD + Graph API Setup | 8–9 | 2 weeks |
+| 6 | Calendar Sync + UI | 10–11 | 2 weeks |
+| 7 | Live Sessions (Admin-driven) | 12–13 | 2 weeks |
+| 8 | Recordings & Pre-recorded Video | 14 | 1 week |
+| 9 | LMS Core (Courses, Progress, Assignments) | 15 | 1 week |
+| 10 | Payments (Manual / Optional Razorpay) | 16 | 1 week |
+| 11 | Quizzes + Certificates | 17 | 1 week |
+| 12 | Admin Panel + Launch | 18 | 1 week |
 
 ---
 

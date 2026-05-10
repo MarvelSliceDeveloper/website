@@ -1,22 +1,23 @@
 # LMS Portal — Revised Implementation Plan & Timeline
 
-**11 Phases · 17 Weeks · ~4.5 Months**
+**12 Phases · 18 Weeks · ~4.5 Months**
 
-> Note: This timeline has been updated to reflect the single-organisation, cohort/batch-based model with Admin-driven live sessions.
+> Note: This timeline has been updated to prioritize the Student UI, manual payments, and 1-on-1 mentorship.
 
 | # | Phase | Weeks | Duration |
 |---|---|---|---|
 | 1 | Foundation & Setup | 1 | 1 week |
 | 2 | Authentication | 2–3 | 2 weeks |
-| 3 | Batch & Enrollment Management | 3–4 | 2 weeks |
-| 4 | Azure AD + Graph API Setup | 4–5 | 2 weeks |
-| 5 | Calendar Sync + UI | 5–6 | 2 weeks |
-| 6 | Live Sessions (Admin-driven) | 7–8 | 2 weeks |
-| 7 | Recordings | 9–10 | 2 weeks |
-| 8 | LMS Core (Courses, Progress, Dashboard) | 11–12 | 2 weeks |
-| 9 | Payments (Razorpay) | 13 | 1 week |
-| 10 | Quizzes + Certificates | 14–15 | 2 weeks |
-| 11 | Admin Panel + Launch | 16–17 | 2 weeks |
+| 3 | Student User Interface & Dashboard | 4-5 | 2 weeks |
+| 4 | Batch & Enrollment Management | 6–7 | 2 weeks |
+| 5 | Azure AD + Graph API Setup | 8–9 | 2 weeks |
+| 6 | Calendar Sync + UI | 10–11 | 2 weeks |
+| 7 | Live Sessions (Admin-driven) | 12–13 | 2 weeks |
+| 8 | Recordings & Pre-recorded Video | 14 | 1 week |
+| 9 | LMS Core (Courses, Progress, Assignments) | 15 | 1 week |
+| 10 | Payments (Manual / Optional Razorpay) | 16 | 1 week |
+| 11 | Quizzes + Certificates | 17 | 1 week |
+| 12 | Admin Panel + Launch | 18 | 1 week |
 
 ---
 
@@ -36,57 +37,61 @@
 - Role-based middleware (STUDENT / INSTRUCTOR / ADMIN)
 - Token refresh background job
 
-### Phase 3 — Batch & Enrollment Management (Week 3–4)
+### Phase 3 — Student User Interface & Dashboard (Week 4–5)
+- Build the core Student UI dashboard
+- Integrate progression bar to track student progress
+- 1-on-1 Mentorship Request feature (create ticket/email admin for assignment)
+- Course catalogue and batch display
+
+### Phase 4 — Batch & Enrollment Management (Week 6–7)
 - Batch CRUD (create batch, link to course, assign instructor, set dates)
 - Admin: enrollment request review (approve → assign to batch / reject)
 - Instructor: view assigned batches and student lists
 - Student: view batch sessions and materials after approval
 
-### Phase 4 — Azure AD + Graph API Setup (Week 4–5)
+### Phase 5 — Azure AD + Graph API Setup (Week 8–9)
 - Register multi-tenant Azure AD app
 - Configure permissions: `Calendars.Read`, `OnlineMeetings.ReadWrite`, `OnlineMeetingRecording.Read.All`, `CallRecords.Read.All`
 - Build Graph API client module using Admin's stored token
 - Test MS token exchange end-to-end
 
-### Phase 5 — Calendar Sync + UI (Week 5–6)
+### Phase 6 — Calendar Sync + UI (Week 10–11)
 - Poll `GET /me/calendarView` to fetch events into CalendarEvent table
 - Calendar UI with monthly/weekly view
 - Live Now badge logic
 - Optional: Graph webhook for real-time sync (production)
 
-### Phase 6 — Live Sessions / Admin-driven (Week 7–8)
+### Phase 7 — Live Sessions / Admin-driven (Week 12–13)
 - Admin session form → `POST /me/onlineMeetings` → stored against batch
 - Join URL displayed to all students in the batch
 - Graph webhook for Teams-created meetings (createdFrom: TEAMS)
 - ngrok setup for local webhook testing
 
-### Phase 7 — Recordings (Week 9–10)
-- Bull job triggers 30 min after session ends
-- Fetch call records + SharePoint signed URL
+### Phase 8 — Recordings & Pre-recorded Video (Week 14)
+- Pre-recorded video playback implementation
+- Teams Recording sync (30 min after session ends)
 - Store in Recording table; re-fetch on every play
 - Video player with HLS/signed URL streaming
-- Watched-seconds progress tracking
 
-### Phase 8 — LMS Core (Week 11–12)
+### Phase 9 — LMS Core (Courses, Progress, Assignments) (Week 15)
 - Course CRUD (create, edit, publish, archive)
-- Module and lesson management
-- Student dashboard (batches, progress bars, upcoming sessions)
-- Landing page with course catalogue
+- Module, lesson, and assignment management
+- Watched-seconds progress tracking update
+- Assignment submission features
 
-### Phase 9 — Payments (Week 13)
-- `POST /payments/create-order` → Razorpay order
-- Frontend Razorpay checkout widget
-- Webhook → HMAC verify → create EnrollmentRequest (PENDING)
-- Admin approval → batch assignment → course access granted
+### Phase 10 — Payments (Manual / Optional Razorpay) (Week 16)
+- Manual enrollment approval workflow
+- Payment verification handled by admin manually
+- Razorpay setup (optional/deferred)
 
-### Phase 10 — Quizzes + Certificates (Week 14–15)
+### Phase 11 — Quizzes + Certificates (Week 17)
 - Quiz builder per module (MCQ + short answer)
 - Auto-grading and score recording
 - Auto-issue PDF certificate on 100% course completion
 - Certificate verification page (public URL)
 
-### Phase 11 — Admin Panel + Launch (Week 16–17)
-- Full admin dashboard: all courses, batches, users, payments
+### Phase 12 — Admin Panel + Launch (Week 18)
+- Full admin dashboard: all courses, batches, users, ticket assignments
 - Production deploy: Vercel (web) + EC2 (API) + Supabase (DB)
 - DNS, SSL, monitoring (Sentry, Upstash)
 - Load testing and security hardening
@@ -113,12 +118,13 @@
 |-------|-------------|-------------|------------|-----------|--------|
 | 1 | Week 1 | Week 1 | Week 1 | Week 1 | ✅ Completed |
 | 2 | Week 2 | Week 2 | Week 3 | Week 3 | ✅ Completed |
-| 3 | Week 3 | — | Week 4 | — | 🔄 Pending |
-| 4 | Week 4 | — | Week 5 | — | 🔄 Pending |
-| 5 | Week 5 | — | Week 6 | — | 🔄 Pending |
-| 6 | Week 7 | — | Week 8 | — | 🔄 Pending |
-| 7 | Week 9 | — | Week 10 | — | 🔄 Pending |
-| 8 | Week 11 | — | Week 12 | — | 🔄 Pending |
-| 9 | Week 13 | — | Week 13 | — | 🔄 Pending |
-| 10 | Week 14 | — | Week 15 | — | 🔄 Pending |
-| 11 | Week 16 | — | Week 17 | — | 🔄 Pending |
+| 3 | Week 4 | — | Week 5 | — | 🔄 Pending |
+| 4 | Week 6 | — | Week 7 | — | 🔄 Pending |
+| 5 | Week 8 | — | Week 9 | — | 🔄 Pending |
+| 6 | Week 10 | — | Week 11 | — | 🔄 Pending |
+| 7 | Week 12 | — | Week 13 | — | 🔄 Pending |
+| 8 | Week 14 | — | Week 14 | — | 🔄 Pending |
+| 9 | Week 15 | — | Week 15 | — | 🔄 Pending |
+| 10 | Week 16 | — | Week 16 | — | 🔄 Pending |
+| 11 | Week 17 | — | Week 17 | — | 🔄 Pending |
+| 12 | Week 18 | — | Week 18 | — | 🔄 Pending |

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LiveBadge } from "@/components/ui/Badge";
 
 type ViewMode = "month" | "week" | "day";
@@ -8,16 +8,100 @@ type ViewMode = "month" | "week" | "day";
 const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const hours = Array.from({ length: 15 }, (_, i) => i + 8); // 8 AM to 10 PM
 
-// Mock events
-const events = [
-  { id: "1", title: "TypeScript Deep Dive", time: "10:00 AM", day: 3, hour: 10, duration: 1, isLive: true, joinUrl: "#", color: "bg-success/20 border-success/30 text-success" },
-  { id: "2", title: "React Server Components", time: "2:00 PM", day: 3, hour: 14, duration: 1.5, isLive: false, joinUrl: "#", color: "bg-primary/20 border-primary/30 text-primary-hover" },
-  { id: "3", title: "Database Design", time: "4:30 PM", day: 4, hour: 16, duration: 1, isLive: false, joinUrl: "#", color: "bg-accent/20 border-accent/30 text-accent" },
-  { id: "4", title: "System Design Patterns", time: "11:00 AM", day: 5, hour: 11, duration: 2, isLive: false, joinUrl: "#", color: "bg-warning/20 border-warning/30 text-warning" },
-];
+interface CalendarEvent {
+  id: string;
+  title: string;
+  time: string;
+  day: number;
+  hour: number;
+  duration: number;
+  isLive: boolean;
+  joinUrl?: string;
+  color: string;
+  type: "session" | "mentorship";
+  mentorName?: string;
+}
 
 export default function CalendarPage() {
   const [view, setView] = useState<ViewMode>("week");
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCalendarData();
+  }, []);
+
+  const fetchCalendarData = async () => {
+    try {
+      setIsLoading(true);
+      const [sessionsRes, ticketsRes] = await Promise.all([
+        fetch("/api/sessions"),
+        fetch("/api/mentorship/tickets/my"),
+      ]);
+
+      const calendarEvents: CalendarEvent[] = [];
+
+      // Process live sessions
+      if (sessionsRes.ok) {
+        const sessionsData = await sessionsRes.json();
+        const sessions = sessionsData.sessions || [];
+        
+        sessions.forEach((session: any) => {
+          const date = new Date(session.scheduledAt);
+          calendarEvents.push({
+            id: `session-${session.id}`,
+            title: session.title || "Live Session",
+            time: date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+            day: date.getDay(),
+            hour: date.getHours(),
+            duration: 1, // Default 1 hour
+            isLive: isSessionLive(session.scheduledAt, session.endedAt),
+            joinUrl: session.joinUrl,
+            color: "bg-primary/20 border-primary/30 text-primary-hover",
+            type: "session",
+          });
+        });
+      }
+
+      // Process scheduled mentorship sessions
+      if (ticketsRes.ok) {
+        const ticketsData = await ticketsRes.json();
+        const tickets = ticketsData.tickets || [];
+        
+        tickets
+          .filter((t: any) => t.status === "SCHEDULED" && t.scheduledAt)
+          .forEach((ticket: any) => {
+            const date = new Date(ticket.scheduledAt);
+            calendarEvents.push({
+              id: `mentorship-${ticket.id}`,
+              title: `1-on-1: ${ticket.title}`,
+              time: date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+              day: date.getDay(),
+              hour: date.getHours(),
+              duration: 1, // Default 1 hour
+              isLive: isSessionLive(ticket.scheduledAt, null),
+              joinUrl: ticket.joinUrl,
+              color: "bg-success/20 border-success/30 text-success",
+              type: "mentorship",
+              mentorName: ticket.mentor?.name,
+            });
+          });
+      }
+
+      setEvents(calendarEvents);
+    } catch (error) {
+      console.error("Failed to fetch calendar data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const isSessionLive = (scheduledAt: string, endedAt: string | null) => {
+    const now = new Date();
+    const start = new Date(scheduledAt);
+    const end = endedAt ? new Date(endedAt) : new Date(start.getTime() + 60 * 60 * 1000); // Default 1 hour
+    return now >= start && now <= end;
+  };
 
   return (
     <div className="space-y-6">
@@ -26,7 +110,38 @@ export default function CalendarPage() {
           <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
           <p className="text-sm text-muted mt-1">Your schedule at a glance</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Legend */}
+          <div className="flex items-center gap-4 mr-4">
+            <div className="flex items-center gap-1.5">
+              <div className="h-3 w-3 rounded bg-primary/50" />
+              <span className="text-xs text-muted">Live Sessions</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="h-3 w-3 rounded bg-success/50" />
+              <span className="text-xs text-muted">Mentorship</span>
+            </div>
+          </div>
+          <button
+            onClick={fetchCalendarData}
+            disabled={isLoading}
+            className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-card-hover transition-colors disabled:opacity-50"
+          >
+            <svg
+              className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            {isLoading ? "Loading..." : "Refresh"}
+          </button>
           {(["month", "week", "day"] as ViewMode[]).map((v) => (
             <button
               key={v}

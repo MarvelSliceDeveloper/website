@@ -1,4 +1,4 @@
-# Phase 4 — Azure AD & Graph API Setup
+# Phase 5 — Azure AD & Graph API Setup
 
 > ⏱️ **Duration**: Weeks 5–7 (3 weeks)  
 > 📌 **Status**: 🔄 In Progress  

@@ -1,4 +1,4 @@
-# Phase 9 — Payments (Razorpay)
+# Phase 10 — Payments (Manual / Optional Razorpay)
 
 > ⏱️ **Duration**: Weeks 16–17 (2 weeks)  
 > 📌 **Status**: Not Started  

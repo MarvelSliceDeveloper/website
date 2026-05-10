@@ -1,4 +1,4 @@
-# Phase 6 — Live Sessions
+# Phase 7 — Live Sessions
 
 > ⏱️ **Duration**: Weeks 9–11 (3 weeks)  
 > 📌 **Status**: 🔄 In Progress  

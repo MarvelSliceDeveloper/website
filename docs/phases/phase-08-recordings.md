@@ -1,4 +1,4 @@
-# Phase 7 — Recordings
+# Phase 8 — Recordings & Video
 
 > ⏱️ **Duration**: Weeks 11–12 (2 weeks)  
 > 📌 **Status**: 🔄 In Progress  
