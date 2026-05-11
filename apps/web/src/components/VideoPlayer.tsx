@@ -1,168 +1,512 @@
-"use client";
+import { useState, useRef, useEffect, useCallback } from "react";
 
-import { useEffect, useRef, useState } from "react";
+/* ─── Icons ──────────────────────────────────────────────────── */
+const Icon = ({ d, size = 20, stroke = "currentColor", fill = "none", strokeWidth = 1.6 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    {Array.isArray(d) ? d.map((p, i) => <path key={i} d={p} />) : <path d={d} />}
+  </svg>
+);
 
-interface VideoPlayerProps {
-  url: string;
-  onProgress?: (progress: number) => void;
-  initialTime?: number;
-}
+const icons = {
+  grid: "M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z",
+  book: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5V5a2.5 2.5 0 0 1 2.5-2.5H20v15",
+  video: ["M15 10l4.553-2.276A1 1 0 0 1 21 8.723v6.554a1 1 0 0 1-1.447.894L15 14M3 8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z"],
+  people: ["M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2", "M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z", "M23 21v-2a4 4 0 0 0-3-3.87", "M16 3.13a4 4 0 0 1 0 7.75"],
+  calendar: ["M3 9h18M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5z", "M8 2v3M16 2v3"],
+  chat: ["M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"],
+  search: ["M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0"],
+  bell: ["M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9", "M13.73 21a2 2 0 0 1-3.46 0"],
+  more: "M12 5v.01M12 12v.01M12 19v.01",
+  skipBack: "M19 20L9 12l10-8v16zM5 19V5",
+  skipFwd: "M5 4l10 8-10 8V4zM19 5v14",
+  play: "M5 3l14 9-14 9V3z",
+  pause: "M6 4h4v16H6zM14 4h4v16h-4z",
+  volume2: ["M11 5L6 9H2v6h4l5 4V5z", "M15.54 8.46a5 5 0 0 1 0 7.07"],
+  mute: ["M11 5L6 9H2v6h4l5 4V5z", "M23 9l-6 6M17 9l6 6"],
+  captions: ["M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6z", "M7 12h4M7 16h8M15 12h2"],
+  maximize: "M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3",
+  dotsH: "M5 12h.01M12 12h.01M19 12h.01",
+};
 
-export default function VideoPlayer({ url, onProgress, initialTime = 0 }: VideoPlayerProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [showControls, setShowControls] = useState(true);
-  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+/* ─── Video Player ─────────────────────────────────────────────── */
+function VideoPlayer({ url = "" }) {
+  const videoRef = useRef(null);
+  const progressRef = useRef(null);
+  const hideRef = useRef(null);
+  const [playing, setPlaying] = useState(false);
+  const [current, setCurrent] = useState(868); // demo 14:28
+  const [duration] = useState(2265);           // demo 37:45
+  const [vol, setVol] = useState(0.8);
+  const [muted, setMuted] = useState(false);
+  const [speed, setSpeed] = useState(1);
+  const [show, setShow] = useState(false);
+  const [hoverT, setHoverT] = useState(null);
+  const [hoverX, setHoverX] = useState(0);
 
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+  const fmt = (s) => {
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = Math.floor(s % 60);
+    return `${h ? h + ":" : ""}${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
+  };
 
-    if (initialTime > 0) {
-      video.currentTime = initialTime;
-    }
-
-    const handleTimeUpdate = () => {
-      setCurrentTime(video.currentTime);
-      if (onProgress && Math.floor(video.currentTime) % 15 === 0) {
-        onProgress(video.currentTime);
-      }
-    };
-
-    const handleLoadedMetadata = () => {
-      setDuration(video.duration);
-    };
-
-    video.addEventListener("timeupdate", handleTimeUpdate);
-    video.addEventListener("loadedmetadata", handleLoadedMetadata);
-
-    return () => {
-      video.removeEventListener("timeupdate", handleTimeUpdate);
-      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
-    };
-  }, [onProgress, initialTime]);
+  const resetHide = useCallback(() => {
+    setShow(true);
+    if (hideRef.current) clearTimeout(hideRef.current);
+    hideRef.current = setTimeout(() => setShow(false), 2800);
+  }, []);
 
   const togglePlay = () => {
-    if (videoRef.current?.paused) {
-      videoRef.current.play();
-      setIsPlaying(true);
-    } else {
-      videoRef.current?.pause();
-      setIsPlaying(false);
-    }
+    if (!videoRef.current) { setPlaying(p => !p); return; }
+    videoRef.current.paused ? videoRef.current.play() : videoRef.current.pause();
+    setPlaying(p => !p);
   };
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const time = parseFloat(e.target.value);
-    setCurrentTime(time);
-    if (videoRef.current) {
-      videoRef.current.currentTime = time;
-    }
+  const handleProgressClick = (e) => {
+    if (!progressRef.current) return;
+    const r = progressRef.current.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    const t = ratio * duration;
+    setCurrent(t);
+    if (videoRef.current) videoRef.current.currentTime = t;
   };
 
-  const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = Math.floor(seconds % 60);
-    return `${h > 0 ? h + ":" : ""}${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  const handleProgressHover = (e) => {
+    if (!progressRef.current) return;
+    const r = progressRef.current.getBoundingClientRect();
+    setHoverX(e.clientX - r.left);
+    setHoverT(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * duration);
   };
 
-  const handleMouseMove = () => {
-    setShowControls(true);
-    if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
-    controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000);
-  };
+  const pct = duration ? (current / duration) * 100 : 0;
 
   return (
-    <div 
-      className="relative aspect-video w-full overflow-hidden rounded-xl bg-black shadow-2xl group"
-      onMouseMove={handleMouseMove}
-      onMouseLeave={() => setShowControls(false)}
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        aspectRatio: "16/9",
+        background: "#0d0d10",
+        borderRadius: 12,
+        overflow: "hidden",
+        cursor: show ? "default" : "none",
+        userSelect: "none",
+      }}
+      onMouseMove={resetHide}
+      onMouseLeave={() => setShow(false)}
     >
-      <video
-        ref={videoRef}
-        src={url}
-        className="h-full w-full object-contain"
-        onClick={togglePlay}
-        playsInline
-      />
+      {url && <video ref={videoRef} src={url} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />}
 
-      {/* Overlay Controls */}
-      <div className={`absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/80 via-transparent to-transparent p-4 transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0"}`}>
-        
-        {/* Progress Bar */}
-        <input
-          type="range"
-          min={0}
-          max={duration || 0}
-          value={currentTime}
-          onChange={handleSeek}
-          className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/20 accent-primary outline-none transition-all hover:h-2"
-        />
+      {/* Gradient overlays */}
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 40%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, transparent 25%)", pointerEvents: "none" }} />
 
-        <div className="mt-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={togglePlay} className="text-2xl text-white hover:text-primary transition-colors">
-              {isPlaying ? "⏸" : "▶"}
-            </button>
-            <div className="flex items-center gap-2 text-xs font-medium text-white/90">
-              <span>{formatTime(currentTime)}</span>
-              <span className="opacity-50">/</span>
-              <span>{formatTime(duration)}</span>
+      {/* Top-right dots */}
+      <div style={{ position: "absolute", top: 14, right: 16, zIndex: 10, opacity: show ? 1 : 0, transition: "opacity 0.3s", cursor: "pointer" }}>
+        <span style={{ color: "rgba(255,255,255,0.6)", display: "flex" }}>
+          <Icon d={icons.dotsH} size={20} strokeWidth={2.2} />
+        </span>
+      </div>
+
+      {/* Center — idle state */}
+      {!show && (
+        <div onClick={togglePlay} style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, cursor: "pointer", zIndex: 5 }}>
+          <div style={{
+            width: 64, height: 64,
+            borderRadius: "50%",
+            background: "rgba(108, 92, 231, 0.85)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 0 32px rgba(108,92,231,0.5)",
+            backdropFilter: "blur(4px)",
+          }}>
+            <Icon d={icons.play} size={26} fill="white" stroke="none" />
+          </div>
+          <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "0.04em" }}>
+            Hover to see controls
+          </span>
+        </div>
+      )}
+
+      {/* Bottom control panel */}
+      <div style={{
+        position: "absolute", bottom: 0, left: 0, right: 0,
+        padding: "0 0 0",
+        zIndex: 10,
+        opacity: show ? 1 : 0,
+        transform: show ? "translateY(0)" : "translateY(6px)",
+        transition: "opacity 0.3s ease, transform 0.3s ease",
+        pointerEvents: show ? "auto" : "none",
+      }}>
+        {/* Progress bar */}
+        <div
+          ref={progressRef}
+          onClick={handleProgressClick}
+          onMouseMove={handleProgressHover}
+          onMouseLeave={() => setHoverT(null)}
+          style={{ position: "relative", width: "100%", height: 20, cursor: "pointer", display: "flex", alignItems: "center", padding: "0 0" }}
+        >
+          <div style={{ position: "relative", width: "100%", height: 3, background: "rgba(255,255,255,0.15)", borderRadius: 99 }}>
+            <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, #7c6ee0, #a09af0)", borderRadius: 99, position: "relative" }}>
+              <div style={{ position: "absolute", right: -5, top: "50%", transform: "translateY(-50%)", width: 11, height: 11, borderRadius: "50%", background: "#fff", boxShadow: "0 0 6px rgba(255,255,255,0.6)" }} />
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-white/70">Vol</span>
-              <input 
-                type="range" min="0" max="1" step="0.1" value={volume} 
-                onChange={(e) => {
-                  const v = parseFloat(e.target.value);
-                  setVolume(v);
-                  if(videoRef.current) videoRef.current.volume = v;
-                }}
-                className="w-16 h-1 bg-white/20 accent-white outline-none"
-              />
+          </div>
+          {hoverT !== null && (
+            <div style={{ position: "absolute", bottom: "calc(100% + 6px)", left: hoverX, transform: "translateX(-50%)", background: "rgba(15,14,20,0.9)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.85)", fontSize: 10, fontFamily: "monospace", padding: "3px 7px", borderRadius: 4, whiteSpace: "nowrap", backdropFilter: "blur(8px)", pointerEvents: "none" }}>
+              {fmt(hoverT)}
+            </div>
+          )}
+        </div>
+
+        {/* Controls row */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          background: "rgba(10,10,14,0.82)",
+          backdropFilter: "blur(16px)",
+          borderTop: "1px solid rgba(255,255,255,0.05)",
+          padding: "10px 18px",
+          gap: 8,
+        }}>
+          {/* Left */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <CtrlBtn icon={icons.skipBack} />
+            <button onClick={togglePlay} style={{
+              width: 36, height: 36, borderRadius: "50%",
+              background: "rgba(108,92,231,0.2)",
+              border: "1px solid rgba(108,92,231,0.35)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: "#fff", flexShrink: 0,
+              transition: "background 0.2s",
+            }}
+              onMouseEnter={e => e.currentTarget.style.background = "rgba(108,92,231,0.4)"}
+              onMouseLeave={e => e.currentTarget.style.background = "rgba(108,92,231,0.2)"}
+            >
+              <Icon d={playing ? icons.pause : icons.play} size={16} fill="white" stroke="none" />
+            </button>
+            <CtrlBtn icon={icons.skipFwd} />
+
+            {/* Timestamp */}
+            <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, fontFamily: "'DM Mono', monospace", marginLeft: 6, whiteSpace: "nowrap", letterSpacing: "0.04em" }}>
+              <span style={{ color: "#fff" }}>{fmt(current)}</span>
+              <span style={{ color: "rgba(255,255,255,0.35)", margin: "0 4px" }}>/</span>
+              {fmt(duration)}
+            </span>
+
+            {/* Volume */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 8 }}>
+              <button onClick={() => setMuted(m => !m)} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: muted ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.75)", transition: "color 0.2s" }}>
+                <Icon d={muted ? icons.mute : icons.volume2} size={16} />
+              </button>
+              <VolSlider value={muted ? 0 : vol} onChange={v => { setVol(v); if (videoRef.current) videoRef.current.volume = v; }} />
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <select 
-              value={playbackSpeed} 
-              onChange={(e) => {
-                const s = parseFloat(e.target.value);
-                setPlaybackSpeed(s);
-                if(videoRef.current) videoRef.current.playbackRate = s;
+          {/* Right */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {/* Speed */}
+            <select
+              value={speed}
+              onChange={e => { const s = +e.target.value; setSpeed(s); if (videoRef.current) videoRef.current.playbackRate = s; }}
+              style={{
+                background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)",
+                color: "rgba(255,255,255,0.8)", fontSize: 12, fontFamily: "'DM Mono', monospace",
+                padding: "6px 10px", borderRadius: 8, cursor: "pointer", outline: "none", letterSpacing: "0.04em",
               }}
-              className="bg-transparent text-xs font-bold text-white outline-none border border-white/20 rounded px-1"
             >
-              {[0.5, 0.75, 1, 1.25, 1.5, 2].map(s => (
-                <option key={s} value={s} className="bg-zinc-900">{s}x</option>
-              ))}
+              {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(s => <option key={s} value={s} style={{ background: "#0d0d10" }}>{s}x</option>)}
             </select>
-            <button 
-              onClick={() => videoRef.current?.requestFullscreen()}
-              className="text-xl text-white hover:text-primary transition-colors"
-            >
-              ⛶
-            </button>
+            <CtrlBtn icon={icons.captions} />
+            <CtrlBtn icon={icons.maximize} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CtrlBtn({ icon, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)",
+      color: "rgba(255,255,255,0.7)", borderRadius: 8, width: 34, height: 34,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      cursor: "pointer", transition: "background 0.2s, color 0.2s",
+    }}
+      onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#fff"; }}
+      onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
+    >
+      <Icon d={icon} size={15} />
+    </button>
+  );
+}
+
+function VolSlider({ value, onChange }) {
+  return (
+    <div style={{ position: "relative", width: 80, height: 34, display: "flex", alignItems: "center" }}>
+      <div style={{ position: "absolute", width: "100%", height: 3, background: "rgba(255,255,255,0.12)", borderRadius: 99 }}>
+        <div style={{ width: `${value * 100}%`, height: "100%", background: "rgba(255,255,255,0.5)", borderRadius: 99 }} />
+      </div>
+      <input type="range" min="0" max="1" step="0.05" value={value}
+        onChange={e => onChange(+e.target.value)}
+        style={{ position: "absolute", width: "100%", opacity: 0, cursor: "pointer", height: 20, margin: 0 }}
+      />
+    </div>
+  );
+}
+
+/* ─── Sidebar ──────────────────────────────────────────────────── */
+const navItems = [
+  { id: "grid", icon: "grid" },
+  { id: "library", icon: "book" },
+  { id: "videos", icon: "video" },
+  { id: "people", icon: "people" },
+  { id: "calendar", icon: "calendar" },
+  { id: "chat", icon: "chat", active: true },
+];
+
+function Sidebar({ active, setActive }) {
+  return (
+    <div style={{
+      width: 56, minHeight: "100vh", background: "#0d0d10",
+      borderRight: "1px solid rgba(255,255,255,0.05)",
+      display: "flex", flexDirection: "column", alignItems: "center",
+      padding: "14px 0", gap: 4, flexShrink: 0,
+    }}>
+      {/* Avatar */}
+      <div style={{
+        width: 34, height: 34, borderRadius: 10,
+        background: "linear-gradient(135deg, #7c6ee0, #5f50c0)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: "#fff", fontSize: 14, fontWeight: 700,
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        marginBottom: 18, flexShrink: 0, cursor: "pointer",
+        boxShadow: "0 2px 10px rgba(108,92,231,0.35)",
+      }}>L</div>
+
+      {navItems.map(item => (
+        <button key={item.id} onClick={() => setActive(item.id)} style={{
+          width: 40, height: 40, borderRadius: 10,
+          background: active === item.id ? "rgba(108,92,231,0.2)" : "transparent",
+          border: active === item.id ? "1px solid rgba(108,92,231,0.3)" : "1px solid transparent",
+          color: active === item.id ? "#a09af0" : "rgba(255,255,255,0.35)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", transition: "all 0.2s",
+        }}
+          onMouseEnter={e => { if (active !== item.id) { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; } }}
+          onMouseLeave={e => { if (active !== item.id) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.35)"; } }}
+        >
+          <Icon d={icons[item.icon]} size={18} strokeWidth={active === item.id ? 1.8 : 1.5} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Header ───────────────────────────────────────────────────── */
+function Header() {
+  const [searchFocused, setSearchFocused] = useState(false);
+  return (
+    <div style={{
+      height: 58, background: "#0d0d10",
+      borderBottom: "1px solid rgba(255,255,255,0.05)",
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "0 24px", flexShrink: 0, gap: 16,
+    }}>
+      {/* Left */}
+      <div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ color: "#f0ede8", fontSize: 15, fontWeight: 600, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Welcome back</span>
+          <span style={{ fontSize: 15 }}>👋</span>
+        </div>
+        <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: "'Plus Jakarta Sans', sans-serif", marginTop: 1 }}>
+          Here's what's happening today
+        </div>
+      </div>
+
+      {/* Right */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {/* Search */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 8,
+          background: searchFocused ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.04)",
+          border: `1px solid ${searchFocused ? "rgba(108,92,231,0.4)" : "rgba(255,255,255,0.07)"}`,
+          borderRadius: 10, padding: "7px 12px",
+          transition: "all 0.2s", cursor: "text", minWidth: 180,
+        }}>
+          <Icon d={icons.search} size={14} stroke="rgba(255,255,255,0.35)" strokeWidth={2} />
+          <input
+            placeholder="Search content"
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+            style={{ background: "none", border: "none", outline: "none", color: "rgba(255,255,255,0.7)", fontSize: 12, fontFamily: "'Plus Jakarta Sans', sans-serif", width: "100%" }}
+          />
+          <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <span style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "rgba(255,255,255,0.3)", fontSize: 10, padding: "2px 5px", fontFamily: "monospace" }}>⌘</span>
+            <span style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "rgba(255,255,255,0.3)", fontSize: 10, padding: "2px 5px", fontFamily: "monospace" }}>K</span>
+          </div>
+        </div>
+
+        {/* Bell */}
+        <div style={{ position: "relative", cursor: "pointer" }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10,
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "rgba(255,255,255,0.55)",
+          }}>
+            <Icon d={icons.bell} size={16} strokeWidth={1.8} />
+          </div>
+          <div style={{
+            position: "absolute", top: -3, right: -3,
+            width: 17, height: 17, borderRadius: "50%",
+            background: "#7c6ee0",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "#fff", fontSize: 9, fontWeight: 700,
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            border: "2px solid #0d0d10",
+          }}>3</div>
+        </div>
+
+        {/* Profile */}
+        <div style={{
+          width: 34, height: 34, borderRadius: 9,
+          background: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: "rgba(255,255,255,0.5)", cursor: "pointer",
+        }}>
+          <Icon d={icons.more} size={16} strokeWidth={2.5} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main Content ─────────────────────────────────────────────── */
+function CourseContent() {
+  const chapters = [
+    { num: "01", title: "Introduction to the Course", dur: "5:20", done: true },
+    { num: "02", title: "Setting Up Your Environment", dur: "12:44", done: true },
+    { num: "03", title: "Core Concepts Deep Dive", dur: "37:45", active: true },
+    { num: "04", title: "Building Your First Project", dur: "28:10" },
+    { num: "05", title: "Advanced Patterns", dur: "41:03" },
+    { num: "06", title: "Testing & Deployment", dur: "19:55" },
+  ];
+
+  return (
+    <div style={{ flex: 1, display: "flex", gap: 0, height: "100%", overflow: "hidden" }}>
+      {/* Video area */}
+      <div style={{ flex: 1, padding: 24, overflowY: "auto", display: "flex", flexDirection: "column", gap: 20 }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <span style={{ background: "rgba(108,92,231,0.15)", border: "1px solid rgba(108,92,231,0.25)", color: "#a09af0", fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 6, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+              Chapter 03
+            </span>
+            <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 10 }}>·</span>
+            <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>37:45</span>
+          </div>
+          <h1 style={{ color: "#f0ede8", fontSize: 18, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", margin: 0, lineHeight: 1.3 }}>
+            Core Concepts Deep Dive
+          </h1>
+          <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, fontFamily: "'Plus Jakarta Sans', sans-serif", margin: "8px 0 0", lineHeight: 1.6 }}>
+            Master the foundational concepts with hands-on examples and real-world applications.
+          </p>
+        </div>
+
+        <VideoPlayer />
+
+        {/* Progress */}
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: 16, display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+              <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Course Progress</span>
+              <span style={{ color: "#a09af0", fontSize: 11, fontFamily: "'DM Mono', monospace" }}>38%</span>
+            </div>
+            <div style={{ height: 4, background: "rgba(255,255,255,0.07)", borderRadius: 99 }}>
+              <div style={{ width: "38%", height: "100%", background: "linear-gradient(90deg, #7c6ee0, #a09af0)", borderRadius: 99 }} />
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 16 }}>
+            {[["2", "Completed"], ["1", "In Progress"], ["3", "Remaining"]].map(([n, l]) => (
+              <div key={l} style={{ textAlign: "center" }}>
+                <div style={{ color: "#f0ede8", fontSize: 16, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{n}</div>
+                <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{l}</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Center Play/Pause Large Icon on Toggle */}
-      {!isPlaying && (
-        <div 
-          className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          onClick={togglePlay}
-        >
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/20 backdrop-blur-md border border-primary/30 text-4xl text-white animate-pulse">
-            ▶
+      {/* Chapter list */}
+      <div style={{
+        width: 280, borderLeft: "1px solid rgba(255,255,255,0.05)",
+        overflowY: "auto", padding: "20px 0", flexShrink: 0,
+      }}>
+        <div style={{ padding: "0 18px 14px", color: "rgba(255,255,255,0.4)", fontSize: 10, fontWeight: 600, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+          Chapters
+        </div>
+        {chapters.map(ch => (
+          <div key={ch.num} style={{
+            display: "flex", alignItems: "flex-start", gap: 12,
+            padding: "12px 18px", cursor: "pointer",
+            background: ch.active ? "rgba(108,92,231,0.1)" : "transparent",
+            borderLeft: ch.active ? "2px solid #7c6ee0" : "2px solid transparent",
+            transition: "background 0.2s",
+          }}
+            onMouseEnter={e => { if (!ch.active) e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
+            onMouseLeave={e => { if (!ch.active) e.currentTarget.style.background = "transparent"; }}
+          >
+            <div style={{
+              width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+              background: ch.done ? "rgba(108,92,231,0.2)" : ch.active ? "rgba(108,92,231,0.25)" : "rgba(255,255,255,0.05)",
+              border: `1px solid ${ch.done || ch.active ? "rgba(108,92,231,0.3)" : "rgba(255,255,255,0.08)"}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: ch.done ? "#a09af0" : ch.active ? "#c4bff8" : "rgba(255,255,255,0.25)",
+              fontSize: 10, fontWeight: 700, fontFamily: "'DM Mono', monospace",
+            }}>
+              {ch.done ? "✓" : ch.num}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ color: ch.active ? "#e8e5ff" : ch.done ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.45)", fontSize: 12, fontWeight: ch.active ? 600 : 400, fontFamily: "'Plus Jakarta Sans', sans-serif", lineHeight: 1.35, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {ch.title}
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.25)", fontSize: 10, marginTop: 3, fontFamily: "'DM Mono', monospace" }}>
+                {ch.dur}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Root App ─────────────────────────────────────────────────── */
+export default function App() {
+  const [activeNav, setActiveNav] = useState("videos");
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@300;400&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #0d0d10; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
+        input[type=range] { -webkit-appearance: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #fff; cursor: pointer; }
+        select option { background: #0d0d10; color: rgba(255,255,255,0.8); }
+      `}</style>
+
+      <div style={{ display: "flex", height: "100vh", background: "#0d0d10", overflow: "hidden" }}>
+        <Sidebar active={activeNav} setActive={setActiveNav} />
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <Header />
+          <div style={{ flex: 1, overflow: "hidden" }}>
+            <CourseContent />
           </div>
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 }

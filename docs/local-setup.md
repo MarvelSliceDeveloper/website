@@ -50,6 +50,15 @@ This is the easiest method because Docker will automatically download and run Po
    pnpm dev
    ```
 
+### Demo Login Credentials (Frontend)
+
+Use these accounts to access the UI until real authentication is wired.
+
+| Role | Email | Password | Landing Page |
+|------|-------|----------|--------------|
+| Student | student@lms.local | student123 | `/student/dashboard` |
+| Admin | admin@lms.local | admin123 | `/admin/mentorship` |
+
 ### Stopping Docker
 When you are done working for the day, you can stop the databases from consuming your RAM:
 ```bash

@@ -23,6 +23,8 @@
 | [Phase 11 — Quizzes & Certificates](./phases/phase-11-quizzes-certificates.md) | Quiz builder, auto-grading, PDF certificate generation |
 | [Phase 12 — Admin Panel & Launch](./phases/phase-12-admin-launch.md) | Admin features, platform deploy, go live |
 | [Mentorship Feature](./mentorship.md) | 1-on-1 mentorship system with admin management |
+| [Style Guide](./style-guide.md) | UI tokens, layout rules, and reusable design primitives |
+| [UI/UX Redesign Notes](./DesignUIUX.md) | Core redesign scope and implementation notes |
 | [Architecture Overview](./architecture.md) | Tech stack, folder structure, DB schema, integration flows |
 | [Auth API Endpoints](./auth-api.md) | Endpoints for Login, Register, Logout & Security features |
 | [Calendar & Graph API](./calendar-api.md) | Calendar sync, live sessions, webhooks, Graph module reference |
@@ -55,6 +57,17 @@
 
 ---
 
+## 🔐 Demo Login Credentials (Frontend)
+
+Use these accounts to access the UI until real authentication is wired.
+
+| Role | Email | Password | Landing Page |
+|------|-------|----------|--------------|
+| Student | student@lms.local | student123 | `/student/dashboard` |
+| Admin | admin@lms.local | admin123 | `/admin/mentorship` |
+
+---
+
 ## 👤 Creator
 
 | Field | Detail |
@@ -67,4 +80,3 @@
 ---
 
 *Last updated: May 2026*
-

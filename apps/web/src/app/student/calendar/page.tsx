@@ -45,7 +45,7 @@ export default function CalendarPage() {
       if (sessionsRes.ok) {
         const sessionsData = await sessionsRes.json();
         const sessions = sessionsData.sessions || [];
-        
+
         sessions.forEach((session: any) => {
           const date = new Date(session.scheduledAt);
           calendarEvents.push({
@@ -67,7 +67,7 @@ export default function CalendarPage() {
       if (ticketsRes.ok) {
         const ticketsData = await ticketsRes.json();
         const tickets = ticketsData.tickets || [];
-        
+
         tickets
           .filter((t: any) => t.status === "SCHEDULED" && t.scheduledAt)
           .forEach((ticket: any) => {
@@ -105,14 +105,14 @@ export default function CalendarPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
           <p className="text-sm text-muted mt-1">Your schedule at a glance</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-2 md:gap-3">
           {/* Legend */}
-          <div className="flex items-center gap-4 mr-4">
+          <div className="mr-0 flex items-center gap-3 md:mr-4 md:gap-4">
             <div className="flex items-center gap-1.5">
               <div className="h-3 w-3 rounded bg-primary/50" />
               <span className="text-xs text-muted">Live Sessions</span>
@@ -146,11 +146,10 @@ export default function CalendarPage() {
             <button
               key={v}
               onClick={() => setView(v)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                view === v
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${view === v
                   ? "bg-primary text-white shadow-lg shadow-primary/20"
                   : "bg-card border border-border text-muted-foreground hover:bg-card-hover hover:text-foreground"
-              }`}
+                }`}
             >
               {v.charAt(0).toUpperCase() + v.slice(1)}
             </button>
@@ -251,7 +250,7 @@ export default function CalendarPage() {
             .filter((e) => e.day === new Date().getDay())
             .sort((a, b) => a.hour - b.hour)
             .map((event) => (
-              <div key={event.id} className="glass-card p-5 flex items-center justify-between">
+              <div key={event.id} className="glass-card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
                   <div className="text-center min-w-[60px]">
                     <p className="text-lg font-bold text-foreground">{event.time.split(" ")[0]}</p>
@@ -265,9 +264,16 @@ export default function CalendarPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   {event.isLive && <LiveBadge size="lg" />}
-                  <a href={event.joinUrl} className={event.isLive ? "btn-primary text-sm" : "btn-secondary text-sm"}>
-                    {event.isLive ? "Join Now" : "View Details"}
-                  </a>
+                  {event.joinUrl ? (
+                    <a
+                      href={event.joinUrl}
+                      className={event.isLive ? "btn-primary text-sm" : "btn-secondary text-sm"}
+                    >
+                      {event.isLive ? "Join Now" : "View Details"}
+                    </a>
+                  ) : (
+                    <span className="text-xs text-muted">Join link pending</span>
+                  )}
                 </div>
               </div>
             ))}

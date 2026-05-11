@@ -102,19 +102,19 @@ export default function AdminMentorshipPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Admin</p>
           <h1 className="text-2xl font-bold text-foreground">
             Mentorship Management
           </h1>
-          <p className="text-sm text-muted mt-1">
+          <p className="mt-1 text-sm text-muted-foreground">
             Manage 1-on-1 mentorship requests and assign mentors to students
           </p>
         </div>
         <button
           onClick={fetchData}
-          className="flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-card-hover transition-colors"
+          className="btn-secondary"
         >
           <svg
             className="h-4 w-4"
@@ -133,8 +133,7 @@ export default function AdminMentorshipPage() {
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-5">
         <StatCard label="Total" value={stats.total} color="from-primary to-violet-500" />
         <StatCard label="Pending" value={stats.open} color="from-warning to-amber-400" />
         <StatCard label="Assigned" value={stats.assigned} color="from-accent to-cyan-400" />
@@ -142,7 +141,6 @@ export default function AdminMentorshipPage() {
         <StatCard label="Completed" value={stats.completed} color="from-muted to-slate-400" />
       </div>
 
-      {/* Filter Tabs */}
       <div className="flex flex-wrap gap-2">
         {[
           { key: "all", label: "All Requests" },
@@ -154,18 +152,16 @@ export default function AdminMentorshipPage() {
           <button
             key={tab.key}
             onClick={() => setFilter(tab.key)}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-              filter === tab.key
-                ? "bg-primary text-white"
-                : "bg-card border border-border text-muted hover:text-foreground"
-            }`}
+            className={`rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${filter === tab.key
+                ? "border-primary/30 bg-primary/20 text-primary-hover"
+                : "border-border bg-card text-muted hover:bg-card-hover hover:text-foreground"
+              }`}
           >
             {tab.label}
           </button>
         ))}
       </div>
 
-      {/* Tickets Table */}
       <div className="glass-card overflow-hidden">
         <div className="border-b border-border px-6 py-4">
           <h2 className="text-base font-semibold text-foreground">
@@ -185,7 +181,7 @@ export default function AdminMentorshipPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[860px]">
               <thead className="bg-card-hover">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
@@ -239,9 +235,8 @@ export default function AdminMentorshipPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
-                          statusColors[ticket.status]
-                        }`}
+                        className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusColors[ticket.status]
+                          }`}
                       >
                         {statusLabels[ticket.status]}
                       </span>
@@ -303,8 +298,8 @@ function StatCard({
 }) {
   return (
     <div className="glass-card p-4">
-      <div className={`h-1 w-full rounded-full bg-gradient-to-r ${color} mb-3`} />
-      <p className="text-xs font-medium text-muted uppercase tracking-wider">
+      <div className={`mb-3 h-1 w-full rounded-full bg-gradient-to-r ${color}`} />
+      <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted">
         {label}
       </p>
       <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>

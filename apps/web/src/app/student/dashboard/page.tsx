@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LiveBadge } from "@/components/ui/Badge";
 
 const stats = [
@@ -15,22 +16,27 @@ const upcomingSessions = [
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted mt-1">Track your learning progress</p>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Student</p>
+          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">Learning Dashboard</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Track sessions, progress, and mentorship in one place.</p>
+        </div>
+        <Link href="/student/courses" className="btn-secondary">
+          Browse Courses
+        </Link>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (
-          <div key={stat.label} className="glass-card p-5 group">
-            <div className="flex items-center justify-between">
+          <div key={stat.label} className="glass-card p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs font-medium text-muted uppercase tracking-wider">{stat.label}</p>
+                <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted">{stat.label}</p>
                 <p className="mt-2 text-3xl font-bold text-foreground">{stat.value}</p>
               </div>
-              <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${stat.color} text-xl opacity-80 group-hover:opacity-100 transition-opacity`}>
+              <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${stat.color} text-lg`}>
                 {stat.icon}
               </div>
             </div>
@@ -38,83 +44,58 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Upcoming Sessions */}
-      <div className="glass-card overflow-hidden">
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <h2 className="text-base font-semibold text-foreground">Upcoming Live Sessions</h2>
-          <a href="/sessions" className="text-xs font-medium text-primary hover:text-primary-hover transition-colors">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.3fr_1fr]">
+        <div className="glass-card overflow-hidden">
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+            <h2 className="text-base font-semibold text-foreground">Upcoming Live Sessions</h2>
+            <Link href="/student/sessions" className="text-xs font-medium text-primary hover:text-primary-hover transition-colors">
             View all →
-          </a>
-        </div>
-        <div className="divide-y divide-border">
-          {upcomingSessions.map((session) => (
-            <div key={session.id} className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-card-hover">
-              <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary text-sm">
-                  🎥
+          </Link>
+          </div>
+          <div className="divide-y divide-border">
+            {upcomingSessions.map((session) => (
+              <div key={session.id} className="flex flex-col items-start gap-3 px-5 py-4 transition-colors hover:bg-card-hover/60 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary text-sm">
+                    🎥
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{session.title}</p>
+                    <p className="text-xs text-muted">{session.course} · {session.time}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">{session.title}</p>
-                  <p className="text-xs text-muted">{session.course} · {session.time}</p>
+                <div className="flex items-center gap-2.5">
+                  {session.isLive ? (
+                    <>
+                      <LiveBadge />
+                      <Link href="/student/sessions" className="btn-primary text-xs py-1.5 px-4">Join</Link>
+                    </>
+                  ) : (
+                    <span className="text-xs text-muted">Upcoming</span>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                {session.isLive ? (
-                  <>
-                    <LiveBadge />
-                    <a href="#" className="btn-primary text-xs py-1.5 px-4">Join Now</a>
-                  </>
-                ) : (
-                  <span className="text-xs text-muted">Upcoming</span>
-                )}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* 1-on-1 Mentorship CTA */}
-      <div className="glass-card p-6 bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/20 text-2xl">
-              🤝
-            </div>
+        <div className="glass-card border-primary/25 bg-gradient-to-br from-primary/15 via-card to-card p-6">
+          <div className="flex h-full flex-col justify-between gap-5">
             <div>
-              <h3 className="text-base font-semibold text-foreground">
-                Need personalized help?
-              </h3>
-              <p className="text-sm text-muted mt-0.5">
-                Request a 1-on-1 mentorship session with an expert instructor
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary-hover">Mentorship</p>
+              <h3 className="mt-2 text-xl font-semibold text-foreground">Need personalized support?</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Request a 1-on-1 session with an instructor and get focused guidance on your blockers.
               </p>
             </div>
+            <Link href="/student/mentorship" className="btn-primary w-fit">Request Session</Link>
           </div>
-          <a
-            href="/mentorship"
-            className="btn-primary flex items-center gap-2"
-          >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Request Session
-          </a>
         </div>
       </div>
 
-      {/* Progress Section */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="glass-card p-6">
-          <h3 className="text-base font-semibold text-foreground mb-4">Recent Activity</h3>
+          <h3 className="mb-4 text-base font-semibold text-foreground">Recent Activity</h3>
           <div className="space-y-4">
             {["Completed Module 3 in React Pro", "Earned certificate for Backend 101", "Joined live session: TS Patterns"].map((activity, i) => (
               <div key={i} className="flex items-center gap-3">
@@ -125,7 +106,7 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="glass-card p-6">
-          <h3 className="text-base font-semibold text-foreground mb-4">Course Progress</h3>
+          <h3 className="mb-4 text-base font-semibold text-foreground">Course Progress</h3>
           <div className="space-y-4">
             {[
               { name: "TypeScript Mastery", progress: 75 },

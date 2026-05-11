@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { StatusBadge, LiveBadge } from "@/components/ui/Badge";
 
 const sessions = [
@@ -21,7 +22,7 @@ export default function SessionsPage() {
       {sessions.some((s) => s.status === "live") && (
         <div className="rounded-xl border border-success/20 bg-success/5 p-5">
           {sessions.filter((s) => s.status === "live").map((s) => (
-            <div key={s.id} className="flex items-center justify-between">
+            <div key={s.id} className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success/20 text-xl">🎥</div>
                 <div>
@@ -30,38 +31,40 @@ export default function SessionsPage() {
                   <p className="text-xs text-muted">{s.course} · {s.attendees} attendees</p>
                 </div>
               </div>
-              <a href="#" className="btn-primary text-sm">Join →</a>
+              <Link href={`/student/learn/${s.id}`} className="btn-primary text-sm">Join →</Link>
             </div>
           ))}
         </div>
       )}
 
       <div className="glass-card overflow-hidden">
-        <table className="w-full">
-          <thead><tr className="border-b border-border text-left">
-            <th className="px-6 py-3 text-xs font-medium text-muted uppercase">Session</th>
-            <th className="px-6 py-3 text-xs font-medium text-muted uppercase">Date</th>
-            <th className="px-6 py-3 text-xs font-medium text-muted uppercase">Status</th>
-            <th className="px-6 py-3 text-xs font-medium text-muted uppercase">Action</th>
-          </tr></thead>
-          <tbody className="divide-y divide-border/50">
-            {sessions.map((s) => (
-              <tr key={s.id} className="hover:bg-card-hover/50 transition-colors">
-                <td className="px-6 py-4">
-                  <p className="text-sm font-medium text-foreground">{s.title}</p>
-                  <p className="text-xs text-muted">{s.course} · {s.instructor}</p>
-                </td>
-                <td className="px-6 py-4 text-sm text-muted-foreground">{s.date} · {s.time}</td>
-                <td className="px-6 py-4"><StatusBadge status={s.status} /></td>
-                <td className="px-6 py-4">
-                  {s.status === "live" ? <a href="#" className="btn-primary text-xs py-1.5 px-3">Join</a>
-                   : s.status === "completed" ? <a href="#" className="text-xs text-primary hover:text-primary-hover">Recording</a>
-                   : <span className="text-xs text-muted">Upcoming</span>}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px]">
+            <thead><tr className="border-b border-border text-left">
+              <th className="px-6 py-3 text-xs font-medium text-muted uppercase">Session</th>
+              <th className="px-6 py-3 text-xs font-medium text-muted uppercase">Date</th>
+              <th className="px-6 py-3 text-xs font-medium text-muted uppercase">Status</th>
+              <th className="px-6 py-3 text-xs font-medium text-muted uppercase">Action</th>
+            </tr></thead>
+            <tbody className="divide-y divide-border/50">
+              {sessions.map((s) => (
+                <tr key={s.id} className="hover:bg-card-hover/50 transition-colors">
+                  <td className="px-6 py-4">
+                    <p className="text-sm font-medium text-foreground">{s.title}</p>
+                    <p className="text-xs text-muted">{s.course} · {s.instructor}</p>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-muted-foreground">{s.date} · {s.time}</td>
+                  <td className="px-6 py-4"><StatusBadge status={s.status} /></td>
+                  <td className="px-6 py-4">
+                    {s.status === "live" ? <Link href={`/student/learn/${s.id}`} className="btn-primary text-xs py-1.5 px-3">Join</Link>
+                      : s.status === "completed" ? <Link href={`/student/learn/${s.id}`} className="text-xs text-primary hover:text-primary-hover">Recording</Link>
+                        : <span className="text-xs text-muted">Upcoming</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
