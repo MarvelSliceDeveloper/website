@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { api } from "@/lib/api";
 
 const demoAccounts = {
   student: {
@@ -21,30 +22,41 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    if (
-      normalizedEmail === demoAccounts.admin.email &&
-      password === demoAccounts.admin.password
-    ) {
-      router.push(demoAccounts.admin.redirectTo);
-      return;
-    }
+    setIsSubmitting(true);
 
-    if (
-      normalizedEmail === demoAccounts.student.email &&
-      password === demoAccounts.student.password
-    ) {
+    try {
+      const result = await api.post<{
+        user?: { role?: string };
+      }>("/api/auth/login", {
+        email: normalizedEmail,
+        password,
+      });
+
+      const role = result?.user?.role;
+
+      if (role === "ADMIN") {
+        router.push(demoAccounts.admin.redirectTo);
+        return;
+      }
+
       router.push(demoAccounts.student.redirectTo);
-      return;
+    } catch (submitError) {
+      if (submitError instanceof Error) {
+        setError(submitError.message);
+      } else {
+        setError("Login failed. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setError("Invalid email or password.");
   };
 
   return (
@@ -108,7 +120,13 @@ export default function LoginPage() {
               />
             </div>
 
-            <button type="submit" className="btn-primary w-full">Sign in</button>
+            <button
+              type="submit"
+              className="btn-primary w-full"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Signing in..." : "Sign in"}
+            </button>
           </form>
 
           <div className="mt-6 rounded-xl border border-border bg-background/40 p-4 text-xs text-muted-foreground lg:hidden">

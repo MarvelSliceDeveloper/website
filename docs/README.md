@@ -57,9 +57,10 @@
 
 ---
 
-## 🔐 Demo Login Credentials (Frontend)
+## 🔐 Demo Login Credentials (API-backed)
 
-Use these accounts to access the UI until real authentication is wired.
+These demo accounts are created by `pnpm prisma:seed` and authenticate via `POST /api/auth/login`.
+Ensure the API is running before signing in.
 
 | Role | Email | Password | Landing Page |
 |------|-------|----------|--------------|

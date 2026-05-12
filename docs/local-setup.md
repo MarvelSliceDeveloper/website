@@ -40,7 +40,7 @@ This is the easiest method because Docker will automatically download and run Po
    pnpm prisma:migrate
    ```
 
-4. **Seed the Database**: Create your first default tenant and admin user:
+4. **Seed the Database**: Create demo admin + student accounts for API login:
    ```bash
    pnpm prisma:seed
    ```
@@ -50,9 +50,10 @@ This is the easiest method because Docker will automatically download and run Po
    pnpm dev
    ```
 
-### Demo Login Credentials (Frontend)
+### Demo Login Credentials (API-backed)
 
-Use these accounts to access the UI until real authentication is wired.
+These accounts are created by `pnpm prisma:seed` and authenticate via `POST /api/auth/login`.
+Ensure the API is running before signing in.
 
 | Role | Email | Password | Landing Page |
 |------|-------|----------|--------------|

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Prisma, TicketStatus } from '@prisma/client';
 import { prisma } from '../../utils/prisma';
 
 // Validation schemas
@@ -35,7 +36,7 @@ export const mentorshipService = {
         description: data.description,
         preferredDate: data.preferredDate ? new Date(data.preferredDate) : null,
         preferredTime: data.preferredTime || null,
-        status: 'OPEN',
+        status: TicketStatus.OPEN,
       },
       include: {
         student: {
@@ -67,9 +68,9 @@ export const mentorshipService = {
   /**
    * List all tickets (admin view)
    */
-  async listAllTickets(status?: string) {
-    const where = status ? { status } : {};
-    
+  async listAllTickets(status?: TicketStatus) {
+    const where: Prisma.MentorshipTicketWhereInput = status ? { status } : {};
+
     const tickets = await prisma.mentorshipTicket.findMany({
       where,
       include: {
@@ -126,7 +127,7 @@ export const mentorshipService = {
       where: { id: ticketId },
       data: {
         mentorId: data.mentorId,
-        status: 'ASSIGNED',
+        status: TicketStatus.ASSIGNED,
       },
       include: {
         student: {
@@ -151,7 +152,7 @@ export const mentorshipService = {
         scheduledAt: new Date(data.scheduledAt),
         teamsMeetingId: data.teamsMeetingId || null,
         joinUrl: data.joinUrl || null,
-        status: 'SCHEDULED',
+        status: TicketStatus.SCHEDULED,
       },
       include: {
         student: {
@@ -173,7 +174,7 @@ export const mentorshipService = {
     const ticket = await prisma.mentorshipTicket.update({
       where: { id: ticketId },
       data: {
-        status: 'COMPLETED',
+        status: TicketStatus.COMPLETED,
         resolvedAt: new Date(),
       },
       include: {
@@ -196,7 +197,7 @@ export const mentorshipService = {
     const ticket = await prisma.mentorshipTicket.update({
       where: { id: ticketId },
       data: {
-        status: 'CANCELLED',
+        status: TicketStatus.CANCELLED,
         resolvedAt: new Date(),
       },
       include: {
@@ -240,10 +241,10 @@ export const mentorshipService = {
   async getMentorshipStats() {
     const [total, open, assigned, scheduled, completed] = await Promise.all([
       prisma.mentorshipTicket.count(),
-      prisma.mentorshipTicket.count({ where: { status: 'OPEN' } }),
-      prisma.mentorshipTicket.count({ where: { status: 'ASSIGNED' } }),
-      prisma.mentorshipTicket.count({ where: { status: 'SCHEDULED' } }),
-      prisma.mentorshipTicket.count({ where: { status: 'COMPLETED' } }),
+      prisma.mentorshipTicket.count({ where: { status: TicketStatus.OPEN } }),
+      prisma.mentorshipTicket.count({ where: { status: TicketStatus.ASSIGNED } }),
+      prisma.mentorshipTicket.count({ where: { status: TicketStatus.SCHEDULED } }),
+      prisma.mentorshipTicket.count({ where: { status: TicketStatus.COMPLETED } }),
     ]);
 
     return { total, open, assigned, scheduled, completed };

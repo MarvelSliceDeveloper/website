@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { TicketStatus } from '@prisma/client';
 import { ZodError } from 'zod';
 import { AuthRequest } from '../../middleware/auth.middleware';
 import {
@@ -20,10 +21,10 @@ export const mentorshipController = {
       const data = CreateTicketSchema.parse(req.body);
       const ticket = await mentorshipService.createTicket(req.user.userId, data);
 
-      return res.status(201).json({ 
+      return res.status(201).json({
         success: true,
         message: 'Mentorship request submitted successfully',
-        ticket 
+        ticket
       });
     } catch (error: any) {
       if (error instanceof ZodError) {
@@ -57,7 +58,7 @@ export const mentorshipController = {
   async listAllTickets(req: AuthRequest, res: Response) {
     try {
       const { status } = req.query;
-      const tickets = await mentorshipService.listAllTickets(status as any);
+      const tickets = await mentorshipService.listAllTickets(status as TicketStatus | undefined);
       return res.status(200).json({ tickets });
     } catch (error: any) {
       console.error('Error listing all tickets:', error.message);
@@ -72,7 +73,7 @@ export const mentorshipController = {
   async getTicket(req: AuthRequest, res: Response) {
     try {
       const ticket = await mentorshipService.getTicket(req.params.id);
-      
+
       if (!ticket) {
         return res.status(404).json({ error: 'Ticket not found' });
       }
@@ -100,10 +101,10 @@ export const mentorshipController = {
       const data = AssignMentorSchema.parse(req.body);
       const ticket = await mentorshipService.assignMentor(req.params.id, req.user.userId, data);
 
-      return res.status(200).json({ 
+      return res.status(200).json({
         success: true,
         message: 'Mentor assigned successfully',
-        ticket 
+        ticket
       });
     } catch (error: any) {
       if (error instanceof ZodError) {
@@ -131,10 +132,10 @@ export const mentorshipController = {
       const data = ScheduleSessionSchema.parse(req.body);
       const ticket = await mentorshipService.scheduleSession(req.params.id, req.user.userId, data);
 
-      return res.status(200).json({ 
+      return res.status(200).json({
         success: true,
         message: 'Session scheduled successfully',
-        ticket 
+        ticket
       });
     } catch (error: any) {
       if (error instanceof ZodError) {
@@ -152,10 +153,10 @@ export const mentorshipController = {
   async completeTicket(req: AuthRequest, res: Response) {
     try {
       const ticket = await mentorshipService.completeTicket(req.params.id);
-      return res.status(200).json({ 
+      return res.status(200).json({
         success: true,
         message: 'Ticket marked as completed',
-        ticket 
+        ticket
       });
     } catch (error: any) {
       console.error('Error completing ticket:', error.message);
@@ -170,10 +171,10 @@ export const mentorshipController = {
   async cancelTicket(req: AuthRequest, res: Response) {
     try {
       const ticket = await mentorshipService.cancelTicket(req.params.id);
-      return res.status(200).json({ 
+      return res.status(200).json({
         success: true,
         message: 'Ticket cancelled successfully',
-        ticket 
+        ticket
       });
     } catch (error: any) {
       console.error('Error cancelling ticket:', error.message);

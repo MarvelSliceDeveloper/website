@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { MentorshipRequestModal } from "@/components/mentorship/MentorshipRequestModal";
 import { MentorshipTickets } from "@/components/mentorship/MentorshipTickets";
+import { api } from "@/lib/api";
 
 interface Ticket {
   id: string;
@@ -30,9 +31,7 @@ export default function MentorshipPage() {
   const fetchTickets = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/mentorship/tickets/my");
-      if (!response.ok) throw new Error("Failed to fetch tickets");
-      const data = await response.json();
+      const data = await api.get<{ tickets?: Ticket[] }>("/api/mentorship/tickets/my");
       setTickets(data.tickets || []);
     } catch (err: any) {
       setError(err.message);
@@ -51,16 +50,7 @@ export default function MentorshipPage() {
     preferredDate?: string;
     preferredTime?: string;
   }) => {
-    const response = await fetch("/api/mentorship/tickets", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to submit request");
-    }
+    await api.post("/api/mentorship/tickets", data);
 
     // Refresh tickets after successful submission
     await fetchTickets();

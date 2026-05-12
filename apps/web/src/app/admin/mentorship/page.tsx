@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
 
 interface Ticket {
   id: string;
@@ -70,23 +71,20 @@ export default function AdminMentorshipPage() {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const [ticketsRes, mentorsRes, statsRes] = await Promise.all([
-        fetch("/api/mentorship/tickets"),
-        fetch("/api/mentorship/mentors"),
-        fetch("/api/mentorship/stats"),
+      const [ticketsRes, mentorsRes, statsRes] = await Promise.allSettled([
+        api.get<{ tickets?: Ticket[] }>("/api/mentorship/tickets"),
+        api.get<{ mentors?: Mentor[] }>("/api/mentorship/mentors"),
+        api.get<{ stats: typeof stats }>("/api/mentorship/stats"),
       ]);
 
-      if (ticketsRes.ok) {
-        const ticketsData = await ticketsRes.json();
-        setTickets(ticketsData.tickets || []);
+      if (ticketsRes.status === "fulfilled") {
+        setTickets(ticketsRes.value.tickets || []);
       }
-      if (mentorsRes.ok) {
-        const mentorsData = await mentorsRes.json();
-        setMentors(mentorsData.mentors || []);
+      if (mentorsRes.status === "fulfilled") {
+        setMentors(mentorsRes.value.mentors || []);
       }
-      if (statsRes.ok) {
-        const statsData = await statsRes.json();
-        setStats(statsData.stats);
+      if (statsRes.status === "fulfilled") {
+        setStats(statsRes.value.stats);
       }
     } catch (error) {
       console.error("Failed to fetch mentorship data:", error);
@@ -153,8 +151,8 @@ export default function AdminMentorshipPage() {
             key={tab.key}
             onClick={() => setFilter(tab.key)}
             className={`rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${filter === tab.key
-                ? "border-primary/30 bg-primary/20 text-primary-hover"
-                : "border-border bg-card text-muted hover:bg-card-hover hover:text-foreground"
+              ? "border-primary/30 bg-primary/20 text-primary-hover"
+              : "border-border bg-card text-muted hover:bg-card-hover hover:text-foreground"
               }`}
           >
             {tab.label}

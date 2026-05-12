@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { LiveBadge } from "@/components/ui/Badge";
+import { api } from "@/lib/api";
 
 type ViewMode = "month" | "week" | "day";
 
@@ -34,17 +35,16 @@ export default function CalendarPage() {
   const fetchCalendarData = async () => {
     try {
       setIsLoading(true);
-      const [sessionsRes, ticketsRes] = await Promise.all([
-        fetch("/api/sessions"),
-        fetch("/api/mentorship/tickets/my"),
+      const [sessionsRes, ticketsRes] = await Promise.allSettled([
+        api.get<{ sessions?: any[] }>("/api/sessions"),
+        api.get<{ tickets?: any[] }>("/api/mentorship/tickets/my"),
       ]);
 
       const calendarEvents: CalendarEvent[] = [];
 
       // Process live sessions
-      if (sessionsRes.ok) {
-        const sessionsData = await sessionsRes.json();
-        const sessions = sessionsData.sessions || [];
+      if (sessionsRes.status === "fulfilled") {
+        const sessions = sessionsRes.value.sessions || [];
 
         sessions.forEach((session: any) => {
           const date = new Date(session.scheduledAt);
@@ -64,9 +64,8 @@ export default function CalendarPage() {
       }
 
       // Process scheduled mentorship sessions
-      if (ticketsRes.ok) {
-        const ticketsData = await ticketsRes.json();
-        const tickets = ticketsData.tickets || [];
+      if (ticketsRes.status === "fulfilled") {
+        const tickets = ticketsRes.value.tickets || [];
 
         tickets
           .filter((t: any) => t.status === "SCHEDULED" && t.scheduledAt)
@@ -147,8 +146,8 @@ export default function CalendarPage() {
               key={v}
               onClick={() => setView(v)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${view === v
-                  ? "bg-primary text-white shadow-lg shadow-primary/20"
-                  : "bg-card border border-border text-muted-foreground hover:bg-card-hover hover:text-foreground"
+                ? "bg-primary text-white shadow-lg shadow-primary/20"
+                : "bg-card border border-border text-muted-foreground hover:bg-card-hover hover:text-foreground"
                 }`}
             >
               {v.charAt(0).toUpperCase() + v.slice(1)}
