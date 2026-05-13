@@ -675,3 +675,56 @@ Handles Microsoft Graph webhook notifications when meetings are created, updated
 
 ---
 
+<!-- Source: phase-03-student-ui.md -->
+## Phase 3 Student UI API Contract
+
+This appendix maps the student dashboard screens to the request helper in `apps/web/src/lib/api.ts` and the backend endpoints already mounted in the API server.
+
+### Request Layer
+
+- Base URL: `NEXT_PUBLIC_API_URL` or `http://localhost:4000`
+- Browser requests include cookies via `credentials: "include"`
+- JSON is the default payload format for `POST` and `PATCH`
+- Non-2xx responses are normalized into thrown `Error` values in the web client
+
+### Student-Facing Endpoints
+
+| Screen | Method | Endpoint | Purpose |
+|---|---|---|---|
+| Login | POST | `/api/auth/login` | Authenticate student and set session cookie |
+| Dashboard live widget | GET | `/api/calendar/live` | Load current live sessions |
+| Dashboard today widget | GET | `/api/calendar/events/today` | Load today’s events |
+| Course live sessions | GET | `/api/sessions?courseId=...` | Load sessions for one course |
+| Recorded videos list | GET | `/api/recordings?courseId=...` | Load synced recordings |
+| Recorded playback URL | GET | `/api/recordings/:id/url` | Refresh signed playback link |
+| Video progress tracking | POST | `/api/recordings/progress` | Persist watch progress |
+| Mentorship list | GET | `/api/mentorship/tickets/my` | Load student mentorship tickets |
+| Mentorship create | POST | `/api/mentorship/tickets` | Submit a new mentorship request |
+| Calendar sync | POST | `/api/calendar/sync` | Refresh Microsoft calendar data |
+
+### Example Requests
+
+```ts
+await api.post('/api/mentorship/tickets', {
+  title: 'Need help with model evaluation',
+  description: 'I want help choosing and interpreting metrics for my classification project.',
+  preferredDate: '2026-05-20',
+  preferredTime: 'evening',
+});
+```
+
+```ts
+await api.post('/api/recordings/progress', {
+  recordingId: 'uuid',
+  watchedSeconds: 1500,
+});
+```
+
+### Response Expectations
+
+- `200` or `201` for successful reads and creates
+- `400` for validation errors
+- `401` when the auth cookie is missing or invalid
+- `403` when the user is authenticated but not allowed to perform the action
+- `404` when the resource does not exist
+

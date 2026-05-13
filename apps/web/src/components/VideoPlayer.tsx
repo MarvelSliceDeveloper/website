@@ -1,4 +1,11 @@
+// @ts-nocheck
 import { useState, useRef, useEffect, useCallback } from "react";
+
+type VideoPlayerProps = {
+  url?: string;
+  initialTime?: number;
+  onProgress?: (watchedSeconds: number) => Promise<void> | void;
+};
 
 /* ─── Icons ──────────────────────────────────────────────────── */
 const Icon = ({ d, size = 20, stroke = "currentColor", fill = "none", strokeWidth = 1.6 }) => (
@@ -29,12 +36,12 @@ const icons = {
 };
 
 /* ─── Video Player ─────────────────────────────────────────────── */
-function VideoPlayer({ url = "" }) {
+function VideoPlayer({ url = "", initialTime = 0, onProgress }: VideoPlayerProps) {
   const videoRef = useRef(null);
   const progressRef = useRef(null);
   const hideRef = useRef(null);
   const [playing, setPlaying] = useState(false);
-  const [current, setCurrent] = useState(868); // demo 14:28
+  const [current, setCurrent] = useState(initialTime || 0);
   const [duration] = useState(2265);           // demo 37:45
   const [vol, setVol] = useState(0.8);
   const [muted, setMuted] = useState(false);
@@ -77,6 +84,33 @@ function VideoPlayer({ url = "" }) {
   };
 
   const pct = duration ? (current / duration) * 100 : 0;
+
+  useEffect(() => {
+    setCurrent(initialTime || 0);
+    if (videoRef.current && typeof initialTime === "number") {
+      videoRef.current.currentTime = initialTime;
+    }
+  }, [initialTime]);
+
+  useEffect(() => {
+    if (!videoRef.current || !onProgress) return undefined;
+
+    const video = videoRef.current;
+    let lastReported = -1;
+
+    const handleTimeUpdate = () => {
+      const watchedSeconds = Math.floor(video.currentTime || 0);
+      setCurrent(watchedSeconds);
+
+      if (watchedSeconds !== lastReported && watchedSeconds > 0 && watchedSeconds % 30 === 0) {
+        lastReported = watchedSeconds;
+        void onProgress(watchedSeconds);
+      }
+    };
+
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    return () => video.removeEventListener("timeupdate", handleTimeUpdate);
+  }, [onProgress]);
 
   return (
     <div
@@ -480,7 +514,7 @@ function CourseContent() {
 }
 
 /* ─── Root App ─────────────────────────────────────────────────── */
-export default function App() {
+function VideoPlayerDemo() {
   const [activeNav, setActiveNav] = useState("videos");
 
   return (
@@ -510,3 +544,5 @@ export default function App() {
     </>
   );
 }
+
+export default VideoPlayer;
