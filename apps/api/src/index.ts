@@ -14,6 +14,9 @@ import { webhookRouter } from './modules/calendar/webhook.routes';
 import { sessionRouter } from './modules/sessions/session.routes';
 import { recordingRouter } from './modules/recordings/recording.routes';
 import { mentorshipRouter } from './modules/mentorship/mentorship.routes';
+import { courseRouter } from './modules/courses/course.routes';
+import { batchRouter } from './modules/batches/batch.routes';
+import { userRouter } from './modules/users/user.routes';
 import { eventsWebhookController } from './modules/sessions/events-webhook.controller';
 
 const app = express();
@@ -31,6 +34,9 @@ app.use('/api/calendar', calendarRouter);
 app.use('/api/sessions', sessionRouter);
 app.use('/api/recordings', recordingRouter);
 app.use('/api/mentorship', mentorshipRouter);
+app.use('/api/admin/courses', courseRouter);
+app.use('/api/admin/batches', batchRouter);
+app.use('/api/users', userRouter);
 app.use('/api/webhooks', webhookRouter);
 
 // Events webhook — for Teams-created meetings (no auth required)

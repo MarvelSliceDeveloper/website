@@ -27,6 +27,18 @@ enum TicketStatus {
   CANCELLED
 }
 
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum BatchStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+}
+
 model User {
   id             String              @id @default(cuid())
   name           String
@@ -45,34 +57,55 @@ model User {
 }
 
 model Course {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  price       Float
-  isPublished Boolean  @default(false)
-  modules     Module[]
-  batches     Batch[]
+  id                 String       @id @default(cuid())
+  title              String
+  slug               String       @unique
+  description        String
+  thumbnailUrl       String?
+  coverImageUrl      String?
+  status             CourseStatus @default(DRAFT)
+  price              Float
+  category           String?
+  tags               Json?        // string[]
+  learningObjectives Json?        // string[]
+  durationMinutes    Int?
+  createdBy          String?
+  publishedAt        DateTime?
+  modules            Module[]
+  batches            Batch[]
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 }
 
 model Module {
-  id       String        @id @default(cuid())
-  courseId String
-  title    String
-  order    Int
-  course   Course        @relation(fields: [courseId], references: [id])
-  sessions LiveSession[]
-  quizzes  Quiz[]
+  id              String        @id @default(cuid())
+  courseId         String
+  title           String
+  description     String?
+  order           Int
+  videoType       String?       // upload | youtube | vimeo | loom | url
+  videoUrl        String?
+  videoEmbedId    String?
+  durationSeconds Int?
+  isFreePreview   Boolean       @default(false)
+  resources       Json?         // [{name, url}]
+  course          Course        @relation(fields: [courseId], references: [id])
+  sessions        LiveSession[]
+  quizzes         Quiz[]
 }
 
 // A Batch is a course cohort — e.g. "Python Batch Jan 2025"
 model Batch {
   id           String              @id @default(cuid())
   courseId     String
-  instructorId String // Assigned mentor/instructor
-  name         String // e.g. "Python Batch Jan 2025"
+  instructorId String              // Assigned mentor/instructor
+  name         String              // e.g. "Python Batch Jan 2025"
   startDate    DateTime
   endDate      DateTime
   isActive     Boolean             @default(true)
+  maxStudents  Int?
+  status       BatchStatus         @default(UPCOMING)
+  description  String?
   course       Course              @relation(fields: [courseId], references: [id])
   instructor   User                @relation("BatchInstructor", fields: [instructorId], references: [id])
   enrollments  EnrollmentRequest[]

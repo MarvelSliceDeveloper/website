@@ -13,7 +13,7 @@ const demoAccounts = {
   admin: {
     email: "admin@lms.local",
     password: "admin123",
-    redirectTo: "/admin/mentorship",
+    redirectTo: "/admin/dashboard",
   },
 };
 

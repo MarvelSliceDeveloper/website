@@ -10,8 +10,16 @@ type NavItem = {
   badge?: number;
 };
 
-const mainNavItems: NavItem[] = [
-  { label: "Mentorship", href: "/admin/mentorship", icon: "ti-users", badge: 3 },
+const overviewItems: NavItem[] = [
+  { label: "Dashboard", href: "/admin/dashboard", icon: "ti-layout-dashboard" },
+  { label: "Courses", href: "/admin/courses", icon: "ti-book" },
+  { label: "Batches", href: "/admin/batches", icon: "ti-users-group" },
+  { label: "Sessions", href: "/admin/sessions", icon: "ti-video" },
+];
+
+const managementItems: NavItem[] = [
+  { label: "Users", href: "/admin/users", icon: "ti-user" },
+  { label: "Mentorship", href: "/admin/mentorship", icon: "ti-messages", badge: 3 },
 ];
 
 function NavGroup({
@@ -83,7 +91,8 @@ export default function AdminSidebar() {
       </div>
 
       <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
-        <NavGroup label="Main" items={mainNavItems} pathname={pathname} />
+        <NavGroup label="Overview" items={overviewItems} pathname={pathname} />
+        <NavGroup label="Management" items={managementItems} pathname={pathname} />
       </nav>
 
       <div className="border-t border-border p-3 space-y-2">
