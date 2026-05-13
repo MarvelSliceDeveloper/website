@@ -109,5 +109,16 @@ If you **do not** have Docker installed and do not want to install it, you can e
   - *If using Docker:* Make sure Docker Desktop is open and you ran `docker-compose up -d`.
   - *If using Cloud DB:* Make sure your internet connection is active and you copied the `.env` URL correctly.
 
+- **"Prisma schema validation (P1012): Environment variable not found: DATABASE_URL"**
+   - This can happen if your terminal has an empty `DATABASE_URL` value that overrides `.env`.
+   - In PowerShell, run:
+      ```powershell
+      Remove-Item Env:DATABASE_URL -ErrorAction SilentlyContinue
+      ```
+   - Then rerun:
+      ```bash
+      pnpm prisma:migrate
+      ```
+
 - **"Port 3000 or 4000 is already in use"**
   - You likely have another app (or an old instance of this app) running in the background. Kill the terminal or close the old process.

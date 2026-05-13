@@ -6,7 +6,8 @@ import { prisma } from '../../utils/prisma';
 export const CreateTicketSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
-  preferredDate: z.string().datetime().optional(),
+  // Accept date-only (YYYY-MM-DD) or datetime strings, and allow empty values from the form
+  preferredDate: z.string().optional(),
   preferredTime: z.string().optional(),
 });
 
