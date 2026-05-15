@@ -140,34 +140,7 @@ export default function MentorshipPage() {
         </div>
       </div>
 
-      {/* How It Works */}
-      <div className="glass-card p-6">
-        <h2 className="text-base font-semibold text-foreground mb-4">
-          How It Works
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <StepCard
-            number={1}
-            title="Submit Request"
-            description="Fill out the form with your topic and preferred time"
-          />
-          <StepCard
-            number={2}
-            title="Admin Review"
-            description="An admin will review and assign a mentor to you"
-          />
-          <StepCard
-            number={3}
-            title="Get Scheduled"
-            description="Your session will be scheduled and added to your calendar"
-          />
-          <StepCard
-            number={4}
-            title="Join Session"
-            description="Join your 1-on-1 session via the provided Teams link"
-          />
-        </div>
-      </div>
+
 
       {/* Modal */}
       <MentorshipRequestModal
@@ -209,24 +182,4 @@ function StatCard({
   );
 }
 
-function StepCard({
-  number,
-  title,
-  description,
-}: {
-  number: number;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="flex gap-3">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
-        {number}
-      </div>
-      <div>
-        <h3 className="text-sm font-medium text-foreground">{title}</h3>
-        <p className="text-xs text-muted mt-0.5">{description}</p>
-      </div>
-    </div>
-  );
-}
+

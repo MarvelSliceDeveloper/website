@@ -15,13 +15,19 @@ type Session = {
   recording: { id: string } | null;
 };
 
+type SessionsResponse = {
+  sessions?: Session[];
+};
+
 export default function AdminSessionsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get<Session[]>("/api/sessions")
-      .then(setSessions)
+    api.get<SessionsResponse>("/api/sessions")
+      .then((response) => {
+        setSessions(Array.isArray(response.sessions) ? response.sessions : []);
+      })
       .catch(() => setSessions([]))
       .finally(() => setLoading(false));
   }, []);
@@ -93,9 +99,8 @@ function SessionCard({ session, upcoming }: { session: Session; upcoming: boolea
   return (
     <div className="glass-card p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-3">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${
-          upcoming ? "bg-primary/20" : "bg-muted/10"
-        }`}>
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${upcoming ? "bg-primary/20" : "bg-muted/10"
+          }`}>
           {upcoming ? "📅" : "🎬"}
         </div>
         <div>

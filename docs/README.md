@@ -30,6 +30,7 @@
 | [Calendar & Graph API](./calendar-api.md) | Calendar sync, live sessions, webhooks, Graph module reference |
 | [Sessions API](./sessions-api.md) | Live session CRUD, Teams sync webhook, attendance |
 | [Recordings API](./recordings-api.md) | Recording sync, playback URLs, watch progress |
+| [Changelog](./CHANGELOG.md) | Recent repository updates and notable UI/API changes |
 | [Timeline & Milestones](./timeline.md) | Gantt overview, key milestones, risk buffer |
 | [Local Setup Guide](./local-setup.md) | How to run the project locally (with or without Docker) |
 | [Command Reference](./commands.md) | Every CLI command for dev, testing, building, deploying |
