@@ -77,7 +77,7 @@ Ensure the API is running before signing in.
 | **Created By** | Harish Kumar |
 | **Project** | LMS Portal — Centralized Content Marketplace |
 | **Started** | May 2026 |
-| **Contact** | *Add your email/LinkedIn/GitHub here* |
+| **Contact** | harishkumarjohnson@gmail.com |
 
 ---
 
