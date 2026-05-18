@@ -8,7 +8,7 @@ const demoAccounts = {
   student: {
     email: "student@lms.local",
     password: "student123",
-    redirectTo: "/student/dashboard",
+    redirectTo: "/student/",
   },
   admin: {
     email: "admin@lms.local",

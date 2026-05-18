@@ -12,7 +12,7 @@
 | [Phase 0 — Pre-Build Foundation](./phases/phase-00-pre-build.md) | CI/CD, testing, monitoring, dev environment — **before any code** |
 | [Phase 1 — Foundation & Setup](./phases/phase-01-foundation.md) | Monorepo, Prisma, shared types, env config |
 | [Phase 2 — Authentication](./phases/phase-02-authentication.md) | JWT, Microsoft OAuth, MSAL, token encryption |
-| [Phase 3 — Student UI & Dashboard](./phases/phase-03-student-ui.md) | Prioritized Student Dashboard, progression bar, 1-on-1 requests |
+| [Phase 3 — Student UI & Dashboard](./phases/phase-03-student-ui.md) | ✅ **IMPLEMENTED** — Single-page view-stack portal at `/student` (10 views, no sidebar) |
 | [Phase 4 — Batch & Enrollment Management](./phases/phase-04-batch.md) | Cohorts, manual approvals, instructor assignment |
 | [Phase 5 — Azure AD & Graph API Setup](./phases/phase-05-azure-graph.md) | App registration, API permissions, token exchange |
 | [Phase 6 — Calendar Sync & UI](./phases/phase-06-calendar.md) | MS Calendar sync, CalendarView, Live Now badge |
@@ -65,8 +65,8 @@ Ensure the API is running before signing in.
 
 | Role | Email | Password | Landing Page |
 |------|-------|----------|--------------|
-| Student | student@lms.local | student123 | `/student/dashboard` |
-| Admin | admin@lms.local | admin123 | `/admin/mentorship` |
+| Student | student@lms.local | student123 | `/student` |
+| Admin | admin@lms.local | admin123 | `/admin/dashboard` |
 
 ---
 
@@ -81,4 +81,4 @@ Ensure the API is running before signing in.
 
 ---
 
-*Last updated: May 2026*
+*Last updated: 18 May 2026 — Single-page student portal migration complete.*

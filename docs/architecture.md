@@ -115,61 +115,87 @@ Students watch pre-recorded videos & live recordings, take quizzes, submit assig
 
 ## 06 — Frontend Structure (`/apps/web`)
 
+> ⚠️ **May 2026 update:** The student portal was migrated to a single-page view-stack. See §06-A for the new student structure.
+
+### 06-A — Student Portal (single-page, implemented)
+
 ```
-/app
-  /(auth)
-    /login
-    /register
-    /ms-callback              → Microsoft OAuth redirect handler
+/app/student/
+  page.tsx                   → Main portal — view-stack state machine (renders all views)
+  layout.tsx                 → Pass-through (no shell; shell is inside page.tsx)
+  _types/
+    student-portal.ts        → ViewName | ViewState discriminated union
+  _views/
+    HomeView.tsx             → Dashboard: count-up stats, section grid, schedule, continue-learning
+    CoursesView.tsx          → My Courses: filter tabs, search, progress bars
+    BatchDetailView.tsx      → Batch detail: Sessions / Recordings / Progress tabs
+    RecordingPlayerView.tsx  → Video player with next-up recording list
+    LiveSessionsView.tsx     → Live/Upcoming/Past sessions with Teams join
+    CalendarView.tsx         → FullCalendar wrapper + legend + this-week list
+    CalendarWidget.tsx       → FullCalendar inner (dynamic import, ssr: false)
+    MentorshipView.tsx       → 1-on-1 ticket list + inline request form
+    CertificatesView.tsx     → Earned certificates + in-progress tracker
+    BrowseCatalogueView.tsx  → Course catalogue with search + tag filters
+    CourseDetailView.tsx     → Course detail + enroll CTA with confirmation
 
-  /(student)
-    /dashboard                → Enrolled batches, upcoming sessions, progress
-    /courses
-      /page.tsx               → Course catalogue
-      /[courseId]/page.tsx    → Course detail + enroll CTA
-    /batch/[batchId]
-      /sessions               → Scheduled live sessions for this batch
-      /recordings             → Past recordings for this batch
-      /learn/[sessionId]      → Individual recording stream (SharePoint)
-    /calendar                 → MS Calendar view + Live Now badge
-    /live/[meetingId]         → Join live Teams session page
-    /certificates             → Download earned certificates
+/components/
+  StudentPortalShell.tsx     → No-sidebar header shell:
+                               back button · logo · breadcrumbs ·
+                               notification bell (slide-in drawer) ·
+                               avatar dropdown (Profile / Settings / Sign Out)
 
-  /(instructor)
-    /dashboard                → Assigned batches overview
-    /batch/[batchId]
-      /students               → Students in this batch
-      /sessions               → Sessions scheduled by admin
-      /recordings             → Recordings from past sessions
+/lib/
+  api.ts                     → Shared fetch helper (NEXT_PUBLIC_API_URL)
+  student-mock-data.ts       → Full mock data + shared TypeScript types for all 10 views
 
-  /(admin)
-    /dashboard                → Platform overview: users, revenue, active batches
-    /courses                  → Create / edit / publish courses
-    /batches
-      /page.tsx               → All batches (filter by course, status)
-      /new                    → Create new batch, assign instructor, set dates
-      /[batchId]
-        /students             → Enrolled students, approve/reject pending
-        /sessions             → Schedule Teams meeting, view all sessions
-        /recordings           → All recordings for this batch
-    /enrollments              → All pending enrollment requests (approve/reject)
-    /users                    → Manage all students and instructors
-    /payments                 → Revenue, transactions, Razorpay dashboard
+.env.local
+  NEXT_PUBLIC_USE_MOCK_DATA  → true = mock data | false = real API
+  NEXT_PUBLIC_API_URL        → Backend URL (default: http://localhost:4000)
+  NEXT_PUBLIC_BASE_URL       → Public base URL for the web app
+```
 
-/components
-  /ui          → shadcn/ui base components
-  /course      → CourseCard, CurriculumSidebar
-  /batch       → BatchCard, StudentList, EnrollmentRequestList
-  /calendar    → CalendarView, LiveBadge
-  /video       → TeamsRecordingPlayer, SessionCard
-  /layout      → Navbar, Sidebar, RoleShell
+**Navigation model:** All views share `/student`. The current view is tracked in React state as a `ViewState[]` stack. The shell's Back button pops the stack; breadcrumbs jump to any level.
 
-/lib
-  /msal.ts     → Microsoft MSAL config
-  /api.ts      → TanStack Query API client
-  /auth.ts     → NextAuth config (MS Provider + credentials)
+---
 
-/hooks
+### 06-B — Admin Portal (multi-route, in progress)
+
+```
+/app/admin/
+  dashboard/page.tsx         → Platform overview: users, revenue, active batches
+  courses/page.tsx           → Create / edit / publish courses
+  batches/
+    page.tsx                 → All batches (filter by course, status)
+    new/                     → Create batch, assign instructor, set dates
+    [batchId]/
+      students/              → Enrolled students, approve/reject
+      sessions/              → Schedule Teams meeting, manage sessions
+      recordings/            → All recordings for this batch
+  enrollments/page.tsx       → Pending enrollment requests
+  users/page.tsx             → Manage students and instructors
+  sessions/page.tsx          → Global sessions view
+  payments/page.tsx          → Revenue, transactions
+  mentorship/page.tsx        → Mentorship ticket management
+```
+
+---
+
+### 06-C — Auth & Shared
+
+```
+/app/login/page.tsx          → Email/password login (demo accounts pre-filled)
+/app/register/page.tsx       → Student self-registration
+
+/components/
+  Sidebar.tsx                → Admin sidebar (still multi-route)
+  ui/                        → Shared UI primitives
+
+/lib/
+  api.ts                     → fetch wrapper — reads NEXT_PUBLIC_API_URL
+  msal.ts                    → Microsoft MSAL config (for admin MS OAuth)
+  auth.ts                    → NextAuth config
+
+/hooks/
   useCalendarEvents.ts
   useRecordings.ts
   useLiveSessions.ts
@@ -646,4 +672,5 @@ Student gets access to batch sessions, pre-recorded videos, and materials
 
 ---
 
-*LMS Portal — Revised Architecture · Single-Org · Batch-Cohort Model · Admin-Driven Sessions*
+*LMS Portal — Revised Architecture · Single-Org · Batch-Cohort Model · Admin-Driven Sessions*  
+*Last updated: 18 May 2026 — Student portal migrated to single-page view-stack.*

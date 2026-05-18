@@ -1,5 +1,77 @@
-# Phase 3 — Student Dashboard: Detailed UI/UX Plan
-> Reference: Intellipaat · Duration: Weeks 4–5 · Status: Pending
+# Phase 3 — Student Portal: Single-Page Design Implementation
+> Reference: `Student_Portal_SinglePage_Design.md` · Duration: Weeks 4–5 · **Status: ✅ IMPLEMENTED**
+
+---
+
+## ⚠️ Architecture Change — May 2026
+
+The original Phase 3 plan (sidebar + multi-route) has been **superseded** by the Single-Page View-Stack architecture.
+
+### What Changed
+| Before | After |
+|---|---|
+| Sidebar navigation | No sidebar — header bar only |
+| Multi-route (`/student/courses`, `/student/sessions`, etc.) | **One URL** (`/student`) — all views via React state |
+| `StudentShell.tsx` with `Sidebar.tsx` | `StudentPortalShell.tsx` (header only) |
+| 7 separate page files | One `page.tsx` + 10 view components in `_views/` |
+
+### New File Structure
+```
+apps/web/src/app/student/
+├── page.tsx                    ← Main portal (view stack state machine)
+├── layout.tsx                  ← Pass-through (no shell)
+├── _types/
+│   └── student-portal.ts       ← ViewName, ViewState types
+└── _views/
+    ├── HomeView.tsx             ← Dashboard: stats, section grid, schedule, continue learning
+    ├── CoursesView.tsx          ← My Courses: filter, search, progress bars
+    ├── BatchDetailView.tsx      ← Batch: Sessions/Recordings/Progress tabs
+    ├── RecordingPlayerView.tsx  ← Video player with next-up list
+    ├── LiveSessionsView.tsx     ← Live/Upcoming/Past sessions
+    ├── CalendarView.tsx         ← FullCalendar month/week/list view
+    ├── CalendarWidget.tsx       ← FullCalendar inner widget (dynamic import)
+    ├── MentorshipView.tsx       ← 1-on-1 requests + inline form
+    ├── CertificatesView.tsx     ← Earned + in-progress certificates
+    ├── BrowseCatalogueView.tsx  ← Course catalogue with search/filter
+    └── CourseDetailView.tsx     ← Course detail + enroll CTA
+
+apps/web/src/components/
+└── StudentPortalShell.tsx      ← New header-only shell (back btn, logo, notif, avatar)
+
+apps/web/src/lib/
+└── student-mock-data.ts        ← Full mock data (toggle via NEXT_PUBLIC_USE_MOCK_DATA)
+
+apps/web/.env.local
+└── NEXT_PUBLIC_USE_MOCK_DATA=true   ← Set to false to use real API
+```
+
+### Features Implemented (v1.0)
+- ✅ Dynamic greeting + time-based salutation
+- ✅ Count-up animated stat cards (Enrolled, Completed, Live Today, Certificates)
+- ✅ 6-card section grid with live pulse badge on active sessions
+- ✅ Today's schedule strip (live sessions + open mentorship tickets)
+- ✅ Continue Learning strip (last 2 in-progress recordings)
+- ✅ My Courses view with filter (All/Active/Completed/Pending) + search
+- ✅ Batch Detail view with Sessions/Recordings/Progress tabs
+- ✅ Recording Player view with next-up list
+- ✅ Live Sessions view (Live/Upcoming/Past groups + Teams join)
+- ✅ Calendar view (FullCalendar month/week/list + dark theme)
+- ✅ Mentorship view with inline request form + ticket cards
+- ✅ Certificates view (Earned with Download/Share + In Progress)
+- ✅ Browse Catalogue with search + tag filters
+- ✅ Course Detail with curriculum, what-you'll-learn, enroll CTA
+- ✅ Back button + breadcrumb trail in header
+- ✅ Notification bell with slide-in drawer
+- ✅ Avatar dropdown (Profile, Settings, Sign Out)
+- ✅ Slide-in view transition animation (28ms ease)
+- ✅ Mock/real API toggle via `NEXT_PUBLIC_USE_MOCK_DATA`
+
+### Packages Added
+- `@fullcalendar/react` + plugins (daygrid, timegrid, list, interaction, core)
+
+---
+
+## Original Phase 3 Specification (preserved for reference)
 
 ---
 
