@@ -5,12 +5,15 @@ import {
   IconArrowLeft,
   IconBell,
   IconChevronDown,
+  IconMoon,
   IconSchool,
+  IconSun,
   IconLogout,
   IconSettings,
   IconUser,
   IconX,
 } from "@tabler/icons-react";
+import StudentTopNoticeBar from "@/components/student/StudentTopNoticeBar";
 
 export interface Breadcrumb {
   label: string;
@@ -49,12 +52,20 @@ export default function StudentPortalShell({
 }: StudentPortalShellProps) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [notifications, setNotifications] = useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
 
   const notifRef = useRef<HTMLDivElement>(null);
   const avatarRef = useRef<HTMLDivElement>(null);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("lms-student-theme");
+    const nextTheme = saved === "light" ? "light" : "dark";
+    setTheme(nextTheme);
+    document.documentElement.setAttribute("data-theme", nextTheme);
+  }, []);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -80,6 +91,12 @@ export default function StudentPortalShell({
 
   return (
     <div className="min-h-screen bg-background">
+      <StudentTopNoticeBar
+        text="Please click here for this week agenda"
+        ctaLabel="Join Now"
+        ctaHref="/student"
+      />
+
       {/* ── Top Header Bar ─────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-6">
@@ -89,9 +106,8 @@ export default function StudentPortalShell({
             {/* Back button */}
             <button
               onClick={onBack}
-              className={`sp-back-btn flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-muted transition-all hover:border-primary/40 hover:text-foreground ${
-                showBack ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-              }`}
+              className={`sp-back-btn flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-muted transition-all hover:border-primary/40 hover:text-foreground ${showBack ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+                }`}
               aria-label="Go back"
             >
               <IconArrowLeft size={15} stroke={2} />
@@ -100,7 +116,7 @@ export default function StudentPortalShell({
 
             {/* Logo — always returns to home */}
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-violet-600">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-linear-to-br from-primary to-violet-600">
                 <IconSchool size={17} className="text-white" />
               </div>
               <span className="hidden text-sm font-bold tracking-tight text-foreground sm:inline">
@@ -117,12 +133,12 @@ export default function StudentPortalShell({
                     {crumb.onClick ? (
                       <button
                         onClick={crumb.onClick}
-                        className="max-w-[120px] truncate transition-colors hover:text-foreground"
+                        className="max-w-30 truncate transition-colors hover:text-foreground"
                       >
                         {crumb.label}
                       </button>
                     ) : (
-                      <span className="max-w-[140px] truncate text-muted-foreground">{crumb.label}</span>
+                      <span className="max-w-35 truncate text-muted-foreground">{crumb.label}</span>
                     )}
                   </span>
                 ))}
@@ -132,6 +148,20 @@ export default function StudentPortalShell({
 
           {/* Right: Notification bell + Avatar */}
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                const nextTheme = theme === "dark" ? "light" : "dark";
+                setTheme(nextTheme);
+                document.documentElement.setAttribute("data-theme", nextTheme);
+                window.localStorage.setItem("lms-student-theme", nextTheme);
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              title={theme === "dark" ? "Light mode" : "Dark mode"}
+            >
+              {theme === "dark" ? <IconSun size={17} stroke={1.8} /> : <IconMoon size={17} stroke={1.8} />}
+            </button>
+
             {/* Notification Bell */}
             <div ref={notifRef} className="relative">
               <button
@@ -191,7 +221,7 @@ export default function StudentPortalShell({
                 className="flex h-9 items-center gap-2 rounded-xl border border-border bg-card px-2.5 text-sm font-medium text-foreground transition-colors hover:border-border-hover"
                 aria-label="User menu"
               >
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-primary to-violet-600 text-[11px] font-bold text-white">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-primary to-violet-600 text-[11px] font-bold text-white">
                   A
                 </div>
                 <span className="hidden sm:inline">Arjun</span>

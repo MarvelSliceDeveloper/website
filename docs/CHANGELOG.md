@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-05-19 — Student Portal API Linkage + UI Cleanup ✅
+
+**Backend linkage:** Connected the student recordings experience to API-backed batch and recording payloads, and cleaned up the reusable UI primitives so diagnostics are resolved.
+
+### Updated
+- `apps/web/src/app/student/page.tsx` — Batch loading now merges `/api/batches/:id` with `/api/recordings?batchId=...` so recordings and modules are hydrated from backend data.
+- `apps/api/src/modules/recordings/recording.service.ts` — Batch recordings now return `sessionId`, `moduleId`, and `moduleTitle` for exact module grouping.
+- `apps/web/src/app/student/_views/BatchDetailView.tsx` — Recordings list uses `StudentTable` + `PaginationBar` with backend-linked data.
+- `apps/web/src/app/student/_views/RecordingPlayerView.tsx` — Module accordion groups recordings by explicit `moduleId`.
+- `apps/web/src/components/student/StudentTable.tsx` — Added compatibility support for `emptyMessage`/`emptyText` prop usage.
+
+### Diagnostics Fixed
+- Updated Tailwind utility names to accepted `bg-linear-*` / `max-w-*` / `min-w-*` forms where flagged.
+- Suppressed the `@theme` CSS warning in `globals.css` while keeping Tailwind token mapping intact.
+
 ## 2026-05-18 — Student Portal Single-Page Migration ✅
 
 **Architecture change:** Replaced the sidebar + multi-route student portal with a **single-page view-stack** at `/student`.

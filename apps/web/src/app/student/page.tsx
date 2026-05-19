@@ -11,6 +11,7 @@ import type { ViewState } from "./_types/student-portal";
 import {
   MOCK_ENABLED,
   MOCK_STATS,
+  MOCK_OVERDUE_ASSIGNMENTS,
   MOCK_ENROLLED_COURSES,
   MOCK_BATCHES,
   MOCK_LIVE_SESSIONS,
@@ -20,6 +21,7 @@ import {
   MOCK_CATALOGUE,
   MOCK_CONTINUE_LEARNING,
   type DashboardStats,
+  type OverdueAssignment,
   type EnrolledCourse,
   type Batch,
   type LiveSession,
@@ -46,6 +48,7 @@ import CourseDetailView from "./_views/CourseDetailView";
 
 interface PortalData {
   stats: DashboardStats;
+  overdueAssignments: OverdueAssignment[];
   enrolledCourses: EnrolledCourse[];
   batches: Record<string, Batch>;
   liveSessions: LiveSession[];
@@ -56,12 +59,53 @@ interface PortalData {
   continueLearning: ContinueLearningItem[];
 }
 
+interface ApiBatchSessionRecord {
+  id: string;
+  scheduledAt: string;
+  module?: {
+    id: string;
+    title: string;
+  } | null;
+  recording?: {
+    id: string;
+    syncedAt: string;
+  } | null;
+}
+
+interface ApiBatchDetailResponse {
+  batch: {
+    id: string;
+    course: { id: string; title: string };
+    instructor: { id: string; name: string; email: string };
+    name: string;
+    startDate: string;
+    endDate: string;
+    sessions: ApiBatchSessionRecord[];
+  };
+}
+
+interface ApiRecordingResponse {
+  recordings: Array<{
+    id: string;
+    sessionId: string;
+    moduleId?: string | null;
+    moduleTitle?: string | null;
+    session: {
+      id: string;
+      scheduledAt: string;
+      module?: { id: string; title: string } | null;
+    };
+    progress: Array<{ watchedSeconds: number; completedAt: string | null }>;
+  }>;
+}
+
 async function fetchPortalData(): Promise<PortalData> {
   if (MOCK_ENABLED) {
     // Simulate a small network delay for realism
     await new Promise((r) => setTimeout(r, 300));
     return {
       stats: MOCK_STATS,
+      overdueAssignments: MOCK_OVERDUE_ASSIGNMENTS,
       enrolledCourses: MOCK_ENROLLED_COURSES,
       batches: MOCK_BATCHES,
       liveSessions: MOCK_LIVE_SESSIONS,
@@ -74,13 +118,16 @@ async function fetchPortalData(): Promise<PortalData> {
   }
 
   // Real API calls — run in parallel
-  const [enrolled, sessions, calEvents, tickets, certs, catalogue] = await Promise.all([
+  const [enrolled, sessions, calEvents, tickets, certs, catalogue, overdueAssignments] = await Promise.all([
     api.get<{ courses: EnrolledCourse[] }>("/api/courses/enrolled").catch(() => ({ courses: MOCK_ENROLLED_COURSES })),
     api.get<{ sessions: LiveSession[] }>("/api/sessions/live").catch(() => ({ sessions: MOCK_LIVE_SESSIONS })),
     api.get<{ events: CalendarEvent[] }>("/api/calendar/events").catch(() => ({ events: MOCK_CALENDAR_EVENTS })),
     api.get<{ tickets: MentorshipTicket[] }>("/api/mentorship/tickets/my").catch(() => ({ tickets: MOCK_MENTORSHIP_TICKETS })),
     api.get<{ certificates: Certificate[] }>("/api/certificates/my").catch(() => ({ certificates: MOCK_CERTIFICATES })),
     api.get<{ courses: CatalogueCourse[] }>("/api/courses/catalogue").catch(() => ({ courses: MOCK_CATALOGUE })),
+    api
+      .get<{ items: OverdueAssignment[] }>("/api/student/assignments/overdue")
+      .catch(() => ({ items: [] })),
   ]);
 
   return {
@@ -90,6 +137,7 @@ async function fetchPortalData(): Promise<PortalData> {
       liveTodayCount: sessions.sessions.filter((s) => s.status === "LIVE").length,
       certificatesCount: (certs.certificates ?? []).filter((c) => c.earned).length,
     },
+    overdueAssignments: overdueAssignments.items,
     enrolledCourses: enrolled.courses,
     batches: MOCK_BATCHES, // batches loaded on demand
     liveSessions: sessions.sessions,
@@ -104,8 +152,64 @@ async function fetchPortalData(): Promise<PortalData> {
 async function fetchBatch(batchId: string): Promise<Batch | null> {
   if (MOCK_ENABLED) return MOCK_BATCHES[batchId] ?? null;
   try {
-    const res = await api.get<{ batch: Batch }>(`/api/batches/${batchId}`);
-    return res.batch;
+    const [batchRes, recordingsRes] = await Promise.all([
+      api.get<ApiBatchDetailResponse>(`/api/batches/${batchId}`),
+      api.get<ApiRecordingResponse>(`/api/recordings?batchId=${batchId}`),
+    ]);
+
+    const batch = batchRes.batch;
+    const recordingsBySession = new Map(recordingsRes.recordings.map((recording) => [recording.sessionId, recording]));
+
+    const recordings: Batch["recordings"] = batch.sessions.map((session, index) => {
+      const matchedRecording = recordingsBySession.get(session.id);
+      const watchedPercent = matchedRecording
+        ? matchedRecording.progress.reduce((max, progress) => {
+          const durationSeconds = 100;
+          const percent = Math.min(100, Math.round((progress.watchedSeconds / durationSeconds) * 100));
+          return Math.max(max, percent);
+        }, 0)
+        : 0;
+
+      return {
+        id: matchedRecording?.id ?? session.id,
+        sessionId: session.id,
+        moduleId: matchedRecording?.moduleId ?? session.module?.id ?? undefined,
+        dayLabel: `Day ${index + 1}`,
+        title: session.module?.title ?? matchedRecording?.moduleTitle ?? "Recording",
+        duration: matchedRecording ? "Recorded session" : "Pending",
+        watchedPercent,
+        videoUrl: "",
+      };
+    });
+
+    const modules = Array.from(
+      new Map(
+        batch.sessions
+          .map((session) => session.module)
+          .filter((module): module is NonNullable<typeof module> => Boolean(module))
+          .map((module) => [module.id, { id: module.id, title: module.title, completionPercent: 0 }])
+      ).values()
+    );
+
+    return {
+      id: batch.id,
+      courseTitle: batch.course.title,
+      batchLabel: batch.name,
+      instructor: batch.instructor.name,
+      startDate: batch.startDate,
+      endDate: batch.endDate,
+      overallProgress: recordings.length > 0 ? Math.round(recordings.reduce((sum, item) => sum + item.watchedPercent, 0) / recordings.length) : 0,
+      sessions: batch.sessions.map((session, index) => ({
+        id: session.id,
+        dayLabel: `Day ${index + 1}`,
+        title: session.module?.title ?? "Session",
+        status: "PAST",
+        scheduledAt: session.scheduledAt,
+        instructor: batch.instructor.name,
+      })),
+      recordings,
+      modules,
+    };
   } catch {
     return MOCK_BATCHES[batchId] ?? null;
   }
@@ -122,17 +226,17 @@ function buildBreadcrumbs(
     const isLast = index === viewStack.length - 1;
     const label = (() => {
       switch (entry.view) {
-        case "HOME":             return "Home";
-        case "COURSES":          return "Courses";
-        case "BATCH_DETAIL":     return data?.batches[entry.params?.batchId ?? ""]?.courseTitle ?? "Batch";
+        case "HOME": return "Home";
+        case "COURSES": return "Courses";
+        case "BATCH_DETAIL": return data?.batches[entry.params?.batchId ?? ""]?.courseTitle ?? "Batch";
         case "RECORDING_PLAYER": return "Recording";
-        case "LIVE_SESSIONS":    return "Live Sessions";
-        case "CALENDAR":         return "Calendar";
-        case "MENTORSHIP":       return "Mentorship";
-        case "CERTIFICATES":     return "Certificates";
+        case "LIVE_SESSIONS": return "Live Sessions";
+        case "CALENDAR": return "Calendar";
+        case "MENTORSHIP": return "Mentorship";
+        case "CERTIFICATES": return "Certificates";
         case "BROWSE_CATALOGUE": return "Browse Courses";
-        case "COURSE_DETAIL":    return data?.catalogue.find((c) => c.id === entry.params?.courseId)?.title ?? "Course";
-        default:                 return "—";
+        case "COURSE_DETAIL": return data?.catalogue.find((c) => c.id === entry.params?.courseId)?.title ?? "Course";
+        default: return "—";
       }
     })();
     return {
@@ -153,6 +257,15 @@ export default function StudentPortalPage() {
   const [error, setError] = useState("");
 
   const currentView = viewStack[viewStack.length - 1];
+
+  const sectionApiAvailability = {
+    courses: true,
+    calendar: true,
+    sessions: true,
+    notifications: false,
+    messages: false,
+    support: false,
+  };
 
   // ── Navigation helpers ────────────────────────────────────────────────────
 
@@ -278,9 +391,11 @@ export default function StudentPortalPage() {
         return (
           <HomeView
             stats={portalData.stats}
+            overdueAssignments={portalData.overdueAssignments}
             continueLearning={portalData.continueLearning}
             liveSessionsToday={portalData.liveSessions}
             openTickets={portalData.mentorshipTickets}
+            sectionApiAvailability={sectionApiAvailability}
             firstBatchId={firstBatchId}
             navigate={navigate}
           />
@@ -311,7 +426,18 @@ export default function StudentPortalPage() {
         if (loadingBatch || !batch) {
           return <LoadingView message="Loading recording…" />;
         }
-        return <RecordingPlayerView batch={batch} recordingId={recordingId} />;
+        return (
+          <RecordingPlayerView
+            batch={batch}
+            recordingId={recordingId}
+            onSelectRecording={(nextRecordingId) =>
+              setViewStack((prev) => [
+                ...prev.slice(0, -1),
+                { view: "RECORDING_PLAYER", params: { batchId, sessionId: nextRecordingId } },
+              ])
+            }
+          />
+        );
       }
 
       case "LIVE_SESSIONS":

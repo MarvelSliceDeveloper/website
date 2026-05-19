@@ -85,7 +85,7 @@ export const recordingService = {
       throw new Error('Access denied: You are not enrolled in this batch');
     }
 
-    return prisma.recording.findMany({
+    const recordings = await prisma.recording.findMany({
       where: {
         session: { batchId },
       },
@@ -93,8 +93,9 @@ export const recordingService = {
         session: {
           select: {
             id: true,
+            moduleId: true,
             scheduledAt: true,
-            module: { select: { title: true } },
+            module: { select: { id: true, title: true } },
           },
         },
         progress: {
@@ -104,6 +105,13 @@ export const recordingService = {
       },
       orderBy: { session: { scheduledAt: 'asc' } },
     });
+
+    return recordings.map((recording) => ({
+      ...recording,
+      sessionId: recording.session.id,
+      moduleId: recording.session.moduleId,
+      moduleTitle: recording.session.module?.title ?? null,
+    }));
   },
 
   /**
@@ -192,13 +200,13 @@ export const recordingService = {
     // For recordings, we use the instructor's token as they are the "owner"
     // of the meeting and recording.
     const instructorId = recording.session.batch.instructorId;
-    
+
     // Import dynamically to avoid circular dependencies if any
     const { getRecordingContent } = await import('../graph/graph.recordings');
-    
+
     try {
       const contentUrl = await getRecordingContent(instructorId, recording.session.teamsMeetingId, recording.teamsRecordingId);
-      
+
       return {
         url: contentUrl,
         expiresAt: new Date(Date.now() + 3600000), // ~1 hour

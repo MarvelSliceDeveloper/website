@@ -18,6 +18,7 @@ import { courseRouter } from './modules/courses/course.routes';
 import { batchRouter } from './modules/batches/batch.routes';
 import { userRouter } from './modules/users/user.routes';
 import { certificateRouter } from './modules/certificates/certificate.routes';
+import { studentRouter } from './modules/student/student.routes';
 import { eventsWebhookController } from './modules/sessions/events-webhook.controller';
 
 const app = express();
@@ -39,6 +40,7 @@ app.use('/api/admin/courses', courseRouter);
 app.use('/api/admin/batches', batchRouter);
 app.use('/api/users', userRouter);
 app.use('/api/certificates', certificateRouter);
+app.use('/api/student', studentRouter);
 app.use('/api/webhooks', webhookRouter);
 
 // Events webhook — for Teams-created meetings (no auth required)

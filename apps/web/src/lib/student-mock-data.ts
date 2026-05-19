@@ -47,6 +47,8 @@ export interface BatchSession {
 
 export interface BatchRecording {
   id: string;
+  sessionId?: string;
+  moduleId?: string;
   dayLabel: string;
   title: string;
   duration: string;
@@ -131,6 +133,15 @@ export interface DashboardStats {
   certificatesCount: number;
 }
 
+export interface OverdueAssignment {
+  id: string;
+  courseName: string;
+  unitName: string;
+  assignmentName: string;
+  dueDate: string;
+  status: "PENDING" | "SUBMITTED";
+}
+
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
 const now = new Date();
@@ -145,6 +156,33 @@ export const MOCK_STATS: DashboardStats = {
   liveTodayCount: 2,
   certificatesCount: 3,
 };
+
+export const MOCK_OVERDUE_ASSIGNMENTS: OverdueAssignment[] = [
+  {
+    id: "oa1",
+    courseName: "Python for Data Science",
+    unitName: "Capstone Project (Covid 19)",
+    assignmentName: "Capstone Project (Covid 19) - Submit Here",
+    dueDate: "2026-03-03T00:00:00.000Z",
+    status: "PENDING",
+  },
+  {
+    id: "oa2",
+    courseName: "Python for Data Science",
+    unitName: "Capstone Project (Netflix)",
+    assignmentName: "Capstone Project (Netflix) - Submit Here",
+    dueDate: "2026-05-01T00:00:00.000Z",
+    status: "PENDING",
+  },
+  {
+    id: "oa3",
+    courseName: "React Full Stack",
+    unitName: "Hooks Deep Dive",
+    assignmentName: "Hooks Refactor Assignment",
+    dueDate: "2026-04-24T00:00:00.000Z",
+    status: "SUBMITTED",
+  },
+];
 
 export const MOCK_ENROLLED_COURSES: EnrolledCourse[] = [
   {
@@ -233,9 +271,9 @@ export const MOCK_BATCHES: Record<string, Batch> = {
       },
     ],
     recordings: [
-      { id: "r1", dayLabel: "Day 11", title: "NumPy Arrays", duration: "2h 15m", watchedPercent: 100, videoUrl: "" },
-      { id: "r2", dayLabel: "Day 10", title: "Pandas Introduction", duration: "1h 50m", watchedPercent: 62, videoUrl: "" },
-      { id: "r3", dayLabel: "Day 9", title: "File Handling", duration: "2h 00m", watchedPercent: 0, videoUrl: "" },
+      { id: "r1", sessionId: "s3", moduleId: "m4", dayLabel: "Day 11", title: "NumPy Arrays", duration: "2h 15m", watchedPercent: 100, videoUrl: "" },
+      { id: "r2", sessionId: "s2", moduleId: "m4", dayLabel: "Day 10", title: "Pandas Introduction", duration: "1h 50m", watchedPercent: 62, videoUrl: "" },
+      { id: "r3", sessionId: "s1", moduleId: "m3", dayLabel: "Day 9", title: "File Handling", duration: "2h 00m", watchedPercent: 0, videoUrl: "" },
     ],
   },
   b2: {
@@ -262,8 +300,8 @@ export const MOCK_BATCHES: Record<string, Batch> = {
       },
     ],
     recordings: [
-      { id: "r4", dayLabel: "Day 2", title: "React Hooks", duration: "1h 30m", watchedPercent: 10, videoUrl: "" },
-      { id: "r5", dayLabel: "Day 1", title: "React Basics", duration: "1h 45m", watchedPercent: 100, videoUrl: "" },
+      { id: "r4", sessionId: "s4", moduleId: "m2", dayLabel: "Day 2", title: "React Hooks", duration: "1h 30m", watchedPercent: 10, videoUrl: "" },
+      { id: "r5", sessionId: "s4", moduleId: "m1", dayLabel: "Day 1", title: "React Basics", duration: "1h 45m", watchedPercent: 100, videoUrl: "" },
     ],
   },
 };

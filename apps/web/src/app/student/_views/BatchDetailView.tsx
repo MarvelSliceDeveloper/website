@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { IconCalendarPlus, IconPlayerPlay } from "@tabler/icons-react";
 import type { ViewState } from "../_types/student-portal";
-import type { Batch } from "@/lib/student-mock-data";
+import type { Batch, BatchRecording } from "@/lib/student-mock-data";
+import StudentTable, { type StudentTableColumn } from "@/components/student/StudentTable";
+import PaginationBar from "@/components/student/PaginationBar";
 
 interface BatchDetailViewProps {
   batch: Batch;
@@ -20,6 +22,77 @@ const sessionStatusConfig = {
 
 export default function BatchDetailView({ batch, navigate }: BatchDetailViewProps) {
   const [activeTab, setActiveTab] = useState<Tab>("sessions");
+  const [recordingsPage, setRecordingsPage] = useState(1);
+
+  const RECORDINGS_PAGE_SIZE = 6;
+
+  const moduleTitleById = useMemo(
+    () => new Map(batch.modules.map((mod) => [mod.id, mod.title])),
+    [batch.modules]
+  );
+
+  const paginatedRecordings = useMemo(() => {
+    const start = (recordingsPage - 1) * RECORDINGS_PAGE_SIZE;
+    const end = start + RECORDINGS_PAGE_SIZE;
+    return batch.recordings.slice(start, end);
+  }, [batch.recordings, recordingsPage]);
+
+  const recordingColumns: StudentTableColumn<BatchRecording>[] = [
+    {
+      key: "title",
+      header: "Recording",
+      render: (rec) => (
+        <div>
+          <p className="font-medium text-foreground">{rec.dayLabel} — {rec.title}</p>
+          <p className="text-xs text-muted-foreground">Session ID: {rec.sessionId ?? "—"}</p>
+        </div>
+      ),
+    },
+    {
+      key: "module",
+      header: "Module",
+      render: (rec) => (
+        <span className="text-sm text-muted-foreground">
+          {(rec.moduleId && moduleTitleById.get(rec.moduleId)) || "Unassigned"}
+        </span>
+      ),
+      className: "hidden md:table-cell",
+    },
+    {
+      key: "duration",
+      header: "Duration",
+      render: (rec) => <span className="text-sm text-muted-foreground">{rec.duration}</span>,
+      className: "hidden lg:table-cell",
+    },
+    {
+      key: "progress",
+      header: "Progress",
+      render: (rec) => (
+        <div className="w-35">
+          <div className="h-1.5 overflow-hidden rounded-full bg-border">
+            <div
+              className="h-full rounded-full bg-linear-to-r from-primary to-accent transition-all duration-700"
+              style={{ width: `${rec.watchedPercent}%` }}
+            />
+          </div>
+          <p className="mt-1 text-right text-[11px] text-muted-foreground">{rec.watchedPercent}%</p>
+        </div>
+      ),
+    },
+    {
+      key: "action",
+      header: "",
+      render: (rec) => (
+        <button
+          onClick={() => navigate({ view: "RECORDING_PLAYER", params: { batchId: batch.id, sessionId: rec.id } })}
+          className="btn-secondary text-xs"
+        >
+          {rec.watchedPercent > 0 && rec.watchedPercent < 100 ? "Resume" : "Watch"}
+        </button>
+      ),
+      className: "text-right",
+    },
+  ];
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "sessions", label: "Sessions" },
@@ -44,11 +117,10 @@ export default function BatchDetailView({ batch, navigate }: BatchDetailViewProp
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`relative flex-shrink-0 px-4 py-2.5 text-sm font-medium transition-colors ${
-              activeTab === tab.id
-                ? "text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            className={`relative shrink-0 px-4 py-2.5 text-sm font-medium transition-colors ${activeTab === tab.id
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground"
+              }`}
           >
             {tab.label}
             {activeTab === tab.id && (
@@ -80,9 +152,9 @@ export default function BatchDetailView({ batch, navigate }: BatchDetailViewProp
                         {session.status === "LIVE"
                           ? `Started ${Math.floor((Date.now() - new Date(session.scheduledAt).getTime()) / 60000)} min ago`
                           : new Date(session.scheduledAt).toLocaleString("en-IN", {
-                              weekday: "short", day: "numeric", month: "short",
-                              hour: "numeric", minute: "2-digit",
-                            })}
+                            weekday: "short", day: "numeric", month: "short",
+                            hour: "numeric", minute: "2-digit",
+                          })}
                         {" "} · Instructor: {session.instructor}
                       </p>
                     </div>
@@ -105,48 +177,24 @@ export default function BatchDetailView({ batch, navigate }: BatchDetailViewProp
       )}
 
       {activeTab === "recordings" && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {batch.recordings.length === 0 ? (
             <EmptyState icon="🎬" message="No recordings available yet for this batch." />
           ) : (
-            batch.recordings.map((rec) => (
-              <button
-                key={rec.id}
-                onClick={() => navigate({ view: "RECORDING_PLAYER", params: { batchId: batch.id, sessionId: rec.id } })}
-                className="glass-card group flex w-full items-center gap-4 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30"
-              >
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-card text-primary opacity-80 group-hover:opacity-100">
-                  <IconPlayerPlay size={18} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-medium text-foreground">
-                      {rec.dayLabel} — {rec.title}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted">{rec.duration}</span>
-                      {rec.watchedPercent === 100 && (
-                        <span className="rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-[11px] text-success">
-                          ✅ Done
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="mt-2 flex items-center gap-2">
-                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-border">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-700"
-                        style={{ width: `${rec.watchedPercent}%` }}
-                      />
-                    </div>
-                    <span className="w-8 text-right text-[11px] text-muted">{rec.watchedPercent}%</span>
-                  </div>
-                </div>
-                <span className="text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                  {rec.watchedPercent > 0 && rec.watchedPercent < 100 ? "Resume →" : "Watch →"}
-                </span>
-              </button>
-            ))
+            <>
+              <StudentTable
+                columns={recordingColumns}
+                rows={paginatedRecordings}
+                rowKey={(rec) => rec.id}
+                emptyText="No recordings found."
+              />
+              <PaginationBar
+                page={recordingsPage}
+                pageSize={RECORDINGS_PAGE_SIZE}
+                totalItems={batch.recordings.length}
+                onPageChange={setRecordingsPage}
+              />
+            </>
           )}
         </div>
       )}
@@ -161,7 +209,7 @@ export default function BatchDetailView({ batch, navigate }: BatchDetailViewProp
             </div>
             <div className="h-3 overflow-hidden rounded-full bg-border">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-700"
+                className="h-full rounded-full bg-linear-to-r from-primary to-accent transition-all duration-700"
                 style={{ width: `${batch.overallProgress}%` }}
               />
             </div>
@@ -179,13 +227,12 @@ export default function BatchDetailView({ batch, navigate }: BatchDetailViewProp
                 </div>
                 <div className="h-1.5 overflow-hidden rounded-full bg-border">
                   <div
-                    className={`h-full rounded-full transition-all duration-700 ${
-                      mod.completionPercent === 100
-                        ? "bg-success"
-                        : mod.completionPercent > 0
-                        ? "bg-gradient-to-r from-primary to-accent"
+                    className={`h-full rounded-full transition-all duration-700 ${mod.completionPercent === 100
+                      ? "bg-success"
+                      : mod.completionPercent > 0
+                        ? "bg-linear-to-r from-primary to-accent"
                         : "bg-border"
-                    }`}
+                      }`}
                     style={{ width: `${mod.completionPercent}%` }}
                   />
                 </div>

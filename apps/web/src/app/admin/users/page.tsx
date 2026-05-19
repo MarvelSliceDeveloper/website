@@ -66,9 +66,8 @@ export default function AdminUsersPage() {
           <button
             key={role}
             onClick={() => setRoleFilter(roleFilter === role ? "" : role)}
-            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-              roleFilter === role ? roleStyles[role] : "border-border text-muted-foreground hover:bg-card-hover"
-            }`}
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${roleFilter === role ? roleStyles[role] : "border-border text-muted-foreground hover:bg-card-hover"
+              }`}
           >
             <span>{roleIcons[role]}</span>
             {role} · {counts[role]}
@@ -109,7 +108,7 @@ export default function AdminUsersPage() {
                 <tr key={user.id} className="hover:bg-card-hover/50 transition-colors">
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-accent/20 text-xs font-bold text-foreground">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary/30 to-accent/20 text-xs font-bold text-foreground">
                         {user.name.charAt(0).toUpperCase()}
                       </div>
                       <span className="text-sm font-medium text-foreground">{user.name}</span>

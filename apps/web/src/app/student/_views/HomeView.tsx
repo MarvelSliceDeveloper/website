@@ -1,65 +1,34 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { IconArrowRight, IconBook, IconCalendar, IconCertificate, IconHeart, IconPlayerPlay, IconVideo } from "@tabler/icons-react";
 import type { ViewState } from "../_types/student-portal";
 import type {
   DashboardStats,
+  OverdueAssignment,
   ContinueLearningItem,
   LiveSession,
   MentorshipTicket,
 } from "@/lib/student-mock-data";
+import StudentSectionTabs, { type StudentSectionTab } from "@/components/student/StudentSectionTabs";
+import StudentStatTiles from "@/components/student/StudentStatTiles";
+import OverdueAssignmentsPanel from "@/components/student/OverdueAssignmentsPanel";
 
 interface HomeViewProps {
   stats: DashboardStats;
+  overdueAssignments: OverdueAssignment[];
   continueLearning: ContinueLearningItem[];
   liveSessionsToday: LiveSession[];
   openTickets: MentorshipTicket[];
+  sectionApiAvailability: {
+    courses: boolean;
+    calendar: boolean;
+    sessions: boolean;
+    notifications: boolean;
+    messages: boolean;
+    support: boolean;
+  };
   firstBatchId?: string; // for the Recordings shortcut
   navigate: (v: ViewState) => void;
-}
-
-// Count-up hook
-function useCountUp(target: number, duration = 800) {
-  const [count, setCount] = useState(0);
-  const raf = useRef<number | null>(null);
-  useEffect(() => {
-    const start = performance.now();
-    function tick(now: number) {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.round(eased * target));
-      if (progress < 1) raf.current = requestAnimationFrame(tick);
-    }
-    raf.current = requestAnimationFrame(tick);
-    return () => { if (raf.current) cancelAnimationFrame(raf.current); };
-  }, [target, duration]);
-  return count;
-}
-
-function StatCard({ label, value, icon, gradient, onClick }: {
-  label: string; value: number; icon: string; gradient: string; onClick: () => void;
-}) {
-  const count = useCountUp(value);
-  return (
-    <button
-      onClick={onClick}
-      className="glass-card group relative flex flex-col gap-3 overflow-hidden p-5 text-left transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10"
-    >
-      <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-xl shadow-md`}>
-        {icon}
-      </div>
-      <div>
-        <p className="sp-eyebrow">{label}</p>
-        <p className="mt-1 text-3xl font-bold tracking-tight text-foreground">{count}</p>
-      </div>
-      <IconArrowRight
-        size={14}
-        className="absolute right-4 top-4 text-muted opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100"
-      />
-    </button>
-  );
 }
 
 const SECTION_CARDS = [
@@ -117,7 +86,16 @@ const SECTION_CARDS = [
   },
 ];
 
-export default function HomeView({ stats, continueLearning, liveSessionsToday, openTickets, firstBatchId, navigate }: HomeViewProps) {
+export default function HomeView({
+  stats,
+  overdueAssignments,
+  continueLearning,
+  liveSessionsToday,
+  openTickets,
+  sectionApiAvailability,
+  firstBatchId,
+  navigate,
+}: HomeViewProps) {
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
@@ -126,12 +104,56 @@ export default function HomeView({ stats, continueLearning, liveSessionsToday, o
   const liveCount = liveSessionsToday.filter((s) => s.status === "LIVE").length;
   const openTicketCount = openTickets.filter((t) => t.status === "OPEN" || t.status === "ASSIGNED").length;
 
-  const statCards = [
-    { label: "Enrolled", value: stats.enrolledCount, icon: "📚", gradient: "from-primary to-violet-600", view: { view: "COURSES" as const } },
-    { label: "Completed", value: stats.completedCount, icon: "✅", gradient: "from-success to-emerald-400", view: { view: "COURSES" as const } },
-    { label: "Live Today", value: stats.liveTodayCount, icon: "📹", gradient: "from-danger to-red-400", view: { view: "LIVE_SESSIONS" as const } },
-    { label: "Certificates", value: stats.certificatesCount, icon: "🎓", gradient: "from-warning to-amber-400", view: { view: "CERTIFICATES" as const } },
+  const statTiles = [
+    {
+      id: "enrolled",
+      label: "Courses To Do",
+      value: stats.enrolledCount,
+      icon: <IconBook size={20} className="text-primary" />,
+      gradient: "bg-gradient-to-br from-primary/20 to-violet-500/10",
+      onClick: () => navigate({ view: "COURSES" }),
+    },
+    {
+      id: "assignment-overdue",
+      label: "Assignment Overdue",
+      value: overdueAssignments.filter((item) => item.status === "PENDING").length,
+      icon: <span className="text-lg">📝</span>,
+      gradient: "bg-gradient-to-br from-danger/20 to-red-400/10",
+      onClick: () => navigate({ view: "COURSES" }),
+      liveBadge: overdueAssignments.some((item) => item.status === "PENDING") ? "Overdue" : undefined,
+    },
+    {
+      id: "quiz-overdue",
+      label: "Quiz Overdue",
+      value: openTicketCount,
+      icon: <span className="text-lg">⏰</span>,
+      gradient: "bg-gradient-to-br from-accent/20 to-cyan-400/10",
+      onClick: () => navigate({ view: "MENTORSHIP" }),
+    },
+    {
+      id: "completed",
+      label: "Completed Course",
+      value: stats.completedCount,
+      icon: <IconCertificate size={20} className="text-success" />,
+      gradient: "bg-gradient-to-br from-success/20 to-emerald-400/10",
+      onClick: () => navigate({ view: "CERTIFICATES" }),
+    },
   ];
+
+  const sectionTabs: StudentSectionTab[] = [
+    { key: "courses", label: "My Courses", enabled: sectionApiAvailability.courses },
+    { key: "calendar", label: "Calendar", enabled: sectionApiAvailability.calendar },
+    { key: "sessions", label: "My Sessions", enabled: sectionApiAvailability.sessions },
+    { key: "notifications", label: "Notifications", enabled: sectionApiAvailability.notifications },
+    { key: "messages", label: "Messages", enabled: sectionApiAvailability.messages },
+    { key: "support", label: "Support", enabled: sectionApiAvailability.support },
+  ];
+
+  function handleSectionTabChange(key: string) {
+    if (key === "courses") navigate({ view: "COURSES" });
+    if (key === "calendar") navigate({ view: "CALENDAR" });
+    if (key === "sessions") navigate({ view: "LIVE_SESSIONS" });
+  }
 
   return (
     <div className="sp-view-enter space-y-8">
@@ -144,18 +166,14 @@ export default function HomeView({ stats, continueLearning, liveSessionsToday, o
       </div>
 
       {/* ── Stats Strip ───────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-        {statCards.map((s) => (
-          <StatCard
-            key={s.label}
-            label={s.label}
-            value={s.value}
-            icon={s.icon}
-            gradient={s.gradient}
-            onClick={() => navigate(s.view)}
-          />
-        ))}
-      </div>
+      <StudentStatTiles tiles={statTiles} />
+
+      {/* ── Section Tabs ──────────────────────────────────────────────────── */}
+      <StudentSectionTabs
+        tabs={sectionTabs}
+        activeKey="courses"
+        onChange={handleSectionTabChange}
+      />
 
       {/* ── Section Grid ──────────────────────────────────────────────────── */}
       <div>
@@ -174,8 +192,8 @@ export default function HomeView({ stats, continueLearning, liveSessionsToday, o
               style={{ animationDelay: `${i * 50}ms` }}
             >
               {/* bg glow */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 transition-opacity group-hover:opacity-100`} />
-              <div className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-card shadow-sm">
+              <div className={`absolute inset-0 bg-linear-to-br ${card.gradient} opacity-0 transition-opacity group-hover:opacity-100`} />
+              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card shadow-sm">
                 {card.icon}
               </div>
               <div className="relative min-w-0">
@@ -192,12 +210,17 @@ export default function HomeView({ stats, continueLearning, liveSessionsToday, o
               </div>
               <IconArrowRight
                 size={15}
-                className="relative ml-auto flex-shrink-0 text-muted opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100"
+                className="relative ml-auto shrink-0 text-muted opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100"
               />
             </button>
           ))}
         </div>
       </div>
+
+      <OverdueAssignmentsPanel
+        items={overdueAssignments}
+        onView={() => navigate({ view: "COURSES" })}
+      />
 
       {/* ── Today's Schedule ──────────────────────────────────────────────── */}
       <div className="glass-card p-5">
@@ -217,8 +240,8 @@ export default function HomeView({ stats, continueLearning, liveSessionsToday, o
                 <div key={s.id} className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3">
                     {s.status === "LIVE"
-                      ? <span className="live-pulse h-2.5 w-2.5 flex-shrink-0 rounded-full bg-danger" />
-                      : <span className="h-2.5 w-2.5 flex-shrink-0 rounded-full bg-accent/60" />}
+                      ? <span className="live-pulse h-2.5 w-2.5 shrink-0 rounded-full bg-danger" />
+                      : <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-accent/60" />}
                     <div>
                       <p className="text-sm font-medium text-foreground">{s.title}</p>
                       <p className="text-xs text-muted">{s.courseTitle}</p>
@@ -239,7 +262,7 @@ export default function HomeView({ stats, continueLearning, liveSessionsToday, o
               {openTickets.slice(0, 2).map((t) => (
                 <div key={t.id} className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3">
-                    <span className="h-2.5 w-2.5 flex-shrink-0 rounded-full bg-warning/70" />
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-warning/70" />
                     <div>
                       <p className="text-sm font-medium text-foreground">{t.topic}</p>
                       <p className="text-xs text-muted">Mentorship · {t.courseTitle}</p>
@@ -270,7 +293,7 @@ export default function HomeView({ stats, continueLearning, liveSessionsToday, o
                 onClick={() => navigate({ view: "RECORDING_PLAYER", params: { batchId: item.batchId, sessionId: item.recordingId } })}
                 className="glass-card group flex w-full items-center gap-4 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30"
               >
-                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-card text-2xl">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-2xl">
                   {item.thumbnail}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -278,7 +301,7 @@ export default function HomeView({ stats, continueLearning, liveSessionsToday, o
                   <p className="mt-0.5 text-xs text-muted">{item.dayLabel} · {item.watchedPercent}% watched</p>
                   <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-border">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all"
+                      className="h-full rounded-full bg-linear-to-r from-primary to-accent transition-all"
                       style={{ width: `${item.watchedPercent}%` }}
                     />
                   </div>
@@ -293,7 +316,7 @@ export default function HomeView({ stats, continueLearning, liveSessionsToday, o
       )}
 
       {/* ── Browse Courses CTA ────────────────────────────────────────────── */}
-      <div className="glass-card flex flex-col items-start justify-between gap-4 border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card p-6 sm:flex-row sm:items-center">
+      <div className="glass-card flex flex-col items-start justify-between gap-4 border-primary/20 bg-linear-to-br from-primary/10 via-card to-card p-6 sm:flex-row sm:items-center">
         <div>
           <p className="sp-eyebrow">Catalogue</p>
           <h2 className="mt-1 text-lg font-bold text-foreground">Explore new courses</h2>
@@ -301,7 +324,7 @@ export default function HomeView({ stats, continueLearning, liveSessionsToday, o
         </div>
         <button
           onClick={() => navigate({ view: "BROWSE_CATALOGUE" })}
-          className="btn-primary flex-shrink-0"
+          className="btn-primary shrink-0"
         >
           Browse Courses →
         </button>

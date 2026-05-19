@@ -18,6 +18,25 @@
   --radius: 14px;
 }
 
+/* stylelint-disable at-rule-no-unknown */
+
+[data-theme="light"] {
+  --background: #f4f7ff;
+  --foreground: #1a2238;
+  --card: #ffffff;
+  --card-hover: #eef3ff;
+  --border: #d7deef;
+  --border-hover: #bcc7e2;
+  --primary: #4459f3;
+  --primary-hover: #3045d8;
+  --accent: #0ca3cf;
+  --success: #1f9c5b;
+  --warning: #d68b1d;
+  --danger: #d54b70;
+  --muted: #5a678a;
+  --muted-foreground: #3f4a69;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -35,6 +54,8 @@
   --color-muted-foreground: var(--muted-foreground);
   --font-sans: var(--font-body);
 }
+
+/* stylelint-enable at-rule-no-unknown */
 
 *,
 *::before,
@@ -170,11 +191,13 @@ a:focus-visible {
 }
 
 @keyframes pulse-live {
+
   0%,
   100% {
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.55;
     transform: scale(1.25);
@@ -220,6 +243,7 @@ a:focus-visible {
     opacity: 0;
     transform: translateX(24px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -236,6 +260,7 @@ a:focus-visible {
     opacity: 0;
     transform: translateY(12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -250,6 +275,7 @@ a:focus-visible {
 .scrollbar-none {
   scrollbar-width: none;
 }
+
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
