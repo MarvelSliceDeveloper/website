@@ -4,7 +4,14 @@
 
 ---
 
+## 2026-05-22 — Documentation Consolidation & Graph Client Audit ✅
+
+- **API Guide Consolidation**: Merged Postman environment configurations and endpoint execution steps from `docs/TestAPI.md` directly into a single comprehensive source of truth: `docs/API.md`.
+- **Microsoft Graph Client Verification**: Verified and documented backend Graph module resilience, including auto-refreshing delegated/app tokens, 429 rate-limit back-offs, and automatic retries for transient service failures.
+- **Documentation Repository Cleanup**: Cleaned up obsolete timeline, planning, setup, and phase-based documents to keep the `/docs` directory pristine, retaining only `API.md` and `CHANGELOG.md`.
+
 ## 2026-05-19 — Student Portal API Linkage + UI Cleanup ✅
+
 
 **Backend linkage:** Connected the student recordings experience to API-backed batch and recording payloads, and cleaned up the reusable UI primitives so diagnostics are resolved.
 
