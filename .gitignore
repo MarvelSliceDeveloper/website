@@ -158,6 +158,7 @@ invoices/
 
 # Uploaded files (stored in cloud, not in repo)
 uploads/
+apps/api/uploads/
 
 # ngrok config
 ngrok.yml

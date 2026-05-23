@@ -10,12 +10,15 @@ export interface AuthRequest extends Request {
     role: UserRole;
     email: string;
   };
+  file?: UploadFile;
 }
+
+type UploadFile = Request['file'];
 
 export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     let token = req.headers.authorization?.split(' ')[1];
-    
+
     // Fallback to cookie if present (requires cookie-parser, assume setup later)
     if (!token && req.cookies && req.cookies.accessToken) {
       token = req.cookies.accessToken;
@@ -27,7 +30,7 @@ export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction)
 
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     req.user = decoded;
-    
+
     next();
   } catch (error) {
     return res.status(401).json({ error: 'Invalid or expired token' });

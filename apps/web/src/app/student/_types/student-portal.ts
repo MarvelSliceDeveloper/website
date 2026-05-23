@@ -10,7 +10,8 @@ export type ViewName =
   | "MENTORSHIP"
   | "CERTIFICATES"
   | "BROWSE_CATALOGUE"
-  | "COURSE_DETAIL";
+  | "COURSE_DETAIL"
+  | "COURSE_CONTENT";
 
 export interface ViewState {
   view: ViewName;
@@ -18,6 +19,7 @@ export interface ViewState {
     batchId?: string;
     sessionId?: string; // also used as recordingId
     courseId?: string;
+    moduleId?: string;
     ticketId?: string;
   };
 }

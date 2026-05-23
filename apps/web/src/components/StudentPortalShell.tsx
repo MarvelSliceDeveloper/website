@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   IconArrowLeft,
   IconBell,
@@ -14,6 +15,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import StudentTopNoticeBar from "@/components/student/StudentTopNoticeBar";
+import { api } from "@/lib/api";
 
 export interface Breadcrumb {
   label: string;
@@ -50,6 +52,7 @@ export default function StudentPortalShell({
   showBack = false,
   onMarkAllRead,
 }: StudentPortalShellProps) {
+  const router = useRouter();
   const [notifOpen, setNotifOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -82,6 +85,16 @@ export default function StudentPortalShell({
     onMarkAllRead?.();
   }
 
+  async function handleSignOut() {
+    try {
+      await api.post("/api/auth/logout");
+    } catch (e) {
+      // ignore — still redirect
+    }
+
+    router.push("/login");
+  }
+
   const notifTypeColor = (type: NotificationItem["type"]) => {
     if (type === "live") return "bg-danger/20 border-danger/30";
     if (type === "recording") return "bg-accent/20 border-accent/30";
@@ -91,12 +104,6 @@ export default function StudentPortalShell({
 
   return (
     <div className="min-h-screen bg-background">
-      <StudentTopNoticeBar
-        text="Please click here for this week agenda"
-        ctaLabel="Join Now"
-        ctaHref="/student"
-      />
-
       {/* ── Top Header Bar ─────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-6">
@@ -224,7 +231,7 @@ export default function StudentPortalShell({
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-primary to-violet-600 text-[11px] font-bold text-white">
                   A
                 </div>
-                <span className="hidden sm:inline">Arjun</span>
+                <span className="hidden sm:inline">Name</span>
                 <IconChevronDown size={13} className="text-muted" />
               </button>
 
@@ -251,6 +258,7 @@ export default function StudentPortalShell({
                     <div className="my-1 border-t border-border" />
                     <button
                       id="sp-avatar-signout"
+                      onClick={handleSignOut}
                       className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-danger transition-colors hover:bg-danger/10"
                     >
                       <IconLogout size={15} stroke={1.8} />

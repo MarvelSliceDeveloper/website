@@ -6,6 +6,7 @@ import {
   CreateCourseSchema,
   UpdateCourseSchema,
 } from './course.service';
+import { buildCourseThumbnailUrl } from './course.upload';
 
 export const courseController = {
   async create(req: AuthRequest, res: Response) {
@@ -65,6 +66,27 @@ export const courseController = {
     }
   },
 
+  async uploadThumbnail(req: AuthRequest, res: Response) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'Thumbnail file is required' });
+      }
+
+      const thumbnailUrl = buildCourseThumbnailUrl(req, req.file.filename);
+      const data = UpdateCourseSchema.parse({ thumbnailUrl });
+      const course = await courseService.updateCourse(req.params.id, data);
+      return res.json({ thumbnailUrl: course.thumbnailUrl });
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      if (error.message === 'Course not found') {
+        return res.status(404).json({ error: error.message });
+      }
+      return res.status(400).json({ error: error.message });
+    }
+  },
+
   async delete(req: AuthRequest, res: Response) {
     try {
       await courseService.deleteCourse(req.params.id);
@@ -86,7 +108,11 @@ export const courseController = {
           checklist: result.checklist,
         });
       }
-      return res.json({ message: 'Course published', checklist: result.checklist });
+      return res.json({
+        message: 'Course published',
+        published: true,
+        checklist: result.checklist,
+      });
     } catch (error: any) {
       if (error.message === 'Course not found') {
         return res.status(404).json({ error: error.message });

@@ -131,6 +131,65 @@ Sets JWT access token in HTTP-only cookies and redirects to the frontend dashboa
 
 ---
 
+<!-- Source: courses-admin-api.md -->
+## Admin Courses API Documentation
+
+Base URL: `/api/admin/courses`
+
+### Upload Course Thumbnail
+Uploads a thumbnail image for a course and stores it locally.
+
+**Endpoint:** `POST /:id/thumbnail`
+**Auth Required:** Yes (ADMIN)
+
+**Content-Type:** `multipart/form-data`
+
+**Form Data**
+| Field | Type | Required | Description |
+|------|------|----------|-------------|
+| `thumbnail` | file | Yes | JPG, PNG, or WebP image (max 5 MB) |
+
+**Success Response (200 OK)**
+```json
+{
+  "thumbnailUrl": "http://localhost:4000/uploads/courses/uuid.jpg"
+}
+```
+
+**Notes**
+- Files are stored locally in `apps/api/uploads/courses`.
+- Uploaded files are served from `/uploads`.
+
+### Publish Course
+Validates the publish checklist and publishes the course.
+
+**Endpoint:** `POST /:id/publish`
+**Auth Required:** Yes (ADMIN)
+
+**Success Response (200 OK)**
+```json
+{
+  "message": "Course published",
+  "published": true,
+  "checklist": [
+    { "item": "Course has a title", "passed": true }
+  ]
+}
+```
+
+**Error Response (422 Unprocessable Entity)**
+```json
+{
+  "error": "Course does not meet publish requirements",
+  "checklist": [
+    { "item": "Course has a title", "passed": false }
+  ]
+}
+```
+
+
+---
+
 <!-- Source: calendar-api.md -->
 ## Calendar & Graph API Endpoints
 
@@ -701,6 +760,8 @@ This appendix maps the student dashboard screens to the request helper in `apps/
 | Mentorship list | GET | `/api/mentorship/tickets/my` | Load student mentorship tickets |
 | Mentorship create | POST | `/api/mentorship/tickets` | Submit a new mentorship request |
 | Calendar sync | POST | `/api/calendar/sync` | Refresh Microsoft calendar data |
+| Enrolled courses | GET | `/api/courses/enrolled` | Load student's enrolled courses and status |
+| Course catalogue | GET | `/api/courses/catalogue` | Load student's browseable catalogue courses |
 
 ### Example Requests
 

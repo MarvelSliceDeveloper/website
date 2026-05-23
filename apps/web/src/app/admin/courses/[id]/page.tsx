@@ -41,6 +41,13 @@ const statusStyles: Record<string, string> = {
   ARCHIVED: "bg-muted/15 text-muted border-muted/25",
 };
 
+const MAX_THUMBNAIL_BYTES = 5 * 1024 * 1024;
+const ALLOWED_THUMBNAIL_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
+
 export default function CourseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -50,6 +57,9 @@ export default function CourseDetailPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [thumbnailUploading, setThumbnailUploading] = useState(false);
+  const [thumbnailError, setThumbnailError] = useState("");
+  const [thumbnailSuccess, setThumbnailSuccess] = useState("");
 
   // Edit form state
   const [form, setForm] = useState({
@@ -117,6 +127,36 @@ export default function CourseDetailPage() {
       setError(err.message || "Failed to save");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleThumbnailUpload = async (file: File) => {
+    setThumbnailError("");
+    setThumbnailSuccess("");
+
+    if (!ALLOWED_THUMBNAIL_TYPES.has(file.type)) {
+      setThumbnailError("Thumbnail must be a JPG, PNG, or WebP image.");
+      return;
+    }
+
+    if (file.size > MAX_THUMBNAIL_BYTES) {
+      setThumbnailError("Thumbnail must be 5 MB or smaller.");
+      return;
+    }
+
+    setThumbnailUploading(true);
+
+    try {
+      const uploadData = new FormData();
+      uploadData.append("thumbnail", file);
+      await api.post(`/api/admin/courses/${id}/thumbnail`, uploadData);
+      setThumbnailSuccess("Thumbnail updated.");
+      fetchCourse();
+      setTimeout(() => setThumbnailSuccess(""), 3000);
+    } catch (err: any) {
+      setThumbnailError(err.message || "Failed to upload thumbnail");
+    } finally {
+      setThumbnailUploading(false);
     }
   };
 
@@ -301,6 +341,47 @@ export default function CourseDetailPage() {
         {/* Left: Course Details Form */}
         <div className="glass-card p-6 space-y-4">
           <h2 className="text-base font-semibold text-foreground">Course Details</h2>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Thumbnail
+            </label>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="h-20 w-28 overflow-hidden rounded-lg border border-border bg-card flex items-center justify-center text-xl">
+                {course.thumbnailUrl ? (
+                  <img
+                    src={course.thumbnailUrl}
+                    alt="Course thumbnail"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  "\ud83d\udcda"
+                )}
+              </div>
+              <div className="space-y-1">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) {
+                      handleThumbnailUpload(file);
+                    }
+                    event.target.value = "";
+                  }}
+                  className="field"
+                  disabled={thumbnailUploading}
+                />
+                <p className="text-xs text-muted">JPG, PNG, or WebP. Max 5 MB.</p>
+                {thumbnailError && (
+                  <p className="text-xs text-danger">{thumbnailError}</p>
+                )}
+                {thumbnailSuccess && (
+                  <p className="text-xs text-success">{thumbnailSuccess}</p>
+                )}
+              </div>
+            </div>
+          </div>
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">Title</label>

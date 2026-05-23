@@ -6,6 +6,8 @@ interface FetchOptions extends RequestInit {
 
 async function request<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { params, ...fetchOptions } = options;
+  const isFormData =
+    typeof FormData !== "undefined" && fetchOptions.body instanceof FormData;
 
   let url = `${API_BASE}${endpoint}`;
   if (params) {
@@ -17,7 +19,7 @@ async function request<T>(endpoint: string, options: FetchOptions = {}): Promise
     ...fetchOptions,
     credentials: "include",
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...fetchOptions.headers,
     },
   });
@@ -35,7 +37,10 @@ export const api = {
   get: <T>(endpoint: string, params?: Record<string, string>) =>
     request<T>(endpoint, { method: "GET", params }),
   post: <T>(endpoint: string, body?: unknown) =>
-    request<T>(endpoint, { method: "POST", body: JSON.stringify(body) }),
+    request<T>(endpoint, {
+      method: "POST",
+      body: body instanceof FormData ? body : JSON.stringify(body),
+    }),
   put: <T>(endpoint: string, body?: unknown) =>
     request<T>(endpoint, { method: "PUT", body: JSON.stringify(body) }),
   patch: <T>(endpoint: string, body?: unknown) =>

@@ -4,6 +4,14 @@
 
 ---
 
+## 2026-05-23 — Course Thumbnail Upload (Local Storage) ✅
+
+- **Admin UI**: Added thumbnail file upload during course creation and in the course editor.
+- **API**: Added `POST /api/admin/courses/:id/thumbnail` for local uploads and exposed `/uploads` for serving images.
+- **API**: Publish response now includes `published: true` to align admin UI refresh behavior.
+- **API**: Replaced `Express.Multer.File` with a local upload type to fix TS2694 in the API server.
+- **Storage**: Thumbnails are stored locally under `apps/api/uploads/courses` (S3 planned later).
+
 ## 2026-05-22 — Documentation Consolidation & Graph Client Audit ✅
 
 - **API Guide Consolidation**: Merged Postman environment configurations and endpoint execution steps from `docs/TestAPI.md` directly into a single comprehensive source of truth: `docs/API.md`.

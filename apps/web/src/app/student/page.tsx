@@ -43,6 +43,7 @@ import MentorshipView from "./_views/MentorshipView";
 import CertificatesView from "./_views/CertificatesView";
 import BrowseCatalogueView from "./_views/BrowseCatalogueView";
 import CourseDetailView from "./_views/CourseDetailView";
+import CourseContentView from "./_views/CourseContentView";
 
 // ─── Portal data store ────────────────────────────────────────────────────────
 
@@ -236,6 +237,7 @@ function buildBreadcrumbs(
         case "CERTIFICATES": return "Certificates";
         case "BROWSE_CATALOGUE": return "Browse Courses";
         case "COURSE_DETAIL": return data?.catalogue.find((c) => c.id === entry.params?.courseId)?.title ?? "Course";
+        case "COURSE_CONTENT": return data?.enrolledCourses.find((c) => c.id === entry.params?.courseId)?.title ?? "Course";
         default: return "—";
       }
     })();
@@ -466,6 +468,12 @@ export default function StudentPortalPage() {
         const course = portalData.catalogue.find((c) => c.id === courseId);
         if (!course) return <NotFoundView />;
         return <CourseDetailView course={course} onEnroll={handleEnroll} />;
+      }
+
+      case "COURSE_CONTENT": {
+        const courseId = currentView.params?.courseId ?? "";
+        if (!courseId) return <NotFoundView />;
+        return <CourseContentView courseId={courseId} navigate={navigate} />;
       }
 
       default:

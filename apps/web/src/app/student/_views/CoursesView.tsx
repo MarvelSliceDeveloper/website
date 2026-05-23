@@ -139,7 +139,7 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
                   {/* Action */}
                   {canOpen && (
                     <button
-                      onClick={() => navigate({ view: "BATCH_DETAIL", params: { batchId: course.batchId } })}
+                      onClick={() => navigate({ view: "COURSE_CONTENT", params: { courseId: course.id } })}
                       className="btn-primary flex-shrink-0 text-sm"
                     >
                       Open <IconArrowRight size={14} />

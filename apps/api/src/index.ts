@@ -2,6 +2,8 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import pino from 'pino';
 import rateLimit from 'express-rate-limit';
+import fs from 'fs';
+import path from 'path';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
@@ -19,9 +21,13 @@ import { batchRouter } from './modules/batches/batch.routes';
 import { userRouter } from './modules/users/user.routes';
 import { certificateRouter } from './modules/certificates/certificate.routes';
 import { studentRouter } from './modules/student/student.routes';
+import { studentCourseRouter } from './modules/courses/student-course.routes';
 import { eventsWebhookController } from './modules/sessions/events-webhook.controller';
 
 const app = express();
+
+const uploadsRoot = path.resolve(__dirname, '..', 'uploads');
+fs.mkdirSync(uploadsRoot, { recursive: true });
 
 app.use(express.json());
 app.use(cookieParser());
@@ -29,6 +35,8 @@ app.use(cors({
   origin: process.env.WEB_URL || 'http://localhost:3000',
   credentials: true
 }));
+
+app.use('/uploads', express.static(uploadsRoot));
 
 // Mount Modular Routes
 app.use('/api/auth', authRouter);
@@ -41,6 +49,7 @@ app.use('/api/admin/batches', batchRouter);
 app.use('/api/users', userRouter);
 app.use('/api/certificates', certificateRouter);
 app.use('/api/student', studentRouter);
+app.use('/api/courses', studentCourseRouter);
 app.use('/api/webhooks', webhookRouter);
 
 // Events webhook — for Teams-created meetings (no auth required)

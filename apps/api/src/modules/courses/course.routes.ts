@@ -1,6 +1,7 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { courseController } from './course.controller';
 import { moduleController } from './module.controller';
+import { uploadCourseThumbnail } from './course.upload';
 import { requireAuth, requireRole } from '../../middleware/auth.middleware';
 import { UserRole } from '@lms/types';
 
@@ -23,6 +24,19 @@ router.get('/:id', courseController.getById);
 
 // PUT /api/admin/courses/:id — update course fields
 router.put('/:id', courseController.update);
+
+// POST /api/admin/courses/:id/thumbnail — upload course thumbnail image
+router.post(
+    '/:id/thumbnail',
+    (req: Request, res: Response, next: NextFunction) =>
+        uploadCourseThumbnail(req, res, (err) => {
+            if (err) {
+                return res.status(400).json({ error: err.message });
+            }
+            return next();
+        }),
+    courseController.uploadThumbnail
+);
 
 // DELETE /api/admin/courses/:id — soft-delete (archive) course
 router.delete('/:id', courseController.delete);
