@@ -79,7 +79,9 @@ export default function InstructorDashboardPage() {
         setUpcomingSessions(upcoming.slice(0, 3));
 
         // Deduplicate batches and calculate stats
-        const uniqueBatches = new Set(allSessions.map((s) => s.batch?.id).filter(Boolean));
+        const uniqueBatches = new Set(
+          allSessions.map((s) => (s.batch as { id: string; name: string; course: { title: string } })?.id).filter(Boolean)
+        );
         setStats({
           totalSessions: allSessions.length,
           totalBatches: uniqueBatches.size || 1,

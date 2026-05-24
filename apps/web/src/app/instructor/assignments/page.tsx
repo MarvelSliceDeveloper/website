@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { 
-  IconClipboardList, 
-  IconCheck, 
-  IconAlertCircle, 
-  IconUser, 
-  IconFileText, 
+// Remove IconGraduationCap from import
+import {
+  IconClipboardList,
+  IconCheck,
+  IconAlertCircle,
+  IconUser,
+  IconFileText,
   IconSchool,
-  IconSend
+  IconSend,
 } from "@tabler/icons-react";
 
 type Submission = {
@@ -114,12 +115,11 @@ export default function InstructorAssignmentsPage() {
             ) : (
               <div className="space-y-2">
                 {pending.map(s => (
-                  <div 
-                    key={s.id} 
+                  <div
+                    key={s.id}
                     onClick={() => { setSelectedSub(s); setGrade(""); setFeedback(""); }}
-                    className={`glass-card p-4 flex items-center justify-between border cursor-pointer transition-all duration-200 ${
-                      selectedSub?.id === s.id ? "border-violet-500 bg-violet-500/5" : "border-border/80 hover:border-violet-500/20"
-                    }`}
+                    className={`glass-card p-4 flex items-center justify-between border cursor-pointer transition-all duration-200 ${selectedSub?.id === s.id ? "border-violet-500 bg-violet-500/5" : "border-border/80 hover:border-violet-500/20"
+                      }`}
                   >
                     <div>
                       <p className="text-sm font-semibold text-foreground">{s.assignmentTitle}</p>
@@ -161,7 +161,7 @@ export default function InstructorAssignmentsPage() {
         {/* Grading Panel (Sidebar) */}
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground flex items-center gap-2 mb-3">
-            <IconGraduationCap size={15} /> Grading Assistant
+            <IconSchool size={15} /> Grading Assistant
           </h2>
 
           {selectedSub ? (
@@ -180,24 +180,24 @@ export default function InstructorAssignmentsPage() {
 
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Grade (A+, A, B, C, F)</label>
-                <input 
-                  type="text" 
-                  className="field" 
-                  value={grade} 
-                  onChange={e => setGrade(e.target.value)} 
-                  placeholder="e.g. A+" 
-                  required 
+                <input
+                  type="text"
+                  className="field"
+                  value={grade}
+                  onChange={e => setGrade(e.target.value)}
+                  placeholder="e.g. A+"
+                  required
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Feedback</label>
-                <textarea 
-                  className="field min-h-[80px]" 
-                  value={feedback} 
-                  onChange={e => setFeedback(e.target.value)} 
-                  placeholder="Write constructive advice here..." 
-                  required 
+                <textarea
+                  className="field min-h-[80px]"
+                  value={feedback}
+                  onChange={e => setFeedback(e.target.value)}
+                  placeholder="Write constructive advice here..."
+                  required
                 />
               </div>
 
