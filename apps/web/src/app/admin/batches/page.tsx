@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 
 type Batch = {
@@ -24,9 +25,24 @@ const statusStyles: Record<string, string> = {
 };
 
 export default function AdminBatchesPage() {
+  return (
+    <Suspense fallback={
+      <div className="glass-card p-12 text-center">
+        <p className="text-muted animate-pulse">Loading batches...</p>
+      </div>
+    }>
+      <BatchesPageContent />
+    </Suspense>
+  );
+}
+
+function BatchesPageContent() {
+  const searchParams = useSearchParams();
+  const statusParam = searchParams.get("status") || "";
+
   const [batches, setBatches] = useState<Batch[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState(statusParam);
 
   const fetchBatches = async () => {
     setLoading(true);
@@ -41,6 +57,10 @@ export default function AdminBatchesPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    setStatusFilter(statusParam);
+  }, [statusParam]);
 
   useEffect(() => {
     fetchBatches();

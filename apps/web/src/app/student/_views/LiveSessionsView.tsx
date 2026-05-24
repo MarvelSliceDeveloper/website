@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { LiveSession } from "@/lib/student-mock-data";
+import { api } from "@/lib/api";
 
 interface LiveSessionsViewProps {
   sessions: LiveSession[];
@@ -84,11 +85,27 @@ export default function LiveSessionsView({ sessions }: LiveSessionsViewProps) {
 function SessionCard({ session }: { session: LiveSession }) {
   const isLive = session.status === "LIVE";
   const isPast = session.status === "PAST";
+  const [joining, setJoining] = useState(false);
 
   const scheduledStr = new Date(session.scheduledAt).toLocaleString("en-IN", {
     weekday: "short", day: "numeric", month: "short",
     hour: "numeric", minute: "2-digit",
   });
+
+  const handleJoin = async () => {
+    if (!session.joinUrl) return;
+    setJoining(true);
+    try {
+      // Record attendance first
+      await api.post(`/api/attendance/${session.id}/join`);
+    } catch (err) {
+      console.error("Failed to log attendance:", err);
+    } finally {
+      setJoining(false);
+      // Open teams meeting
+      window.open(session.joinUrl, "_blank", "noopener,noreferrer");
+    }
+  };
 
   return (
     <div className={`glass-card p-5 transition-all ${isLive ? "border-danger/30 bg-danger/5" : ""}`}>
@@ -120,14 +137,20 @@ function SessionCard({ session }: { session: LiveSession }) {
 
         <div className="flex flex-shrink-0 items-center gap-2">
           {isLive && session.joinUrl && (
-            <a
-              href={session.joinUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="btn-primary text-sm"
+            <button
+              onClick={handleJoin}
+              disabled={joining}
+              className="btn-primary text-sm flex items-center gap-1.5"
             >
-              Join on Teams →
-            </a>
+              {joining ? (
+                <>
+                  <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
+                  Joining...
+                </>
+              ) : (
+                "Join on Teams →"
+              )}
+            </button>
           )}
           {session.status === "UPCOMING" && (
             <button className="btn-secondary text-sm">

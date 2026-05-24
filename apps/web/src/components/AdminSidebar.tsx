@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import {
   IconBook,
+  IconClipboardCheck,
   IconLayoutDashboard,
   IconLayoutSidebarLeftCollapse,
   IconLogout,
@@ -11,26 +13,149 @@ import {
   IconUsers,
   IconUsersGroup,
   IconVideo,
+  IconChevronDown,
 } from "@tabler/icons-react";
+
+type NavItemChild = {
+  label: string;
+  href: string;
+};
 
 type NavItem = {
   label: string;
   href: string;
   icon: React.ComponentType<{ size?: number; stroke?: number; className?: string }>;
   badge?: number;
+  children?: NavItemChild[];
 };
 
 const overviewItems: NavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard", icon: IconLayoutDashboard },
-  { label: "Courses", href: "/admin/courses", icon: IconBook },
-  { label: "Batches", href: "/admin/batches", icon: IconUsersGroup },
-  { label: "Sessions", href: "/admin/sessions", icon: IconVideo },
+  {
+    label: "Courses",
+    href: "/admin/courses",
+    icon: IconBook,
+    children: [
+      { label: "All Courses", href: "/admin/courses" },
+      { label: "Create Course", href: "/admin/courses/new" },
+      { label: "Drafts", href: "/admin/courses?status=DRAFT" },
+      { label: "Published", href: "/admin/courses?status=PUBLISHED" },
+      { label: "Archived", href: "/admin/courses?status=ARCHIVED" },
+    ],
+  },
+  {
+    label: "Batches",
+    href: "/admin/batches",
+    icon: IconUsersGroup,
+    children: [
+      { label: "All Batches", href: "/admin/batches" },
+      { label: "Create Batch", href: "/admin/batches/new" },
+      { label: "Active", href: "/admin/batches?status=ACTIVE" },
+      { label: "Upcoming", href: "/admin/batches?status=UPCOMING" },
+      { label: "Completed", href: "/admin/batches?status=COMPLETED" },
+    ],
+  },
+  {
+    label: "Sessions",
+    href: "/admin/sessions",
+    icon: IconVideo,
+    children: [
+      { label: "All Sessions", href: "/admin/sessions" },
+      { label: "Schedule Session", href: "/admin/sessions/new" },
+      { label: "Upcoming", href: "/admin/sessions?status=UPCOMING" },
+      { label: "Past", href: "/admin/sessions?status=PAST" },
+    ],
+  },
+  {
+    label: "Enrollments",
+    href: "/admin/enrollments",
+    icon: IconClipboardCheck,
+    children: [
+      { label: "Pending Requests", href: "/admin/enrollments" },
+      { label: "Approved", href: "/admin/enrollments?status=APPROVED" },
+      { label: "Rejected", href: "/admin/enrollments?status=REJECTED" },
+    ],
+  },
 ];
 
 const managementItems: NavItem[] = [
-  { label: "Users", href: "/admin/users", icon: IconUsers },
-  { label: "Mentorship", href: "/admin/mentorship", icon: IconMessages, badge: 3 },
+  {
+    label: "Users",
+    href: "/admin/users",
+    icon: IconUsers,
+    children: [
+      { label: "All Users", href: "/admin/users" },
+      { label: "Students", href: "/admin/users?role=STUDENT" },
+      { label: "Instructors", href: "/admin/users?role=INSTRUCTOR" },
+      { label: "Admins", href: "/admin/users?role=ADMIN" },
+    ],
+  },
+  {
+    label: "Mentorship",
+    href: "/admin/mentorship",
+    icon: IconMessages,
+    badge: 3,
+    children: [
+      { label: "All Requests", href: "/admin/mentorship?status=all" },
+      { label: "Pending Review", href: "/admin/mentorship?status=OPEN" },
+      { label: "Assigned", href: "/admin/mentorship?status=ASSIGNED" },
+      { label: "Scheduled", href: "/admin/mentorship?status=SCHEDULED" },
+      { label: "Completed", href: "/admin/mentorship?status=COMPLETED" },
+    ],
+  },
 ];
+
+function ChildNavLink({
+  child,
+  pathname,
+}: {
+  child: NavItemChild;
+  pathname: string;
+}) {
+  const searchParams = useSearchParams();
+  
+  // Parse child path and search params
+  const [childPath, childQueryString] = child.href.split("?");
+  const isPathActive = pathname === childPath;
+  
+  let isQueryActive = true;
+  if (childQueryString) {
+    const childParams = new URLSearchParams(childQueryString);
+    childParams.forEach((value, key) => {
+      if (searchParams.get(key) !== value) {
+        isQueryActive = false;
+      }
+    });
+  } else {
+    // If child has no query params, check that searchParams doesn't have active filters
+    const hasFilteringParams = searchParams.get("status") || searchParams.get("role");
+    if (hasFilteringParams) {
+      isQueryActive = false;
+    }
+  }
+
+  const isChildActive = isPathActive && isQueryActive;
+
+  return (
+    <li>
+      <Link
+        href={child.href}
+        className={`group flex items-center gap-2 rounded-lg py-1.5 px-3 text-[13px] font-medium transition-all duration-150 ${
+          isChildActive
+            ? "text-primary bg-primary/5 font-semibold"
+            : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
+        }`}
+      >
+        <span
+          className={`h-1.5 w-1.5 rounded-full transition-all duration-150 ${
+            isChildActive ? "bg-primary scale-125" : "bg-muted/40 group-hover:bg-muted"
+          }`}
+        />
+        <span>{child.label}</span>
+      </Link>
+    </li>
+  );
+}
 
 function NavGroup({
   label,
@@ -43,33 +168,122 @@ function NavGroup({
   pathname: string;
   collapsed?: boolean;
 }) {
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (collapsed) return;
+    const initialExpanded = { ...expandedGroups };
+    let changed = false;
+
+    items.forEach((item) => {
+      if (item.children) {
+        const isChildActive = item.children.some((child) => {
+          const [childPath] = child.href.split("?");
+          return pathname === childPath;
+        });
+
+        if (isChildActive && !expandedGroups[item.label]) {
+          initialExpanded[item.label] = true;
+          changed = true;
+        }
+      }
+    });
+
+    if (changed) {
+      setExpandedGroups(initialExpanded);
+    }
+  }, [pathname, collapsed, items]);
+
+  const toggleGroup = (groupLabel: string) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [groupLabel]: !prev[groupLabel],
+    }));
+  };
+
   return (
     <div className="space-y-1">
       <p className={`px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted ${collapsed ? "hidden" : "block"}`}>
         {label}
       </p>
-      <ul className={`space-y-0.5 ${collapsed ? "mx-auto w-fit" : ""}`}>
+      <ul className={`space-y-1 ${collapsed ? "mx-auto w-fit" : ""}`}>
         {items.map((item) => {
-          const isActive =
-            pathname === item.href || pathname?.startsWith(item.href + "/");
+          const hasChildren = !!item.children?.length;
+          const isExpanded = !!expandedGroups[item.label];
+
+          const isParentActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+          const isAnyChildActive = hasChildren && item.children!.some((child) => {
+            const [childPath] = child.href.split("?");
+            return pathname === childPath;
+          });
+          const isActive = isParentActive || isAnyChildActive;
+
           return (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                title={item.label}
-                className={`flex items-center rounded-xl py-2 text-sm font-medium transition-all duration-150 ${collapsed ? "justify-center px-2" : "gap-2.5 px-3"} ${isActive
-                    ? "border border-primary/25 bg-primary/15 text-primary-hover"
-                    : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
+            <li key={item.label} className="space-y-0.5">
+              {hasChildren && !collapsed ? (
+                <div className="space-y-0.5">
+                  <button
+                    onClick={() => toggleGroup(item.label)}
+                    title={item.label}
+                    className={`w-full flex items-center rounded-xl py-2 text-sm font-medium transition-all duration-150 gap-2.5 px-3 select-none text-left cursor-pointer ${
+                      isActive
+                        ? "border border-primary/15 bg-primary/10 text-primary-hover"
+                        : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
+                    }`}
+                  >
+                    <item.icon size={18} stroke={1.8} className="shrink-0" />
+                    <span className="flex-1 truncate">{item.label}</span>
+                    {item.badge != null && (
+                      <span className="rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-medium text-white mr-1">
+                        {item.badge}
+                      </span>
+                    )}
+                    <IconChevronDown
+                      size={16}
+                      stroke={1.8}
+                      className={`shrink-0 text-muted transition-transform duration-200 ${
+                        isExpanded ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ${
+                      isExpanded ? "max-h-64 opacity-100 mt-0.5" : "max-h-0 opacity-0 pointer-events-none"
+                    }`}
+                  >
+                    <ul className="pl-4 border-l border-border/60 ml-5 space-y-0.5">
+                      {item.children!.map((child) => (
+                        <ChildNavLink
+                          key={child.href}
+                          child={child}
+                          pathname={pathname}
+                        />
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  href={item.href}
+                  title={item.label}
+                  className={`flex items-center rounded-xl py-2 text-sm font-medium transition-all duration-150 ${
+                    collapsed ? "justify-center px-2" : "gap-2.5 px-3"
+                  } ${
+                    isActive
+                      ? "border border-primary/25 bg-primary/15 text-primary-hover"
+                      : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
                   }`}
-              >
-                <item.icon size={18} stroke={1.8} className="shrink-0" />
-                <span className={`flex-1 truncate ${collapsed ? "hidden" : "block"}`}>{item.label}</span>
-                {item.badge != null && (
-                  <span className={`${collapsed ? "hidden" : "rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-medium text-white"}`}>
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
+                >
+                  <item.icon size={18} stroke={1.8} className="shrink-0" />
+                  <span className={`flex-1 truncate ${collapsed ? "hidden" : "block"}`}>{item.label}</span>
+                  {item.badge != null && (
+                    <span className={`${collapsed ? "hidden" : "rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-medium text-white"}`}>
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              )}
             </li>
           );
         })}

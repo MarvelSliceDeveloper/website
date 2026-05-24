@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 
 type Course = {
@@ -30,10 +31,25 @@ const statusStyles: Record<string, string> = {
 };
 
 export default function AdminCoursesPage() {
+  return (
+    <Suspense fallback={
+      <div className="glass-card p-12 text-center">
+        <p className="text-muted animate-pulse">Loading courses...</p>
+      </div>
+    }>
+      <CoursesPageContent />
+    </Suspense>
+  );
+}
+
+function CoursesPageContent() {
+  const searchParams = useSearchParams();
+  const statusParam = searchParams.get("status") || "";
+
   const [courses, setCourses] = useState<Course[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState(statusParam);
   const [search, setSearch] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
 
@@ -54,6 +70,10 @@ export default function AdminCoursesPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    setStatusFilter(statusParam);
+  }, [statusParam]);
 
   useEffect(() => {
     fetchCourses();

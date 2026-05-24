@@ -54,6 +54,9 @@ model User {
   instructorOf   Batch[]             @relation("BatchInstructor")
   ticketsCreated MentorshipTicket[]  @relation("TicketStudent")
   ticketsAssigned MentorshipTicket[] @relation("TicketMentor")
+  notifications  Notification[]
+  attendance     Attendance[]
+  sessionsLed    LiveSession[]       @relation("SessionInstructor")
 }
 
 model Course {
@@ -141,6 +144,9 @@ model LiveSession {
   module         Module?        @relation(fields: [moduleId], references: [id])
   recording      Recording?
   calendarEvent  CalendarEvent?
+  attendance     Attendance[]
+  instructorId   String?
+  instructor     User?          @relation("SessionInstructor", fields: [instructorId], references: [id])
 }
 
 model Recording {
@@ -231,4 +237,29 @@ model MentorshipTicket {
   
   student       User         @relation("TicketStudent", fields: [studentId], references: [id])
   mentor        User?        @relation("TicketMentor", fields: [mentorId], references: [id])
+}
+
+// In-app notification for students and instructors
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   // SESSION_SCHEDULED, SESSION_CANCELLED, RECORDING_AVAILABLE
+  read      Boolean  @default(false)
+  metadata  Json?    // { sessionId, courseId, joinUrl, etc. }
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+// Attendance tracking — logged when a student clicks "Join Now"
+model Attendance {
+  id        String      @id @default(cuid())
+  userId    String
+  sessionId String
+  joinedAt  DateTime    @default(now())
+  user      User        @relation(fields: [userId], references: [id])
+  session   LiveSession @relation(fields: [sessionId], references: [id])
+
+  @@unique([userId, sessionId])
 }

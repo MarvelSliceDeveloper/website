@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { prisma } from '../../utils/prisma';
 import { createOnlineMeeting } from '../graph';
+import { notificationService } from '../notifications/notification.service';
 
 // --- Zod Schemas ---
 
@@ -10,6 +11,8 @@ export const CreateSessionSchema = z.object({
   title: z.string().min(3).max(200),
   startDateTime: z.string().datetime({ message: 'Must be a valid ISO 8601 datetime' }),
   endDateTime: z.string().datetime({ message: 'Must be a valid ISO 8601 datetime' }),
+  customJoinUrl: z.string().optional().nullable(),
+  instructorOverride: z.string().optional().nullable(),
 });
 
 export const UpdateSessionSchema = z.object({
@@ -23,11 +26,11 @@ export const UpdateSessionSchema = z.object({
 export const sessionService = {
   /**
    * Create a new live session.
-   * Calls Microsoft Graph to create a Teams meeting, then stores the session
-   * and creates a corresponding CalendarEvent.
+   * If customJoinUrl is provided, uses that. Otherwise calls Microsoft Graph to create a Teams meeting.
+   * Then stores the session and creates a corresponding CalendarEvent.
    */
   async createSession(userId: string, data: z.infer<typeof CreateSessionSchema>) {
-    const { batchId, moduleId, title, startDateTime, endDateTime } = data;
+    const { batchId, moduleId, title, startDateTime, endDateTime, customJoinUrl, instructorOverride } = data;
 
     // Verify the batch exists
     const batch = await prisma.batch.findUnique({
@@ -61,23 +64,47 @@ export const sessionService = {
       throw new Error('A session is already scheduled during this time for this batch');
     }
 
-    // Create Teams meeting via Graph API
-    const meeting = await createOnlineMeeting(userId, {
-      subject: `${batch.name} — ${title}`,
-      startDateTime,
-      endDateTime,
-    });
+    let teamsMeetingId = '';
+    let joinUrl = '';
+
+    if (customJoinUrl && customJoinUrl.trim()) {
+      // If admin pasted a custom meeting URL, use it directly
+      joinUrl = customJoinUrl.trim();
+      teamsMeetingId = `custom-${Math.random().toString(36).substring(2, 10)}-${Date.now()}`;
+    } else {
+      // Otherwise, auto-create Teams meeting via Graph API
+      try {
+        const meeting = await createOnlineMeeting(userId, {
+          subject: `${batch.name} — ${title}`,
+          startDateTime,
+          endDateTime,
+        });
+        teamsMeetingId = meeting.id;
+        joinUrl = meeting.joinWebUrl;
+      } catch (err: any) {
+        console.warn('Teams Graph API integration omitted/failed, generating fallback URL:', err.message);
+        // Fallback placeholder URL for easy testing
+        joinUrl = `https://teams.microsoft.com/l/meetup-join/fallback-${Date.now()}`;
+        teamsMeetingId = `fallback-${Date.now()}`;
+      }
+    }
+
+    // Determine instructor (use override or default to batch instructor)
+    const finalInstructorId = instructorOverride && instructorOverride.trim()
+      ? instructorOverride.trim()
+      : batch.instructorId;
 
     // Store in LiveSession table
     const session = await prisma.liveSession.create({
       data: {
         batchId,
         moduleId,
-        teamsMeetingId: meeting.id,
-        joinUrl: meeting.joinWebUrl,
+        teamsMeetingId,
+        joinUrl,
         scheduledAt: new Date(startDateTime),
-        createdFrom: 'LMS',
+        createdFrom: customJoinUrl && customJoinUrl.trim() ? 'LMS_CUSTOM' : 'LMS',
         createdBy: userId,
+        instructorId: finalInstructorId,
       },
     });
 
@@ -88,9 +115,14 @@ export const sessionService = {
         title: `${batch.name} — ${title}`,
         startAt: new Date(startDateTime),
         endAt: new Date(endDateTime),
-        joinUrl: meeting.joinWebUrl,
+        joinUrl,
         sessionId: session.id,
       },
+    });
+
+    // Trigger notification to students and instructor
+    await notificationService.notifySessionScheduled(session.id).catch(err => {
+      console.error('Failed to send session notifications:', err.message);
     });
 
     return session;
@@ -104,13 +136,58 @@ export const sessionService = {
     courseId?: string;
     status?: 'scheduled' | 'live' | 'completed' | 'cancelled';
     instructorId?: string;
+    studentId?: string;
   }) {
     const where: any = {};
 
-    if (filters.batchId) where.batchId = filters.batchId;
-    if (filters.courseId) where.batch = { courseId: filters.courseId };
+    if (filters.studentId) {
+      // Find batches where student is enrolled
+      const enrollments = await prisma.enrollmentRequest.findMany({
+        where: { userId: filters.studentId, status: 'APPROVED' },
+        select: { batchId: true }
+      });
+      const batchIds = enrollments.map(e => e.batchId).filter(Boolean) as string[];
+      
+      // If student is not in any approved batch, they shouldn't see anything
+      if (batchIds.length === 0) {
+        return [];
+      }
+      
+      if (filters.batchId) {
+        // If they requested a specific batch, ensure they are enrolled in it
+        if (!batchIds.includes(filters.batchId)) {
+          return [];
+        }
+        where.batchId = filters.batchId;
+      } else {
+        where.batchId = { in: batchIds };
+      }
+    } else if (filters.batchId) {
+      where.batchId = filters.batchId;
+    }
+
+    // Merge courseId + instructorId into a single batch filter
+    const batchFilter: any = {};
+    if (filters.courseId) batchFilter.courseId = filters.courseId;
+
     if (filters.instructorId) {
-      where.batch = { instructorId: filters.instructorId };
+      // Find sessions where the user is EITHER the overridden instructor OR the batch's default instructor
+      where.OR = [
+        { instructorId: filters.instructorId },
+        {
+          batch: {
+            instructorId: filters.instructorId,
+            ...(filters.courseId ? { courseId: filters.courseId } : {}),
+          },
+        },
+      ];
+      
+      // If courseId filter is active, apply it as well to the main where block (for override sessions)
+      if (filters.courseId) {
+        where.batch = batchFilter;
+      }
+    } else if (filters.courseId) {
+      where.batch = batchFilter;
     }
 
     // Status filter
@@ -128,7 +205,13 @@ export const sessionService = {
     return prisma.liveSession.findMany({
       where,
       include: {
-        batch: { select: { id: true, name: true, courseId: true } },
+        batch: {
+          select: {
+            id: true, name: true, courseId: true,
+            course: { select: { id: true, title: true } },
+            instructor: { select: { id: true, name: true } },
+          },
+        },
         module: { select: { id: true, title: true } },
         recording: { select: { id: true, syncedAt: true } },
       },

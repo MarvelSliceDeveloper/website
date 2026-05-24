@@ -331,4 +331,47 @@ router.get('/:courseId/content', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// POST /api/courses/enroll — student submits enrollment request for a course
+router.post('/enroll', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { courseId } = req.body;
+
+    if (!courseId) {
+      return res.status(400).json({ error: 'courseId is required' });
+    }
+
+    // Check course exists and is published
+    const course = await prisma.course.findUnique({ where: { id: courseId } });
+    if (!course || course.status !== 'PUBLISHED') {
+      return res.status(404).json({ error: 'Course not found or not available' });
+    }
+
+    // Check if already enrolled or has a pending request
+    const existing = await prisma.enrollmentRequest.findFirst({
+      where: { userId, courseId, status: { in: ['PENDING', 'APPROVED'] } },
+    });
+    if (existing) {
+      return res.status(400).json({ error: 'You already have an active enrollment for this course' });
+    }
+
+    // Create PENDING enrollment request
+    const enrollment = await prisma.enrollmentRequest.create({
+      data: {
+        userId,
+        courseId,
+        status: 'PENDING',
+      },
+    });
+
+    return res.status(201).json({
+      message: 'Enrollment request submitted. Admin will review and assign you to a batch.',
+      enrollment,
+    });
+  } catch (error: any) {
+    console.error('Error creating enrollment request:', error);
+    return res.status(500).json({ error: 'Failed to submit enrollment request' });
+  }
+});
+
 export const studentCourseRouter = router;

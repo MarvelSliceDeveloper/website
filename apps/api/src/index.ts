@@ -23,6 +23,10 @@ import { certificateRouter } from './modules/certificates/certificate.routes';
 import { studentRouter } from './modules/student/student.routes';
 import { studentCourseRouter } from './modules/courses/student-course.routes';
 import { eventsWebhookController } from './modules/sessions/events-webhook.controller';
+import { notificationRouter } from './modules/notifications/notification.routes';
+import { attendanceRouter } from './modules/attendance/attendance.routes';
+import { recordingSyncJob } from './jobs/recording-sync.job';
+import { enrollmentRouter } from './modules/enrollments/enrollment.routes';
 
 const app = express();
 
@@ -50,6 +54,9 @@ app.use('/api/users', userRouter);
 app.use('/api/certificates', certificateRouter);
 app.use('/api/student', studentRouter);
 app.use('/api/courses', studentCourseRouter);
+app.use('/api/notifications', notificationRouter);
+app.use('/api/attendance', attendanceRouter);
+app.use('/api/admin/enrollments', enrollmentRouter);
 app.use('/api/webhooks', webhookRouter);
 
 // Events webhook — for Teams-created meetings (no auth required)
@@ -77,4 +84,6 @@ const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, () => {
   logger.info(`API Server running on port ${PORT}`);
+  // Start the background Teams recording poller
+  recordingSyncJob.start();
 });

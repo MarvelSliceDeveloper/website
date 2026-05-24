@@ -1,0 +1,128 @@
+# Live Sessions Flow — Analysis & Implementation Plan
+
+I've read through the entire codebase. Here's my analysis of what exists, what's broken, and what needs to be built.
+
+---
+
+## Current State Summary
+
+### What Already Exists ✅
+
+| Layer | Component | Status |
+|-------|-----------|--------|
+| **DB Schema** | `LiveSession` model (Prisma) | ✅ Has `batchId`, `joinUrl`, `teamsMeetingId`, `scheduledAt`, `endedAt` |
+| **DB Schema** | `CalendarEvent` model | ✅ Linked to `LiveSession` via `sessionId` |
+| **DB Schema** | `Recording` model | ✅ Linked to `LiveSession` via `sessionId` |
+| **Backend** | `POST /api/sessions` — create session | ✅ Creates Teams meeting via Graph API, stores `LiveSession` + `CalendarEvent` |
+| **Backend** | `GET /api/sessions` — list sessions | ✅ Supports `batchId`, `courseId`, `status` filters |
+| **Backend** | `GET /api/sessions/:id` — detail | ✅ Includes batch, module, recording, calendar event |
+| **Backend** | `PATCH /api/sessions/:id` — update | ✅ Updates schedule + calendar event |
+| **Backend** | `DELETE /api/sessions/:id` — cancel (soft delete) | ✅ Sets `endedAt = now()` |
+| **Backend** | `POST /api/recordings/:sessionId/sync` | ✅ Fetches recording from MS Graph, stores in DB |
+| **Backend** | Recording playback + progress tracking | ✅ Full CRUD |
+| **Frontend (Admin)** | [sessions/page.tsx](file:///d:/Harish%20Kumar/Project/LMS/apps/web/src/app/admin/sessions/page.tsx) — list sessions | ✅ Lists upcoming/past, shows join URL |
+| **Frontend (Admin)** | AdminSidebar has "Schedule Session" link to `/admin/sessions/new` | ✅ Link exists |
+| **Frontend (Student)** | [LiveSessionsView.tsx](file:///d:/Harish%20Kumar/Project/LMS/apps/web/src/app/student/_views/LiveSessionsView.tsx) — student live sessions | ✅ Shows Live/Upcoming/Past with Join button |
+| **Frontend (Student)** | [CourseContentView.tsx](file:///d:/Harish%20Kumar/Project/LMS/apps/web/src/app/student/_views/CourseContentView.tsx) — "Live Classes" tab inside course | ✅ Shows sessions with Join Now button |
+
+---
+
+### What's Broken / Missing ❌
+
+#### 1. ❌ **Admin "Schedule Session" page (`/admin/sessions/new`) does NOT exist**
+- The AdminSidebar links to `/admin/sessions/new`, but **there is no `page.tsx` file at `apps/web/src/app/admin/sessions/new/`**.
+- This is the core problem: the admin cannot create sessions because the form page is missing.
+
+#### 2. ❌ **Admin sessions list: `session.batch.course.title` crashes**
+- The [admin sessions page](file:///d:/Harish%20Kumar/Project/LMS/apps/web/src/app/admin/sessions/page.tsx#L114) renders `session.batch.course.title`, but the backend `listSessions` service only includes `batch: { select: { id, name, courseId } }` — **it does NOT include `course`**.
+- This will cause a runtime error or show `undefined`.
+
+#### 3. ❌ **No notification system exists**
+- There is **no `Notification` model** in the Prisma schema.
+- There are **no notification routes** in the API.
+- When a session is created, there is no mechanism to notify the instructor or enrolled students.
+
+#### 4. ❌ **No instructor dashboard / session view**
+- The `apps/web/src/app/(instructor)` directory is **completely empty**.
+- Instructors have no dedicated page to see their scheduled sessions or join a Teams meeting.
+- Currently, instructors would have to rely on the admin panel or use the student portal.
+
+#### 5. ❌ **`listSessions` filters with `instructorId` override `courseId`**
+- In [session.service.ts L111-114](file:///d:/Harish%20Kumar/Project/LMS/apps/api/src/modules/sessions/session.service.ts#L111-L114), if both `courseId` and `instructorId` are provided, the `where.batch` object gets overwritten — `instructorId` filter clobbers the `courseId` filter:
+  ```ts
+  if (filters.courseId) where.batch = { courseId: filters.courseId };
+  if (filters.instructorId) where.batch = { instructorId: filters.instructorId }; // overwrites ☝️
+  ```
+
+#### 6. ❌ **No auto-fetch of recording link after session ends**
+- Recording sync is manual via `POST /api/recordings/:sessionId/sync`.
+- There is **no background job or cron** that automatically fetches and links recordings after a session ends.
+- The webhook `events-webhook.controller.ts` handles meeting create/update/delete events but does NOT trigger recording sync.
+
+#### 7. ⚠️ **Student `LiveSessionsView` uses mock data only**
+- The student page calls `api.get("/api/sessions/live")`, but this endpoint does **not exist** on the backend. The actual endpoints are `GET /api/sessions?status=live` or `GET /api/calendar/live`.
+- The `LiveSessionsView` component receives data from mock data (`MOCK_LIVE_SESSIONS`) and displays it — it is not wired to the real API response shape.
+
+---
+
+## Implementation Plan
+
+Here's the ordered work to make the full session flow functional:
+
+### Phase 1: Fix Backend Bugs
+1. **Fix `listSessions` filter clobbering** — merge `courseId` and `instructorId` into a single `where.batch` object.
+2. **Include `course` in `listSessions` response** — add `course: { select: { id, title } }` inside the batch include.
+
+### Phase 2: Build Admin "Schedule Session" Page
+3. **Create `apps/web/src/app/admin/sessions/new/page.tsx`** — a form with:
+   - Batch selector (dropdown of all batches with course name)
+   - Module selector (optional, filtered by selected batch's course)
+   - Title field
+   - Start date/time picker
+   - End date/time picker
+   - Submit → calls `POST /api/sessions`
+
+### Phase 3: Add Notification System
+4. **Add `Notification` model** to Prisma schema:
+   ```prisma
+   model Notification {
+     id        String   @id @default(cuid())
+     userId    String
+     title     String
+     message   String
+     type      String   // SESSION_SCHEDULED, SESSION_CANCELLED, RECORDING_AVAILABLE
+     read      Boolean  @default(false)
+     metadata  Json?    // { sessionId, courseId, joinUrl, etc. }
+     createdAt DateTime @default(now())
+     user      User     @relation(fields: [userId], references: [id])
+   }
+   ```
+5. **Create notification service & routes** — `POST` (internal), `GET /api/notifications`, `PATCH /api/notifications/:id/read`
+6. **Trigger notifications on session create** — notify instructor + all enrolled students in the batch
+
+### Phase 4: Build Instructor Dashboard
+7. **Create instructor layout and sessions page** — show scheduled sessions, join button, recording sync button
+
+### Phase 5: Auto-Fetch Recording After Session Ends
+8. **Add a background job / polling mechanism** — after `endedAt` is set on a session, periodically attempt `syncRecordingsForSession` until successful or max retries reached
+9. **Display recording under course Live Sessions** — the `CourseContentView` "Live Classes" tab already shows `hasRecording`, so the recording link just needs to actually exist in the DB
+
+### Phase 6: Wire Student Live Sessions to Real API
+10. **Fix the student portal** to call the correct `GET /api/sessions` endpoint (with appropriate filters like `batchId` or `courseId`) instead of the non-existent `/api/sessions/live`
+
+---
+
+## Questions Before I Start
+
+> [!IMPORTANT]
+> I have a few questions to clarify before proceeding:
+
+1. **Which phases do you want me to tackle first?** Should I do all 6 phases, or just focus on certain ones (e.g., Phase 1 + 2 to get the admin scheduling working)?
+
+2. **Notification delivery method:** Do you want just in-app notifications (stored in DB, shown in the UI), or also **email notifications** to instructor/students?
+
+3. **Instructor dashboard:** Should the instructor use the same student portal layout (sidebar + views), or should they have a completely separate layout (like the admin panel)?
+
+4. **Auto-sync recordings:** Should this be a simple polling approach (check every 5 minutes for ended sessions without recordings), or do you want a more sophisticated approach (e.g., webhook-triggered)?
+
+5. **Teams link for students:** Currently `joinUrl` from the Teams meeting is stored in the `LiveSession` table. Should students see the raw Teams join URL, or should it go through your backend (e.g., for tracking attendance)?

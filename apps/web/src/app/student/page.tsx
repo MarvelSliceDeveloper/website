@@ -119,9 +119,9 @@ async function fetchPortalData(): Promise<PortalData> {
   }
 
   // Real API calls — run in parallel
-  const [enrolled, sessions, calEvents, tickets, certs, catalogue, overdueAssignments] = await Promise.all([
+  const [enrolled, sessionsData, calEvents, tickets, certs, catalogue, overdueAssignments] = await Promise.all([
     api.get<{ courses: EnrolledCourse[] }>("/api/courses/enrolled").catch(() => ({ courses: MOCK_ENROLLED_COURSES })),
-    api.get<{ sessions: LiveSession[] }>("/api/sessions/live").catch(() => ({ sessions: MOCK_LIVE_SESSIONS })),
+    api.get<{ sessions: any[] }>("/api/sessions").catch(() => ({ sessions: [] })),
     api.get<{ events: CalendarEvent[] }>("/api/calendar/events").catch(() => ({ events: MOCK_CALENDAR_EVENTS })),
     api.get<{ tickets: MentorshipTicket[] }>("/api/mentorship/tickets/my").catch(() => ({ tickets: MOCK_MENTORSHIP_TICKETS })),
     api.get<{ certificates: Certificate[] }>("/api/certificates/my").catch(() => ({ certificates: MOCK_CERTIFICATES })),
@@ -131,17 +131,41 @@ async function fetchPortalData(): Promise<PortalData> {
       .catch(() => ({ items: [] })),
   ]);
 
+  const now = new Date();
+  const mappedSessions: LiveSession[] = (sessionsData.sessions || []).map((s: any) => {
+    const scheduledTime = new Date(s.scheduledAt);
+    let status: "LIVE" | "UPCOMING" | "PAST" = "UPCOMING";
+    
+    if (s.endedAt) {
+      status = "PAST";
+    } else if (scheduledTime <= now) {
+      status = "LIVE";
+    }
+
+    return {
+      id: s.id,
+      title: s.module ? `Module ${s.module.title} — ${s.batch?.course?.title}` : `Live Session — ${s.batch?.course?.title}`,
+      courseTitle: s.batch?.course?.title || "Unknown Course",
+      instructor: s.batch?.instructor?.name || "TBD",
+      batchLabel: s.batch?.name || "—",
+      status,
+      scheduledAt: s.scheduledAt,
+      joinUrl: s.joinUrl,
+      recordingSyncingIn: status === "PAST" && !s.recording ? "~20 min" : undefined,
+    };
+  });
+
   return {
     stats: {
       enrolledCount: enrolled.courses.length,
       completedCount: enrolled.courses.filter((c) => c.status === "COMPLETED").length,
-      liveTodayCount: sessions.sessions.filter((s) => s.status === "LIVE").length,
+      liveTodayCount: mappedSessions.filter((s) => s.status === "LIVE").length,
       certificatesCount: (certs.certificates ?? []).filter((c) => c.earned).length,
     },
     overdueAssignments: overdueAssignments.items,
     enrolledCourses: enrolled.courses,
     batches: MOCK_BATCHES, // batches loaded on demand
-    liveSessions: sessions.sessions,
+    liveSessions: mappedSessions,
     calendarEvents: calEvents.events,
     mentorshipTickets: tickets.tickets,
     certificates: certs.certificates,
@@ -343,7 +367,7 @@ export default function StudentPortalPage() {
       await new Promise((r) => setTimeout(r, 800));
       return;
     }
-    await api.post("/api/payments/create-order", { courseId });
+    await api.post("/api/courses/enroll", { courseId });
   }
 
   // ── Loading / Error states ────────────────────────────────────────────────

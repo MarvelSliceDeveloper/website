@@ -1,6 +1,7 @@
 import { prisma } from '../../utils/prisma';
 import { getMeetingRecordings } from '../graph/graph.recordings';
 import { GraphError } from '../graph/graph.client';
+import { notificationService } from '../notifications/notification.service';
 
 export const recordingService = {
   /**
@@ -53,6 +54,12 @@ export const recordingService = {
       });
 
       console.log(`[RecordingSync] Successfully synced recording for session ${sessionId}`);
+
+      // Notify students that the recording is ready
+      await notificationService.notifyRecordingAvailable(sessionId).catch(err => {
+        console.error('Failed to send recording notifications:', err.message);
+      });
+
       return recording;
     } catch (error: any) {
       if (error instanceof GraphError && error.statusCode === 404) {

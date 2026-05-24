@@ -45,11 +45,13 @@ export const sessionController = {
 
       const { batchId, courseId, status } = req.query;
 
+      // Only filter by instructorId for INSTRUCTOR role — admins should see all sessions
       const sessions = await sessionService.listSessions({
         batchId: batchId as string | undefined,
         courseId: courseId as string | undefined,
         status: status as 'scheduled' | 'live' | 'completed' | 'cancelled' | undefined,
-        instructorId: req.user.userId,
+        instructorId: req.user.role === 'INSTRUCTOR' ? req.user.userId : undefined,
+        studentId: req.user.role === 'STUDENT' ? req.user.userId : undefined,
       });
 
       return res.status(200).json({ sessions });
