@@ -4,6 +4,14 @@
 
 ---
 
+## 2026-05-24 — Student Portal Refinement, Live Session Scheduling & System Documentation ✅
+
+- **Documentation**: Created `docs/SYSTEM_GUIDE.md` detailing the entire enrollment approval pipeline, dynamic admin user creation, live session overrides, thumbnail rendering systems, and default seeded credentials.
+- **Student UI Thumbnail Fix**: Updated thumbnail container in all 4 student portal views (`CoursesView`, `HomeView`, `CourseDetailView`, and `BrowseCatalogueView`) to automatically render image tags if the path starts with a slash or HTTP, resolving text overlaps.
+- **Mock Data Leakage Cleanup**: Replaced mock data catch-block fallbacks with clean empty arrays (`[]`) in the student page parallel API fetches, ensuring clean and authentic local database testing.
+- **Instructor Dashboard**: Verified default instructor seeded credential login: `instructor@lms.local` / `instructor123` with access to the `/sessions` route.
+- **Schedule Dropdowns & Scheduling**: Validated response schema shapes for courses and batches dropdown APIs, ensuring full compatibility between the Express API server and Next.js frontend pages.
+
 ## 2026-05-23 — Course Thumbnail Upload (Local Storage) ✅
 
 - **Admin UI**: Added thumbnail file upload during course creation and in the course editor.

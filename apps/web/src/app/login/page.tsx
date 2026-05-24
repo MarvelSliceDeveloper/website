@@ -10,6 +10,11 @@ const demoAccounts = {
     password: "student123",
     redirectTo: "/student/",
   },
+  instructor: {
+    email: "instructor@lms.local",
+    password: "instructor123",
+    redirectTo: "/instructor/dashboard",
+  },
   admin: {
     email: "admin@lms.local",
     password: "admin123",
@@ -47,6 +52,11 @@ export default function LoginPage() {
         return;
       }
 
+      if (role === "INSTRUCTOR") {
+        router.push("/instructor/dashboard");
+        return;
+      }
+
       router.push(demoAccounts.student.redirectTo);
     } catch (submitError) {
       if (submitError instanceof Error) {
@@ -74,6 +84,10 @@ export default function LoginPage() {
             <div className="panel px-4 py-3">
               <p className="text-xs text-muted">Student demo</p>
               <p className="text-sm font-semibold text-foreground">{demoAccounts.student.email}</p>
+            </div>
+            <div className="panel px-4 py-3">
+              <p className="text-xs text-muted">Instructor demo</p>
+              <p className="text-sm font-semibold text-foreground">{demoAccounts.instructor.email}</p>
             </div>
             <div className="panel px-4 py-3">
               <p className="text-xs text-muted">Admin demo</p>
@@ -132,6 +146,7 @@ export default function LoginPage() {
           <div className="mt-6 rounded-xl border border-border bg-background/40 p-4 text-xs text-muted-foreground lg:hidden">
             <p className="font-semibold text-foreground">Demo Credentials</p>
             <p className="mt-2">Student: {demoAccounts.student.email} / {demoAccounts.student.password}</p>
+            <p className="mt-1">Instructor: {demoAccounts.instructor.email} / {demoAccounts.instructor.password}</p>
             <p className="mt-1">Admin: {demoAccounts.admin.email} / {demoAccounts.admin.password}</p>
           </div>
         </section>

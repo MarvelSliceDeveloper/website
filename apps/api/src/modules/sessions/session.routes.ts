@@ -8,8 +8,8 @@ const router = Router();
 // All session routes require authentication
 router.use(requireAuth);
 
-// POST /api/sessions — create a new session (admins only)
-router.post('/', requireRole([UserRole.ADMIN]), sessionController.create);
+// POST /api/sessions — create a new session (admins + instructors)
+router.post('/', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), sessionController.create);
 
 // GET /api/sessions — list sessions
 router.get('/', sessionController.list);

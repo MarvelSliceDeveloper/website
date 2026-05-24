@@ -104,8 +104,12 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
               <div key={course.id} className="glass-card group overflow-hidden transition-all hover:-translate-y-0.5 hover:border-primary/30">
                 <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
                   {/* Thumbnail */}
-                  <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-card text-3xl">
-                    {course.thumbnail}
+                  <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-card text-3xl overflow-hidden">
+                    {course.thumbnail && (course.thumbnail.startsWith("/") || course.thumbnail.startsWith("http")) ? (
+                      <img src={course.thumbnail} className="h-full w-full object-cover" alt="" />
+                    ) : (
+                      course.thumbnail || "📚"
+                    )}
                   </div>
 
                   {/* Info */}

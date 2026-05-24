@@ -7,6 +7,7 @@ import { api } from "../lib/api";
 import {
   IconBook,
   IconCalendar,
+  IconClipboardList,
   IconLayoutDashboard,
   IconLayoutSidebarLeftCollapse,
   IconLogout,
@@ -25,6 +26,7 @@ const mainItems: NavItem[] = [
   { label: "Dashboard", href: "/instructor/dashboard", icon: IconLayoutDashboard },
   { label: "My Sessions", href: "/instructor/sessions", icon: IconVideo },
   { label: "My Batches", href: "/instructor/batches", icon: IconUsers },
+  { label: "Assignments", href: "/instructor/assignments", icon: IconClipboardList },
 ];
 
 export default function InstructorSidebar({

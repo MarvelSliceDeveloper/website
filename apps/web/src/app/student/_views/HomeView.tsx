@@ -293,8 +293,12 @@ export default function HomeView({
                 onClick={() => navigate({ view: "RECORDING_PLAYER", params: { batchId: item.batchId, sessionId: item.recordingId } })}
                 className="glass-card group flex w-full items-center gap-4 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30"
               >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-2xl">
-                  {item.thumbnail}
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-2xl overflow-hidden">
+                  {item.thumbnail && (item.thumbnail.startsWith("/") || item.thumbnail.startsWith("http")) ? (
+                    <img src={item.thumbnail} className="h-full w-full object-cover" alt="" />
+                  ) : (
+                    item.thumbnail || "📚"
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">{item.courseTitle}</p>

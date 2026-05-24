@@ -16,11 +16,14 @@ export const calendarController = {
     try {
       const { start, end } = req.query;
 
-      if (!start || !end) {
-        return res.status(400).json({ error: 'start and end query parameters are required (ISO 8601 format)' });
-      }
+      const now = new Date();
+      const defaultStart = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString(); // 90 days ago
+      const defaultEnd = new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000).toISOString(); // 180 days from now
 
-      const events = await getEventsForUser(start as string, end as string);
+      const startDate = (start as string) || defaultStart;
+      const endDate = (end as string) || defaultEnd;
+
+      const events = await getEventsForUser(startDate, endDate);
       return res.status(200).json({ events });
     } catch (error: any) {
       console.error('Error fetching calendar events:', error.message);

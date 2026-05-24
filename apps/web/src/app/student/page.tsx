@@ -120,12 +120,12 @@ async function fetchPortalData(): Promise<PortalData> {
 
   // Real API calls — run in parallel
   const [enrolled, sessionsData, calEvents, tickets, certs, catalogue, overdueAssignments] = await Promise.all([
-    api.get<{ courses: EnrolledCourse[] }>("/api/courses/enrolled").catch(() => ({ courses: MOCK_ENROLLED_COURSES })),
+    api.get<{ courses: EnrolledCourse[] }>("/api/courses/enrolled").catch(() => ({ courses: [] })),
     api.get<{ sessions: any[] }>("/api/sessions").catch(() => ({ sessions: [] })),
-    api.get<{ events: CalendarEvent[] }>("/api/calendar/events").catch(() => ({ events: MOCK_CALENDAR_EVENTS })),
-    api.get<{ tickets: MentorshipTicket[] }>("/api/mentorship/tickets/my").catch(() => ({ tickets: MOCK_MENTORSHIP_TICKETS })),
-    api.get<{ certificates: Certificate[] }>("/api/certificates/my").catch(() => ({ certificates: MOCK_CERTIFICATES })),
-    api.get<{ courses: CatalogueCourse[] }>("/api/courses/catalogue").catch(() => ({ courses: MOCK_CATALOGUE })),
+    api.get<{ events: CalendarEvent[] }>("/api/calendar/events").catch(() => ({ events: [] })),
+    api.get<{ tickets: MentorshipTicket[] }>("/api/mentorship/tickets/my").catch(() => ({ tickets: [] })),
+    api.get<{ certificates: Certificate[] }>("/api/certificates/my").catch(() => ({ certificates: [] })),
+    api.get<{ courses: CatalogueCourse[] }>("/api/courses/catalogue").catch(() => ({ courses: [] })),
     api
       .get<{ items: OverdueAssignment[] }>("/api/student/assignments/overdue")
       .catch(() => ({ items: [] })),

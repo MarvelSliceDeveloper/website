@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { IconEdit, IconTrash, IconX, IconRefresh } from "@tabler/icons-react";
 
 type Session = {
   id: string;
@@ -23,19 +24,86 @@ export default function AdminSessionsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  // Edit modal state
+  const [editingSession, setEditingSession] = useState<Session | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editStart, setEditStart] = useState("");
+  const [editEnd, setEditEnd] = useState("");
+  const [editError, setEditError] = useState("");
+  const [editSubmitting, setEditSubmitting] = useState(false);
+
+  // Sync state
+  const [syncingId, setSyncingId] = useState<string | null>(null);
+
+  const fetchSessions = () => {
+    setLoading(true);
     api.get<SessionsResponse>("/api/sessions")
       .then((response) => {
         setSessions(Array.isArray(response.sessions) ? response.sessions : []);
       })
       .catch(() => setSessions([]))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchSessions();
   }, []);
 
   const now = new Date();
 
   const upcoming = sessions.filter((s) => !s.endedAt && new Date(s.scheduledAt) >= now);
   const past = sessions.filter((s) => s.endedAt || new Date(s.scheduledAt) < now);
+
+  const openEdit = (session: Session) => {
+    setEditingSession(session);
+    setEditTitle(`${session.batch.course.title} — ${session.batch.name}`);
+    setEditStart(new Date(session.scheduledAt).toISOString().slice(0, 16));
+    setEditEnd(new Date(new Date(session.scheduledAt).getTime() + 3600000).toISOString().slice(0, 16));
+    setEditError("");
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSession) return;
+    setEditSubmitting(true);
+    setEditError("");
+    try {
+      await api.patch(`/api/sessions/${editingSession.id}`, {
+        title: editTitle,
+        startDateTime: new Date(editStart).toISOString(),
+        endDateTime: new Date(editEnd).toISOString(),
+      });
+      setEditingSession(null);
+      fetchSessions();
+    } catch (err: any) {
+      setEditError(err.message || "Failed to update session");
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (sessionId: string) => {
+    if (!confirm("Are you sure you want to cancel this session? This action marks the session as ended.")) return;
+    try {
+      await api.delete(`/api/sessions/${sessionId}`);
+      fetchSessions();
+    } catch (err: any) {
+      alert(err.message || "Failed to cancel session");
+    }
+  };
+
+  const handleSync = async (sessionId: string) => {
+    setSyncingId(sessionId);
+    try {
+      await api.post(`/api/recordings/${sessionId}/sync`);
+      alert("Recording synced successfully!");
+      fetchSessions();
+    } catch (err: any) {
+      alert(err.message || "No recording found yet. Teams recordings may take a few minutes to become available.");
+    } finally {
+      setSyncingId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -70,7 +138,13 @@ export default function AdminSessionsPage() {
               </h2>
               <div className="space-y-2">
                 {upcoming.map((session) => (
-                  <SessionCard key={session.id} session={session} upcoming />
+                  <SessionCard
+                    key={session.id}
+                    session={session}
+                    upcoming
+                    onEdit={openEdit}
+                    onDelete={handleDelete}
+                  />
                 ))}
               </div>
             </div>
@@ -84,18 +158,81 @@ export default function AdminSessionsPage() {
               </h2>
               <div className="space-y-2">
                 {past.map((session) => (
-                  <SessionCard key={session.id} session={session} upcoming={false} />
+                  <SessionCard
+                    key={session.id}
+                    session={session}
+                    upcoming={false}
+                    onEdit={openEdit}
+                    onDelete={handleDelete}
+                    onSync={handleSync}
+                    syncing={syncingId === session.id}
+                  />
                 ))}
               </div>
             </div>
           )}
         </div>
       )}
+
+      {/* Edit Modal */}
+      {editingSession && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="glass-card w-full max-w-lg overflow-hidden border border-border shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-border bg-card p-4">
+              <h3 className="font-bold text-foreground">Edit Session</h3>
+              <button onClick={() => setEditingSession(null)} className="rounded-lg p-1 hover:bg-card-hover text-muted-foreground">
+                <IconX size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="p-4 space-y-4">
+              {editError && <div className="rounded-lg bg-danger/10 border border-danger/25 p-3 text-xs text-danger">{editError}</div>}
+
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Session Title</label>
+                <input type="text" className="field" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Start</label>
+                  <input type="datetime-local" className="field" value={editStart} onChange={(e) => setEditStart(e.target.value)} required />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">End</label>
+                  <input type="datetime-local" className="field" value={editEnd} onChange={(e) => setEditEnd(e.target.value)} required />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => setEditingSession(null)} className="btn-secondary text-xs px-4">Cancel</button>
+                <button type="submit" disabled={editSubmitting} className="btn-primary text-xs px-4">
+                  {editSubmitting ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function SessionCard({ session, upcoming }: { session: Session; upcoming: boolean }) {
+function SessionCard({
+  session,
+  upcoming,
+  onEdit,
+  onDelete,
+  onSync,
+  syncing,
+}: {
+  session: Session;
+  upcoming: boolean;
+  onEdit: (s: Session) => void;
+  onDelete: (id: string) => void;
+  onSync?: (id: string) => void;
+  syncing?: boolean;
+}) {
   return (
     <div className="glass-card p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-3">
@@ -130,14 +267,49 @@ function SessionCard({ session, upcoming }: { session: Session; upcoming: boolea
           </div>
         </div>
       </div>
-      <a
-        href={session.joinUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="btn-secondary text-xs shrink-0"
-      >
-        {upcoming ? "Join →" : "View Details"}
-      </a>
+
+      <div className="flex items-center gap-2 shrink-0">
+        {/* Sync Recording (past sessions without recording) */}
+        {!upcoming && !session.recording && onSync && (
+          <button
+            onClick={() => onSync(session.id)}
+            disabled={syncing}
+            className="btn-secondary text-xs px-2.5 py-1.5 flex items-center gap-1"
+            title="Sync recording from Teams"
+          >
+            <IconRefresh size={14} className={syncing ? "animate-spin" : ""} />
+            {syncing ? "Syncing" : "Sync"}
+          </button>
+        )}
+
+        {/* Edit */}
+        <button
+          onClick={() => onEdit(session)}
+          className="p-1.5 rounded-lg border border-border hover:bg-card-hover text-muted-foreground hover:text-foreground transition-colors"
+          title="Edit session"
+        >
+          <IconEdit size={15} />
+        </button>
+
+        {/* Delete / Cancel */}
+        <button
+          onClick={() => onDelete(session.id)}
+          className="p-1.5 rounded-lg border border-danger/20 hover:bg-danger/10 text-muted-foreground hover:text-danger transition-colors"
+          title="Cancel session"
+        >
+          <IconTrash size={15} />
+        </button>
+
+        {/* Join / View */}
+        <a
+          href={session.joinUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-secondary text-xs shrink-0"
+        >
+          {upcoming ? "Join →" : "View Details"}
+        </a>
+      </div>
     </div>
   );
 }
