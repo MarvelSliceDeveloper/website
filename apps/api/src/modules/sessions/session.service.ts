@@ -146,13 +146,13 @@ export const sessionService = {
         where: { userId: filters.studentId, status: 'APPROVED' },
         select: { batchId: true }
       });
-      const batchIds = enrollments.map(e => e.batchId).filter(Boolean) as string[];
-      
+      const batchIds = enrollments.map((e: typeof enrollments[number]) => e.batchId).filter(Boolean) as string[];
+
       // If student is not in any approved batch, they shouldn't see anything
       if (batchIds.length === 0) {
         return [];
       }
-      
+
       if (filters.batchId) {
         // If they requested a specific batch, ensure they are enrolled in it
         if (!batchIds.includes(filters.batchId)) {
@@ -181,7 +181,7 @@ export const sessionService = {
           },
         },
       ];
-      
+
       // If courseId filter is active, apply it as well to the main where block (for override sessions)
       if (filters.courseId) {
         where.batch = batchFilter;
@@ -247,7 +247,7 @@ export const sessionService = {
     });
 
     if (!session) throw new Error('Session not found');
-    
+
     // In actual implementation, roleGuard middleware ensures only ADMIN or the specific INSTRUCTOR can access.
     // We double check instructor ownership here if they aren't admin.
     const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -288,7 +288,7 @@ export const sessionService = {
     });
 
     if (!session) throw new Error('Session not found');
-    
+
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (user?.role === 'INSTRUCTOR' && session.batch.instructorId !== userId) {
       throw new Error('Only the assigned instructor or an admin can cancel this session');

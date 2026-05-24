@@ -113,7 +113,7 @@ export const recordingService = {
       orderBy: { session: { scheduledAt: 'asc' } },
     });
 
-    return recordings.map((recording) => ({
+    return recordings.map((recording: typeof recordings[number]) => ({
       ...recording,
       sessionId: recording.session.id,
       moduleId: recording.session.moduleId,

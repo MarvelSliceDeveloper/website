@@ -162,7 +162,7 @@ export const notificationService = {
 
     const message = `Recording is now available for ${session.batch.course.title} — ${session.batch.name}`;
 
-    const notifications = session.batch.enrollments.map((e) => ({
+    const notifications = session.batch.enrollments.map((e: typeof session.batch.enrollments[0]) => ({
       userId: e.userId,
       title: '📹 Recording Available',
       message,

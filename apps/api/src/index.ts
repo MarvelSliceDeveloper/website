@@ -1,9 +1,14 @@
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+
+// ↓ everything else stays the same ↓
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import pino from 'pino';
+
 import rateLimit from 'express-rate-limit';
 import fs from 'fs';
-import path from 'path';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',

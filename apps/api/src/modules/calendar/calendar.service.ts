@@ -1,5 +1,20 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../../utils/prisma';
 import { getCalendarView, CalendarEvent as MsCalendarEvent } from '../graph';
+
+type CalendarEventWithSession = Prisma.CalendarEventGetPayload<{
+  include: {
+    session: {
+      select: {
+        id: true;
+        batchId: true;
+        joinUrl: true;
+        scheduledAt: true;
+        endedAt: true;
+      };
+    };
+  };
+}>;
 
 /**
  * Checks if a session is currently live.
@@ -17,7 +32,7 @@ export function isSessionLive(startAt: Date, endAt: Date): boolean {
  */
 export async function syncCalendarForUser(userId: string, startDate: string, endDate: string) {
   // Fetch events from Microsoft Graph
-  const msEvents = await getCalendarView(userId, startDate, endDate);
+  const msEvents: MsCalendarEvent[] = await getCalendarView(userId, startDate, endDate);
 
   const results = {
     created: 0,
@@ -110,7 +125,7 @@ export async function getTodayEvents() {
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
 
-  const events = await prisma.calendarEvent.findMany({
+  const events: CalendarEventWithSession[] = await prisma.calendarEvent.findMany({
     where: {
       startAt: { gte: startOfDay },
       endAt: { lte: endOfDay },
@@ -143,7 +158,7 @@ export async function getLiveSessions() {
   const bufferMs = 15 * 60 * 1000;
   const bufferedNow = new Date(now.getTime() - bufferMs);
 
-  const events = await prisma.calendarEvent.findMany({
+  const events: CalendarEventWithSession[] = await prisma.calendarEvent.findMany({
     where: {
       startAt: { lte: now },
       endAt: { gte: bufferedNow },
