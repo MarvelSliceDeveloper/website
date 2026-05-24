@@ -27,7 +27,6 @@ node_modules/
 # ─────────────────────────────────
 # Build Output
 # ─────────────────────────────────
-# Next.js
 apps/web/.next/
 apps/web/out/
 
