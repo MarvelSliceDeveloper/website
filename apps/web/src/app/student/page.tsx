@@ -13,13 +13,11 @@ import {
   MOCK_STATS,
   MOCK_OVERDUE_ASSIGNMENTS,
   MOCK_ENROLLED_COURSES,
-  MOCK_BATCHES,
   MOCK_LIVE_SESSIONS,
   MOCK_CALENDAR_EVENTS,
   MOCK_MENTORSHIP_TICKETS,
   MOCK_CERTIFICATES,
   MOCK_CATALOGUE,
-  MOCK_CONTINUE_LEARNING,
   type DashboardStats,
   type OverdueAssignment,
   type EnrolledCourse,
@@ -138,7 +136,7 @@ async function fetchPortalData(): Promise<PortalData> {
   const mappedSessions: LiveSession[] = (sessionsData.sessions || []).map((s: any) => {
     const scheduledTime = new Date(s.scheduledAt);
     let status: "LIVE" | "UPCOMING" | "PAST" = "UPCOMING";
-    
+
     if (s.endedAt) {
       status = "PAST";
     } else if (scheduledTime <= now) {
@@ -167,18 +165,22 @@ async function fetchPortalData(): Promise<PortalData> {
     },
     overdueAssignments: overdueAssignments.items,
     enrolledCourses: enrolled.courses,
-    batches: MOCK_BATCHES, // batches loaded on demand
+    batches: {}, // batches loaded on demand via API
     liveSessions: mappedSessions,
     calendarEvents: calEvents.events,
     mentorshipTickets: tickets.tickets,
     certificates: certs.certificates,
     catalogue: catalogue.courses,
-    continueLearning: MOCK_CONTINUE_LEARNING, // from progress endpoint (use mock for now)
+    continueLearning: [], // loaded from /api/student/continue-learning
   };
 }
 
 async function fetchBatch(batchId: string): Promise<Batch | null> {
-  if (MOCK_ENABLED) return MOCK_BATCHES[batchId] ?? null;
+  if (MOCK_ENABLED) {
+    // Return null when mock is enabled - should use real API
+    await new Promise((r) => setTimeout(r, 300));
+    return null;
+  }
   try {
     const [batchRes, recordingsRes] = await Promise.all([
       api.get<ApiBatchDetailResponse>(`/api/batches/${batchId}`),
@@ -239,7 +241,7 @@ async function fetchBatch(batchId: string): Promise<Batch | null> {
       modules,
     };
   } catch {
-    return MOCK_BATCHES[batchId] ?? null;
+    return null;
   }
 }
 

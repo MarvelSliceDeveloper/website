@@ -7,27 +7,27 @@ import { UserRole } from '@lms/types';
 
 const router = Router();
 
-// All course admin routes require authentication + ADMIN role
+// All course admin routes require authentication
 router.use(requireAuth);
-router.use(requireRole([UserRole.ADMIN]));
 
 // --- Course Routes ---
 
 // GET /api/admin/courses — list all courses with filters
-router.get('/', courseController.list);
+router.get('/', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), courseController.list);
 
 // POST /api/admin/courses — create a new course (draft)
-router.post('/', courseController.create);
+router.post('/', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), courseController.create);
 
 // GET /api/admin/courses/:id — get full course detail with modules
-router.get('/:id', courseController.getById);
+router.get('/:id', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), courseController.getById);
 
 // PUT /api/admin/courses/:id — update course fields
-router.put('/:id', courseController.update);
+router.put('/:id', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), courseController.update);
 
 // POST /api/admin/courses/:id/thumbnail — upload course thumbnail image
 router.post(
     '/:id/thumbnail',
+    requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
     (req: Request, res: Response, next: NextFunction) =>
         uploadCourseThumbnail(req, res, (err) => {
             if (err) {
@@ -39,26 +39,26 @@ router.post(
 );
 
 // DELETE /api/admin/courses/:id — soft-delete (archive) course
-router.delete('/:id', courseController.delete);
+router.delete('/:id', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), courseController.delete);
 
 // POST /api/admin/courses/:id/publish — validate and publish
-router.post('/:id/publish', courseController.publish);
+router.post('/:id/publish', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), courseController.publish);
 
 // POST /api/admin/courses/:id/unpublish — revert to draft
-router.post('/:id/unpublish', courseController.unpublish);
+router.post('/:id/unpublish', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), courseController.unpublish);
 
 // --- Module Routes ---
 
 // POST /api/admin/courses/:id/modules — add a module to a course
-router.post('/:id/modules', moduleController.addModule);
+router.post('/:id/modules', requireRole([UserRole.ADMIN]), moduleController.addModule);
 
 // PATCH /api/admin/courses/:id/modules/reorder — reorder modules (drag-and-drop)
-router.patch('/:id/modules/reorder', moduleController.reorderModules);
+router.patch('/:id/modules/reorder', requireRole([UserRole.ADMIN]), moduleController.reorderModules);
 
 // PUT /api/admin/modules/:id — update a module
-router.put('/modules/:id', moduleController.updateModule);
+router.put('/modules/:id', requireRole([UserRole.ADMIN]), moduleController.updateModule);
 
 // DELETE /api/admin/modules/:id — delete a module
-router.delete('/modules/:id', moduleController.deleteModule);
+router.delete('/modules/:id', requireRole([UserRole.ADMIN]), moduleController.deleteModule);
 
 export const courseRouter = router;

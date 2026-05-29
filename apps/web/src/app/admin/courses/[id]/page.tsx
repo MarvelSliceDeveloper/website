@@ -188,6 +188,16 @@ export default function CourseDetailPage() {
     }
   };
 
+  const handleDeleteCourse = async () => {
+    if (!confirm("Archive this course? Students will lose access.")) return;
+    try {
+      await api.delete(`/api/admin/courses/${id}`);
+      router.push("/admin/courses");
+    } catch (err: any) {
+      alert(err.message || "Failed to archive course");
+    }
+  };
+
   // --- Module Actions ---
 
   const handleAddModule = async (e: React.FormEvent) => {
@@ -323,6 +333,9 @@ export default function CourseDetailPage() {
               Unpublish
             </button>
           )}
+          <button onClick={handleDeleteCourse} className="btn-danger">
+            Archive
+          </button>
         </div>
       </div>
 

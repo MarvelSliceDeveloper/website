@@ -248,7 +248,7 @@ export default function HomeView({
                       <div className="min-w-0">
                         <p className="truncate font-medium text-foreground text-sm">{event.title}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {new Date(event.date).toLocaleDateString()}
+                          {new Date(event.start).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
@@ -433,7 +433,18 @@ export default function HomeView({
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-2xl overflow-hidden">
                   {item.thumbnail && (item.thumbnail.startsWith("/") || item.thumbnail.startsWith("http")) ? (
-                    <img src={item.thumbnail} className="h-full w-full object-cover" alt="" />
+                    <img
+                      src={item.thumbnail}
+                      className="h-full w-full object-cover"
+                      alt=""
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        const parent = e.currentTarget.parentElement;
+                        if (parent) {
+                          parent.textContent = "📚";
+                        }
+                      }}
+                    />
                   ) : (
                     item.thumbnail || "📚"
                   )}

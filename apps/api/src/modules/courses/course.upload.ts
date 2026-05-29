@@ -14,7 +14,11 @@ const extensionByMime: Record<string, string> = {
     'image/webp': '.webp',
 };
 
-const uploadsRoot = path.resolve(__dirname, '..', '..', '..', 'uploads');
+const apiRoot = __dirname.includes('dist')
+    ? path.resolve(__dirname, '..')
+    : path.resolve(__dirname, '..', '..', '..');
+
+const uploadsRoot = path.join(apiRoot, 'uploads');
 const courseUploadsDir = path.join(uploadsRoot, 'courses');
 
 fs.mkdirSync(courseUploadsDir, { recursive: true });

@@ -23,10 +23,12 @@ export const batchController = {
   async list(req: AuthRequest, res: Response) {
     try {
       const { courseId, status, search } = req.query;
+      const instructorId = req.user?.role === 'INSTRUCTOR' ? req.user.userId : undefined;
       const batches = await batchService.listBatches({
         courseId: courseId as string,
         status: status as string,
         search: search as string,
+        instructorId,
       });
       return res.json(batches);
     } catch (error: any) {
@@ -37,6 +39,9 @@ export const batchController = {
   async getById(req: AuthRequest, res: Response) {
     try {
       const batch = await batchService.getBatchById(req.params.id);
+      if (req.user?.role === 'INSTRUCTOR' && batch.instructorId !== req.user.userId) {
+        return res.status(403).json({ error: 'Insufficient permissions' });
+      }
       return res.json(batch);
     } catch (error: any) {
       if (error.message === 'Batch not found') return res.status(404).json({ error: error.message });
@@ -68,6 +73,12 @@ export const batchController = {
 
   async listStudents(req: AuthRequest, res: Response) {
     try {
+      if (req.user?.role === 'INSTRUCTOR') {
+        const batch = await batchService.getBatchById(req.params.id);
+        if (batch.instructorId !== req.user.userId) {
+          return res.status(403).json({ error: 'Insufficient permissions' });
+        }
+      }
       const students = await batchService.listStudents(req.params.id);
       return res.json(students);
     } catch (error: any) {

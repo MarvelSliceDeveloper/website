@@ -4,6 +4,14 @@
 
 ---
 
+## 2026-05-29 — Batch & Course Route Permissions for Instructors ✅
+
+- **API Permissions Update**: Removed top-level `requireRole([UserRole.ADMIN])` restriction from both `batchRouter` and `courseRouter` to allow read-only access for instructors.
+- **Instructors Access Control**: 
+  - Restricted `ADMIN` role only to mutating operations (create, update, delete, add/remove students) for batches and courses.
+  - Allowed `ADMIN` and `INSTRUCTOR` roles to access read-only operations (list and get details).
+  - Enforced security scope checks in `batch.controller.ts` so that instructors can only fetch batches they are assigned to, and only get details/students of their assigned batches.
+
 ## 2026-05-24 — Student Portal Refinement, Live Session Scheduling & System Documentation ✅
 
 - **Documentation**: Created `docs/SYSTEM_GUIDE.md` detailing the entire enrollment approval pipeline, dynamic admin user creation, live session overrides, thumbnail rendering systems, and default seeded credentials.

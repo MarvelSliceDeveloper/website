@@ -70,11 +70,13 @@ export const batchService = {
     courseId?: string;
     status?: string;
     search?: string;
+    instructorId?: string;
   }) {
     const where: any = {};
 
     if (filters.courseId) where.courseId = filters.courseId;
     if (filters.status) where.status = filters.status;
+    if (filters.instructorId) where.instructorId = filters.instructorId;
     if (filters.search) {
       where.name = { contains: filters.search, mode: 'insensitive' };
     }

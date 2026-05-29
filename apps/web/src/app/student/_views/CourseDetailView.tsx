@@ -31,7 +31,18 @@ export default function CourseDetailView({ course, onEnroll }: CourseDetailViewP
         <div className="flex items-start gap-5">
           <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-4xl shadow-lg overflow-hidden">
             {course.thumbnail && (course.thumbnail.startsWith("/") || course.thumbnail.startsWith("http")) ? (
-              <img src={course.thumbnail} className="h-full w-full object-cover" alt="" />
+              <img
+                src={course.thumbnail}
+                className="h-full w-full object-cover"
+                alt=""
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                  const parent = e.currentTarget.parentElement;
+                  if (parent) {
+                    parent.textContent = "📚";
+                  }
+                }}
+              />
             ) : (
               course.thumbnail || "📚"
             )}

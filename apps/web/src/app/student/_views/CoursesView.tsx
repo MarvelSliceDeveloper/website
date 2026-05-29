@@ -71,11 +71,10 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
-              className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-sm font-medium transition-all ${
-                filter === f.value
+              className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-sm font-medium transition-all ${filter === f.value
                   ? "border-primary bg-primary/15 text-primary"
                   : "border-border bg-card text-muted-foreground hover:border-border-hover hover:text-foreground"
-              }`}
+                }`}
             >
               {f.label}
             </button>
@@ -83,7 +82,7 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
         </div>
       </div>
 
-      {/* Course List */}
+      {/* Course Grid */}
       {filtered.length === 0 ? (
         <div className="glass-card flex flex-col items-center gap-3 py-16 text-center">
           <span className="text-4xl">📚</span>
@@ -96,64 +95,85 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((course) => {
             const cfg = statusConfig[course.status];
             const canOpen = course.status !== "PENDING" && course.batchId;
             return (
-              <div key={course.id} className="glass-card group overflow-hidden transition-all hover:-translate-y-0.5 hover:border-primary/30">
-                <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
-                  {/* Thumbnail */}
-                  <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-card text-3xl overflow-hidden">
-                    {course.thumbnail && (course.thumbnail.startsWith("/") || course.thumbnail.startsWith("http")) ? (
-                      <img src={course.thumbnail} className="h-full w-full object-cover" alt="" />
+              <div key={course.id} className="glass-card group flex flex-col overflow-hidden transition-all hover:-translate-y-1 hover:border-primary/40">
+                {/* Large Thumbnail */}
+                <div className="relative h-40 w-full overflow-hidden bg-card">
+                  {(() => {
+                    const thumb = (course as any).thumbnailUrl || (course as any).thumbnail;
+                    const isValidUrl = thumb && (thumb.startsWith("/") || thumb.startsWith("http"));
+                    return isValidUrl ? (
+                      <img
+                        src={thumb}
+                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                        alt={course.title}
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            parent.innerHTML = '<div class="flex h-full w-full items-center justify-center text-5xl bg-gradient-to-br from-primary/20 to-accent/20">📚</div>';
+                          }
+                        }}
+                      />
                     ) : (
-                      course.thumbnail || "📚"
-                    )}
+                      <div className="flex h-full w-full items-center justify-center text-5xl bg-gradient-to-br from-primary/20 to-accent/20">
+                        {thumb || "📚"}
+                      </div>
+                    );
+                  })()}
+                  {/* Status Badge */}
+                  <span className={`absolute right-3 top-3 rounded-full border px-2.5 py-1 text-xs font-semibold ${cfg.classes}`}>
+                    {cfg.label}
+                  </span>
+                </div>
+
+                {/* Content */}
+                <div className="flex flex-1 flex-col gap-3 p-4">
+                  {/* Title */}
+                  <div>
+                    <p className="line-clamp-2 font-semibold text-foreground">{course.title}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{course.instructor}</p>
                   </div>
 
-                  {/* Info */}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <p className="font-semibold text-foreground">{course.title}</p>
-                      <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${cfg.classes}`}>
-                        {cfg.label}
-                      </span>
+                  {/* Batch info */}
+                  <p className="text-xs text-muted-foreground">Batch: {course.batchLabel}</p>
+
+                  {/* Progress bar */}
+                  {course.status !== "PENDING" && (
+                    <div>
+                      <div className="mb-1.5 flex items-center justify-between text-xs text-muted">
+                        <span>Progress</span>
+                        <span className="font-medium">{course.progress}%</span>
+                      </div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-700"
+                          style={{ width: `${course.progress}%` }}
+                        />
+                      </div>
                     </div>
-                    <p className="mt-0.5 text-sm text-muted-foreground">
-                      Batch: {course.batchLabel} · Instructor: {course.instructor}
-                    </p>
-                    {/* Progress bar */}
-                    {course.status !== "PENDING" && (
-                      <div className="mt-3">
-                        <div className="mb-1 flex items-center justify-between text-xs text-muted">
-                          <span>Progress</span>
-                          <span>{course.progress}%</span>
-                        </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-700"
-                            style={{ width: `${course.progress}%` }}
-                          />
-                        </div>
+                  )}
+
+                  {/* Action Button */}
+                  <div className="mt-auto pt-2">
+                    {canOpen && (
+                      <button
+                        onClick={() => navigate({ view: "COURSE_CONTENT", params: { courseId: course.id } })}
+                        className="btn-primary w-full text-sm"
+                      >
+                        Open <IconArrowRight size={14} />
+                      </button>
+                    )}
+                    {course.status === "PENDING" && (
+                      <div className="flex items-center justify-center gap-1 rounded-lg border border-warning/30 bg-warning/5 py-2 text-xs text-warning">
+                        <IconClock size={13} /> Awaiting admin
                       </div>
                     )}
                   </div>
-
-                  {/* Action */}
-                  {canOpen && (
-                    <button
-                      onClick={() => navigate({ view: "COURSE_CONTENT", params: { courseId: course.id } })}
-                      className="btn-primary flex-shrink-0 text-sm"
-                    >
-                      Open <IconArrowRight size={14} />
-                    </button>
-                  )}
-                  {course.status === "PENDING" && (
-                    <span className="flex items-center gap-1 text-xs text-muted">
-                      <IconClock size={13} /> Awaiting admin
-                    </span>
-                  )}
                 </div>
               </div>
             );

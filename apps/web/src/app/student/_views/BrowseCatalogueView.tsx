@@ -53,11 +53,10 @@ export default function BrowseCatalogueView({ courses, navigate }: BrowseCatalog
             <button
               key={t}
               onClick={() => setTag(t)}
-              className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-sm font-medium transition-all ${
-                tag === t
+              className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-sm font-medium transition-all ${tag === t
                   ? "border-primary bg-primary/15 text-primary"
                   : "border-border bg-card text-muted-foreground hover:border-border-hover hover:text-foreground"
-              }`}
+                }`}
             >
               {t}
             </button>
@@ -79,11 +78,26 @@ export default function BrowseCatalogueView({ courses, navigate }: BrowseCatalog
               <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
                 {/* Thumbnail */}
                 <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-card text-3xl overflow-hidden">
-                  {course.thumbnail && (course.thumbnail.startsWith("/") || course.thumbnail.startsWith("http")) ? (
-                    <img src={course.thumbnail} className="h-full w-full object-cover" alt="" />
-                  ) : (
-                    course.thumbnail || "📚"
-                  )}
+                  {(() => {
+                    const thumb = (course as any).thumbnailUrl || (course as any).thumbnail;
+                    const isValidUrl = thumb && (thumb.startsWith("/") || thumb.startsWith("http"));
+                    return isValidUrl ? (
+                      <img
+                        src={thumb}
+                        className="h-full w-full object-cover"
+                        alt={course.title}
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            parent.textContent = "📚";
+                          }
+                        }}
+                      />
+                    ) : (
+                      <>{thumb || "📚"}</>
+                    );
+                  })()}
                 </div>
 
                 {/* Info */}
