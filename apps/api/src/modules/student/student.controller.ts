@@ -14,4 +14,16 @@ export const studentController = {
             return res.status(500).json({ error: "Failed to list overdue assignments" });
         }
     },
+
+    async getContinueLearning(req: AuthRequest, res: Response) {
+        try {
+            if (!req.user) return res.status(401).json({ error: "Authentication required" });
+
+            const items = await studentService.getContinueLearning(req.user.userId);
+            return res.status(200).json(items);
+        } catch (error: any) {
+            console.error("Error getting continue learning items:", error.message);
+            return res.status(500).json({ error: "Failed to get continue learning items" });
+        }
+    },
 };

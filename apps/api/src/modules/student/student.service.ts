@@ -9,6 +9,15 @@ export interface OverdueAssignmentItem {
     status: "PENDING" | "SUBMITTED";
 }
 
+export interface ContinueLearningItem {
+    recordingId: string;
+    batchId: string;
+    courseTitle: string;
+    dayLabel: string;
+    watchedPercent: number;
+    thumbnail: string;
+}
+
 export const studentService = {
     async getOverdueAssignments(userId: string): Promise<OverdueAssignmentItem[]> {
         const now = new Date();
@@ -84,5 +93,77 @@ export const studentService = {
         }
 
         return items.sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime());
+    },
+
+    async getContinueLearning(userId: string): Promise<{ continueLearning: ContinueLearningItem[] }> {
+        const enrollments = await prisma.enrollmentRequest.findMany({
+            where: {
+                userId,
+                status: "APPROVED",
+                batchId: { not: null },
+            },
+            select: {
+                batchId: true,
+                batch: {
+                    select: {
+                        id: true,
+                        course: {
+                            select: {
+                                title: true,
+                                thumbnailUrl: true,
+                            },
+                        },
+                        sessions: {
+                            orderBy: { scheduledAt: 'desc' },
+                            take: 5,
+                            select: {
+                                id: true,
+                                scheduledAt: true,
+                                recording: {
+                                    select: {
+                                        id: true,
+                                        duration: true,
+                                        progress: {
+                                            where: { userId },
+                                            select: {
+                                                watchedSeconds: true,
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        const items: ContinueLearningItem[] = [];
+
+        for (const enrollment of enrollments) {
+            if (!enrollment.batch || !enrollment.batchId) continue;
+
+            for (const session of enrollment.batch.sessions) {
+                if (!session.recording) continue;
+
+                const watchedSeconds = session.recording.progress[0]?.watchedSeconds ?? 0;
+                const totalSeconds = session.recording.duration ?? 1;
+                const watchedPercent = Math.min(100, Math.round((watchedSeconds / totalSeconds) * 100));
+
+                // Only include if partially watched (not completed and not unwatched)
+                if (watchedPercent > 0 && watchedPercent < 100) {
+                    items.push({
+                        recordingId: session.recording.id,
+                        batchId: enrollment.batchId,
+                        courseTitle: `${enrollment.batch.course.title} — Batch ${enrollment.batch.id.slice(0, 8)}`,
+                        dayLabel: `Day ${items.filter(i => i.batchId === enrollment.batchId).length + 1}`,
+                        watchedPercent,
+                        thumbnail: enrollment.batch.course.thumbnailUrl || "📚",
+                    });
+                }
+            }
+        }
+
+        return { continueLearning: items.slice(0, 10) };
     },
 };

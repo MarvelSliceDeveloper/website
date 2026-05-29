@@ -124,4 +124,19 @@ export const batchController = {
       return res.status(500).json({ error: error.message });
     }
   },
+
+  async getByIdForStudent(req: AuthRequest, res: Response) {
+    try {
+      const batch = await batchService.getBatchById(req.params.id);
+      // Verify student is enrolled in this batch
+      const isEnrolled = batch.enrollments.some(e => e.user.id === req.user?.userId);
+      if (!isEnrolled) {
+        return res.status(403).json({ error: 'You are not enrolled in this batch' });
+      }
+      return res.json({ batch });
+    } catch (error: any) {
+      if (error.message === 'Batch not found') return res.status(404).json({ error: error.message });
+      return res.status(500).json({ error: error.message });
+    }
+  },
 };
