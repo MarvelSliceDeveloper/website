@@ -1,6 +1,7 @@
 "use client";
 
-import { IconArrowRight, IconBook, IconCalendar, IconCertificate, IconHeart, IconPlayerPlay, IconVideo } from "@tabler/icons-react";
+import { useState } from "react";
+import { IconArrowRight, IconBook, IconCalendar, IconCertificate, IconHeart, IconPlayerPlay, IconVideo, IconClock } from "@tabler/icons-react";
 import type { ViewState } from "../_types/student-portal";
 import type {
   DashboardStats,
@@ -8,6 +9,8 @@ import type {
   ContinueLearningItem,
   LiveSession,
   MentorshipTicket,
+  EnrolledCourse,
+  CalendarEvent,
 } from "@/lib/student-mock-data";
 import StudentSectionTabs, { type StudentSectionTab } from "@/components/student/StudentSectionTabs";
 import StudentStatTiles from "@/components/student/StudentStatTiles";
@@ -19,6 +22,10 @@ interface HomeViewProps {
   continueLearning: ContinueLearningItem[];
   liveSessionsToday: LiveSession[];
   openTickets: MentorshipTicket[];
+  enrolledCourses?: EnrolledCourse[];
+  calendarEvents?: CalendarEvent[];
+  studentName?: string;
+  studentEmail?: string;
   sectionApiAvailability: {
     courses: boolean;
     calendar: boolean;
@@ -92,10 +99,15 @@ export default function HomeView({
   continueLearning,
   liveSessionsToday,
   openTickets,
+  enrolledCourses = [],
+  calendarEvents = [],
+  studentName = "Student",
+  studentEmail = "student@example.com",
   sectionApiAvailability,
   firstBatchId,
   navigate,
 }: HomeViewProps) {
+  const [activeInlineTab, setActiveInlineTab] = useState<"courses" | "calendar" | "sessions">("courses");
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
@@ -119,7 +131,7 @@ export default function HomeView({
       value: overdueAssignments.filter((item) => item.status === "PENDING").length,
       icon: <span className="text-lg">📝</span>,
       gradient: "bg-gradient-to-br from-danger/20 to-red-400/10",
-      onClick: () => navigate({ view: "COURSES" }),
+      onClick: () => navigate({ view: "ASSIGNMENT_OVERDUE" }),
       liveBadge: overdueAssignments.some((item) => item.status === "PENDING") ? "Overdue" : undefined,
     },
     {
@@ -128,7 +140,7 @@ export default function HomeView({
       value: openTicketCount,
       icon: <span className="text-lg">⏰</span>,
       gradient: "bg-gradient-to-br from-accent/20 to-cyan-400/10",
-      onClick: () => navigate({ view: "MENTORSHIP" }),
+      onClick: () => navigate({ view: "QUIZ_OVERDUE" }),
     },
     {
       id: "completed",
@@ -136,7 +148,7 @@ export default function HomeView({
       value: stats.completedCount,
       icon: <IconCertificate size={20} className="text-success" />,
       gradient: "bg-gradient-to-br from-success/20 to-emerald-400/10",
-      onClick: () => navigate({ view: "CERTIFICATES" }),
+      onClick: () => navigate({ view: "COURSE_COMPLETED" }),
     },
   ];
 
@@ -150,9 +162,9 @@ export default function HomeView({
   ];
 
   function handleSectionTabChange(key: string) {
-    if (key === "courses") navigate({ view: "COURSES" });
-    if (key === "calendar") navigate({ view: "CALENDAR" });
-    if (key === "sessions") navigate({ view: "LIVE_SESSIONS" });
+    if (key === "courses") setActiveInlineTab("courses");
+    if (key === "calendar") setActiveInlineTab("calendar");
+    if (key === "sessions") setActiveInlineTab("sessions");
   }
 
   return (
@@ -160,7 +172,7 @@ export default function HomeView({
       {/* ── Greeting ─────────────────────────────────────────────────────── */}
       <div>
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-          {greeting}, Arjun 👋
+          {greeting}, {studentName.split(" ")[0]} 👋
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">Here&apos;s everything in one place.</p>
       </div>
@@ -171,11 +183,137 @@ export default function HomeView({
       {/* ── Section Tabs ──────────────────────────────────────────────────── */}
       <StudentSectionTabs
         tabs={sectionTabs}
-        activeKey="courses"
+        activeKey={activeInlineTab}
         onChange={handleSectionTabChange}
       />
 
-      {/* ── Section Grid ──────────────────────────────────────────────────── */}
+      {/* ── Inline Content Display ────────────────────────────────────────── */}
+      <div className="glass-card p-5">
+        {activeInlineTab === "courses" && (
+          <div className="space-y-3">
+            <div className="mb-4">
+              <p className="sp-eyebrow">My Courses</p>
+              <p className="mt-1 text-sm text-muted-foreground">Your enrolled courses</p>
+            </div>
+            {enrolledCourses.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted">No courses enrolled yet</p>
+            ) : (
+              <div className="space-y-2">
+                {enrolledCourses.slice(0, 5).map((course) => (
+                  <div
+                    key={course.id}
+                    className="flex items-center justify-between rounded-lg border border-border/40 bg-card/50 p-3 hover:border-border transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate font-medium text-foreground text-sm">{course.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{course.instructor}</p>
+                    </div>
+                    <span className={`text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap ml-2 ${
+                      course.status === "ACTIVE"
+                        ? "bg-success/20 text-success border border-success/30"
+                        : "bg-primary/20 text-primary border border-primary/30"
+                    }`}>
+                      {course.status === "ACTIVE" ? "Active" : "Completed"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => navigate({ view: "COURSES" })}
+              className="mt-3 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
+            >
+              View All Courses →
+            </button>
+          </div>
+        )}
+
+        {activeInlineTab === "calendar" && (
+          <div className="space-y-3">
+            <div className="mb-4">
+              <p className="sp-eyebrow">Calendar</p>
+              <p className="mt-1 text-sm text-muted-foreground">Your upcoming events</p>
+            </div>
+            {calendarEvents.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted">No upcoming events</p>
+            ) : (
+              <div className="space-y-2">
+                {calendarEvents.slice(0, 5).map((event) => (
+                  <div
+                    key={event.id}
+                    className="flex items-center justify-between rounded-lg border border-border/40 bg-card/50 p-3"
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <IconClock size={16} className="text-accent shrink-0" />
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-foreground text-sm">{event.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {new Date(event.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => navigate({ view: "CALENDAR" })}
+              className="mt-3 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
+            >
+              View Full Calendar →
+            </button>
+          </div>
+        )}
+
+        {activeInlineTab === "sessions" && (
+          <div className="space-y-3">
+            <div className="mb-4">
+              <p className="sp-eyebrow">My Sessions</p>
+              <p className="mt-1 text-sm text-muted-foreground">Live and upcoming sessions</p>
+            </div>
+            {liveSessionsToday.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted">No live sessions today</p>
+            ) : (
+              <div className="space-y-2">
+                {liveSessionsToday.slice(0, 5).map((session) => (
+                  <div
+                    key={session.id}
+                    className="flex items-center justify-between rounded-lg border border-border/40 bg-card/50 p-3"
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      {session.status === "LIVE" ? (
+                        <span className="live-pulse h-2.5 w-2.5 shrink-0 rounded-full bg-danger" />
+                      ) : (
+                        <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-accent/60" />
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-foreground text-sm">{session.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{session.courseTitle}</p>
+                      </div>
+                    </div>
+                    {session.status === "LIVE" && session.joinUrl && (
+                      <a
+                        href={session.joinUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-primary px-3 py-1 text-xs shrink-0 ml-2"
+                      >
+                        Join
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => navigate({ view: "LIVE_SESSIONS" })}
+              className="mt-3 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
+            >
+              View All Sessions →
+            </button>
+          </div>
+        )}
+      </div>
       <div>
         <p className="sp-eyebrow mb-3">Sections</p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

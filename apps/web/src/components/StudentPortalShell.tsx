@@ -29,6 +29,8 @@ interface StudentPortalShellProps {
   showBack?: boolean;
   notifications?: NotificationItem[];
   onMarkAllRead?: () => void;
+  studentName?: string;
+  studentEmail?: string;
 }
 
 export interface NotificationItem {
@@ -39,24 +41,21 @@ export interface NotificationItem {
   type: "live" | "recording" | "mentorship" | "general";
 }
 
-const MOCK_NOTIFICATIONS: NotificationItem[] = [
-  { id: "n1", message: "🔴 Python Day 12 is LIVE now — Join session!", time: "Just now", read: false, type: "live" },
-  { id: "n2", message: "📹 Recording for Day 11 is now available", time: "2 hours ago", read: false, type: "recording" },
-  { id: "n3", message: "🎓 Your mentorship session has been scheduled", time: "Yesterday", read: true, type: "mentorship" },
-];
-
 export default function StudentPortalShell({
   children,
   breadcrumbs = [],
   onBack,
   showBack = false,
+  notifications: initialNotifications = [],
   onMarkAllRead,
+  studentName = "Student",
+  studentEmail = "student@example.com",
 }: StudentPortalShellProps) {
   const router = useRouter();
   const [notifOpen, setNotifOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [notifications, setNotifications] = useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
 
   const notifRef = useRef<HTMLDivElement>(null);
   const avatarRef = useRef<HTMLDivElement>(null);
@@ -229,17 +228,17 @@ export default function StudentPortalShell({
                 aria-label="User menu"
               >
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-primary to-violet-600 text-[11px] font-bold text-white">
-                  A
+                  {studentName.charAt(0).toUpperCase()}
                 </div>
-                <span className="hidden sm:inline">Name</span>
+                <span className="hidden sm:inline">{studentName.split(" ")[0]}</span>
                 <IconChevronDown size={13} className="text-muted" />
               </button>
 
               {avatarOpen && (
                 <div className="absolute right-0 top-11 z-50 w-44 rounded-2xl border border-border bg-card shadow-2xl">
                   <div className="border-b border-border px-4 py-3">
-                    <p className="text-sm font-semibold text-foreground">Arjun Kumar</p>
-                    <p className="text-[11px] text-muted">student@example.com</p>
+                    <p className="text-sm font-semibold text-foreground">{studentName}</p>
+                    <p className="text-[11px] text-muted">{studentEmail}</p>
                   </div>
                   <div className="p-1.5">
                     {[

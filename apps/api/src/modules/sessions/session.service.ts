@@ -104,7 +104,6 @@ export const sessionService = {
         scheduledAt: new Date(startDateTime),
         createdFrom: customJoinUrl && customJoinUrl.trim() ? 'LMS_CUSTOM' : 'LMS',
         createdBy: userId,
-        instructorId: finalInstructorId,
       },
     });
 
@@ -171,21 +170,11 @@ export const sessionService = {
     if (filters.courseId) batchFilter.courseId = filters.courseId;
 
     if (filters.instructorId) {
-      // Find sessions where the user is EITHER the overridden instructor OR the batch's default instructor
-      where.OR = [
-        { instructorId: filters.instructorId },
-        {
-          batch: {
-            instructorId: filters.instructorId,
-            ...(filters.courseId ? { courseId: filters.courseId } : {}),
-          },
-        },
-      ];
-
-      // If courseId filter is active, apply it as well to the main where block (for override sessions)
-      if (filters.courseId) {
-        where.batch = batchFilter;
-      }
+      // Find sessions where the batch's instructor matches
+      where.batch = {
+        instructorId: filters.instructorId,
+        ...(filters.courseId ? { courseId: filters.courseId } : {}),
+      };
     } else if (filters.courseId) {
       where.batch = batchFilter;
     }

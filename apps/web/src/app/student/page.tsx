@@ -44,6 +44,9 @@ import CertificatesView from "./_views/CertificatesView";
 import BrowseCatalogueView from "./_views/BrowseCatalogueView";
 import CourseDetailView from "./_views/CourseDetailView";
 import CourseContentView from "./_views/CourseContentView";
+import AssignmentOverdueView from "./_views/AssignmentOverdueView";
+import QuizOverdueView from "./_views/QuizOverdueView";
+import CourseCompletedView from "./_views/CourseCompletedView";
 
 // ─── Portal data store ────────────────────────────────────────────────────────
 
@@ -262,6 +265,9 @@ function buildBreadcrumbs(
         case "BROWSE_CATALOGUE": return "Browse Courses";
         case "COURSE_DETAIL": return data?.catalogue.find((c) => c.id === entry.params?.courseId)?.title ?? "Course";
         case "COURSE_CONTENT": return data?.enrolledCourses.find((c) => c.id === entry.params?.courseId)?.title ?? "Course";
+        case "ASSIGNMENT_OVERDUE": return "Assignment Overdue";
+        case "QUIZ_OVERDUE": return "Quiz Overdue";
+        case "COURSE_COMPLETED": return "Courses Completed";
         default: return "—";
       }
     })();
@@ -281,6 +287,8 @@ export default function StudentPortalPage() {
   const [loadingBatch, setLoadingBatch] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [studentName, setStudentName] = useState("Demo Student");
+  const [studentEmail, setStudentEmail] = useState("demo@student.example.com");
 
   const currentView = viewStack[viewStack.length - 1];
 
@@ -421,6 +429,10 @@ export default function StudentPortalPage() {
             continueLearning={portalData.continueLearning}
             liveSessionsToday={portalData.liveSessions}
             openTickets={portalData.mentorshipTickets}
+            enrolledCourses={portalData.enrolledCourses}
+            calendarEvents={portalData.calendarEvents}
+            studentName={studentName}
+            studentEmail={studentEmail}
             sectionApiAvailability={sectionApiAvailability}
             firstBatchId={firstBatchId}
             navigate={navigate}
@@ -500,6 +512,25 @@ export default function StudentPortalPage() {
         return <CourseContentView courseId={courseId} navigate={navigate} />;
       }
 
+      case "ASSIGNMENT_OVERDUE":
+        return (
+          <AssignmentOverdueView
+            assignments={portalData.overdueAssignments}
+            onGoBack={goBack}
+          />
+        );
+
+      case "QUIZ_OVERDUE":
+        return <QuizOverdueView quizzes={[]} onGoBack={goBack} />;
+
+      case "COURSE_COMPLETED":
+        return (
+          <CourseCompletedView
+            courses={portalData.enrolledCourses}
+            onGoBack={goBack}
+          />
+        );
+
       default:
         return <NotFoundView />;
     }
@@ -510,6 +541,8 @@ export default function StudentPortalPage() {
       breadcrumbs={breadcrumbs}
       showBack={showBack}
       onBack={goBack}
+      studentName={studentName}
+      studentEmail={studentEmail}
     >
       {/* Mock mode banner */}
       {MOCK_ENABLED && (

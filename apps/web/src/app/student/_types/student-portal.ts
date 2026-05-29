@@ -11,7 +11,10 @@ export type ViewName =
   | "CERTIFICATES"
   | "BROWSE_CATALOGUE"
   | "COURSE_DETAIL"
-  | "COURSE_CONTENT";
+  | "COURSE_CONTENT"
+  | "ASSIGNMENT_OVERDUE"
+  | "QUIZ_OVERDUE"
+  | "COURSE_COMPLETED";
 
 export interface ViewState {
   view: ViewName;
