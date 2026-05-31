@@ -230,7 +230,7 @@ export default function StudentPortalShell({
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-primary to-violet-600 text-[11px] font-bold text-white">
                   {studentName.charAt(0).toUpperCase()}
                 </div>
-                <span className="hidden sm:inline">{studentName.split(" ")[0]}</span>
+                <span className="hidden sm:inline">{studentName}</span>
                 <IconChevronDown size={13} className="text-muted" />
               </button>
 

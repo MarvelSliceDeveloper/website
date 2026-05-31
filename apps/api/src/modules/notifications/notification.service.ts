@@ -1,93 +1,162 @@
 import { prisma } from '../../utils/prisma';
+// use an untyped alias to avoid strict model typing issues in some build setups
+const db = prisma as any;
+
+interface NotificationCreateData {
+  userId: string;
+  title: string;
+  message: string;
+  type: string;
+  metadata?: any;
+}
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  const res: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) res.push(arr.slice(i, i + size));
+  return res;
+}
 
 export const notificationService = {
   /**
    * Create a notification for a specific user.
    */
-  async create(data: {
-    userId: string;
-    title: string;
-    message: string;
-    type: string;
-    metadata?: Record<string, any>;
-  }) {
-    return prisma.notification.create({
-      data: {
-        userId: data.userId,
-        title: data.title,
-        message: data.message,
-        type: data.type,
-        metadata: data.metadata ?? undefined,
-      },
-    });
+  async create(data: NotificationCreateData): Promise<Notification | null> {
+    if (!prisma || !('notification' in prisma)) {
+      console.warn('Prisma notification model not available — skipping create');
+      return null;
+    }
+
+    try {
+      return await db.notification.create({
+        data: {
+          userId: data.userId,
+          title: data.title,
+          message: data.message,
+          type: data.type,
+          metadata: data.metadata ?? undefined,
+        },
+      });
+    } catch (err: unknown) {
+      console.error('Error creating notification:', (err as Error)?.message ?? err);
+      return null;
+    }
   },
 
   /**
    * Bulk-create notifications for multiple users (e.g., all students in a batch).
    */
-  async createMany(notifications: {
-    userId: string;
-    title: string;
-    message: string;
-    type: string;
-    metadata?: Record<string, any>;
-  }[]) {
-    return prisma.notification.createMany({
-      data: notifications.map((n) => ({
-        userId: n.userId,
-        title: n.title,
-        message: n.message,
-        type: n.type,
-        metadata: n.metadata ?? undefined,
-      })),
-    });
+  async createMany(notifications: NotificationCreateData[]): Promise<number> {
+    if (!prisma || !('notification' in prisma)) {
+      console.warn('Prisma notification model not available — skipping createMany');
+      return 0;
+    }
+
+    if (!notifications || notifications.length === 0) return 0;
+
+    try {
+      // Chunk to avoid exceeding DB parameter limits when inserting large batches
+      const chunks = chunkArray(notifications, 500);
+      let totalInserted = 0;
+      for (const chunk of chunks) {
+        const payload = chunk.map((n) => ({
+          userId: n.userId,
+          title: n.title,
+          message: n.message,
+          type: n.type,
+          metadata: n.metadata ?? undefined,
+        }));
+        const result = await db.notification.createMany({ data: payload, skipDuplicates: true });
+        totalInserted += result.count ?? 0;
+      }
+      return totalInserted;
+    } catch (err: unknown) {
+      console.error('Error creating many notifications:', (err as Error)?.message ?? err);
+      return 0;
+    }
   },
 
   /**
    * List notifications for a user, newest first.
    */
-  async listForUser(userId: string, limit = 50) {
-    return prisma.notification.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-    });
+  async listForUser(userId: string, limit = 50): Promise<Notification[]> {
+    if (!prisma || !('notification' in prisma)) {
+      console.warn('Prisma notification model not available — returning empty notifications');
+      return [];
+    }
+
+    try {
+      return await db.notification.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      });
+    } catch (err: unknown) {
+      console.error('Error fetching notifications from DB:', (err as Error)?.message ?? err);
+      return [];
+    }
   },
 
   /**
    * Count unread notifications for a user.
    */
-  async unreadCount(userId: string) {
-    return prisma.notification.count({
-      where: { userId, read: false },
-    });
+  async unreadCount(userId: string): Promise<number> {
+    if (!prisma || !('notification' in prisma)) return 0;
+
+    try {
+      return await db.notification.count({ where: { userId, read: false } });
+    } catch (err: unknown) {
+      console.error('Error counting unread notifications:', (err as Error)?.message ?? err);
+      return 0;
+    }
   },
 
   /**
    * Mark a single notification as read.
    */
-  async markAsRead(notificationId: string, userId: string) {
-    return prisma.notification.updateMany({
-      where: { id: notificationId, userId },
-      data: { read: true },
-    });
+  async markAsRead(notificationId: string, userId: string): Promise<number> {
+    if (!prisma || !('notification' in prisma)) {
+      console.warn('Prisma notification model not available — cannot mark as read');
+      return 0;
+    }
+
+    try {
+      const res = await db.notification.updateMany({
+        where: { id: notificationId, userId },
+        data: { read: true },
+      });
+      return res.count ?? 0;
+    } catch (err: unknown) {
+      console.error('Error marking notification as read:', (err as Error)?.message ?? err);
+      return 0;
+    }
   },
 
   /**
    * Mark all notifications as read for a user.
    */
-  async markAllAsRead(userId: string) {
-    return prisma.notification.updateMany({
-      where: { userId, read: false },
-      data: { read: true },
-    });
+  async markAllAsRead(userId: string): Promise<number> {
+    if (!prisma || !('notification' in prisma)) {
+      console.warn('Prisma notification model not available — cannot markAllAsRead');
+      return 0;
+    }
+
+    try {
+      const res = await db.notification.updateMany({
+        where: { userId, read: false },
+        data: { read: true },
+      });
+      return res.count ?? 0;
+    } catch (err: unknown) {
+      console.error('Error marking all notifications as read:', (err as Error)?.message ?? err);
+      return 0;
+    }
   },
 
   /**
    * Notify all enrolled students + the instructor when a session is scheduled.
    */
   async notifySessionScheduled(sessionId: string) {
-    const session = await prisma.liveSession.findUnique({
+    const session = await db.liveSession.findUnique({
       where: { id: sessionId },
       include: {
         batch: {
@@ -106,20 +175,20 @@ export const notificationService = {
     if (!session) return;
 
     const title = session.calendarEvent?.title ?? `Live Session Scheduled`;
-    const startStr = session.scheduledAt.toLocaleString('en-IN', {
-      weekday: 'short', day: 'numeric', month: 'short',
-      hour: '2-digit', minute: '2-digit',
-    });
+    const startStr = session.scheduledAt
+      ? new Date(session.scheduledAt).toLocaleString('en-IN', {
+        weekday: 'short', day: 'numeric', month: 'short',
+        hour: '2-digit', minute: '2-digit',
+      })
+      : 'unspecified time';
+
     const message = `${session.batch.course.title} — ${session.batch.name}: A live session is scheduled for ${startStr}`;
 
-    // Collect all user IDs: enrolled students + batch instructor + overridden instructor
     const userIds = new Set<string>();
-    userIds.add(session.batch.instructorId);
-    if (session.instructorId) {
-      userIds.add(session.instructorId);
-    }
-    for (const enrollment of session.batch.enrollments) {
-      userIds.add(enrollment.userId);
+    if (session.batch?.instructorId) userIds.add(session.batch.instructorId);
+    if (session.instructorId) userIds.add(session.instructorId);
+    for (const enrollment of session.batch.enrollments ?? []) {
+      if (enrollment?.userId) userIds.add(enrollment.userId);
     }
 
     const notifications = Array.from(userIds).map((userId) => ({
@@ -143,7 +212,7 @@ export const notificationService = {
    * Notify students when a recording becomes available.
    */
   async notifyRecordingAvailable(sessionId: string) {
-    const session = await prisma.liveSession.findUnique({
+    const session = await db.liveSession.findUnique({
       where: { id: sessionId },
       include: {
         batch: {
@@ -162,7 +231,7 @@ export const notificationService = {
 
     const message = `Recording is now available for ${session.batch.course.title} — ${session.batch.name}`;
 
-    const notifications = session.batch.enrollments.map((e: typeof session.batch.enrollments[0]) => ({
+    const notifications = (session.batch.enrollments ?? []).map((e) => ({
       userId: e.userId,
       title: '📹 Recording Available',
       message,

@@ -9,15 +9,6 @@ import type { ViewState } from "./_types/student-portal";
 
 // Mock data
 import {
-  MOCK_ENABLED,
-  MOCK_STATS,
-  MOCK_OVERDUE_ASSIGNMENTS,
-  MOCK_ENROLLED_COURSES,
-  MOCK_LIVE_SESSIONS,
-  MOCK_CALENDAR_EVENTS,
-  MOCK_MENTORSHIP_TICKETS,
-  MOCK_CERTIFICATES,
-  MOCK_CATALOGUE,
   type DashboardStats,
   type OverdueAssignment,
   type EnrolledCourse,
@@ -102,22 +93,7 @@ interface ApiRecordingResponse {
 }
 
 async function fetchPortalData(): Promise<PortalData> {
-  if (MOCK_ENABLED) {
-    // Simulate a small network delay for realism
-    await new Promise((r) => setTimeout(r, 300));
-    return {
-      stats: MOCK_STATS,
-      overdueAssignments: MOCK_OVERDUE_ASSIGNMENTS,
-      enrolledCourses: MOCK_ENROLLED_COURSES,
-      batches: MOCK_BATCHES,
-      liveSessions: MOCK_LIVE_SESSIONS,
-      calendarEvents: MOCK_CALENDAR_EVENTS,
-      mentorshipTickets: MOCK_MENTORSHIP_TICKETS,
-      certificates: MOCK_CERTIFICATES,
-      catalogue: MOCK_CATALOGUE,
-      continueLearning: MOCK_CONTINUE_LEARNING,
-    };
-  }
+
 
   // Real API calls — run in parallel
   const [enrolled, sessionsData, calEvents, tickets, certs, catalogue, overdueAssignments] = await Promise.all([
@@ -176,11 +152,7 @@ async function fetchPortalData(): Promise<PortalData> {
 }
 
 async function fetchBatch(batchId: string): Promise<Batch | null> {
-  if (MOCK_ENABLED) {
-    // Return null when mock is enabled - should use real API
-    await new Promise((r) => setTimeout(r, 300));
-    return null;
-  }
+
   try {
     const [batchRes, recordingsRes] = await Promise.all([
       api.get<ApiBatchDetailResponse>(`/api/batches/${batchId}`),
@@ -341,6 +313,21 @@ export default function StudentPortalPage() {
     return () => { active = false; };
   }, []);
 
+  // Load current user profile for greeting
+  useEffect(() => {
+    let active = true;
+    api.get<{ user: { id: string; name: string; email: string; role: string } }>("/api/auth/me")
+      .then((res) => {
+        if (!active || !res || !res.user) return;
+        setStudentName(res.user.name || "");
+        setStudentEmail(res.user.email || "");
+      })
+      .catch(() => {
+        // ignore — keep demo values if unauthenticated
+      });
+    return () => { active = false; };
+  }, []);
+
   // Load batch on-demand when navigating to BATCH_DETAIL or RECORDING_PLAYER
   useEffect(() => {
     const batchId = currentView.params?.batchId;
@@ -363,20 +350,14 @@ export default function StudentPortalPage() {
   // ── Mentorship submit handler ─────────────────────────────────────────────
 
   async function handleMentorshipSubmit(courseId: string, topic: string, preferredDate: string) {
-    if (MOCK_ENABLED) {
-      await new Promise((r) => setTimeout(r, 600)); // mock delay
-      return;
-    }
+
     await api.post("/api/mentorship/tickets", { courseId, topic, preferredDate });
   }
 
   // ── Enroll handler ────────────────────────────────────────────────────────
 
   async function handleEnroll(courseId: string) {
-    if (MOCK_ENABLED) {
-      await new Promise((r) => setTimeout(r, 800));
-      return;
-    }
+
     await api.post("/api/courses/enroll", { courseId });
   }
 
@@ -388,11 +369,6 @@ export default function StudentPortalPage() {
         <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-border border-t-primary" />
           <p className="text-sm text-muted-foreground">Loading your portal…</p>
-          {MOCK_ENABLED && (
-            <p className="rounded-full border border-warning/30 bg-warning/10 px-3 py-1 text-xs text-warning">
-              🧪 Mock Mode — set NEXT_PUBLIC_USE_MOCK_DATA=false to use real API
-            </p>
-          )}
         </div>
       </StudentPortalShell>
     );
@@ -546,12 +522,6 @@ export default function StudentPortalPage() {
       studentName={studentName}
       studentEmail={studentEmail}
     >
-      {/* Mock mode banner */}
-      {MOCK_ENABLED && (
-        <div className="mb-4 flex items-center justify-between rounded-xl border border-warning/30 bg-warning/10 px-4 py-2.5 text-xs text-warning">
-          <span>🧪 <strong>Mock Mode</strong> — displaying sample data. Set <code>NEXT_PUBLIC_USE_MOCK_DATA=false</code> in .env.local to use real API.</span>
-        </div>
-      )}
 
       {/* View transition wrapper */}
       <div key={viewStack.map((v) => v.view).join("-")}>

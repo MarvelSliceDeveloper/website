@@ -94,7 +94,6 @@ const managementItems: NavItem[] = [
     label: "Mentorship",
     href: "/admin/mentorship",
     icon: IconMessages,
-    badge: 3,
     children: [
       { label: "All Requests", href: "/admin/mentorship?status=all" },
       { label: "Pending Review", href: "/admin/mentorship?status=OPEN" },
@@ -113,11 +112,11 @@ function ChildNavLink({
   pathname: string;
 }) {
   const searchParams = useSearchParams();
-  
+
   // Parse child path and search params
   const [childPath, childQueryString] = child.href.split("?");
   const isPathActive = pathname === childPath;
-  
+
   let isQueryActive = true;
   if (childQueryString) {
     const childParams = new URLSearchParams(childQueryString);
@@ -140,16 +139,14 @@ function ChildNavLink({
     <li>
       <Link
         href={child.href}
-        className={`group flex items-center gap-2 rounded-lg py-1.5 px-3 text-[13px] font-medium transition-all duration-150 ${
-          isChildActive
+        className={`group flex items-center gap-2 rounded-lg py-1.5 px-3 text-[13px] font-medium transition-all duration-150 ${isChildActive
             ? "text-primary bg-primary/5 font-semibold"
             : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
-        }`}
+          }`}
       >
         <span
-          className={`h-1.5 w-1.5 rounded-full transition-all duration-150 ${
-            isChildActive ? "bg-primary scale-125" : "bg-muted/40 group-hover:bg-muted"
-          }`}
+          className={`h-1.5 w-1.5 rounded-full transition-all duration-150 ${isChildActive ? "bg-primary scale-125" : "bg-muted/40 group-hover:bg-muted"
+            }`}
         />
         <span>{child.label}</span>
       </Link>
@@ -168,37 +165,25 @@ function NavGroup({
   pathname: string;
   collapsed?: boolean;
 }) {
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
 
   useEffect(() => {
     if (collapsed) return;
-    const initialExpanded = { ...expandedGroups };
-    let changed = false;
-
-    items.forEach((item) => {
-      if (item.children) {
-        const isChildActive = item.children.some((child) => {
-          const [childPath] = child.href.split("?");
-          return pathname === childPath;
-        });
-
-        if (isChildActive && !expandedGroups[item.label]) {
-          initialExpanded[item.label] = true;
-          changed = true;
-        }
-      }
+    const activeGroup = items.find((item) => {
+      if (!item.children) return false;
+      return item.children.some((child) => {
+        const [childPath] = child.href.split("?");
+        return pathname === childPath;
+      });
     });
 
-    if (changed) {
-      setExpandedGroups(initialExpanded);
+    if (activeGroup && activeGroup.label !== expandedGroup) {
+      setExpandedGroup(activeGroup.label);
     }
-  }, [pathname, collapsed, items]);
+  }, [pathname, collapsed, items, expandedGroup]);
 
   const toggleGroup = (groupLabel: string) => {
-    setExpandedGroups((prev) => ({
-      ...prev,
-      [groupLabel]: !prev[groupLabel],
-    }));
+    setExpandedGroup((prev) => (prev === groupLabel ? null : groupLabel));
   };
 
   return (
@@ -209,7 +194,7 @@ function NavGroup({
       <ul className={`space-y-1 ${collapsed ? "mx-auto w-fit" : ""}`}>
         {items.map((item) => {
           const hasChildren = !!item.children?.length;
-          const isExpanded = !!expandedGroups[item.label];
+          const isExpanded = expandedGroup === item.label;
 
           const isParentActive = pathname === item.href || pathname?.startsWith(item.href + "/");
           const isAnyChildActive = hasChildren && item.children!.some((child) => {
@@ -225,11 +210,10 @@ function NavGroup({
                   <button
                     onClick={() => toggleGroup(item.label)}
                     title={item.label}
-                    className={`w-full flex items-center rounded-xl py-2 text-sm font-medium transition-all duration-150 gap-2.5 px-3 select-none text-left cursor-pointer ${
-                      isActive
+                    className={`w-full flex items-center rounded-xl py-2 text-sm font-medium transition-all duration-150 gap-2.5 px-3 select-none text-left cursor-pointer ${isActive
                         ? "border border-primary/15 bg-primary/10 text-primary-hover"
                         : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
-                    }`}
+                      }`}
                   >
                     <item.icon size={18} stroke={1.8} className="shrink-0" />
                     <span className="flex-1 truncate">{item.label}</span>
@@ -241,16 +225,14 @@ function NavGroup({
                     <IconChevronDown
                       size={16}
                       stroke={1.8}
-                      className={`shrink-0 text-muted transition-transform duration-200 ${
-                        isExpanded ? "rotate-180" : ""
-                      }`}
+                      className={`shrink-0 text-muted transition-transform duration-200 ${isExpanded ? "rotate-180" : ""
+                        }`}
                     />
                   </button>
 
                   <div
-                    className={`overflow-hidden transition-all duration-300 ${
-                      isExpanded ? "max-h-64 opacity-100 mt-0.5" : "max-h-0 opacity-0 pointer-events-none"
-                    }`}
+                    className={`overflow-hidden transition-all duration-300 ${isExpanded ? "max-h-64 opacity-100 mt-0.5" : "max-h-0 opacity-0 pointer-events-none"
+                      }`}
                   >
                     <ul className="pl-4 border-l border-border/60 ml-5 space-y-0.5">
                       {item.children!.map((child) => (
@@ -267,13 +249,11 @@ function NavGroup({
                 <Link
                   href={item.href}
                   title={item.label}
-                  className={`flex items-center rounded-xl py-2 text-sm font-medium transition-all duration-150 ${
-                    collapsed ? "justify-center px-2" : "gap-2.5 px-3"
-                  } ${
-                    isActive
+                  className={`flex items-center rounded-xl py-2 text-sm font-medium transition-all duration-150 ${collapsed ? "justify-center px-2" : "gap-2.5 px-3"
+                    } ${isActive
                       ? "border border-primary/25 bg-primary/15 text-primary-hover"
                       : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   <item.icon size={18} stroke={1.8} className="shrink-0" />
                   <span className={`flex-1 truncate ${collapsed ? "hidden" : "block"}`}>{item.label}</span>

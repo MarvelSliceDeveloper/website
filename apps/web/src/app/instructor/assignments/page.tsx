@@ -27,38 +27,7 @@ type Submission = {
 
 export default function InstructorAssignmentsPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([
-    {
-      id: "sub-1",
-      studentName: "Demo Student",
-      studentEmail: "student@lms.local",
-      courseTitle: "Introduction to TypeScript",
-      assignmentTitle: "Zod Schema Validation",
-      submittedAt: new Date(Date.now() - 3 * 3600000).toISOString(),
-      status: "PENDING",
-      submissionText: "Here is my zod validation schema code:\n\nconst UserSchema = z.object({\n  name: z.string().min(3),\n  email: z.string().email(),\n  age: z.number().min(18)\n});",
-    },
-    {
-      id: "sub-2",
-      studentName: "Alice Miller",
-      studentEmail: "alice@lms.local",
-      courseTitle: "Introduction to TypeScript",
-      assignmentTitle: "Advanced Utility Types",
-      submittedAt: new Date(Date.now() - 14 * 3600000).toISOString(),
-      status: "PENDING",
-      submissionText: "My implementation of a custom Pick and Omit types using conditional type maps:\n\ntype MyPick<T, K extends keyof T> = { [P in K]: T[P] };",
-    },
-    {
-      id: "sub-3",
-      studentName: "Bob Carter",
-      studentEmail: "bob@lms.local",
-      courseTitle: "Introduction to TypeScript",
-      assignmentTitle: "TypeScript Generic Hooks",
-      submittedAt: new Date(Date.now() - 2 * 24 * 3600000).toISOString(),
-      status: "GRADED",
-      submissionText: "Enclosed is the generic useFetch hook implementation in react.",
-      grade: "A+",
-      feedback: "Excellent execution of types, Bob! Safe generics mapping is perfect.",
-    }
+    // Start with an empty list; real submissions should come from the API
   ]);
 
   const [selectedSub, setSelectedSub] = useState<Submission | null>(null);
