@@ -172,7 +172,7 @@ export default function HomeView({
       {/* ── Greeting ─────────────────────────────────────────────────────── */}
       <div>
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-          {greeting}, {studentName.split(" ")[0]} 👋
+          {greeting}, {studentName} 👋
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">Here&apos;s everything in one place.</p>
       </div>
@@ -208,11 +208,10 @@ export default function HomeView({
                       <p className="truncate font-medium text-foreground text-sm">{course.title}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">{course.instructor}</p>
                     </div>
-                    <span className={`text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap ml-2 ${
-                      course.status === "ACTIVE"
+                    <span className={`text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap ml-2 ${course.status === "ACTIVE"
                         ? "bg-success/20 text-success border border-success/30"
                         : "bg-primary/20 text-primary border border-primary/30"
-                    }`}>
+                      }`}>
                       {course.status === "ACTIVE" ? "Active" : "Completed"}
                     </span>
                   </div>

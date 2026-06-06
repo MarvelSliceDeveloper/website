@@ -24,6 +24,7 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:all": "pnpm test && pnpm test:integration && pnpm test:e2e",
+    "prisma:reset": "cd apps/api && npx prisma db push --force-reset && npx prisma db seed",
     "prisma:migrate": "cd apps/api && npx prisma migrate dev",
     "prisma:seed": "cd apps/api && npx prisma db seed",
     "prisma:studio": "cd apps/api && npx prisma studio",

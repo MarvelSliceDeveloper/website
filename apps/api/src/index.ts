@@ -3,6 +3,22 @@ import * as path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 // ↓ everything else stays the same ↓
+// DEBUG: show which DATABASE_URL the server loaded (credentials masked)
+// eslint-disable-next-line no-console
+if (process.env.DATABASE_URL) {
+  try {
+    const url = new URL(process.env.DATABASE_URL);
+    const maskedAuth = url.username ? `${url.username}:*****@` : '';
+    // eslint-disable-next-line no-console
+    console.debug('[config] Using DATABASE_URL:', `${url.protocol}//${maskedAuth}${url.host}${url.pathname}`);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.debug('[config] DATABASE_URL (raw):', process.env.DATABASE_URL?.slice(0, 80));
+  }
+} else {
+  // eslint-disable-next-line no-console
+  console.debug('[config] DATABASE_URL not set');
+}
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import pino from 'pino';

@@ -43,27 +43,10 @@ export default function InstructorDashboardPage() {
     totalSessions: 0,
     totalBatches: 0,
     totalStudents: 0,
-    pendingAssignments: 3, // Premium UI defaults
+    pendingAssignments: 0,
   });
   const [submissions, setSubmissions] = useState<AssignmentSubmission[]>([
-    {
-      id: "sub-1",
-      studentName: "Demo Student",
-      studentEmail: "student@lms.local",
-      courseTitle: "Introduction to TypeScript",
-      assignmentTitle: "Zod Schema Validation",
-      submittedAt: new Date(Date.now() - 3 * 3600000).toISOString(),
-      status: "PENDING",
-    },
-    {
-      id: "sub-2",
-      studentName: "Alice Miller",
-      studentEmail: "alice@lms.local",
-      courseTitle: "Introduction to TypeScript",
-      assignmentTitle: "Advanced Utility Types",
-      submittedAt: new Date(Date.now() - 14 * 3600000).toISOString(),
-      status: "PENDING",
-    },
+    // No demo submissions — rely on real API data
   ]);
   const [upcomingSessions, setUpcomingSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);

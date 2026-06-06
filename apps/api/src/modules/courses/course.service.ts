@@ -40,10 +40,17 @@ function generateSlug(title: string): string {
 async function ensureUniqueSlug(baseSlug: string): Promise<string> {
   let slug = baseSlug;
   let counter = 1;
-
-  while (await prisma.course.findUnique({ where: { slug } })) {
-    slug = `${baseSlug}-${counter}`;
-    counter++;
+  try {
+    // Attempt to ensure database uniqueness; if the DB schema is out-of-date
+    // (e.g. slug column missing), fall back to returning the base slug.
+    // This avoids crashes during early development when migrations haven't been run.
+    while (await prisma.course.findUnique({ where: { slug } })) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+  } catch (err: any) {
+    console.warn('Could not verify slug uniqueness (DB may be outdated):', err.message || err);
+    return baseSlug;
   }
 
   return slug;

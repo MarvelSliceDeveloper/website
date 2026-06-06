@@ -22,8 +22,11 @@ export const authService = {
   async register(data: z.infer<typeof RegisterSchema>) {
     const { name, email, password } = data;
 
+    // Normalize email to lower-case for consistent storage
+    const normalizedEmail = email.trim().toLowerCase();
+
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email: normalizedEmail }
     });
 
     if (existingUser) throw new Error('Email already registered');
@@ -33,7 +36,7 @@ export const authService = {
     const user = await prisma.user.create({
       data: {
         name,
-        email,
+        email: normalizedEmail,
         passwordHash: hashedPassword,
       }
     });
@@ -44,13 +47,20 @@ export const authService = {
   async login(data: z.infer<typeof LoginSchema>) {
     const { email, password } = data;
 
-    const user = await prisma.user.findUnique({
-      where: { email }
+    // Use case-insensitive lookup so logins are resilient to email casing
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: email.trim(), mode: 'insensitive' } }
     });
+
+    // DEBUG: log existence and passwordHash presence (do not log hashes)
+    // eslint-disable-next-line no-console
+    console.debug('[auth] login lookup:', { email, userId: user?.id, hasPassword: !!user?.passwordHash });
 
     if (!user || !user.passwordHash) throw new Error('Invalid credentials');
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
+    // eslint-disable-next-line no-console
+    console.debug('[auth] password compare result for', user?.id, isMatch);
     if (!isMatch) throw new Error('Invalid credentials');
 
     return this.generateTokens(user);

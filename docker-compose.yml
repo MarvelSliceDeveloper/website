@@ -13,6 +13,15 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com      # your login email
+      PGADMIN_DEFAULT_PASSWORD: admin             # your login password
+    ports:
+      - "5050:80"                                 # access at localhost:5050
+    depends_on:
+      - postgres
 
   redis:
     image: redis:7-alpine
@@ -22,6 +31,7 @@ services:
     volumes:
       - redisdata:/data
     restart: unless-stopped
+
 
 volumes:
   pgdata:

@@ -26,9 +26,8 @@ Copy-Item .env.example .env
 # Edit .env and set DATABASE_URL and other secrets
 # Start Postgres + Redis
 docker-compose up -d
-# Run database migrations and seed data
-pnpm prisma:migrate
-pnpm prisma:seed
+# Rebuild the Prisma schema from `schema.prisma` and seed data
+pnpm prisma:reset
 # Start API + Web dev servers
 pnpm dev
 ```
@@ -46,9 +45,8 @@ cp .env.example .env
 # Edit .env and set DATABASE_URL and other secrets
 # Start Postgres + Redis
 docker-compose up -d
-# Run database migrations and seed data
-pnpm prisma:migrate
-pnpm prisma:seed
+# Rebuild the Prisma schema from `schema.prisma` and seed data
+pnpm prisma:reset
 # Start API + Web dev servers
 pnpm dev
 ```
@@ -106,3 +104,4 @@ pnpm prisma:studio
 ## Troubleshooting
 - Postgres port mismatch: docker-compose maps host 5433 -> container 5432. Make sure DATABASE_URL uses port 5433 when using the provided compose file.
 - Prisma env loading: if prisma reports missing DATABASE_URL, ensure the .env file is in the repo root and the variable is set. If needed, copy .env into apps/api/ as well.
+- This repo currently uses `pnpm prisma:reset` instead of `pnpm prisma:migrate` because the checked-in migration SQL files are not present.

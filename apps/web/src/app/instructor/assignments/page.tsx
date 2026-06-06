@@ -207,11 +207,11 @@ export default function InstructorAssignmentsPage() {
       setSelectedSubmission((prev) =>
         prev
           ? {
-              ...prev,
-              status: "GRADED",
-              grade: gradeInput,
-              feedback: feedbackInput,
-            }
+            ...prev,
+            status: "GRADED",
+            grade: gradeInput,
+            feedback: feedbackInput,
+          }
           : null
       );
     } catch (err: any) {
@@ -361,17 +361,15 @@ export default function InstructorAssignmentsPage() {
               setActiveTab("list");
               setSelectedAssignment(null);
             }}
-            className={`btn-secondary text-xs py-2 px-4 ${
-              activeTab === "list" && !selectedAssignment ? "border-violet-500/30 bg-violet-500/10 text-violet-400" : ""
-            }`}
+            className={`btn-secondary text-xs py-2 px-4 ${activeTab === "list" && !selectedAssignment ? "border-violet-500/30 bg-violet-500/10 text-violet-400" : ""
+              }`}
           >
             <IconClipboardList size={16} /> All Assignments
           </button>
           <button
             onClick={() => setActiveTab("create")}
-            className={`btn-primary text-xs py-2 px-4 ${
-              activeTab === "create" ? "shadow-lg" : ""
-            }`}
+            className={`btn-primary text-xs py-2 px-4 ${activeTab === "create" ? "shadow-lg" : ""
+              }`}
           >
             <IconPlus size={16} /> Create Assignment
           </button>
@@ -524,11 +522,10 @@ export default function InstructorAssignmentsPage() {
                         {q.options.map((opt, optIndex) => (
                           <div
                             key={optIndex}
-                            className={`flex items-center gap-2 p-2 rounded-lg border transition-all ${
-                              opt.isCorrect
+                            className={`flex items-center gap-2 p-2 rounded-lg border transition-all ${opt.isCorrect
                                 ? "border-emerald-500/40 bg-emerald-500/10"
                                 : "border-border/60"
-                            }`}
+                              }`}
                           >
                             <input
                               type="radio"
@@ -635,9 +632,8 @@ export default function InstructorAssignmentsPage() {
                       {submissions.map((sub) => (
                         <tr
                           key={sub.id}
-                          className={`hover:bg-card-hover transition-colors ${
-                            selectedSubmission?.id === sub.id ? "bg-violet-500/5" : ""
-                          }`}
+                          className={`hover:bg-card-hover transition-colors ${selectedSubmission?.id === sub.id ? "bg-violet-500/5" : ""
+                            }`}
                         >
                           <td className="py-3 pr-2">
                             <p className="font-semibold text-foreground">{sub.student.name}</p>
@@ -651,11 +647,10 @@ export default function InstructorAssignmentsPage() {
                           </td>
                           <td className="py-3 pr-2">
                             <span
-                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                                sub.status === "GRADED"
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${sub.status === "GRADED"
                                   ? "bg-emerald-500/10 text-emerald-400"
                                   : "bg-amber-500/10 text-amber-400"
-                              }`}
+                                }`}
                             >
                               {sub.status === "GRADED" ? sub.grade || "Graded" : "Pending Evaluation"}
                             </span>
@@ -705,9 +700,8 @@ export default function InstructorAssignmentsPage() {
                       <div>
                         <p className="text-[9px] font-bold text-muted uppercase">Status</p>
                         <p
-                          className={`text-xs font-bold ${
-                            selectedSubmission.status === "GRADED" ? "text-emerald-400" : "text-amber-400"
-                          }`}
+                          className={`text-xs font-bold ${selectedSubmission.status === "GRADED" ? "text-emerald-400" : "text-amber-400"
+                            }`}
                         >
                           {selectedSubmission.status}
                         </p>
@@ -737,13 +731,12 @@ export default function InstructorAssignmentsPage() {
                               return (
                                 <div
                                   key={o.id}
-                                  className={`flex items-start gap-1.5 p-1 rounded ${
-                                    o.isCorrect
+                                  className={`flex items-start gap-1.5 p-1 rounded ${o.isCorrect
                                       ? "bg-emerald-500/10 text-emerald-400 font-semibold"
                                       : isSelected
-                                      ? "bg-danger/10 text-danger"
-                                      : "text-muted-foreground"
-                                  }`}
+                                        ? "bg-danger/10 text-danger"
+                                        : "text-muted-foreground"
+                                    }`}
                                 >
                                   <span className="mt-0.5 shrink-0">
                                     {o.isCorrect ? "✅" : isSelected ? "❌" : "○"}
