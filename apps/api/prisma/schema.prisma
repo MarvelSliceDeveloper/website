@@ -57,6 +57,7 @@ model User {
   notifications  Notification[]
   attendance     Attendance[]
   sessionsLed    LiveSession[]       @relation("SessionInstructor")
+  assignmentSubmissions AssignmentSubmission[]
 }
 
 model Course {
@@ -78,6 +79,7 @@ model Course {
   batches            Batch[]
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
+  assignments        Assignment[]
 }
 
 model Module {
@@ -113,6 +115,7 @@ model Batch {
   instructor   User                @relation("BatchInstructor", fields: [instructorId], references: [id])
   enrollments  EnrollmentRequest[]
   sessions     LiveSession[]
+  assignments  Assignment[]
 }
 
 // Student applies → pays → pending → admin approves → assigned to batch
@@ -262,4 +265,75 @@ model Attendance {
   session   LiveSession @relation(fields: [sessionId], references: [id])
 
   @@unique([userId, sessionId])
+}
+
+enum SubmissionStatus {
+  PENDING
+  GRADED
+}
+
+model Assignment {
+  id          String                 @id @default(cuid())
+  courseId    String
+  batchId     String
+  title       String
+  description String                 @db.Text
+  dueDate     DateTime
+  maxPoints   Int                    @default(100)
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  course      Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  batch       Batch                  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  questions   AssignmentQuestion[]
+  submissions AssignmentSubmission[]
+}
+
+model AssignmentQuestion {
+  id            String                    @id @default(cuid())
+  assignmentId  String
+  questionText  String                    @db.Text
+  marks         Int                       @default(1)
+  orderIndex    Int                       @default(0)
+  assignment    Assignment                @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  options       AssignmentMcqOption[]
+  responses     StudentQuestionResponse[]
+}
+
+model AssignmentMcqOption {
+  id          String                    @id @default(cuid())
+  questionId  String
+  optionText  String
+  isCorrect   Boolean                   @default(false)
+  question    AssignmentQuestion        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  responses   StudentQuestionResponse[]
+}
+
+model AssignmentSubmission {
+  id                String                    @id @default(cuid())
+  assignmentId      String
+  studentId         String
+  submittedAt       DateTime                  @default(now())
+  status            SubmissionStatus          @default(PENDING)
+  grade             String?                   // e.g. "A+", "B", "95"
+  feedback          String?                   @db.Text
+  gradedAt          DateTime?
+  totalScore        Int?                      // auto-calculated after MCQ grading
+  assignment        Assignment                @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student           User                      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  questionResponses StudentQuestionResponse[]
+
+  @@unique([assignmentId, studentId])
+}
+
+model StudentQuestionResponse {
+  id               String               @id @default(cuid())
+  submissionId     String
+  questionId       String
+  selectedOptionId String
+  isCorrect        Boolean              @default(false)
+  submission       AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  question         AssignmentQuestion   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption   AssignmentMcqOption  @relation(fields: [selectedOptionId], references: [id], onDelete: Cascade)
+
+  @@unique([submissionId, questionId])
 }

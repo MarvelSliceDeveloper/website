@@ -1,30 +1,447 @@
 "use client";
 
-import { IconAlertCircle, IconCheck, IconClock } from "@tabler/icons-react";
+import { useState } from "react";
+import { api } from "@/lib/api";
+import {
+  IconAlertCircle,
+  IconCheck,
+  IconClock,
+  IconArrowLeft,
+  IconSend,
+  IconAward,
+  IconCircleCheck,
+  IconCircleX,
+} from "@tabler/icons-react";
 import type { OverdueAssignment } from "@/lib/student-mock-data";
+
+// ── API response types ──────────────────────────────────────────────────────
+
+type McqOption = {
+  id: string;
+  optionText: string;
+};
+
+type McqQuestion = {
+  id: string;
+  questionText: string;
+  marks: number;
+  orderIndex: number;
+  options: McqOption[];
+};
+
+type AssignmentQuestions = {
+  id: string;
+  title: string;
+  description: string;
+  dueDate: string;
+  maxPoints: number;
+  questions: McqQuestion[];
+};
+
+type SubmissionResult = {
+  id: string;
+  status: "PENDING" | "GRADED";
+  totalScore: number | null;
+  grade: string | null;
+  feedback: string | null;
+  assignment: {
+    title: string;
+    maxPoints: number;
+    questions: Array<{
+      id: string;
+      questionText: string;
+      marks: number;
+      options: Array<{ id: string; optionText: string; isCorrect: boolean }>;
+    }>;
+  };
+  questionResponses: Array<{
+    questionId: string;
+    selectedOptionId: string;
+    isCorrect: boolean;
+  }>;
+};
+
+// ── Component Props ─────────────────────────────────────────────────────────
 
 interface AssignmentOverdueViewProps {
   assignments: OverdueAssignment[];
   onGoBack: () => void;
 }
 
+// ── Sub-views ───────────────────────────────────────────────────────────────
+
+type SubView =
+  | { type: "LIST" }
+  | { type: "QUIZ"; assignmentId: string; data: AssignmentQuestions }
+  | { type: "RESULT"; data: SubmissionResult };
+
 export default function AssignmentOverdueView({
   assignments,
   onGoBack,
 }: AssignmentOverdueViewProps) {
-  const overdueItems = assignments.filter((a) => a.status === "PENDING");
-  const completedItems = assignments.filter((a) => a.status === "SUBMITTED");
+  const [subView, setSubView] = useState<SubView>({ type: "LIST" });
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // MCQ answer state: questionId → selectedOptionId
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
+
+  // Keep track of assignments submitted in this browser session
+  const [locallySubmittedIds, setLocallySubmittedIds] = useState<string[]>([]);
+
+  const overdueItems = assignments.filter(
+    (a) => a.status === "PENDING" && !locallySubmittedIds.includes(a.id)
+  );
+  const completedItems = [
+    ...assignments.filter((a) => a.status === "SUBMITTED"),
+    ...assignments
+      .filter((a) => a.status === "PENDING" && locallySubmittedIds.includes(a.id))
+      .map((a) => ({ ...a, status: "SUBMITTED" as const })),
+  ];
+
+  // Fetches questions and starts the MCQ quiz view.
+  async function handleStartQuiz(assignmentId: string) {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await api.get<AssignmentQuestions>(
+        `/api/assignments/${assignmentId}/questions`
+      );
+      setSelectedAnswers({});
+      setSubView({ type: "QUIZ", assignmentId, data });
+    } catch (err: any) {
+      setError(err.message || "Failed to load assignment questions.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Submits the selected MCQ answers to the API, updates locallySubmittedIds state, and shows results.
+  async function handleSubmitMcq() {
+    if (subView.type !== "QUIZ") return;
+
+    const { assignmentId, data } = subView;
+
+    // Verify all questions answered
+    const unanswered = data.questions.filter((q) => !selectedAnswers[q.id]);
+    if (unanswered.length > 0) {
+      setError(`Please answer all questions. ${unanswered.length} unanswered.`);
+      return;
+    }
+
+    const answers = Object.entries(selectedAnswers).map(([questionId, selectedOptionId]) => ({
+      questionId,
+      selectedOptionId,
+    }));
+
+    try {
+      setSubmitting(true);
+      setError(null);
+      const res = await api.post<{ submission: { id: string } }>(
+        `/api/assignments/${assignmentId}/submit/mcq`,
+        { answers }
+      );
+
+      // Fetch the detailed result
+      const resultRes = await api.get<{ result: SubmissionResult }>(
+        `/api/assignments/submissions/${res.submission.id}/result`
+      );
+      setLocallySubmittedIds((prev) => [...prev, assignmentId]);
+      setSubView({ type: "RESULT", data: resultRes.result });
+    } catch (err: any) {
+      setError(err.message || "Failed to submit answers.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  // ── QUIZ SUB-VIEW ─────────────────────────────────────────────────────────
+
+  if (subView.type === "QUIZ") {
+    const { data } = subView;
+    const answeredCount = Object.keys(selectedAnswers).length;
+    const totalCount = data.questions.length;
+
+    return (
+      <div className="sp-view-enter space-y-6 max-w-3xl mx-auto">
+        {/* Quiz Header */}
+        <div>
+          <button
+            onClick={() => setSubView({ type: "LIST" })}
+            className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 mb-3 transition-colors"
+          >
+            <IconArrowLeft size={14} /> Back to assignments
+          </button>
+          <p className="sp-eyebrow">MCQ Assessment</p>
+          <h1 className="text-2xl font-bold text-foreground">{data.title}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{data.description}</p>
+
+          <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              📅 Due: {new Date(data.dueDate).toLocaleDateString()}
+            </span>
+            <span className="flex items-center gap-1">
+              💯 Max Points: {data.maxPoints}
+            </span>
+            <span className="flex items-center gap-1">
+              📝 Questions: {totalCount}
+            </span>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-[10px] font-bold text-muted uppercase tracking-wider mb-1">
+              <span>Progress</span>
+              <span>{answeredCount} / {totalCount} answered</span>
+            </div>
+            <div className="h-2 rounded-full bg-border/60 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-violet-500 to-primary transition-all duration-300"
+                style={{ width: `${(answeredCount / totalCount) * 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Questions */}
+        <div className="space-y-5">
+          {data.questions.map((q, idx) => {
+            const isAnswered = !!selectedAnswers[q.id];
+            return (
+              <div
+                key={q.id}
+                className={`glass-card p-5 space-y-4 border transition-all duration-200 ${
+                  isAnswered ? "border-emerald-500/20" : "border-border/80"
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <p className="text-sm font-semibold text-foreground leading-snug">
+                    <span className="text-violet-400 mr-1.5">Q{idx + 1}.</span>
+                    {q.questionText}
+                  </p>
+                  <span className="text-[10px] font-bold text-muted bg-card px-2 py-0.5 rounded shrink-0 ml-3">
+                    {q.marks} {q.marks === 1 ? "mark" : "marks"}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  {q.options.map((opt, optIdx) => {
+                    const isSelected = selectedAnswers[q.id] === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() =>
+                          setSelectedAnswers((prev) => ({ ...prev, [q.id]: opt.id }))
+                        }
+                        className={`flex items-center gap-3 p-3 rounded-xl border text-left text-sm transition-all duration-150 ${
+                          isSelected
+                            ? "border-violet-500/50 bg-violet-500/15 text-foreground font-semibold shadow-sm"
+                            : "border-border/60 text-muted-foreground hover:border-border-hover hover:bg-card-hover"
+                        }`}
+                      >
+                        <div
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold transition-all ${
+                            isSelected
+                              ? "border-violet-500 bg-violet-500 text-white"
+                              : "border-border text-muted"
+                          }`}
+                        >
+                          {String.fromCharCode(65 + optIdx)}
+                        </div>
+                        <span className="leading-tight">{opt.optionText}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Error & Submit */}
+        {error && (
+          <div className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-xs text-danger font-medium">
+            ⚠️ {error}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between pt-4 border-t border-border/60">
+          <button
+            onClick={() => setSubView({ type: "LIST" })}
+            className="btn-secondary text-xs"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmitMcq}
+            disabled={submitting || answeredCount < totalCount}
+            className="btn-primary text-sm px-6 py-2.5"
+          >
+            {submitting ? (
+              "Submitting..."
+            ) : (
+              <>
+                <IconSend size={16} /> Submit Answers
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── RESULT SUB-VIEW ───────────────────────────────────────────────────────
+
+  if (subView.type === "RESULT") {
+    const { data } = subView;
+    const correctCount = data.questionResponses.filter((r) => r.isCorrect).length;
+    const totalQuestions = data.assignment.questions.length;
+    const pct = data.assignment.maxPoints > 0
+      ? Math.round(((data.totalScore ?? 0) / data.assignment.maxPoints) * 100)
+      : 0;
+
+    return (
+      <div className="sp-view-enter space-y-6 max-w-3xl mx-auto">
+        {/* Result Header */}
+        <div className="glass-card p-6 border border-border/80 text-center space-y-4">
+          <div className="flex justify-center">
+            <div
+              className={`flex h-20 w-20 items-center justify-center rounded-full border-4 ${
+                pct >= 70
+                  ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-400"
+                  : pct >= 40
+                  ? "border-amber-500/50 bg-amber-500/15 text-amber-400"
+                  : "border-danger/50 bg-danger/15 text-danger"
+              }`}
+            >
+              <IconAward size={36} />
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Your Score</p>
+            <p className="text-4xl font-bold text-foreground mt-1">
+              {data.totalScore ?? 0}
+              <span className="text-lg text-muted font-normal"> / {data.assignment.maxPoints}</span>
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {correctCount} of {totalQuestions} correct · {pct}%
+            </p>
+          </div>
+
+          {data.feedback && (
+            <div className="mx-auto max-w-md rounded-xl border border-border/60 bg-card p-3 text-sm text-muted-foreground">
+              💡 <strong>Feedback:</strong> {data.feedback}
+            </div>
+          )}
+        </div>
+
+        {/* Questions Breakdown */}
+        <div className="space-y-4">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+            Detailed Breakdown
+          </h2>
+
+          {data.assignment.questions.map((q, idx) => {
+            const response = data.questionResponses.find((r) => r.questionId === q.id);
+            return (
+              <div
+                key={q.id}
+                className={`glass-card p-4 border space-y-3 ${
+                  response?.isCorrect ? "border-emerald-500/20" : "border-danger/20"
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <p className="text-sm font-semibold text-foreground leading-snug">
+                    <span className="text-violet-400 mr-1.5">Q{idx + 1}.</span>
+                    {q.questionText}
+                  </p>
+                  {response?.isCorrect ? (
+                    <IconCircleCheck size={20} className="text-emerald-400 shrink-0 ml-2" />
+                  ) : (
+                    <IconCircleX size={20} className="text-danger shrink-0 ml-2" />
+                  )}
+                </div>
+
+                <div className="space-y-1.5 pl-1">
+                  {q.options.map((o) => {
+                    const isSelected = o.id === response?.selectedOptionId;
+                    const isCorrectOption = o.isCorrect;
+
+                    return (
+                      <div
+                        key={o.id}
+                        className={`flex items-center gap-2 p-2 rounded-lg text-xs ${
+                          isCorrectOption
+                            ? "bg-emerald-500/10 text-emerald-400 font-semibold"
+                            : isSelected
+                            ? "bg-danger/10 text-danger"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        <span className="shrink-0">
+                          {isCorrectOption ? "✅" : isSelected ? "❌" : "○"}
+                        </span>
+                        <span>{o.optionText}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="flex justify-between text-[10px] text-muted pt-2 border-t border-border/30">
+                  <span>Weight: {q.marks} mark{q.marks !== 1 ? "s" : ""}</span>
+                  <span className={response?.isCorrect ? "text-emerald-400 font-bold" : "text-danger font-bold"}>
+                    {response?.isCorrect ? `+${q.marks}` : "0"} marks
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="flex justify-center pt-4 border-t border-border/60">
+          <button
+            onClick={() => {
+              setSubView({ type: "LIST" });
+              // Ideally the parent would re-fetch, but this at least returns to list
+            }}
+            className="btn-secondary text-sm px-6"
+          >
+            ← Back to Assignments
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── LIST SUB-VIEW (DEFAULT) ───────────────────────────────────────────────
 
   return (
     <div className="sp-view-enter space-y-6">
       {/* Header */}
       <div>
         <p className="sp-eyebrow">Tasks</p>
-        <h1 className="text-2xl font-bold text-foreground">Assignment Overdue</h1>
+        <h1 className="text-2xl font-bold text-foreground">Assignments</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Complete your pending assignments to stay on track.
+          Complete your pending MCQ assessments to stay on track.
         </p>
       </div>
+
+      {/* Error */}
+      {error && (
+        <div className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-xs text-danger font-medium">
+          ⚠️ {error}
+        </div>
+      )}
+
+      {/* Loading indicator */}
+      {loading && (
+        <div className="glass-card p-8 text-center text-sm text-muted animate-pulse">
+          Loading assignment details...
+        </div>
+      )}
 
       {/* Overdue Section */}
       {overdueItems.length > 0 && (
@@ -41,13 +458,18 @@ export default function AssignmentOverdueView({
                 (new Date().getTime() - new Date(assignment.dueDate).getTime()) /
                   (1000 * 60 * 60 * 24)
               );
+              const isOverdue = daysOverdue > 0;
               return (
                 <div
                   key={assignment.id}
-                  className="glass-card flex flex-col gap-4 border-danger/20 p-4 sm:flex-row sm:items-center sm:justify-between"
+                  className={`glass-card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between ${
+                    isOverdue ? "border-danger/20" : "border-amber-500/20"
+                  }`}
                 >
                   <div className="flex gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-danger/30 bg-danger/10">
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border ${
+                      isOverdue ? "border-danger/30 bg-danger/10" : "border-amber-500/30 bg-amber-500/10"
+                    }`}>
                       <span className="text-lg">📝</span>
                     </div>
                     <div className="min-w-0 flex-1">
@@ -58,15 +480,22 @@ export default function AssignmentOverdueView({
                         {assignment.courseName}
                       </p>
                       <div className="mt-2 flex items-center gap-2">
-                        <IconClock size={14} className="text-danger" />
-                        <span className="text-xs font-medium text-danger">
-                          {daysOverdue} day{daysOverdue !== 1 ? "s" : ""} overdue
+                        <IconClock size={14} className={isOverdue ? "text-danger" : "text-amber-400"} />
+                        <span className={`text-xs font-medium ${isOverdue ? "text-danger" : "text-amber-400"}`}>
+                          {isOverdue
+                            ? `${daysOverdue} day${daysOverdue !== 1 ? "s" : ""} overdue`
+                            : `Due ${new Date(assignment.dueDate).toLocaleDateString()}`
+                          }
                         </span>
                       </div>
                     </div>
                   </div>
-                  <button className="btn-primary flex-shrink-0 text-sm sm:w-auto">
-                    Submit Now →
+                  <button
+                    onClick={() => handleStartQuiz(assignment.id)}
+                    disabled={loading}
+                    className="btn-primary flex-shrink-0 text-sm sm:w-auto"
+                  >
+                    {loading ? "Loading..." : "Start Quiz →"}
                   </button>
                 </div>
               );
@@ -103,6 +532,9 @@ export default function AssignmentOverdueView({
                     </p>
                   </div>
                 </div>
+                <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">
+                  ✅ Submitted
+                </span>
               </div>
             ))}
           </div>
@@ -113,7 +545,7 @@ export default function AssignmentOverdueView({
       {overdueItems.length === 0 && completedItems.length === 0 && (
         <div className="glass-card flex flex-col items-center justify-center py-12 text-center">
           <span className="text-4xl">🎉</span>
-          <p className="mt-3 font-semibold text-foreground">No overdue assignments</p>
+          <p className="mt-3 font-semibold text-foreground">No assignments yet</p>
           <p className="mt-1 text-sm text-muted-foreground">
             You&apos;re all caught up! Keep up the great work.
           </p>

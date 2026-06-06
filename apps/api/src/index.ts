@@ -33,6 +33,7 @@ import { notificationRouter } from './modules/notifications/notification.routes'
 import { attendanceRouter } from './modules/attendance/attendance.routes';
 import { recordingSyncJob } from './jobs/recording-sync.job';
 import { enrollmentRouter } from './modules/enrollments/enrollment.routes';
+import { assignmentRouter } from './modules/assignments/assignment.routes';
 
 const app = express();
 
@@ -65,6 +66,7 @@ app.use('/api/notifications', notificationRouter);
 app.use('/api/attendance', attendanceRouter);
 app.use('/api/admin/enrollments', enrollmentRouter);
 app.use('/api/webhooks', webhookRouter);
+app.use('/api/assignments', assignmentRouter);
 
 // Events webhook — for Teams-created meetings (no auth required)
 app.post('/api/webhooks/events', eventsWebhookController.handleEventsWebhook);

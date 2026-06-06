@@ -18,6 +18,8 @@ import {
   MOCK_MENTORSHIP_TICKETS,
   MOCK_CERTIFICATES,
   MOCK_CATALOGUE,
+  MOCK_BATCHES,
+  MOCK_CONTINUE_LEARNING,
   type DashboardStats,
   type OverdueAssignment,
   type EnrolledCourse,

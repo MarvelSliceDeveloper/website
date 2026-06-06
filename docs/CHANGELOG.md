@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-06-06 — MCQ Assignment System (Instructor + Student) ✅
+
+- **Database Schema**: Added 5 new Prisma models: `Assignment`, `AssignmentQuestion`, `AssignmentMcqOption`, `AssignmentSubmission`, `StudentQuestionResponse`, plus `SubmissionStatus` enum. Linked to existing `User`, `Course`, and `Batch` models.
+- **Backend Module**: Created `apps/api/src/modules/assignments/` with full service, controller, and route files.
+  - `POST /api/assignments` — Create MCQ assignment with nested questions and options (Instructor)
+  - `GET /api/assignments` — List assignments scoped by role
+  - `GET /api/assignments/:id/questions` — Fetch questions (strips `isCorrect` for students)
+  - `POST /api/assignments/:id/submit/mcq` — Submit answers & auto-grade (Student)
+  - `GET /api/assignments/submissions/:id/result` — Get detailed score breakdown
+  - `GET /api/assignments/:id/submissions` — List student scores (Instructor)
+  - `POST /api/assignments/submissions/:id/grade` — Manual grade/feedback override (Instructor)
+- **Auto-Grading Engine**: MCQ submissions are automatically graded in a database transaction, calculating correctness per question and total score.
+- **Safety Checks**: Unique constraint prevents duplicate submissions, due date validation rejects late submissions, `isCorrect` stripped from student-facing question endpoints.
+- **Student Service Refactor**: `studentService.getOverdueAssignments()` now queries real `Assignment` table instead of deriving assignments from past live sessions.
+- **Instructor Frontend**: Rewrote `apps/web/src/app/instructor/assignments/page.tsx` with dynamic batch selection, MCQ question builder, submissions leaderboard, and per-student answer review with manual feedback form.
+- **Student Frontend**: Rewrote `apps/web/src/app/student/_views/AssignmentOverdueView.tsx` with interactive MCQ quiz-taking UI (radio button selection, progress bar), auto-graded score display, and detailed question breakdown with correct/incorrect markers.
+
+---
 ## 2026-05-29 — Batch & Course Route Permissions for Instructors ✅
 
 - **API Permissions Update**: Removed top-level `requireRole([UserRole.ADMIN])` restriction from both `batchRouter` and `courseRouter` to allow read-only access for instructors.

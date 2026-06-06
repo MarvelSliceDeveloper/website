@@ -20,8 +20,7 @@ export interface ContinueLearningItem {
 
 export const studentService = {
     async getOverdueAssignments(userId: string): Promise<OverdueAssignmentItem[]> {
-        const now = new Date();
-
+        // Fetch approved student enrollments
         const enrollments = await prisma.enrollmentRequest.findMany({
             where: {
                 userId,
@@ -29,70 +28,41 @@ export const studentService = {
                 batchId: { not: null },
             },
             select: {
-                batch: {
-                    select: {
-                        id: true,
-                        name: true,
-                        course: {
-                            select: {
-                                title: true,
-                            },
-                        },
-                        sessions: {
-                            select: {
-                                id: true,
-                                scheduledAt: true,
-                                module: {
-                                    select: {
-                                        title: true,
-                                    },
-                                },
-                                recording: {
-                                    select: {
-                                        progress: {
-                                            where: {
-                                                userId,
-                                            },
-                                            select: {
-                                                watchedSeconds: true,
-                                                completedAt: true,
-                                            },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
+                batchId: true,
             },
         });
 
-        const items: OverdueAssignmentItem[] = [];
+        const batchIds = enrollments.map((e) => e.batchId as string);
+        if (batchIds.length === 0) return [];
 
-        for (const enrollment of enrollments) {
-            if (!enrollment.batch) continue;
+        // Fetch all assignments for these batches
+        const assignments = await prisma.assignment.findMany({
+            where: {
+                batchId: { in: batchIds },
+            },
+            include: {
+                course: { select: { title: true } },
+                batch: { select: { name: true } },
+                submissions: {
+                    where: { studentId: userId },
+                    select: { id: true, status: true },
+                },
+            },
+            orderBy: { dueDate: 'desc' },
+        });
 
-            for (const session of enrollment.batch.sessions) {
-                if (session.scheduledAt >= now) continue;
-
-                const progressList = session.recording?.progress ?? [];
-                const submitted =
-                    progressList.length > 0 &&
-                    progressList.some((entry) => entry.watchedSeconds > 0 || !!entry.completedAt);
-
-                const unitName = session.module?.title ?? "General Module";
-                items.push({
-                    id: session.id,
-                    courseName: enrollment.batch.course.title,
-                    unitName,
-                    assignmentName: `${unitName} - Submit Here`,
-                    dueDate: session.scheduledAt.toISOString(),
-                    status: submitted ? "SUBMITTED" : "PENDING",
-                });
-            }
-        }
-
-        return items.sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime());
+        return assignments.map((assignment) => {
+            const submission = assignment.submissions[0];
+            const status = submission ? "SUBMITTED" as const : "PENDING" as const;
+            return {
+                id: assignment.id,
+                courseName: assignment.course.title,
+                unitName: "Assignment",
+                assignmentName: assignment.title,
+                dueDate: assignment.dueDate.toISOString(),
+                status,
+            };
+        });
     },
 
     async getContinueLearning(userId: string): Promise<{ continueLearning: ContinueLearningItem[] }> {
