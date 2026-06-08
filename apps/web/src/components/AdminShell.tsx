@@ -7,14 +7,11 @@ import AdminSidebar from "./AdminSidebar";
 const STORAGE_KEY = "lms-admin-sidebar-collapsed";
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-
-    useEffect(() => {
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+        if (typeof window === "undefined") return false;
         const savedValue = window.localStorage.getItem(STORAGE_KEY);
-        if (savedValue != null) {
-            setIsSidebarCollapsed(savedValue === "1");
-        }
-    }, []);
+        return savedValue === "1";
+    });
 
     useEffect(() => {
         window.localStorage.setItem(STORAGE_KEY, isSidebarCollapsed ? "1" : "0");

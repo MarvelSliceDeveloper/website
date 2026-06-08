@@ -86,7 +86,6 @@ model Course {
   assignments        Assignment[]
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
-  assignments        Assignment[]
 }
 
 model Module {
