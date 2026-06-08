@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { courseController } from './course.controller';
 import { moduleController } from './module.controller';
 import { uploadCourseThumbnail } from './course.upload';
+import { uploadModuleResource } from './modules.upload';
 import { requireAuth, requireRole } from '../../middleware/auth.middleware';
 import { UserRole } from '@lms/types';
 
@@ -60,5 +61,28 @@ router.put('/modules/:id', requireRole([UserRole.ADMIN]), moduleController.updat
 
 // DELETE /api/admin/modules/:id — delete a module
 router.delete('/modules/:id', requireRole([UserRole.ADMIN]), moduleController.deleteModule);
+
+// --- Module Resources Routes ---
+
+// POST /api/admin/courses/:courseId/modules/:id/resources — upload resource file
+router.post(
+  '/:courseId/modules/:id/resources',
+  requireRole([UserRole.ADMIN]),
+  (req: Request, res: Response, next: NextFunction) =>
+    uploadModuleResource(req, res, (err) => {
+      if (err) {
+        return res.status(400).json({ error: err.message });
+      }
+      return next();
+    }),
+  moduleController.uploadResource
+);
+
+// DELETE /api/admin/courses/modules/:id/resources/:resourceId — delete resource file
+router.delete(
+  '/modules/:id/resources/:resourceId',
+  requireRole([UserRole.ADMIN]),
+  moduleController.deleteResource
+);
 
 export const courseRouter = router;

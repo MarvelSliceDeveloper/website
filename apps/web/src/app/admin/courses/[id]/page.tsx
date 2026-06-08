@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import ModuleStudyMaterialsSection from "./_components/ModuleStudyMaterialsSection";
 
 type Module = {
   id: string;
@@ -60,6 +61,9 @@ export default function CourseDetailPage() {
   const [thumbnailUploading, setThumbnailUploading] = useState(false);
   const [thumbnailError, setThumbnailError] = useState("");
   const [thumbnailSuccess, setThumbnailSuccess] = useState("");
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState<"details" | "modules" | "materials">("details");
 
   // Edit form state
   const [form, setForm] = useState({
@@ -350,8 +354,39 @@ export default function CourseDetailPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_1.2fr]">
-        {/* Left: Course Details Form */}
+      {/* Tab Navigation */}
+      <div className="flex gap-2 border-b border-border/50">
+        <button
+          onClick={() => setActiveTab("details")}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "details"
+            ? "border-b-2 border-primary text-primary"
+            : "text-muted-foreground hover:text-foreground"
+            }`}
+        >
+          Course Details
+        </button>
+        <button
+          onClick={() => setActiveTab("modules")}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "modules"
+            ? "border-b-2 border-primary text-primary"
+            : "text-muted-foreground hover:text-foreground"
+            }`}
+        >
+          Modules
+        </button>
+        <button
+          onClick={() => setActiveTab("materials")}
+          className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === "materials"
+            ? "border-b-2 border-primary text-primary"
+            : "text-muted-foreground hover:text-foreground"
+            }`}
+        >
+          Study Materials
+        </button>
+      </div>
+
+      {/* Course Details Tab */}
+      {activeTab === "details" && (
         <div className="glass-card p-6 space-y-4">
           <h2 className="text-base font-semibold text-foreground">Course Details</h2>
 
@@ -445,8 +480,10 @@ export default function CourseDetailPage() {
             {saving ? "Saving..." : "Save Changes"}
           </button>
         </div>
+      )}
 
-        {/* Right: Modules */}
+      {/* Modules Tab */}
+      {activeTab === "modules" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-foreground">
@@ -609,7 +646,11 @@ export default function CourseDetailPage() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+
+      )
+      }
+
+
+    </div >
   );
 }

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { prisma } from '../../utils/prisma';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // --- Zod Schemas ---
 
@@ -172,5 +174,76 @@ export const moduleService = {
     );
 
     return { reordered: true };
+  },
+
+  /**
+   * Add a resource file to a module
+   */
+  async addResource(
+    moduleId: string,
+    filename: string,
+    originalName: string,
+    fileType: string,
+    fileSize: number,
+    url: string
+  ) {
+    const module = await prisma.module.findUnique({ where: { id: moduleId } });
+    if (!module) throw new Error('Module not found');
+
+    const resourceId = require('crypto').randomUUID();
+    const resources = Array.isArray(module.resources) ? module.resources : [];
+
+    const newResource = {
+      id: resourceId,
+      name: filename,
+      originalName,
+      url,
+      fileType,
+      size: fileSize,
+      uploadedAt: new Date().toISOString(),
+    };
+
+    resources.push(newResource);
+
+    await prisma.module.update({
+      where: { id: moduleId },
+      data: { resources },
+    });
+
+    return newResource;
+  },
+
+  /**
+   * Delete a resource file from a module
+   */
+  async deleteResource(moduleId: string, resourceId: string) {
+    const module = await prisma.module.findUnique({ where: { id: moduleId } });
+    if (!module) throw new Error('Module not found');
+
+    const resources = Array.isArray(module.resources) ? module.resources : [];
+    const resource = resources.find((r: any) => r.id === resourceId);
+
+    if (!resource) throw new Error('Resource not found');
+
+    // Delete file from disk
+    try {
+      const uploadsRoot = path.resolve(__dirname, '..', '..', '..', 'uploads');
+      const filePath = path.join(uploadsRoot, resource.url.replace(/^.*\/uploads/, ''));
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch (err) {
+      console.error('Error deleting resource file:', err);
+    }
+
+    // Remove from resources array
+    const updatedResources = resources.filter((r: any) => r.id !== resourceId);
+
+    await prisma.module.update({
+      where: { id: moduleId },
+      data: { resources: updatedResources },
+    });
+
+    return { deleted: true };
   },
 };

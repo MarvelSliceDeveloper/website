@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-// Remove IconGraduationCap from import
+import { useState, useEffect } from "react";
 import {
   IconClipboardList,
   IconCheck,
@@ -10,7 +9,10 @@ import {
   IconFileText,
   IconSchool,
   IconSend,
+  IconPlus,
 } from "@tabler/icons-react";
+import { api } from "@/lib/api";
+import CreateAssignmentModal from "./_components/CreateAssignmentModal";
 
 type Submission = {
   id: string;
@@ -25,14 +27,41 @@ type Submission = {
   feedback?: string;
 };
 
+type Batch = {
+  id: string;
+  name: string;
+  courseId: string;
+};
+
 export default function InstructorAssignmentsPage() {
-  const [submissions, setSubmissions] = useState<Submission[]>([
-    // Start with an empty list; real submissions should come from the API
-  ]);
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [selectedSub, setSelectedSub] = useState<Submission | null>(null);
   const [grade, setGrade] = useState("");
   const [feedback, setFeedback] = useState("");
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const batchesData = await api.get<Batch[]>("/api/batches");
+        setBatches(Array.isArray(batchesData) ? batchesData : []);
+      } catch (err) {
+        console.error("Failed to load batches:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  const handleAssignmentCreated = () => {
+    setShowCreateModal(false);
+    setLoading(true);
+    setTimeout(() => setLoading(false), 500);
+  };
 
   const handleGrade = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,8 +94,24 @@ export default function InstructorAssignmentsPage() {
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-400">Instructor</p>
         <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">Assignments & Grading</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Grade submissions and provide critical feedback to your students.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Create assignments and grade student submissions.</p>
       </div>
+
+      {/* Create Assignment Button */}
+      <button
+        onClick={() => setShowCreateModal(true)}
+        className="btn-primary inline-flex items-center gap-2"
+      >
+        <IconPlus size={16} /> Create Assignment
+      </button>
+
+      {showCreateModal && (
+        <CreateAssignmentModal
+          batches={batches}
+          onAssignmentCreated={handleAssignmentCreated}
+          onClose={() => setShowCreateModal(false)}
+        />
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Submissions List */}
