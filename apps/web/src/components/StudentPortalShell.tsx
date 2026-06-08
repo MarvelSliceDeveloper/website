@@ -54,7 +54,7 @@ export default function StudentPortalShell({
   const router = useRouter();
   const [notifOpen, setNotifOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
 
   const notifRef = useRef<HTMLDivElement>(null);
@@ -163,9 +163,9 @@ export default function StudentPortalShell({
               }}
               className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              title={theme === "dark" ? "Light mode" : "Dark mode"}
+              title={theme === "dark" ? "Light mode" : "light mode"}
             >
-              {theme === "dark" ? <IconSun size={17} stroke={1.8} /> : <IconMoon size={17} stroke={1.8} />}
+              {theme === "light" ? <IconSun size={17} stroke={1.8} /> : <IconMoon size={17} stroke={1.8} />}
             </button>
 
             {/* Notification Bell */}

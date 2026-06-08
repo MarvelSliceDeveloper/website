@@ -8,6 +8,8 @@ import {
   IconClipboardCheck,
   IconLayoutDashboard,
   IconLayoutSidebarLeftCollapse,
+  IconSun,
+  IconMoon,
   IconLogout,
   IconMessages,
   IconUsers,
@@ -370,6 +372,7 @@ export default function AdminSidebar({
           <IconLogout size={18} stroke={1.8} className="shrink-0" />
           <span className={collapsed ? "hidden" : "inline"}>Sign out</span>
         </button>
+
       </div>
     </aside>
   );
