@@ -67,12 +67,15 @@ export default function InstructorDashboardPage() {
         );
         setStats({
           totalSessions: allSessions.length,
-          totalBatches: uniqueBatches.size || 1,
-          totalStudents: 12,
-          pendingAssignments: 2,
+          totalBatches: uniqueBatches.size || 0,
+          totalStudents: 0,
+          pendingAssignments: 0,
         });
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to load dashboard data:", err);
+        if (err.message?.includes("Authentication") || err.message?.includes("401")) {
+          window.location.href = "/login";
+        }
       } finally {
         setLoading(false);
       }
@@ -86,7 +89,7 @@ export default function InstructorDashboardPage() {
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-400">Instructor</p>
         <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">Dashboard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Welcome back, Demo Instructor! Here is a summary of your workspace.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Welcome back! Here is a summary of your workspace.</p>
       </div>
 
       {/* Stats Cards */}
@@ -189,7 +192,7 @@ export default function InstructorDashboardPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => alert(`Reviewing assignment details for ${sub.studentName}... (Simulated Grading)`)}
+                  onClick={() => window.location.href = "/instructor/assignments"}
                   className="btn-secondary w-full justify-center text-xs py-1.5 border-amber-500/20 text-amber-400 hover:bg-amber-500/10"
                 >
                   Review & Grade

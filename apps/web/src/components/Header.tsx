@@ -3,8 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
   IconBell,
-  IconLayoutSidebarLeftCollapse,
-  IconLayoutSidebarRightExpand,
   IconSettings,
   IconX,
   IconSun,
@@ -101,26 +99,6 @@ export default function Header({
     <header className="sticky top-0 z-30 border-b border-border/80 bg-background/80 backdrop-blur">
       <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 md:flex-nowrap md:px-6">
         <div className="flex items-center gap-3">
-          {/* ✅ Calls toggleTheme, shows correct icon */}
-          <button
-            onClick={toggleTheme}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            title={theme === "dark" ? "Light mode" : "light mode"}
-          >
-            {theme === "light" ? <IconSun size={17} stroke={1.8} /> : <IconMoon size={17} stroke={1.8} />}
-          </button>
-          <button
-            onClick={onToggleSidebar}
-            className="flex h-9 w-9 items-center justify-center  "
-            aria-label={isSidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
-          >
-            {isSidebarCollapsed ? (
-              <IconLayoutSidebarRightExpand size={18} stroke={1.8} />
-            ) : (
-              <IconLayoutSidebarLeftCollapse size={18} stroke={1.8} />
-            )}
-          </button>
           <div>
             <p className="text-xs uppercase tracking-[0.18em] text-muted">LMS Workspace</p>
             <h2 className="text-sm font-semibold text-foreground md:text-base">Welcome back 👋</h2>
@@ -189,6 +167,14 @@ export default function Header({
             aria-label="Settings"
           >
             <IconSettings size={18} stroke={1.8} />
+          </button>
+          <button
+            onClick={toggleTheme}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? "Light mode" : "light mode"}
+          >
+            {theme === "light" ? <IconSun size={17} stroke={1.8} /> : <IconMoon size={17} stroke={1.8} />}
           </button>
         </div>
       </div>

@@ -1,33 +1,258 @@
 "use client";
 
-import Link from "next/navigation";
-import LinkNext from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import { api } from "../lib/api";
 import {
   IconBook,
   IconCalendar,
   IconClipboardList,
   IconLayoutDashboard,
-  IconLayoutSidebarLeftCollapse,
   IconLogout,
   IconUsers,
   IconVideo,
   IconMessageCircle,
+  IconChevronDown,
 } from "@tabler/icons-react";
+
+type NavItemChild = {
+  label: string;
+  href: string;
+};
 
 type NavItem = {
   label: string;
   href: string;
   icon: React.ComponentType<{ size?: number; stroke?: number; className?: string }>;
+  badge?: number;
+  children?: NavItemChild[];
 };
 
-const mainItems: NavItem[] = [
+const overviewItems: NavItem[] = [
   { label: "Dashboard", href: "/instructor/dashboard", icon: IconLayoutDashboard },
-  { label: "My Sessions", href: "/instructor/sessions", icon: IconVideo },
-  { label: "My Batches", href: "/instructor/batches", icon: IconUsers },
-  { label: "Assignments", href: "/instructor/assignments", icon: IconClipboardList },
+  {
+    label: "My Sessions",
+    href: "/instructor/sessions",
+    icon: IconVideo,
+    children: [
+      { label: "All Sessions", href: "/instructor/sessions" },
+      { label: "Upcoming", href: "/instructor/sessions?status=UPCOMING" },
+      { label: "Past", href: "/instructor/sessions?status=PAST" },
+    ],
+  },
+  {
+    label: "My Batches",
+    href: "/instructor/batches",
+    icon: IconUsers,
+    children: [
+      { label: "All Batches", href: "/instructor/batches" },
+      { label: "Active", href: "/instructor/batches?status=ACTIVE" },
+      { label: "Completed", href: "/instructor/batches?status=COMPLETED" },
+    ],
+  },
+  {
+    label: "Assignments",
+    href: "/instructor/assignments",
+    icon: IconClipboardList,
+    children: [
+      { label: "All Assignments", href: "/instructor/assignments" },
+      { label: "Pending", href: "/instructor/assignments?status=PENDING" },
+      { label: "Graded", href: "/instructor/assignments?status=GRADED" },
+    ],
+  },
 ];
+
+function ChildNavLink({
+  child,
+  pathname,
+}: {
+  child: NavItemChild;
+  pathname: string;
+}) {
+  const searchParams = useSearchParams();
+
+  const [childPath, childQueryString] = child.href.split("?");
+  const isPathActive = pathname === childPath;
+
+  let isQueryActive = true;
+  if (childQueryString) {
+    const childParams = new URLSearchParams(childQueryString);
+    childParams.forEach((value, key) => {
+      if (searchParams.get(key) !== value) {
+        isQueryActive = false;
+      }
+    });
+  } else {
+    const hasFilteringParams = searchParams.get("status");
+    if (hasFilteringParams) {
+      isQueryActive = false;
+    }
+  }
+
+  const isChildActive = isPathActive && isQueryActive;
+
+  return (
+    <li>
+      <Link
+        href={child.href}
+        className={`group flex items-center gap-2 rounded-lg py-1.5 px-3 text-[13px] font-medium transition-all duration-150 ${isChildActive
+          ? "text-primary bg-primary/5 font-semibold"
+          : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
+          }`}
+      >
+        <span
+          className={`h-1.5 w-1.5 rounded-full transition-all duration-150 ${isChildActive ? "bg-primary scale-125" : "bg-muted/40 group-hover:bg-muted"
+            }`}
+        />
+        <span>{child.label}</span>
+      </Link>
+    </li>
+  );
+}
+
+function NavGroup({
+  label,
+  items,
+  pathname,
+  collapsed = false,
+}: {
+  label: string;
+  items: NavItem[];
+  pathname: string;
+  collapsed?: boolean;
+}) {
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
+  const [manuallyCollapsed, setManuallyCollapsed] = useState<string | null>(null);
+
+  // Auto-expand the group whose child matches the current pathname,
+  // but only if the user hasn't manually collapsed that group.
+  useEffect(() => {
+    if (collapsed) return;
+
+    const activeGroup = items.find((item) => {
+      if (!item.children) return false;
+      return item.children.some((child) => {
+        const [childPath] = child.href.split("?");
+        return pathname === childPath;
+      });
+    });
+
+    if (activeGroup && manuallyCollapsed !== activeGroup.label) {
+      setExpandedGroup(activeGroup.label);
+    }
+  }, [pathname, collapsed, items]);
+
+  const toggleGroup = (groupLabel: string) => {
+    setExpandedGroup((prev) => {
+      const isOpening = prev !== groupLabel;
+      // If closing, remember that the user manually collapsed this group.
+      // If opening a different group, clear the manual collapse state.
+      setManuallyCollapsed(isOpening ? null : groupLabel);
+      return isOpening ? groupLabel : null;
+    });
+  };
+
+  return (
+    <div className="space-y-1">
+      <p
+        className={`px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted ${collapsed ? "hidden" : "block"
+          }`}
+      >
+        {label}
+      </p>
+      <ul className={`space-y-1 ${collapsed ? "mx-auto w-fit" : ""}`}>
+        {items.map((item) => {
+          const hasChildren = !!item.children?.length;
+          const isExpanded = expandedGroup === item.label;
+
+          const isParentActive =
+            pathname === item.href || pathname?.startsWith(item.href + "/");
+          const isAnyChildActive =
+            hasChildren &&
+            item.children!.some((child) => {
+              const [childPath] = child.href.split("?");
+              return pathname === childPath;
+            });
+          const isActive = isParentActive || isAnyChildActive;
+
+          return (
+            <li key={item.label} className="space-y-0.5">
+              {hasChildren && !collapsed ? (
+                <div className="space-y-0.5">
+                  <button
+                    onClick={() => toggleGroup(item.label)}
+                    title={item.label}
+                    className={`w-full flex items-center rounded-xl py-2 text-sm font-medium transition-all duration-150 gap-2.5 px-3 select-none text-left cursor-pointer ${isActive
+                      ? "border border-primary/15 bg-primary/10 text-primary-hover"
+                      : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
+                      }`}
+                  >
+                    <item.icon size={18} stroke={1.8} className="shrink-0" />
+                    <span className="flex-1 truncate">{item.label}</span>
+                    {item.badge != null && (
+                      <span className="rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-medium text-white mr-1">
+                        {item.badge}
+                      </span>
+                    )}
+                    <IconChevronDown
+                      size={16}
+                      stroke={1.8}
+                      className={`shrink-0 text-muted transition-transform duration-200 ${isExpanded ? "rotate-180" : ""
+                        }`}
+                    />
+                  </button>
+
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ${isExpanded
+                      ? "max-h-64 opacity-100 mt-0.5"
+                      : "max-h-0 opacity-0 pointer-events-none"
+                      }`}
+                  >
+                    <ul className="pl-4 border-l border-border/60 ml-5 space-y-0.5">
+                      {item.children!.map((child) => (
+                        <ChildNavLink
+                          key={child.href}
+                          child={child}
+                          pathname={pathname}
+                        />
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  href={item.href}
+                  title={item.label}
+                  className={`flex items-center rounded-xl py-2 text-sm font-medium transition-all duration-150 ${collapsed ? "justify-center px-2" : "gap-2.5 px-3"
+                    } ${isActive
+                      ? "border border-primary/25 bg-primary/15 text-primary-hover"
+                      : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
+                    }`}
+                >
+                  <item.icon size={18} stroke={1.8} className="shrink-0" />
+                  <span className={`flex-1 truncate ${collapsed ? "hidden" : "block"}`}>
+                    {item.label}
+                  </span>
+                  {item.badge != null && (
+                    <span
+                      className={`${collapsed
+                        ? "hidden"
+                        : "rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-medium text-white"
+                        }`}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
 
 export default function InstructorSidebar({
   collapsed = false,
@@ -60,44 +285,18 @@ export default function InstructorSidebar({
           <p className="truncate text-sm font-semibold text-foreground">LMS Portal</p>
           <p className="text-xs text-muted">Instructor Area</p>
         </div>
-        {!collapsed && (
-          <button
-            onClick={onToggleCollapse}
-            className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
-            aria-label="Collapse sidebar"
-          >
-            <IconLayoutSidebarLeftCollapse size={16} stroke={1.8} />
-          </button>
-        )}
       </div>
 
-      <nav className={`flex-1 overflow-y-auto py-4 ${collapsed ? "space-y-4 px-2" : "space-y-5 px-3"}`}>
-        <div className="space-y-1">
-          <p className={`px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted ${collapsed ? "hidden" : "block"}`}>
-            Menu
-          </p>
-          <ul className={`space-y-0.5 ${collapsed ? "mx-auto w-fit" : ""}`}>
-            {mainItems.map((item) => {
-              const isActive =
-                pathname === item.href || pathname?.startsWith(item.href + "/");
-              return (
-                <li key={item.href}>
-                  <LinkNext
-                    href={item.href}
-                    title={item.label}
-                    className={`flex items-center rounded-xl py-2 text-sm font-medium transition-all duration-150 ${collapsed ? "justify-center px-2" : "gap-2.5 px-3"} ${isActive
-                      ? "border border-violet-500/25 bg-violet-500/15 text-violet-400 font-semibold"
-                      : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
-                      }`}
-                  >
-                    <item.icon size={18} stroke={1.8} className="shrink-0 text-center" />
-                    <span className={`truncate ${collapsed ? "hidden" : "inline"}`}>{item.label}</span>
-                  </LinkNext>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+      <nav
+        className={`flex-1 overflow-y-auto py-4 ${collapsed ? "space-y-4 px-2" : "space-y-5 px-3"
+          }`}
+      >
+        <NavGroup
+          label="Overview"
+          items={overviewItems}
+          pathname={pathname}
+          collapsed={collapsed}
+        />
       </nav>
 
       <div className="border-t border-border p-3">

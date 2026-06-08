@@ -7,15 +7,8 @@ import AdminSidebar from "./AdminSidebar";
 const STORAGE_KEY = "lms-admin-sidebar-collapsed";
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-        if (typeof window === "undefined") return false;
-        const savedValue = window.localStorage.getItem(STORAGE_KEY);
-        return savedValue === "1";
-    });
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-    useEffect(() => {
-        window.localStorage.setItem(STORAGE_KEY, isSidebarCollapsed ? "1" : "0");
-    }, [isSidebarCollapsed]);
 
     return (
         <div className="min-h-screen bg-background">

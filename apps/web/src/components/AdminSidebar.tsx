@@ -323,15 +323,6 @@ export default function AdminSidebar({
           <p className="truncate text-sm font-semibold text-foreground">LMS Portal</p>
           <p className="text-xs text-muted">Admin Console</p>
         </div>
-        {!collapsed && (
-          <button
-            onClick={onToggleCollapse}
-            className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
-            aria-label="Collapse admin sidebar"
-          >
-            <IconLayoutSidebarLeftCollapse size={16} stroke={1.8} />
-          </button>
-        )}
       </div>
 
       <nav

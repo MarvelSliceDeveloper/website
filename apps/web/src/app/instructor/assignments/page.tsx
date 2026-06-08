@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import {
   IconClipboardList,
@@ -86,6 +87,8 @@ type FormQuestion = {
 };
 
 export default function InstructorAssignmentsPage() {
+  const searchParams = useSearchParams();
+  const statusFilter = searchParams.get("status");
   const [activeTab, setActiveTab] = useState<"list" | "create">("list");
   const [batches, setBatches] = useState<Batch[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -128,19 +131,35 @@ export default function InstructorAssignmentsPage() {
       try {
         setLoading(true);
         const [batchesRes, assignmentsRes] = await Promise.all([
-          api.get<Batch[]>("/api/admin/batches"),
+          api.get<Batch[]>("/api/batches"),
           api.get<{ assignments: Assignment[] }>("/api/assignments"),
         ]);
         setBatches(batchesRes || []);
         setAssignments(assignmentsRes.assignments || []);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error loading instructor assignment data:", err);
+        if (err.message?.includes("Authentication") || err.message?.includes("401")) {
+          window.location.href = "/login";
+        }
       } finally {
         setLoading(false);
       }
     }
     loadData();
   }, []);
+
+  // Filter assignments based on status
+  let filteredAssignments = assignments;
+  if (statusFilter === "PENDING") {
+    filteredAssignments = assignments.filter((a) => {
+      const dueDate = new Date(a.dueDate);
+      return dueDate >= new Date();
+    });
+  } else if (statusFilter === "GRADED") {
+    filteredAssignments = assignments.filter((a) => {
+      return a._count?.submissions && a._count.submissions > 0;
+    });
+  }
 
   // Fetch submissions when selected assignment changes
   useEffect(() => {
@@ -813,13 +832,13 @@ export default function InstructorAssignmentsPage() {
               Active MCQ Assignments
             </h2>
 
-            {assignments.length === 0 ? (
+            {filteredAssignments.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground text-sm">
                 📚 No assignments posted yet. Click "+ Create Assignment" to post one!
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {assignments.map((assignment) => (
+                {filteredAssignments.map((assignment) => (
                   <div
                     key={assignment.id}
                     className="glass-card p-4 space-y-4 border border-border hover:border-violet-500/30 transition-all duration-200"
