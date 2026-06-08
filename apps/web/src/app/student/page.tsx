@@ -9,6 +9,17 @@ import type { ViewState } from "./_types/student-portal";
 
 // Mock data
 import {
+  MOCK_ENABLED,
+  MOCK_STATS,
+  MOCK_OVERDUE_ASSIGNMENTS,
+  MOCK_ENROLLED_COURSES,
+  MOCK_LIVE_SESSIONS,
+  MOCK_CALENDAR_EVENTS,
+  MOCK_MENTORSHIP_TICKETS,
+  MOCK_CERTIFICATES,
+  MOCK_CATALOGUE,
+  MOCK_BATCHES,
+  MOCK_CONTINUE_LEARNING,
   type DashboardStats,
   type OverdueAssignment,
   type EnrolledCourse,
