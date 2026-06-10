@@ -140,6 +140,7 @@ export interface OverdueAssignment {
   assignmentName: string;
   dueDate: string;
   status: "PENDING" | "SUBMITTED";
+  type: "QUIZ" | "ASSIGNMENT";
 }
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
@@ -165,6 +166,7 @@ export const MOCK_OVERDUE_ASSIGNMENTS: OverdueAssignment[] = [
     assignmentName: "Capstone Project (Covid 19) - Submit Here",
     dueDate: "2026-03-03T00:00:00.000Z",
     status: "PENDING",
+    type: "ASSIGNMENT",
   },
   {
     id: "oa2",
@@ -173,6 +175,7 @@ export const MOCK_OVERDUE_ASSIGNMENTS: OverdueAssignment[] = [
     assignmentName: "Capstone Project (Netflix) - Submit Here",
     dueDate: "2026-05-01T00:00:00.000Z",
     status: "PENDING",
+    type: "ASSIGNMENT",
   },
   {
     id: "oa3",
@@ -181,6 +184,7 @@ export const MOCK_OVERDUE_ASSIGNMENTS: OverdueAssignment[] = [
     assignmentName: "Hooks Refactor Assignment",
     dueDate: "2026-04-24T00:00:00.000Z",
     status: "SUBMITTED",
+    type: "QUIZ",
   },
 ];
 

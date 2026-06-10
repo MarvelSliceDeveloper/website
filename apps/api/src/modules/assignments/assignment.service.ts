@@ -1,7 +1,10 @@
 import { z } from 'zod';
 import { prisma } from '../../utils/prisma';
 
-export const CreateAssignmentSchema = z.object({
+// ── Zod Schemas ──────────────────────────────────────────────────────────────
+
+// Schema for creating a QUIZ (MCQ-based, auto-graded)
+export const CreateQuizSchema = z.object({
   courseId: z.string().cuid(),
   batchId: z.string().cuid(),
   title: z.string().min(3).max(150),
@@ -22,6 +25,17 @@ export const CreateAssignmentSchema = z.object({
   ).min(1),
 });
 
+// Schema for creating an ASSIGNMENT (PDF questions, file-upload answers)
+export const CreateFileAssignmentSchema = z.object({
+  courseId: z.string().cuid(),
+  batchId: z.string().cuid(),
+  title: z.string().min(3).max(150),
+  description: z.string().min(3),
+  dueDate: z.string().datetime(),
+  maxPoints: z.number().int().min(1).default(100),
+  questionPdfUrl: z.string().min(1),
+});
+
 export const SubmitMcqAnswersSchema = z.object({
   answers: z.array(
     z.object({
@@ -36,17 +50,26 @@ export const GradeSubmissionSchema = z.object({
   feedback: z.string().optional(),
 });
 
+// Keep backward-compatible alias
+export const CreateAssignmentSchema = CreateQuizSchema;
+
 export const assignmentService = {
-  // Creates a new MCQ assignment with nested questions and options; limited to the assigned instructor.
-  async createAssignment(instructorId: string, data: z.infer<typeof CreateAssignmentSchema>) {
-    const batch = await prisma.batch.findUnique({ where: { id: data.batchId } });
+  // ── Helper: verify instructor owns the batch ─────────────────────────────
+  async _verifyBatchInstructor(instructorId: string, batchId: string, courseId: string) {
+    const batch = await prisma.batch.findUnique({ where: { id: batchId } });
     if (!batch) throw new Error('Batch not found');
     if (batch.instructorId !== instructorId) {
       throw new Error('You are not the instructor of this batch');
     }
-    if (batch.courseId !== data.courseId) {
+    if (batch.courseId !== courseId) {
       throw new Error('Batch does not belong to the selected course');
     }
+    return batch;
+  },
+
+  // Creates a new MCQ quiz with nested questions and options; limited to the assigned instructor.
+  async createQuiz(instructorId: string, data: z.infer<typeof CreateQuizSchema>) {
+    await this._verifyBatchInstructor(instructorId, data.batchId, data.courseId);
 
     return prisma.assignment.create({
       data: {
@@ -54,6 +77,7 @@ export const assignmentService = {
         batchId: data.batchId,
         title: data.title,
         description: data.description,
+        type: 'QUIZ',
         dueDate: new Date(data.dueDate),
         maxPoints: data.maxPoints,
         questions: {
@@ -78,6 +102,33 @@ export const assignmentService = {
         },
       },
     });
+  },
+
+  // Creates a file-based assignment where the instructor uploads a PDF with questions.
+  async createFileAssignment(
+    instructorId: string,
+    data: z.infer<typeof CreateFileAssignmentSchema>,
+    questionPdfUrl: string
+  ) {
+    await this._verifyBatchInstructor(instructorId, data.batchId, data.courseId);
+
+    return prisma.assignment.create({
+      data: {
+        courseId: data.courseId,
+        batchId: data.batchId,
+        title: data.title,
+        description: data.description,
+        type: 'ASSIGNMENT',
+        questionPdfUrl,
+        dueDate: new Date(data.dueDate),
+        maxPoints: data.maxPoints,
+      },
+    });
+  },
+
+  // Backward-compatible alias that delegates to createQuiz
+  async createAssignment(instructorId: string, data: z.infer<typeof CreateQuizSchema>) {
+    return this.createQuiz(instructorId, data);
   },
 
   // Lists assignments filtered by role and batch; filters are restricted based on student/instructor permissions.
@@ -181,6 +232,8 @@ export const assignmentService = {
       description: assignment.description,
       dueDate: assignment.dueDate,
       maxPoints: assignment.maxPoints,
+      type: assignment.type,
+      questionPdfUrl: assignment.questionPdfUrl,
       questions,
     };
   },
@@ -376,6 +429,49 @@ export const assignmentService = {
         feedback: feedback || null,
         status: 'GRADED',
         gradedAt: new Date(),
+      },
+    });
+  },
+
+  // Allows a student to submit a file answer for an ASSIGNMENT-type item.
+  async submitFileAnswer(studentId: string, assignmentId: string, answerFileUrl: string) {
+    const assignment = await prisma.assignment.findUnique({
+      where: { id: assignmentId },
+      include: {
+        batch: {
+          include: {
+            enrollments: {
+              where: { userId: studentId, status: 'APPROVED' },
+            },
+          },
+        },
+      },
+    });
+
+    if (!assignment) throw new Error('Assignment not found');
+    if (assignment.type !== 'ASSIGNMENT') throw new Error('This is a quiz, not a file-upload assignment');
+    if (new Date() > assignment.dueDate) throw new Error('Assignment due date has passed');
+    if (assignment.batch.enrollments.length === 0) {
+      throw new Error('You are not enrolled in the batch for this assignment');
+    }
+
+    // Upsert — allow re-submission before grading
+    return prisma.assignmentSubmission.upsert({
+      where: {
+        assignmentId_studentId: {
+          assignmentId,
+          studentId,
+        },
+      },
+      create: {
+        assignmentId,
+        studentId,
+        answerFileUrl,
+        status: 'PENDING',
+      },
+      update: {
+        answerFileUrl,
+        submittedAt: new Date(),
       },
     });
   },

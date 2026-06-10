@@ -49,12 +49,25 @@ export default function CreateAssignmentModal({
 
     try {
       await api.post("/api/assignments", {
+        type: "QUIZ",
         batchId: form.batchId,
         courseId: form.courseId,
         title: form.title,
-        description: form.description,
-        instructions: form.instructions || undefined,
-        dueDate: form.dueDate,
+        description: form.instructions
+          ? `${form.description}\n\n${form.instructions}`
+          : form.description,
+        dueDate: new Date(form.dueDate).toISOString(),
+        maxPoints: 10,
+        questions: [
+          {
+            questionText: form.title,
+            marks: 10,
+            options: [
+              { optionText: "Option A", isCorrect: true },
+              { optionText: "Option B", isCorrect: false },
+            ],
+          },
+        ],
       });
 
       setForm({

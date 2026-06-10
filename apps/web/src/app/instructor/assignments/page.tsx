@@ -31,6 +31,8 @@ type Assignment = {
   description: string;
   dueDate: string;
   maxPoints: number;
+  type: "QUIZ" | "ASSIGNMENT";
+  questionPdfUrl?: string | null;
   course: {
     title: string;
   };
@@ -51,6 +53,7 @@ type StudentSubmission = {
   totalScore: number | null;
   grade: string | null;
   feedback: string | null;
+  answerFileUrl?: string | null;
   student: {
     name: string;
     email: string;
@@ -61,6 +64,8 @@ type SubmissionDetail = StudentSubmission & {
   assignment: {
     title: string;
     maxPoints: number;
+    type: "QUIZ" | "ASSIGNMENT";
+    questionPdfUrl?: string | null;
     questions: Array<{
       id: string;
       questionText: string;
@@ -124,6 +129,9 @@ export default function InstructorAssignmentsPage() {
       ],
     },
   ]);
+  const [formType, setFormType] = useState<"QUIZ" | "ASSIGNMENT">("QUIZ");
+  const [formQuestionPdfUrl, setFormQuestionPdfUrl] = useState("");
+  const [uploadingPdf, setUploadingPdf] = useState(false);
 
   // Initial load
   useEffect(() => {
@@ -131,7 +139,7 @@ export default function InstructorAssignmentsPage() {
       try {
         setLoading(true);
         const [batchesRes, assignmentsRes] = await Promise.all([
-          api.get<Batch[]>("/api/batches"),
+          api.get<Batch[]>("/api/admin/batches"),
           api.get<{ assignments: Assignment[] }>("/api/assignments"),
         ]);
         setBatches(batchesRes || []);
@@ -293,7 +301,31 @@ export default function InstructorAssignmentsPage() {
     setFormQuestions(updated);
   };
 
-  // Validates input fields and posts the new MCQ assignment with nested questions to the database.
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      alert("Only PDF files are allowed for assignments.");
+      return;
+    }
+
+    try {
+      setUploadingPdf(true);
+      const formData = new FormData();
+      formData.append("pdf", file);
+
+      const res = await api.post<{ fileUrl: string }>("/api/assignments/upload-pdf", formData);
+      setFormQuestionPdfUrl(res.fileUrl);
+      alert("Question PDF uploaded successfully!");
+    } catch (err: any) {
+      alert(`Upload failed: ${err.message}`);
+    } finally {
+      setUploadingPdf(false);
+    }
+  };
+
+  // Validates input fields and posts the new MCQ assignment or file assignment to the database.
   const handleCreateAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formBatchId) {
@@ -304,32 +336,48 @@ export default function InstructorAssignmentsPage() {
     const selectedBatch = batches.find((b) => b.id === formBatchId);
     if (!selectedBatch) return;
 
-    // Validate questions
-    for (const q of formQuestions) {
-      if (!q.questionText.trim()) {
-        alert("Please write a question text for all questions.");
-        return;
-      }
-      for (const o of q.options) {
-        if (!o.optionText.trim()) {
-          alert("All multiple-choice options must have text filled.");
+    // Validate type-specific fields
+    if (formType === "QUIZ") {
+      for (const q of formQuestions) {
+        if (!q.questionText.trim()) {
+          alert("Please write a question text for all questions.");
           return;
         }
+        for (const o of q.options) {
+          if (!o.optionText.trim()) {
+            alert("All multiple-choice options must have text filled.");
+            return;
+          }
+        }
+      }
+    } else {
+      if (!formQuestionPdfUrl) {
+        alert("Please upload a question PDF file for the assignment.");
+        return;
+      }
+      if (Number(formMaxPoints) <= 0) {
+        alert("Please specify a valid positive number for max points.");
+        return;
       }
     }
 
     try {
       setSubmitting(true);
-      const computedMaxPoints = formQuestions.reduce((sum, q) => sum + Number(q.marks), 0);
+      const computedMaxPoints =
+        formType === "QUIZ"
+          ? formQuestions.reduce((sum, q) => sum + Number(q.marks), 0)
+          : Number(formMaxPoints);
 
       await api.post("/api/assignments", {
+        type: formType,
         courseId: selectedBatch.course.id,
         batchId: formBatchId,
         title: formTitle,
         description: formDesc,
         dueDate: new Date(formDueDate).toISOString(),
         maxPoints: computedMaxPoints,
-        questions: formQuestions,
+        questions: formType === "QUIZ" ? formQuestions : undefined,
+        questionPdfUrl: formType === "ASSIGNMENT" ? formQuestionPdfUrl : undefined,
       });
 
       // Reset Form
@@ -337,6 +385,9 @@ export default function InstructorAssignmentsPage() {
       setFormDesc("");
       setFormBatchId("");
       setFormDueDate("");
+      setFormMaxPoints(100);
+      setFormQuestionPdfUrl("");
+      setFormType("QUIZ");
       setFormQuestions([
         {
           questionText: "",
@@ -368,9 +419,9 @@ export default function InstructorAssignmentsPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-400">Instructor</p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">Assignments Dashboard</h1>
+          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">Assessments Dashboard</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Post and evaluate MCQ-based class tests and automated assessments.
+            Create quizzes (auto-graded MCQ) or assignments (PDF-based, manually graded).
           </p>
         </div>
 
@@ -403,10 +454,45 @@ export default function InstructorAssignmentsPage() {
         /* ==================== CREATE VIEW ==================== */
         <div className="glass-card p-6 border border-border/80 max-w-4xl mx-auto">
           <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-            🆕 Create MCQ Assignment
+            🆕 Create {formType === "QUIZ" ? "Quiz" : "Assignment"}
           </h2>
 
           <form onSubmit={handleCreateAssignment} className="space-y-6">
+            {/* Type Selector */}
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Assessment Type
+              </label>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormType("QUIZ")}
+                  className={`flex-1 rounded-xl border-2 p-4 text-left transition-all ${
+                    formType === "QUIZ"
+                      ? "border-violet-500 bg-violet-500/10 shadow-md"
+                      : "border-border/60 hover:border-border"
+                  }`}
+                >
+                  <span className="text-lg">📝</span>
+                  <p className="mt-1 text-sm font-bold text-foreground">Quiz (MCQ)</p>
+                  <p className="text-[11px] text-muted-foreground">Auto-graded multiple choice questions</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormType("ASSIGNMENT")}
+                  className={`flex-1 rounded-xl border-2 p-4 text-left transition-all ${
+                    formType === "ASSIGNMENT"
+                      ? "border-violet-500 bg-violet-500/10 shadow-md"
+                      : "border-border/60 hover:border-border"
+                  }`}
+                >
+                  <span className="text-lg">📄</span>
+                  <p className="mt-1 text-sm font-bold text-foreground">Assignment (File)</p>
+                  <p className="text-[11px] text-muted-foreground">Upload question PDF, students submit answer files</p>
+                </button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -469,7 +555,8 @@ export default function InstructorAssignmentsPage() {
               />
             </div>
 
-            {/* Questions Builder */}
+            {/* === QUIZ: MCQ Questions Builder === */}
+            {formType === "QUIZ" && (
             <div className="space-y-4 pt-4 border-t border-border/60">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
@@ -569,6 +656,69 @@ export default function InstructorAssignmentsPage() {
                 ))}
               </div>
             </div>
+            )}
+
+            {/* === ASSIGNMENT: PDF Upload & Max Points === */}
+            {formType === "ASSIGNMENT" && (
+            <div className="space-y-4 pt-4 border-t border-border/60">
+              <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
+                Question PDF &amp; Grading
+              </h3>
+
+              <div className="p-4 rounded-xl border border-border/80 bg-background/50 space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
+                    Upload Question PDF
+                  </label>
+                  <p className="text-[11px] text-muted-foreground mb-2">
+                    Upload a PDF containing the assignment questions. Students will download this and submit their answers as a file.
+                  </p>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handlePdfUpload}
+                    disabled={uploadingPdf}
+                    className="field py-2 text-sm"
+                  />
+                  {uploadingPdf && (
+                    <p className="text-xs text-accent animate-pulse">Uploading PDF…</p>
+                  )}
+                  {formQuestionPdfUrl && (
+                    <div className="flex items-center gap-2 mt-2 p-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10">
+                      <span className="text-emerald-400 text-sm">✅</span>
+                      <span className="text-xs text-emerald-300 font-medium truncate flex-1">PDF uploaded successfully</span>
+                      <a
+                        href={formQuestionPdfUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[11px] text-primary hover:underline shrink-0"
+                      >
+                        Preview →
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
+                    Maximum Points
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    value={formMaxPoints}
+                    onChange={(e) => setFormMaxPoints(Number(e.target.value))}
+                    className="field py-2 text-sm w-40"
+                    placeholder="100"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    The total points this assignment is worth. Instructors will manually grade submissions.
+                  </p>
+                </div>
+              </div>
+            </div>
+            )}
 
             <div className="flex justify-end gap-3 pt-4 border-t border-border/60">
               <button
@@ -642,7 +792,7 @@ export default function InstructorAssignmentsPage() {
                       <tr className="border-b border-border/60 text-muted uppercase font-bold tracking-wider">
                         <th className="py-2.5">Student</th>
                         <th className="py-2.5">Submitted</th>
-                        <th className="py-2.5">Auto Score</th>
+                        <th className="py-2.5">{selectedAssignment.type === "QUIZ" ? "Auto Score" : "File"}</th>
                         <th className="py-2.5">Grade</th>
                         <th className="py-2.5 text-right">Action</th>
                       </tr>
@@ -662,7 +812,12 @@ export default function InstructorAssignmentsPage() {
                             {new Date(sub.submittedAt).toLocaleDateString()}
                           </td>
                           <td className="py-3 pr-2 font-bold text-foreground">
-                            {sub.totalScore !== null ? `${sub.totalScore}/${selectedAssignment.maxPoints}` : "-"}
+                            {selectedAssignment.type === "QUIZ"
+                              ? (sub.totalScore !== null ? `${sub.totalScore}/${selectedAssignment.maxPoints}` : "-")
+                              : sub.answerFileUrl
+                                ? <a href={sub.answerFileUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline text-[10px]">📎 Download</a>
+                                : <span className="text-muted">—</span>
+                            }
                           </td>
                           <td className="py-3 pr-2">
                             <span
@@ -679,7 +834,7 @@ export default function InstructorAssignmentsPage() {
                               onClick={() => handleSelectSubmission(sub)}
                               className="btn-secondary text-[10px] py-1 px-2.5"
                             >
-                              Review Answers
+                              {selectedAssignment.type === "QUIZ" ? "Review Answers" : "Review & Grade"}
                             </button>
                           </td>
                         </tr>
@@ -711,9 +866,9 @@ export default function InstructorAssignmentsPage() {
 
                     <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-border/40">
                       <div>
-                        <p className="text-[9px] font-bold text-muted uppercase">Auto Grade</p>
+                        <p className="text-[9px] font-bold text-muted uppercase">{selectedSubmission.assignment.type === "QUIZ" ? "Auto Grade" : "Score"}</p>
                         <p className="text-base font-bold text-foreground">
-                          {selectedSubmission.totalScore} / {selectedSubmission.assignment.maxPoints}
+                          {selectedSubmission.totalScore !== null ? selectedSubmission.totalScore : "—"} / {selectedSubmission.assignment.maxPoints}
                         </p>
                       </div>
                       <div>
@@ -728,7 +883,8 @@ export default function InstructorAssignmentsPage() {
                     </div>
                   </div>
 
-                  {/* Question Answers Details */}
+                  {/* === QUIZ: Question Answers Details === */}
+                  {selectedSubmission.assignment.type === "QUIZ" && (
                   <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
                     <p className="text-[10px] font-bold text-muted uppercase tracking-wider">Student Responses</p>
                     {selectedSubmission.assignment.questions.map((q, idx) => {
@@ -775,6 +931,42 @@ export default function InstructorAssignmentsPage() {
                       );
                     })}
                   </div>
+                  )}
+
+                  {/* === ASSIGNMENT: File Review === */}
+                  {selectedSubmission.assignment.type === "ASSIGNMENT" && (
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-bold text-muted uppercase tracking-wider">Submitted Files</p>
+                    {selectedSubmission.assignment.questionPdfUrl && (
+                      <a
+                        href={selectedSubmission.assignment.questionPdfUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2 p-3 rounded-lg border border-border/50 bg-background/30 text-xs hover:border-primary/40 transition-colors"
+                      >
+                        <span>📄</span>
+                        <span className="font-medium text-foreground">Question PDF</span>
+                        <span className="ml-auto text-primary text-[10px]">Open →</span>
+                      </a>
+                    )}
+                    {selectedSubmission.answerFileUrl ? (
+                      <a
+                        href={selectedSubmission.answerFileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2 p-3 rounded-lg border border-border/50 bg-background/30 text-xs hover:border-primary/40 transition-colors"
+                      >
+                        <span>📎</span>
+                        <span className="font-medium text-foreground">Student Answer File</span>
+                        <span className="ml-auto text-primary text-[10px]">Download →</span>
+                      </a>
+                    ) : (
+                      <div className="p-3 rounded-lg border border-border/50 bg-background/30 text-xs text-muted-foreground">
+                        No answer file submitted yet.
+                      </div>
+                    )}
+                  </div>
+                  )}
 
                   {/* Manual Grading Form */}
                   <form onSubmit={handleGradeSubmission} className="space-y-3 pt-3 border-t border-border/60">
@@ -829,7 +1021,7 @@ export default function InstructorAssignmentsPage() {
         <div className="space-y-4">
           <div className="glass-card p-5 border border-border/80">
             <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">
-              Active MCQ Assignments
+              All Assessments
             </h2>
 
             {filteredAssignments.length === 0 ? (
@@ -845,9 +1037,18 @@ export default function InstructorAssignmentsPage() {
                   >
                     <div>
                       <div className="flex items-center justify-between">
-                        <span className="text-[9px] uppercase font-bold text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded">
-                          {assignment.batch.name}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[9px] uppercase font-bold text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded">
+                            {assignment.batch.name}
+                          </span>
+                          <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded ${
+                            assignment.type === "QUIZ"
+                              ? "text-accent bg-accent/10"
+                              : "text-warning bg-warning/10"
+                          }`}>
+                            {assignment.type === "QUIZ" ? "Quiz" : "Assignment"}
+                          </span>
+                        </div>
                         <span className="text-[10px] text-muted flex items-center gap-1">
                           <IconCalendar size={11} />
                           {new Date(assignment.dueDate).toLocaleDateString()}
@@ -862,7 +1063,7 @@ export default function InstructorAssignmentsPage() {
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-muted pt-3 border-t border-border/50">
-                      <span>{assignment._count?.questions || 0} Questions</span>
+                      <span>{assignment.type === "QUIZ" ? `${assignment._count?.questions || 0} Questions` : `${assignment.maxPoints} pts`}</span>
                       <span className="font-semibold text-foreground">
                         {assignment._count?.submissions || 0} Submissions
                       </span>

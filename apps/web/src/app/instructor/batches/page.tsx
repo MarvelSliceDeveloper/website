@@ -31,7 +31,7 @@ export default function InstructorBatchesPage() {
   useEffect(() => {
     async function loadBatches() {
       try {
-        const data = await api.get<Batch[]>("/api/batches");
+        const data = await api.get<Batch[]>("/api/admin/batches");
         setBatches(Array.isArray(data) ? data : []);
       } catch (err: any) {
         console.error("Failed to load batches:", err);
@@ -79,8 +79,14 @@ export default function InstructorBatchesPage() {
             <div key={b.id} className="glass-card p-5 space-y-4 border border-border/80 hover:border-violet-500/20 hover:shadow-lg transition-all duration-200 flex flex-col justify-between">
               <div className="space-y-2">
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full">
-                    ACTIVE COHORT
+                  <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
+                    new Date(b.endDate) < now
+                      ? "text-muted-foreground bg-muted/20"
+                      : new Date(b.startDate) > now
+                        ? "text-sky-400 bg-sky-500/10"
+                        : "text-violet-400 bg-violet-500/10"
+                  }`}>
+                    {new Date(b.endDate) < now ? "Completed" : new Date(b.startDate) > now ? "Upcoming" : "Active"}
                   </span>
                   <h3 className="font-bold text-foreground text-base mt-2 truncate">{b.name}</h3>
                   <p className="text-xs text-muted-foreground truncate">{b.course.title}</p>
@@ -98,21 +104,21 @@ export default function InstructorBatchesPage() {
                   <p className="text-[10px] text-muted-foreground font-medium uppercase">Students</p>
                   <p className="text-base font-bold text-foreground flex items-center justify-center gap-1">
                     <IconUserCheck size={14} className="text-violet-400" />
-                    {b._count?.enrollments || 12}
+                    {b._count?.enrollments ?? 0}
                   </p>
                 </div>
                 <div className="space-y-0.5">
                   <p className="text-[10px] text-muted-foreground font-medium uppercase">Sessions</p>
                   <p className="text-base font-bold text-foreground flex items-center justify-center gap-1">
                     <IconVideo size={14} className="text-emerald-400" />
-                    {b._count?.sessions || 2}
+                    {b._count?.sessions ?? 0}
                   </p>
                 </div>
                 <div className="space-y-0.5">
                   <p className="text-[10px] text-muted-foreground font-medium uppercase">Limit</p>
                   <p className="text-base font-bold text-foreground flex items-center justify-center gap-1">
                     <IconClock size={14} className="text-sky-400" />
-                    {b.maxStudents}
+                    {b.maxStudents ?? "—"}
                   </p>
                 </div>
               </div>

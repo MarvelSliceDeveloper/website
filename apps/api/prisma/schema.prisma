@@ -279,13 +279,15 @@ enum SubmissionStatus {
 }
 
 model Assignment {
-  id          String                 @id @default(cuid())
-  courseId    String
-  batchId     String
-  title       String
-  description String                 @db.Text
-  dueDate     DateTime
-  maxPoints   Int                    @default(100)
+  id              String                 @id @default(cuid())
+  courseId        String
+  batchId         String
+  title           String
+  description     String                 @db.Text
+  type            String                 @default("QUIZ") // "QUIZ" or "ASSIGNMENT"
+  questionPdfUrl  String?                // PDF file URL for ASSIGNMENT type
+  dueDate         DateTime
+  maxPoints       Int                    @default(100)
   createdAt   DateTime               @default(now())
   updatedAt   DateTime               @updatedAt
   course      Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -324,6 +326,7 @@ model AssignmentSubmission {
   feedback          String?                   @db.Text
   gradedAt          DateTime?
   totalScore        Int?                      // auto-calculated after MCQ grading
+  answerFileUrl     String?                   // File uploaded by student (for ASSIGNMENT type)
   assignment        Assignment                @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   student           User                      @relation(fields: [studentId], references: [id], onDelete: Cascade)
   questionResponses StudentQuestionResponse[]

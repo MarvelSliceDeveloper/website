@@ -228,7 +228,7 @@ export const moduleService = {
     // Delete file from disk
     try {
       const uploadsRoot = path.resolve(__dirname, '..', '..', '..', 'uploads');
-      const filePath = path.join(uploadsRoot, resource.url.replace(/^.*\/uploads/, ''));
+      const filePath = path.join(uploadsRoot, (resource as any).url.replace(/^.*\/uploads/, ''));
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }

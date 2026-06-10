@@ -128,7 +128,7 @@ export default function InstructorSessionsPage() {
     });
     setLoadingCourses(true);
     try {
-      const data = await api.get<{ courses: Course[] }>("/api/courses?limit=100");
+      const data = await api.get<{ courses: Course[] }>("/api/admin/courses?limit=100");
       setCourses(data.courses || []);
     } catch (err) {
       console.error("Failed to load courses:", err);
@@ -149,10 +149,10 @@ export default function InstructorSessionsPage() {
       setLoadingBatches(true);
       setLoadingModules(true);
       try {
-        const batchData = await api.get<Batch[]>(`/api/batches?courseId=${form.courseId}`);
+        const batchData = await api.get<Batch[]>(`/api/admin/batches?courseId=${form.courseId}`);
         setBatches(Array.isArray(batchData) ? batchData : []);
 
-        const courseData = await api.get<{ modules: Module[] }>(`/api/courses/${form.courseId}`);
+        const courseData = await api.get<{ modules: Module[] }>(`/api/admin/courses/${form.courseId}`);
         setModules(courseData.modules || []);
       } catch (err) {
         console.error(err);

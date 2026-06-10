@@ -3,21 +3,32 @@ import { ZodError } from 'zod';
 import { AuthRequest } from '../../middleware/auth.middleware';
 import {
   assignmentService,
-  CreateAssignmentSchema,
+  CreateQuizSchema,
+  CreateFileAssignmentSchema,
   SubmitMcqAnswersSchema,
   GradeSubmissionSchema,
 } from './assignment.service';
+import { buildAssignmentFileUrl } from './assignment.upload';
 
 export const assignmentController = {
-  // POST /api/assignments: Creates a new assignment; restricted to instructor/admin.
+  // POST /api/assignments: Creates a new assignment (QUIZ or ASSIGNMENT); restricted to instructor/admin.
   async create(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
 
-      const data = CreateAssignmentSchema.parse(req.body);
-      const assignment = await assignmentService.createAssignment(req.user.userId, data);
-
-      return res.status(201).json({ assignment });
+      if (req.body.type === 'ASSIGNMENT') {
+        const data = CreateFileAssignmentSchema.parse(req.body);
+        const assignment = await assignmentService.createFileAssignment(
+          req.user.userId,
+          data,
+          data.questionPdfUrl
+        );
+        return res.status(201).json({ assignment });
+      } else {
+        const data = CreateQuizSchema.parse(req.body);
+        const assignment = await assignmentService.createQuiz(req.user.userId, data);
+        return res.status(201).json({ assignment });
+      }
     } catch (error: any) {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });
@@ -190,6 +201,55 @@ export const assignmentController = {
       }
       console.error('Error grading submission:', error.message);
       return res.status(500).json({ error: 'Failed to grade submission' });
+    }
+  },
+
+  // POST /api/assignments/upload-pdf: Uploads the question PDF; restricted to instructors.
+  async uploadPdf(req: AuthRequest, res: Response) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No PDF file uploaded' });
+      }
+      const fileUrl = buildAssignmentFileUrl(req, req.file.filename);
+      return res.status(200).json({ fileUrl });
+    } catch (error: any) {
+      console.error('Error uploading question PDF:', error.message);
+      return res.status(500).json({ error: 'Failed to upload question PDF' });
+    }
+  },
+
+  // POST /api/assignments/:id/submit/file: Student uploads their completed assignment answer file.
+  async submitFile(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+      if (req.user.role !== 'STUDENT') {
+        return res.status(403).json({ error: 'Only students can submit assignments' });
+      }
+      if (!req.file) {
+        return res.status(400).json({ error: 'No answer file uploaded' });
+      }
+
+      const fileUrl = buildAssignmentFileUrl(req, req.file.filename);
+      const submission = await assignmentService.submitFileAnswer(
+        req.user.userId,
+        req.params.id,
+        fileUrl
+      );
+
+      return res.status(200).json({ submission });
+    } catch (error: any) {
+      if (
+        error.message.includes('due date has passed') ||
+        error.message.includes('not enrolled') ||
+        error.message.includes('not a file-upload assignment')
+      ) {
+        return res.status(400).json({ error: error.message });
+      }
+      if (error.message.includes('not found')) {
+        return res.status(404).json({ error: error.message });
+      }
+      console.error('Error submitting file answer:', error.message);
+      return res.status(500).json({ error: 'Failed to submit file answer' });
     }
   },
 };

@@ -7,6 +7,7 @@ export interface OverdueAssignmentItem {
     assignmentName: string;
     dueDate: string;
     status: "PENDING" | "SUBMITTED";
+    type: "QUIZ" | "ASSIGNMENT";
 }
 
 export interface ContinueLearningItem {
@@ -57,10 +58,11 @@ export const studentService = {
             return {
                 id: assignment.id,
                 courseName: assignment.course.title,
-                unitName: "Assignment",
+                unitName: assignment.type === 'QUIZ' ? "Quiz" : "Assignment",
                 assignmentName: assignment.title,
                 dueDate: assignment.dueDate.toISOString(),
                 status,
+                type: assignment.type as "QUIZ" | "ASSIGNMENT",
             };
         });
     },
