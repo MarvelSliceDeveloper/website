@@ -63,7 +63,7 @@ Required for local dev:
 - WEB_URL (http://localhost:3000)
 
 Optional but needed for those features:
-- Microsoft OAuth (MS_CLIENT_ID, MS_CLIENT_SECRET, MS_TENANT_ID, MS_REDIRECT_URI)
+- Microsoft OAuth / Teams (MS_CLIENT_ID, MS_CLIENT_SECRET, MS_TENANT_ID, MS_REDIRECT_URI, MS_WEBHOOK_CLIENT_STATE) — see [docs/MICROSOFT_GRAPH.md](docs/MICROSOFT_GRAPH.md)
 - Razorpay (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET)
 - Sentry (SENTRY_DSN)
 

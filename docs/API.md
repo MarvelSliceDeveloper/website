@@ -195,6 +195,8 @@ Validates the publish checklist and publishes the course.
 
 This document describes the REST API endpoints for the Calendar Sync (Phase 5) and Microsoft Graph integration (Phase 4).
 
+> **Full Graph integration guide:** See [MICROSOFT_GRAPH.md](./MICROSOFT_GRAPH.md) for Teams meeting creation, calendar sync, recording pipeline, webhooks, Azure AD setup, and troubleshooting.
+
 ### Base URLs
 - Calendar: `/api/calendar`
 - Webhooks: `/api/webhooks`
