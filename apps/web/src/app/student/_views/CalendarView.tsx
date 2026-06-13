@@ -1,9 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import type { CalendarEvent } from "@/lib/student-mock-data";
+import { useEffect, useState } from "react";
 
-// Dynamically import the FullCalendar widget — no SSR to avoid hydration issues
 const CalendarWidget = dynamic(() => import("./CalendarWidget"), {
   ssr: false,
   loading: () => (
@@ -13,8 +12,13 @@ const CalendarWidget = dynamic(() => import("./CalendarWidget"), {
   ),
 });
 
-interface CalendarViewProps {
-  events: CalendarEvent[];
+interface CalendarEvent {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  type: "live" | "mentorship" | "upcoming";
+  joinUrl?: string;
 }
 
 function eventColor(type: CalendarEvent["type"]): string {
@@ -23,16 +27,39 @@ function eventColor(type: CalendarEvent["type"]): string {
   return "#25c0e8";
 }
 
-export default function CalendarView({ events }: CalendarViewProps) {
-  const fcEvents = events.map((e) => ({
-    id: e.id,
-    title: e.title,
-    start: e.start,
-    end: e.end,
-    backgroundColor: eventColor(e.type),
-    borderColor: eventColor(e.type),
-    url: e.joinUrl,
-  }));
+export default function CalendarView() {
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+  async function fetchEvents() {
+    try {
+      const res = await fetch("/api/calendar/events");
+      if (!res.ok) throw new Error("Failed to load events");
+      const data = await res.json();
+
+      console.log("API response:", data, typeof data); // 👈 check browser console
+
+      const list = Array.isArray(data) ? data : data.events ?? data.data ?? [];
+      setEvents(list);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  fetchEvents();
+}, []);
+  const fcEvents = Array.isArray(events) ? events.map((e) => ({
+  id: e.id,
+  title: e.title,
+  start: e.start,
+  end: e.end,
+  backgroundColor: eventColor(e.type),
+  borderColor: eventColor(e.type),
+  url: e.joinUrl,
+})) : [];
 
   return (
     <div className="sp-view-enter space-y-6">
@@ -61,13 +88,27 @@ export default function CalendarView({ events }: CalendarViewProps) {
 
       {/* FullCalendar */}
       <div className="glass-card p-4">
-        <CalendarWidget events={fcEvents} />
+        {loading ? (
+          <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
+            Loading events…
+          </div>
+        ) : error ? (
+          <div className="flex h-64 items-center justify-center text-sm text-red-500">
+            {error}
+          </div>
+        ) : (
+          <CalendarWidget events={fcEvents} />
+        )}
       </div>
 
       {/* This Week List */}
       <div>
         <p className="sp-eyebrow mb-3">This Week</p>
-        {events.length === 0 ? (
+        {loading ? (
+          <div className="glass-card flex flex-col items-center gap-3 py-12 text-center">
+            <p className="text-sm text-muted-foreground">Loading sessions…</p>
+          </div>
+        ) : events.length === 0 ? (
           <div className="glass-card flex flex-col items-center gap-3 py-12 text-center">
             <span className="text-4xl">📅</span>
             <p className="text-sm text-muted-foreground">No sessions this week.</p>
@@ -76,31 +117,34 @@ export default function CalendarView({ events }: CalendarViewProps) {
           <div className="space-y-2">
             {events.map((e) => {
               const start = new Date(e.start);
+              const isValid = !isNaN(start.getTime());
               return (
                 <div key={e.id} className="glass-card flex items-center gap-4 p-4">
+                  {/* Colored type indicator — thin left bar, no image/square */}
                   <div
-                    className="flex h-10 w-10 flex-shrink-0 flex-col items-center justify-center rounded-xl text-[11px] font-bold text-white"
+                    className="h-8 w-1 flex-shrink-0 rounded-full"
                     style={{ background: eventColor(e.type) }}
-                  >
-                    <span>{start.toLocaleDateString("en-IN", { day: "numeric" })}</span>
-                    <span className="text-[9px] uppercase">{start.toLocaleDateString("en-IN", { month: "short" })}</span>
-                  </div>
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-foreground">{e.title}</p>
                     <p className="text-xs text-muted">
-                      {start.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })}
+                      {isValid
+                        ? start.toLocaleString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })
+                        : "Date not available"}
                     </p>
                   </div>
-                  {e.joinUrl && (
-                    <a
-                      href={e.joinUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="btn-primary px-3 py-1.5 text-xs"
-                    >
-                      Join
-                    </a>
-                  )}
+                  {/* Type badge */}
+                  <span
+                    className="flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium text-white"
+                    style={{ background: eventColor(e.type) }}
+                  >
+                    {e.type === "live" ? "Live" : e.type === "mentorship" ? "Mentorship" : "Upcoming"}
+                  </span>
                 </div>
               );
             })}
