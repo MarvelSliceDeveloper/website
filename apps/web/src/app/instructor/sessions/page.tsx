@@ -1,17 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
-import { 
-  IconVideo, 
-  IconRefresh, 
-  IconUsers, 
-  IconCalendar, 
-  IconCheck, 
-  IconSearch, 
-  IconX, 
-  IconEdit, 
-  IconTrash, 
+import {
+  IconVideo,
+  IconRefresh,
+  IconUsers,
+  IconCalendar,
+  IconCheck,
+  IconSearch,
+  IconX,
+  IconEdit,
+  IconTrash,
   IconPlus,
   IconLink
 } from "@tabler/icons-react";
@@ -57,10 +58,12 @@ type AttendanceRecord = {
 };
 
 export default function InstructorSessionsPage() {
+  const searchParams = useSearchParams();
+  const statusFilter = searchParams.get("status");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncingId, setSyncingId] = useState<string | null>(null);
-  
+
   // Attendance modal state
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
@@ -77,7 +80,7 @@ export default function InstructorSessionsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
-  
+
   const [form, setForm] = useState({
     courseId: "",
     batchId: "",
@@ -95,8 +98,11 @@ export default function InstructorSessionsPage() {
     try {
       const response = await api.get<{ sessions?: Session[] }>("/api/sessions");
       setSessions(Array.isArray(response.sessions) ? response.sessions : []);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      if (err.message?.includes("Authentication") || err.message?.includes("401")) {
+        window.location.href = "/login";
+      }
       setSessions([]);
     } finally {
       setLoading(false);
@@ -261,8 +267,16 @@ export default function InstructorSessionsPage() {
   };
 
   const now = new Date();
-  const upcoming = sessions.filter((s) => !s.endedAt && new Date(s.scheduledAt) >= now);
-  const past = sessions.filter((s) => s.endedAt || new Date(s.scheduledAt) < now);
+  let filteredSessions = sessions;
+
+  if (statusFilter === "UPCOMING") {
+    filteredSessions = sessions.filter((s) => !s.endedAt && new Date(s.scheduledAt) >= now);
+  } else if (statusFilter === "PAST") {
+    filteredSessions = sessions.filter((s) => s.endedAt || new Date(s.scheduledAt) < now);
+  }
+
+  const upcoming = filteredSessions.filter((s) => !s.endedAt && new Date(s.scheduledAt) >= now);
+  const past = filteredSessions.filter((s) => s.endedAt || new Date(s.scheduledAt) < now);
 
   return (
     <div className="space-y-6">
@@ -301,10 +315,10 @@ export default function InstructorSessionsPage() {
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {upcoming.map((session) => (
-                  <SessionCard 
-                    key={session.id} 
-                    session={session} 
-                    upcoming 
+                  <SessionCard
+                    key={session.id}
+                    session={session}
+                    upcoming
                     onViewAttendance={handleViewAttendance}
                     onEdit={openEditModal}
                     onDelete={handleDeleteSession}
@@ -323,9 +337,9 @@ export default function InstructorSessionsPage() {
               </h2>
               <div className="space-y-3">
                 {past.map((session) => (
-                  <SessionCard 
-                    key={session.id} 
-                    session={session} 
+                  <SessionCard
+                    key={session.id}
+                    session={session}
                     upcoming={false}
                     syncing={syncingId === session.id}
                     onSyncRecording={handleSyncRecording}
@@ -348,16 +362,16 @@ export default function InstructorSessionsPage() {
               <h3 className="font-bold text-foreground">Schedule Live Session</h3>
               <button onClick={() => setShowCreateModal(false)} className="rounded-lg p-1 hover:bg-card-hover text-muted-foreground"><IconX size={20} /></button>
             </div>
-            
+
             <form onSubmit={handleCreateSession} className="p-4 space-y-4">
               {error && <div className="rounded-lg bg-danger/10 border border-danger/25 p-3 text-xs text-danger">{error}</div>}
-              
+
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Select Course</label>
-                <select 
-                  className="field" 
-                  value={form.courseId} 
-                  onChange={(e) => setForm({...form, courseId: e.target.value, batchId: "", moduleId: ""})}
+                <select
+                  className="field"
+                  value={form.courseId}
+                  onChange={(e) => setForm({ ...form, courseId: e.target.value, batchId: "", moduleId: "" })}
                   required
                 >
                   <option value="">-- Select Course --</option>
@@ -368,10 +382,10 @@ export default function InstructorSessionsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Select Batch</label>
-                  <select 
-                    className="field" 
-                    value={form.batchId} 
-                    onChange={(e) => setForm({...form, batchId: e.target.value})}
+                  <select
+                    className="field"
+                    value={form.batchId}
+                    onChange={(e) => setForm({ ...form, batchId: e.target.value })}
                     disabled={!form.courseId || loadingBatches}
                     required
                   >
@@ -381,10 +395,10 @@ export default function InstructorSessionsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Select Module</label>
-                  <select 
-                    className="field" 
-                    value={form.moduleId} 
-                    onChange={(e) => setForm({...form, moduleId: e.target.value})}
+                  <select
+                    className="field"
+                    value={form.moduleId}
+                    onChange={(e) => setForm({ ...form, moduleId: e.target.value })}
                     disabled={!form.courseId || loadingModules}
                   >
                     <option value="">-- None / General --</option>
@@ -395,47 +409,47 @@ export default function InstructorSessionsPage() {
 
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Session Title</label>
-                <input 
-                  type="text" 
-                  className="field" 
-                  value={form.title} 
-                  onChange={(e) => setForm({...form, title: e.target.value})} 
+                <input
+                  type="text"
+                  className="field"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
                   placeholder="e.g. Types and Interfaces Deep Dive"
-                  required 
+                  required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Start Date & Time</label>
-                  <input 
-                    type="datetime-local" 
-                    className="field" 
-                    value={form.startDateTime} 
-                    onChange={(e) => setForm({...form, startDateTime: e.target.value})}
-                    required 
+                  <input
+                    type="datetime-local"
+                    className="field"
+                    value={form.startDateTime}
+                    onChange={(e) => setForm({ ...form, startDateTime: e.target.value })}
+                    required
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">End Date & Time</label>
-                  <input 
-                    type="datetime-local" 
-                    className="field" 
-                    value={form.endDateTime} 
-                    onChange={(e) => setForm({...form, endDateTime: e.target.value})}
-                    required 
+                  <input
+                    type="datetime-local"
+                    className="field"
+                    value={form.endDateTime}
+                    onChange={(e) => setForm({ ...form, endDateTime: e.target.value })}
+                    required
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Custom Join URL (Optional)</label>
-                <input 
-                  type="url" 
-                  className="field" 
-                  value={form.customJoinUrl} 
-                  onChange={(e) => setForm({...form, customJoinUrl: e.target.value})} 
-                  placeholder="e.g. Google Meet, Zoom or standard Teams URL" 
+                <input
+                  type="url"
+                  className="field"
+                  value={form.customJoinUrl}
+                  onChange={(e) => setForm({ ...form, customJoinUrl: e.target.value })}
+                  placeholder="e.g. Google Meet, Zoom or standard Teams URL"
                 />
               </div>
 
@@ -458,40 +472,40 @@ export default function InstructorSessionsPage() {
               <h3 className="font-bold text-foreground">Edit Live Session</h3>
               <button onClick={() => setShowEditModal(false)} className="rounded-lg p-1 hover:bg-card-hover text-muted-foreground"><IconX size={20} /></button>
             </div>
-            
+
             <form onSubmit={handleEditSession} className="p-4 space-y-4">
               {error && <div className="rounded-lg bg-danger/10 border border-danger/25 p-3 text-xs text-danger">{error}</div>}
-              
+
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Session Title</label>
-                <input 
-                  type="text" 
-                  className="field" 
-                  value={form.title} 
-                  onChange={(e) => setForm({...form, title: e.target.value})} 
-                  required 
+                <input
+                  type="text"
+                  className="field"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Start Date & Time</label>
-                  <input 
-                    type="datetime-local" 
-                    className="field" 
-                    value={form.startDateTime} 
-                    onChange={(e) => setForm({...form, startDateTime: e.target.value})}
-                    required 
+                  <input
+                    type="datetime-local"
+                    className="field"
+                    value={form.startDateTime}
+                    onChange={(e) => setForm({ ...form, startDateTime: e.target.value })}
+                    required
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">End Date & Time</label>
-                  <input 
-                    type="datetime-local" 
-                    className="field" 
-                    value={form.endDateTime} 
-                    onChange={(e) => setForm({...form, endDateTime: e.target.value})}
-                    required 
+                  <input
+                    type="datetime-local"
+                    className="field"
+                    value={form.endDateTime}
+                    onChange={(e) => setForm({ ...form, endDateTime: e.target.value })}
+                    required
                   />
                 </div>
               </div>
@@ -560,17 +574,17 @@ export default function InstructorSessionsPage() {
   );
 }
 
-function SessionCard({ 
-  session, 
-  upcoming, 
+function SessionCard({
+  session,
+  upcoming,
   syncing,
   onSyncRecording,
   onViewAttendance,
   onEdit,
   onDelete
-}: { 
-  session: Session; 
-  upcoming: boolean; 
+}: {
+  session: Session;
+  upcoming: boolean;
   syncing?: boolean;
   onSyncRecording?: (id: string) => void;
   onViewAttendance: (session: Session) => void;
@@ -581,9 +595,8 @@ function SessionCard({
     <div className="glass-card p-4 flex flex-col gap-4 border border-border/80 hover:border-violet-500/20 hover:shadow-lg transition-all duration-200 justify-between">
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
-          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${
-            upcoming ? "bg-violet-500/20 text-violet-400" : "bg-muted/10"
-          }`}>
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${upcoming ? "bg-violet-500/20 text-violet-400" : "bg-muted/10"
+            }`}>
             {upcoming ? "📅" : "🎬"}
           </div>
           <div className="min-w-0 flex-1">
@@ -618,15 +631,15 @@ function SessionCard({
 
         {/* Action icons */}
         <div className="flex items-center gap-1">
-          <button 
-            onClick={() => onEdit(session)} 
+          <button
+            onClick={() => onEdit(session)}
             className="p-1.5 rounded-lg hover:bg-card-hover text-muted-foreground hover:text-foreground transition-colors"
             title="Edit Session"
           >
             <IconEdit size={16} />
           </button>
-          <button 
-            onClick={() => onDelete(session.id)} 
+          <button
+            onClick={() => onDelete(session.id)}
             className="p-1.5 rounded-lg hover:bg-danger/10 text-muted-foreground hover:text-danger transition-colors"
             title="Cancel Session"
           >

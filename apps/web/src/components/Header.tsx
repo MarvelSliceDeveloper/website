@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import {
   IconBell,
-  IconLayoutSidebarLeftCollapse,
-  IconLayoutSidebarRightExpand,
   IconSettings,
   IconX,
+  IconSun,
+  IconMoon,
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 
@@ -26,6 +26,7 @@ export default function Header({
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
 }) {
+  const [theme, setTheme] = useState<"dark" | "light">("light"); // ✅ moved inside component
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -57,6 +58,22 @@ export default function Header({
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  // ✅ Correctly read saved theme from localStorage on mount
+  useEffect(() => {
+    const saved = window.localStorage.getItem("lms-theme");
+    const initialTheme = saved === "dark" ? "dark" : "light";
+    setTheme(initialTheme);
+    document.documentElement.setAttribute("data-theme", initialTheme);
+  }, []);
+
+  const toggleTheme = () => {
+    // ✅ Actually toggles between dark and light
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    document.documentElement.setAttribute("data-theme", nextTheme);
+    window.localStorage.setItem("lms-theme", nextTheme);
+  };
+
   const markAllRead = async () => {
     try {
       await api.post("/api/notifications/read-all");
@@ -82,17 +99,6 @@ export default function Header({
     <header className="sticky top-0 z-30 border-b border-border/80 bg-background/80 backdrop-blur">
       <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 md:flex-nowrap md:px-6">
         <div className="flex items-center gap-3">
-          <button
-            onClick={onToggleSidebar}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
-            aria-label={isSidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
-          >
-            {isSidebarCollapsed ? (
-              <IconLayoutSidebarRightExpand size={18} stroke={1.8} />
-            ) : (
-              <IconLayoutSidebarLeftCollapse size={18} stroke={1.8} />
-            )}
-          </button>
           <div>
             <p className="text-xs uppercase tracking-[0.18em] text-muted">LMS Workspace</p>
             <h2 className="text-sm font-semibold text-foreground md:text-base">Welcome back 👋</h2>
@@ -161,6 +167,14 @@ export default function Header({
             aria-label="Settings"
           >
             <IconSettings size={18} stroke={1.8} />
+          </button>
+          <button
+            onClick={toggleTheme}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? "Light mode" : "light mode"}
+          >
+            {theme === "light" ? <IconSun size={17} stroke={1.8} /> : <IconMoon size={17} stroke={1.8} />}
           </button>
         </div>
       </div>

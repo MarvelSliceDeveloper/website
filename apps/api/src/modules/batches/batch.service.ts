@@ -86,7 +86,12 @@ export const batchService = {
       include: {
         course: { select: { id: true, title: true } },
         instructor: { select: { id: true, name: true, email: true } },
-        _count: { select: { enrollments: true, sessions: true } },
+        _count: {
+          select: {
+            enrollments: { where: { status: 'APPROVED' } },
+            sessions: true,
+          },
+        },
       },
       orderBy: { startDate: 'desc' },
     });
@@ -112,7 +117,12 @@ export const batchService = {
             recording: { select: { id: true, syncedAt: true } },
           },
         },
-        _count: { select: { enrollments: true, sessions: true } },
+        _count: {
+          select: {
+            enrollments: { where: { status: 'APPROVED' } },
+            sessions: true,
+          },
+        },
       },
     });
 

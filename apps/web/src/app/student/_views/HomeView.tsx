@@ -128,19 +128,20 @@ export default function HomeView({
     {
       id: "assignment-overdue",
       label: "Assignment Overdue",
-      value: overdueAssignments.filter((item) => item.status === "PENDING").length,
+      value: overdueAssignments.filter((item) => item.status === "PENDING" && item.type === "ASSIGNMENT").length,
       icon: <span className="text-lg">📝</span>,
       gradient: "bg-gradient-to-br from-danger/20 to-red-400/10",
       onClick: () => navigate({ view: "ASSIGNMENT_OVERDUE" }),
-      liveBadge: overdueAssignments.some((item) => item.status === "PENDING") ? "Overdue" : undefined,
+      liveBadge: overdueAssignments.some((item) => item.status === "PENDING" && item.type === "ASSIGNMENT") ? "Overdue" : undefined,
     },
     {
       id: "quiz-overdue",
       label: "Quiz Overdue",
-      value: openTicketCount,
+      value: overdueAssignments.filter((item) => item.status === "PENDING" && item.type === "QUIZ").length,
       icon: <span className="text-lg">⏰</span>,
       gradient: "bg-gradient-to-br from-accent/20 to-cyan-400/10",
       onClick: () => navigate({ view: "QUIZ_OVERDUE" }),
+      liveBadge: overdueAssignments.some((item) => item.status === "PENDING" && item.type === "QUIZ") ? "Overdue" : undefined,
     },
     {
       id: "completed",

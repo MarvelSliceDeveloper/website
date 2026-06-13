@@ -9,17 +9,6 @@ const STORAGE_KEY = "lms-instructor-sidebar-collapsed";
 export default function InstructorShell({ children }: { children: React.ReactNode }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  useEffect(() => {
-    const savedValue = window.localStorage.getItem(STORAGE_KEY);
-    if (savedValue != null) {
-      setIsSidebarCollapsed(savedValue === "1");
-    }
-  }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, isSidebarCollapsed ? "1" : "0");
-  }, [isSidebarCollapsed]);
-
   return (
     <div className="min-h-screen bg-background">
       <InstructorSidebar

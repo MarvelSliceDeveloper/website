@@ -104,15 +104,6 @@ export default function Sidebar({
           <p className="truncate text-sm font-semibold text-foreground">LMS Portal</p>
           <p className="text-xs text-muted">Student Area</p>
         </div>
-        {!collapsed && (
-          <button
-            onClick={onToggleCollapse}
-            className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
-            aria-label="Collapse sidebar"
-          >
-            <IconLayoutSidebarLeftCollapse size={16} stroke={1.8} />
-          </button>
-        )}
       </div>
 
       <nav className={`flex-1 overflow-y-auto py-4 ${collapsed ? "space-y-4 px-2" : "space-y-5 px-3"}`}>

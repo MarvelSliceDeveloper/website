@@ -81,8 +81,8 @@ app.use('/api/courses', studentCourseRouter);
 app.use('/api/notifications', notificationRouter);
 app.use('/api/attendance', attendanceRouter);
 app.use('/api/admin/enrollments', enrollmentRouter);
-app.use('/api/webhooks', webhookRouter);
 app.use('/api/assignments', assignmentRouter);
+app.use('/api/webhooks', webhookRouter);
 
 // Events webhook — for Teams-created meetings (no auth required)
 app.post('/api/webhooks/events', eventsWebhookController.handleEventsWebhook);
