@@ -120,28 +120,23 @@ async function fetchPortalData(): Promise<PortalData> {
   ]);
 
   const now = new Date();
-  const mappedSessions: LiveSession[] = (sessionsData.sessions || []).map((s: any) => {
-    const scheduledTime = new Date(s.scheduledAt);
-    let status: "LIVE" | "UPCOMING" | "PAST" = "UPCOMING";
-
-    if (s.endedAt) {
-      status = "PAST";
-    } else if (scheduledTime <= now) {
-      status = "LIVE";
-    }
-
-    return {
-      id: s.id,
-      title: s.module ? `Module ${s.module.title} — ${s.batch?.course?.title}` : `Live Session — ${s.batch?.course?.title}`,
-      courseTitle: s.batch?.course?.title || "Unknown Course",
-      instructor: s.batch?.instructor?.name || "TBD",
-      batchLabel: s.batch?.name || "—",
-      status,
-      scheduledAt: s.scheduledAt,
-      joinUrl: s.joinUrl,
-      recordingSyncingIn: status === "PAST" && !s.recording ? "~20 min" : undefined,
-    };
-  });
+// AFTER ✅ — endDateTime passed through, status left to the hook
+const mappedSessions: LiveSession[] = (sessionsData.sessions || []).map((s: any) => ({
+  id: s.id,
+  title: s.module
+    ? `Module ${s.module.title} — ${s.batch?.course?.title}`
+    : `Live Session — ${s.batch?.course?.title}`,
+  courseTitle: s.batch?.course?.title || "Unknown Course",
+  instructor: s.batch?.instructor?.name || "TBD",
+  batchLabel: s.batch?.name || "—",
+  status: "UPCOMING" as const,
+  scheduledAt: s.scheduledAt,
+  endDateTime: s.endDateTime,   // ✅ THIS was missing
+  joinUrl: s.joinUrl,
+  recordingSyncingIn: s.endDateTime && new Date(s.endDateTime) <= new Date() && !s.recording
+    ? "~20 min"
+    : undefined,
+}));
 
   return {
     stats: {

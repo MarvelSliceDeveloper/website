@@ -30,6 +30,7 @@ export default function CalendarWidget({ events }: CalendarWidgetProps) {
   return (
     <div className="fc-sp">
       <style>{`
+      
         .fc-sp .fc { font-family: inherit; color: var(--foreground); }
         .fc-sp .fc-toolbar { gap: 0.5rem; flex-wrap: wrap; }
         .fc-sp .fc-toolbar-title { font-size: 1rem; font-weight: 700; color: var(--foreground); }
@@ -62,6 +63,10 @@ export default function CalendarWidget({ events }: CalendarWidgetProps) {
         .fc-sp .fc-list-event-dot { border-radius: 50%; }
         .fc-sp .fc-timegrid-slot { height: 2.5rem; }
         .fc-sp .fc-timegrid-slot-label { color: var(--muted); font-size: 0.72rem; }
+          .fc-sp .fc-daygrid-event-dot { display: none !important; }
+        .fc-sp .fc-list-event-dot { display: none !important; }
+        .fc-sp .fc-event img,
+        .fc-sp .fc-list-event img { display: none !important; }
       `}</style>
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}

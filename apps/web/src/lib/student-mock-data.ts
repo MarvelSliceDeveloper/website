@@ -72,6 +72,8 @@ export interface LiveSession {
   scheduledAt: string;
   joinUrl?: string;
   recordingSyncingIn?: string;
+  endDateTime: string;  // ← add this if not already present
+  
 }
 
 export interface CalendarEvent {
