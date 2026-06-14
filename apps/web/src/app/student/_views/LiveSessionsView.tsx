@@ -3,30 +3,35 @@
 import { useState } from "react";
 import type { LiveSession } from "@/lib/student-mock-data";
 import { api } from "@/lib/api";
-import { useComputedStatus, type ComputedStatus } from "@/lib/use-session-status";
-
 interface LiveSessionsViewProps {
   sessions: LiveSession[];
 }
 
 type Filter = "ALL" | "LIVE" | "UPCOMING" | "PAST";
-
+type ComputedStatus = "LIVE" | "UPCOMING" | "PAST";
 const FILTERS: { label: string; value: Filter }[] = [
-  { label: "All",          value: "ALL"      },
-  { label: "🔴 Live Now", value: "LIVE"     },
-  { label: "Upcoming",     value: "UPCOMING" },
-  { label: "Past",         value: "PAST"     },
+  { label: "All", value: "ALL" },
+  { label: "🔴 Live Now", value: "LIVE" },
+  { label: "Upcoming", value: "UPCOMING" },
+  { label: "Past", value: "PAST" },
 ];
 
 // ✅ Compute status from real time — never trust s.status from server
 function getComputedStatus(session: LiveSession): ComputedStatus {
-  const now   = Date.now();
+  const now = Date.now();
   const start = new Date(session.scheduledAt).getTime();
-  const end   = new Date(session.endDateTime).getTime();
 
-  if (isNaN(end)) return "UPCOMING"; // safety: if endDateTime missing, show as upcoming
+  const rawEnd = (session as any).endDateTime ?? (session as any).endAt;
+  let end = new Date(rawEnd).getTime();
+
+  // Fallback: if no valid end time, assume session lasts 1 hour
+  if (isNaN(end)) {
+    end = start + 60 * 60 * 1000;
+  }
+
+  if (isNaN(start)) return "UPCOMING"; // safety fallback
   if (now >= start && now < end) return "LIVE";
-  if (now >= end)                return "PAST";
+  if (now >= end) return "PAST";
   return "UPCOMING";
 }
 
@@ -34,24 +39,24 @@ export default function LiveSessionsView({ sessions }: LiveSessionsViewProps) {
   const [filter, setFilter] = useState<Filter>("ALL");
 
   // ✅ Group using real time — not stale server status
-  const liveNow  = sessions.filter((s) => getComputedStatus(s) === "LIVE");
+  const liveNow = sessions.filter((s) => getComputedStatus(s) === "LIVE");
   const upcoming = sessions.filter((s) => getComputedStatus(s) === "UPCOMING");
-  const past     = sessions.filter((s) => getComputedStatus(s) === "PAST");
+  const past = sessions.filter((s) => getComputedStatus(s) === "PAST");
 
   const grouped =
     filter === "ALL"
       ? [
-          { label: "🔴 Live Now", items: liveNow  },
-          { label: "Upcoming",    items: upcoming  },
-          { label: "Past",        items: past      },
-        ].filter((g) => g.items.length > 0)
+        { label: "🔴 Live Now", items: liveNow },
+        { label: "Upcoming", items: upcoming },
+        { label: "Past", items: past },
+      ].filter((g) => g.items.length > 0)
       : [
-          {
-            label: "",
-            // ✅ Filter using real time — not stale server status
-            items: sessions.filter((s) => getComputedStatus(s) === filter),
-          },
-        ];
+        {
+          label: "",
+          // ✅ Filter using real time — not stale server status
+          items: sessions.filter((s) => getComputedStatus(s) === filter),
+        },
+      ];
 
   return (
     <div className="sp-view-enter space-y-6">
@@ -67,11 +72,10 @@ export default function LiveSessionsView({ sessions }: LiveSessionsViewProps) {
           <button
             key={f.value}
             onClick={() => setFilter(f.value)}
-            className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-sm font-medium transition-all ${
-              filter === f.value
-                ? "border-primary bg-primary/15 text-primary"
-                : "border-border bg-card text-muted-foreground hover:border-border-hover hover:text-foreground"
-            }`}
+            className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-sm font-medium transition-all ${filter === f.value
+              ? "border-primary bg-primary/15 text-primary"
+              : "border-border bg-card text-muted-foreground hover:border-border-hover hover:text-foreground"
+              }`}
           >
             {f.label}
           </button>
@@ -92,7 +96,7 @@ export default function LiveSessionsView({ sessions }: LiveSessionsViewProps) {
           <div key={group.label} className="space-y-3">
             {group.label && <p className="sp-eyebrow">{group.label}</p>}
             {group.items.map((session) => (
-              <SessionCard key={session.id} session={session} />
+              <SessionCard key={session.id} session={session} status={getComputedStatus(session)} />
             ))}
           </div>
         ))
@@ -101,18 +105,17 @@ export default function LiveSessionsView({ sessions }: LiveSessionsViewProps) {
   );
 }
 
-function SessionCard({ session }: { session: LiveSession }) {
-  const status   = useComputedStatus(session);
-  const isLive   = status === "LIVE";
-  const isPast   = status === "PAST";
+function SessionCard({ session, status }: { session: LiveSession; status: ComputedStatus }) {
+  const isLive = status === "LIVE";
+  const isPast = status === "PAST";
   const [joining, setJoining] = useState(false);
 
   const scheduledStr = new Date(session.scheduledAt).toLocaleString("en-IN", {
     weekday: "short",
-    day:     "numeric",
-    month:   "short",
-    hour:    "numeric",
-    minute:  "2-digit",
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
   });
 
   const minutesRunning = Math.max(
@@ -160,7 +163,7 @@ function SessionCard({ session }: { session: LiveSession }) {
           <p className="mt-0.5 text-xs text-muted">
             Batch: {session.batchLabel}
             {!isLive && ` · ${scheduledStr}`}
-            {isLive  && ` · Started ${minutesRunning} min ago`}
+            {isLive && ` · Started ${minutesRunning} min ago`}
           </p>
         </div>
 

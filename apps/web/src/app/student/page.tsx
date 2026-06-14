@@ -66,6 +66,7 @@ interface PortalData {
 interface ApiBatchSessionRecord {
   id: string;
   scheduledAt: string;
+  endDateTime: string;
   module?: {
     id: string;
     title: string;
@@ -103,6 +104,17 @@ interface ApiRecordingResponse {
   }>;
 }
 
+function computeSessionStatus(scheduledAt: string, endDateTime?: string): "LIVE" | "UPCOMING" | "PAST" {
+  const now = Date.now();
+  const start = new Date(scheduledAt).getTime();
+  const end = endDateTime ? new Date(endDateTime).getTime() : NaN;
+
+  if (isNaN(end)) return "UPCOMING";
+  if (now >= start && now < end) return "LIVE";
+  if (now >= end) return "PAST";
+  return "UPCOMING";
+}
+
 async function fetchPortalData(): Promise<PortalData> {
 
 
@@ -120,7 +132,7 @@ async function fetchPortalData(): Promise<PortalData> {
   ]);
 
   const now = new Date();
-// AFTER ✅ — endDateTime passed through, status left to the hook
+// AFTER ✅ — endDateTime passed through, status computed dynamically
 const mappedSessions: LiveSession[] = (sessionsData.sessions || []).map((s: any) => ({
   id: s.id,
   title: s.module
@@ -129,7 +141,7 @@ const mappedSessions: LiveSession[] = (sessionsData.sessions || []).map((s: any)
   courseTitle: s.batch?.course?.title || "Unknown Course",
   instructor: s.batch?.instructor?.name || "TBD",
   batchLabel: s.batch?.name || "—",
-  status: "UPCOMING" as const,
+  status: computeSessionStatus(s.scheduledAt, s.endDateTime),
   scheduledAt: s.scheduledAt,
   endDateTime: s.endDateTime,   // ✅ THIS was missing
   joinUrl: s.joinUrl,
@@ -211,8 +223,9 @@ async function fetchBatch(batchId: string): Promise<Batch | null> {
         id: session.id,
         dayLabel: `Day ${index + 1}`,
         title: session.module?.title ?? "Session",
-        status: "PAST",
+        status: computeSessionStatus(session.scheduledAt, session.endDateTime),
         scheduledAt: session.scheduledAt,
+        endDateTime: session.endDateTime,
         instructor: batch.instructor.name,
       })),
       recordings,
@@ -499,13 +512,18 @@ export default function StudentPortalPage() {
       case "ASSIGNMENT_OVERDUE":
         return (
           <AssignmentOverdueView
-            assignments={portalData.overdueAssignments}
+            assignments={portalData.overdueAssignments.filter((a) => a.type === "ASSIGNMENT")}
             onGoBack={goBack}
           />
         );
 
       case "QUIZ_OVERDUE":
-        return <QuizOverdueView quizzes={[]} onGoBack={goBack} />;
+        return (
+          <QuizOverdueView
+            quizzes={portalData.overdueAssignments.filter((a) => a.type === "QUIZ")}
+            onGoBack={goBack}
+          />
+        );
 
       case "COURSE_COMPLETED":
         return (

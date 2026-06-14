@@ -9,6 +9,7 @@ type Session = {
   id: string;
   joinUrl: string;
   scheduledAt: string;
+  endDateTime: string;
   endedAt: string | null;
   createdFrom: string;
   createdBy: string;
@@ -49,10 +50,16 @@ export default function AdminSessionsPage() {
     fetchSessions();
   }, []);
 
-  const now = new Date();
+  const now = Date.now();
 
-  const upcoming = sessions.filter((s) => !s.endedAt && new Date(s.scheduledAt) >= now);
-  const past = sessions.filter((s) => s.endedAt || new Date(s.scheduledAt) < now);
+  const upcoming = sessions.filter((s) => {
+    const end = s.endDateTime ? new Date(s.endDateTime).getTime() : NaN;
+    return !s.endedAt && (isNaN(end) || end > now);
+  });
+  const past = sessions.filter((s) => {
+    const end = s.endDateTime ? new Date(s.endDateTime).getTime() : NaN;
+    return s.endedAt || (!isNaN(end) && end <= now);
+  });
 
   const openEdit = (session: Session) => {
     setEditingSession(session);
@@ -83,7 +90,7 @@ export default function AdminSessionsPage() {
   };
 
   const handleDelete = async (sessionId: string) => {
-    if (!confirm("Are you sure you want to cancel this session? This action marks the session as ended.")) return;
+    if (!confirm("Are you sure you want to permanently delete this session? This will remove all associated data (attendance, calendar events, recordings).")) return;
     try {
       await api.delete(`/api/sessions/${sessionId}`);
       fetchSessions();
@@ -295,7 +302,7 @@ function SessionCard({
         <button
           onClick={() => onDelete(session.id)}
           className="p-1.5 rounded-lg border border-danger/20 hover:bg-danger/10 text-muted-foreground hover:text-danger transition-colors"
-          title="Cancel session"
+          title="Delete session"
         >
           <IconTrash size={15} />
         </button>

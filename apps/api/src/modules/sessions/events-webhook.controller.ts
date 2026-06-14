@@ -122,6 +122,7 @@ async function handleEventCreatedOrUpdated(userId: string, msEventId: string) {
       data: {
         scheduledAt,
         joinUrl,
+        endedAt: event.end.dateTime ? new Date(event.end.dateTime + 'Z') : undefined,
       },
     });
 

@@ -41,6 +41,7 @@ export interface BatchSession {
   title: string;
   status: SessionStatus;
   scheduledAt: string;
+  endDateTime?: string;
   joinUrl?: string;
   instructor: string;
 }
@@ -70,10 +71,9 @@ export interface LiveSession {
   batchLabel: string;
   status: SessionStatus;
   scheduledAt: string;
+  endDateTime: string;
   joinUrl?: string;
   recordingSyncingIn?: string;
-  endDateTime: string;  // ← add this if not already present
-  
 }
 
 export interface CalendarEvent {
@@ -143,15 +143,22 @@ export interface OverdueAssignment {
   dueDate: string;
   status: "PENDING" | "SUBMITTED";
   type: "QUIZ" | "ASSIGNMENT";
+  submissionId?: string | null;
 }
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
+// ─── Time helpers ──────────────────────────────────────────────────────────────
 
 const now = new Date();
 const inOneHour = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
+const inTwoHours = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
 const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+const tomorrowPlusTwoHours = new Date(now.getTime() + 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
 const inTwoDays = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString();
+const inTwoDaysPlusTwoHours = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
 const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+const yesterdayPlusTwoHours = new Date(now.getTime() - 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
+
+// ─── Mock Data ────────────────────────────────────────────────────────────────
 
 export const MOCK_STATS: DashboardStats = {
   enrolledCount: 12,
@@ -256,6 +263,7 @@ export const MOCK_BATCHES: Record<string, Batch> = {
         title: "Python Pandas Deep Dive",
         status: "LIVE",
         scheduledAt: now.toISOString(),
+        endDateTime: inOneHour,
         joinUrl: "https://teams.microsoft.com/mock-session-1",
         instructor: "Ravi Kumar",
       },
@@ -265,6 +273,7 @@ export const MOCK_BATCHES: Record<string, Batch> = {
         title: "Matplotlib & Visualisation",
         status: "UPCOMING",
         scheduledAt: tomorrow,
+        endDateTime: tomorrowPlusTwoHours,
         instructor: "Ravi Kumar",
       },
       {
@@ -273,6 +282,7 @@ export const MOCK_BATCHES: Record<string, Batch> = {
         title: "NumPy Arrays",
         status: "PAST",
         scheduledAt: yesterday,
+        endDateTime: yesterdayPlusTwoHours,
         instructor: "Ravi Kumar",
       },
     ],
@@ -302,6 +312,7 @@ export const MOCK_BATCHES: Record<string, Batch> = {
         title: "React Server Components Deep Dive",
         status: "UPCOMING",
         scheduledAt: inTwoDays,
+        endDateTime: inTwoDaysPlusTwoHours,
         instructor: "Priya Mehta",
       },
     ],
@@ -321,6 +332,7 @@ export const MOCK_LIVE_SESSIONS: LiveSession[] = [
     batchLabel: "Jan 2025",
     status: "LIVE",
     scheduledAt: now.toISOString(),
+    endDateTime: inOneHour,
     joinUrl: "https://teams.microsoft.com/mock-session-1",
   },
   {
@@ -331,6 +343,7 @@ export const MOCK_LIVE_SESSIONS: LiveSession[] = [
     batchLabel: "Feb 2025",
     status: "UPCOMING",
     scheduledAt: inTwoDays,
+    endDateTime: inTwoDaysPlusTwoHours,
   },
   {
     id: "ls3",
@@ -340,6 +353,7 @@ export const MOCK_LIVE_SESSIONS: LiveSession[] = [
     batchLabel: "Jan 2025",
     status: "UPCOMING",
     scheduledAt: tomorrow,
+    endDateTime: tomorrowPlusTwoHours,
   },
   {
     id: "ls4",
@@ -349,6 +363,7 @@ export const MOCK_LIVE_SESSIONS: LiveSession[] = [
     batchLabel: "Jan 2025",
     status: "PAST",
     scheduledAt: yesterday,
+    endDateTime: yesterdayPlusTwoHours,
     recordingSyncingIn: "~20 min",
   },
 ];
@@ -366,14 +381,14 @@ export const MOCK_CALENDAR_EVENTS: CalendarEvent[] = [
     id: "ce2",
     title: "📅 React Day 3",
     start: inTwoDays,
-    end: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString(),
+    end: inTwoDaysPlusTwoHours,
     type: "upcoming",
   },
   {
     id: "ce3",
     title: "📅 Python Day 13",
     start: tomorrow,
-    end: new Date(now.getTime() + 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString(),
+    end: tomorrowPlusTwoHours,
     type: "upcoming",
   },
 ];

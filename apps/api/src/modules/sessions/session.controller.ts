@@ -107,14 +107,18 @@ export const sessionController = {
 
   /**
    * DELETE /api/sessions/:id
-   * Cancel a session (instructor only). Soft-deletes by setting endedAt.
+   * Cancel a session (for instructor) or delete a session (for admin).
    */
   async cancel(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
 
       const session = await sessionService.cancelSession(req.params.id, req.user.userId);
-      return res.status(200).json({ message: 'Session cancelled', session });
+      const isDeleted = req.user.role === 'ADMIN';
+      return res.status(200).json({
+        message: isDeleted ? 'Session deleted' : 'Session cancelled',
+        session,
+      });
     } catch (error: any) {
       if (error.message.includes('not found')) {
         return res.status(404).json({ error: error.message });
@@ -122,8 +126,8 @@ export const sessionController = {
       if (error.message.includes('Only the instructor')) {
         return res.status(403).json({ error: error.message });
       }
-      console.error('Error cancelling session:', error.message);
-      return res.status(500).json({ error: 'Failed to cancel session' });
+      console.error('Error cancelling/deleting session:', error.message);
+      return res.status(500).json({ error: 'Failed to cancel or delete session' });
     }
   },
 

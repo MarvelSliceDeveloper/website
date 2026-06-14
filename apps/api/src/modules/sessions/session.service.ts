@@ -268,25 +268,49 @@ export const sessionService = {
   },
 
   /**
-   * Cancel (soft-delete) a session. Sets endedAt to now.
+   * Cancel (soft-delete) or delete (hard-delete) a session.
+   * If the user is an ADMIN, performs a hard-delete of the session and all its related rows.
+   * If the user is an INSTRUCTOR, performs a soft-delete (sets endedAt to now).
    */
   async cancelSession(sessionId: string, userId: string) {
     const session = await prisma.liveSession.findUnique({
       where: { id: sessionId },
-      include: { batch: { select: { instructorId: true } } },
+      include: {
+        batch: { select: { instructorId: true } },
+        recording: true,
+      },
     });
 
     if (!session) throw new Error('Session not found');
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (user?.role === 'INSTRUCTOR' && session.batch.instructorId !== userId) {
-      throw new Error('Only the assigned instructor or an admin can cancel this session');
-    }
+    if (!user) throw new Error('User not found');
 
-    return prisma.liveSession.update({
-      where: { id: sessionId },
-      data: { endedAt: new Date() },
-    });
+    if (user.role === 'ADMIN') {
+      // Hard delete for Admin
+      return prisma.$transaction(async (tx) => {
+        // Delete calendar event
+        await tx.calendarEvent.deleteMany({ where: { sessionId } });
+        // Delete attendance
+        await tx.attendance.deleteMany({ where: { sessionId } });
+        // Delete recording progress and recording if they exist
+        if (session.recording) {
+          await tx.progress.deleteMany({ where: { recordingId: session.recording.id } });
+          await tx.recording.delete({ where: { sessionId } });
+        }
+        // Delete the session itself
+        return tx.liveSession.delete({ where: { id: sessionId } });
+      });
+    } else {
+      // Soft delete/cancel for Instructor
+      if (session.batch.instructorId !== userId) {
+        throw new Error('Only the assigned instructor or an admin can cancel this session');
+      }
+      return prisma.liveSession.update({
+        where: { id: sessionId },
+        data: { endedAt: new Date() },
+      });
+    }
   },
 
   /**

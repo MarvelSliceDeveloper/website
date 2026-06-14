@@ -210,8 +210,8 @@ export default function HomeView({
                       <p className="text-xs text-muted-foreground mt-0.5">{course.instructor}</p>
                     </div>
                     <span className={`text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap ml-2 ${course.status === "ACTIVE"
-                        ? "bg-success/20 text-success border border-success/30"
-                        : "bg-primary/20 text-primary border border-primary/30"
+                      ? "bg-success/20 text-success border border-success/30"
+                      : "bg-primary/20 text-primary border border-primary/30"
                       }`}>
                       {course.status === "ACTIVE" ? "Active" : "Completed"}
                     </span>
@@ -248,7 +248,7 @@ export default function HomeView({
                       <div className="min-w-0">
                         <p className="truncate font-medium text-foreground text-sm">{event.title}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {new Date(event.start).toLocaleDateString()}
+                          {new Date(event.startAt).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
@@ -271,11 +271,11 @@ export default function HomeView({
               <p className="sp-eyebrow">My Sessions</p>
               <p className="mt-1 text-sm text-muted-foreground">Live and upcoming sessions</p>
             </div>
-            {liveSessionsToday.length === 0 ? (
+            {liveSessionsToday.filter(s => s.status !== "PAST").length === 0 ? (
               <p className="py-6 text-center text-sm text-muted">No live sessions today</p>
             ) : (
               <div className="space-y-2">
-                {liveSessionsToday.slice(0, 5).map((session) => (
+                {liveSessionsToday.filter(s => s.status !== "PAST").slice(0, 5).map((session) => (
                   <div
                     key={session.id}
                     className="flex items-center justify-between rounded-lg border border-border/40 bg-card/50 p-3"
@@ -370,11 +370,11 @@ export default function HomeView({
           <span className="text-xs text-muted">{liveCount + openTicketCount} events</span>
         </div>
         <div className="divide-y divide-border/60">
-          {liveSessionsToday.length === 0 && openTickets.length === 0 ? (
+          {liveSessionsToday.filter(s => s.status !== "PAST").length === 0 && openTickets.length === 0 ? (
             <p className="py-3 text-sm text-muted">No live sessions or mentorship requests today.</p>
           ) : (
             <>
-              {liveSessionsToday.slice(0, 3).map((s) => (
+              {liveSessionsToday.filter(s => s.status !== "PAST").slice(0, 3).map((s) => (
                 <div key={s.id} className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3">
                     {s.status === "LIVE"

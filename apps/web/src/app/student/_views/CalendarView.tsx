@@ -1,7 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import type { CalendarEvent as ApiCalendarEvent } from "@/lib/student-mock-data";
+
 
 const CalendarWidget = dynamic(() => import("./CalendarWidget"), {
   ssr: false,
@@ -12,14 +13,21 @@ const CalendarWidget = dynamic(() => import("./CalendarWidget"), {
   ),
 });
 
+
 interface CalendarEvent {
   id: string;
   title: string;
-  start: string;
-  end: string;
+  startAt: string;
+  endAt: string;
   type: "live" | "mentorship" | "upcoming";
   joinUrl?: string;
 }
+
+interface CalendarViewProps {
+  events: CalendarEvent[];
+}
+
+type SessionStatus = "past" | "present" | "upcoming";
 
 function eventColor(type: CalendarEvent["type"]): string {
   if (type === "live") return "#ef4444";
@@ -27,39 +35,40 @@ function eventColor(type: CalendarEvent["type"]): string {
   return "#25c0e8";
 }
 
-export default function CalendarView() {
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+function getSessionStatus(startAt: string, endAt: string): SessionStatus {
+  const now = Date.now();
+  const start = new Date(startAt).getTime();
+  const end = new Date(endAt).getTime();
 
-  useEffect(() => {
-  async function fetchEvents() {
-    try {
-      const res = await fetch("/api/calendar/events");
-      if (!res.ok) throw new Error("Failed to load events");
-      const data = await res.json();
+  if (now < start) return "upcoming";
+  if (now > end) return "past";
+  return "present";
+}
 
-      console.log("API response:", data, typeof data); // 👈 check browser console
+function statusLabel(status: SessionStatus): string {
+  if (status === "present") return "Live Now";
+  if (status === "past") return "Past";
+  return "Upcoming";
+}
 
-      const list = Array.isArray(data) ? data : data.events ?? data.data ?? [];
-      setEvents(list);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }
-  fetchEvents();
-}, []);
-  const fcEvents = Array.isArray(events) ? events.map((e) => ({
-  id: e.id,
-  title: e.title,
-  start: e.start,
-  end: e.end,
-  backgroundColor: eventColor(e.type),
-  borderColor: eventColor(e.type),
-  url: e.joinUrl,
-})) : [];
+function statusColor(status: SessionStatus): string {
+  if (status === "present") return "#ef4444";
+  if (status === "past") return "#9ca3af";
+  return "#25c0e8";
+}
+
+export default function CalendarView({ events }: CalendarViewProps) {
+  const fcEvents = Array.isArray(events)
+    ? events.map((e) => ({
+      id: e.id,
+      title: e.title,
+      start: e.startAt,
+      end: e.endAt,
+      backgroundColor: eventColor(e.type),
+      borderColor: eventColor(e.type),
+      url: e.joinUrl,
+    }))
+    : [];
 
   return (
     <div className="sp-view-enter space-y-6">
@@ -88,13 +97,9 @@ export default function CalendarView() {
 
       {/* FullCalendar */}
       <div className="glass-card p-4">
-        {loading ? (
+        {events.length === 0 ? (
           <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-            Loading events…
-          </div>
-        ) : error ? (
-          <div className="flex h-64 items-center justify-center text-sm text-red-500">
-            {error}
+            No events to display.
           </div>
         ) : (
           <CalendarWidget events={fcEvents} />
@@ -104,11 +109,7 @@ export default function CalendarView() {
       {/* This Week List */}
       <div>
         <p className="sp-eyebrow mb-3">This Week</p>
-        {loading ? (
-          <div className="glass-card flex flex-col items-center gap-3 py-12 text-center">
-            <p className="text-sm text-muted-foreground">Loading sessions…</p>
-          </div>
-        ) : events.length === 0 ? (
+        {events.length === 0 ? (
           <div className="glass-card flex flex-col items-center gap-3 py-12 text-center">
             <span className="text-4xl">📅</span>
             <p className="text-sm text-muted-foreground">No sessions this week.</p>
@@ -116,11 +117,12 @@ export default function CalendarView() {
         ) : (
           <div className="space-y-2">
             {events.map((e) => {
-              const start = new Date(e.start);
+              const start = new Date(e.startAt);
               const isValid = !isNaN(start.getTime());
+              const status = getSessionStatus(e.startAt, e.endAt);
+
               return (
                 <div key={e.id} className="glass-card flex items-center gap-4 p-4">
-                  {/* Colored type indicator — thin left bar, no image/square */}
                   <div
                     className="h-8 w-1 flex-shrink-0 rounded-full"
                     style={{ background: eventColor(e.type) }}
@@ -130,20 +132,19 @@ export default function CalendarView() {
                     <p className="text-xs text-muted">
                       {isValid
                         ? start.toLocaleString("en-IN", {
-                            day: "numeric",
-                            month: "short",
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })
+                          day: "numeric",
+                          month: "short",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })
                         : "Date not available"}
                     </p>
                   </div>
-                  {/* Type badge */}
                   <span
                     className="flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium text-white"
-                    style={{ background: eventColor(e.type) }}
+                    style={{ background: statusColor(status) }}
                   >
-                    {e.type === "live" ? "Live" : e.type === "mentorship" ? "Mentorship" : "Upcoming"}
+                    {statusLabel(status)}
                   </span>
                 </div>
               );
