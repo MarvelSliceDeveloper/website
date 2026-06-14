@@ -105,10 +105,10 @@ Clears the HTTP-only access token cookie.
 ---
 
 ### 4. Microsoft OAuth Login (Phase 4)
-Redirects the user to the Microsoft Azure AD login page.
+Redirects the administrator to the Microsoft Azure AD login page to link their account.
 
 **Endpoint:** `GET /azure-ad/login`  
-**Auth Required:** No
+**Auth Required:** Yes (ADMIN)
 
 #### Success Response (302 Redirect)
 Redirects to `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?...`
@@ -116,17 +116,17 @@ Redirects to `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?...
 ---
 
 ### 5. Microsoft OAuth Callback (Phase 4)
-Handles the callback from Microsoft Azure AD, exchanges the code for tokens, encrypts the tokens, and creates or updates the user profile.
+Handles the callback from Microsoft Azure AD, exchanges the authorization code for tokens, encrypts them, and saves them on the administrator's profile.
 
 **Endpoint:** `GET /azure-ad/callback`  
-**Auth Required:** No
+**Auth Required:** No (Authorized via state validation)
 
 #### Query Parameters
 - `code`: The authorization code from Microsoft
-- `state`: Optional CSRF token
+- `state`: Encrypted LMS userId parameter
 
 #### Success Response (302 Redirect)
-Sets JWT access token in HTTP-only cookies and redirects to the frontend dashboard.
+Redirects the administrator back to their dashboard (`/admin/dashboard`).
 
 
 ---

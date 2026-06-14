@@ -9,11 +9,10 @@ export const recordingService = {
    * This is typically called by a background job after the session ends.
    */
   async syncRecordingsForSession(sessionId: string) {
-    // 1. Get session and instructor info
+    // 1. Get session and info
     const session = await prisma.liveSession.findUnique({
       where: { id: sessionId },
       include: {
-        batch: { select: { instructorId: true } },
         recording: true,
       },
     });
@@ -27,12 +26,12 @@ export const recordingService = {
       return session.recording;
     }
 
-    const instructorId = session.batch.instructorId;
+    const creatorId = session.createdBy;
     const teamsMeetingId = session.teamsMeetingId;
 
     try {
-      // 2. Fetch recordings from Microsoft Graph
-      const msRecordings = await getMeetingRecordings(instructorId, teamsMeetingId);
+      // 2. Fetch recordings from Microsoft Graph using the creator's tokens
+      const msRecordings = await getMeetingRecordings(creatorId, teamsMeetingId);
 
       if (!msRecordings || msRecordings.length === 0) {
         console.log(`[RecordingSync] No recordings found yet for session ${sessionId}`);
@@ -197,22 +196,22 @@ export const recordingService = {
       where: { id: recordingId },
       include: {
         session: {
-          select: { teamsMeetingId: true, batch: { select: { instructorId: true } } },
+          select: { teamsMeetingId: true, createdBy: true },
         },
       },
     });
 
     if (!recording) throw new Error('Recording not found');
 
-    // For recordings, we use the instructor's token as they are the "owner"
+    // For recordings, we use the session creator's token as they are the "owner"
     // of the meeting and recording.
-    const instructorId = recording.session.batch.instructorId;
+    const creatorId = recording.session.createdBy;
 
     // Import dynamically to avoid circular dependencies if any
     const { getRecordingContent } = await import('../graph/graph.recordings');
 
     try {
-      const contentUrl = await getRecordingContent(instructorId, recording.session.teamsMeetingId, recording.teamsRecordingId);
+      const contentUrl = await getRecordingContent(creatorId, recording.session.teamsMeetingId, recording.teamsRecordingId);
 
       return {
         url: contentUrl,

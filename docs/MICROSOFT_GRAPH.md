@@ -410,7 +410,7 @@ Default if unset: `secretClientValue` (change this in production).
 ### Steps (summary)
 
 1. Go to [Azure Portal](https://portal.azure.com) → **Microsoft Entra ID** → **App registrations** → **New registration**
-2. Set redirect URI (e.g. `http://localhost:3000/api/auth/callback/azure-ad`)
+2. Set redirect URI (e.g. `http://localhost:4000/api/auth/azure-ad/callback`)
 3. Create a **client secret** under **Certificates & secrets**
 4. Under **API permissions**, add:
 
@@ -438,7 +438,7 @@ Default if unset: `secretClientValue` (change this in production).
 
 The user who **creates** the session (`POST /api/sessions`) must have valid MS tokens — Graph creates the meeting as `/me/onlineMeetings` (that user's identity).
 
-For **recordings**, the **batch instructor's** token is used.
+For **recordings**, the **session creator's** token is used. This allows administrators to schedule classes and retrieve their recordings even if the assigned instructors do not have linked Microsoft accounts.
 
 ---
 
@@ -460,7 +460,7 @@ Example `.env` block:
 MS_CLIENT_ID=your-client-id
 MS_CLIENT_SECRET=your-client-secret
 MS_TENANT_ID=common
-MS_REDIRECT_URI=http://localhost:3000/api/auth/callback/azure-ad
+MS_REDIRECT_URI=http://localhost:4000/api/auth/azure-ad/callback
 TOKEN_ENCRYPTION_KEY=your_32_byte_encryption_key_here
 MS_WEBHOOK_CLIENT_STATE=your-random-webhook-secret
 API_URL=http://localhost:4000

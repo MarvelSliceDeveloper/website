@@ -51,7 +51,7 @@ export async function refreshMsTokenForUser(userId: string): Promise<string> {
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
       redirect_uri: redirectUri,
-      scope: 'openid profile email offline_access Calendars.ReadWrite OnlineMeetings.ReadWrite User.Read',
+      scope: 'openid profile email offline_access Calendars.ReadWrite OnlineMeetings.ReadWrite User.Read OnlineMeetingRecording.Read.All',
     }),
   });
 

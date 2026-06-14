@@ -51,23 +51,23 @@ router.post('/:id/unpublish', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR])
 // --- Module Routes ---
 
 // POST /api/admin/courses/:id/modules — add a module to a course
-router.post('/:id/modules', requireRole([UserRole.ADMIN]), moduleController.addModule);
+router.post('/:id/modules', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), moduleController.addModule);
 
 // PATCH /api/admin/courses/:id/modules/reorder — reorder modules (drag-and-drop)
-router.patch('/:id/modules/reorder', requireRole([UserRole.ADMIN]), moduleController.reorderModules);
+router.patch('/:id/modules/reorder', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), moduleController.reorderModules);
 
 // PUT /api/admin/modules/:id — update a module
-router.put('/modules/:id', requireRole([UserRole.ADMIN]), moduleController.updateModule);
+router.put('/modules/:id', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), moduleController.updateModule);
 
 // DELETE /api/admin/modules/:id — delete a module
-router.delete('/modules/:id', requireRole([UserRole.ADMIN]), moduleController.deleteModule);
+router.delete('/modules/:id', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), moduleController.deleteModule);
 
 // --- Module Resources Routes ---
 
 // POST /api/admin/courses/:courseId/modules/:id/resources — upload resource file
 router.post(
   '/:courseId/modules/:id/resources',
-  requireRole([UserRole.ADMIN]),
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
   (req: Request, res: Response, next: NextFunction) =>
     uploadModuleResource(req, res, (err) => {
       if (err) {
@@ -81,7 +81,7 @@ router.post(
 // DELETE /api/admin/courses/modules/:id/resources/:resourceId — delete resource file
 router.delete(
   '/modules/:id/resources/:resourceId',
-  requireRole([UserRole.ADMIN]),
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
   moduleController.deleteResource
 );
 

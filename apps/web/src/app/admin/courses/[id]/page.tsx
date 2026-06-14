@@ -646,11 +646,16 @@ export default function CourseDetailPage() {
             </div>
           )}
         </div>
+      )}
 
-      )
-      }
-
-
-    </div >
+      {/* Study Materials Tab */}
+      {activeTab === "materials" && (
+        <ModuleStudyMaterialsSection
+          courseId={id}
+          modules={course.modules}
+          onResourcesUpdated={fetchCourse}
+        />
+      )}
+    </div>
   );
 }

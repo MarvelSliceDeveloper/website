@@ -11,4 +11,8 @@ router.post('/logout', authController.logout);
 // GET /api/auth/me — return current authenticated user
 router.get('/me', requireAuth, authController.me);
 
+// --- Microsoft Azure AD OAuth ---
+router.get('/azure-ad/login', requireAuth, authController.azureAdLogin);
+router.get('/azure-ad/callback', authController.azureAdCallback);
+
 export const authRouter = router;

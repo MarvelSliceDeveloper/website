@@ -10,10 +10,7 @@ export interface AuthRequest extends Request {
     role: UserRole;
     email: string;
   };
-  file?: UploadFile;
 }
-
-type UploadFile = Request['file'];
 
 export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction) => {
   try {

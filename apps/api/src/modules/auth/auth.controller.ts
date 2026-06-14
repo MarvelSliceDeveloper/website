@@ -66,5 +66,158 @@ export const authController = {
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
     }
+  },
+
+  async azureAdLogin(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+      
+      // Ensure only ADMIN can link Microsoft account
+      const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+      if (!user || user.role !== 'ADMIN') {
+        return res.status(403).json({ error: 'Only administrators are allowed to link Microsoft accounts' });
+      }
+
+      const clientId = process.env.MS_CLIENT_ID;
+      const redirectUri = process.env.MS_REDIRECT_URI;
+
+      if (!clientId || !redirectUri) {
+        return res.status(500).json({ error: 'Microsoft Azure AD is not configured on the server' });
+      }
+
+      // Securely pass user ID in the state parameter
+      const { encryptToken } = await import('../../utils/encryption');
+      const state = encryptToken(req.user.userId);
+
+      const scopes = [
+        'openid',
+        'profile',
+        'email',
+        'offline_access',
+        'Calendars.ReadWrite',
+        'OnlineMeetings.ReadWrite',
+        'User.Read',
+        'OnlineMeetingRecording.Read.All'
+      ].join(' ');
+
+      const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&response_mode=query&scope=${encodeURIComponent(scopes)}&state=${encodeURIComponent(state)}`;
+
+      return res.redirect(authUrl);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  },
+
+  async azureAdCallback(req: Request, res: Response) {
+    const { code, state, error, error_description } = req.query;
+
+    if (error) {
+      console.error('[AzureOAuth] Microsoft callback error:', error, error_description);
+      return res.status(400).send(`Authentication failed: ${error_description || error}`);
+    }
+
+    if (!code || !state) {
+      return res.status(400).json({ error: 'Code or state query parameter is missing' });
+    }
+
+    try {
+      const { decryptToken, encryptToken } = await import('../../utils/encryption');
+      
+      // 1. Decrypt user ID from state
+      let userId: string;
+      try {
+        userId = decryptToken(state as string);
+      } catch (err) {
+        return res.status(400).json({ error: 'Invalid state parameter' });
+      }
+
+      // 2. Look up user and verify role is ADMIN
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      if (user.role !== 'ADMIN') {
+        return res.status(403).json({ error: 'Access denied: Only admins are allowed to link Microsoft accounts' });
+      }
+
+      const clientId = process.env.MS_CLIENT_ID;
+      const clientSecret = process.env.MS_CLIENT_SECRET;
+      const redirectUri = process.env.MS_REDIRECT_URI;
+
+      if (!clientId || !clientSecret || !redirectUri) {
+        return res.status(500).json({ error: 'Microsoft OAuth configuration is missing on the server' });
+      }
+
+      // 3. Exchange authorization code for tokens
+      const tokenUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/token`;
+      const scopes = [
+        'openid',
+        'profile',
+        'email',
+        'offline_access',
+        'Calendars.ReadWrite',
+        'OnlineMeetings.ReadWrite',
+        'User.Read',
+        'OnlineMeetingRecording.Read.All'
+      ].join(' ');
+
+      const response = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          grant_type: 'authorization_code',
+          code: code as string,
+          redirect_uri: redirectUri,
+          scope: scopes,
+        }),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error('[AzureOAuth] Token exchange failed:', errText);
+        return res.status(response.status).send(`Token exchange failed: ${response.statusText}`);
+      }
+
+      const tokenData = (await response.json()) as any;
+      if (!tokenData.access_token || !tokenData.refresh_token) {
+        return res.status(500).json({ error: 'Invalid token response received' });
+      }
+
+      // 4. Update access & refresh tokens on user
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          msAccessToken: encryptToken(tokenData.access_token),
+          msRefreshToken: encryptToken(tokenData.refresh_token),
+        },
+      });
+
+      // 5. Query Microsoft Graph /me to resolve the msUserId
+      const { getMsUserProfile } = await import('../graph/graph.users');
+      let msProfile;
+      try {
+        msProfile = await getMsUserProfile(userId);
+      } catch (err: any) {
+        console.error('[AzureOAuth] Failed to retrieve Microsoft user profile:', err.message);
+      }
+
+      if (msProfile?.id) {
+        await prisma.user.update({
+          where: { id: userId },
+          data: { msUserId: msProfile.id },
+        });
+      }
+
+      // 6. Redirect back to frontend dashboard
+      const redirectDashboard = `${process.env.WEB_URL || 'http://localhost:3000'}/admin/dashboard`;
+      return res.redirect(redirectDashboard);
+    } catch (error: any) {
+      console.error('[AzureOAuth] Fatal callback error:', error);
+      return res.status(500).send(`Internal server error during authentication: ${error.message}`);
+    }
   }
 };
