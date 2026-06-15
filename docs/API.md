@@ -794,6 +794,382 @@ await api.post('/api/recordings/progress', {
 
 ---
 
+## Full API Route Map (All Endpoints)
+
+This section lists every REST endpoint in the platform organized by module. All endpoints are prefixed with the API base URL (`http://localhost:4000` by default).
+
+### Legend
+| Column | Meaning |
+|--------|---------|
+| Method | HTTP verb |
+| Path | Full URL path (relative to base URL) |
+| Auth | Authentication & role requirements |
+| Description | What the endpoint does |
+
+---
+
+### 1. Auth — `/api/auth`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/auth/register` | None | Register new user |
+| POST | `/api/auth/login` | None | Login, returns JWT + sets cookie |
+| POST | `/api/auth/logout` | None | Clears auth cookie |
+| GET | `/api/auth/me` | JWT | Get current user profile |
+| GET | `/api/auth/azure-ad/login` | JWT (ADMIN) | Redirect to Microsoft OAuth |
+| GET | `/api/auth/azure-ad/callback` | None | Microsoft OAuth callback |
+
+---
+
+### 2. Calendar — `/api/calendar`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/calendar/events?start=&end=` | JWT | List calendar events in date range |
+| GET | `/api/calendar/events/today` | JWT | Get today's events with live status |
+| GET | `/api/calendar/live` | JWT | Get currently live sessions |
+| POST | `/api/calendar/sync` | JWT | Manually trigger Microsoft calendar sync |
+
+---
+
+### 3. Sessions — `/api/sessions`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/sessions/` | JWT (INSTRUCTOR/ADMIN) | Create session + Teams meeting |
+| GET | `/api/sessions/` | JWT | List sessions (filters: `courseId`, `status`) |
+| GET | `/api/sessions/:id` | JWT | Get session details |
+| PATCH | `/api/sessions/:id` | JWT (INSTRUCTOR/ADMIN) | Update session schedule |
+| DELETE | `/api/sessions/:id` | JWT (INSTRUCTOR/ADMIN) | Cancel session (soft delete) |
+
+---
+
+### 4. Recordings — `/api/recordings`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/recordings/?courseId=` | JWT | List recordings for a course |
+| GET | `/api/recordings/:id` | JWT | Get recording details |
+| GET | `/api/recordings/:id/url` | JWT | Get signed playback URL |
+| POST | `/api/recordings/progress` | JWT | Update watch progress |
+| POST | `/api/recordings/:sessionId/sync` | JWT (INSTRUCTOR/ADMIN) | Manually sync recording |
+
+---
+
+### 5. Mentorship — `/api/mentorship`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/mentorship/tickets` | JWT (STUDENT) | Create mentorship ticket |
+| GET | `/api/mentorship/tickets/my` | JWT (STUDENT) | List my tickets |
+| GET | `/api/mentorship/tickets` | JWT (ADMIN) | List all tickets |
+| GET | `/api/mentorship/tickets/:id` | JWT | Get ticket details |
+| GET | `/api/mentorship/mentors` | JWT (ADMIN) | List available mentors |
+| GET | `/api/mentorship/stats` | JWT (ADMIN) | Get mentorship stats |
+| PATCH | `/api/mentorship/tickets/:id/assign` | JWT (ADMIN) | Assign mentor to ticket |
+| PATCH | `/api/mentorship/tickets/:id/schedule` | JWT (ADMIN) | Schedule mentorship session |
+| PATCH | `/api/mentorship/tickets/:id/complete` | JWT (ADMIN) | Complete ticket |
+| PATCH | `/api/mentorship/tickets/:id/cancel` | JWT (ADMIN) | Cancel ticket |
+
+---
+
+### 6. Admin Courses — `/api/admin/courses`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/admin/courses/` | JWT (ADMIN/INSTRUCTOR) | List courses |
+| POST | `/api/admin/courses/` | JWT (ADMIN/INSTRUCTOR) | Create course |
+| GET | `/api/admin/courses/:id` | JWT (ADMIN/INSTRUCTOR) | Get course details |
+| PUT | `/api/admin/courses/:id` | JWT (ADMIN/INSTRUCTOR) | Update course |
+| DELETE | `/api/admin/courses/:id` | JWT (ADMIN/INSTRUCTOR) | Delete course |
+| POST | `/api/admin/courses/:id/thumbnail` | JWT (ADMIN/INSTRUCTOR) | Upload thumbnail (multipart) |
+| POST | `/api/admin/courses/:id/publish` | JWT (ADMIN/INSTRUCTOR) | Publish course |
+| POST | `/api/admin/courses/:id/unpublish` | JWT (ADMIN/INSTRUCTOR) | Unpublish course |
+| POST | `/api/admin/courses/:id/modules` | JWT (ADMIN/INSTRUCTOR) | Add module |
+| PATCH | `/api/admin/courses/:id/modules/reorder` | JWT (ADMIN/INSTRUCTOR) | Reorder modules |
+| PUT | `/api/admin/courses/modules/:id` | JWT (ADMIN/INSTRUCTOR) | Update module |
+| DELETE | `/api/admin/courses/modules/:id` | JWT (ADMIN/INSTRUCTOR) | Delete module |
+| POST | `/api/admin/courses/:courseId/modules/:id/resources` | JWT (ADMIN/INSTRUCTOR) | Upload module resource (multipart) |
+| DELETE | `/api/admin/courses/modules/:id/resources/:resourceId` | JWT (ADMIN/INSTRUCTOR) | Delete module resource |
+
+---
+
+### 7. Admin Batches — `/api/admin/batches`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/admin/batches/` | JWT (ADMIN/INSTRUCTOR) | List batches |
+| POST | `/api/admin/batches/` | JWT (ADMIN) | Create batch |
+| GET | `/api/admin/batches/:id` | JWT (ADMIN/INSTRUCTOR) | Get batch details |
+| PUT | `/api/admin/batches/:id` | JWT (ADMIN) | Update batch |
+| DELETE | `/api/admin/batches/:id` | JWT (ADMIN) | Delete batch |
+| GET | `/api/admin/batches/instructors` | JWT (ADMIN/INSTRUCTOR) | List instructors |
+| GET | `/api/admin/batches/courses` | JWT (ADMIN/INSTRUCTOR) | List courses for batch assignment |
+| GET | `/api/admin/batches/:id/students` | JWT (ADMIN/INSTRUCTOR) | List students in batch |
+| POST | `/api/admin/batches/:id/students` | JWT (ADMIN) | Add students to batch |
+| DELETE | `/api/admin/batches/:id/students/:uid` | JWT (ADMIN) | Remove student from batch |
+
+---
+
+### 8. Student Batches — `/api/batches`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/batches/:id` | JWT | Get batch details (student view) |
+
+---
+
+### 9. Student Courses — `/api/courses`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/courses/enrolled` | JWT | List enrolled courses with progress |
+| GET | `/api/courses/catalogue` | JWT | Browse published courses |
+| POST | `/api/courses/enroll` | JWT | Submit enrollment request |
+| GET | `/api/courses/:courseId/content` | JWT | Get course content (enrolled only) |
+
+---
+
+### 10. Student Portal — `/api/student`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/student/assignments/overdue` | JWT (STUDENT) | List overdue assignments |
+| GET | `/api/student/continue-learning` | JWT (STUDENT) | Get continue-learning suggestions |
+
+---
+
+### 11. Assignments — `/api/assignments`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/assignments/` | JWT (ADMIN/INSTRUCTOR) | Create assignment |
+| POST | `/api/assignments/upload-pdf` | JWT (ADMIN/INSTRUCTOR) | Upload question PDF (multipart, field: `questionPdf`) |
+| GET | `/api/assignments/` | JWT | List assignments |
+| GET | `/api/assignments/:id/questions` | JWT | Get assignment questions |
+| POST | `/api/assignments/:id/submit/mcq` | JWT (STUDENT) | Submit MCQ answers |
+| POST | `/api/assignments/:id/submit/file` | JWT (STUDENT) | Submit file answer (multipart) |
+| GET | `/api/assignments/submissions/:submissionId/result` | JWT | Get submission result |
+| GET | `/api/assignments/:id/submissions` | JWT (ADMIN/INSTRUCTOR) | List all submissions for assignment |
+| POST | `/api/assignments/submissions/:submissionId/grade` | JWT (ADMIN/INSTRUCTOR) | Grade a submission |
+
+---
+
+### 12. Attendance — `/api/attendance`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/attendance/:sessionId/join` | JWT | Join session (mark attendance) |
+| GET | `/api/attendance/:sessionId` | JWT (ADMIN/INSTRUCTOR) | Get session attendance records |
+
+---
+
+### 13. Notifications — `/api/notifications`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/notifications/` | JWT | List my notifications |
+| PATCH | `/api/notifications/:id/read` | JWT | Mark notification as read |
+| POST | `/api/notifications/read-all` | JWT | Mark all notifications as read |
+
+---
+
+### 14. Admin Enrollments — `/api/admin/enrollments`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/admin/enrollments/` | JWT (ADMIN) | List enrollment requests (with filters) |
+| PATCH | `/api/admin/enrollments/:id/approve` | JWT (ADMIN) | Approve enrollment + assign batch |
+| PATCH | `/api/admin/enrollments/:id/reject` | JWT (ADMIN) | Reject enrollment |
+
+---
+
+### 15. Admin Users — `/api/users`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/users/` | JWT (ADMIN) | List all users |
+| POST | `/api/users/` | JWT (ADMIN) | Create user |
+
+---
+
+### 16. Admin Dashboard — `/api/admin/dashboard`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/admin/dashboard/stats` | JWT (ADMIN) | Get dashboard statistics |
+
+---
+
+### 17. Webhooks (Unauthenticated)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/webhooks/calendar` | None | Microsoft Graph calendar change notifications |
+| POST | `/api/webhooks/events` | None | Microsoft Teams meeting webhook events |
+
+---
+
+### 18. System
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/health` | None | Health check — returns `{ status: "ok", timestamp }` |
+
+---
+
+### 19. Static Files
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/uploads/*` | None | Serve uploaded files (thumbnails, resources, PDFs) |
+
+---
+
+### 20. Certificates — `/api/certificates` ⚠️
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| None | *(router has no registered routes)* | — | Controller & service exist but endpoints are not wired |
+
+> **Note:** The certificate router is mounted at `/api/certificates` but contains zero route definitions. The `certificate.controller.ts` and `certificate.service.ts` are fully implemented but unreachable via API.
+
+---
+
+### Postman/Insomnia Route Summary
+
+Below is every route grouped by module for quick reference when setting up test collections:
+
+```
+AUTH
+  POST   /api/auth/register
+  POST   /api/auth/login
+  POST   /api/auth/logout
+  GET    /api/auth/me
+  GET    /api/auth/azure-ad/login
+  GET    /api/auth/azure-ad/callback
+
+CALENDAR
+  GET    /api/calendar/events?start=&end=
+  GET    /api/calendar/events/today
+  GET    /api/calendar/live
+  POST   /api/calendar/sync
+
+SESSIONS
+  POST   /api/sessions/
+  GET    /api/sessions/
+  GET    /api/sessions/:id
+  PATCH  /api/sessions/:id
+  DELETE /api/sessions/:id
+
+RECORDINGS
+  GET    /api/recordings/?courseId=
+  GET    /api/recordings/:id
+  GET    /api/recordings/:id/url
+  POST   /api/recordings/progress
+  POST   /api/recordings/:sessionId/sync
+
+MENTORSHIP
+  POST   /api/mentorship/tickets
+  GET    /api/mentorship/tickets/my
+  GET    /api/mentorship/tickets
+  GET    /api/mentorship/tickets/:id
+  GET    /api/mentorship/mentors
+  GET    /api/mentorship/stats
+  PATCH  /api/mentorship/tickets/:id/assign
+  PATCH  /api/mentorship/tickets/:id/schedule
+  PATCH  /api/mentorship/tickets/:id/complete
+  PATCH  /api/mentorship/tickets/:id/cancel
+
+ADMIN COURSES
+  GET    /api/admin/courses/
+  POST   /api/admin/courses/
+  GET    /api/admin/courses/:id
+  PUT    /api/admin/courses/:id
+  DELETE /api/admin/courses/:id
+  POST   /api/admin/courses/:id/thumbnail
+  POST   /api/admin/courses/:id/publish
+  POST   /api/admin/courses/:id/unpublish
+  POST   /api/admin/courses/:id/modules
+  PATCH  /api/admin/courses/:id/modules/reorder
+  PUT    /api/admin/courses/modules/:id
+  DELETE /api/admin/courses/modules/:id
+  POST   /api/admin/courses/:courseId/modules/:id/resources
+  DELETE /api/admin/courses/modules/:id/resources/:resourceId
+
+ADMIN BATCHES
+  GET    /api/admin/batches/
+  POST   /api/admin/batches/
+  GET    /api/admin/batches/:id
+  PUT    /api/admin/batches/:id
+  DELETE /api/admin/batches/:id
+  GET    /api/admin/batches/instructors
+  GET    /api/admin/batches/courses
+  GET    /api/admin/batches/:id/students
+  POST   /api/admin/batches/:id/students
+  DELETE /api/admin/batches/:id/students/:uid
+
+STUDENT BATCHES
+  GET    /api/batches/:id
+
+STUDENT COURSES
+  GET    /api/courses/enrolled
+  GET    /api/courses/catalogue
+  POST   /api/courses/enroll
+  GET    /api/courses/:courseId/content
+
+STUDENT PORTAL
+  GET    /api/student/assignments/overdue
+  GET    /api/student/continue-learning
+
+ASSIGNMENTS
+  POST   /api/assignments/
+  POST   /api/assignments/upload-pdf
+  GET    /api/assignments/
+  GET    /api/assignments/:id/questions
+  POST   /api/assignments/:id/submit/mcq
+  POST   /api/assignments/:id/submit/file
+  GET    /api/assignments/submissions/:submissionId/result
+  GET    /api/assignments/:id/submissions
+  POST   /api/assignments/submissions/:submissionId/grade
+
+ATTENDANCE
+  POST   /api/attendance/:sessionId/join
+  GET    /api/attendance/:sessionId
+
+NOTIFICATIONS
+  GET    /api/notifications/
+  PATCH  /api/notifications/:id/read
+  POST   /api/notifications/read-all
+
+ADMIN ENROLLMENTS
+  GET    /api/admin/enrollments/
+  PATCH  /api/admin/enrollments/:id/approve
+  PATCH  /api/admin/enrollments/:id/reject
+
+ADMIN USERS
+  GET    /api/users/
+  POST   /api/users/
+
+ADMIN DASHBOARD
+  GET    /api/admin/dashboard/stats
+
+WEBHOOKS
+  POST   /api/webhooks/calendar
+  POST   /api/webhooks/events
+
+SYSTEM
+  GET    /health
+
+STATIC
+  GET    /uploads/*
+
+CERTIFICATES ⚠️ (not wired)
+  <empty>
+```
+
+---
+
 ## Platform API Testing Guide (Postman / Insomnia)
 
 This section explains how to set up an API testing environment (like Postman or Insomnia) to test the LMS platform endpoints without needing a custom frontend.

@@ -519,7 +519,7 @@ export default function StudentPortalPage() {
       case "COURSE_CONTENT": {
         const courseId = currentView.params?.courseId ?? "";
         if (!courseId) return <NotFoundView />;
-        return <CourseContentView courseId={courseId} navigate={navigate} />;
+        return <CourseContentView courseId={courseId} navigate={navigate} goBack={goBack} />;
       }
 
       case "ASSIGNMENT_OVERDUE":
@@ -551,6 +551,8 @@ export default function StudentPortalPage() {
     }
   }
 
+  const isCourseContent = currentView.view === "COURSE_CONTENT";
+
   return (
     <StudentPortalShell
       breadcrumbs={breadcrumbs}
@@ -558,6 +560,9 @@ export default function StudentPortalPage() {
       onBack={goBack}
       studentName={studentName}
       studentEmail={studentEmail}
+      hideProfile={isCourseContent}
+      hideLogo={isCourseContent}
+      hideHeader={isCourseContent}
     >
 
       {/* View transition wrapper */}

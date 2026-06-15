@@ -28,7 +28,7 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
 
-  // Create user modal state
+  // Create user modal
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
@@ -38,6 +38,16 @@ export default function AdminUsersPage() {
     password: "",
     role: "STUDENT",
   });
+
+  // Edit user modal
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", email: "", role: "STUDENT" as string });
+  const [editing, setEditing] = useState(false);
+  const [editError, setEditError] = useState("");
+
+  // Delete confirmation
+  const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchUsers = () => {
     setLoading(true);
@@ -58,15 +68,55 @@ export default function AdminUsersPage() {
 
     try {
       await api.post("/api/users", form);
-      // Success! Reset form and reload
       setForm({ name: "", email: "", password: "", role: "STUDENT" });
       setShowModal(false);
       fetchUsers();
-    } catch (err: any) {
-      setFormError(err.message || "Failed to create user. Ensure email is unique.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to create user.";
+      setFormError(message);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editUser) return;
+    setEditError("");
+    setEditing(true);
+
+    try {
+      await api.patch(`/api/users/${editUser.id}`, editForm);
+      setEditUser(null);
+      fetchUsers();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to update user.";
+      setEditError(message);
+    } finally {
+      setEditing(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deleteUserId) return;
+    setDeleting(true);
+
+    try {
+      await api.delete(`/api/users/${deleteUserId}`);
+      setDeleteUserId(null);
+      fetchUsers();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to delete user.";
+      alert(message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const openEditModal = (user: User) => {
+    setEditUser(user);
+    setEditForm({ name: user.name, email: user.email, role: user.role });
+    setEditError("");
   };
 
   const filtered = users.filter((u) => {
@@ -144,6 +194,7 @@ export default function AdminUsersPage() {
                 <th className="px-5 py-3 text-xs font-medium uppercase text-muted">User</th>
                 <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Email</th>
                 <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Role</th>
+                <th className="px-5 py-3 text-xs font-medium uppercase text-muted text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
@@ -162,6 +213,24 @@ export default function AdminUsersPage() {
                     <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${roleStyles[user.role]}`}>
                       {roleIcons[user.role]} {user.role}
                     </span>
+                  </td>
+                  <td className="px-5 py-3 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => openEditModal(user)}
+                        className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+                        title="Edit user"
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        onClick={() => setDeleteUserId(user.id)}
+                        className="rounded-md border border-danger/20 px-2.5 py-1 text-xs font-medium text-danger hover:bg-danger/10 transition-colors"
+                        title="Delete user"
+                      >
+                        🗑️ Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -272,6 +341,133 @@ export default function AdminUsersPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {editUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md glass-card p-6 shadow-2xl space-y-4 animate-in scale-in duration-200">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h3 className="text-lg font-bold text-foreground">Edit User</h3>
+              <button
+                onClick={() => {
+                  setEditUser(null);
+                  setEditError("");
+                }}
+                className="text-muted-foreground hover:text-foreground text-xl"
+              >
+                &times;
+              </button>
+            </div>
+
+            {editError && (
+              <div className="rounded-lg border border-danger/20 bg-danger/10 p-3 text-xs text-danger">
+                {editError}
+              </div>
+            )}
+
+            <form onSubmit={handleEditUser} className="space-y-4">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted">Full Name</label>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  placeholder="e.g. John Doe"
+                  className="field"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted">Email Address</label>
+                <input
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  placeholder="e.g. johndoe@lms.local"
+                  className="field"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted">Role</label>
+                <select
+                  value={editForm.role}
+                  onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                  className="field w-full"
+                >
+                  <option value="STUDENT">Student 🎓</option>
+                  <option value="INSTRUCTOR">Instructor 👨‍🏫</option>
+                  <option value="ADMIN">Administrator 🛡️</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-border/50">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditUser(null);
+                    setEditError("");
+                  }}
+                  className="btn-secondary text-sm"
+                  disabled={editing}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary text-sm flex items-center gap-1.5"
+                  disabled={editing}
+                >
+                  {editing ? (
+                    <>
+                      <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation */}
+      {deleteUserId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm glass-card p-6 shadow-2xl space-y-4 animate-in scale-in duration-200 text-center">
+            <div className="text-4xl">⚠️</div>
+            <h3 className="text-lg font-bold text-foreground">Delete User?</h3>
+            <p className="text-sm text-muted-foreground">
+              This action cannot be undone. All data associated with this user will be permanently removed.
+            </p>
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                onClick={() => setDeleteUserId(null)}
+                className="btn-secondary text-sm"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteUser}
+                className="rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-white hover:bg-danger/90 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <>
+                    <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Yes, Delete"
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

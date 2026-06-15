@@ -325,7 +325,7 @@ function AssignmentsPageContent() {
     try {
       setUploadingPdf(true);
       const formData = new FormData();
-      formData.append("pdf", file);
+      formData.append("questionPdf", file);
 
       const res = await api.post<{ fileUrl: string }>("/api/assignments/upload-pdf", formData);
       setFormQuestionPdfUrl(res.fileUrl);

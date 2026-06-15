@@ -1,13 +1,12 @@
 import { prisma } from '../../utils/prisma';
-// use an untyped alias to avoid strict model typing issues in some build setups
-const db = prisma as any;
+import type { Prisma } from '@prisma/client';
 
 interface NotificationCreateData {
   userId: string;
   title: string;
   message: string;
   type: string;
-  metadata?: any;
+  metadata?: Prisma.InputJsonValue;
 }
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
@@ -20,14 +19,14 @@ export const notificationService = {
   /**
    * Create a notification for a specific user.
    */
-  async create(data: NotificationCreateData): Promise<Notification | null> {
+  async create(data: NotificationCreateData) {
     if (!prisma || !('notification' in prisma)) {
       console.warn('Prisma notification model not available — skipping create');
       return null;
     }
 
     try {
-      return await db.notification.create({
+      return await prisma.notification.create({
         data: {
           userId: data.userId,
           title: data.title,
@@ -65,7 +64,7 @@ export const notificationService = {
           type: n.type,
           metadata: n.metadata ?? undefined,
         }));
-        const result = await db.notification.createMany({ data: payload, skipDuplicates: true });
+        const result = await prisma.notification.createMany({ data: payload, skipDuplicates: true });
         totalInserted += result.count ?? 0;
       }
       return totalInserted;
@@ -78,14 +77,14 @@ export const notificationService = {
   /**
    * List notifications for a user, newest first.
    */
-  async listForUser(userId: string, limit = 50): Promise<Notification[]> {
+  async listForUser(userId: string, limit = 50) {
     if (!prisma || !('notification' in prisma)) {
       console.warn('Prisma notification model not available — returning empty notifications');
       return [];
     }
 
     try {
-      return await db.notification.findMany({
+      return await prisma.notification.findMany({
         where: { userId },
         orderBy: { createdAt: 'desc' },
         take: limit,
@@ -103,7 +102,7 @@ export const notificationService = {
     if (!prisma || !('notification' in prisma)) return 0;
 
     try {
-      return await db.notification.count({ where: { userId, read: false } });
+      return await prisma.notification.count({ where: { userId, read: false } });
     } catch (err: unknown) {
       console.error('Error counting unread notifications:', (err as Error)?.message ?? err);
       return 0;
@@ -120,7 +119,7 @@ export const notificationService = {
     }
 
     try {
-      const res = await db.notification.updateMany({
+      const res = await prisma.notification.updateMany({
         where: { id: notificationId, userId },
         data: { read: true },
       });
@@ -141,7 +140,7 @@ export const notificationService = {
     }
 
     try {
-      const res = await db.notification.updateMany({
+      const res = await prisma.notification.updateMany({
         where: { userId, read: false },
         data: { read: true },
       });
@@ -156,7 +155,7 @@ export const notificationService = {
    * Notify all enrolled students + the instructor when a session is scheduled.
    */
   async notifySessionScheduled(sessionId: string) {
-    const session = await db.liveSession.findUnique({
+    const session = await prisma.liveSession.findUnique({
       where: { id: sessionId },
       include: {
         batch: {
@@ -212,7 +211,7 @@ export const notificationService = {
    * Notify students when a recording becomes available.
    */
   async notifyRecordingAvailable(sessionId: string) {
-    const session = await db.liveSession.findUnique({
+    const session = await prisma.liveSession.findUnique({
       where: { id: sessionId },
       include: {
         batch: {
