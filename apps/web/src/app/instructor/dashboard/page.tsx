@@ -221,7 +221,7 @@ export default function InstructorDashboardPage() {
                     href={session.joinUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn-primary text-xs px-3 py-1.5 bg-violet-600 hover:bg-violet-700"
+                    className="btn-primary text-xs px-3 py-1.5"
                   >
                     Start Class →
                   </a>

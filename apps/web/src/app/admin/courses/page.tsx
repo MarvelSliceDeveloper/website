@@ -326,7 +326,7 @@ function CoursesPageContent() {
                         <button
                           onClick={() => handleDelete(course.id, course.title)}
                           disabled={deleting === course.id}
-                          className="text-xs font-medium text-danger hover:text-danger/80 transition-colors disabled:opacity-50"
+                          className="btn-danger text-xs disabled:opacity-50"
                         >
                           {deleting === course.id ? "..." : "Archive"}
                         </button>

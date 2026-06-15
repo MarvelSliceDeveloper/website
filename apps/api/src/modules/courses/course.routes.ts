@@ -48,6 +48,12 @@ router.post('/:id/publish', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), 
 // POST /api/admin/courses/:id/unpublish — revert to draft
 router.post('/:id/unpublish', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), courseController.unpublish);
 
+// GET /api/admin/courses/:courseId/sessions — list sessions for a course
+router.get('/:courseId/sessions', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), courseController.listSessions);
+
+// GET /api/admin/courses/:courseId/recordings — list recordings for a course
+router.get('/:courseId/recordings', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), courseController.listRecordings);
+
 // --- Module Routes ---
 
 // POST /api/admin/courses/:id/modules — add a module to a course
@@ -84,5 +90,4 @@ router.delete(
   requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
   moduleController.deleteResource
 );
-
 export const courseRouter = router;

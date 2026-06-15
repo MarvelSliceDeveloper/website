@@ -180,6 +180,27 @@ a:focus-visible {
   border-color: var(--border-hover);
 }
 
+.btn-danger {
+  background: var(--card);
+  color: var(--danger);
+  padding: 0.62rem 1rem;
+  border-radius: 0.72rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+  cursor: pointer;
+  transition: border-color 0.16s ease, background-color 0.16s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  border-color: var(--danger);
+}
+
 .field {
   width: 100%;
   border-radius: 0.72rem;

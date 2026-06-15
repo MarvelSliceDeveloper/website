@@ -51,8 +51,8 @@ export default function CalendarView({ events }: CalendarViewProps) {
     ? events.map((e) => ({
       id: e.id,
       title: e.title,
-      start: e.start,
-      end: e.end,
+      start: e.startAt,
+      end: e.endAt,
       backgroundColor: eventColor(e.type),
       borderColor: eventColor(e.type),
       url: e.joinUrl,
@@ -106,9 +106,9 @@ export default function CalendarView({ events }: CalendarViewProps) {
         ) : (
           <div className="space-y-2">
             {events.map((e) => {
-              const start = new Date(e.start);
+              const start = new Date(e.startAt);
               const isValid = !isNaN(start.getTime());
-              const status = getSessionStatus(e.start, e.end);
+              const status = getSessionStatus(e.startAt, e.endAt);
 
               return (
                 <div key={e.id} className="glass-card flex items-center gap-4 p-4">

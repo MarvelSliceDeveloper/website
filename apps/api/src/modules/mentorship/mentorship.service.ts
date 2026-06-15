@@ -67,10 +67,12 @@ export const mentorshipService = {
   },
 
   /**
-   * List all tickets (admin view)
+   * List all tickets (admin view) or instructor's assigned tickets
    */
-  async listAllTickets(status?: TicketStatus) {
-    const where: Prisma.MentorshipTicketWhereInput = status ? { status } : {};
+  async listAllTickets(status?: TicketStatus, mentorId?: string) {
+    const where: Prisma.MentorshipTicketWhereInput = {};
+    if (status) where.status = status;
+    if (mentorId) where.mentorId = mentorId;
 
     const tickets = await prisma.mentorshipTicket.findMany({
       where,

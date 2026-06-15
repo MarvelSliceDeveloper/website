@@ -299,7 +299,7 @@ function SessionsPageContent() {
           <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">Live Sessions</h1>
           <p className="mt-1 text-sm text-muted-foreground">Manage, schedule, and configure your live classes.</p>
         </div>
-        <button onClick={openCreateModal} className="btn-primary flex items-center gap-1 bg-violet-600 hover:bg-violet-700">
+        <button onClick={openCreateModal} className="btn-primary flex items-center gap-1">
           <IconPlus size={16} /> Schedule Session
         </button>
       </div>
@@ -467,7 +467,7 @@ function SessionsPageContent() {
 
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setShowCreateModal(false)} className="btn-secondary text-xs px-4">Cancel</button>
-                <button type="submit" disabled={submitting} className="btn-primary text-xs px-4 bg-violet-600 hover:bg-violet-700">
+                <button type="submit" disabled={submitting} className="btn-primary text-xs px-4">
                   {submitting ? "Scheduling..." : "Schedule Session"}
                 </button>
               </div>
@@ -524,7 +524,7 @@ function SessionsPageContent() {
 
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setShowEditModal(false)} className="btn-secondary text-xs px-4">Cancel</button>
-                <button type="submit" disabled={submitting} className="btn-primary text-xs px-4 bg-violet-600 hover:bg-violet-700">
+                <button type="submit" disabled={submitting} className="btn-primary text-xs px-4">
                   {submitting ? "Updating..." : "Update Session"}
                 </button>
               </div>
@@ -665,7 +665,7 @@ function SessionCard({
           href={session.joinUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-primary text-xs flex-1 justify-center py-1.5 px-3 bg-violet-600 hover:bg-violet-700"
+          className="btn-primary text-xs flex-1 justify-center py-1.5 px-3"
         >
           {upcoming ? "Start Class →" : "View Link"}
         </a>

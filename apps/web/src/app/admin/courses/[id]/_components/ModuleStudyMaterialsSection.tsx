@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 
 interface Resource {
@@ -42,12 +42,12 @@ const ALLOWED_TYPES = new Set([
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 function getFileIcon(fileType: string) {
-  if (fileType.includes("pdf")) return "📄";
-  if (fileType.includes("word") || fileType.includes("document")) return "📝";
-  if (fileType.includes("powerpoint") || fileType.includes("presentation")) return "📊";
-  if (fileType.includes("excel") || fileType.includes("spreadsheet")) return "📊";
-  if (fileType.includes("image")) return "🖼️";
-  return "📎";
+  if (fileType.includes("pdf")) return "\uD83D\uDCC4";
+  if (fileType.includes("word") || fileType.includes("document")) return "\uD83D\uDCDD";
+  if (fileType.includes("powerpoint") || fileType.includes("presentation")) return "\uD83D\uDCCA";
+  if (fileType.includes("excel") || fileType.includes("spreadsheet")) return "\uD83D\uDCCA";
+  if (fileType.includes("image")) return "\uD83D\uDDBC\uFE0F";
+  return "\uD83D\uDCCE";
 }
 
 function formatFileSize(bytes: number) {
@@ -75,11 +75,7 @@ export default function ModuleStudyMaterialsSection({
   const selectedModule = modules.find((m) => m.id === selectedModuleId);
 
   useEffect(() => {
-    if (selectedModule?.resources) {
-      setResources(selectedModule.resources as Resource[]);
-    } else {
-      setResources([]);
-    }
+    setResources(selectedModule?.resources as Resource[] || []);
   }, [selectedModule]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -89,16 +85,12 @@ export default function ModuleStudyMaterialsSection({
     setUploadError("");
     setUploadSuccess("");
 
-    // Validate file type
     if (!ALLOWED_TYPES.has(file.type)) {
-      setUploadError(
-        "File type not allowed. Please upload PDF, DOCX, PPTX, XLSX, or image files."
-      );
+      setUploadError("File type not allowed. Please upload PDF, DOCX, PPTX, XLSX, or image files.");
       e.target.value = "";
       return;
     }
 
-    // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       setUploadError("File is too large. Maximum size is 50 MB.");
       e.target.value = "";
@@ -130,14 +122,11 @@ export default function ModuleStudyMaterialsSection({
 
   const handleDeleteResource = async (resourceId: string) => {
     if (!confirm("Delete this resource?")) return;
-
     setDeleting(resourceId);
-
     try {
       await api.delete(
         `/api/admin/courses/modules/${selectedModuleId}/resources/${resourceId}`
       );
-
       setResources((prev) => prev.filter((r) => r.id !== resourceId));
       onResourcesUpdated();
     } catch (err: any) {
@@ -150,9 +139,7 @@ export default function ModuleStudyMaterialsSection({
   return (
     <div className="space-y-4">
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-foreground">
-          Select Module
-        </label>
+        <label className="mb-1.5 block text-sm font-medium text-foreground">Select Module</label>
         <select
           value={selectedModuleId || ""}
           onChange={(e) => setSelectedModuleId(e.target.value)}
@@ -167,17 +154,13 @@ export default function ModuleStudyMaterialsSection({
         </select>
       </div>
 
-      {selectedModuleId && (
+      {selectedModuleId ? (
         <div className="space-y-4">
           <div className="glass-card p-6 space-y-4 border-2 border-dashed border-border">
             <label className="flex flex-col items-center justify-center cursor-pointer p-4 rounded-lg hover:bg-primary/5 transition-colors">
-              <span className="text-3xl mb-2">📁</span>
-              <span className="text-sm font-medium text-foreground">
-                Click to upload or drag and drop
-              </span>
-              <span className="text-xs text-muted mt-1">
-                PDF, DOCX, PPTX, XLSX, or Images up to 50 MB
-              </span>
+              <span className="text-3xl mb-2">{'\uD83D\uDCC1'}</span>
+              <span className="text-sm font-medium text-foreground">Click to upload or drag and drop</span>
+              <span className="text-xs text-muted mt-1">PDF, DOCX, PPTX, XLSX, or Images up to 50 MB</span>
               <input
                 type="file"
                 onChange={handleFileUpload}
@@ -186,16 +169,9 @@ export default function ModuleStudyMaterialsSection({
                 accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.webp"
               />
             </label>
-
-            {uploadError && (
-              <p className="text-xs text-danger">{uploadError}</p>
-            )}
-            {uploadSuccess && (
-              <p className="text-xs text-success">{uploadSuccess}</p>
-            )}
-            {uploading && (
-              <p className="text-xs text-muted animate-pulse">Uploading...</p>
-            )}
+            {uploadError && <p className="text-xs text-danger">{uploadError}</p>}
+            {uploadSuccess && <p className="text-xs text-success">{uploadSuccess}</p>}
+            {uploading && <p className="text-xs text-muted animate-pulse">Uploading...</p>}
           </div>
 
           <div className="space-y-2">
@@ -204,48 +180,28 @@ export default function ModuleStudyMaterialsSection({
             </h3>
 
             {resources.length === 0 ? (
-              <div className="glass-card p-4 text-center text-sm text-muted">
-                No resources uploaded yet
-              </div>
+              <div className="glass-card p-4 text-center text-sm text-muted">No resources uploaded yet</div>
             ) : (
               <div className="space-y-2">
                 {resources.map((resource) => (
-                  <div
-                    key={resource.id}
-                    className="glass-card p-4 flex items-center justify-between border border-border/80 hover:border-border transition-colors"
-                  >
+                  <div key={resource.id} className="glass-card p-4 flex items-center justify-between border border-border/80 hover:border-border transition-colors">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <span className="text-xl shrink-0">
-                        {getFileIcon(resource.fileType)}
-                      </span>
+                      <span className="text-xl shrink-0">{getFileIcon(resource.fileType)}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {resource.originalName}
-                        </p>
+                        <p className="text-sm font-medium text-foreground truncate">{resource.originalName}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-muted">
-                            {formatFileSize(resource.size)}
-                          </span>
-                          <span className="text-xs text-muted">•</span>
-                          <span className="text-xs text-muted">
-                            {new Date(resource.uploadedAt).toLocaleDateString()}
-                          </span>
+                          <span className="text-xs text-muted">{formatFileSize(resource.size)}</span>
+                          <span className="text-xs text-muted">\u00B7</span>
+                          <span className="text-xs text-muted">{new Date(resource.uploadedAt).toLocaleDateString()}</span>
                         </div>
                       </div>
                     </div>
-
                     <div className="flex items-center gap-2 shrink-0 ml-2">
-                      <a
-                        href={resource.url}
-                        download
-                        className="text-xs font-medium text-primary hover:text-primary-hover transition-colors"
-                      >
-                        Download
-                      </a>
+                      <a href={resource.url} download className="text-xs font-medium text-primary hover:text-primary-hover transition-colors">Download</a>
                       <button
                         onClick={() => handleDeleteResource(resource.id)}
                         disabled={deleting === resource.id}
-                        className="text-xs font-medium text-danger hover:text-danger/80 transition-colors disabled:opacity-50"
+                        className="btn-danger text-xs"
                       >
                         {deleting === resource.id ? "Deleting..." : "Delete"}
                       </button>
@@ -255,6 +211,12 @@ export default function ModuleStudyMaterialsSection({
               </div>
             )}
           </div>
+        </div>
+      ) : (
+        <div className="glass-card p-8 text-center">
+          <p className="text-muted-foreground text-sm">
+            Select a module to manage its study materials.
+          </p>
         </div>
       )}
     </div>

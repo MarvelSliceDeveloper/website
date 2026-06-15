@@ -53,12 +53,13 @@ export const mentorshipController = {
 
   /**
    * GET /api/mentorship/tickets
-   * List all tickets (admin only)
+   * List all tickets (admin) or instructor's assigned tickets (instructor)
    */
   async listAllTickets(req: AuthRequest, res: Response) {
     try {
       const { status } = req.query;
-      const tickets = await mentorshipService.listAllTickets(status as TicketStatus | undefined);
+      const mentorId = req.user?.role === 'INSTRUCTOR' ? req.user.userId : undefined;
+      const tickets = await mentorshipService.listAllTickets(status as TicketStatus | undefined, mentorId);
       return res.status(200).json({ tickets });
     } catch (error: any) {
       console.error('Error listing all tickets:', error.message);

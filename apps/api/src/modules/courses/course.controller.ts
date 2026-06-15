@@ -7,6 +7,7 @@ import {
   UpdateCourseSchema,
 } from './course.service';
 import { buildCourseThumbnailUrl } from './course.upload';
+import { prisma } from '../../utils/prisma';
 
 export const courseController = {
   async create(req: AuthRequest, res: Response) {
@@ -130,6 +131,50 @@ export const courseController = {
         return res.status(404).json({ error: error.message });
       }
       return res.status(400).json({ error: error.message });
+    }
+  },
+
+  async listSessions(req: AuthRequest, res: Response) {
+    try {
+      const sessions = await prisma.liveSession.findMany({
+        where: {
+          batch: { courseId: req.params.courseId },
+        },
+        include: {
+          batch: { select: { id: true, name: true } },
+          module: { select: { id: true, title: true } },
+          recording: { select: { id: true, syncedAt: true } },
+        },
+        orderBy: { scheduledAt: 'desc' },
+      });
+      return res.json({ sessions });
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  },
+
+  async listRecordings(req: AuthRequest, res: Response) {
+    try {
+      const recordings = await prisma.recording.findMany({
+        where: {
+          session: { batch: { courseId: req.params.courseId } },
+        },
+        include: {
+          session: {
+            select: {
+              id: true,
+              scheduledAt: true,
+              joinUrl: true,
+              module: { select: { id: true, title: true } },
+              batch: { select: { id: true, name: true } },
+            },
+          },
+        },
+        orderBy: { syncedAt: 'desc' },
+      });
+      return res.json({ recordings });
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
     }
   },
 };

@@ -61,6 +61,17 @@ const overviewItems: NavItem[] = [
       { label: "Graded", href: "/instructor/assignments?status=GRADED" },
     ],
   },
+  {
+    label: "Mentorship",
+    href: "/instructor/mentorship",
+    icon: IconMessageCircle,
+    children: [
+      { label: "All Requests", href: "/instructor/mentorship" },
+      { label: "Pending", href: "/instructor/mentorship?status=OPEN" },
+      { label: "Scheduled", href: "/instructor/mentorship?status=SCHEDULED" },
+      { label: "Completed", href: "/instructor/mentorship?status=COMPLETED" },
+    ],
+  },
 ];
 
 function ChildNavLink({
@@ -311,7 +322,7 @@ export default function InstructorSidebar({
         </div>
         <button
           onClick={handleSignOut}
-          className="btn-secondary mt-2 w-full justify-center border-danger/30 text-danger hover:bg-danger/10"
+          className="btn-danger mt-2 w-full justify-center"
           aria-label="Sign out"
         >
           <IconLogout size={18} stroke={1.8} className="shrink-0" />

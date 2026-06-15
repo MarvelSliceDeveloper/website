@@ -171,7 +171,7 @@ function BatchesPageContent() {
                   </Link>
                   <button
                     onClick={() => handleDelete(batch.id, batch.name)}
-                    className="btn-secondary text-xs border-danger/30 text-danger hover:bg-danger/10"
+                    className="btn-danger text-xs"
                   >
                     Delete
                   </button>

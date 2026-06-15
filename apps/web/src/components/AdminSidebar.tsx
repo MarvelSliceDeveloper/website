@@ -16,6 +16,7 @@ import {
   IconUsers,
   IconUsersGroup,
   IconVideo,
+  IconCalendar,
   IconChevronDown,
 } from "@tabler/icons-react";
 
@@ -84,9 +85,11 @@ const overviewItems: NavItem[] = [
       { label: "Rejected", href: "/admin/enrollments?status=REJECTED" },
     ],
   },
-];
-
-const managementItems: NavItem[] = [
+  {
+    label: "Calendar",
+    href: "/admin/calendar",
+    icon: IconCalendar,
+  },
   {
     label: "Users",
     href: "/admin/users",
@@ -321,13 +324,9 @@ export default function AdminSidebar({
       <div
         className={`flex h-16 items-center border-b border-border ${collapsed ? "justify-center px-2" : "gap-2.5 px-4"
           }`}
-      >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white">
-          AD
-        </div>
+        >
         <div className={`min-w-0 flex-1 ${collapsed ? "hidden" : "block"}`}>
           <p className="truncate text-sm font-semibold text-foreground">LMS Portal</p>
-          <p className="text-xs text-muted">Admin Console</p>
         </div>
       </div>
 
@@ -338,12 +337,6 @@ export default function AdminSidebar({
         <NavGroup
           label="Overview"
           items={overviewItems}
-          pathname={pathname}
-          collapsed={collapsed}
-        />
-        <NavGroup
-          label="Management"
-          items={managementItems}
           pathname={pathname}
           collapsed={collapsed}
         />
@@ -364,7 +357,7 @@ export default function AdminSidebar({
         </div>
         <button
           onClick={() => router.push("/login")}
-          className="btn-secondary w-full justify-center border-danger/30 text-danger hover:bg-danger/10"
+          className="btn-danger w-full justify-center"
         >
           <IconLogout size={18} stroke={1.8} className="shrink-0" />
           <span className={collapsed ? "hidden" : "inline"}>Sign out</span>

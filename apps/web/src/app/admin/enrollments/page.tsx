@@ -212,7 +212,7 @@ export default function AdminEnrollmentsPage() {
                     </button>
                     <button
                       onClick={() => handleReject(enrollment.id)}
-                      className="btn-secondary text-xs border-danger/30 text-danger hover:bg-danger/10"
+                      className="btn-danger text-xs"
                     >
                       Reject
                     </button>

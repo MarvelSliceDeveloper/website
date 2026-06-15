@@ -301,7 +301,7 @@ function SessionCard({
         {/* Delete / Cancel */}
         <button
           onClick={() => onDelete(session.id)}
-          className="p-1.5 rounded-lg border border-danger/20 hover:bg-danger/10 text-muted-foreground hover:text-danger transition-colors"
+          className="btn-danger p-1.5"
           title="Delete session"
         >
           <IconTrash size={15} />

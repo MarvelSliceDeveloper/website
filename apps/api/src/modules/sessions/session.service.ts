@@ -102,6 +102,7 @@ export const sessionService = {
         teamsMeetingId,
         joinUrl,
         scheduledAt: new Date(startDateTime),
+        endedAt: new Date(endDateTime),
         createdFrom: customJoinUrl && customJoinUrl.trim() ? 'LMS_CUSTOM' : 'LMS',
         createdBy: userId,
       },
@@ -183,12 +184,14 @@ export const sessionService = {
     const now = new Date();
     if (filters.status === 'scheduled') {
       where.scheduledAt = { gt: now };
-      where.endedAt = null;
     } else if (filters.status === 'live') {
       where.scheduledAt = { lte: now };
-      where.endedAt = null;
+      where.OR = [
+        { endedAt: null },
+        { endedAt: { gte: now } },
+      ];
     } else if (filters.status === 'completed') {
-      where.endedAt = { not: null };
+      where.endedAt = { lt: now };
     }
 
     return prisma.liveSession.findMany({
