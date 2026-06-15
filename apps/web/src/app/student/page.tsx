@@ -116,7 +116,20 @@ function computeSessionStatus(scheduledAt: string, endDateTime?: string): "LIVE"
 }
 
 async function fetchPortalData(): Promise<PortalData> {
-
+  if (MOCK_ENABLED) {
+    return {
+      stats: MOCK_STATS,
+      overdueAssignments: MOCK_OVERDUE_ASSIGNMENTS,
+      enrolledCourses: MOCK_ENROLLED_COURSES,
+      batches: MOCK_BATCHES,
+      liveSessions: MOCK_LIVE_SESSIONS,
+      calendarEvents: MOCK_CALENDAR_EVENTS,
+      mentorshipTickets: MOCK_MENTORSHIP_TICKETS,
+      certificates: MOCK_CERTIFICATES,
+      catalogue: MOCK_CATALOGUE,
+      continueLearning: MOCK_CONTINUE_LEARNING,
+    };
+  }
 
   // Real API calls — run in parallel
   const [enrolled, sessionsData, calEvents, tickets, certs, catalogue, overdueAssignments] = await Promise.all([

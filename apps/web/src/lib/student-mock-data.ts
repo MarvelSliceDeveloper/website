@@ -3,7 +3,7 @@
 // Toggle with: NEXT_PUBLIC_USE_MOCK_DATA=true in .env.local
 // ──────────────────────────────────────────────────────────────────────────────
 
-export const MOCK_ENABLED = process.env.NEXT_PUBLIC_USE_MOCK_DATA = "true";
+export const MOCK_ENABLED = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";
 
 // ─── Types (shared with portal) ───────────────────────────────────────────────
 
