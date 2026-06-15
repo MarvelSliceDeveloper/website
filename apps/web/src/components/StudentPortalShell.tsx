@@ -31,6 +31,9 @@ interface StudentPortalShellProps {
   onMarkAllRead?: () => void;
   studentName?: string;
   studentEmail?: string;
+  hideProfile?: boolean;
+  hideLogo?: boolean;
+  hideHeader?: boolean;
 }
 
 export interface NotificationItem {
@@ -50,6 +53,9 @@ export default function StudentPortalShell({
   onMarkAllRead,
   studentName = "Student",
   studentEmail = "student@example.com",
+  hideProfile = false,
+  hideLogo = false,
+  hideHeader = false,
 }: StudentPortalShellProps) {
   const router = useRouter();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -104,6 +110,7 @@ export default function StudentPortalShell({
   return (
     <div className="min-h-screen bg-background">
       {/* ── Top Header Bar ─────────────────────────────────────────────────── */}
+      {!hideHeader && (
       <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-6">
 
@@ -121,14 +128,16 @@ export default function StudentPortalShell({
             </button>
 
             {/* Logo — always returns to home */}
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-linear-to-br from-primary to-violet-600">
-                <IconSchool size={17} className="text-white" />
+            {!hideLogo && (
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-linear-to-br from-primary to-violet-600">
+                  <IconSchool size={17} className="text-white" />
+                </div>
+                <span className="hidden text-sm font-bold tracking-tight text-foreground sm:inline">
+                  LMS <span className="text-primary">Portal</span>
+                </span>
               </div>
-              <span className="hidden text-sm font-bold tracking-tight text-foreground sm:inline">
-                LMS <span className="text-primary">Portal</span>
-              </span>
-            </div>
+            )}
 
             {/* Breadcrumbs */}
             {breadcrumbs.length > 0 && (
@@ -220,59 +229,62 @@ export default function StudentPortalShell({
             </div>
 
             {/* Avatar Dropdown */}
-            <div ref={avatarRef} className="relative">
-              <button
-                id="sp-avatar-btn"
-                onClick={() => { setAvatarOpen((v) => !v); setNotifOpen(false); }}
-                className="flex h-9 items-center gap-2 rounded-xl border border-border bg-card px-2.5 text-sm font-medium text-foreground transition-colors hover:border-border-hover"
-                aria-label="User menu"
-              >
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-primary to-violet-600 text-[11px] font-bold text-white">
-                  {studentName.charAt(0).toUpperCase()}
-                </div>
-                <span className="hidden sm:inline">{studentName}</span>
-                <IconChevronDown size={13} className="text-muted" />
-              </button>
+            {!hideProfile && (
+              <div ref={avatarRef} className="relative">
+                <button
+                  id="sp-avatar-btn"
+                  onClick={() => { setAvatarOpen((v) => !v); setNotifOpen(false); }}
+                  className="flex h-9 items-center gap-2 rounded-xl border border-border bg-card px-2.5 text-sm font-medium text-foreground transition-colors hover:border-border-hover"
+                  aria-label="User menu"
+                >
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-primary to-violet-600 text-[11px] font-bold text-white">
+                    {studentName.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="hidden sm:inline">{studentName}</span>
+                  <IconChevronDown size={13} className="text-muted" />
+                </button>
 
-              {avatarOpen && (
-                <div className="absolute right-0 top-11 z-50 w-44 rounded-2xl border border-border bg-card shadow-2xl">
-                  <div className="border-b border-border px-4 py-3">
-                    <p className="text-sm font-semibold text-foreground">{studentName}</p>
-                    <p className="text-[11px] text-muted">{studentEmail}</p>
-                  </div>
-                  <div className="p-1.5">
-                    {[
-                      { icon: IconUser, label: "Profile", id: "sp-avatar-profile" },
-                      { icon: IconSettings, label: "Settings", id: "sp-avatar-settings" },
-                    ].map(({ icon: Icon, label, id }) => (
+                {avatarOpen && (
+                  <div className="absolute right-0 top-11 z-50 w-44 rounded-2xl border border-border bg-card shadow-2xl">
+                    <div className="border-b border-border px-4 py-3">
+                      <p className="text-sm font-semibold text-foreground">{studentName}</p>
+                      <p className="text-[11px] text-muted">{studentEmail}</p>
+                    </div>
+                    <div className="p-1.5">
+                      {[
+                        { icon: IconUser, label: "Profile", id: "sp-avatar-profile" },
+                        { icon: IconSettings, label: "Settings", id: "sp-avatar-settings" },
+                      ].map(({ icon: Icon, label, id }) => (
+                        <button
+                          key={id}
+                          id={id}
+                          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-card-hover hover:text-foreground"
+                        >
+                          <Icon size={15} stroke={1.8} />
+                          {label}
+                        </button>
+                      ))}
+                      <div className="my-1 border-t border-border" />
                       <button
-                        key={id}
-                        id={id}
-                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-card-hover hover:text-foreground"
+                        id="sp-avatar-signout"
+                        onClick={handleSignOut}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-danger transition-colors hover:bg-danger/10"
                       >
-                        <Icon size={15} stroke={1.8} />
-                        {label}
+                        <IconLogout size={15} stroke={1.8} />
+                        Sign Out
                       </button>
-                    ))}
-                    <div className="my-1 border-t border-border" />
-                    <button
-                      id="sp-avatar-signout"
-                      onClick={handleSignOut}
-                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-danger transition-colors hover:bg-danger/10"
-                    >
-                      <IconLogout size={15} stroke={1.8} />
-                      Sign Out
-                    </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </header>
+      )}
 
       {/* ── Main Content ─────────────────────────────────────────────────────── */}
-      <main className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6">
+      <main className={`w-full ${hideHeader ? "" : "mx-auto max-w-7xl px-4 py-6 md:px-6"}`}>
         {children}
       </main>
     </div>

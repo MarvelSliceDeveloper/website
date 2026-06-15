@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   IconBook,
+  IconChartBar,
   IconClipboardCheck,
   IconLayoutDashboard,
   IconLayoutSidebarLeftCollapse,
@@ -67,6 +68,11 @@ const overviewItems: NavItem[] = [
       { label: "Upcoming", href: "/admin/sessions?status=UPCOMING" },
       { label: "Past", href: "/admin/sessions?status=PAST" },
     ],
+  },
+  {
+    label: "Reports",
+    href: "/admin/reports",
+    icon: IconChartBar,
   },
   {
     label: "Enrollments",
@@ -368,3 +374,5 @@ export default function AdminSidebar({
     </aside>
   );
 }
+
+

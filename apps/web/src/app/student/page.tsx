@@ -116,7 +116,20 @@ function computeSessionStatus(scheduledAt: string, endDateTime?: string): "LIVE"
 }
 
 async function fetchPortalData(): Promise<PortalData> {
-
+  if (MOCK_ENABLED) {
+    return {
+      stats: MOCK_STATS,
+      overdueAssignments: MOCK_OVERDUE_ASSIGNMENTS,
+      enrolledCourses: MOCK_ENROLLED_COURSES,
+      batches: MOCK_BATCHES,
+      liveSessions: MOCK_LIVE_SESSIONS,
+      calendarEvents: MOCK_CALENDAR_EVENTS,
+      mentorshipTickets: MOCK_MENTORSHIP_TICKETS,
+      certificates: MOCK_CERTIFICATES,
+      catalogue: MOCK_CATALOGUE,
+      continueLearning: MOCK_CONTINUE_LEARNING,
+    };
+  }
 
   // Real API calls — run in parallel
   const [enrolled, sessionsData, calEvents, tickets, certs, catalogue, overdueAssignments] = await Promise.all([
@@ -506,7 +519,7 @@ export default function StudentPortalPage() {
       case "COURSE_CONTENT": {
         const courseId = currentView.params?.courseId ?? "";
         if (!courseId) return <NotFoundView />;
-        return <CourseContentView courseId={courseId} navigate={navigate} />;
+        return <CourseContentView courseId={courseId} navigate={navigate} goBack={goBack} />;
       }
 
       case "ASSIGNMENT_OVERDUE":
@@ -538,6 +551,8 @@ export default function StudentPortalPage() {
     }
   }
 
+  const isCourseContent = currentView.view === "COURSE_CONTENT";
+
   return (
     <StudentPortalShell
       breadcrumbs={breadcrumbs}
@@ -545,6 +560,9 @@ export default function StudentPortalPage() {
       onBack={goBack}
       studentName={studentName}
       studentEmail={studentEmail}
+      hideProfile={isCourseContent}
+      hideLogo={isCourseContent}
+      hideHeader={isCourseContent}
     >
 
       {/* View transition wrapper */}

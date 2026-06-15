@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import {
@@ -23,6 +23,18 @@ type Batch = {
 };
 
 export default function InstructorBatchesPage() {
+  return (
+    <Suspense fallback={
+      <div className="glass-card p-12 text-center">
+        <p className="text-muted animate-pulse">Loading batches...</p>
+      </div>
+    }>
+      <BatchesPageContent />
+    </Suspense>
+  );
+}
+
+function BatchesPageContent() {
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status");
   const [batches, setBatches] = useState<Batch[]>([]);

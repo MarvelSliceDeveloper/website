@@ -50,6 +50,7 @@ import { attendanceRouter } from './modules/attendance/attendance.routes';
 import { recordingSyncJob } from './jobs/recording-sync.job';
 import { enrollmentRouter } from './modules/enrollments/enrollment.routes';
 import { assignmentRouter } from './modules/assignments/assignment.routes';
+import { dashboardRouter } from './modules/dashboard/dashboard.routes';
 
 const app = express();
 
@@ -83,6 +84,7 @@ app.use('/api/attendance', attendanceRouter);
 app.use('/api/admin/enrollments', enrollmentRouter);
 app.use('/api/assignments', assignmentRouter);
 app.use('/api/webhooks', webhookRouter);
+app.use('/api/admin/dashboard', dashboardRouter);
 
 // Events webhook — for Teams-created meetings (no auth required)
 app.post('/api/webhooks/events', eventsWebhookController.handleEventsWebhook);
@@ -112,3 +114,4 @@ app.listen(PORT, () => {
   // Start the background Teams recording poller
   recordingSyncJob.start();
 });
+
