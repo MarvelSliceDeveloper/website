@@ -1,8 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import type { CalendarEvent as ApiCalendarEvent } from "@/lib/student-mock-data";
-
+import type { CalendarEvent } from "@/lib/student-mock-data";
 
 const CalendarWidget = dynamic(() => import("./CalendarWidget"), {
   ssr: false,
@@ -12,16 +11,6 @@ const CalendarWidget = dynamic(() => import("./CalendarWidget"), {
     </div>
   ),
 });
-
-
-interface CalendarEvent {
-  id: string;
-  title: string;
-  startAt: string;
-  endAt: string;
-  type: "live" | "mentorship" | "upcoming";
-  joinUrl?: string;
-}
 
 interface CalendarViewProps {
   events: CalendarEvent[];
@@ -35,13 +24,13 @@ function eventColor(type: CalendarEvent["type"]): string {
   return "#25c0e8";
 }
 
-function getSessionStatus(startAt: string, endAt: string): SessionStatus {
+function getSessionStatus(start: string, end: string): SessionStatus {
   const now = Date.now();
-  const start = new Date(startAt).getTime();
-  const end = new Date(endAt).getTime();
+  const startTime = new Date(start).getTime();
+  const endTime = new Date(end).getTime();
 
-  if (now < start) return "upcoming";
-  if (now > end) return "past";
+  if (now < startTime) return "upcoming";
+  if (now > endTime) return "past";
   return "present";
 }
 
@@ -62,8 +51,8 @@ export default function CalendarView({ events }: CalendarViewProps) {
     ? events.map((e) => ({
       id: e.id,
       title: e.title,
-      start: e.startAt,
-      end: e.endAt,
+      start: e.start,
+      end: e.end,
       backgroundColor: eventColor(e.type),
       borderColor: eventColor(e.type),
       url: e.joinUrl,
@@ -117,9 +106,9 @@ export default function CalendarView({ events }: CalendarViewProps) {
         ) : (
           <div className="space-y-2">
             {events.map((e) => {
-              const start = new Date(e.startAt);
+              const start = new Date(e.start);
               const isValid = !isNaN(start.getTime());
-              const status = getSessionStatus(e.startAt, e.endAt);
+              const status = getSessionStatus(e.start, e.end);
 
               return (
                 <div key={e.id} className="glass-card flex items-center gap-4 p-4">

@@ -248,7 +248,7 @@ export default function HomeView({
                       <div className="min-w-0">
                         <p className="truncate font-medium text-foreground text-sm">{event.title}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {new Date(event.startAt).toLocaleDateString()}
+                          {new Date(event.start).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
