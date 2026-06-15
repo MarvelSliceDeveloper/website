@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import {
@@ -58,6 +58,18 @@ type AttendanceRecord = {
 };
 
 export default function InstructorSessionsPage() {
+  return (
+    <Suspense fallback={
+      <div className="glass-card p-12 text-center">
+        <p className="text-muted animate-pulse">Loading sessions...</p>
+      </div>
+    }>
+      <SessionsPageContent />
+    </Suspense>
+  );
+}
+
+function SessionsPageContent() {
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status");
   const [sessions, setSessions] = useState<Session[]>([]);

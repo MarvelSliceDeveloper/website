@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import {
@@ -92,6 +92,18 @@ type FormQuestion = {
 };
 
 export default function InstructorAssignmentsPage() {
+  return (
+    <Suspense fallback={
+      <div className="glass-card p-12 text-center">
+        <p className="text-muted animate-pulse">Loading assignments...</p>
+      </div>
+    }>
+      <AssignmentsPageContent />
+    </Suspense>
+  );
+}
+
+function AssignmentsPageContent() {
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status");
   const [activeTab, setActiveTab] = useState<"list" | "create">("list");
