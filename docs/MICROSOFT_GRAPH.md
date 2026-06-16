@@ -539,3 +539,4 @@ API_URL=http://localhost:4000
 - [API.md](./API.md) — REST endpoint reference (calendar, sessions, recordings, webhooks)
 - [SYSTEM_GUIDE.md](./SYSTEM_GUIDE.md) — High-level LMS workflows
 - [api_layer.md](./api_layer.md) — API architecture notes
+- [update/MICROSOFT_INTEGRATION_PLAN.md](./update/MICROSOFT_INTEGRATION_PLAN.md) — Full feature roadmap and implementation plans for all Microsoft 365 integration opportunities

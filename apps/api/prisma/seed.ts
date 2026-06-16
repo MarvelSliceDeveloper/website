@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // --- Admin user ---
+  // ─── Admin ────────────────────────────────────────────────────────────────
   const adminHash = await bcrypt.hash('admin123', 10);
   const admin = await prisma.user.upsert({
     where: { email: 'admin@lms.local' },
@@ -22,134 +22,286 @@ async function main() {
   });
   console.log('✅ Admin:', admin.email);
 
-  // --- Instructor user ---
-  const instructorHash = await bcrypt.hash('instructor123', 10);
-  const instructor = await prisma.user.upsert({
-    where: { email: 'instructor@lms.local' },
-    update: {},
-    create: {
-      name: 'Demo Instructor',
-      email: 'instructor@lms.local',
-      passwordHash: instructorHash,
-      role: 'INSTRUCTOR',
-    },
-  });
-  console.log('✅ Instructor:', instructor.email);
+  // ─── Instructors ─────────────────────────────────────────────────────────
+  const instructors = await Promise.all([
+    upsertUser('instructor@lms.local', 'Demo Instructor', 'instructor123', 'INSTRUCTOR'),
+    upsertUser('ravi.kumar@lms.local', 'Ravi Kumar', 'instructor123', 'INSTRUCTOR'),
+    upsertUser('priya.mehta@lms.local', 'Priya Mehta', 'instructor123', 'INSTRUCTOR'),
+    upsertUser('suresh.p@lms.local', 'Suresh P.', 'instructor123', 'INSTRUCTOR'),
+    upsertUser('vikram.j@lms.local', 'Vikram J.', 'instructor123', 'INSTRUCTOR'),
+    upsertUser('anita.r@lms.local', 'Anita R.', 'instructor123', 'INSTRUCTOR'),
+  ]);
+  const [demoInstructor, ravi, priya, suresh, vikram, anita] = instructors;
+  console.log('✅ Instructors created');
 
-  // --- Student user ---
-  const studentHash = await bcrypt.hash('student123', 10);
-  const student = await prisma.user.upsert({
-    where: { email: 'student@lms.local' },
-    update: {},
-    create: {
-      name: 'Demo Student',
-      email: 'student@lms.local',
-      passwordHash: studentHash,
-      role: 'STUDENT',
-    },
-  });
-  console.log('✅ Student:', student.email);
+  // ─── Students ─────────────────────────────────────────────────────────────
+  const students = await Promise.all([
+    upsertUser('student@lms.local', 'Demo Student', 'student123', 'STUDENT'),
+    upsertUser('amit.sharma@example.com', 'Amit Sharma', 'student123', 'STUDENT'),
+    upsertUser('neha.patel@example.com', 'Neha Patel', 'student123', 'STUDENT'),
+    upsertUser('rohit.singh@example.com', 'Rohit Singh', 'student123', 'STUDENT'),
+    upsertUser('priya.desai@example.com', 'Priya Desai', 'student123', 'STUDENT'),
+    upsertUser('arjun.nair@example.com', 'Arjun Nair', 'student123', 'STUDENT'),
+    upsertUser('sneha.reddy@example.com', 'Sneha Reddy', 'student123', 'STUDENT'),
+  ]);
+  const [demoStudent, ...moreStudents] = students;
+  console.log('✅ Students created');
 
-  // --- Demo Course ---
-  const course = await prisma.course.upsert({
-    where: { slug: 'intro-to-typescript' },
+  // ─── Courses ──────────────────────────────────────────────────────────────
+  const pythonCourse = await upsertCourse({
+    slug: 'python-for-data-science',
+    title: 'Python for Data Science',
+    description: 'Master Python for data analysis, visualization, and machine learning.',
+    price: 4999,
+    category: 'Data Science',
+    createdBy: ravi.id,
+    tags: ['python', 'data-science', 'pandas', 'numpy'],
+    learningObjectives: [
+      'Write Python scripts with confidence',
+      'Analyze data with Pandas & NumPy',
+      'Create visualizations with Matplotlib',
+      'Build machine learning models',
+    ],
+  });
+
+  const reactCourse = await upsertCourse({
+    slug: 'react-full-stack',
+    title: 'React Full Stack',
+    description: 'Build modern web apps with React, Next.js, and server components.',
+    price: 3999,
+    category: 'Frontend',
+    createdBy: priya.id,
+    tags: ['react', 'nextjs', 'frontend', 'javascript'],
+    learningObjectives: [
+      'Build reusable React components',
+      'Master React Hooks and state management',
+      'Build full-stack apps with Next.js',
+      'Deploy production-ready applications',
+    ],
+  });
+
+  const awsCourse = await upsertCourse({
+    slug: 'aws-cloud-architecture',
+    title: 'AWS Cloud Architecture',
+    description: 'Learn AWS cloud computing from fundamentals to advanced architecture patterns.',
+    price: 5499,
+    category: 'Cloud',
+    createdBy: suresh.id,
+    tags: ['aws', 'cloud', 'devops', 'infrastructure'],
+    learningObjectives: [
+      'Design and deploy AWS infrastructure',
+      'Master EC2, S3, VPC, and IAM',
+      'Implement auto-scaling and high availability',
+      'Apply cloud security best practices',
+    ],
+  });
+
+  const jsCourse = await upsertCourse({
+    slug: 'javascript-foundations',
+    title: 'JavaScript Foundations',
+    description: 'Core JavaScript concepts for beginners — from variables to closures.',
+    price: 2499,
+    category: 'Programming',
+    createdBy: anita.id,
+    tags: ['javascript', 'programming', 'web'],
+    learningObjectives: [
+      'Understand JS fundamentals and ES6+ features',
+      'Work with DOM and browser APIs',
+      'Master async programming with Promises',
+      'Build interactive web pages',
+    ],
+  });
+
+  console.log('✅ Courses created');
+
+  // ─── Modules ──────────────────────────────────────────────────────────────
+  await upsertModules(pythonCourse.id, [
+    { title: 'Python Basics', description: 'Variables, data types, control flow.', order: 0 },
+    { title: 'Data Structures', description: 'Lists, tuples, dicts, sets.', order: 1 },
+    { title: 'File & IO', description: 'Reading and writing files.', order: 2 },
+    { title: 'Pandas & NumPy', description: 'Data manipulation with Pandas and NumPy.', order: 3 },
+    { title: 'Visualisation', description: 'Matplotlib and Seaborn.', order: 4 },
+  ]);
+
+  await upsertModules(reactCourse.id, [
+    { title: 'React Basics', description: 'Components, JSX, props.', order: 0 },
+    { title: 'Hooks & State', description: 'useState, useEffect, custom hooks.', order: 1 },
+    { title: 'Server Components', description: 'React Server Components and Next.js.', order: 2 },
+  ]);
+
+  await upsertModules(awsCourse.id, [
+    { title: 'AWS Fundamentals', description: 'Regions, AZs, IAM basics.', order: 0 },
+    { title: 'Compute & Storage', description: 'EC2, S3, EBS, CloudFront.', order: 1 },
+    { title: 'Networking & VPC', description: 'VPC, subnets, NAT, security groups.', order: 2 },
+    { title: 'Security & IAM', description: 'IAM policies, roles, best practices.', order: 3 },
+  ]);
+
+  await upsertModules(jsCourse.id, [
+    { title: 'JS Basics', description: 'Variables, functions, objects.', order: 0 },
+    { title: 'DOM & Events', description: 'Manipulating the DOM, event handling.', order: 1 },
+    { title: 'Async JS', description: 'Callbacks, Promises, async/await.', order: 2 },
+  ]);
+
+  console.log('✅ Modules created');
+
+  // ─── Batches ──────────────────────────────────────────────────────────────
+  const pythonBatch = await upsertBatch({
+    courseId: pythonCourse.id,
+    instructorId: ravi.id,
+    name: 'Batch Jan 2025',
+    startDate: new Date('2025-01-15'),
+    endDate: new Date('2025-03-30'),
+    maxStudents: 30,
+    status: 'ACTIVE',
+    description: 'Python for Data Science cohort.',
+  });
+
+  const reactBatch = await upsertBatch({
+    courseId: reactCourse.id,
+    instructorId: priya.id,
+    name: 'Batch Feb 2025',
+    startDate: new Date('2025-02-01'),
+    endDate: new Date('2025-04-15'),
+    maxStudents: 25,
+    status: 'ACTIVE',
+    description: 'React Full Stack cohort.',
+  });
+
+  const awsBatch = await upsertBatch({
+    courseId: awsCourse.id,
+    instructorId: suresh.id,
+    name: 'Batch Mar 2025',
+    startDate: new Date('2025-03-01'),
+    endDate: new Date('2025-05-30'),
+    maxStudents: 30,
+    status: 'ACTIVE',
+    description: 'AWS Cloud Architecture cohort.',
+  });
+
+  const jsBatch = await upsertBatch({
+    courseId: jsCourse.id,
+    instructorId: anita.id,
+    name: 'Batch Aug 2024',
+    startDate: new Date('2024-08-01'),
+    endDate: new Date('2024-09-30'),
+    maxStudents: 25,
+    status: 'COMPLETED',
+    description: 'JavaScript Foundations completed cohort.',
+  });
+
+  console.log('✅ Batches created');
+
+  // ─── Enrollments ──────────────────────────────────────────────────────────
+  const enrollmentPairs: [typeof demoStudent, string][] = [
+    [demoStudent, pythonBatch.id],
+    [demoStudent, reactBatch.id],
+    [demoStudent, awsBatch.id],
+    [demoStudent, jsBatch.id],
+    [moreStudents[0], pythonBatch.id],
+    [moreStudents[1], pythonBatch.id],
+    [moreStudents[2], reactBatch.id],
+    [moreStudents[3], awsBatch.id],
+    [moreStudents[4], pythonBatch.id],
+    [moreStudents[5], reactBatch.id],
+    [moreStudents[6], awsBatch.id],
+  ];
+
+  for (const [student, batchId] of enrollmentPairs) {
+    const exists = await prisma.enrollmentRequest.findFirst({
+      where: { userId: student.id, batchId },
+    });
+    if (!exists) {
+      await prisma.enrollmentRequest.create({
+        data: {
+          userId: student.id,
+          courseId: (await prisma.batch.findUnique({ where: { id: batchId } }))!.courseId,
+          batchId,
+          status: 'APPROVED',
+          reviewedAt: new Date(),
+        },
+      });
+    }
+  }
+
+  console.log('✅ Enrollments created');
+  console.log('\n🎉 Seed complete!');
+  console.log('   Admin (1):       admin@lms.local / admin123');
+  console.log('   Instructors (6): instructor@lms.local / instructor123 (Ravi, Priya, Suresh, Vikram, Anita)');
+  console.log('   Students (7):    student@lms.local / student123 (Amit, Neha, Rohit, Priya D, Arjun, Sneha)');
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+async function upsertUser(email: string, name: string, password: string, role: 'ADMIN' | 'INSTRUCTOR' | 'STUDENT') {
+  const hash = await bcrypt.hash(password, 10);
+  return prisma.user.upsert({
+    where: { email },
+    update: {},
+    create: { name, email, passwordHash: hash, role },
+  });
+}
+
+async function upsertCourse(data: {
+  slug: string;
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  createdBy: string;
+  tags: string[];
+  learningObjectives: string[];
+}) {
+  return prisma.course.upsert({
+    where: { slug: data.slug },
     update: {},
     create: {
-      title: 'Introduction to TypeScript',
-      slug: 'intro-to-typescript',
-      description: 'A comprehensive beginner course on TypeScript — types, interfaces, generics, and more.',
-      price: 2999,
-      category: 'Programming',
+      ...data,
       status: 'PUBLISHED',
       publishedAt: new Date(),
-      createdBy: admin.id,
-      tags: ['typescript', 'javascript', 'programming'],
-      learningObjectives: [
-        'Understand TypeScript type system',
-        'Build type-safe applications',
-        'Use generics and utility types',
-      ],
     },
   });
-  console.log('✅ Course:', course.title);
-
-  // --- Demo Modules ---
-  const existingModules = await prisma.module.count({ where: { courseId: course.id } });
-  if (existingModules === 0) {
-    await prisma.module.createMany({
-      data: [
-        {
-          courseId: course.id,
-          title: 'Getting Started with TypeScript',
-          description: 'Setup, tooling, and your first .ts file.',
-          order: 0,
-          videoType: 'youtube',
-          videoUrl: 'https://www.youtube.com/watch?v=BwuLxPH8IDs',
-          videoEmbedId: 'BwuLxPH8IDs',
-          durationSeconds: 1200,
-          isFreePreview: true,
-        },
-        {
-          courseId: course.id,
-          title: 'Types and Interfaces',
-          description: 'Primitive types, type aliases, and interface definitions.',
-          order: 1,
-          videoType: 'youtube',
-          videoUrl: 'https://www.youtube.com/watch?v=WlsTVZ0nFWk',
-          videoEmbedId: 'WlsTVZ0nFWk',
-          durationSeconds: 1800,
-          isFreePreview: false,
-        },
-        {
-          courseId: course.id,
-          title: 'Generics and Utility Types',
-          description: 'Building reusable code with generics, Partial, Required, and more.',
-          order: 2,
-          durationSeconds: 2400,
-          isFreePreview: false,
-        },
-      ],
-    });
-    console.log('✅ Modules created');
-  }
-
-  // --- Demo Batch ---
-  const existingBatch = await prisma.batch.findFirst({
-    where: { courseId: course.id },
-  });
-  if (!existingBatch) {
-    const batch = await prisma.batch.create({
-      data: {
-        courseId: course.id,
-        instructorId: instructor.id,
-        name: 'TypeScript Batch — June 2025',
-        startDate: new Date('2025-06-01'),
-        endDate: new Date('2025-08-31'),
-        maxStudents: 30,
-        status: 'UPCOMING',
-        description: 'First cohort for the TypeScript course.',
-      },
-    });
-    console.log('✅ Batch:', batch.name);
-
-    // Enroll demo student
-    await prisma.enrollmentRequest.create({
-      data: {
-        userId: student.id,
-        courseId: course.id,
-        batchId: batch.id,
-        status: 'APPROVED',
-        reviewedAt: new Date(),
-      },
-    });
-    console.log('✅ Student enrolled in batch');
-  }
-
-  console.log('\n🎉 Seed complete!');
-  console.log('   Admin:      admin@lms.local / admin123');
-  console.log('   Instructor: instructor@lms.local / instructor123');
-  console.log('   Student:    student@lms.local / student123');
 }
+
+async function upsertModules(courseId: string, modules: { title: string; description: string; order: number }[]) {
+  const existing = await prisma.module.count({ where: { courseId } });
+  if (existing > 0) return;
+
+  await prisma.module.createMany({
+    data: modules.map((m) => ({
+      courseId,
+      title: m.title,
+      description: m.description,
+      order: m.order,
+      durationSeconds: 1800,
+      isFreePreview: m.order === 0,
+    })),
+  });
+}
+
+async function upsertBatch(data: {
+  courseId: string;
+  instructorId: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  maxStudents: number;
+  status: 'UPCOMING' | 'ACTIVE' | 'COMPLETED';
+  description: string;
+}) {
+  const existing = await prisma.batch.findFirst({
+    where: { courseId: data.courseId, name: data.name },
+  });
+  if (existing) return existing;
+
+  return prisma.batch.create({ data });
+}
+
+main()
+  .catch((e: unknown) => {
+    console.error('❌ Seed failed:', e);
+    process.exit(1);
+  })
+  .finally(() => prisma.$disconnect());
 
 main()
   .catch((e: unknown) => {

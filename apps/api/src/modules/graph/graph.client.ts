@@ -1,4 +1,5 @@
 import { getTokenForUser, refreshMsTokenForUser, getAppToken } from './graph.auth';
+import { prisma } from '../../utils/prisma';
 
 const GRAPH_BASE_URL = 'https://graph.microsoft.com/v1.0';
 
@@ -46,6 +47,46 @@ function mapGraphError(statusCode: number, data: any): GraphError {
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+const ACTION_MAP: Record<string, string> = {
+  '/me/onlineMeetings': 'createOnlineMeeting',
+  '/onlineMeetings': 'getOnlineMeeting',
+  '/me/events': 'getCalendarView',
+  '/events': 'getCalendarView',
+  '/me/calendar': 'getCalendarEvents',
+  '/users': 'getMsUserProfile',
+  '/me': 'getMsUserProfile',
+  '/communications/callRecords': 'getCallRecords',
+  '/subscriptions': 'createSubscription',
+};
+
+function inferAction(endpoint: string): string {
+  const clean = endpoint.replace(GRAPH_BASE_URL, '').split('?')[0];
+  for (const [pattern, action] of Object.entries(ACTION_MAP)) {
+    if (clean.includes(pattern)) return action;
+  }
+  return `request_${clean.replace(/[/]/g, '_')}`;
+}
+
+async function logGraphApi(userId: string | undefined, endpoint: string, options: RequestInit, statusCode: number | null, errorMsg: string | null, startMs: number) {
+  if (!userId) return;
+  const durationMs = Date.now() - startMs;
+  try {
+    await prisma.graphApiLog.create({
+      data: {
+        userId,
+        action: inferAction(endpoint),
+        endpoint: `${options.method || 'GET'} ${endpoint.replace(GRAPH_BASE_URL, '')}`,
+        statusCode,
+        success: statusCode !== null && statusCode < 400,
+        errorMsg,
+        durationMs,
+      },
+    });
+  } catch {
+    // silently fail — logging should never break the main flow
+  }
+}
+
 interface GraphClientOptions {
   userId?: string; // if provided, uses delegated permissions
   useAppToken?: boolean; // if true, uses application permissions
@@ -91,12 +132,13 @@ export class GraphClient {
     const maxRetries = 3;
     let attempts = 0;
     let forceRefresh = false;
+    const startMs = Date.now();
 
     while (attempts < maxRetries) {
       attempts++;
       
       const token = await this.getValidToken(forceRefresh);
-      forceRefresh = false; // reset after refreshing
+      forceRefresh = false;
 
       const url = endpoint.startsWith('http') ? endpoint : `${GRAPH_BASE_URL}${endpoint}`;
       
@@ -111,9 +153,12 @@ export class GraphClient {
 
       if (response.ok) {
         if (response.status === 204) {
+          logGraphApi(this.userId, endpoint, options, 204, null, startMs);
           return null as any;
         }
-        return await response.json() as T;
+        const result = await response.json() as T;
+        logGraphApi(this.userId, endpoint, options, response.status, null, startMs);
+        return result;
       }
 
       const errorData = await response.json().catch(() => null);
@@ -122,10 +167,11 @@ export class GraphClient {
       if (response.status === 401) {
         if (attempts < maxRetries) {
           forceRefresh = true;
-          continue; // Try again with a new token
+          continue;
         }
-        // Last attempt — throw the proper mapped error
-        throw mapGraphError(response.status, errorData);
+        const err = mapGraphError(response.status, errorData);
+        logGraphApi(this.userId, endpoint, options, response.status, err.message, startMs);
+        throw err;
       }
 
       // Handle 429 Too Many Requests -> Backoff
@@ -136,7 +182,9 @@ export class GraphClient {
           await wait(delay);
           continue;
         }
-        throw mapGraphError(response.status, errorData);
+        const err = mapGraphError(response.status, errorData);
+        logGraphApi(this.userId, endpoint, options, response.status, err.message, startMs);
+        throw err;
       }
 
       // Handle 503/504 Service Unavailable -> Backoff
@@ -146,14 +194,20 @@ export class GraphClient {
           await wait(delay);
           continue;
         }
-        throw mapGraphError(response.status, errorData);
+        const err = mapGraphError(response.status, errorData);
+        logGraphApi(this.userId, endpoint, options, response.status, err.message, startMs);
+        throw err;
       }
 
       // Other errors — do not retry
-      throw mapGraphError(response.status, errorData);
+      const err = mapGraphError(response.status, errorData);
+      logGraphApi(this.userId, endpoint, options, response.status, err.message, startMs);
+      throw err;
     }
 
-    throw new GraphError(500, 'MaxRetriesExceeded', 'Maximum retries exceeded calling Microsoft Graph API');
+    const err = new GraphError(500, 'MaxRetriesExceeded', 'Maximum retries exceeded calling Microsoft Graph API');
+    logGraphApi(this.userId, endpoint, options, 500, err.message, startMs);
+    throw err;
   }
 
   public get(endpoint: string, options?: RequestInit) {

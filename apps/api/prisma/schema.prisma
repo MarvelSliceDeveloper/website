@@ -346,3 +346,18 @@ model StudentQuestionResponse {
 
   @@unique([submissionId, questionId])
 }
+
+model GraphApiLog {
+  id          String   @id @default(cuid())
+  userId      String   // Admin who performed the action
+  action      String   // e.g. "createOnlineMeeting", "getCalendarView", "syncRecording"
+  endpoint    String   // e.g. "POST /me/onlineMeetings", "GET /me/events"
+  statusCode  Int?     // HTTP response status
+  success     Boolean  @default(false)
+  errorMsg    String?  // Error message if failed
+  durationMs  Int?     // How long the request took
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}

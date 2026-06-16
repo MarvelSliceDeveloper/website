@@ -164,16 +164,26 @@ const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
 const tomorrowPlusTwoHours = new Date(now.getTime() + 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
 const inTwoDays = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString();
 const inTwoDaysPlusTwoHours = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
+const inThreeDays = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString();
+const inThreeDaysPlusTwoHours = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
+const inFourDays = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000).toISOString();
+const inFourDaysPlusTwoHours = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
+const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+const inTwoWeeks = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString();
 const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
 const yesterdayPlusTwoHours = new Date(now.getTime() - 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
+const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString();
+const threeDaysAgoPlusTwoHours = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
+const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+const lastWeekPlusTwoHours = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
 export const MOCK_STATS: DashboardStats = {
-  enrolledCount: 12,
-  completedCount: 8,
-  liveTodayCount: 2,
-  certificatesCount: 3,
+  enrolledCount: 18,
+  completedCount: 10,
+  liveTodayCount: 3,
+  certificatesCount: 5,
 };
 
 export const MOCK_OVERDUE_ASSIGNMENTS: OverdueAssignment[] = [
@@ -203,6 +213,24 @@ export const MOCK_OVERDUE_ASSIGNMENTS: OverdueAssignment[] = [
     dueDate: "2026-04-24T00:00:00.000Z",
     status: "SUBMITTED",
     type: "QUIZ",
+  },
+  {
+    id: "oa4",
+    courseName: "AWS Cloud Architecture",
+    unitName: "Module 3 — Networking",
+    assignmentName: "VPC Design Quiz",
+    dueDate: tomorrow,
+    status: "PENDING",
+    type: "QUIZ",
+  },
+  {
+    id: "oa5",
+    courseName: "DevOps with Docker & K8s",
+    unitName: "Module 2 — Containers",
+    assignmentName: "Dockerfile Best Practices",
+    dueDate: inTwoDays,
+    status: "PENDING",
+    type: "ASSIGNMENT",
   },
 ];
 
@@ -246,6 +274,26 @@ export const MOCK_ENROLLED_COURSES: EnrolledCourse[] = [
     instructor: "Anita R.",
     progress: 100,
     status: "COMPLETED",
+  },
+  {
+    id: "c5",
+    title: "AWS Cloud Architecture",
+    thumbnail: "☁️",
+    batchId: "b3",
+    batchLabel: "Mar 2025",
+    instructor: "Suresh P.",
+    progress: 28,
+    status: "ACTIVE",
+  },
+  {
+    id: "c6",
+    title: "DevOps with Docker & K8s",
+    thumbnail: "🐳",
+    batchId: "",
+    batchLabel: "—",
+    instructor: "Vikram J.",
+    progress: 0,
+    status: "PENDING",
   },
 ];
 
@@ -330,6 +378,54 @@ export const MOCK_BATCHES: Record<string, Batch> = {
       { id: "r5", sessionId: "s4", moduleId: "m1", dayLabel: "Day 1", title: "React Basics", duration: "1h 45m", watchedPercent: 100, videoUrl: "" },
     ],
   },
+  b3: {
+    id: "b3",
+    courseTitle: "AWS Cloud Architecture",
+    batchLabel: "Batch Mar 2025",
+    instructor: "Suresh P.",
+    startDate: "1 Mar 2025",
+    endDate: "30 May 2025",
+    overallProgress: 28,
+    modules: [
+      { id: "m1", title: "AWS Fundamentals", completionPercent: 80 },
+      { id: "m2", title: "Compute & Storage", completionPercent: 40 },
+      { id: "m3", title: "Networking & VPC", completionPercent: 0 },
+      { id: "m4", title: "Security & IAM", completionPercent: 0 },
+    ],
+    sessions: [
+      {
+        id: "s5",
+        dayLabel: "Day 8",
+        title: "VPC Design & Subnetting",
+        status: "UPCOMING",
+        scheduledAt: inThreeDays,
+        endDateTime: inThreeDaysPlusTwoHours,
+        instructor: "Suresh P.",
+      },
+      {
+        id: "s6",
+        dayLabel: "Day 7",
+        title: "EC2 & Auto Scaling",
+        status: "PAST",
+        scheduledAt: threeDaysAgo,
+        endDateTime: threeDaysAgoPlusTwoHours,
+        instructor: "Suresh P.",
+      },
+      {
+        id: "s7",
+        dayLabel: "Day 6",
+        title: "S3 & CloudFront",
+        status: "PAST",
+        scheduledAt: lastWeek,
+        endDateTime: lastWeekPlusTwoHours,
+        instructor: "Suresh P.",
+      },
+    ],
+    recordings: [
+      { id: "r6", sessionId: "s6", moduleId: "m2", dayLabel: "Day 7", title: "EC2 & Auto Scaling", duration: "2h 10m", watchedPercent: 40, videoUrl: "" },
+      { id: "r7", sessionId: "s7", moduleId: "m1", dayLabel: "Day 6", title: "S3 & CloudFront", duration: "1h 55m", watchedPercent: 100, videoUrl: "" },
+    ],
+  },
 };
 
 export const MOCK_LIVE_SESSIONS: LiveSession[] = [
@@ -366,6 +462,26 @@ export const MOCK_LIVE_SESSIONS: LiveSession[] = [
   },
   {
     id: "ls4",
+    title: "VPC Design & Subnetting — Day 8",
+    courseTitle: "AWS Cloud Architecture",
+    instructor: "Suresh P.",
+    batchLabel: "Mar 2025",
+    status: "UPCOMING",
+    scheduledAt: inThreeDays,
+    endDateTime: inThreeDaysPlusTwoHours,
+  },
+  {
+    id: "ls5",
+    title: "DevOps CI/CD Pipeline — Day 4",
+    courseTitle: "DevOps with Docker & K8s",
+    instructor: "Vikram J.",
+    batchLabel: "Apr 2025",
+    status: "UPCOMING",
+    scheduledAt: oneWeekFromNow,
+    endDateTime: inTwoWeeks,
+  },
+  {
+    id: "ls6",
     title: "NumPy Deep Dive — Day 11",
     courseTitle: "Python for Data Science",
     instructor: "Ravi Kumar",
@@ -374,6 +490,17 @@ export const MOCK_LIVE_SESSIONS: LiveSession[] = [
     scheduledAt: yesterday,
     endDateTime: yesterdayPlusTwoHours,
     recordingSyncingIn: "~20 min",
+  },
+  {
+    id: "ls7",
+    title: "EC2 & Auto Scaling — Day 7",
+    courseTitle: "AWS Cloud Architecture",
+    instructor: "Suresh P.",
+    batchLabel: "Mar 2025",
+    status: "PAST",
+    scheduledAt: threeDaysAgo,
+    endDateTime: threeDaysAgoPlusTwoHours,
+    recordingSyncingIn: "~15 min",
   },
 ];
 
@@ -400,6 +527,27 @@ export const MOCK_CALENDAR_EVENTS: CalendarEvent[] = [
     endAt: tomorrowPlusTwoHours,
     type: "upcoming",
   },
+  {
+    id: "ce4",
+    title: "📅 AWS VPC Design Day 8",
+    startAt: inThreeDays,
+    endAt: inThreeDaysPlusTwoHours,
+    type: "upcoming",
+  },
+  {
+    id: "ce5",
+    title: "📅 DevOps CI/CD Day 4",
+    startAt: oneWeekFromNow,
+    endAt: inTwoWeeks,
+    type: "upcoming",
+  },
+  {
+    id: "ce6",
+    title: "💬 Mentorship: Ravi Kumar",
+    startAt: inFourDays,
+    endAt: inFourDaysPlusTwoHours,
+    type: "mentorship",
+  },
 ];
 
 export const MOCK_MENTORSHIP_TICKETS: MentorshipTicket[] = [
@@ -420,6 +568,30 @@ export const MOCK_MENTORSHIP_TICKETS: MentorshipTicket[] = [
     createdAt: "2025-02-03T14:00:00Z",
     instructor: "Priya Mehta",
     notes: "Explained cleanup pattern with timer and subscription examples.",
+  },
+  {
+    id: "t3",
+    courseTitle: "AWS Cloud Architecture",
+    topic: "Need help understanding VPC peering vs Transit Gateway",
+    status: "OPEN",
+    createdAt: "2025-03-10T09:00:00Z",
+  },
+  {
+    id: "t4",
+    courseTitle: "Python for Data Science",
+    topic: "Stuck on Matplotlib subplots layout",
+    status: "SCHEDULED",
+    createdAt: "2025-03-12T14:00:00Z",
+    instructor: "Ravi Kumar",
+    notes: "Session scheduled for next Tuesday.",
+  },
+  {
+    id: "t5",
+    courseTitle: "AWS Cloud Architecture",
+    topic: "IAM policy writing help",
+    status: "ASSIGNED",
+    createdAt: "2025-03-14T11:00:00Z",
+    instructor: "Suresh P.",
   },
 ];
 
@@ -455,6 +627,22 @@ export const MOCK_CERTIFICATES: Certificate[] = [
     batchLabel: "Batch Jan 2025",
     completionPercent: 62,
     earned: false,
+  },
+  {
+    id: "cert5",
+    courseTitle: "AWS Cloud Architecture",
+    batchLabel: "Batch Mar 2025",
+    completionPercent: 28,
+    earned: false,
+  },
+  {
+    id: "cert6",
+    courseTitle: "Node.js Backend Development",
+    batchLabel: "Batch Dec 2024",
+    issuedAt: "10 Feb 2025",
+    verifyUrl: "https://lms.portal/verify/ghi789",
+    completionPercent: 100,
+    earned: true,
   },
 ];
 
@@ -531,6 +719,42 @@ export const MOCK_CATALOGUE: CatalogueCourse[] = [
       { title: "AWS", sessions: 4 },
     ],
   },
+  {
+    id: "cat5",
+    title: "TypeScript Masterclass",
+    thumbnail: "🔷",
+    duration: "6 weeks",
+    instructor: "Anita R.",
+    price: 3499,
+    nextBatch: "May 2025",
+    isEnrolled: false,
+    tags: ["Frontend", "TypeScript"],
+    whatYouLearn: ["Advanced types", "Generics & utilities", "TypeScript with React", "Declaration files"],
+    curriculum: [
+      { title: "TypeScript Foundations", sessions: 3 },
+      { title: "Advanced Types", sessions: 4 },
+      { title: "Generics & Utilities", sessions: 3 },
+      { title: "Real-world Patterns", sessions: 2 },
+    ],
+  },
+  {
+    id: "cat6",
+    title: "System Design & Architecture",
+    thumbnail: "🏗️",
+    duration: "8 weeks",
+    instructor: "Vikram J.",
+    price: 5999,
+    nextBatch: "Jun 2025",
+    isEnrolled: false,
+    tags: ["Backend", "Architecture"],
+    whatYouLearn: ["Microservices patterns", "Database design", "Caching & CDN", "Scalability & resilience"],
+    curriculum: [
+      { title: "Foundations", sessions: 2 },
+      { title: "Microservices", sessions: 4 },
+      { title: "Data & Storage", sessions: 3 },
+      { title: "Operations & Scaling", sessions: 3 },
+    ],
+  },
 ];
 
 export const MOCK_CONTINUE_LEARNING: ContinueLearningItem[] = [
@@ -549,6 +773,14 @@ export const MOCK_CONTINUE_LEARNING: ContinueLearningItem[] = [
     dayLabel: "Day 2 Recording",
     watchedPercent: 10,
     thumbnail: "⚛️",
+  },
+  {
+    recordingId: "r6",
+    batchId: "b3",
+    courseTitle: "AWS Cloud Architecture — Batch Mar 2025",
+    dayLabel: "Day 7 Recording",
+    watchedPercent: 40,
+    thumbnail: "☁️",
   },
 ];
 

@@ -12,6 +12,7 @@ router.post('/logout', authController.logout);
 router.get('/me', requireAuth, authController.me);
 
 // --- Microsoft Azure AD OAuth ---
+router.get('/azure-ad/status', requireAuth, authController.azureAdStatus);
 router.get('/azure-ad/login', requireAuth, authController.azureAdLogin);
 router.get('/azure-ad/callback', authController.azureAdCallback);
 

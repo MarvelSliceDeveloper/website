@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   IconBook,
+  IconBrandWindows,
   IconChartBar,
   IconClipboardCheck,
   IconLayoutDashboard,
@@ -112,6 +113,11 @@ const overviewItems: NavItem[] = [
       { label: "Scheduled", href: "/admin/mentorship?status=SCHEDULED" },
       { label: "Completed", href: "/admin/mentorship?status=COMPLETED" },
     ],
+  },
+  {
+    label: "Microsoft",
+    href: "/admin/microsoft",
+    icon: IconBrandWindows,
   },
 ];
 

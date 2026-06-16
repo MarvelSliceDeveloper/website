@@ -277,7 +277,7 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
             <div className="mb-1.5 h-1 overflow-hidden rounded-full bg-white/20">
               <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${selectedRecording.watchedPercent}%` }} />
             </div>
-            <div className="flex items-center justify-between text-[11px] text-white/60">
+            <div className="flex items-center justify-between text-[19px] text-white/60">
               <span>{selectedRecording.durationLabel}</span>
               <span>{selectedRecording.watchedPercent}% watched</span>
             </div>
@@ -422,7 +422,7 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
           </p>
           {currentSession.joinUrl && (
             <a href={currentSession.joinUrl} target="_blank" rel="noreferrer"
-               className="btn-primary inline-flex items-center gap-2 text-sm">
+              className="btn-primary inline-flex items-center gap-2 text-sm">
               <IconVideo size={16} /> Join Session
             </a>
           )}
@@ -482,7 +482,7 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
       <div className="flex flex-col h-full">
         <div className="p-4 border-b border-border flex-shrink-0">
           <p className="text-sm font-medium text-foreground">Study Material</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">{modulesWithResources.length} module{modulesWithResources.length !== 1 ? "s" : ""} with resources</p>
+          <p className="text-[17px] text-muted-foreground mt-0.5">{modulesWithResources.length} module{modulesWithResources.length !== 1 ? "s" : ""} with resources</p>
         </div>
         <div className="flex-1 overflow-y-auto">
           {modulesWithResources.length === 0 ? (
@@ -511,7 +511,7 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-border flex-shrink-0">
         <p className="text-sm font-medium text-foreground">{data.course.title}</p>
-        <p className="text-[11px] text-muted-foreground mt-0.5">{data.batch?.name ?? "Course"}</p>
+        <p className="text-[17px] text-muted-foreground mt-0.5">{data.batch?.name ?? "Course"}</p>
       </div>
       <div className="flex-1 overflow-y-auto">
         {data.modules.length === 0 ? (
@@ -528,24 +528,22 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
               <div key={mod.id}>
                 <div
                   onClick={() => { selectModule(mod.id); toggleModule(mod.id); }}
-                  className={`flex items-center gap-2.5 px-4 py-2.5 cursor-pointer transition-colors ${
-                    isSelected ? "bg-primary/[0.04]" : "hover:bg-muted/5"
-                  }`}
+                  className={`flex items-center gap-2.5 px-4 py-2.5 cursor-pointer transition-colors ${isSelected ? "bg-primary/[0.04]" : "hover:bg-muted/5"
+                    }`}
                 >
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] flex-shrink-0 border ${
-                    isComplete ? "bg-primary border-primary text-white" :
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[12px] flex-shrink-0 border ${isComplete ? "bg-primary border-primary text-white" :
                     isSelected ? "border-primary text-primary" :
-                    inProgress ? "border-primary/50 text-primary" :
-                    "border-border text-muted-foreground"
-                  }`}>
+                      inProgress ? "border-primary/50 text-primary" :
+                        "border-border text-muted-foreground"
+                    }`}>
                     {isComplete ? <IconCheck size={10} /> :
-                     isSelected ? <IconPlayerPlay size={9} className="ml-0.5" /> :
-                     idx + 1}
+                      isSelected ? <IconPlayerPlay size={9} className="ml-0.5" /> :
+                        idx + 1}
                   </div>
-                  <span className={`text-xs font-medium flex-1 truncate ${isSelected ? "text-primary" : "text-foreground"}`}>
+                  <span className={`text-[12px] font-medium flex-1 truncate ${isSelected ? "text-primary" : "text-foreground"}`}>
                     {mod.title}
                   </span>
-                  <span className="text-[11px] text-muted shrink-0">
+                  <span className="text-[12px] text-muted shrink-0">
                     {mod.durationSeconds ? `${Math.floor(mod.durationSeconds / 60)}m` : "—"}
                   </span>
                   <button
@@ -558,8 +556,8 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
                       fill={bookmarks.includes(mod.id) ? "currentColor" : "none"}
                     />
                   </button>
-                  {isExpanded ? <IconChevronUp size={13} className="text-muted shrink-0" /> :
-                                <IconChevronDown size={13} className="text-muted shrink-0" />}
+                  {isExpanded ? <IconChevronUp size={18} className="text-muted shrink-0" /> :
+                    <IconChevronDown size={18} className="text-muted shrink-0" />}
                 </div>
 
                 {isExpanded && (
@@ -567,18 +565,15 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
                     {(mod.videoUrl || mod.videoEmbedId) && (
                       <div
                         onClick={() => { selectModule(mod.id); setSelectedRecordingId(null); }}
-                        className={`flex items-center gap-2 py-1.5 px-3 rounded-md cursor-pointer transition-colors ${
-                          selectedModuleId === mod.id && !selectedRecordingId
-                            ? "bg-primary/10" : "hover:bg-muted/5"
-                        }`}
+                        className={`flex items-center gap-2 py-1.5 px-3 rounded-md cursor-pointer transition-colors ${selectedModuleId === mod.id && !selectedRecordingId
+                          ? "bg-primary/10" : "hover:bg-muted/5"
+                          }`}
                       >
-                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                          selectedModuleId === mod.id && !selectedRecordingId ? "bg-primary" : "bg-border"
-                        }`} />
-                        <span className={`text-xs flex-1 truncate ${
-                          selectedModuleId === mod.id && !selectedRecordingId
-                            ? "text-primary font-medium" : "text-muted-foreground"
-                        }`}>
+                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${selectedModuleId === mod.id && !selectedRecordingId ? "bg-primary" : "bg-border"
+                          }`} />
+                        <span className={`text-xs flex-1 truncate ${selectedModuleId === mod.id && !selectedRecordingId
+                          ? "text-primary font-medium" : "text-muted-foreground"
+                          }`}>
                           Video Lesson
                         </span>
                         <span className="text-[11px] text-muted">
@@ -593,19 +588,16 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
                       <div
                         key={rec.id}
                         onClick={() => { selectModule(mod.id); selectRecording(rec.id); }}
-                        className={`flex items-center gap-2 py-1.5 px-3 rounded-md cursor-pointer transition-colors ${
-                          selectedRecordingId === rec.id
-                            ? "bg-primary/10" : "hover:bg-muted/5"
-                        }`}
+                        className={`flex items-center gap-2 py-1.5 px-3 rounded-md cursor-pointer transition-colors ${selectedRecordingId === rec.id
+                          ? "bg-primary/10" : "hover:bg-muted/5"
+                          }`}
                       >
-                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                          selectedRecordingId === rec.id ? "bg-primary" :
+                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${selectedRecordingId === rec.id ? "bg-primary" :
                           rec.isCompleted ? "bg-primary" : "bg-border"
-                        }`} />
-                        <span className={`text-xs flex-1 truncate ${
-                          selectedRecordingId === rec.id
-                            ? "text-primary font-medium" : "text-muted-foreground"
-                        }`}>
+                          }`} />
+                        <span className={`text-xs flex-1 truncate ${selectedRecordingId === rec.id
+                          ? "text-primary font-medium" : "text-muted-foreground"
+                          }`}>
                           {rec.dayLabel} — {rec.title}
                         </span>
                         <span className="text-[11px] text-muted">{rec.durationLabel}</span>
@@ -694,9 +686,8 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
           <div
             key={n.id}
             onClick={() => setSelectedNoteId(n.id === selectedNoteId ? null : n.id)}
-            className={`glass-card p-2.5 space-y-1 cursor-pointer transition-colors ${
-              selectedNoteId === n.id ? "ring-1 ring-primary" : ""
-            }`}
+            className={`glass-card p-2.5 space-y-1 cursor-pointer transition-colors ${selectedNoteId === n.id ? "ring-1 ring-primary" : ""
+              }`}
           >
             <div className="flex items-start justify-between gap-1">
               <p className="text-xs font-medium text-foreground">{n.title || "Untitled"}</p>
@@ -755,11 +746,10 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
             <button
               key={tab}
               onClick={() => setSidebarTab(tab)}
-              className={`flex-1 py-2.5 text-[11px] text-center cursor-pointer transition-colors ${
-                sidebarTab === tab
-                  ? "text-primary border-b-2 border-primary font-medium"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={`flex-1 py-2.5 text-[11px] text-center cursor-pointer transition-colors ${sidebarTab === tab
+                ? "text-primary border-b-2 border-primary font-medium"
+                : "text-muted-foreground hover:text-foreground"
+                }`}
             >
               {tab === "all" ? "All" : tab === "live" ? "Live" : "Recordings"}
             </button>
@@ -783,7 +773,7 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
                   </div>
                   {session.joinUrl && (
                     <a href={session.joinUrl} target="_blank" rel="noreferrer"
-                       className="text-[10px] px-2 py-1 rounded-md bg-danger text-white shrink-0 font-medium">
+                      className="text-[10px] px-2 py-1 rounded-md bg-danger text-white shrink-0 font-medium">
                       Join
                     </a>
                   )}
@@ -919,7 +909,7 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
       </div>
 
       {/* Sidebar (380px) */}
-      <div className="w-[380px] flex-shrink-0 bg-background border-l border-border flex flex-col overflow-hidden">
+      <div className="w-[340px] flex-shrink-0 bg-background border-l border-border flex flex-col overflow-hidden">
         {activeRail === "lesson" && renderLessonSidebar()}
         {activeRail === "editor" && renderEditorSidebar()}
         {activeRail === "note" && renderNoteSidebar()}
@@ -927,22 +917,21 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
         {activeRail === "resource" && renderResourceSidebar()}
       </div>
 
-      {/* Rail (52px) */}
-      <div className="w-[52px] flex-shrink-0 bg-background border-l border-border flex flex-col items-center py-3 overflow-y-auto">
+      {/* Rail (128px) */}
+      <div className="w-[118px] flex-shrink-0 bg-background border-l border-border flex flex-col items-center py-3 overflow-y-auto">
 
         {(["lesson", "editor", "note", "session", "resource"] as RailTab[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveRail(tab)}
-            className={`w-10 h-10 rounded-lg flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors mb-0.5 ${
-              activeRail === tab
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-muted/5 hover:text-foreground"
-            }`}
+            className={`w-20 h-20 rounded-lg flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors mb-0.5 ${activeRail === tab
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:bg-muted/5 hover:text-foreground"
+              }`}
             title={railLabels[tab]}
           >
             {railIcons[tab]}
-            <span className="text-[7px] font-medium leading-none">{railLabels[tab]}</span>
+            <span className="text-[15px] font-medium leading-none">{railLabels[tab]}</span>
           </button>
         ))}
       </div>

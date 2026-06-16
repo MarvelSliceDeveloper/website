@@ -68,6 +68,41 @@ export const authController = {
     }
   },
 
+  async azureAdStatus(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.userId },
+        select: { msUserId: true, msAccessToken: true },
+      });
+
+      const msClientId = !!process.env.MS_CLIENT_ID;
+      const msClientSecret = !!process.env.MS_CLIENT_SECRET;
+      const msRedirectUri = !!process.env.MS_REDIRECT_URI;
+
+      const recentLogs = await prisma.graphApiLog.findMany({
+        where: { userId: req.user.userId },
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+      });
+
+      return res.json({
+        linked: !!(user?.msUserId && user?.msAccessToken),
+        msUserId: user?.msUserId || null,
+        envConfigured: msClientId && msClientSecret && msRedirectUri,
+        env: {
+          MS_CLIENT_ID: msClientId,
+          MS_CLIENT_SECRET: msClientSecret,
+          MS_REDIRECT_URI: msRedirectUri,
+        },
+        logs: recentLogs,
+      });
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  },
+
   async azureAdLogin(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
