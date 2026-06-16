@@ -10,14 +10,15 @@ export async function getTokenForUser(userId: string): Promise<string> {
   });
 
   if (!user || !user.msAccessToken || !user.msRefreshToken) {
-    throw new Error(`User not found or Microsoft account not linked: ${userId}`);
+    throw new Error(`Microsoft account not linked for this user. Please go to Admin → Microsoft Settings and link your account.`);
   }
 
-  // Attempt to use current access token if not expired
-  // Since we don't store expiry locally yet, we will just assume it might be expired
-  // and let the client try. If it fails with 401, the client will call refreshMsTokenForUser.
-  
-  return decryptToken(user.msAccessToken);
+  try {
+    return decryptToken(user.msAccessToken);
+  } catch (err: any) {
+    console.error(`[GraphAuth] Failed to decrypt access token for user ${userId}:`, err.message);
+    throw new Error(`Your Microsoft account tokens are corrupted or the encryption key has changed. Please re-link your account in Admin → Microsoft Settings.`);
+  }
 }
 
 export async function refreshMsTokenForUser(userId: string): Promise<string> {
@@ -50,15 +51,19 @@ export async function refreshMsTokenForUser(userId: string): Promise<string> {
       client_secret: clientSecret,
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
-      redirect_uri: redirectUri,
       scope: 'openid profile email offline_access Calendars.ReadWrite OnlineMeetings.ReadWrite User.Read OnlineMeetingRecording.Read.All',
     }),
   });
 
   if (!response.ok) {
     const errorData = await response.text();
-    console.error('Failed to refresh Microsoft token:', errorData);
-    throw new Error(`Failed to refresh MS token: ${response.statusText}`);
+    console.error('[GraphAuth] Failed to refresh Microsoft token:', errorData);
+    const parsed = JSON.parse(errorData);
+    // Refresh token expired or revoked — user needs to re-link
+    if (parsed?.error === 'invalid_grant') {
+      throw new Error('Your Microsoft account session has expired. Please re-link your account in Admin → Microsoft Settings.');
+    }
+    throw new Error(`Failed to refresh Microsoft token: ${parsed?.error_description || response.statusText}`);
   }
 
   const data = await response.json();

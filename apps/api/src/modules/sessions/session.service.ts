@@ -82,10 +82,11 @@ export const sessionService = {
         teamsMeetingId = meeting.id;
         joinUrl = meeting.joinWebUrl;
       } catch (err: any) {
-        console.warn('Teams Graph API integration omitted/failed, generating fallback URL:', err.message);
-        // Fallback placeholder URL for easy testing
-        joinUrl = `https://teams.microsoft.com/l/meetup-join/fallback-${Date.now()}`;
-        teamsMeetingId = `fallback-${Date.now()}`;
+        console.warn('[Teams] Failed to create Teams meeting via Graph API:', err.message);
+        // Session is still created but without a Teams meeting link.
+        // Admin can add a custom join URL by editing the session later.
+        teamsMeetingId = `teams-error`;
+        joinUrl = '';
       }
     }
 

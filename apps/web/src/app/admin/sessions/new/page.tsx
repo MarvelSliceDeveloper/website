@@ -346,7 +346,7 @@ export default function ScheduleSessionPage() {
               className="field w-full"
             />
             <p className="mt-1 text-xs text-muted">
-              Leave blank to automatically schedule and generate a fresh Microsoft Teams meeting URL. Paste a link here if you want to use a specific manual link instead.
+              Paste a Google Meet, Zoom, or Teams link here. Leave blank to auto-create a Teams meeting via Graph API (requires a Teams license).
             </p>
           </div>
         )}
@@ -406,10 +406,10 @@ export default function ScheduleSessionPage() {
         <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-muted-foreground flex gap-3 items-start">
           <IconVideo size={20} className="text-primary shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-foreground mb-0.5">Microsoft Teams Integration</p>
+            <p className="font-semibold text-foreground mb-0.5">Meeting Link</p>
             <p>
-              Submitting this form automatically requests an online meeting room from Microsoft Graph. 
-              The unique join link will be emailed and shown on both the student and instructor dashboards instantly.
+              Provide a Custom Join URL above (Google Meet, Zoom, etc.) — or leave it blank to auto-create a Teams meeting
+              via Microsoft Graph (requires a Teams license). Students receive the link in their dashboard.
             </p>
           </div>
         </div>

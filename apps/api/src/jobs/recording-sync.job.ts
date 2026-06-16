@@ -28,6 +28,7 @@ export const recordingSyncJob = {
         },
         select: {
           id: true,
+          createdBy: true,
           scheduledAt: true,
           endedAt: true,
           batch: {

@@ -29,6 +29,12 @@ export const recordingService = {
     const creatorId = session.createdBy;
     const teamsMeetingId = session.teamsMeetingId;
 
+    // Skip sessions without a real Teams meeting (custom URL, error, or fallback)
+    if (!teamsMeetingId || teamsMeetingId.startsWith('custom-') || teamsMeetingId.startsWith('teams-error') || teamsMeetingId.startsWith('fallback-')) {
+      console.log(`[RecordingSync] Skipping session ${sessionId}: no real Teams meeting (${teamsMeetingId || 'empty'})`);
+      return null;
+    }
+
     try {
       // 2. Fetch recordings from Microsoft Graph using the creator's tokens
       const msRecordings = await getMeetingRecordings(creatorId, teamsMeetingId);
@@ -65,7 +71,12 @@ export const recordingService = {
         console.log(`[RecordingSync] Meeting or recordings not found for session ${sessionId}`);
         return null;
       }
-      console.error(`[RecordingSync] Failed to sync recordings for session ${sessionId}:`, error.message);
+      // Token/auth errors — log the specific issue for debugging
+      if (error instanceof GraphError && (error.statusCode === 401 || error.statusCode === 403)) {
+        console.error(`[RecordingSync] Auth/Token error for session ${sessionId} (${error.statusCode} ${error.graphErrorCode}): ${error.message}`);
+      } else {
+        console.error(`[RecordingSync] Failed to sync recordings for session ${sessionId}:`, error.message);
+      }
       throw error;
     }
   },

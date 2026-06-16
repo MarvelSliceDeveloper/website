@@ -38,8 +38,18 @@ function mapGraphError(statusCode: number, data: any): GraphError {
       friendlyMessage = 'Your Microsoft account mailbox is not enabled for the REST API.';
       break;
     case 'AuthenticationError':
-      friendlyMessage = 'Microsoft authentication failed. Please re-link your Microsoft account.';
+      if (rawMessage.includes('Error authenticating with resource')) {
+        friendlyMessage = 'Your Microsoft account cannot create Teams meetings. This usually means: (1) Your account lacks a Microsoft Teams license, or (2) the Azure AD admin hasn\'t granted consent for "OnlineMeetings.ReadWrite" in the Azure Portal → App registrations → API Permissions.';
+      } else {
+        friendlyMessage = 'Microsoft authentication failed. Please re-link your Microsoft account.';
+      }
       break;
+  }
+
+  // "No authorization information present on the request" usually means the token
+  // is empty, malformed, or the Azure AD app lacks admin-consented permissions.
+  if (rawMessage.includes('No authorization information')) {
+    friendlyMessage = 'Microsoft Graph authentication failed. Please ensure: (1) Your Microsoft account is re-linked in Settings, and (2) an Azure AD admin has granted consent for "OnlineMeetingRecording.Read.All" in the Azure Portal.';
   }
 
   return new GraphError(statusCode, code, friendlyMessage);
