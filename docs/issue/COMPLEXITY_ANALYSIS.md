@@ -25,10 +25,10 @@
 
 | Pattern | Files | Status |
 |---|---|---|---|
-| `timeAgo()` | 8 files | ✅ Extracted to `apps/web/src/lib/time-ago.ts`. Student/instructor support pages updated. |
-| `NotificationItem` interface | 4 files | ❌ Still duplicated. Move to `@lms/types`. |
+| `timeAgo()` | 8 files | ✅ Extracted to `apps/web/src/lib/time-ago.ts`. All inbox pages now use it. |
+| `NotificationItem` interface | 4 files | ✅ Moved to `apps/web/src/lib/notifications.tsx`. All inbox pages import it. |
 | `SupportTicket` / `SupportMessage` interfaces | 3 files | ❌ Still duplicated. Move to `@lms/types`. |
-| `NOTIF_ICONS` record | 4 files | ❌ Still duplicated. Create shared `NotificationIcon`. |
+| `NOTIF_ICONS` record | 4 files | ✅ Unified in `apps/web/src/lib/notifications.tsx` as `<NotificationIcon>`. All inbox pages use it. |
 | `STATUS_CONFIG` objects | 6 files | ✅ Created shared `StatusBadge` component. Used in both support pages. |
 | `Empty state` (icon + text) | 12+ files | ✅ Created shared `<EmptyState>`. Used in both support pages. |
 | `Loading skeleton` | 10+ files | ✅ Created shared `<Skeleton>`. Used in both support pages. |
@@ -45,9 +45,9 @@
 | File | Lines | Plan |
 |---|---|---|
 | `instructor/assignments/page.tsx` | 1,027 → 14 | Split into `_comps/types.ts`, `AssignmentsList.tsx`, `QuizBuilder.tsx`, `AssignmentCreateForm.tsx`, `SubmissionReviewPanel.tsx`, `AssignmentsPageContent.tsx` |
-| `CourseContentView.tsx` | 880 | Extract: VideoPlayerSection, QuizSection, ResourcesPanel, ProgressBar |
-| `notification.service.ts` | 523 | Extract: per-event notification builders into separate files |
-| `VideoPlayer.tsx` | 505 | Extract: Controls, ProgressBar, PlaybackRateSelector, FullscreenToggle |
+| `CourseContentView.tsx` | 940 → ~650 | Split: `_comps/types.ts`, `VideoPlayer.tsx`, `LessonSidebar.tsx`, `SessionSidebar.tsx` |
+| `notification.service.ts` | 577 | Pending: extract per-event notification builders |
+| `VideoPlayer.tsx` | 548 | Pending: extract Controls, ProgressBar, PlaybackRateSelector, FullscreenToggle |
 
 **Plan**: Split each file by UI concern. Each extracted component gets its own file in a `_components/` directory. The parent file becomes a thin orchestration layer.
 
@@ -115,7 +115,7 @@ This eliminates duplicate `requireRole` calls and makes the auth boundary clear.
 | Priority | Item | Effort | Impact | Status |
 |---|---|---|---|---|---|
 | P0 | Dispatch shared utilities | Small | High | ✅ `timeAgo`, `EmptyState`, `Skeleton`, `StatusBadge`, `PageHeader` done |
-| P0 | Split god files | Medium | High | ✅ assignments done; CourseContentView next |
+| P0 | Split god files | Medium | High | ✅ assignments + CourseContentView done; notification.service + VideoPlayer next |
 | P1 | Unify Ticket system (backend) | Large | Highest | ✅ Service + controller + routes created at `/api/tickets`. Support pages use unified API. |
 | P1 | Unify admin route middleware | Small | Medium | ❌ Not started |
 | P2 | Unify Shell components | Medium | Medium | ✅ `AppShell` created. 3 shells are thin wrappers. |
