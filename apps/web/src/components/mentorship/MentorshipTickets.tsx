@@ -68,7 +68,6 @@ export function MentorshipTickets({
     return (
       <div className="glass-card p-8 text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-3xl">
-          🤝
         </div>
         <h3 className="text-lg font-semibold text-foreground">
           No mentorship requests yet

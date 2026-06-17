@@ -203,7 +203,6 @@ async function main() {
     [moreStudents[3], awsBatch.id],
     [moreStudents[4], pythonBatch.id],
     [moreStudents[5], reactBatch.id],
-    [moreStudents[6], awsBatch.id],
   ];
 
   for (const [student, batchId] of enrollmentPairs) {
@@ -224,6 +223,24 @@ async function main() {
   }
 
   console.log('✅ Enrollments created');
+
+  // ─── Notification Preferences ──────────────────────────────────────────
+  const allUsers = [admin, demoInstructor, ravi, priya, suresh, vikram, anita, demoStudent, ...moreStudents];
+  const notifTypes = ['SESSION_SCHEDULED', 'SESSION_CANCELLED', 'RECORDING_AVAILABLE',
+    'ENROLLMENT_APPROVED', 'ENROLLMENT_REJECTED', 'ASSIGNMENT_GRADED'];
+
+  for (const user of allUsers) {
+    for (const type of notifTypes) {
+      await prisma.notificationPreference.upsert({
+        where: { userId_type: { userId: user.id, type } },
+        update: {},
+        create: { userId: user.id, type, enabled: true, email: false },
+      });
+    }
+  }
+
+  console.log('✅ Notification preferences seeded');
+
   console.log('\n🎉 Seed complete!');
   console.log('   Admin (1):       admin@lms.local / admin123');
   console.log('   Instructors (6): instructor@lms.local / instructor123 (Ravi, Priya, Suresh, Vikram, Anita)');
@@ -295,13 +312,6 @@ async function upsertBatch(data: {
 
   return prisma.batch.create({ data });
 }
-
-main()
-  .catch((e: unknown) => {
-    console.error('❌ Seed failed:', e);
-    process.exit(1);
-  })
-  .finally(() => prisma.$disconnect());
 
 main()
   .catch((e: unknown) => {

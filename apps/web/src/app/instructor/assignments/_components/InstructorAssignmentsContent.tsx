@@ -15,6 +15,7 @@ import {
   IconBook,
   IconMessageCircle,
 } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 type Batch = {
   id: string;
@@ -242,7 +243,7 @@ export default function InstructorAssignmentsContent() {
           : null
       );
     } catch (err: any) {
-      alert(`Error saving grade: ${err.message}`);
+      toast.error(`Error saving grade: ${err.message}`);
     } finally {
       setSubmitting(false);
     }
@@ -306,7 +307,7 @@ export default function InstructorAssignmentsContent() {
     if (!file) return;
 
     if (file.type !== "application/pdf") {
-      alert("Only PDF files are allowed for assignments.");
+      toast.error("Only PDF files are allowed for assignments.");
       return;
     }
 
@@ -317,9 +318,9 @@ export default function InstructorAssignmentsContent() {
 
       const res = await api.post<{ fileUrl: string }>("/api/assignments/upload-pdf", formData);
       setFormQuestionPdfUrl(res.fileUrl);
-      alert("Question PDF uploaded successfully!");
+      toast.success("Question PDF uploaded successfully!");
     } catch (err: any) {
-      alert(`Upload failed: ${err.message}`);
+      toast.error(`Upload failed: ${err.message}`);
     } finally {
       setUploadingPdf(false);
     }
@@ -329,7 +330,7 @@ export default function InstructorAssignmentsContent() {
   const handleCreateAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formBatchId) {
-      alert("Please select a batch.");
+      toast.error("Please select a batch.");
       return;
     }
 
@@ -340,23 +341,23 @@ export default function InstructorAssignmentsContent() {
     if (formType === "QUIZ") {
       for (const q of formQuestions) {
         if (!q.questionText.trim()) {
-          alert("Please write a question text for all questions.");
+          toast.error("Please write a question text for all questions.");
           return;
         }
         for (const o of q.options) {
           if (!o.optionText.trim()) {
-            alert("All multiple-choice options must have text filled.");
+            toast.error("All multiple-choice options must have text filled.");
             return;
           }
         }
       }
     } else {
       if (!formQuestionPdfUrl) {
-        alert("Please upload a question PDF file for the assignment.");
+        toast.error("Please upload a question PDF file for the assignment.");
         return;
       }
       if (Number(formMaxPoints) <= 0) {
-        alert("Please specify a valid positive number for max points.");
+        toast.error("Please specify a valid positive number for max points.");
         return;
       }
     }
@@ -405,9 +406,9 @@ export default function InstructorAssignmentsContent() {
       const assignmentsRes = await api.get<{ assignments: Assignment[] }>("/api/assignments");
       setAssignments(assignmentsRes.assignments || []);
       setActiveTab("list");
-      alert("Assignment created successfully!");
+      toast.success("Assignment created successfully!");
     } catch (err: any) {
-      alert(`Error creating assignment: ${err.message}`);
+      toast.error(`Error creating assignment: ${err.message}`);
     } finally {
       setSubmitting(false);
     }

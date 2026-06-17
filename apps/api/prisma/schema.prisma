@@ -60,10 +60,13 @@ model User {
   instructorOf   Batch[]             @relation("BatchInstructor")
   ticketsCreated MentorshipTicket[]  @relation("TicketStudent")
   ticketsAssigned MentorshipTicket[] @relation("TicketMentor")
-  notifications  Notification[]
-  attendance     Attendance[]
-  sessionsLed    LiveSession[]       @relation("SessionInstructor")
+  notifications        Notification[]
+  notificationPreferences NotificationPreference[]
+  attendance           Attendance[]
+  sessionsLed          LiveSession[]       @relation("SessionInstructor")
   assignmentSubmissions AssignmentSubmission[]
+  sentMessages         Message[]           @relation("SentMessages")
+  receivedMessages     Message[]           @relation("ReceivedMessages")
 }
 
 model Course {
@@ -84,6 +87,7 @@ model Course {
   modules            Module[]
   batches            Batch[]
   assignments        Assignment[]
+  mentorshipTickets  MentorshipTicket[]
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 }
@@ -232,6 +236,7 @@ model MentorshipTicket {
   id            String       @id @default(cuid())
   studentId     String
   mentorId      String?      // Assigned by admin
+  courseId      String?      // Optional course reference
   title         String       // Topic/subject of mentorship
   description   String       // Detailed request
   preferredDate DateTime?    // Student's preferred date
@@ -239,13 +244,15 @@ model MentorshipTicket {
   scheduledAt   DateTime?    // Final scheduled time (Teams meeting)
   joinUrl       String?      // Teams meeting join URL
   teamsMeetingId String?     // Microsoft Teams meeting ID
+  notes         String?      // Resolution notes by mentor/admin
   status        TicketStatus @default(OPEN)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   resolvedAt    DateTime?    // When ticket is completed/cancelled
-  
+
   student       User         @relation("TicketStudent", fields: [studentId], references: [id])
   mentor        User?        @relation("TicketMentor", fields: [mentorId], references: [id])
+  course        Course?      @relation(fields: [courseId], references: [id])
 }
 
 // In-app notification for students and instructors
@@ -259,6 +266,36 @@ model Notification {
   metadata  Json?    // { sessionId, courseId, joinUrl, etc. }
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
+}
+
+// Direct messages between admin and instructors
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  subject    String?
+  body       String   @db.Text
+  read       Boolean  @default(false)
+  entityType String?  // "BATCH" | "COURSE" | "SESSION" | null = general
+  entityId   String?
+  createdAt  DateTime @default(now())
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@index([receiverId, read])
+  @@index([senderId, receiverId])
+}
+
+// Per-user notification type preferences
+model NotificationPreference {
+  id      String  @id @default(cuid())
+  userId  String
+  type    String  // SESSION_SCHEDULED, RECORDING_AVAILABLE, etc.
+  enabled Boolean @default(true)
+  email   Boolean @default(false)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([userId, type])
 }
 
 // Attendance tracking — logged when a student clicks "Join Now"

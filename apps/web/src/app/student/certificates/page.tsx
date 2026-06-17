@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 
 type CertificateItem = {
@@ -36,17 +37,15 @@ type CertificatesResponse = {
 export default function CertificatesPage() {
     const [data, setData] = useState<CertificatesResponse>({ certificates: [], claimable: [] });
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState("");
     const [claimingCourseId, setClaimingCourseId] = useState<string | null>(null);
 
     const loadCertificates = async () => {
         try {
             setIsLoading(true);
-            setError("");
             const response = await api.get<CertificatesResponse>("/api/certificates/my");
             setData(response);
         } catch (loadError: any) {
-            setError(loadError.message || "Failed to load certificates");
+            toast.error(loadError.message || "Failed to load certificates");
         } finally {
             setIsLoading(false);
         }
@@ -60,9 +59,10 @@ export default function CertificatesPage() {
         try {
             setClaimingCourseId(courseId);
             await api.post("/api/certificates/claim", { courseId });
+            toast.success("Certificate claimed successfully!");
             await loadCertificates();
         } catch (claimError: any) {
-            setError(claimError.message || "Failed to claim certificate");
+            toast.error(claimError.message || "Failed to claim certificate");
         } finally {
             setClaimingCourseId(null);
         }
@@ -78,12 +78,6 @@ export default function CertificatesPage() {
                     </p>
                 </div>
             </div>
-
-            {error && (
-                <div className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger">
-                    {error}
-                </div>
-            )}
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <StatCard label="Issued" value={String(data.certificates.length)} icon="🏆" color="from-warning to-amber-400" />

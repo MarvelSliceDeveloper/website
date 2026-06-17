@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import ModuleStudyMaterialsSection from "./_components/ModuleStudyMaterialsSection";
+import { toast } from "sonner";
 
 type Module = {
   id: string;
@@ -76,11 +77,7 @@ export default function CourseDetailPage() {
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [thumbnailUploading, setThumbnailUploading] = useState(false);
-  const [thumbnailError, setThumbnailError] = useState("");
-  const [thumbnailSuccess, setThumbnailSuccess] = useState("");
 
   const [activeTab, setActiveTab] = useState<"details" | "content" | "materials" | "sessions" | "recordings">("details");
 
@@ -102,7 +99,7 @@ export default function CourseDetailPage() {
         category: data.category || "",
       });
     } catch {
-      setError("Failed to load course");
+      toast.error("Failed to load course");
     } finally {
       setLoading(false);
     }
@@ -114,8 +111,6 @@ export default function CourseDetailPage() {
 
   const handleSaveCourse = async () => {
     setSaving(true);
-    setError("");
-    setSuccess("");
     try {
       await api.put(`/api/admin/courses/${id}`, {
         title: form.title,
@@ -123,25 +118,22 @@ export default function CourseDetailPage() {
         price: Number(form.price),
         category: form.category || null,
       });
-      setSuccess("Course saved!");
+      toast.success("Course saved!");
       fetchCourse();
-      setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
-      setError(err.message || "Failed to save");
+      toast.error(err.message || "Failed to save");
     } finally {
       setSaving(false);
     }
   };
 
   const handleThumbnailUpload = async (file: File) => {
-    setThumbnailError("");
-    setThumbnailSuccess("");
     if (!ALLOWED_THUMBNAIL_TYPES.has(file.type)) {
-      setThumbnailError("Thumbnail must be a JPG, PNG, or WebP image.");
+      toast.error("Thumbnail must be a JPG, PNG, or WebP image.");
       return;
     }
     if (file.size > MAX_THUMBNAIL_BYTES) {
-      setThumbnailError("Thumbnail must be 5 MB or smaller.");
+      toast.error("Thumbnail must be 5 MB or smaller.");
       return;
     }
     setThumbnailUploading(true);
@@ -149,11 +141,10 @@ export default function CourseDetailPage() {
       const uploadData = new FormData();
       uploadData.append("thumbnail", file);
       await api.post(`/api/admin/courses/${id}/thumbnail`, uploadData);
-      setThumbnailSuccess("Thumbnail updated.");
+      toast.success("Thumbnail updated.");
       fetchCourse();
-      setTimeout(() => setThumbnailSuccess(""), 3000);
     } catch (err: any) {
-      setThumbnailError(err.message || "Failed to upload thumbnail");
+      toast.error(err.message || "Failed to upload thumbnail");
     } finally {
       setThumbnailUploading(false);
     }
@@ -169,21 +160,23 @@ export default function CourseDetailPage() {
           .filter((c: any) => !c.passed)
           .map((c: any) => `\u2022 ${c.item}`)
           .join("\n");
-        alert(`Cannot publish:\n${fails}`);
+        toast.error(`Cannot publish:\n${fails}`);
         return;
       }
+      toast.success("Course published");
       fetchCourse();
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
   const handleUnpublish = async () => {
     try {
       await api.post(`/api/admin/courses/${id}/unpublish`);
+      toast.success("Course unpublished");
       fetchCourse();
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -191,9 +184,10 @@ export default function CourseDetailPage() {
     if (!confirm("Archive this course? Students will lose access.")) return;
     try {
       await api.delete(`/api/admin/courses/${id}`);
+      toast.success("Course archived");
       router.push("/admin/courses");
     } catch (err: any) {
-      alert(err.message || "Failed to archive course");
+      toast.error(err.message || "Failed to archive course");
     }
   };
 
@@ -251,13 +245,6 @@ export default function CourseDetailPage() {
         </div>
       </div>
 
-      {error && (
-        <div className="rounded-xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm text-danger">{error}</div>
-      )}
-      {success && (
-        <div className="rounded-xl border border-success/25 bg-success/10 px-4 py-3 text-sm text-success">{success}</div>
-      )}
-
       {/* Tab Navigation */}
       <div className="flex gap-2 border-b border-border/50">
         <TabButton label="Course Details" active={activeTab === "details"} onClick={() => setActiveTab("details")} />
@@ -274,8 +261,6 @@ export default function CourseDetailPage() {
           form={form}
           setForm={setForm}
           thumbnailUploading={thumbnailUploading}
-          thumbnailError={thumbnailError}
-          thumbnailSuccess={thumbnailSuccess}
           saving={saving}
           onThumbnailUpload={handleThumbnailUpload}
           onSave={handleSaveCourse}
@@ -325,9 +310,9 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
 }
 
 function CourseDetailsTab({
-  course, form, setForm, thumbnailUploading, thumbnailError, thumbnailSuccess, saving, onThumbnailUpload, onSave,
+  course, form, setForm, thumbnailUploading, saving, onThumbnailUpload, onSave,
 }: {
-  course: Course; form: any; setForm: any; thumbnailUploading: boolean; thumbnailError: string; thumbnailSuccess: string; saving: boolean; onThumbnailUpload: (file: File) => void; onSave: () => void;
+  course: Course; form: any; setForm: any; thumbnailUploading: boolean; saving: boolean; onThumbnailUpload: (file: File) => void; onSave: () => void;
 }) {
   return (
     <div className="glass-card p-6 space-y-4">
@@ -354,8 +339,6 @@ function CourseDetailsTab({
               disabled={thumbnailUploading}
             />
             <p className="text-xs text-muted">JPG, PNG, or WebP. Max 5 MB.</p>
-            {thumbnailError && <p className="text-xs text-danger">{thumbnailError}</p>}
-            {thumbnailSuccess && <p className="text-xs text-success">{thumbnailSuccess}</p>}
           </div>
         </div>
       </div>
@@ -455,7 +438,7 @@ function ModuleCard({ module: mod, courseId, onChanged }: {
       setEditing(false);
       onChanged();
     } catch (err: any) {
-      alert(err.message || "Failed to update module");
+      toast.error(err.message || "Failed to update module");
     }
   };
 
@@ -464,7 +447,7 @@ function ModuleCard({ module: mod, courseId, onChanged }: {
     try {
       await api.delete(`/api/admin/courses/modules/${mod.id}`);
       onChanged();
-    } catch { alert("Failed to delete module"); }
+    } catch { toast.error("Failed to delete module"); }
   };
 
   const handleMove = async (direction: "up" | "down") => {
@@ -477,7 +460,7 @@ function ModuleCard({ module: mod, courseId, onChanged }: {
       [sorted[idx], sorted[swapIdx]] = [sorted[swapIdx], sorted[idx]];
       await api.patch(`/api/admin/courses/${courseId}/modules/reorder`, { moduleIds: sorted.map((m: Module) => m.id) });
       onChanged();
-    } catch { alert("Failed to reorder"); }
+    } catch { toast.error("Failed to reorder"); }
   };
 
   return (
@@ -532,7 +515,7 @@ function AddModuleForm({ courseId, onAdded }: { courseId: string; onAdded: () =>
       setForm({ title: "", description: "", videoUrl: "" });
       setShow(false);
       onAdded();
-    } catch (err: any) { alert(err.message || "Failed to add module"); }
+    } catch (err: any) { toast.error(err.message || "Failed to add module"); }
     finally { setAdding(false); }
   };
 
@@ -576,10 +559,10 @@ function SessionsTab({ courseId, courseTitle }: { courseId: string; courseTitle:
     setSyncingId(sessionId);
     try {
       await api.post(`/api/recordings/${sessionId}/sync`);
-      alert("Recording synced successfully!");
+      toast.success("Recording synced successfully!");
       fetchSessions();
     } catch (err: any) {
-      alert(err.message || "No recording found yet.");
+      toast.error(err.message || "No recording found yet.");
     } finally { setSyncingId(null); }
   };
 

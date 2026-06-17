@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 type Student = {
   id: string;
@@ -72,9 +73,10 @@ export default function BatchDetailPage() {
     if (!confirm(`Remove ${name} from this batch?`)) return;
     try {
       await api.delete(`/api/admin/batches/${id}/students/${userId}`);
+      toast.success(`${name} removed from batch`);
       fetchBatch();
     } catch (err: any) {
-      alert(err.message || "Failed to remove student");
+      toast.error(err.message || "Failed to remove student");
     }
   };
 

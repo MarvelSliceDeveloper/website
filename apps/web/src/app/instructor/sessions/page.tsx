@@ -16,6 +16,7 @@ import {
   IconPlus,
   IconLink
 } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 type Course = {
   id: string;
@@ -103,7 +104,6 @@ function SessionsPageContent() {
     customJoinUrl: "",
   });
 
-  const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const fetchSessions = async () => {
@@ -128,7 +128,6 @@ function SessionsPageContent() {
   // Fetch courses when create modal opens
   const openCreateModal = async () => {
     setShowCreateModal(true);
-    setError("");
     setForm({
       courseId: "",
       batchId: "",
@@ -179,7 +178,6 @@ function SessionsPageContent() {
 
   const handleCreateSession = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setSubmitting(true);
 
     try {
@@ -195,7 +193,7 @@ function SessionsPageContent() {
       setShowCreateModal(false);
       fetchSessions();
     } catch (err: any) {
-      setError(err.message || "Failed to schedule session");
+      toast.error(err.message || "Failed to schedule session");
     } finally {
       setSubmitting(false);
     }
@@ -203,7 +201,6 @@ function SessionsPageContent() {
 
   const openEditModal = (session: Session) => {
     setEditingSession(session);
-    setError("");
     setForm({
       courseId: session.batch?.course?.id || "",
       batchId: session.batchId,
@@ -219,7 +216,6 @@ function SessionsPageContent() {
   const handleEditSession = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSession) return;
-    setError("");
     setSubmitting(true);
 
     try {
@@ -233,7 +229,7 @@ function SessionsPageContent() {
       setEditingSession(null);
       fetchSessions();
     } catch (err: any) {
-      setError(err.message || "Failed to update session");
+      toast.error(err.message || "Failed to update session");
     } finally {
       setSubmitting(false);
     }
@@ -244,10 +240,10 @@ function SessionsPageContent() {
 
     try {
       await api.delete(`/api/sessions/${sessionId}`);
-      alert("Session cancelled successfully!");
+      toast.success("Session cancelled successfully!");
       fetchSessions();
     } catch (err: any) {
-      alert(err.message || "Failed to cancel session");
+      toast.error(err.message || "Failed to cancel session");
     }
   };
 
@@ -255,10 +251,10 @@ function SessionsPageContent() {
     setSyncingId(sessionId);
     try {
       await api.post(`/api/recordings/${sessionId}/sync`);
-      alert("Recording synced successfully! The video is now available for students.");
+      toast.success("Recording synced successfully! The video is now available for students.");
       fetchSessions();
     } catch (err: any) {
-      alert(err.message || "No recording was found on Teams. Please note that Teams recordings take a few minutes to process after a session ends.");
+      toast.error(err.message || "No recording was found on Teams. Please note that Teams recordings take a few minutes to process after a session ends.");
     } finally {
       setSyncingId(null);
     }
@@ -376,8 +372,6 @@ function SessionsPageContent() {
             </div>
 
             <form onSubmit={handleCreateSession} className="p-4 space-y-4">
-              {error && <div className="rounded-lg bg-danger/10 border border-danger/25 p-3 text-xs text-danger">{error}</div>}
-
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Select Course</label>
                 <select
@@ -486,8 +480,6 @@ function SessionsPageContent() {
             </div>
 
             <form onSubmit={handleEditSession} className="p-4 space-y-4">
-              {error && <div className="rounded-lg bg-danger/10 border border-danger/25 p-3 text-xs text-danger">{error}</div>}
-
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Session Title</label>
                 <input

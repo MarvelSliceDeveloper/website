@@ -171,6 +171,7 @@ stats.html
 # TypeScript build info
 *.tsbuildinfo
 
-# Lock files (keep pnpm-lock.yaml, ignore others)
+# Lock files (keep root pnpm-lock.yaml, ignore others)
 package-lock.json
 yarn.lock
+apps/web/pnpm-lock.yaml

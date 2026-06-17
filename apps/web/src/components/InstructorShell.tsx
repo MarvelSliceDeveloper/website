@@ -19,6 +19,7 @@ export default function InstructorShell({ children }: { children: React.ReactNod
         <Header
           isSidebarCollapsed={isSidebarCollapsed}
           onToggleSidebar={() => setIsSidebarCollapsed((value) => !value)}
+          inboxHref="/instructor/inbox"
         />
         <main className="flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-7xl p-4 md:p-6">{children}</div>

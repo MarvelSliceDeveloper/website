@@ -2,11 +2,13 @@ import { Response } from 'express';
 import { TicketStatus } from '@prisma/client';
 import { ZodError } from 'zod';
 import { AuthRequest } from '../../middleware/auth.middleware';
+import { notificationService } from '../notifications/notification.service';
 import {
   mentorshipService,
   CreateTicketSchema,
   AssignMentorSchema,
   ScheduleSessionSchema,
+  CompleteTicketSchema,
 } from './mentorship.service';
 
 export const mentorshipController = {
@@ -20,6 +22,8 @@ export const mentorshipController = {
 
       const data = CreateTicketSchema.parse(req.body);
       const ticket = await mentorshipService.createTicket(req.user.userId, data);
+
+      notificationService.notifyMentorshipCreated(ticket.id);
 
       return res.status(201).json({
         success: true,
@@ -101,6 +105,7 @@ export const mentorshipController = {
 
       const data = AssignMentorSchema.parse(req.body);
       const ticket = await mentorshipService.assignMentor(req.params.id, req.user.userId, data);
+      notificationService.notifyMentorshipStatusChange(req.params.id, 'ASSIGNED');
 
       return res.status(200).json({
         success: true,
@@ -132,6 +137,7 @@ export const mentorshipController = {
 
       const data = ScheduleSessionSchema.parse(req.body);
       const ticket = await mentorshipService.scheduleSession(req.params.id, req.user.userId, data);
+      notificationService.notifyMentorshipStatusChange(req.params.id, 'SCHEDULED');
 
       return res.status(200).json({
         success: true,
@@ -153,13 +159,18 @@ export const mentorshipController = {
    */
   async completeTicket(req: AuthRequest, res: Response) {
     try {
-      const ticket = await mentorshipService.completeTicket(req.params.id);
+      const data = CompleteTicketSchema.parse(req.body);
+      const ticket = await mentorshipService.completeTicket(req.params.id, data);
+      notificationService.notifyMentorshipStatusChange(req.params.id, 'COMPLETED');
       return res.status(200).json({
         success: true,
         message: 'Ticket marked as completed',
         ticket
       });
     } catch (error: any) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
       console.error('Error completing ticket:', error.message);
       return res.status(500).json({ error: 'Failed to complete ticket' });
     }
@@ -172,6 +183,7 @@ export const mentorshipController = {
   async cancelTicket(req: AuthRequest, res: Response) {
     try {
       const ticket = await mentorshipService.cancelTicket(req.params.id);
+      notificationService.notifyMentorshipStatusChange(req.params.id, 'CANCELLED');
       return res.status(200).json({
         success: true,
         message: 'Ticket cancelled successfully',

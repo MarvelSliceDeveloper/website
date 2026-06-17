@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 
 type CourseOption = { id: string; title: string };
@@ -10,7 +11,6 @@ type InstructorOption = { id: string; name: string; email: string; role: string 
 export default function CreateBatchPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
 
   const [courses, setCourses] = useState<CourseOption[]>([]);
   const [instructors, setInstructors] = useState<InstructorOption[]>([]);
@@ -35,7 +35,6 @@ export default function CreateBatchPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setSubmitting(true);
 
     try {
@@ -51,7 +50,7 @@ export default function CreateBatchPage() {
 
       router.push(`/admin/batches/${batch.id}`);
     } catch (err: any) {
-      setError(err.message || "Failed to create batch");
+      toast.error(err.message || "Failed to create batch");
     } finally {
       setSubmitting(false);
     }
@@ -67,10 +66,6 @@ export default function CreateBatchPage() {
         <h1 className="mt-1 text-2xl font-bold text-foreground">Create New Batch</h1>
         <p className="mt-1 text-sm text-muted-foreground">A batch is a cohort of students taking a course together.</p>
       </div>
-
-      {error && (
-        <div className="rounded-xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm text-danger">{error}</div>
-      )}
 
       <form onSubmit={handleSubmit} className="glass-card p-6 space-y-5">
         {/* Batch Name */}

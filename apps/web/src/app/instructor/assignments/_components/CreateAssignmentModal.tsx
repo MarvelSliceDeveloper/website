@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 
 interface Batch {
@@ -31,7 +32,6 @@ export default function CreateAssignmentModal({
   });
 
   const [creating, setCreating] = useState(false);
-  const [error, setError] = useState("");
 
   const handleBatchChange = (batchId: string) => {
     const selectedBatch = batches.find((b) => b.id === batchId);
@@ -44,7 +44,6 @@ export default function CreateAssignmentModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setCreating(true);
 
     try {
@@ -82,7 +81,7 @@ export default function CreateAssignmentModal({
       onAssignmentCreated();
       onClose();
     } catch (err: any) {
-      setError(err.message || "Failed to create assignment");
+      toast.error(err.message || "Failed to create assignment");
     } finally {
       setCreating(false);
     }
@@ -102,12 +101,6 @@ export default function CreateAssignmentModal({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="rounded-lg border border-danger/25 bg-danger/10 px-3 py-2 text-sm text-danger">
-              {error}
-            </div>
-          )}
-
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">
               Batch *

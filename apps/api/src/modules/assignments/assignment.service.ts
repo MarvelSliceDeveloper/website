@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { prisma } from '../../utils/prisma';
+import { notificationService } from '../notifications/notification.service';
 
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
 
@@ -326,7 +327,7 @@ export const assignmentService = {
 
       const grade = `${totalScore}/${assignment.maxPoints}`;
 
-      return tx.assignmentSubmission.update({
+      const updated = await tx.assignmentSubmission.update({
         where: { id: submission.id },
         data: {
           status: 'GRADED',
@@ -339,6 +340,8 @@ export const assignmentService = {
           questionResponses: true,
         },
       });
+      notificationService.notifyAssignmentGraded(submission.id);
+      return updated;
     });
   },
 
@@ -422,7 +425,7 @@ export const assignmentService = {
       throw new Error('You are not the instructor of this batch');
     }
 
-    return prisma.assignmentSubmission.update({
+    const updated = await prisma.assignmentSubmission.update({
       where: { id: submissionId },
       data: {
         grade,
@@ -431,6 +434,8 @@ export const assignmentService = {
         gradedAt: new Date(),
       },
     });
+    notificationService.notifyAssignmentGraded(submissionId);
+    return updated;
   },
 
   // Allows a student to submit a file answer for an ASSIGNMENT-type item.

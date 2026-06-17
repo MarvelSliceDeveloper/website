@@ -12,6 +12,7 @@ import {
   IconLogout,
   IconUsers,
   IconVideo,
+  IconMail,
   IconMessageCircle,
   IconChevronDown,
 } from "@tabler/icons-react";
@@ -31,6 +32,7 @@ type NavItem = {
 
 const overviewItems: NavItem[] = [
   { label: "Dashboard", href: "/instructor/dashboard", icon: IconLayoutDashboard },
+  { label: "Inbox", href: "/instructor/inbox", icon: IconMail },
   {
     label: "My Sessions",
     href: "/instructor/sessions",

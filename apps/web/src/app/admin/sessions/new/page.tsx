@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 import { IconCalendar, IconVideo, IconUsersGroup, IconBook, IconLink } from "@tabler/icons-react";
 
 interface Course {
@@ -38,7 +39,6 @@ interface Instructor {
 export default function ScheduleSessionPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
   
   // Data lists
   const [courses, setCourses] = useState<Course[]>([]);
@@ -72,7 +72,7 @@ export default function ScheduleSessionPage() {
         setCourses(data.courses || []);
       } catch (err: any) {
         console.error("Failed to load courses:", err);
-        setError("Failed to load courses. Please refresh.");
+        toast.error("Failed to load courses. Please refresh.");
       } finally {
         setLoadingCourses(false);
       }
@@ -142,15 +142,13 @@ export default function ScheduleSessionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-
     if (!selectedCourseId) {
-      setError("Please select a Course first.");
+      toast.error("Please select a Course first.");
       return;
     }
 
     if (!form.batchId) {
-      setError("Please select a Batch.");
+      toast.error("Please select a Batch.");
       return;
     }
 
@@ -159,12 +157,12 @@ export default function ScheduleSessionPage() {
     const end = new Date(form.endDateTime);
 
     if (start >= end) {
-      setError("End time must be after the start time.");
+      toast.error("End time must be after the start time.");
       return;
     }
 
     if (start < new Date()) {
-      setError("Start time cannot be in the past.");
+      toast.error("Start time cannot be in the past.");
       return;
     }
 
@@ -183,7 +181,7 @@ export default function ScheduleSessionPage() {
       router.push("/admin/sessions");
       router.refresh();
     } catch (err: any) {
-      setError(err.message || "Failed to schedule live session.");
+      toast.error(err.message || "Failed to schedule live session.");
     } finally {
       setSubmitting(false);
     }
@@ -209,12 +207,6 @@ export default function ScheduleSessionPage() {
           Select a course, assign the session to an active student batch, and schedule the online meeting.
         </p>
       </div>
-
-      {error && (
-        <div className="rounded-xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm text-danger animate-in fade-in slide-in-from-top-1 duration-200">
-          {error}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="glass-card p-6 space-y-5">
         {/* Course Selector */}

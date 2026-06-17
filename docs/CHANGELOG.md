@@ -4,6 +4,49 @@
 
 ---
 
+## 2026-06-17 — Toast Migration, Inbox Overhaul, Mentorship Rewire ✅
+
+### Toast & Monorepo
+- **Sonner Toast Integration**: Installed `sonner ^2.0.7` in `apps/web`. Created `apps/web/src/app/providers.tsx` with `<Toaster position="bottom-right" richColors closeButton />` wired into root layout.
+- **alert() → Toast Migration**: Replaced all 52+ `alert()` calls with `toast.success()` / `toast.error()` across admin, instructor, and student pages.
+- **Inline Error/Success → Toast Migration**: Removed all `{error && <div...}` / `{success && <div...}` inline state-rendering blocks across 13 files, replacing with sonner pop-up notifications. Cleaned up unused error/success/thumbnailError state variables and related `setTimeout` auto-dismiss logic.
+- **Monorepo Package Rename**: `apps/web/package.json` name changed from `"web"` → `"@lms/web"`.
+- **Lockfile Cleanup**: Deleted orphaned `apps/web/pnpm-lock.yaml` and `apps/web/package-lock.json` from git/disk; added `pnpm-lock.yaml` to `.gitignore` in `apps/web/`.
+- **Dependency Relocation**: Moved `react-icons` from root `package.json` → `apps/web/package.json`. Removed unused `nodemon` from `apps/api/devDependencies`.
+- **Root tsconfig.json**: Created shared base `tsconfig.json` at root; `apps/api` and `apps/web` tsconfigs now `extends` it.
+
+### Notification & Inbox Overhaul
+- **Database Schema**: Added `Message` model (sender, receiver, subject, body, read, entityType, entityId) and `NotificationPreference` model (userId, type, enabled, email, unique compound key) to Prisma.
+- **Backend Messages Module**: Created `message.service.ts`, `message.controller.ts`, `message.routes.ts` mounted at `/api/messages`. Supports send, listConversations, getThread, markAsRead, unreadCount.
+- **Enhanced Notification Service**: Added `delete()`, `deleteAllRead()`, `getPreferences()`, `updatePreference()` methods and `shouldNotify()` preference gate.
+- **New Notification Triggers**: Added `notifySessionCancelled()` (sessions), `notifyMentorshipStatusChange()` (mentorship), `notifyAssignmentGraded()` (assignments), `notifyMentorshipCreated()` (new ticket alerts student + all admins). Wired into respective services/controllers.
+- **StudentPortalShell Notification Bell**: Rewritten with 30s polling, API-fetched hybrid dropdown (5 latest), per-item mark-as-read, unread badge (9+ overflow), "View all" link.
+- **Header.tsx Notification Bell**: Same hybrid dropdown + polling added to shared Header for admin/instructor shells.
+- **Student Inbox Page**: Created `/student/inbox` with full notification list, All/Unread filter tabs, per-item mark-as-read/delete, mark-all-read / clear-read bulk actions, loading skeleton, empty states.
+- **Admin Inbox Page**: Created `/admin/inbox` with 3 tabs — Notifications (full list with CRUD), Support Tickets (fetches mentorship API), Messages (conversation list + chat bubble thread with send UI, toast on send).
+- **Instructor Inbox Page**: Created `/instructor/inbox` with 2 tabs — Notifications and Messages (no support tickets).
+- **Student Settings Page**: Created `/student/settings` with notification preference toggle switches for all 6 types, persists via `PATCH /api/notifications/preferences`.
+- **AdminSidebar**: Added "Inbox" nav item (`IconMail`) pointing to `/admin/inbox`.
+- **InstructorSidebar**: Added "Inbox" nav item (`IconMail`) pointing to `/instructor/inbox`.
+- **Seed Defaults**: Added default notification preferences (all types enabled, email=false) for all seeded users. Fixed duplicate `main()` call bug in seed.ts.
+
+### Email & UI Polish
+- **Emoji Cleanup**: Removed emoticons from `MentorshipTickets.tsx`, `student-mock-data.ts`, `instructor/mentorship/page.tsx` empty states, and `MentorshipView.tsx` status labels.
+- **Header inboxHref Prop**: Made "View all" link role-aware via `inboxHref` prop — AdminShell passes `/admin/inbox`, InstructorShell `/instructor/inbox`, StudentShell `/student/inbox`.
+
+### Mentorship Feature Rewire
+- **Database Schema**: Added optional `courseId` (FK to Course) and `notes` (resolution notes) fields to `MentorshipTicket` model.
+- **Backend Updates**: `CreateTicketSchema` now accepts `courseId`; added `CompleteTicketSchema` with optional `notes`; `completeTicket()` persists notes; all queries include `course` relation.
+- **Student Type Fix**: `fetchPortalData()` now maps API response (`title`, `mentor.name`, `course.title`) to mock-type shape (`topic`, `instructor`, `courseTitle`) so `MentorshipView` renders correctly.
+- **Submit Payload Fix**: Changed student form submission from `{ courseId, topic, preferredDate }` to `{ title, description, courseId, preferredDate }` matching backend Zod schema.
+- **Student Mentorship Route**: Created `/student/mentorship/page.tsx` as a standalone route (sidebar link previously 404'd).
+- **Error Handling**: Added `toast.success`/`toast.error` on student submit, `loadData` refresh after create, loading skeleton.
+- **Instructor Page**: Removed bad `t.status !== "OPEN" && t.mentor` frontend filter (backend already scopes by mentorId). `handleComplete` now prompts for and sends notes.
+- **Admin Modal**: Replaced all raw `fetch()` calls with `api.patch()` helper. Added collapsible notes textarea sent with complete action.
+- **Mentorship Creation Notifications**: `notifyMentorshipCreated()` sends notification to the student ("request submitted") and all admins ("new request from student").
+
+---
+
 ## 2026-06-06 — MCQ Assignment System (Instructor + Student) ✅
 
 - **Database Schema**: Added 5 new Prisma models: `Assignment`, `AssignmentQuestion`, `AssignmentMcqOption`, `AssignmentSubmission`, `StudentQuestionResponse`, plus `SubmissionStatus` enum. Linked to existing `User`, `Course`, and `Batch` models.

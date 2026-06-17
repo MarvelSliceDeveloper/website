@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Sora, DM_Sans } from "next/font/google";
+import { Providers } from "./providers";
 import "./globals.css";
 
 // ─── Fonts ────────────────────────────────────────────────────────────────────
@@ -104,14 +105,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
-        {/*
-          Wrap with a <Providers> component when you need:
-            - React Query / SWR
-            - Auth context (next-auth SessionProvider)
-            - Theme context
-            - Toast / notification providers
-        */}
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

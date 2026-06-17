@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 const demoAccounts = {
   student: {
@@ -27,13 +28,11 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setError("");
 
     const normalizedEmail = email.trim().toLowerCase();
 
@@ -46,6 +45,8 @@ export default function LoginPage() {
         email: normalizedEmail,
         password,
       });
+
+      toast.success("Signed in successfully");
 
       const role = result?.user?.role;
 
@@ -61,11 +62,11 @@ export default function LoginPage() {
 
       router.push(demoAccounts.student.redirectTo);
     } catch (submitError) {
-      if (submitError instanceof Error) {
-        setError(submitError.message);
-      } else {
-        setError("Login failed. Please try again.");
-      }
+      const message =
+        submitError instanceof Error
+          ? submitError.message
+          : "Login failed. Please try again.";
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -104,12 +105,6 @@ export default function LoginPage() {
             <h2 className="text-2xl font-bold text-foreground">Welcome back</h2>
             <p className="text-sm text-muted-foreground">Use your account credentials to continue.</p>
           </div>
-
-          {error && (
-            <div className="mb-4 rounded-xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm text-danger">
-              {error}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

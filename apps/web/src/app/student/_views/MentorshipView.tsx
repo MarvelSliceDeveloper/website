@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import type { MentorshipTicket } from "@/lib/student-mock-data";
 import type { EnrolledCourse } from "@/lib/student-mock-data";
 
@@ -14,7 +15,7 @@ const statusConfig: Record<MentorshipTicket["status"], { label: string; classes:
   OPEN:      { label: "Waiting review",  classes: "border-warning/30 bg-warning/10 text-warning" },
   ASSIGNED:  { label: "Mentor assigned", classes: "border-accent/30 bg-accent/10 text-accent" },
   SCHEDULED: { label: "Scheduled",       classes: "border-success/30 bg-success/10 text-success" },
-  COMPLETED: { label: "Resolved ✅",     classes: "border-primary/30 bg-primary/10 text-primary" },
+  COMPLETED: { label: "Resolved",        classes: "border-primary/30 bg-primary/10 text-primary" },
   CANCELLED: { label: "Cancelled",       classes: "border-danger/30 bg-danger/10 text-danger" },
 };
 
@@ -35,12 +36,15 @@ export default function MentorshipView({ tickets, enrolledCourses, onSubmit }: M
     setSubmitting(true);
     try {
       await onSubmit?.(courseId, topic, preferredDate);
-    } finally {
-      setSubmitting(false);
+      toast.success("Request submitted");
       setSubmitted(true);
       setShowForm(false);
       setTopic("");
       setPreferredDate("");
+    } catch {
+      toast.error("Failed to submit request");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -60,14 +64,13 @@ export default function MentorshipView({ tickets, enrolledCourses, onSubmit }: M
           onClick={() => setShowForm((v) => !v)}
           className="btn-primary"
         >
-          {showForm ? "✕ Cancel" : "+ Request New Session"}
+          {showForm ? "Cancel" : "Request New Session"}
         </button>
       </div>
 
-      {/* Success banner */}
       {submitted && (
         <div className="rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm text-success">
-          ✅ Your request was submitted! Admin will review and assign a mentor.
+          Your request was submitted! Admin will review and assign a mentor.
         </div>
       )}
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 import {
   IconAlertCircle,
   IconCheck,
@@ -73,7 +74,6 @@ export default function QuizOverdueView({ quizzes, onGoBack }: QuizOverdueViewPr
   const [subView, setSubView] = useState<SubView>({ type: "LIST" });
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [locallySubmittedIds, setLocallySubmittedIds] = useState<string[]>([]);
 
@@ -91,12 +91,11 @@ export default function QuizOverdueView({ quizzes, onGoBack }: QuizOverdueViewPr
   async function handleStartQuiz(assignmentId: string) {
     try {
       setLoading(true);
-      setError(null);
       const data = await api.get<AssignmentQuestions>(`/api/assignments/${assignmentId}/questions`);
       setSelectedAnswers({});
       setSubView({ type: "QUIZ", assignmentId, data });
     } catch (err: any) {
-      setError(err.message || "Failed to load quiz questions.");
+      toast.error(err.message || "Failed to load quiz questions.");
     } finally {
       setLoading(false);
     }
@@ -105,13 +104,12 @@ export default function QuizOverdueView({ quizzes, onGoBack }: QuizOverdueViewPr
   async function handleViewResult(submissionId: string) {
     try {
       setLoading(true);
-      setError(null);
       const resultRes = await api.get<{ result: SubmissionResult }>(
         `/api/assignments/submissions/${submissionId}/result`
       );
       setSubView({ type: "RESULT", data: resultRes.result });
     } catch (err: any) {
-      setError(err.message || "Failed to load quiz results.");
+      toast.error(err.message || "Failed to load quiz results.");
     } finally {
       setLoading(false);
     }
@@ -123,7 +121,7 @@ export default function QuizOverdueView({ quizzes, onGoBack }: QuizOverdueViewPr
     const { assignmentId, data } = subView;
     const unanswered = data.questions.filter((q) => !selectedAnswers[q.id]);
     if (unanswered.length > 0) {
-      setError(`Please answer all questions. ${unanswered.length} unanswered.`);
+      toast.error(`Please answer all questions. ${unanswered.length} unanswered.`);
       return;
     }
 
@@ -134,7 +132,6 @@ export default function QuizOverdueView({ quizzes, onGoBack }: QuizOverdueViewPr
 
     try {
       setSubmitting(true);
-      setError(null);
       const res = await api.post<{ submission: { id: string } }>(
         `/api/assignments/${assignmentId}/submit/mcq`,
         { answers }
@@ -146,7 +143,7 @@ export default function QuizOverdueView({ quizzes, onGoBack }: QuizOverdueViewPr
       setLocallySubmittedIds((prev) => [...prev, assignmentId]);
       setSubView({ type: "RESULT", data: resultRes.result });
     } catch (err: any) {
-      setError(err.message || "Failed to submit answers.");
+      toast.error(err.message || "Failed to submit answers.");
     } finally {
       setSubmitting(false);
     }
@@ -243,12 +240,6 @@ export default function QuizOverdueView({ quizzes, onGoBack }: QuizOverdueViewPr
             );
           })}
         </div>
-
-        {error && (
-          <div className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-xs text-danger font-medium">
-            ⚠️ {error}
-          </div>
-        )}
 
         <div className="flex items-center justify-between pt-4 border-t border-border/60">
           <button onClick={() => setSubView({ type: "LIST" })} className="btn-secondary text-xs">
@@ -391,12 +382,6 @@ export default function QuizOverdueView({ quizzes, onGoBack }: QuizOverdueViewPr
           Complete your pending quizzes to progress in your courses.
         </p>
       </div>
-
-      {error && (
-        <div className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-xs text-danger font-medium">
-          ⚠️ {error}
-        </div>
-      )}
 
       {loading && (
         <div className="glass-card p-8 text-center text-sm text-muted animate-pulse">

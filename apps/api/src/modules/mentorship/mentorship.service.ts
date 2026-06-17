@@ -6,9 +6,9 @@ import { prisma } from '../../utils/prisma';
 export const CreateTicketSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
-  // Accept date-only (YYYY-MM-DD) or datetime strings, and allow empty values from the form
   preferredDate: z.string().optional(),
   preferredTime: z.string().optional(),
+  courseId: z.string().optional(),
 });
 
 export const AssignMentorSchema = z.object({
@@ -21,9 +21,14 @@ export const ScheduleSessionSchema = z.object({
   joinUrl: z.string().url().optional(),
 });
 
+export const CompleteTicketSchema = z.object({
+  notes: z.string().optional(),
+});
+
 export type CreateTicketInput = z.infer<typeof CreateTicketSchema>;
 export type AssignMentorInput = z.infer<typeof AssignMentorSchema>;
 export type ScheduleSessionInput = z.infer<typeof ScheduleSessionSchema>;
+export type CompleteTicketInput = z.infer<typeof CompleteTicketSchema>;
 
 export const mentorshipService = {
   /**
@@ -37,11 +42,15 @@ export const mentorshipService = {
         description: data.description,
         preferredDate: data.preferredDate ? new Date(data.preferredDate) : null,
         preferredTime: data.preferredTime || null,
+        courseId: data.courseId || null,
         status: TicketStatus.OPEN,
       },
       include: {
         student: {
           select: { id: true, name: true, email: true },
+        },
+        course: {
+          select: { id: true, title: true },
         },
       },
     });
@@ -58,6 +67,9 @@ export const mentorshipService = {
       include: {
         mentor: {
           select: { id: true, name: true, email: true },
+        },
+        course: {
+          select: { id: true, title: true },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -83,6 +95,9 @@ export const mentorshipService = {
         mentor: {
           select: { id: true, name: true, email: true },
         },
+        course: {
+          select: { id: true, title: true },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -102,6 +117,9 @@ export const mentorshipService = {
         },
         mentor: {
           select: { id: true, name: true, email: true },
+        },
+        course: {
+          select: { id: true, title: true },
         },
       },
     });
@@ -139,6 +157,9 @@ export const mentorshipService = {
         mentor: {
           select: { id: true, name: true, email: true },
         },
+        course: {
+          select: { id: true, title: true },
+        },
       },
     });
 
@@ -164,6 +185,9 @@ export const mentorshipService = {
         mentor: {
           select: { id: true, name: true, email: true },
         },
+        course: {
+          select: { id: true, title: true },
+        },
       },
     });
 
@@ -173,12 +197,13 @@ export const mentorshipService = {
   /**
    * Complete a mentorship session
    */
-  async completeTicket(ticketId: string) {
+  async completeTicket(ticketId: string, data?: CompleteTicketInput) {
     const ticket = await prisma.mentorshipTicket.update({
       where: { id: ticketId },
       data: {
         status: TicketStatus.COMPLETED,
         resolvedAt: new Date(),
+        notes: data?.notes || null,
       },
       include: {
         student: {
@@ -186,6 +211,9 @@ export const mentorshipService = {
         },
         mentor: {
           select: { id: true, name: true, email: true },
+        },
+        course: {
+          select: { id: true, title: true },
         },
       },
     });
@@ -209,6 +237,9 @@ export const mentorshipService = {
         },
         mentor: {
           select: { id: true, name: true, email: true },
+        },
+        course: {
+          select: { id: true, title: true },
         },
       },
     });

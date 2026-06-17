@@ -15,6 +15,18 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   return res;
 }
 
+async function shouldNotify(userId: string, type: string): Promise<boolean> {
+  if (!prisma || !('notificationPreference' in prisma)) return true;
+  try {
+    const pref = await prisma.notificationPreference.findUnique({
+      where: { userId_type: { userId, type } },
+    });
+    return pref ? pref.enabled : true;
+  } catch {
+    return true;
+  }
+}
+
 export const notificationService = {
   /**
    * Create a notification for a specific user.
@@ -152,6 +164,69 @@ export const notificationService = {
   },
 
   /**
+   * Delete a single notification (scoped to user).
+   */
+  async delete(notificationId: string, userId: string): Promise<number> {
+    if (!prisma || !('notification' in prisma)) return 0;
+    try {
+      const res = await prisma.notification.deleteMany({
+        where: { id: notificationId, userId },
+      });
+      return res.count;
+    } catch (err: unknown) {
+      console.error('Error deleting notification:', (err as Error)?.message ?? err);
+      return 0;
+    }
+  },
+
+  /**
+   * Delete all read notifications for a user.
+   */
+  async deleteAllRead(userId: string): Promise<number> {
+    if (!prisma || !('notification' in prisma)) return 0;
+    try {
+      const res = await prisma.notification.deleteMany({
+        where: { userId, read: true },
+      });
+      return res.count;
+    } catch (err: unknown) {
+      console.error('Error deleting read notifications:', (err as Error)?.message ?? err);
+      return 0;
+    }
+  },
+
+  /**
+   * Get notification preferences for a user.
+   */
+  async getPreferences(userId: string) {
+    if (!prisma || !('notificationPreference' in prisma)) return [];
+    try {
+      return await prisma.notificationPreference.findMany({
+        where: { userId },
+      });
+    } catch {
+      return [];
+    }
+  },
+
+  /**
+   * Upsert a notification preference.
+   */
+  async updatePreference(userId: string, type: string, data: { enabled?: boolean; email?: boolean }) {
+    if (!prisma || !('notificationPreference' in prisma)) return null;
+    try {
+      return await prisma.notificationPreference.upsert({
+        where: { userId_type: { userId, type } },
+        create: { userId, type, enabled: data.enabled ?? true, email: data.email ?? false },
+        update: { ...data },
+      });
+    } catch (err: unknown) {
+      console.error('Error updating notification preference:', (err as Error)?.message ?? err);
+      return null;
+    }
+  },
+
+  /**
    * Notify all enrolled students + the instructor when a session is scheduled.
    */
   async notifySessionScheduled(sessionId: string) {
@@ -230,9 +305,16 @@ export const notificationService = {
 
     const message = `Recording is now available for ${session.batch.course.title} — ${session.batch.name}`;
 
-    const notifications = (session.batch.enrollments ?? []).map((e) => ({
-      userId: e.userId,
-      title: '📹 Recording Available',
+    const userIds = new Set<string>();
+    if (session.batch?.instructorId) userIds.add(session.batch.instructorId);
+    if (session.instructorId) userIds.add(session.instructorId);
+    for (const enrollment of session.batch.enrollments ?? []) {
+      if (enrollment?.userId) userIds.add(enrollment.userId);
+    }
+
+    const notifications = Array.from(userIds).map((userId) => ({
+      userId,
+      title: 'Recording Available',
       message,
       type: 'RECORDING_AVAILABLE',
       metadata: {
@@ -244,5 +326,139 @@ export const notificationService = {
     if (notifications.length > 0) {
       await this.createMany(notifications);
     }
+  },
+
+  /**
+   * Notify enrolled students + instructor when a session is cancelled.
+   */
+  async notifySessionCancelled(sessionId: string) {
+    const session = await prisma.liveSession.findUnique({
+      where: { id: sessionId },
+      include: {
+        batch: {
+          include: {
+            course: { select: { title: true } },
+            enrollments: {
+              where: { status: 'APPROVED' },
+              select: { userId: true },
+            },
+          },
+        },
+      },
+    });
+    if (!session) return;
+
+    const message = `Session cancelled for ${session.batch.course.title} — ${session.batch.name}`;
+    const userIds = new Set<string>();
+    if (session.batch?.instructorId) userIds.add(session.batch.instructorId);
+    if (session.instructorId) userIds.add(session.instructorId);
+    for (const enrollment of session.batch.enrollments ?? []) {
+      if (enrollment?.userId) userIds.add(enrollment.userId);
+    }
+
+    const notifications = Array.from(userIds).map((userId) => ({
+      userId,
+      title: 'Session Cancelled',
+      message,
+      type: 'SESSION_CANCELLED',
+      metadata: { sessionId: session.id, batchId: session.batchId },
+    }));
+    if (notifications.length > 0) await this.createMany(notifications);
+  },
+
+  /**
+   * Notify student + admins when a mentorship ticket is created.
+   */
+  async notifyMentorshipCreated(ticketId: string) {
+    const ticket = await prisma.mentorshipTicket.findUnique({
+      where: { id: ticketId },
+      include: {
+        student: { select: { id: true, name: true } },
+        course: { select: { title: true } },
+      },
+    });
+    if (!ticket) return;
+
+    // Notify student
+    await this.create({
+      userId: ticket.studentId,
+      title: 'Mentorship Request Submitted',
+      message: `Your mentorship request "${ticket.title}" has been submitted. Admin will review and assign a mentor.`,
+      type: 'MENTORSHIP_CREATED',
+      metadata: { ticketId: ticket.id },
+    });
+
+    // Notify all admins
+    const admins = await prisma.user.findMany({
+      where: { role: 'ADMIN' },
+      select: { id: true },
+    });
+    if (admins.length > 0) {
+      const courseLabel = ticket.course?.title ? ` for ${ticket.course.title}` : '';
+      await this.createMany(
+        admins.map((admin) => ({
+          userId: admin.id,
+          title: 'New Mentorship Request',
+          message: `${ticket.student.name} requested mentorship${courseLabel}: "${ticket.title}"`,
+          type: 'MENTORSHIP_CREATED',
+          metadata: { ticketId: ticket.id, studentId: ticket.studentId },
+        }))
+      );
+    }
+  },
+
+  /**
+   * Notify student + mentor when a mentorship ticket status changes.
+   */
+  async notifyMentorshipStatusChange(ticketId: string, status: string) {
+    const ticket = await prisma.mentorshipTicket.findUnique({
+      where: { id: ticketId },
+      include: { student: { select: { id: true, name: true } }, mentor: { select: { id: true, name: true } } },
+    });
+    if (!ticket) return;
+
+    const labels: Record<string, string> = {
+      ASSIGNED: 'Mentor Assigned',
+      SCHEDULED: 'Session Scheduled',
+      COMPLETED: 'Mentorship Completed',
+      CANCELLED: 'Mentorship Cancelled',
+    };
+    const label = labels[status] ?? status;
+    const message = `Your mentorship request "${ticket.title}" — ${label}`;
+
+    const userIds: string[] = [ticket.studentId];
+    if (ticket.mentorId) userIds.push(ticket.mentorId);
+
+    const notifications = userIds.map((userId) => ({
+      userId,
+      title: label,
+      message,
+      type: `MENTORSHIP_${status}`,
+      metadata: { ticketId: ticket.id },
+    }));
+    if (notifications.length > 0) await this.createMany(notifications);
+  },
+
+  /**
+   * Notify a student when their assignment is graded.
+   */
+  async notifyAssignmentGraded(submissionId: string) {
+    const submission = await prisma.assignmentSubmission.findUnique({
+      where: { id: submissionId },
+      include: {
+        assignment: { select: { title: true } },
+        student: { select: { id: true } },
+      },
+    });
+    if (!submission) return;
+
+    const message = `Your assignment "${submission.assignment.title}" has been graded.`;
+    await this.create({
+      userId: submission.studentId,
+      title: 'Assignment Graded',
+      message,
+      type: 'ASSIGNMENT_GRADED',
+      metadata: { submissionId: submission.id, assignmentId: submission.assignmentId },
+    });
   },
 };

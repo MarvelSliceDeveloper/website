@@ -290,23 +290,19 @@ export const sessionService = {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new Error('User not found');
 
+    await notificationService.notifySessionCancelled(sessionId);
+
     if (user.role === 'ADMIN') {
-      // Hard delete for Admin
       return prisma.$transaction(async (tx) => {
-        // Delete calendar event
         await tx.calendarEvent.deleteMany({ where: { sessionId } });
-        // Delete attendance
         await tx.attendance.deleteMany({ where: { sessionId } });
-        // Delete recording progress and recording if they exist
         if (session.recording) {
           await tx.progress.deleteMany({ where: { recordingId: session.recording.id } });
           await tx.recording.delete({ where: { sessionId } });
         }
-        // Delete the session itself
         return tx.liveSession.delete({ where: { id: sessionId } });
       });
     } else {
-      // Soft delete/cancel for Instructor
       if (session.batch.instructorId !== userId) {
         throw new Error('Only the assigned instructor or an admin can cancel this session');
       }

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 const MAX_THUMBNAIL_BYTES = 5 * 1024 * 1024;
 const ALLOWED_THUMBNAIL_TYPES = new Set([
@@ -14,8 +15,6 @@ const ALLOWED_THUMBNAIL_TYPES = new Set([
 export default function CreateCoursePage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [thumbnailError, setThumbnailError] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
@@ -43,7 +42,6 @@ export default function CreateCoursePage() {
 
   const handleThumbnailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
-    setThumbnailError("");
 
     if (!file) {
       setThumbnailFile(null);
@@ -52,14 +50,14 @@ export default function CreateCoursePage() {
 
     if (!ALLOWED_THUMBNAIL_TYPES.has(file.type)) {
       setThumbnailFile(null);
-      setThumbnailError("Thumbnail must be a JPG, PNG, or WebP image.");
+      toast.error("Thumbnail must be a JPG, PNG, or WebP image.");
       event.target.value = "";
       return;
     }
 
     if (file.size > MAX_THUMBNAIL_BYTES) {
       setThumbnailFile(null);
-      setThumbnailError("Thumbnail must be 5 MB or smaller.");
+      toast.error("Thumbnail must be 5 MB or smaller.");
       event.target.value = "";
       return;
     }
@@ -69,7 +67,6 @@ export default function CreateCoursePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setSubmitting(true);
 
     try {
@@ -86,7 +83,7 @@ export default function CreateCoursePage() {
         try {
           await api.post(`/api/admin/courses/${course.id}/thumbnail`, uploadData);
         } catch (uploadError: any) {
-          alert(
+          toast.error(
             uploadError?.message ||
             "Course created, but thumbnail upload failed. You can upload it in the editor."
           );
@@ -95,7 +92,7 @@ export default function CreateCoursePage() {
 
       router.push(`/admin/courses/${course.id}`);
     } catch (err: any) {
-      setError(err.message || "Failed to create course");
+      toast.error(err.message || "Failed to create course");
     } finally {
       setSubmitting(false);
     }
@@ -122,12 +119,6 @@ export default function CreateCoursePage() {
           course page later.
         </p>
       </div>
-
-      {error && (
-        <div className="rounded-xl border border-danger/25 bg-danger/10 px-4 py-3 text-sm text-danger">
-          {error}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="glass-card p-6 space-y-5">
         {/* Title */}
@@ -190,9 +181,6 @@ export default function CreateCoursePage() {
                 className="field"
               />
               <p className="text-xs text-muted">JPG, PNG, or WebP. Max 5 MB.</p>
-              {thumbnailError && (
-                <p className="text-xs text-danger">{thumbnailError}</p>
-              )}
             </div>
           </div>
         </div>

@@ -10,6 +10,7 @@ import {
   IconClipboardCheck,
   IconLayoutDashboard,
   IconLayoutSidebarLeftCollapse,
+  IconMail,
   IconSun,
   IconMoon,
   IconLogout,
@@ -36,6 +37,7 @@ type NavItem = {
 
 const overviewItems: NavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard", icon: IconLayoutDashboard },
+  { label: "Inbox", href: "/admin/inbox", icon: IconMail },
   {
     label: "Courses",
     href: "/admin/courses",

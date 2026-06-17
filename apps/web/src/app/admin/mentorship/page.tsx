@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 
 interface Ticket {
@@ -321,36 +322,24 @@ function TicketManageModal({
     ticket.scheduledAt ? new Date(ticket.scheduledAt).toISOString().slice(0, 16) : ""
   );
   const [joinUrl, setJoinUrl] = useState(ticket.joinUrl || "");
+  const [completionNotes, setCompletionNotes] = useState("");
+  const [showNotesInput, setShowNotesInput] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
 
   const handleAssignMentor = async () => {
     if (!selectedMentor) {
-      setError("Please select a mentor");
+      toast.error("Please select a mentor");
       return;
     }
 
     setIsSubmitting(true);
-    setError("");
 
     try {
-      const response = await fetch(
-        `/api/mentorship/tickets/${ticket.id}/assign`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mentorId: selectedMentor }),
-        }
-      );
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to assign mentor");
-      }
-
+      await api.patch(`/api/mentorship/tickets/${ticket.id}/assign`, { mentorId: selectedMentor });
+      toast.success("Mentor assigned successfully");
       onUpdate();
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message || "Failed to assign mentor");
     } finally {
       setIsSubmitting(false);
     }
@@ -358,34 +347,21 @@ function TicketManageModal({
 
   const handleSchedule = async () => {
     if (!scheduledDate) {
-      setError("Please select a date and time");
+      toast.error("Please select a date and time");
       return;
     }
 
     setIsSubmitting(true);
-    setError("");
 
     try {
-      const response = await fetch(
-        `/api/mentorship/tickets/${ticket.id}/schedule`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            scheduledAt: new Date(scheduledDate).toISOString(),
-            joinUrl: joinUrl || undefined,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to schedule session");
-      }
-
+      await api.patch(`/api/mentorship/tickets/${ticket.id}/schedule`, {
+        scheduledAt: new Date(scheduledDate).toISOString(),
+        joinUrl: joinUrl || undefined,
+      });
+      toast.success("Session scheduled successfully");
       onUpdate();
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message || "Failed to schedule session");
     } finally {
       setIsSubmitting(false);
     }
@@ -394,19 +370,12 @@ function TicketManageModal({
   const handleComplete = async () => {
     setIsSubmitting(true);
     try {
-      const response = await fetch(
-        `/api/mentorship/tickets/${ticket.id}/complete`,
-        {
-          method: "PATCH",
-        }
-      );
-
-      if (!response.ok) throw new Error("Failed to complete");
-
+      await api.patch(`/api/mentorship/tickets/${ticket.id}/complete`, { notes: completionNotes || undefined });
+      toast.success("Mentorship marked as completed");
       onUpdate();
       onClose();
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message || "Failed to complete");
     } finally {
       setIsSubmitting(false);
     }
@@ -415,19 +384,12 @@ function TicketManageModal({
   const handleCancel = async () => {
     setIsSubmitting(true);
     try {
-      const response = await fetch(
-        `/api/mentorship/tickets/${ticket.id}/cancel`,
-        {
-          method: "PATCH",
-        }
-      );
-
-      if (!response.ok) throw new Error("Failed to cancel");
-
+      await api.patch(`/api/mentorship/tickets/${ticket.id}/cancel`, {});
+      toast.success("Mentorship request cancelled");
       onUpdate();
       onClose();
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message || "Failed to cancel");
     } finally {
       setIsSubmitting(false);
     }
@@ -450,12 +412,6 @@ function TicketManageModal({
             From: {ticket.student.name} ({ticket.student.email})
           </p>
         </div>
-
-        {error && (
-          <div className="mb-4 rounded-lg border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger">
-            {error}
-          </div>
-        )}
 
         {/* Ticket Details */}
         <div className="mb-6 p-4 bg-card-hover rounded-lg">
@@ -564,6 +520,30 @@ function TicketManageModal({
                 >
                   Join URL: {ticket.joinUrl.substring(0, 50)}...
                 </a>
+              )}
+            </div>
+          )}
+
+          {/* Notes */}
+          {ticket.status !== "COMPLETED" && ticket.status !== "CANCELLED" && (
+            <div className="border border-border rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-foreground">Session Notes</h3>
+                <button
+                  onClick={() => setShowNotesInput((v) => !v)}
+                  className="text-xs text-primary hover:underline"
+                >
+                  {showNotesInput ? "Hide" : "Add notes"}
+                </button>
+              </div>
+              {showNotesInput && (
+                <textarea
+                  value={completionNotes}
+                  onChange={(e) => setCompletionNotes(e.target.value)}
+                  placeholder="Add resolution notes, feedback, or key takeaways..."
+                  rows={3}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none resize-none"
+                />
               )}
             </div>
           )}

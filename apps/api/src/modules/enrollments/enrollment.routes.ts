@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { requireAuth, requireRole, AuthRequest } from '../../middleware/auth.middleware';
 import { UserRole } from '@lms/types';
 import { prisma } from '../../utils/prisma';
+import { notificationService } from '../notifications/notification.service';
 
 const router = Router();
 
@@ -95,19 +96,13 @@ router.patch('/:id/approve', async (req: AuthRequest, res: Response) => {
       },
     });
 
-    // Create in-app notification for the student
-    try {
-      await prisma.notification.create({
-        data: {
-          userId: enrollment.userId,
-          type: 'ENROLLMENT_APPROVED',
-          title: 'Enrollment Approved! 🎉',
-          message: `Your enrollment has been approved. You've been assigned to batch "${batch.name}".`,
-        },
-      });
-    } catch (notifErr) {
-      console.error('Failed to send approval notification:', notifErr);
-    }
+    await notificationService.create({
+      userId: enrollment.userId,
+      type: 'ENROLLMENT_APPROVED',
+      title: 'Enrollment Approved!',
+      message: `Your enrollment has been approved. You've been assigned to batch "${batch.name}".`,
+      metadata: { courseId: enrollment.courseId, batchId },
+    });
 
     return res.json({ message: 'Enrollment approved', enrollment: updated });
   } catch (error: any) {
@@ -136,19 +131,13 @@ router.patch('/:id/reject', async (req: AuthRequest, res: Response) => {
       },
     });
 
-    // Notify student
-    try {
-      await prisma.notification.create({
-        data: {
-          userId: enrollment.userId,
-          type: 'ENROLLMENT_REJECTED',
-          title: 'Enrollment Update',
-          message: 'Unfortunately, your enrollment request was not approved at this time.',
-        },
-      });
-    } catch (notifErr) {
-      console.error('Failed to send rejection notification:', notifErr);
-    }
+    await notificationService.create({
+      userId: enrollment.userId,
+      type: 'ENROLLMENT_REJECTED',
+      title: 'Enrollment Update',
+      message: 'Unfortunately, your enrollment request was not approved at this time.',
+      metadata: { courseId: enrollment.courseId },
+    });
 
     return res.json({ message: 'Enrollment rejected', enrollment: updated });
   } catch (error: any) {

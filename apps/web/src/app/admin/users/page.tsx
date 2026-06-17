@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 type User = {
   id: string;
@@ -31,7 +32,6 @@ export default function AdminUsersPage() {
   // Create user modal
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState("");
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -43,7 +43,6 @@ export default function AdminUsersPage() {
   const [editUser, setEditUser] = useState<User | null>(null);
   const [editForm, setEditForm] = useState({ name: "", email: "", role: "STUDENT" as string });
   const [editing, setEditing] = useState(false);
-  const [editError, setEditError] = useState("");
 
   // Delete confirmation
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
@@ -63,7 +62,6 @@ export default function AdminUsersPage() {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormError("");
     setSubmitting(true);
 
     try {
@@ -73,7 +71,7 @@ export default function AdminUsersPage() {
       fetchUsers();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to create user.";
-      setFormError(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -82,7 +80,6 @@ export default function AdminUsersPage() {
   const handleEditUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editUser) return;
-    setEditError("");
     setEditing(true);
 
     try {
@@ -91,7 +88,7 @@ export default function AdminUsersPage() {
       fetchUsers();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to update user.";
-      setEditError(message);
+      toast.error(message);
     } finally {
       setEditing(false);
     }
@@ -107,7 +104,7 @@ export default function AdminUsersPage() {
       fetchUsers();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to delete user.";
-      alert(message);
+      toast.error(message);
     } finally {
       setDeleting(false);
     }
@@ -116,7 +113,6 @@ export default function AdminUsersPage() {
   const openEditModal = (user: User) => {
     setEditUser(user);
     setEditForm({ name: user.name, email: user.email, role: user.role });
-    setEditError("");
   };
 
   const filtered = users.filter((u) => {
@@ -248,19 +244,12 @@ export default function AdminUsersPage() {
               <button
                 onClick={() => {
                   setShowModal(false);
-                  setFormError("");
                 }}
                 className="text-muted-foreground hover:text-foreground text-xl"
               >
                 &times;
               </button>
             </div>
-
-            {formError && (
-              <div className="rounded-lg border border-danger/20 bg-danger/10 p-3 text-xs text-danger">
-                {formError}
-              </div>
-            )}
 
             <form onSubmit={handleCreateUser} className="space-y-4">
               <div>
@@ -318,7 +307,6 @@ export default function AdminUsersPage() {
                   type="button"
                   onClick={() => {
                     setShowModal(false);
-                    setFormError("");
                   }}
                   className="btn-secondary text-sm"
                   disabled={submitting}
@@ -354,19 +342,12 @@ export default function AdminUsersPage() {
               <button
                 onClick={() => {
                   setEditUser(null);
-                  setEditError("");
                 }}
                 className="text-muted-foreground hover:text-foreground text-xl"
               >
                 &times;
               </button>
             </div>
-
-            {editError && (
-              <div className="rounded-lg border border-danger/20 bg-danger/10 p-3 text-xs text-danger">
-                {editError}
-              </div>
-            )}
 
             <form onSubmit={handleEditUser} className="space-y-4">
               <div>
@@ -409,7 +390,6 @@ export default function AdminUsersPage() {
                   type="button"
                   onClick={() => {
                     setEditUser(null);
-                    setEditError("");
                   }}
                   className="btn-secondary text-sm"
                   disabled={editing}

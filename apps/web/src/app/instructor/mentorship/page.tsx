@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 type TicketStatus = "OPEN" | "ASSIGNED" | "SCHEDULED" | "COMPLETED" | "CANCELLED";
 
@@ -56,10 +57,7 @@ function InstructorMentorshipContent() {
     setLoading(true);
     try {
       const data = await api.get<{ tickets: MentorshipTicket[] }>("/api/mentorship/tickets");
-      const myTickets = (data.tickets || []).filter(
-        (t: MentorshipTicket) => t.status !== "OPEN" && t.mentor
-      );
-      setTickets(myTickets);
+      setTickets(data.tickets || []);
     } catch { setTickets([]); }
     finally { setLoading(false); }
   }, []);
@@ -92,21 +90,24 @@ function InstructorMentorshipContent() {
         scheduledAt,
         joinUrl: joinUrl || undefined,
       });
+      toast.success("Mentorship session scheduled");
       setActionTicket(null);
       fetchTickets();
     } catch (err: any) {
-      alert(err.message || "Failed to schedule");
+      toast.error(err.message || "Failed to schedule");
     } finally { setProcessing(false); }
   };
 
   const handleComplete = async (ticketId: string) => {
-    if (!confirm("Mark this mentorship session as completed?")) return;
+    const notes = window.prompt("Session notes (optional):");
+    if (notes === null) return;
     setProcessing(true);
     try {
-      await api.patch(`/api/mentorship/tickets/${ticketId}/complete`);
+      await api.patch(`/api/mentorship/tickets/${ticketId}/complete`, { notes: notes || undefined });
+      toast.success("Mentorship session marked as completed");
       fetchTickets();
     } catch (err: any) {
-      alert(err.message || "Failed to complete");
+      toast.error(err.message || "Failed to complete");
     } finally { setProcessing(false); }
   };
 
@@ -115,9 +116,10 @@ function InstructorMentorshipContent() {
     setProcessing(true);
     try {
       await api.patch(`/api/mentorship/tickets/${ticketId}/cancel`);
+      toast.success("Mentorship request cancelled");
       fetchTickets();
     } catch (err: any) {
-      alert(err.message || "Failed to cancel");
+      toast.error(err.message || "Failed to cancel");
     } finally { setProcessing(false); }
   };
 
@@ -127,7 +129,7 @@ function InstructorMentorshipContent() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Instructor</p>
           <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">Mentorship</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{tickets.length} assigned ticket{tickets.length !== 1 ? "s" : ""}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{tickets.filter((t) => t.mentor).length} assigned ticket{tickets.filter((t) => t.mentor).length !== 1 ? "s" : ""}</p>
         </div>
       </div>
 
@@ -153,7 +155,6 @@ function InstructorMentorshipContent() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="glass-card p-12 text-center">
-          <div className="text-4xl mb-3">\uD83D\uDCAC</div>
           <p className="text-lg font-semibold text-foreground">No tickets found</p>
           <p className="text-sm text-muted-foreground mt-1">
             {statusFilter === "all"

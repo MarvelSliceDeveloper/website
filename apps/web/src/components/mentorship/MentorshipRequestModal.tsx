@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface MentorshipRequestModalProps {
   isOpen: boolean;
@@ -25,20 +26,18 @@ export function MentorshipRequestModal({
     preferredTime: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
 
     if (formData.title.length < 3) {
-      setError("Title must be at least 3 characters");
+      toast.error("Title must be at least 3 characters");
       return;
     }
     if (formData.description.length < 10) {
-      setError("Description must be at least 10 characters");
+      toast.error("Description must be at least 10 characters");
       return;
     }
 
@@ -48,7 +47,7 @@ export function MentorshipRequestModal({
       setFormData({ title: "", description: "", preferredDate: "", preferredTime: "" });
       onClose();
     } catch (err: any) {
-      setError(err.message || "Failed to submit request");
+      toast.error(err.message || "Failed to submit request");
     } finally {
       setIsSubmitting(false);
     }
@@ -73,13 +72,6 @@ export function MentorshipRequestModal({
             Fill in the details below. An admin will review and assign a mentor to you.
           </p>
         </div>
-
-        {/* Error */}
-        {error && (
-          <div className="mb-4 rounded-lg border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger">
-            {error}
-          </div>
-        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">

@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   IconBell,
   IconSettings,
   IconX,
   IconSun,
   IconMoon,
+  IconEye,
+  IconArrowLeft,
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 
@@ -19,34 +22,48 @@ type NotificationItem = {
   createdAt: string;
 };
 
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
 export default function Header({
   isSidebarCollapsed = false,
   onToggleSidebar = () => { },
+  inboxHref = "/admin/inbox",
 }: {
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
+  inboxHref?: string;
 }) {
-  const [theme, setTheme] = useState<"dark" | "light">("light"); // ✅ moved inside component
+  const router = useRouter();
+  const [theme, setTheme] = useState<"dark" | "light">("light");
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       const data = await api.get<{ notifications: NotificationItem[]; unreadCount: number }>(
         "/api/notifications"
       );
       setNotifications(data.notifications || []);
       setUnreadCount(data.unreadCount || 0);
-    } catch (error) {
-      console.error("Failed to load notifications:", error);
-    }
-  };
+    } catch { /* ignore */ }
+  }, []);
 
   useEffect(() => {
     loadNotifications();
-  }, []);
+    const interval = setInterval(loadNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [loadNotifications]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -58,7 +75,6 @@ export default function Header({
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // ✅ Correctly read saved theme from localStorage on mount
   useEffect(() => {
     const saved = window.localStorage.getItem("lms-theme");
     const initialTheme = saved === "dark" ? "dark" : "light";
@@ -67,7 +83,6 @@ export default function Header({
   }, []);
 
   const toggleTheme = () => {
-    // ✅ Actually toggles between dark and light
     const nextTheme = theme === "dark" ? "light" : "dark";
     setTheme(nextTheme);
     document.documentElement.setAttribute("data-theme", nextTheme);
@@ -79,20 +94,17 @@ export default function Header({
       await api.post("/api/notifications/read-all");
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       setUnreadCount(0);
-    } catch (error) {
-      console.error("Failed to mark notifications as read:", error);
-    }
+    } catch { /* ignore */ }
   };
 
-  const formatTime = (value: string) => {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "";
-    return date.toLocaleString("en-IN", {
-      day: "numeric",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const markOneRead = async (id: string) => {
+    try {
+      await api.patch(`/api/notifications/${id}/read`, {});
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      );
+      setUnreadCount((c) => Math.max(0, c - 1));
+    } catch { /* ignore */ }
   };
 
   return (
@@ -101,7 +113,7 @@ export default function Header({
         <div className="flex items-center gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.18em] text-muted">LMS Workspace</p>
-            <h2 className="text-sm font-semibold text-foreground md:text-base">Welcome back 👋</h2>
+            <h2 className="text-sm font-semibold text-foreground md:text-base">Welcome back</h2>
           </div>
         </div>
 
@@ -118,7 +130,7 @@ export default function Header({
               <IconBell size={18} stroke={1.8} />
               {unreadCount > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-semibold text-white">
-                  {unreadCount}
+                  {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
             </button>
@@ -146,18 +158,40 @@ export default function Header({
                   {notifications.length === 0 ? (
                     <p className="px-4 py-6 text-center text-sm text-muted">No notifications</p>
                   ) : (
-                    notifications.map((item) => (
+                    notifications.slice(0, 5).map((item) => (
                       <div
                         key={item.id}
-                        className={`border-b border-border/50 px-4 py-3 last:border-0 ${!item.read ? "bg-primary/5" : ""}`}
+                        className={`group flex items-start gap-2 border-b border-border/50 px-4 py-3 last:border-0 ${!item.read ? "bg-primary/5" : ""}`}
                       >
-                        <p className="text-sm font-medium text-foreground">{item.title}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">{item.message}</p>
-                        <p className="mt-1 text-[11px] text-muted">{formatTime(item.createdAt)}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-foreground">{item.title}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">{item.message}</p>
+                          <p className="mt-0.5 text-[11px] text-muted">{timeAgo(item.createdAt)}</p>
+                        </div>
+                        {!item.read && (
+                          <button
+                            onClick={() => markOneRead(item.id)}
+                            className="mt-0.5 shrink-0 rounded-lg p-1 text-muted opacity-0 group-hover:opacity-100 hover:text-primary hover:bg-primary/10 transition-all"
+                            title="Mark as read"
+                          >
+                            <IconEye size={14} />
+                          </button>
+                        )}
                       </div>
                     ))
                   )}
                 </div>
+                {notifications.length > 0 && (
+                  <div className="border-t border-border px-4 py-2.5">
+                    <button
+                      onClick={() => { router.push(inboxHref); setNotifOpen(false); }}
+                      className="flex w-full items-center justify-center gap-1.5 text-xs font-medium text-primary hover:text-primary-hover transition-colors"
+                    >
+                      View all notifications
+                      <IconArrowLeft size={13} className="rotate-180" />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -172,7 +206,6 @@ export default function Header({
             onClick={toggleTheme}
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
             aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            title={theme === "dark" ? "Light mode" : "light mode"}
           >
             {theme === "light" ? <IconSun size={17} stroke={1.8} /> : <IconMoon size={17} stroke={1.8} />}
           </button>

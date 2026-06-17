@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 type Course = {
   id: string;
@@ -91,7 +92,7 @@ function CoursesPageContent() {
       await api.delete(`/api/admin/courses/${id}`);
       fetchCourses();
     } catch {
-      alert("Failed to archive course");
+      toast.error("Failed to archive course");
     } finally {
       setDeleting(null);
     }
@@ -107,22 +108,23 @@ function CoursesPageContent() {
           .filter((c: any) => !c.passed)
           .map((c: any) => `• ${c.item}`)
           .join("\n");
-        alert(`Cannot publish. Fix these:\n${failedItems}`);
+        toast.error(`Cannot publish. Fix these:\n${failedItems}`);
         return;
       }
+      toast.success("Course published");
       fetchCourses();
     } catch (err: any) {
-      // Handle 422 with checklist
-      alert(err.message || "Failed to publish");
+      toast.error(err.message || "Failed to publish");
     }
   };
 
   const handleUnpublish = async (id: string) => {
     try {
       await api.post(`/api/admin/courses/${id}/unpublish`);
+      toast.success("Course unpublished");
       fetchCourses();
     } catch {
-      alert("Failed to unpublish");
+      toast.error("Failed to unpublish");
     }
   };
 

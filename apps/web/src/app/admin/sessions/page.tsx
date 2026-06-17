@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { IconEdit, IconTrash, IconX, IconRefresh } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 type Session = {
   id: string;
@@ -30,7 +31,6 @@ export default function AdminSessionsPage() {
   const [editTitle, setEditTitle] = useState("");
   const [editStart, setEditStart] = useState("");
   const [editEnd, setEditEnd] = useState("");
-  const [editError, setEditError] = useState("");
   const [editSubmitting, setEditSubmitting] = useState(false);
 
   // Sync state
@@ -66,24 +66,23 @@ export default function AdminSessionsPage() {
     setEditTitle(`${session.batch.course.title} — ${session.batch.name}`);
     setEditStart(new Date(session.scheduledAt).toISOString().slice(0, 16));
     setEditEnd(new Date(new Date(session.scheduledAt).getTime() + 3600000).toISOString().slice(0, 16));
-    setEditError("");
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSession) return;
     setEditSubmitting(true);
-    setEditError("");
     try {
       await api.patch(`/api/sessions/${editingSession.id}`, {
         title: editTitle,
         startDateTime: new Date(editStart).toISOString(),
         endDateTime: new Date(editEnd).toISOString(),
       });
+      toast.success("Session updated successfully");
       setEditingSession(null);
       fetchSessions();
     } catch (err: any) {
-      setEditError(err.message || "Failed to update session");
+      toast.error(err.message || "Failed to update session");
     } finally {
       setEditSubmitting(false);
     }
@@ -95,7 +94,7 @@ export default function AdminSessionsPage() {
       await api.delete(`/api/sessions/${sessionId}`);
       fetchSessions();
     } catch (err: any) {
-      alert(err.message || "Failed to cancel session");
+      toast.error(err.message || "Failed to cancel session");
     }
   };
 
@@ -103,10 +102,10 @@ export default function AdminSessionsPage() {
     setSyncingId(sessionId);
     try {
       await api.post(`/api/recordings/${sessionId}/sync`);
-      alert("Recording synced successfully!");
+      toast.success("Recording synced successfully!");
       fetchSessions();
     } catch (err: any) {
-      alert(err.message || "No recording found yet. Teams recordings may take a few minutes to become available.");
+      toast.error(err.message || "No recording found yet. Teams recordings may take a few minutes to become available.");
     } finally {
       setSyncingId(null);
     }
@@ -193,8 +192,6 @@ export default function AdminSessionsPage() {
             </div>
 
             <form onSubmit={handleEditSubmit} className="p-4 space-y-4">
-              {editError && <div className="rounded-lg bg-danger/10 border border-danger/25 p-3 text-xs text-danger">{editError}</div>}
-
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Session Title</label>
                 <input type="text" className="field" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />

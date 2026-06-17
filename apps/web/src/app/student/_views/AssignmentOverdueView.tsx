@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 import {
   IconAlertCircle,
@@ -24,8 +25,6 @@ export default function AssignmentOverdueView({
   onGoBack,
 }: AssignmentOverdueViewProps) {
   const [uploading, setUploading] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [successId, setSuccessId] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [activeUploadId, setActiveUploadId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,8 +45,6 @@ export default function AssignmentOverdueView({
   function handleOpenUpload(assignmentId: string) {
     setActiveUploadId(assignmentId);
     setSelectedFile(null);
-    setError(null);
-    setSuccessId(null);
   }
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -56,16 +53,15 @@ export default function AssignmentOverdueView({
 
     // Limit file size to 25 MB
     if (file.size > 25 * 1024 * 1024) {
-      setError("File size must be less than 25 MB.");
+      toast.error("File size must be less than 25 MB.");
       return;
     }
-    setError(null);
     setSelectedFile(file);
   }
 
   async function handleSubmitFile(assignmentId: string) {
     if (!selectedFile) {
-      setError("Please select a file to upload.");
+      toast.error("Please select a file to upload.");
       return;
     }
 
@@ -74,14 +70,13 @@ export default function AssignmentOverdueView({
 
     try {
       setUploading(assignmentId);
-      setError(null);
       await api.post(`/api/assignments/${assignmentId}/submit/file`, formData);
       setLocallySubmittedIds((prev) => [...prev, assignmentId]);
-      setSuccessId(assignmentId);
+      toast.success("Assignment submitted successfully!");
       setActiveUploadId(null);
       setSelectedFile(null);
     } catch (err: any) {
-      setError(err.message || "Failed to upload file.");
+      toast.error(err.message || "Failed to upload file.");
     } finally {
       setUploading(null);
     }
@@ -97,20 +92,6 @@ export default function AssignmentOverdueView({
           Upload your completed assignment files before the deadline.
         </p>
       </div>
-
-      {/* Error */}
-      {error && (
-        <div className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-xs text-danger font-medium">
-          ⚠️ {error}
-        </div>
-      )}
-
-      {/* Success message */}
-      {successId && (
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-400 font-medium">
-          ✅ Assignment submitted successfully!
-        </div>
-      )}
 
       {/* Hidden file input */}
       <input

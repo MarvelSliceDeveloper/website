@@ -136,7 +136,7 @@ async function fetchPortalData(): Promise<PortalData> {
     api.get<{ courses: EnrolledCourse[] }>("/api/courses/enrolled").catch(() => ({ courses: [] })),
     api.get<{ sessions: any[] }>("/api/sessions").catch(() => ({ sessions: [] })),
     api.get<{ events: CalendarEvent[] }>("/api/calendar/events").catch(() => ({ events: [] })),
-    api.get<{ tickets: MentorshipTicket[] }>("/api/mentorship/tickets/my").catch(() => ({ tickets: [] })),
+    api.get<{ tickets: any[] }>("/api/mentorship/tickets/my").catch(() => ({ tickets: [] })),
     api.get<{ certificates: Certificate[] }>("/api/certificates/my").catch(() => ({ certificates: [] })),
     api.get<{ courses: CatalogueCourse[] }>("/api/courses/catalogue").catch(() => ({ courses: [] })),
     api
@@ -175,7 +175,15 @@ async function fetchPortalData(): Promise<PortalData> {
     batches: {}, // batches loaded on demand via API
     liveSessions: mappedSessions,
     calendarEvents: calEvents.events,
-    mentorshipTickets: tickets.tickets,
+    mentorshipTickets: (tickets.tickets || []).map((t: any) => ({
+      id: t.id,
+      courseTitle: t.course?.title || "General",
+      topic: t.title,
+      status: t.status,
+      createdAt: t.createdAt,
+      notes: t.notes || undefined,
+      instructor: t.mentor?.name || undefined,
+    })),
     certificates: certs.certificates,
     catalogue: catalogue.courses,
     continueLearning: [], // loaded from /api/student/continue-learning
@@ -326,24 +334,24 @@ export default function StudentPortalPage() {
 
   // ── Data loading ──────────────────────────────────────────────────────────
 
+  const loadData = useCallback(async () => {
+    const d = await fetchPortalData();
+    setData(d);
+    setBatchCache(d.batches);
+  }, []);
+
   useEffect(() => {
     let active = true;
     setIsLoading(true);
-    fetchPortalData()
-      .then((d) => {
-        if (!active) return;
-        setData(d);
-        setBatchCache(d.batches);
-      })
+    loadData()
       .catch((e) => {
-        if (!active) return;
-        setError(e instanceof Error ? e.message : "Failed to load portal data");
+        if (active) setError(e instanceof Error ? e.message : "Failed to load portal data");
       })
       .finally(() => {
         if (active) setIsLoading(false);
       });
     return () => { active = false; };
-  }, []);
+  }, [loadData]);
 
   // Load current user profile for greeting
   useEffect(() => {
@@ -382,8 +390,20 @@ export default function StudentPortalPage() {
   // ── Mentorship submit handler ─────────────────────────────────────────────
 
   async function handleMentorshipSubmit(courseId: string, topic: string, preferredDate: string) {
-
-    await api.post("/api/mentorship/tickets", { courseId, topic, preferredDate });
+    setIsLoading(true);
+    try {
+      await api.post("/api/mentorship/tickets", {
+        title: topic.length > 50 ? topic.slice(0, 50) + "..." : topic,
+        description: topic,
+        courseId,
+        preferredDate: preferredDate || undefined,
+      });
+      await loadData();
+    } catch {
+      setError("Failed to submit mentorship request");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   // ── Enroll handler ────────────────────────────────────────────────────────

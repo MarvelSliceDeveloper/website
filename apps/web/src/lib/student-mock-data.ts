@@ -543,7 +543,7 @@ export const MOCK_CALENDAR_EVENTS: CalendarEvent[] = [
   },
   {
     id: "ce6",
-    title: "💬 Mentorship: Ravi Kumar",
+    title: "Mentorship: Ravi Kumar",
     startAt: inFourDays,
     endAt: inFourDaysPlusTwoHours,
     type: "mentorship",

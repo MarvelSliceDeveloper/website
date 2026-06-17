@@ -51,6 +51,7 @@ import { recordingSyncJob } from './jobs/recording-sync.job';
 import { enrollmentRouter } from './modules/enrollments/enrollment.routes';
 import { assignmentRouter } from './modules/assignments/assignment.routes';
 import { dashboardRouter } from './modules/dashboard/dashboard.routes';
+import { messageRouter } from './modules/messages/message.routes';
 
 const app = express();
 
@@ -85,6 +86,7 @@ app.use('/api/admin/enrollments', enrollmentRouter);
 app.use('/api/assignments', assignmentRouter);
 app.use('/api/webhooks', webhookRouter);
 app.use('/api/admin/dashboard', dashboardRouter);
+app.use('/api/messages', messageRouter);
 
 // Events webhook — for Teams-created meetings (no auth required)
 app.post('/api/webhooks/events', eventsWebhookController.handleEventsWebhook);
