@@ -4,9 +4,35 @@
 
 ---
 
+## 2026-06-17 — Support Ticket System + Student Pages Polish ✅
+
+### New Feature: Support Ticket System
+
+- **Database Schema**: Added `SupportTicket` and `SupportMessage` models to Prisma with `SupportTicketStatus` enum (OPEN, IN_PROGRESS, RESOLVED, CLOSED).
+- **Backend Module**: Created `support.service.ts`, `support.controller.ts`, `support.routes.ts` at `/api/support` with full CRUD, status transitions, and messaging.
+- **Notification triggers**: Added `notifySupportTicketCreated`, `notifySupportTicketNewMessage`, `notifySupportTicketStatusChanged` helpers.
+- **Support notification icons**: Added `SUPPORT_TICKET_*` entries to all frontend notification icon maps (4 files).
+- **Student Support Page**: Created standalone `/student/support` page with ticket list, create form, and inline chat view.
+- **Instructor Support Page**: Created standalone `/instructor/support` page with same functionality.
+- **Admin Inbox Support Tab**: Added new "Support" tab with split-panel list + chat + status controls; renamed old tab to "Mentorship Tickets".
+- **Student Sidebar**: Added "Support" link (Growth section).
+- **Instructor Sidebar**: Added "Support" link (Overview group).
+
+### Student SPA Portal Updates
+
+- `HomeView.tsx`: Set `sectionApiAvailability.support = true`, added inline support content below tabs (list, create form, "View All Tickets" link), removed standalone Support card from section grid.
+
+### UI Polish
+
+- **Student Support Page**: Aligned layout to `mx-auto max-w-3xl` pattern, wider `max-w-lg` chat bubbles, skeleton loading, proper empty states, removed mobile-style back button (replaced with X close), `btn-secondary` back-to-dashboard button.
+- **Student Settings Page**: Added 3 support notification toggles, replaced emoji icons with Tabler icons, unified toggle rows into single card with `divide-y`, added toast.promise loading states.
+- **Toast Standardization**: All async actions on support and settings pages now use `toast.promise()` with loading/success/error states.
+- **Toast Position**: Added `<Toaster position="top-right" richColors />` to student layout — all student pages now render toasts at top-right.
+
 ## 2026-06-17 — Toast Migration, Inbox Overhaul, Mentorship Rewire ✅
 
 ### Toast & Monorepo
+
 - **Sonner Toast Integration**: Installed `sonner ^2.0.7` in `apps/web`. Created `apps/web/src/app/providers.tsx` with `<Toaster position="bottom-right" richColors closeButton />` wired into root layout.
 - **alert() → Toast Migration**: Replaced all 52+ `alert()` calls with `toast.success()` / `toast.error()` across admin, instructor, and student pages.
 - **Inline Error/Success → Toast Migration**: Removed all `{error && <div...}` / `{success && <div...}` inline state-rendering blocks across 13 files, replacing with sonner pop-up notifications. Cleaned up unused error/success/thumbnailError state variables and related `setTimeout` auto-dismiss logic.
@@ -16,6 +42,7 @@
 - **Root tsconfig.json**: Created shared base `tsconfig.json` at root; `apps/api` and `apps/web` tsconfigs now `extends` it.
 
 ### Notification & Inbox Overhaul
+
 - **Database Schema**: Added `Message` model (sender, receiver, subject, body, read, entityType, entityId) and `NotificationPreference` model (userId, type, enabled, email, unique compound key) to Prisma.
 - **Backend Messages Module**: Created `message.service.ts`, `message.controller.ts`, `message.routes.ts` mounted at `/api/messages`. Supports send, listConversations, getThread, markAsRead, unreadCount.
 - **Enhanced Notification Service**: Added `delete()`, `deleteAllRead()`, `getPreferences()`, `updatePreference()` methods and `shouldNotify()` preference gate.
@@ -31,10 +58,12 @@
 - **Seed Defaults**: Added default notification preferences (all types enabled, email=false) for all seeded users. Fixed duplicate `main()` call bug in seed.ts.
 
 ### Email & UI Polish
+
 - **Emoji Cleanup**: Removed emoticons from `MentorshipTickets.tsx`, `student-mock-data.ts`, `instructor/mentorship/page.tsx` empty states, and `MentorshipView.tsx` status labels.
 - **Header inboxHref Prop**: Made "View all" link role-aware via `inboxHref` prop — AdminShell passes `/admin/inbox`, InstructorShell `/instructor/inbox`, StudentShell `/student/inbox`.
 
 ### Mentorship Feature Rewire
+
 - **Database Schema**: Added optional `courseId` (FK to Course) and `notes` (resolution notes) fields to `MentorshipTicket` model.
 - **Backend Updates**: `CreateTicketSchema` now accepts `courseId`; added `CompleteTicketSchema` with optional `notes`; `completeTicket()` persists notes; all queries include `course` relation.
 - **Student Type Fix**: `fetchPortalData()` now maps API response (`title`, `mentor.name`, `course.title`) to mock-type shape (`topic`, `instructor`, `courseTitle`) so `MentorshipView` renders correctly.
@@ -65,10 +94,11 @@
 - **Student Frontend**: Rewrote `apps/web/src/app/student/_views/AssignmentOverdueView.tsx` with interactive MCQ quiz-taking UI (radio button selection, progress bar), auto-graded score display, and detailed question breakdown with correct/incorrect markers.
 
 ---
+
 ## 2026-05-29 — Batch & Course Route Permissions for Instructors ✅
 
 - **API Permissions Update**: Removed top-level `requireRole([UserRole.ADMIN])` restriction from both `batchRouter` and `courseRouter` to allow read-only access for instructors.
-- **Instructors Access Control**: 
+- **Instructors Access Control**:
   - Restricted `ADMIN` role only to mutating operations (create, update, delete, add/remove students) for batches and courses.
   - Allowed `ADMIN` and `INSTRUCTOR` roles to access read-only operations (list and get details).
   - Enforced security scope checks in `batch.controller.ts` so that instructors can only fetch batches they are assigned to, and only get details/students of their assigned batches.
@@ -97,10 +127,10 @@
 
 ## 2026-05-19 — Student Portal API Linkage + UI Cleanup ✅
 
-
 **Backend linkage:** Connected the student recordings experience to API-backed batch and recording payloads, and cleaned up the reusable UI primitives so diagnostics are resolved.
 
 ### Updated
+
 - `apps/web/src/app/student/page.tsx` — Batch loading now merges `/api/batches/:id` with `/api/recordings?batchId=...` so recordings and modules are hydrated from backend data.
 - `apps/api/src/modules/recordings/recording.service.ts` — Batch recordings now return `sessionId`, `moduleId`, and `moduleTitle` for exact module grouping.
 - `apps/web/src/app/student/_views/BatchDetailView.tsx` — Recordings list uses `StudentTable` + `PaginationBar` with backend-linked data.
@@ -108,6 +138,7 @@
 - `apps/web/src/components/student/StudentTable.tsx` — Added compatibility support for `emptyMessage`/`emptyText` prop usage.
 
 ### Diagnostics Fixed
+
 - Updated Tailwind utility names to accepted `bg-linear-*` / `max-w-*` / `min-w-*` forms where flagged.
 - Suppressed the `@theme` CSS warning in `globals.css` while keeping Tailwind token mapping intact.
 
@@ -116,6 +147,7 @@
 **Architecture change:** Replaced the sidebar + multi-route student portal with a **single-page view-stack** at `/student`.
 
 ### New Components & Files
+
 - `apps/web/src/app/student/page.tsx` — View-stack state machine; renders all 10 views in-place
 - `apps/web/src/app/student/layout.tsx` — Stripped to a pass-through (shell is now in page.tsx)
 - `apps/web/src/app/student/_types/student-portal.ts` — `ViewName` + `ViewState` shared types
@@ -135,6 +167,7 @@
 - `apps/web/.env.local` — `NEXT_PUBLIC_USE_MOCK_DATA=true` toggle (set to `false` for real API)
 
 ### Deleted (old sidebar multi-route pages)
+
 - `student/dashboard/page.tsx` → replaced by `student/page.tsx`
 - `student/courses/page.tsx` → replaced by `CoursesView`
 - `student/sessions/page.tsx` → replaced by `LiveSessionsView`
@@ -144,17 +177,20 @@
 - `student/learn/[sessionId]/page.tsx` → replaced by `RecordingPlayerView`
 
 ### Modified
+
 - `apps/web/src/app/globals.css` — Added `.sp-eyebrow`, `.sp-view-enter` (slide-in), `.sp-fade-up`, `.scrollbar-none`
 - `apps/web/src/components/StudentPortalShell.tsx` — Fixed `IconGraduateCap` → `IconSchool` (invalid Tabler icon)
 - `apps/web/src/app/login/page.tsx` — Fixed student redirect from `/student/dashboard` → `/student/` to match new single-page URL
 
 ### Packages Added
+
 ```
 @fullcalendar/react @fullcalendar/core @fullcalendar/daygrid
 @fullcalendar/timegrid @fullcalendar/list @fullcalendar/interaction
 ```
 
 ### Docs Updated
+
 - `docs/phases/phase-03-student-ui.md` — Marked ✅ IMPLEMENTED, added architecture change section
 - `docs/architecture.md` — Updated §06 Frontend Structure to reflect single-page layout
 - `docs/README.md` — Updated demo login landing page + build summary
@@ -169,4 +205,3 @@
 - Added collapsible sidebar controls for student and admin layouts.
 - Installed `@tabler/icons-react` and switched the student/admin shells to React icons.
 - Fixed the admin sessions page to read the `{ sessions }` API response shape correctly.
-

@@ -12,6 +12,7 @@ import {
   IconLogout,
   IconUsers,
   IconVideo,
+  IconHelp,
 } from "@tabler/icons-react";
 
 type NavItem = {
@@ -28,6 +29,7 @@ const learnItems: NavItem[] = [
 
 const growthItems: NavItem[] = [
   { label: "1-on-1 Mentorship", href: "/student/mentorship", icon: IconUsers },
+  { label: "Support", href: "/student/support", icon: IconHelp },
   { label: "Calendar", href: "/student/calendar", icon: IconCalendar },
   { label: "Certificates", href: "/student/certificates", icon: IconCertificate },
 ];

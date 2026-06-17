@@ -2,38 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
-import { IconBell, IconEye, IconTrash, IconCheck, IconArrowLeft, IconX } from "@tabler/icons-react";
+import { IconTrash, IconArrowLeft, IconCheck, IconBell, IconEye } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
-
-interface NotificationItem {
-  id: string;
-  title: string;
-  message: string;
-  type: string;
-  read: boolean;
-  createdAt: string;
-}
-
-const NOTIF_ICONS: Record<string, React.ReactNode> = {
-  SESSION_SCHEDULED: <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-primary"><IconBell size={16} /></div>,
-  SESSION_CANCELLED: <div className="flex h-8 w-8 items-center justify-center rounded-full bg-danger/20 text-danger"><IconX size={16} /></div>,
-  RECORDING_AVAILABLE: <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/20 text-accent"><IconEye size={16} /></div>,
-  ENROLLMENT_APPROVED: <div className="flex h-8 w-8 items-center justify-center rounded-full bg-success/20 text-success"><IconCheck size={16} /></div>,
-  ENROLLMENT_REJECTED: <div className="flex h-8 w-8 items-center justify-center rounded-full bg-danger/20 text-danger"><IconX size={16} /></div>,
-  ASSIGNMENT_GRADED: <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-primary"><IconBell size={16} /></div>,
-};
-
-function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins} min ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString();
-}
+import { timeAgo } from "@/lib/time-ago";
+import type { NotificationItem } from "@/lib/notifications";
+import { NotificationIcon } from "@/lib/notifications";
 
 export default function StudentInboxPage() {
   const router = useRouter();
@@ -149,7 +122,7 @@ export default function StudentInboxPage() {
                   : "border-primary/20 bg-primary/5"
               }`}
             >
-              {NOTIF_ICONS[n.type] || <div className="flex h-8 w-8 items-center justify-center rounded-full bg-card-hover text-muted"><IconBell size={16} /></div>}
+              <NotificationIcon type={n.type} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <p className={`text-sm leading-snug ${n.read ? "text-muted-foreground" : "text-foreground font-medium"}`}>

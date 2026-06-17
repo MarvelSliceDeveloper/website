@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { IconArrowRight, IconBook, IconCalendar, IconCertificate, IconHeart, IconPlayerPlay, IconVideo, IconClock } from "@tabler/icons-react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { IconArrowRight, IconBook, IconCalendar, IconCertificate, IconHeart, IconPlayerPlay, IconVideo, IconClock, IconHelp, IconMessage, IconPlus } from "@tabler/icons-react";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
 import type { ViewState } from "../_types/student-portal";
 import type {
   DashboardStats,
@@ -107,7 +110,58 @@ export default function HomeView({
   firstBatchId,
   navigate,
 }: HomeViewProps) {
-  const [activeInlineTab, setActiveInlineTab] = useState<"courses" | "calendar" | "sessions">("courses");
+  const router = useRouter();
+  const [activeInlineTab, setActiveInlineTab] = useState<"courses" | "calendar" | "sessions" | "support">("courses");
+  const [supportTickets, setSupportTickets] = useState<Array<{ id: string; title: string; description: string; status: string; createdAt: string; _count?: { messages: number } }>>([]);
+  const [supportLoading, setSupportLoading] = useState(false);
+  const [showSupportForm, setShowSupportForm] = useState(false);
+  const [supportTitle, setSupportTitle] = useState("");
+  const [supportDesc, setSupportDesc] = useState("");
+  const [supportSubmitting, setSupportSubmitting] = useState(false);
+
+  const SUPPORT_STATUS_STYLES: Record<string, string> = {
+    OPEN: "border-warning/30 bg-warning/10 text-warning",
+    IN_PROGRESS: "border-accent/30 bg-accent/10 text-accent",
+    RESOLVED: "border-success/30 bg-success/10 text-success",
+    CLOSED: "border-muted/30 bg-muted/10 text-muted",
+  };
+
+  const fetchSupportTickets = useCallback(async () => {
+    setSupportLoading(true);
+    try {
+      const data = await api.get<{ tickets: Array<{ id: string; title: string; description: string; status: string; createdAt: string; _count?: { messages: number } }> }>("/api/tickets?type=SUPPORT");
+      setSupportTickets(data.tickets || []);
+    } catch { /* ignore */ }
+    finally { setSupportLoading(false); }
+  }, []);
+
+  async function createSupportTicket(e: React.FormEvent) {
+    e.preventDefault();
+    if (!supportTitle.trim() || !supportDesc.trim()) return;
+    setSupportSubmitting(true);
+    try {
+      await api.post("/api/tickets", { type: "SUPPORT", title: supportTitle, description: supportDesc });
+      toast.success("Support ticket created");
+      setShowSupportForm(false);
+      setSupportTitle("");
+      setSupportDesc("");
+      fetchSupportTickets();
+    } catch {
+      toast.error("Failed to create ticket");
+    } finally {
+      setSupportSubmitting(false);
+    }
+  }
+
+  function supportTimeAgo(dateStr: string) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "Just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return new Date(dateStr).toLocaleDateString();
+  }
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
@@ -163,9 +217,10 @@ export default function HomeView({
   ];
 
   function handleSectionTabChange(key: string) {
-    if (key === "courses") setActiveInlineTab("courses");
-    if (key === "calendar") setActiveInlineTab("calendar");
-    if (key === "sessions") setActiveInlineTab("sessions");
+    if (key === "courses" || key === "calendar" || key === "sessions" || key === "support") {
+      setActiveInlineTab(key as typeof activeInlineTab);
+      if (key === "support") fetchSupportTickets();
+    }
   }
 
   return (
@@ -310,6 +365,91 @@ export default function HomeView({
               className="mt-3 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
             >
               View All Sessions →
+            </button>
+          </div>
+        )}
+
+        {activeInlineTab === "support" && (
+          <div className="space-y-3">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="sp-eyebrow">Support</p>
+                <p className="mt-1 text-sm text-muted-foreground">Report issues or ask questions</p>
+              </div>
+              <button onClick={() => setShowSupportForm((v) => !v)} className="btn-primary text-xs flex items-center gap-1.5">
+                <IconPlus size={14} /> {showSupportForm ? "Cancel" : "New Ticket"}
+              </button>
+            </div>
+
+            {showSupportForm && (
+              <form onSubmit={createSupportTicket} className="rounded-xl border border-border/60 bg-card p-4 space-y-3 mb-4">
+                <p className="font-semibold text-sm text-foreground">Create Support Ticket</p>
+                <input
+                  type="text"
+                  value={supportTitle}
+                  onChange={(e) => setSupportTitle(e.target.value)}
+                  placeholder="Brief summary of your issue"
+                  className="field w-full text-sm"
+                  required
+                  minLength={3}
+                />
+                <textarea
+                  value={supportDesc}
+                  onChange={(e) => setSupportDesc(e.target.value)}
+                  placeholder="Describe your issue in detail..."
+                  rows={3}
+                  className="field w-full resize-none text-sm"
+                  required
+                  minLength={10}
+                />
+                <div className="flex justify-end gap-2">
+                  <button type="button" onClick={() => setShowSupportForm(false)} className="btn-secondary text-xs">Cancel</button>
+                  <button type="submit" disabled={supportSubmitting} className="btn-primary text-xs">
+                    {supportSubmitting ? "Submitting..." : "Submit"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {supportLoading ? (
+              <div className="space-y-2">{[1, 2].map((i) => <div key={i} className="h-14 animate-pulse rounded-xl bg-card-hover border border-border" />)}</div>
+            ) : supportTickets.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted">No support tickets yet</p>
+            ) : (
+              <div className="space-y-2">
+                {supportTickets.slice(0, 5).map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => router.push(`/student/support`)}
+                    className="w-full flex items-start gap-3 rounded-xl border border-border/50 bg-card/50 p-3 text-left hover:bg-card-hover transition-colors"
+                  >
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary">
+                      <IconHelp size={14} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-foreground truncate">{t.title}</p>
+                        <span className={`shrink-0 inline-flex rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${SUPPORT_STATUS_STYLES[t.status] || ""}`}>
+                          {t.status.replace("_", " ")}
+                        </span>
+                      </div>
+                      <div className="mt-0.5 flex items-center gap-3 text-[11px] text-muted">
+                        <span>{supportTimeAgo(t.createdAt)}</span>
+                        {t._count && (
+                          <span className="flex items-center gap-1"><IconMessage size={11} /> {t._count.messages}</span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <button
+              onClick={() => router.push("/student/support")}
+              className="text-xs font-medium text-primary transition-colors hover:text-primary-hover"
+            >
+              View All Tickets →
             </button>
           </div>
         )}

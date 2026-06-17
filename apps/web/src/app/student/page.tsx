@@ -312,7 +312,7 @@ export default function StudentPortalPage() {
     sessions: true,
     notifications: false,
     messages: false,
-    support: false,
+    support: true,
   };
 
   // ── Navigation helpers ────────────────────────────────────────────────────

@@ -7,18 +7,20 @@ import {
   IconBell,
   IconChevronDown,
   IconMoon,
-  IconSchool,
   IconSun,
   IconLogout,
   IconSettings,
   IconUser,
   IconX,
-  IconEye,
   IconTrash,
-  IconMessages,
+  IconSchool,
+  IconEye,
 } from "@tabler/icons-react";
 import StudentTopNoticeBar from "@/components/student/StudentTopNoticeBar";
 import { api } from "@/lib/api";
+import { timeAgo } from "@/lib/time-ago";
+import type { NotificationItem } from "@/lib/notifications";
+import { NotificationIcon } from "@/lib/notifications";
 
 export interface Breadcrumb {
   label: string;
@@ -37,34 +39,7 @@ interface StudentPortalShellProps {
   hideHeader?: boolean;
 }
 
-interface NotificationItem {
-  id: string;
-  title: string;
-  message: string;
-  type: string;
-  read: boolean;
-  createdAt: string;
-}
 
-const NOTIF_ICONS: Record<string, React.ReactNode> = {
-  SESSION_SCHEDULED: <IconMessages size={16} className="text-primary" />,
-  SESSION_CANCELLED: <IconX size={16} className="text-danger" />,
-  RECORDING_AVAILABLE: <IconEye size={16} className="text-accent" />,
-  ENROLLMENT_APPROVED: <IconSchool size={16} className="text-success" />,
-  ENROLLMENT_REJECTED: <IconX size={16} className="text-danger" />,
-  ASSIGNMENT_GRADED: <IconMessages size={16} className="text-primary" />,
-};
-
-function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
 
 export default function StudentPortalShell({
   children,
@@ -246,7 +221,7 @@ export default function StudentPortalShell({
                           className={`group flex items-start gap-3 border-b border-border/50 px-4 py-3 last:border-0 ${!n.read ? "bg-primary/5" : ""}`}
                         >
                           <div className="mt-0.5 shrink-0">
-                            {NOTIF_ICONS[n.type] || <div className="h-4 w-4 rounded-full bg-primary/20" />}
+                            <NotificationIcon type={n.type} withContainer={false} />
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-sm leading-snug text-foreground">{n.message}</p>

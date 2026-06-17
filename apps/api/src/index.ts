@@ -52,6 +52,8 @@ import { enrollmentRouter } from './modules/enrollments/enrollment.routes';
 import { assignmentRouter } from './modules/assignments/assignment.routes';
 import { dashboardRouter } from './modules/dashboard/dashboard.routes';
 import { messageRouter } from './modules/messages/message.routes';
+import { supportRouter } from './modules/support/support.routes';
+import ticketRouter from './modules/tickets/ticket.routes';
 
 const app = express();
 
@@ -87,6 +89,8 @@ app.use('/api/assignments', assignmentRouter);
 app.use('/api/webhooks', webhookRouter);
 app.use('/api/admin/dashboard', dashboardRouter);
 app.use('/api/messages', messageRouter);
+app.use('/api/support', supportRouter);
+app.use('/api/tickets', ticketRouter);
 
 // Events webhook — for Teams-created meetings (no auth required)
 app.post('/api/webhooks/events', eventsWebhookController.handleEventsWebhook);

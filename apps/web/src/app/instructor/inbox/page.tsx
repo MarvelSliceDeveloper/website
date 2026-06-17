@@ -2,18 +2,12 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
-import { IconBell, IconEye, IconTrash, IconCheck, IconArrowLeft, IconX, IconMessage } from "@tabler/icons-react";
+import { IconTrash, IconArrowLeft, IconBell, IconCheck, IconEye, IconMessage } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-
-interface NotificationItem {
-  id: string;
-  title: string;
-  message: string;
-  type: string;
-  read: boolean;
-  createdAt: string;
-}
+import { timeAgo } from "@/lib/time-ago";
+import type { NotificationItem } from "@/lib/notifications";
+import { NotificationIcon } from "@/lib/notifications";
 
 interface Conversation {
   id: string;
@@ -26,25 +20,6 @@ interface Conversation {
 }
 
 type Tab = "notifications" | "messages";
-
-function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins} min ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString();
-}
-
-const NOTIF_ICONS: Record<string, React.ReactNode> = {
-  SESSION_SCHEDULED: <IconBell size={16} className="text-primary" />,
-  SESSION_CANCELLED: <IconX size={16} className="text-danger" />,
-  RECORDING_AVAILABLE: <IconEye size={16} className="text-accent" />,
-  ASSIGNMENT_GRADED: <IconCheck size={16} className="text-success" />,
-};
 
 export default function InstructorInboxPage() {
   const router = useRouter();
@@ -148,7 +123,7 @@ function NotificationsTab() {
               n.read ? "border-border/60 bg-card/50" : "border-primary/20 bg-primary/5"
             }`}
           >
-            <div className="mt-0.5">{NOTIF_ICONS[n.type] || <IconBell size={16} className="text-muted" />}</div>
+            <div className="mt-0.5"><NotificationIcon type={n.type} withContainer={false} /></div>
             <div className="min-w-0 flex-1">
               <p className={`text-sm leading-snug ${n.read ? "text-muted-foreground" : "text-foreground font-medium"}`}>
                 {n.message}

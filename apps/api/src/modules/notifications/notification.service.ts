@@ -440,6 +440,119 @@ export const notificationService = {
   },
 
   /**
+   * Notify ticket creator + all admins when a support ticket is created.
+   */
+  async notifySupportTicketCreated(ticketId: string) {
+    const ticket = await prisma.supportTicket.findUnique({
+      where: { id: ticketId },
+      include: {
+        user: { select: { id: true, name: true, role: true } },
+      },
+    });
+    if (!ticket) return;
+
+    // Notify the creator (student/instructor)
+    await this.create({
+      userId: ticket.userId,
+      title: 'Support Ticket Submitted',
+      message: `Your support ticket "${ticket.title}" has been submitted. Admin will review it shortly.`,
+      type: 'SUPPORT_TICKET_CREATED',
+      metadata: { ticketId: ticket.id },
+    });
+
+    // Notify all admins
+    const admins = await prisma.user.findMany({
+      where: { role: 'ADMIN' },
+      select: { id: true },
+    });
+    if (admins.length > 0) {
+      await this.createMany(
+        admins.map((admin) => ({
+          userId: admin.id,
+          title: 'New Support Ticket',
+          message: `${ticket.user.name} opened a support ticket: "${ticket.title}"`,
+          type: 'SUPPORT_TICKET_CREATED',
+          metadata: { ticketId: ticket.id, userId: ticket.userId },
+        }))
+      );
+    }
+  },
+
+  /**
+   * Notify the other party when a new message is added to a support ticket.
+   */
+  async notifySupportTicketNewMessage(ticketId: string, senderId: string) {
+    const ticket = await prisma.supportTicket.findUnique({
+      where: { id: ticketId },
+      include: {
+        user: { select: { id: true, name: true } },
+      },
+    });
+    if (!ticket) return;
+
+    // Notify all admins (if user sent) OR notify the user (if admin sent)
+    const admins = await prisma.user.findMany({
+      where: { role: 'ADMIN' },
+      select: { id: true, name: true },
+    });
+    const adminIds = admins.map((a) => a.id);
+    const isAdminSender = adminIds.includes(senderId);
+
+    if (isAdminSender) {
+      // Admin replied — notify the ticket creator
+      await this.create({
+        userId: ticket.userId,
+        title: 'New Reply on Support Ticket',
+        message: `Admin replied to your support ticket "${ticket.title}".`,
+        type: 'SUPPORT_TICKET_RESPONDED',
+        metadata: { ticketId: ticket.id },
+      });
+    } else {
+      // User replied — notify all admins
+      if (adminIds.length > 0) {
+        await this.createMany(
+          admins.map((admin) => ({
+            userId: admin.id,
+            title: 'New Reply on Support Ticket',
+            message: `${ticket.user.name} replied to support ticket "${ticket.title}".`,
+            type: 'SUPPORT_TICKET_RESPONDED',
+            metadata: { ticketId: ticket.id, userId: ticket.userId },
+          }))
+        );
+      }
+    }
+  },
+
+  /**
+   * Notify ticket creator when support ticket status changes.
+   */
+  async notifySupportTicketStatusChanged(ticketId: string, status: string) {
+    const ticket = await prisma.supportTicket.findUnique({
+      where: { id: ticketId },
+      include: {
+        user: { select: { id: true, name: true } },
+      },
+    });
+    if (!ticket) return;
+
+    const labels: Record<string, string> = {
+      OPEN: 'Reopened',
+      IN_PROGRESS: 'In Progress',
+      RESOLVED: 'Resolved',
+      CLOSED: 'Closed',
+    };
+    const label = labels[status] ?? status;
+
+    await this.create({
+      userId: ticket.userId,
+      title: 'Support Ticket Status Updated',
+      message: `Your support ticket "${ticket.title}" is now marked as "${label}".`,
+      type: 'SUPPORT_TICKET_STATUS_CHANGED',
+      metadata: { ticketId: ticket.id, status },
+    });
+  },
+
+  /**
    * Notify a student when their assignment is graded.
    */
   async notifyAssignmentGraded(submissionId: string) {

@@ -15,6 +15,7 @@ import {
   IconMail,
   IconMessageCircle,
   IconChevronDown,
+  IconHelp,
 } from "@tabler/icons-react";
 
 type NavItemChild = {
@@ -74,6 +75,7 @@ const overviewItems: NavItem[] = [
       { label: "Completed", href: "/instructor/mentorship?status=COMPLETED" },
     ],
   },
+  { label: "Support", href: "/instructor/support", icon: IconHelp },
 ];
 
 function ChildNavLink({
