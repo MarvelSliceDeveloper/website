@@ -48,6 +48,7 @@ const userWithRoleSelect = { id: true, name: true, email: true, role: true } as 
 export const ticketService = {
   // ─── CREATE ───
 
+  // Creates a new support or mentorship ticket
   async createTicket(userId: string, data: CreateTicketInput) {
     if (data.type === 'SUPPORT') {
       const ticket = await prisma.supportTicket.create({
@@ -83,6 +84,7 @@ export const ticketService = {
 
   // ─── LIST ───
 
+  // Lists all tickets with optional filters
   async listTickets(params: {
     userId?: string;
     role?: string;
@@ -125,6 +127,7 @@ export const ticketService = {
 
   // ─── GET ───
 
+  // Gets a single ticket by ID and optional type
   async getTicket(id: string, type?: 'MENTORSHIP' | 'SUPPORT') {
     if (type === 'SUPPORT') {
       const ticket = await prisma.supportTicket.findUnique({
@@ -153,6 +156,7 @@ export const ticketService = {
 
   // ─── MENTORSHIP-SPECIFIC ───
 
+  // Assigns a mentor to a mentorship ticket
   async assignMentor(ticketId: string, adminId: string, data: AssignMentorInput) {
     const mentor = await prisma.user.findUnique({ where: { id: data.mentorId } });
     if (!mentor) throw new Error('Mentor not found');
@@ -169,6 +173,7 @@ export const ticketService = {
     });
   },
 
+  // Schedules a session for a mentorship ticket
   async scheduleSession(ticketId: string, adminId: string, data: ScheduleSessionInput) {
     return prisma.mentorshipTicket.update({
       where: { id: ticketId },
@@ -186,6 +191,7 @@ export const ticketService = {
     });
   },
 
+  // Marks a mentorship ticket as completed
   async completeTicket(ticketId: string, data?: CompleteTicketInput) {
     return prisma.mentorshipTicket.update({
       where: { id: ticketId },
@@ -198,6 +204,7 @@ export const ticketService = {
     });
   },
 
+  // Cancels a mentorship ticket
   async cancelMentorshipTicket(ticketId: string) {
     return prisma.mentorshipTicket.update({
       where: { id: ticketId },
@@ -210,6 +217,7 @@ export const ticketService = {
     });
   },
 
+  // Gets all users eligible to be mentors
   async getAvailableMentors() {
     return prisma.user.findMany({
       where: { role: { in: ['INSTRUCTOR', 'ADMIN'] } },
@@ -220,6 +228,7 @@ export const ticketService = {
 
   // ─── SUPPORT-SPECIFIC ───
 
+  // Adds a message to a support ticket
   async addMessage(ticketId: string, senderId: string, data: AddMessageInput) {
     const ticket = await prisma.supportTicket.findUnique({ where: { id: ticketId } });
     if (!ticket) throw new Error('Ticket not found');
@@ -230,6 +239,7 @@ export const ticketService = {
     });
   },
 
+  // Updates the status of a support ticket
   async updateStatus(ticketId: string, data: UpdateStatusInput) {
     const now = data.status === SupportTicketStatus.RESOLVED || data.status === SupportTicketStatus.CLOSED
       ? new Date() : undefined;
@@ -243,6 +253,7 @@ export const ticketService = {
 
   // ─── STATS ───
 
+  // Gets ticket statistics by type
   async getStats(type: 'MENTORSHIP' | 'SUPPORT') {
     if (type === 'SUPPORT') {
       const [total, open, inProgress, resolved, closed] = await Promise.all([

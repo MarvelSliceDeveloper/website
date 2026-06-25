@@ -52,21 +52,16 @@ export const authService = {
       where: { email: { equals: email.trim(), mode: 'insensitive' } }
     });
 
-    // DEBUG: log existence and passwordHash presence (do not log hashes)
-    // eslint-disable-next-line no-console
-    console.debug('[auth] login lookup:', { email, userId: user?.id, hasPassword: !!user?.passwordHash });
-
     if (!user || !user.passwordHash) throw new Error('Invalid credentials');
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
-    // eslint-disable-next-line no-console
-    console.debug('[auth] password compare result for', user?.id, isMatch);
     if (!isMatch) throw new Error('Invalid credentials');
 
     return this.generateTokens(user);
   },
 
-  generateTokens(user: any) {
+  // Generate JWT access + refresh tokens for a user
+  generateTokens(user: { id: string; role: string; email: string }) {
     const payload = {
       userId: user.id,
       role: user.role,

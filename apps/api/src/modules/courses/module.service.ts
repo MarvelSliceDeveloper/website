@@ -27,6 +27,7 @@ export const ReorderModulesSchema = z.object({
 
 // --- Video URL Parser ---
 
+// Parses a video URL to extract type and embed ID
 function parseVideoUrl(url: string): { type: string; embedId: string } | null {
   // YouTube
   const ytMatch = url.match(
@@ -48,9 +49,7 @@ function parseVideoUrl(url: string): { type: string; embedId: string } | null {
 // --- Service ---
 
 export const moduleService = {
-  /**
-   * Add a module to a course. Auto-assigns next sort order.
-   */
+  // Adds a module to a course with auto-assigned order
   async addModule(courseId: string, data: z.infer<typeof CreateModuleSchema>) {
     const course = await prisma.course.findUnique({ where: { id: courseId } });
     if (!course) throw new Error('Course not found');
@@ -92,9 +91,7 @@ export const moduleService = {
     });
   },
 
-  /**
-   * Update a module.
-   */
+  // Updates a module's fields
   async updateModule(moduleId: string, data: z.infer<typeof UpdateModuleSchema>) {
     const existing = await prisma.module.findUnique({ where: { id: moduleId } });
     if (!existing) throw new Error('Module not found');
@@ -118,9 +115,7 @@ export const moduleService = {
     });
   },
 
-  /**
-   * Delete a module. Re-orders remaining modules.
-   */
+  // Deletes a module and re-orders remaining ones
   async deleteModule(moduleId: string) {
     const module = await prisma.module.findUnique({ where: { id: moduleId } });
     if (!module) throw new Error('Module not found');
@@ -145,10 +140,7 @@ export const moduleService = {
     return { deleted: true };
   },
 
-  /**
-   * Reorder modules via drag-and-drop.
-   * Receives an ordered array of module IDs.
-   */
+  // Reorders modules by an ordered array of IDs
   async reorderModules(courseId: string, moduleIds: string[]) {
     const course = await prisma.course.findUnique({ where: { id: courseId } });
     if (!course) throw new Error('Course not found');
@@ -176,9 +168,7 @@ export const moduleService = {
     return { reordered: true };
   },
 
-  /**
-   * Add a resource file to a module
-   */
+  // Adds a resource file to a module
   async addResource(
     moduleId: string,
     filename: string,
@@ -213,9 +203,7 @@ export const moduleService = {
     return newResource;
   },
 
-  /**
-   * Delete a resource file from a module
-   */
+  // Deletes a resource file from a module
   async deleteResource(moduleId: string, resourceId: string) {
     const module = await prisma.module.findUnique({ where: { id: moduleId } });
     if (!module) throw new Error('Module not found');

@@ -27,6 +27,7 @@ type ClaimableCertificate = {
     progressPercent: number;
 };
 
+// Builds a map of completed courses and claimable certificates
 async function buildCourseCompletionMap(userId: string) {
     const enrollments = await prisma.enrollmentRequest.findMany({
         where: { userId, status: 'APPROVED' },
@@ -142,10 +143,12 @@ async function buildCourseCompletionMap(userId: string) {
 }
 
 export const certificateService = {
+    // Gets all issued and claimable certificates for a user
     async getMyCertificates(userId: string) {
         return buildCourseCompletionMap(userId);
     },
 
+    // Claims a certificate for a user if eligible
     async claimCertificate(userId: string, courseId: string) {
         const { claimable } = await buildCourseCompletionMap(userId);
         const eligible = claimable.find((item) => item.courseId === courseId);

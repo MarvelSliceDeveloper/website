@@ -8,7 +8,6 @@ import {
   IconCertificate,
   IconCalendar,
   IconLayoutDashboard,
-  IconLayoutSidebarLeftCollapse,
   IconLogout,
   IconUsers,
   IconVideo,
@@ -34,6 +33,7 @@ const growthItems: NavItem[] = [
   { label: "Certificates", href: "/student/certificates", icon: IconCertificate },
 ];
 
+// Group of navigation links with a section label
 function NavGroup({
   label,
   items,
@@ -75,6 +75,7 @@ function NavGroup({
   );
 }
 
+// Student sidebar with nav groups and sign-out
 export default function Sidebar({
   collapsed = false,
   onToggleCollapse,
@@ -85,6 +86,7 @@ export default function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
 
+  // Log out the user and redirect to login
   async function handleSignOut() {
     try {
       await api.post("/api/auth/logout");

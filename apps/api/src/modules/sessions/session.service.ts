@@ -24,11 +24,7 @@ export const UpdateSessionSchema = z.object({
 // --- Service ---
 
 export const sessionService = {
-  /**
-   * Create a new live session.
-   * If customJoinUrl is provided, uses that. Otherwise calls Microsoft Graph to create a Teams meeting.
-   * Then stores the session and creates a corresponding CalendarEvent.
-   */
+  // Creates a new live session with optional Teams meeting
   async createSession(userId: string, data: z.infer<typeof CreateSessionSchema>) {
     const { batchId, moduleId, title, startDateTime, endDateTime, customJoinUrl, instructorOverride } = data;
 
@@ -129,9 +125,7 @@ export const sessionService = {
     return session;
   },
 
-  /**
-   * List sessions with optional filters.
-   */
+  // Lists sessions with role-based filters
   async listSessions(filters: {
     batchId?: string;
     courseId?: string;
@@ -212,9 +206,7 @@ export const sessionService = {
     });
   },
 
-  /**
-   * Get a single session by ID.
-   */
+  // Gets a single session by ID
   async getSession(sessionId: string) {
     const session = await prisma.liveSession.findUnique({
       where: { id: sessionId },
@@ -230,9 +222,7 @@ export const sessionService = {
     return session;
   },
 
-  /**
-   * Update a session (title/time).
-   */
+  // Updates a session's title and/or time
   async updateSession(sessionId: string, userId: string, data: z.infer<typeof UpdateSessionSchema>) {
     const session = await prisma.liveSession.findUnique({
       where: { id: sessionId },
@@ -271,11 +261,7 @@ export const sessionService = {
     return updated;
   },
 
-  /**
-   * Cancel (soft-delete) or delete (hard-delete) a session.
-   * If the user is an ADMIN, performs a hard-delete of the session and all its related rows.
-   * If the user is an INSTRUCTOR, performs a soft-delete (sets endedAt to now).
-   */
+  // Cancels or hard-deletes a session based on role
   async cancelSession(sessionId: string, userId: string) {
     const session = await prisma.liveSession.findUnique({
       where: { id: sessionId },
@@ -313,10 +299,7 @@ export const sessionService = {
     }
   },
 
-  /**
-   * Create a session from a Teams-created event (via webhook).
-   * Idempotent — skips if the teamsMeetingId already exists.
-   */
+  // Creates a session from Teams webhook event (idempotent)
   async createSessionFromTeams(data: {
     teamsMeetingId: string;
     joinUrl: string;

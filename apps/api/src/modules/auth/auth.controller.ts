@@ -1,10 +1,11 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { authService, RegisterSchema, LoginSchema } from './auth.service';
 import { ZodError } from 'zod';
 import { prisma } from '../../utils/prisma';
 import { AuthRequest } from '../../middleware/auth.middleware';
 
 export const authController = {
+  // POST /api/auth/register — create a new user account
   async register(req: Request, res: Response) {
     try {
       const data = RegisterSchema.parse(req.body);
@@ -14,24 +15,21 @@ export const authController = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 15 * 60 * 1000 // 15 minutes
+        maxAge: 15 * 60 * 1000
       });
 
       return res.status(201).json(result);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });
       }
-      return res.status(400).json({ error: error.message });
+      return res.status(400).json({ error: (error as Error).message });
     }
   },
 
+  // POST /api/auth/login — authenticate user and set cookie
   async login(req: Request, res: Response) {
     try {
-      // DEBUG: log incoming body to help diagnose "Invalid credentials" from browser requests
-      // Remove or guard this in production
-      // eslint-disable-next-line no-console
-      console.debug('[auth] login body:', typeof req.body === 'object' ? JSON.stringify(req.body) : req.body);
       const data = LoginSchema.parse(req.body);
       const result = await authService.login(data);
 
@@ -39,35 +37,37 @@ export const authController = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 15 * 60 * 1000 // 15 minutes
+        maxAge: 15 * 60 * 1000
       });
 
       return res.status(200).json(result);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });
       }
-      return res.status(401).json({ error: error.message });
+      return res.status(401).json({ error: (error as Error).message });
     }
   },
 
+  // POST /api/auth/logout — clear the auth cookie
   async logout(req: Request, res: Response) {
     res.clearCookie('accessToken');
     return res.status(200).json({ message: 'Logged out successfully' });
-  }
-  ,
+  },
 
+  // GET /api/auth/me — return the currently authenticated user
   async me(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
       const user = await prisma.user.findUnique({ where: { id: req.user.userId }, select: { id: true, name: true, email: true, role: true } });
       if (!user) return res.status(404).json({ error: 'User not found' });
       return res.json({ user });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      return res.status(500).json({ error: (error as Error).message });
     }
   },
 
+  // GET /api/auth/azure/status — check if Microsoft account is linked
   async azureAdStatus(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
@@ -98,15 +98,16 @@ export const authController = {
         },
         logs: recentLogs,
       });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      return res.status(500).json({ error: (error as Error).message });
     }
   },
 
+  // GET /api/auth/azure/login — redirect to Microsoft OAuth consent page
   async azureAdLogin(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
-      
+
       // Ensure only ADMIN can link Microsoft account
       const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
       if (!user || user.role !== 'ADMIN') {
@@ -125,24 +126,20 @@ export const authController = {
       const state = encryptToken(req.user.userId);
 
       const scopes = [
-        'openid',
-        'profile',
-        'email',
-        'offline_access',
-        'Calendars.ReadWrite',
-        'OnlineMeetings.ReadWrite',
-        'User.Read',
-        'OnlineMeetingRecording.Read.All'
+        'openid', 'profile', 'email', 'offline_access',
+        'Calendars.ReadWrite', 'OnlineMeetings.ReadWrite',
+        'User.Read', 'OnlineMeetingRecording.Read.All'
       ].join(' ');
 
       const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&response_mode=query&scope=${encodeURIComponent(scopes)}&state=${encodeURIComponent(state)}`;
 
       return res.redirect(authUrl);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (error: unknown) {
+      return res.status(500).json({ error: (error as Error).message });
     }
   },
 
+  // GET /api/auth/azure/callback — handle Microsoft OAuth redirect and exchange token
   async azureAdCallback(req: Request, res: Response) {
     const { code, state, error, error_description } = req.query;
 
@@ -157,20 +154,16 @@ export const authController = {
 
     try {
       const { decryptToken, encryptToken } = await import('../../utils/encryption');
-      
-      // 1. Decrypt user ID from state
+
       let userId: string;
       try {
         userId = decryptToken(state as string);
-      } catch (err) {
+      } catch {
         return res.status(400).json({ error: 'Invalid state parameter' });
       }
 
-      // 2. Look up user and verify role is ADMIN
       const user = await prisma.user.findUnique({ where: { id: userId } });
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
+      if (!user) return res.status(404).json({ error: 'User not found' });
       if (user.role !== 'ADMIN') {
         return res.status(403).json({ error: 'Access denied: Only admins are allowed to link Microsoft accounts' });
       }
@@ -183,31 +176,21 @@ export const authController = {
         return res.status(500).json({ error: 'Microsoft OAuth configuration is missing on the server' });
       }
 
-      // 3. Exchange authorization code for tokens
+      // Exchange authorization code for tokens
       const tokenUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/token`;
       const scopes = [
-        'openid',
-        'profile',
-        'email',
-        'offline_access',
-        'Calendars.ReadWrite',
-        'OnlineMeetings.ReadWrite',
-        'User.Read',
-        'OnlineMeetingRecording.Read.All'
+        'openid', 'profile', 'email', 'offline_access',
+        'Calendars.ReadWrite', 'OnlineMeetings.ReadWrite',
+        'User.Read', 'OnlineMeetingRecording.Read.All'
       ].join(' ');
 
       const response = await fetch(tokenUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
-          client_id: clientId,
-          client_secret: clientSecret,
-          grant_type: 'authorization_code',
-          code: code as string,
-          redirect_uri: redirectUri,
-          scope: scopes,
+          client_id: clientId, client_secret: clientSecret,
+          grant_type: 'authorization_code', code: code as string,
+          redirect_uri: redirectUri, scope: scopes,
         }),
       });
 
@@ -217,12 +200,12 @@ export const authController = {
         return res.status(response.status).send(`Token exchange failed: ${response.statusText}`);
       }
 
-      const tokenData = (await response.json()) as any;
+      const tokenData = (await response.json()) as Record<string, string>;
       if (!tokenData.access_token || !tokenData.refresh_token) {
         return res.status(500).json({ error: 'Invalid token response received' });
       }
 
-      // 4. Update access & refresh tokens on user
+      // Update access & refresh tokens on user
       await prisma.user.update({
         where: { id: userId },
         data: {
@@ -231,28 +214,25 @@ export const authController = {
         },
       });
 
-      // 5. Query Microsoft Graph /me to resolve the msUserId
+      // Query Microsoft Graph /me to resolve the msUserId
       const { getMsUserProfile } = await import('../graph/graph.users');
-      let msProfile;
       try {
-        msProfile = await getMsUserProfile(userId);
-      } catch (err: any) {
-        console.error('[AzureOAuth] Failed to retrieve Microsoft user profile:', err.message);
+        const msProfile = await getMsUserProfile(userId);
+        if (msProfile?.id) {
+          await prisma.user.update({
+            where: { id: userId },
+            data: { msUserId: msProfile.id },
+          });
+        }
+      } catch (err: unknown) {
+        console.error('[AzureOAuth] Failed to retrieve Microsoft user profile:', (err as Error).message);
       }
 
-      if (msProfile?.id) {
-        await prisma.user.update({
-          where: { id: userId },
-          data: { msUserId: msProfile.id },
-        });
-      }
-
-      // 6. Redirect back to frontend dashboard
       const redirectDashboard = `${process.env.WEB_URL || 'http://localhost:3000'}/admin/dashboard`;
       return res.redirect(redirectDashboard);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[AzureOAuth] Fatal callback error:', error);
-      return res.status(500).send(`Internal server error during authentication: ${error.message}`);
+      return res.status(500).send(`Internal server error during authentication: ${(error as Error).message}`);
     }
   }
 };

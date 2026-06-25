@@ -30,9 +30,7 @@ export const AddStudentsSchema = z.object({
 // --- Service ---
 
 export const batchService = {
-  /**
-   * Create a new batch linked to a course.
-   */
+  // Creates a new batch linked to a course
   async createBatch(data: z.infer<typeof CreateBatchSchema>) {
     // Verify the course exists
     const course = await prisma.course.findUnique({ where: { id: data.courseId } });
@@ -63,9 +61,7 @@ export const batchService = {
     });
   },
 
-  /**
-   * List batches with optional filters.
-   */
+  // Lists batches with optional filters
   async listBatches(filters: {
     courseId?: string;
     status?: string;
@@ -97,9 +93,7 @@ export const batchService = {
     });
   },
 
-  /**
-   * Get a single batch with details.
-   */
+  // Gets a single batch with full details
   async getBatchById(batchId: string) {
     const batch = await prisma.batch.findUnique({
       where: { id: batchId },
@@ -130,9 +124,7 @@ export const batchService = {
     return batch;
   },
 
-  /**
-   * Update batch details.
-   */
+  // Updates batch details
   async updateBatch(batchId: string, data: z.infer<typeof UpdateBatchSchema>) {
     const existing = await prisma.batch.findUnique({ where: { id: batchId } });
     if (!existing) throw new Error('Batch not found');
@@ -151,9 +143,7 @@ export const batchService = {
     });
   },
 
-  /**
-   * Delete a batch (hard delete — only if no enrollments exist).
-   */
+  // Hard-deletes a batch if no enrollments exist
   async deleteBatch(batchId: string) {
     const batch = await prisma.batch.findUnique({
       where: { id: batchId },
@@ -169,9 +159,7 @@ export const batchService = {
     return { deleted: true };
   },
 
-  /**
-   * List students in a batch (via enrollment requests).
-   */
+  // Lists enrolled students in a batch
   async listStudents(batchId: string) {
     const batch = await prisma.batch.findUnique({ where: { id: batchId } });
     if (!batch) throw new Error('Batch not found');
@@ -185,9 +173,7 @@ export const batchService = {
     });
   },
 
-  /**
-   * Add students to a batch by creating approved enrollment requests.
-   */
+  // Adds students to a batch via approved enrollments
   async addStudents(batchId: string, userIds: string[]) {
     const batch = await prisma.batch.findUnique({
       where: { id: batchId },
@@ -225,9 +211,7 @@ export const batchService = {
     return { added, total: userIds.length };
   },
 
-  /**
-   * Remove a student from a batch.
-   */
+  // Removes a student from a batch
   async removeStudent(batchId: string, userId: string) {
     const enrollment = await prisma.enrollmentRequest.findFirst({
       where: { batchId, userId, status: 'APPROVED' },
@@ -239,9 +223,7 @@ export const batchService = {
     return { removed: true };
   },
 
-  /**
-   * Get all instructors (for batch assignment dropdown).
-   */
+  // Gets all instructors for dropdown selection
   async getInstructors() {
     return prisma.user.findMany({
       where: { role: { in: ['INSTRUCTOR', 'ADMIN'] } },
@@ -250,9 +232,7 @@ export const batchService = {
     });
   },
 
-  /**
-   * Get all published courses (for batch creation dropdown).
-   */
+  // Gets all published courses for dropdown selection
   async getCoursesForBatch() {
     return prisma.course.findMany({
       where: { status: 'PUBLISHED' },

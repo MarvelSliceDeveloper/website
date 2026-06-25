@@ -3,6 +3,7 @@ interface StatusBadgeProps {
   config: Record<string, { label: string; classes: string }>;
 }
 
+// Reusable status badge with dynamic label and colors
 export function StatusBadge({ status, config }: StatusBadgeProps) {
   const c = config[status];
   if (!c) return null;

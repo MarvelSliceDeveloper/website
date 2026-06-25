@@ -9,6 +9,7 @@ import {
 } from './batch.service';
 
 export const batchController = {
+  // Creates a new batch
   async create(req: AuthRequest, res: Response) {
     try {
       const data = CreateBatchSchema.parse(req.body);
@@ -20,6 +21,7 @@ export const batchController = {
     }
   },
 
+  // Lists batches with filters
   async list(req: AuthRequest, res: Response) {
     try {
       const { courseId, status, search } = req.query;
@@ -36,6 +38,7 @@ export const batchController = {
     }
   },
 
+  // Gets a single batch by ID
   async getById(req: AuthRequest, res: Response) {
     try {
       const batch = await batchService.getBatchById(req.params.id);
@@ -49,6 +52,7 @@ export const batchController = {
     }
   },
 
+  // Updates a batch
   async update(req: AuthRequest, res: Response) {
     try {
       const data = UpdateBatchSchema.parse(req.body);
@@ -61,6 +65,7 @@ export const batchController = {
     }
   },
 
+  // Deletes a batch
   async delete(req: AuthRequest, res: Response) {
     try {
       await batchService.deleteBatch(req.params.id);
@@ -71,6 +76,7 @@ export const batchController = {
     }
   },
 
+  // Lists students in a batch
   async listStudents(req: AuthRequest, res: Response) {
     try {
       if (req.user?.role === 'INSTRUCTOR') {
@@ -87,6 +93,7 @@ export const batchController = {
     }
   },
 
+  // Adds students to a batch
   async addStudents(req: AuthRequest, res: Response) {
     try {
       const { userIds } = AddStudentsSchema.parse(req.body);
@@ -98,6 +105,7 @@ export const batchController = {
     }
   },
 
+  // Removes a student from a batch
   async removeStudent(req: AuthRequest, res: Response) {
     try {
       await batchService.removeStudent(req.params.id, req.params.uid);
@@ -107,6 +115,7 @@ export const batchController = {
     }
   },
 
+  // Gets available instructors
   async getInstructors(req: AuthRequest, res: Response) {
     try {
       const instructors = await batchService.getInstructors();
@@ -116,6 +125,7 @@ export const batchController = {
     }
   },
 
+  // Gets available courses for batch creation
   async getCourses(req: AuthRequest, res: Response) {
     try {
       const courses = await batchService.getCoursesForBatch();
@@ -125,6 +135,7 @@ export const batchController = {
     }
   },
 
+  // Gets batch details for an enrolled student
   async getByIdForStudent(req: AuthRequest, res: Response) {
     try {
       const batch = await batchService.getBatchById(req.params.id);

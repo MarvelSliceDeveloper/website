@@ -13,6 +13,7 @@ interface StudentSectionTabsProps {
     onChange: (key: string) => void;
 }
 
+// Section tabs with active indicator and optional badges
 export default function StudentSectionTabs({ tabs, activeKey, onChange }: StudentSectionTabsProps) {
     const visibleTabs = tabs.filter((tab) => tab.enabled);
 

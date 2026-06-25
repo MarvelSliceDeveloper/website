@@ -39,6 +39,7 @@ interface Props {
   withContainer?: boolean;
 }
 
+// Notification icon with type-specific color and icon
 export function NotificationIcon({ type, className = "", withContainer = true }: Props) {
   const icon = ICON_MAP[type] ?? <IconBell size={16} />;
   const colors = COLOR_MAP[type] ?? "bg-muted/20 text-muted-foreground";

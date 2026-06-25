@@ -7,6 +7,7 @@ interface PageHeaderProps {
   action?: ReactNode;
 }
 
+// Page header with role label, title, description, and action
 export function PageHeader({ role, title, description, action }: PageHeaderProps) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">

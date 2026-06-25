@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface Ticket {
   id: string;
@@ -38,13 +38,12 @@ const statusLabels: Record<string, string> = {
 interface MentorshipTicketsProps {
   tickets: Ticket[];
   isLoading?: boolean;
-  onRefresh?: () => void;
 }
 
+// List of mentorship tickets with loading and empty states
 export function MentorshipTickets({
   tickets,
   isLoading,
-  onRefresh,
 }: MentorshipTicketsProps) {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
@@ -155,6 +154,7 @@ export function MentorshipTickets({
   );
 }
 
+// Modal showing full details of a mentorship ticket
 function TicketDetailModal({
   ticket,
   onClose,

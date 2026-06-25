@@ -5,8 +5,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { api } from "../lib/api";
 import {
-  IconBook,
-  IconCalendar,
   IconClipboardList,
   IconLayoutDashboard,
   IconLogout,
@@ -78,6 +76,7 @@ const overviewItems: NavItem[] = [
   { label: "Support", href: "/instructor/support", icon: IconHelp },
 ];
 
+// Link for a child nav item under a parent group
 function ChildNavLink({
   child,
   pathname,
@@ -126,6 +125,7 @@ function ChildNavLink({
   );
 }
 
+// Collapsible nav group with auto-expand for active child
 function NavGroup({
   label,
   items,
@@ -269,6 +269,7 @@ function NavGroup({
   );
 }
 
+// Instructor sidebar with nav groups and sign-out
 export default function InstructorSidebar({
   collapsed = false,
   onToggleCollapse,
@@ -279,6 +280,7 @@ export default function InstructorSidebar({
   const pathname = usePathname();
   const router = useRouter();
 
+  // Log out the user and redirect to login
   async function handleSignOut() {
     try {
       await api.post("/api/auth/logout");

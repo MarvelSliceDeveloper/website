@@ -23,6 +23,7 @@ interface OverdueAssignmentsPanelProps {
 
 const PAGE_SIZE = 5;
 
+// Panel showing overdue assignments with filter and pagination
 export default function OverdueAssignmentsPanel({
     title = "Assignment Overdue",
     items,

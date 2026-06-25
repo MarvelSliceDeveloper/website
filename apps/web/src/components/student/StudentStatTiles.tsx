@@ -18,6 +18,7 @@ interface StudentStatTilesProps {
     className?: string;
 }
 
+// Animate a number from 0 to target over a duration
 function useCountUp(target: number, duration = 800) {
     const [count, setCount] = useState(0);
     const frame = useRef<number | null>(null);
@@ -42,6 +43,7 @@ function useCountUp(target: number, duration = 800) {
     return count;
 }
 
+// Single stat tile with count-up animation
 function StatTile({ tile }: { tile: StudentStatTile }) {
     const count = useCountUp(tile.value);
 
@@ -73,6 +75,7 @@ function StatTile({ tile }: { tile: StudentStatTile }) {
     );
 }
 
+// Grid of stat tiles with count-up animations
 export default function StudentStatTiles({ tiles, className = "" }: StudentStatTilesProps) {
     return (
         <div className={`grid grid-cols-2 gap-3 xl:grid-cols-4 ${className}`}>

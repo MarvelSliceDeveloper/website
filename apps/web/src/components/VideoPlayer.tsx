@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, type MouseEvent, type ChangeEvent } from "react";
 
 type VideoPlayerProps = {
   url?: string;
@@ -8,7 +7,8 @@ type VideoPlayerProps = {
 };
 
 /* ─── Icons ──────────────────────────────────────────────────── */
-const Icon = ({ d, size = 20, stroke = "currentColor", fill = "none", strokeWidth = 1.6 }) => (
+// SVG icon renderer for the video player controls
+const Icon = ({ d, size = 20, stroke = "currentColor", fill = "none", strokeWidth = 1.6 }: { d: string | string[]; size?: number; stroke?: string; fill?: string; strokeWidth?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
     {Array.isArray(d) ? d.map((p, i) => <path key={i} d={p} />) : <path d={d} />}
   </svg>
@@ -37,9 +37,9 @@ const icons = {
 
 /* ─── Video Player ─────────────────────────────────────────────── */
 function VideoPlayer({ url = "", initialTime = 0, onProgress }: VideoPlayerProps) {
-  const videoRef = useRef(null);
-  const progressRef = useRef(null);
-  const hideRef = useRef(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+  const hideRef = useRef<ReturnType<typeof setTimeout>>(null);
   const [playing, setPlaying] = useState(false);
   const [current, setCurrent] = useState(initialTime || 0);
   const [duration] = useState(2265);           // demo 37:45
@@ -47,14 +47,16 @@ function VideoPlayer({ url = "", initialTime = 0, onProgress }: VideoPlayerProps
   const [muted, setMuted] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [show, setShow] = useState(false);
-  const [hoverT, setHoverT] = useState(null);
+  const [hoverT, setHoverT] = useState<number | null>(null);
   const [hoverX, setHoverX] = useState(0);
 
-  const fmt = (s) => {
+  // Format seconds to HH:MM:SS or MM:SS
+  const fmt = (s: number) => {
     const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = Math.floor(s % 60);
     return `${h ? h + ":" : ""}${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
   };
 
+  // Reset the auto-hide timer for controls when user interacts
   const resetHide = useCallback(() => {
     setShow(true);
     if (hideRef.current) clearTimeout(hideRef.current);
@@ -67,7 +69,8 @@ function VideoPlayer({ url = "", initialTime = 0, onProgress }: VideoPlayerProps
     setPlaying(p => !p);
   };
 
-  const handleProgressClick = (e) => {
+  // Seek to clicked position on the progress bar
+  const handleProgressClick = (e: MouseEvent<HTMLDivElement>) => {
     if (!progressRef.current) return;
     const r = progressRef.current.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
@@ -76,7 +79,8 @@ function VideoPlayer({ url = "", initialTime = 0, onProgress }: VideoPlayerProps
     if (videoRef.current) videoRef.current.currentTime = t;
   };
 
-  const handleProgressHover = (e) => {
+  // Show hovered timestamp on the progress bar
+  const handleProgressHover = (e: MouseEvent<HTMLDivElement>) => {
     if (!progressRef.current) return;
     const r = progressRef.current.getBoundingClientRect();
     setHoverX(e.clientX - r.left);
@@ -255,7 +259,8 @@ function VideoPlayer({ url = "", initialTime = 0, onProgress }: VideoPlayerProps
   );
 }
 
-function CtrlBtn({ icon, onClick }) {
+// Button control for video player (skip back/forward, captions, fullscreen)
+function CtrlBtn({ icon, onClick }: { icon: string | string[]; onClick?: () => void }) {
   return (
     <button onClick={onClick} style={{
       background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)",
@@ -271,7 +276,8 @@ function CtrlBtn({ icon, onClick }) {
   );
 }
 
-function VolSlider({ value, onChange }) {
+// Volume slider control for the video player
+function VolSlider({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
     <div style={{ position: "relative", width: 80, height: 34, display: "flex", alignItems: "center" }}>
       <div style={{ position: "absolute", width: "100%", height: 3, background: "rgba(255,255,255,0.12)", borderRadius: 99 }}>
@@ -285,8 +291,10 @@ function VolSlider({ value, onChange }) {
   );
 }
 
-/* ─── Sidebar ──────────────────────────────────────────────────── */
-const navItems = [
+/* ─── Sidebar (demo only) ──────────────────────────────────────── */
+type IconKey = keyof typeof icons;
+
+const navItems: { id: string; icon: IconKey; active?: boolean }[] = [
   { id: "grid", icon: "grid" },
   { id: "library", icon: "book" },
   { id: "videos", icon: "video" },
@@ -295,7 +303,7 @@ const navItems = [
   { id: "chat", icon: "chat", active: true },
 ];
 
-function Sidebar({ active, setActive }) {
+function Sidebar({ active, setActive }: { active: string; setActive: (id: string) => void }) {
   return (
     <div style={{
       width: 56, minHeight: "100vh", background: "#0d0d10",

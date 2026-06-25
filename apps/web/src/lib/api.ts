@@ -34,17 +34,22 @@ async function request<T>(endpoint: string, options: FetchOptions = {}): Promise
 }
 
 export const api = {
+  // GET request
   get: <T>(endpoint: string, params?: Record<string, string>) =>
     request<T>(endpoint, { method: "GET", params }),
+  // POST request
   post: <T>(endpoint: string, body?: unknown) =>
     request<T>(endpoint, {
       method: "POST",
       body: body instanceof FormData ? body : JSON.stringify(body),
     }),
+  // PUT request
   put: <T>(endpoint: string, body?: unknown) =>
     request<T>(endpoint, { method: "PUT", body: JSON.stringify(body) }),
+  // PATCH request
   patch: <T>(endpoint: string, body?: unknown) =>
     request<T>(endpoint, { method: "PATCH", body: JSON.stringify(body) }),
+  // DELETE request
   delete: <T>(endpoint: string) =>
     request<T>(endpoint, { method: "DELETE" }),
 };

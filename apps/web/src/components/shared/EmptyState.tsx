@@ -7,6 +7,7 @@ interface EmptyStateProps {
   action?: ReactNode;
 }
 
+// Empty state placeholder with icon, title, and optional action
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-border/60 bg-card/50 py-20 text-center">

@@ -10,6 +10,7 @@ import {
 import { buildModuleResourceUrl } from './modules.upload';
 
 export const moduleController = {
+  // Creates a new module in a course
   async addModule(req: AuthRequest, res: Response) {
     try {
       const data = CreateModuleSchema.parse(req.body);
@@ -26,6 +27,7 @@ export const moduleController = {
     }
   },
 
+  // Updates an existing module
   async updateModule(req: AuthRequest, res: Response) {
     try {
       const data = UpdateModuleSchema.parse(req.body);
@@ -42,6 +44,7 @@ export const moduleController = {
     }
   },
 
+  // Deletes a module from a course
   async deleteModule(req: AuthRequest, res: Response) {
     try {
       await moduleService.deleteModule(req.params.id);
@@ -54,6 +57,7 @@ export const moduleController = {
     }
   },
 
+  // Reorders modules within a course
   async reorderModules(req: AuthRequest, res: Response) {
     try {
       const { moduleIds } = ReorderModulesSchema.parse(req.body);
@@ -70,6 +74,7 @@ export const moduleController = {
     }
   },
 
+  // Uploads a resource file to a module
   async uploadResource(req: AuthRequest, res: Response) {
     try {
       if (!req.file) {
@@ -98,6 +103,7 @@ export const moduleController = {
     }
   },
 
+  // Deletes a resource file from a module
   async deleteResource(req: AuthRequest, res: Response) {
     try {
       const moduleId = req.params.id;

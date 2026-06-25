@@ -1,13 +1,15 @@
 import { Router } from 'express';
+import { requireAuth } from '../../middleware/auth.middleware';
+import { certificateController } from './certificate.controller';
 
 const router = Router();
 
-// Certificate routes will be implemented here
-// Placeholder endpoints:
-// GET /api/certificates - list all certificates
-// GET /api/certificates/:id - get certificate by id
-// POST /api/certificates - create certificate
-// PUT /api/certificates/:id - update certificate
-// DELETE /api/certificates/:id - delete certificate
+router.use(requireAuth);
+
+// GET /api/certificates — list student's certificates with claimable courses
+router.get('/', certificateController.listMyCertificates);
+
+// POST /api/certificates/claim — claim a certificate for a completed course
+router.post('/claim', certificateController.claim);
 
 export const certificateRouter = router;

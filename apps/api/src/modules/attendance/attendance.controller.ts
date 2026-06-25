@@ -3,10 +3,7 @@ import { AuthRequest } from '../../middleware/auth.middleware';
 import { attendanceService } from './attendance.service';
 
 export const attendanceController = {
-  /**
-   * POST /api/attendance/:sessionId/join
-   * Record that a student clicked "Join Now" and joined the session.
-   */
+  // POST /api/attendance/:sessionId/join — records student joining a session
   async joinSession(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
@@ -24,10 +21,7 @@ export const attendanceController = {
     }
   },
 
-  /**
-   * GET /api/attendance/:sessionId
-   * List all student attendance for a given session (Admin or Instructor only).
-   */
+  // GET /api/attendance/:sessionId — lists attendance for a session
   async getSessionAttendance(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });

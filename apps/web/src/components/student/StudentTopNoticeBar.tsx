@@ -10,6 +10,7 @@ interface StudentTopNoticeBarProps {
     dismissKey?: string;
 }
 
+// Dismissible top announcement bar with CTA link
 export default function StudentTopNoticeBar({
     text,
     ctaLabel = "Join Now",

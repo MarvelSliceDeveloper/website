@@ -12,6 +12,7 @@ import {
   IconArrowLeft,
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
+import { timeAgo } from "@/lib/time-ago";
 
 type NotificationItem = {
   id: string;
@@ -22,17 +23,7 @@ type NotificationItem = {
   createdAt: string;
 };
 
-function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
+// Top header bar with notifications, theme toggle, and settings
 export default function Header({
   isSidebarCollapsed = false,
   onToggleSidebar = () => { },
@@ -49,6 +40,7 @@ export default function Header({
   const [unreadCount, setUnreadCount] = useState(0);
   const notifRef = useRef<HTMLDivElement>(null);
 
+  // Fetch notifications from API
   const loadNotifications = useCallback(async () => {
     try {
       const data = await api.get<{ notifications: NotificationItem[]; unreadCount: number }>(
@@ -82,6 +74,7 @@ export default function Header({
     document.documentElement.setAttribute("data-theme", initialTheme);
   }, []);
 
+  // Toggle between light and dark theme
   const toggleTheme = () => {
     const nextTheme = theme === "dark" ? "light" : "dark";
     setTheme(nextTheme);
@@ -89,6 +82,7 @@ export default function Header({
     window.localStorage.setItem("lms-theme", nextTheme);
   };
 
+  // Mark all notifications as read
   const markAllRead = async () => {
     try {
       await api.post("/api/notifications/read-all");
@@ -97,6 +91,7 @@ export default function Header({
     } catch { /* ignore */ }
   };
 
+  // Mark a single notification as read
   const markOneRead = async (id: string) => {
     try {
       await api.patch(`/api/notifications/${id}/read`, {});

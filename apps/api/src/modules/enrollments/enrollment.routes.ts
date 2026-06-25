@@ -10,6 +10,7 @@ router.use(requireAuth);
 router.use(requireRole([UserRole.ADMIN]));
 
 // GET /api/admin/enrollments — list enrollment requests with filters
+// Lists all enrollment requests with optional filters
 router.get('/', async (req: AuthRequest, res: Response) => {
   try {
     const { status, courseId } = req.query;
@@ -55,6 +56,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 });
 
 // PATCH /api/admin/enrollments/:id/approve — approve and assign to batch
+// Approves an enrollment and assigns to a batch
 router.patch('/:id/approve', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
@@ -111,6 +113,7 @@ router.patch('/:id/approve', async (req: AuthRequest, res: Response) => {
 });
 
 // PATCH /api/admin/enrollments/:id/reject — reject enrollment
+// Rejects an enrollment request
 router.patch('/:id/reject', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;

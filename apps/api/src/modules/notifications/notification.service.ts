@@ -1,30 +1,19 @@
 import { prisma } from '../../utils/prisma';
-import type { Prisma } from '@prisma/client';
+import type { InputJsonValue } from '@prisma/client';
 
 interface NotificationCreateData {
   userId: string;
   title: string;
   message: string;
   type: string;
-  metadata?: Prisma.InputJsonValue;
+  metadata?: InputJsonValue;
 }
 
+// Chunk array into smaller batches to avoid DB parameter limits
 function chunkArray<T>(arr: T[], size: number): T[][] {
   const res: T[][] = [];
   for (let i = 0; i < arr.length; i += size) res.push(arr.slice(i, i + size));
   return res;
-}
-
-async function shouldNotify(userId: string, type: string): Promise<boolean> {
-  if (!prisma || !('notificationPreference' in prisma)) return true;
-  try {
-    const pref = await prisma.notificationPreference.findUnique({
-      where: { userId_type: { userId, type } },
-    });
-    return pref ? pref.enabled : true;
-  } catch {
-    return true;
-  }
 }
 
 export const notificationService = {

@@ -9,10 +9,7 @@ import {
   IconChartBar,
   IconClipboardCheck,
   IconLayoutDashboard,
-  IconLayoutSidebarLeftCollapse,
   IconMail,
-  IconSun,
-  IconMoon,
   IconLogout,
   IconMessages,
   IconUsers,
@@ -123,6 +120,7 @@ const overviewItems: NavItem[] = [
   },
 ];
 
+// Link for a child nav item under a parent group
 function ChildNavLink({
   child,
   pathname,
@@ -171,6 +169,7 @@ function ChildNavLink({
   );
 }
 
+// Collapsible nav group with auto-expand for active child
 function NavGroup({
   label,
   items,
@@ -314,6 +313,7 @@ function NavGroup({
   );
 }
 
+// Admin sidebar with collapsible multi-level navigation
 export default function AdminSidebar({
   collapsed = false,
   onToggleCollapse,

@@ -17,6 +17,7 @@ interface StudentTableProps<T> {
     emptyMessage?: string;
 }
 
+// Generic data table with typed columns and empty state
 export default function StudentTable<T>({
     columns,
     rows,

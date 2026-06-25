@@ -14,6 +14,7 @@ interface MentorshipRequestModalProps {
   }) => Promise<void>;
 }
 
+// Modal form to submit a new mentorship request
 export function MentorshipRequestModal({
   isOpen,
   onClose,

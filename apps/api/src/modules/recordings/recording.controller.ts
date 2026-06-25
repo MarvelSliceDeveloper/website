@@ -3,9 +3,7 @@ import { AuthRequest } from '../../middleware/auth.middleware';
 import { recordingService } from './recording.service';
 
 export const recordingController = {
-  /**
-   * GET /api/recordings?batchId=...
-   */
+  // GET /api/recordings?batchId= — lists recordings for a batch
   async listForBatch(req: AuthRequest, res: Response) {
     try {
       const { batchId } = req.query;
@@ -21,9 +19,7 @@ export const recordingController = {
     }
   },
 
-  /**
-   * GET /api/recordings/:id
-   */
+  // GET /api/recordings/:id — gets a recording by ID
   async getById(req: AuthRequest, res: Response) {
     try {
       const recording = await recordingService.getRecording(
@@ -36,9 +32,7 @@ export const recordingController = {
     }
   },
 
-  /**
-   * GET /api/recordings/:id/url
-   */
+  // GET /api/recordings/:id/url — fetches recording playback URL
   async getPlaybackUrl(req: AuthRequest, res: Response) {
     try {
       const data = await recordingService.getPlaybackUrl(
@@ -51,9 +45,7 @@ export const recordingController = {
     }
   },
 
-  /**
-   * POST /api/recordings/progress
-   */
+  // POST /api/recordings/progress — updates watch progress
   async updateProgress(req: AuthRequest, res: Response) {
     try {
       const { recordingId, watchedSeconds } = req.body;
@@ -72,9 +64,7 @@ export const recordingController = {
     }
   },
 
-  /**
-   * POST /api/recordings/:sessionId/sync (Admin/Instructor only)
-   */
+  // POST /api/recordings/:sessionId/sync — manually syncs a recording
   async manualSync(req: AuthRequest, res: Response) {
     try {
       const recording = await recordingService.syncRecordingsForSession(req.params.sessionId);

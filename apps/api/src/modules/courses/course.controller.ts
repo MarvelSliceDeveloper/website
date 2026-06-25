@@ -10,6 +10,7 @@ import { buildCourseThumbnailUrl } from './course.upload';
 import { prisma } from '../../utils/prisma';
 
 export const courseController = {
+  // Creates a new course
   async create(req: AuthRequest, res: Response) {
     try {
       const data = CreateCourseSchema.parse(req.body);
@@ -23,6 +24,7 @@ export const courseController = {
     }
   },
 
+  // Lists courses with filters
   async list(req: AuthRequest, res: Response) {
     try {
       const { status, category, search, page, limit } = req.query;
@@ -39,6 +41,7 @@ export const courseController = {
     }
   },
 
+  // Gets a single course by ID
   async getById(req: AuthRequest, res: Response) {
     try {
       const course = await courseService.getCourseById(req.params.id);
@@ -51,6 +54,7 @@ export const courseController = {
     }
   },
 
+  // Updates a course
   async update(req: AuthRequest, res: Response) {
     try {
       const data = UpdateCourseSchema.parse(req.body);
@@ -67,6 +71,7 @@ export const courseController = {
     }
   },
 
+  // Uploads a course thumbnail image
   async uploadThumbnail(req: AuthRequest, res: Response) {
     try {
       if (!req.file) {
@@ -88,6 +93,7 @@ export const courseController = {
     }
   },
 
+  // Archives (soft-deletes) a course
   async delete(req: AuthRequest, res: Response) {
     try {
       await courseService.deleteCourse(req.params.id);
@@ -100,6 +106,7 @@ export const courseController = {
     }
   },
 
+  // Publishes a course after validation
   async publish(req: AuthRequest, res: Response) {
     try {
       const result = await courseService.publishCourse(req.params.id);
@@ -122,6 +129,7 @@ export const courseController = {
     }
   },
 
+  // Unpublishes a course back to DRAFT
   async unpublish(req: AuthRequest, res: Response) {
     try {
       const course = await courseService.unpublishCourse(req.params.id);
@@ -134,6 +142,7 @@ export const courseController = {
     }
   },
 
+  // Lists sessions for a course
   async listSessions(req: AuthRequest, res: Response) {
     try {
       const sessions = await prisma.liveSession.findMany({
@@ -153,6 +162,7 @@ export const courseController = {
     }
   },
 
+  // Lists recordings for a course
   async listRecordings(req: AuthRequest, res: Response) {
     try {
       const recordings = await prisma.recording.findMany({

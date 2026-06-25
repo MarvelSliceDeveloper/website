@@ -4,10 +4,7 @@ import { GraphError } from '../graph/graph.client';
 import { notificationService } from '../notifications/notification.service';
 
 export const recordingService = {
-  /**
-   * Synchronize recordings for a specific live session.
-   * This is typically called by a background job after the session ends.
-   */
+  // Syncs recordings from Microsoft Teams for a session
   async syncRecordingsForSession(sessionId: string) {
     // 1. Get session and info
     const session = await prisma.liveSession.findUnique({
@@ -81,9 +78,7 @@ export const recordingService = {
     }
   },
 
-  /**
-   * Get recordings for a specific batch.
-   */
+  // Gets recordings for a batch with user progress
   async getRecordingsForBatch(batchId: string, userId: string) {
     // Verify enrollment
     const enrollment = await prisma.enrollmentRequest.findFirst({
@@ -131,9 +126,7 @@ export const recordingService = {
     }));
   },
 
-  /**
-   * Get recording details with watch progress for the current user.
-   */
+  // Gets a single recording with user's watch progress
   async getRecording(recordingId: string, userId: string) {
     const recording = await prisma.recording.findUnique({
       where: { id: recordingId },
@@ -157,9 +150,7 @@ export const recordingService = {
     return recording;
   },
 
-  /**
-   * Track watch progress for a recording.
-   */
+  // Tracks watch progress and marks complete at 90%
   async updateProgress(userId: string, recordingId: string, watchedSeconds: number) {
     // 1. Get recording to check duration
     const recording = await prisma.recording.findUnique({
@@ -199,9 +190,7 @@ export const recordingService = {
     return progress;
   },
 
-  /**
-   * Fetch a fresh playback URL from Microsoft Graph.
-   */
+  // Fetches a fresh playback URL from Microsoft Graph
   async getPlaybackUrl(recordingId: string, userId: string) {
     const recording = await prisma.recording.findUnique({
       where: { id: recordingId },

@@ -10,9 +10,7 @@ import {
   IconSun,
   IconLogout,
   IconSettings,
-  IconUser,
   IconX,
-  IconTrash,
   IconSchool,
   IconEye,
 } from "@tabler/icons-react";
@@ -41,6 +39,7 @@ interface StudentPortalShellProps {
 
 
 
+// Student portal shell with header, breadcrumbs, and notifications
 export default function StudentPortalShell({
   children,
   breadcrumbs = [],
@@ -62,6 +61,7 @@ export default function StudentPortalShell({
   const notifRef = useRef<HTMLDivElement>(null);
   const avatarRef = useRef<HTMLDivElement>(null);
 
+  // Fetch notifications from API
   const fetchNotifications = useCallback(async () => {
     try {
       const data = await api.get<{ notifications: NotificationItem[]; unreadCount: number }>("/api/notifications");
@@ -79,7 +79,7 @@ export default function StudentPortalShell({
   }, [fetchNotifications]);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem("lms-student-theme");
+    const saved = window.localStorage.getItem("lms-theme");
     const nextTheme = saved === "light" ? "light" : "dark";
     setTheme(nextTheme);
     document.documentElement.setAttribute("data-theme", nextTheme);
@@ -94,6 +94,7 @@ export default function StudentPortalShell({
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  // Mark all notifications as read
   async function markAllRead() {
     try {
       await api.post("/api/notifications/read-all");
@@ -102,6 +103,7 @@ export default function StudentPortalShell({
     } catch { /* ignore */ }
   }
 
+  // Mark a single notification as read
   async function markOneRead(id: string) {
     try {
       await api.patch(`/api/notifications/${id}/read`, {});
@@ -112,6 +114,7 @@ export default function StudentPortalShell({
     } catch { /* ignore */ }
   }
 
+  // Log out the user and redirect to login
   async function handleSignOut() {
     try {
       await api.post("/api/auth/logout");
@@ -173,7 +176,7 @@ export default function StudentPortalShell({
                 const nextTheme = theme === "dark" ? "light" : "dark";
                 setTheme(nextTheme);
                 document.documentElement.setAttribute("data-theme", nextTheme);
-                window.localStorage.setItem("lms-student-theme", nextTheme);
+                window.localStorage.setItem("lms-theme", nextTheme);
               }}
               className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}

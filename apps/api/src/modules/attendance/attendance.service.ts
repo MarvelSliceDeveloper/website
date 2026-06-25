@@ -1,10 +1,7 @@
 import { prisma } from '../../utils/prisma';
 
 export const attendanceService = {
-  /**
-   * Record that a student joined a live session.
-   * If already recorded, returns the existing record.
-   */
+  // Records a student joining a live session
   async recordAttendance(userId: string, sessionId: string) {
     // 1. Verify the session exists
     const session = await prisma.liveSession.findUnique({
@@ -46,9 +43,7 @@ export const attendanceService = {
     });
   },
 
-  /**
-   * Get attendance record for a user in a specific session.
-   */
+  // Gets attendance record for a user in a session
   async getAttendance(userId: string, sessionId: string) {
     return prisma.attendance.findUnique({
       where: {
@@ -60,9 +55,7 @@ export const attendanceService = {
     });
   },
 
-  /**
-   * List all attendance records for a given session (Admins/Instructors).
-   */
+  // Lists all attendance records for a session
   async listForSession(sessionId: string) {
     return prisma.attendance.findMany({
       where: { sessionId },

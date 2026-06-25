@@ -17,6 +17,7 @@ function handleError(res: Response, error: unknown, fallback: string) {
 
 export const ticketController = {
   // POST /api/tickets
+  // Handles ticket creation request
   async createTicket(req: AuthRequest, res: Response) {
     try {
       const data = CreateTicketSchema.parse(req.body);
@@ -35,6 +36,7 @@ export const ticketController = {
   },
 
   // GET /api/tickets
+  // Handles ticket listing request
   async listTickets(req: AuthRequest, res: Response) {
     try {
       const role = req.user!.role;
@@ -58,6 +60,7 @@ export const ticketController = {
   },
 
   // GET /api/tickets/:id
+  // Handles single ticket retrieval
   async getTicket(req: AuthRequest, res: Response) {
     try {
       const ticket = await ticketService.getTicket(req.params.id);
@@ -83,6 +86,7 @@ export const ticketController = {
   },
 
   // PATCH /api/tickets/:id/assign
+  // Handles mentor assignment request
   async assignMentor(req: AuthRequest, res: Response) {
     try {
       const data = AssignMentorSchema.parse(req.body);
@@ -95,6 +99,7 @@ export const ticketController = {
   },
 
   // PATCH /api/tickets/:id/schedule
+  // Handles session scheduling request
   async scheduleSession(req: AuthRequest, res: Response) {
     try {
       const data = ScheduleSessionSchema.parse(req.body);
@@ -107,6 +112,7 @@ export const ticketController = {
   },
 
   // PATCH /api/tickets/:id/complete
+  // Handles ticket completion request
   async completeTicket(req: AuthRequest, res: Response) {
     try {
       const data = CompleteTicketSchema.parse(req.body);
@@ -119,6 +125,7 @@ export const ticketController = {
   },
 
   // PATCH /api/tickets/:id/cancel
+  // Handles ticket cancellation request
   async cancelTicket(req: AuthRequest, res: Response) {
     try {
       const ticket = await ticketService.cancelMentorshipTicket(req.params.id);
@@ -130,6 +137,7 @@ export const ticketController = {
   },
 
   // POST /api/tickets/:id/messages
+  // Handles adding a message to a ticket
   async addMessage(req: AuthRequest, res: Response) {
     try {
       const data = AddMessageSchema.parse(req.body);
@@ -156,6 +164,7 @@ export const ticketController = {
   },
 
   // PATCH /api/tickets/:id/status
+  // Handles support ticket status update
   async updateStatus(req: AuthRequest, res: Response) {
     try {
       if (req.user!.role !== 'ADMIN') {
@@ -173,6 +182,7 @@ export const ticketController = {
   },
 
   // GET /api/tickets/mentors
+  // Handles listing available mentors
   async getMentors(req: AuthRequest, res: Response) {
     try {
       const mentors = await ticketService.getAvailableMentors();
@@ -183,6 +193,7 @@ export const ticketController = {
   },
 
   // GET /api/tickets/stats
+  // Handles ticket statistics request
   async getStats(req: AuthRequest, res: Response) {
     try {
       const type = (req.query.type as 'MENTORSHIP' | 'SUPPORT') || 'MENTORSHIP';

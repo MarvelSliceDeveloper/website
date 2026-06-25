@@ -1,3 +1,4 @@
+// Badge indicating a live-now session with pulsing dot
 export function LiveBadge({ size = "sm" }: { size?: "sm" | "lg" }) {
   const dotSize = size === "lg" ? "h-3 w-3" : "h-2 w-2";
   const textSize = size === "lg" ? "text-sm" : "text-xs";
@@ -10,6 +11,7 @@ export function LiveBadge({ size = "sm" }: { size?: "sm" | "lg" }) {
   );
 }
 
+// Badge showing session status with color coding
 export function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     scheduled: "bg-primary/15 text-primary-hover",

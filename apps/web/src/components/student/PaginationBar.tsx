@@ -7,6 +7,7 @@ interface PaginationBarProps {
     onPageChange: (nextPage: number) => void;
 }
 
+// Pagination controls with Previous/Next and page info
 export default function PaginationBar({ page, pageSize, totalItems, onPageChange }: PaginationBarProps) {
     const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
     const from = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;

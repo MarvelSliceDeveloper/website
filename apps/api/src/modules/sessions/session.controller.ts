@@ -8,10 +8,7 @@ import {
 } from './session.service';
 
 export const sessionController = {
-  /**
-   * POST /api/sessions
-   * Create a new live session (instructor only).
-   */
+  // POST /api/sessions — creates a new live session
   async create(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
@@ -35,10 +32,7 @@ export const sessionController = {
     }
   },
 
-  /**
-   * GET /api/sessions
-   * List sessions with optional filters.
-   */
+  // GET /api/sessions — lists sessions with filters
   async list(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
@@ -61,10 +55,7 @@ export const sessionController = {
     }
   },
 
-  /**
-   * GET /api/sessions/:id
-   * Get a single session by ID.
-   */
+  // GET /api/sessions/:id — gets a session by ID
   async getById(req: AuthRequest, res: Response) {
     try {
       const session = await sessionService.getSession(req.params.id);
@@ -78,10 +69,7 @@ export const sessionController = {
     }
   },
 
-  /**
-   * PATCH /api/sessions/:id
-   * Update a session (instructor only).
-   */
+  // PATCH /api/sessions/:id — updates a session
   async update(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
@@ -105,10 +93,7 @@ export const sessionController = {
     }
   },
 
-  /**
-   * DELETE /api/sessions/:id
-   * Cancel a session (for instructor) or delete a session (for admin).
-   */
+  // DELETE /api/sessions/:id — cancels or deletes a session
   async cancel(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });

@@ -2,8 +2,7 @@ import * as dotenv from 'dotenv';
 import * as path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
-// ↓ everything else stays the same ↓
-// DEBUG: show which DATABASE_URL the server loaded (credentials masked)
+// Show which DATABASE_URL the server loaded (credentials masked)
 // eslint-disable-next-line no-console
 if (process.env.DATABASE_URL) {
   try {
@@ -36,7 +35,6 @@ import { calendarRouter } from './modules/calendar/calendar.routes';
 import { webhookRouter } from './modules/calendar/webhook.routes';
 import { sessionRouter } from './modules/sessions/session.routes';
 import { recordingRouter } from './modules/recordings/recording.routes';
-import { mentorshipRouter } from './modules/mentorship/mentorship.routes';
 import { courseRouter } from './modules/courses/course.routes';
 import { batchRouter } from './modules/batches/batch.routes';
 import { studentBatchRouter } from './modules/batches/student-batch.routes';
@@ -52,6 +50,7 @@ import { enrollmentRouter } from './modules/enrollments/enrollment.routes';
 import { assignmentRouter } from './modules/assignments/assignment.routes';
 import { dashboardRouter } from './modules/dashboard/dashboard.routes';
 import { messageRouter } from './modules/messages/message.routes';
+import { mentorshipRouter } from './modules/mentorship/mentorship.routes';
 import { supportRouter } from './modules/support/support.routes';
 import ticketRouter from './modules/tickets/ticket.routes';
 

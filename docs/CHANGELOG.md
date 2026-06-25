@@ -4,6 +4,32 @@
 
 ---
 
+## 2026-06-25 — Code Cleanup: Removed Duplicate Ticket Modules, Dead Code, Typed VideoPlayer ✅
+
+### Consolidated Ticket System
+- **Removed** old `mentorship.service.ts`, `mentorship.controller.ts`, `support.service.ts`, `support.controller.ts`
+- **Rewired** `mentorship.routes.ts` and `support.routes.ts` to delegate to the unified `ticketController`/`ticketService` — same URL paths (`/api/mentorship/*`, `/api/support/*`), consolidated logic underneath
+- Frontend pages untouched — all existing API calls continue to work
+
+### Removed Dead/Unused Code
+- `notification.service.ts`: Deleted unused `shouldNotify()` function
+- `certificate.routes.ts`: Wired up `GET /` and `POST /claim` routes (service/controller were already implemented)
+- `auth.controller.ts` / `auth.service.ts`: Removed debug `console.log` statements
+- `index.ts`: Removed leftover template comment
+- **Frontend**: Removed 9 unused icon imports across `StudentPortalShell`, `Sidebar`, `AdminSidebar`, `InstructorSidebar`, `MentorshipTickets`
+
+### Fixed Duplicate Logic Bugs
+- `Header.tsx`: Replaced local `timeAgo` with import from `@/lib/time-ago` — fixed `"just now"` → `"Just now"` casing inconsistency
+- `StudentPortalShell.tsx`: Fixed localStorage key `lms-student-theme` → `lms-theme` (was inconsistent with `Header.tsx`)
+
+### VideoPlayer.tsx — Fully Typed
+- Removed `// @ts-nocheck`, added proper TypeScript types to all components and functions
+- Fixed `CtrlBtn` icon prop type to accept `string | string[]` (some SVG paths are arrays)
+- Added `IconKey` type for the demo sidebar navigation
+
+### Added Function Documentation
+- Added `// what this does` line comments across 25 frontend component files
+
 ## 2026-06-17 — Support Ticket System + Student Pages Polish ✅
 
 ### New Feature: Support Ticket System

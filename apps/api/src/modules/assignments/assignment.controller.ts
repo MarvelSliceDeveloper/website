@@ -11,7 +11,7 @@ import {
 import { buildAssignmentFileUrl } from './assignment.upload';
 
 export const assignmentController = {
-  // POST /api/assignments: Creates a new assignment (QUIZ or ASSIGNMENT); restricted to instructor/admin.
+  // POST /api/assignments — creates a new quiz or assignment
   async create(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
@@ -41,7 +41,7 @@ export const assignmentController = {
     }
   },
 
-  // GET /api/assignments: Lists assignments scoped by user role (instructor/student/admin).
+  // GET /api/assignments — lists assignments scoped by role
   async list(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
@@ -62,7 +62,7 @@ export const assignmentController = {
     }
   },
 
-  // GET /api/assignments/:id/questions: Gets assignment questions; strips answers for students.
+  // GET /api/assignments/:id/questions — gets questions for an assignment
   async getQuestions(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
@@ -87,7 +87,7 @@ export const assignmentController = {
     }
   },
 
-  // POST /api/assignments/:id/submit/mcq: Submits student MCQ answers for auto-grading.
+  // POST /api/assignments/:id/submit/mcq — submits MCQ answers for grading
   async submitMcq(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
@@ -122,7 +122,7 @@ export const assignmentController = {
     }
   },
 
-  // GET /api/assignments/submissions/:submissionId/result: Fetches detailed score breakdown.
+  // GET /api/assignments/submissions/:submissionId/result — gets score breakdown
   async getSubmissionResult(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
@@ -146,7 +146,7 @@ export const assignmentController = {
     }
   },
 
-  // GET /api/assignments/:id/submissions: Lists all submissions; restricted to instructor/admin.
+  // GET /api/assignments/:id/submissions — lists all student submissions
   async listSubmissions(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
@@ -172,7 +172,7 @@ export const assignmentController = {
     }
   },
 
-  // POST /api/assignments/submissions/:submissionId/grade: Manually overrides grades/feedback.
+  // POST /api/assignments/submissions/:submissionId/grade — manually grades a submission
   async grade(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
@@ -204,7 +204,7 @@ export const assignmentController = {
     }
   },
 
-  // POST /api/assignments/upload-pdf: Uploads the question PDF; restricted to instructors.
+  // POST /api/assignments/upload-pdf — uploads a question PDF
   async uploadPdf(req: AuthRequest, res: Response) {
     try {
       if (!req.file) {
@@ -218,7 +218,7 @@ export const assignmentController = {
     }
   },
 
-  // POST /api/assignments/:id/submit/file: Student uploads their completed assignment answer file.
+  // POST /api/assignments/:id/submit/file — submits a file answer for an assignment
   async submitFile(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });

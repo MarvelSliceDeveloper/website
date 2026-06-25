@@ -3,6 +3,7 @@ interface SkeletonProps {
   lines?: number;
 }
 
+// Animated loading placeholder with optional multi-line mode
 export function Skeleton({ className = "", lines }: SkeletonProps) {
   if (lines) {
     return (

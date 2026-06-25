@@ -9,6 +9,7 @@ interface AppShellProps {
   inboxHref: string;
 }
 
+// App shell layout with sidebar and header
 export default function AppShell({ children, sidebar, inboxHref }: AppShellProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 

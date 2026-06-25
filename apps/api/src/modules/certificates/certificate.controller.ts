@@ -3,6 +3,7 @@ import { AuthRequest } from '../../middleware/auth.middleware';
 import { certificateService } from './certificate.service';
 
 export const certificateController = {
+    // Lists all certificates and claimable ones for the user
     async listMyCertificates(req: AuthRequest, res: Response) {
         try {
             const data = await certificateService.getMyCertificates(req.user!.userId);
@@ -12,6 +13,7 @@ export const certificateController = {
         }
     },
 
+    // Claims a certificate for a completed course
     async claim(req: AuthRequest, res: Response) {
         try {
             const { courseId } = req.body;

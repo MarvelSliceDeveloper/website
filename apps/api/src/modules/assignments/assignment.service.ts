@@ -56,6 +56,7 @@ export const CreateAssignmentSchema = CreateQuizSchema;
 
 export const assignmentService = {
   // ── Helper: verify instructor owns the batch ─────────────────────────────
+  // Verifies the instructor owns the given batch
   async _verifyBatchInstructor(instructorId: string, batchId: string, courseId: string) {
     const batch = await prisma.batch.findUnique({ where: { id: batchId } });
     if (!batch) throw new Error('Batch not found');
@@ -68,7 +69,7 @@ export const assignmentService = {
     return batch;
   },
 
-  // Creates a new MCQ quiz with nested questions and options; limited to the assigned instructor.
+  // Creates a new MCQ quiz with nested questions and options
   async createQuiz(instructorId: string, data: z.infer<typeof CreateQuizSchema>) {
     await this._verifyBatchInstructor(instructorId, data.batchId, data.courseId);
 
@@ -105,7 +106,7 @@ export const assignmentService = {
     });
   },
 
-  // Creates a file-based assignment where the instructor uploads a PDF with questions.
+  // Creates a file-based assignment with a PDF question document
   async createFileAssignment(
     instructorId: string,
     data: z.infer<typeof CreateFileAssignmentSchema>,
@@ -128,11 +129,12 @@ export const assignmentService = {
   },
 
   // Backward-compatible alias that delegates to createQuiz
+  // Creates an assignment (alias for createQuiz)
   async createAssignment(instructorId: string, data: z.infer<typeof CreateQuizSchema>) {
     return this.createQuiz(instructorId, data);
   },
 
-  // Lists assignments filtered by role and batch; filters are restricted based on student/instructor permissions.
+  // Lists assignments filtered by role and batch
   async listAssignments(filters: {
     batchId?: string;
     courseId?: string;
@@ -187,7 +189,7 @@ export const assignmentService = {
     });
   },
 
-  // Fetches questions for an assignment; strips 'isCorrect' boolean from student payload for academic integrity.
+  // Fetches assignment questions; hides correct answers from students
   async getAssignmentQuestions(assignmentId: string, userId: string, isInstructor: boolean) {
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId },
@@ -239,7 +241,7 @@ export const assignmentService = {
     };
   },
 
-  // Auto-grades student answers in a single database transaction; checks due-date and restricts to enrolled students.
+  // Auto-grades MCQ answers submitted by a student
   async submitMcqAnswers(
     studentId: string,
     assignmentId: string,
@@ -345,7 +347,7 @@ export const assignmentService = {
     });
   },
 
-  // Returns the auto-graded breakdown; restricted to the student who submitted it or the batch's instructor.
+  // Gets a submission result with score breakdown
   async getSubmissionResult(submissionId: string, userId: string, role: string) {
     const submission = await prisma.assignmentSubmission.findUnique({
       where: { id: submissionId },
@@ -380,7 +382,7 @@ export const assignmentService = {
     return submission;
   },
 
-  // Lists all student submissions for an assignment; restricted to the batch's instructor.
+  // Lists all student submissions for an assignment
   async listSubmissionsForAssignment(assignmentId: string, instructorId: string) {
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId },
@@ -402,7 +404,7 @@ export const assignmentService = {
     });
   },
 
-  // Manually overrides the score grade and saves custom feedback comments; restricted to the batch's instructor.
+  // Manually grades a submission with score and feedback
   async gradeSubmission(
     instructorId: string,
     submissionId: string,
@@ -438,7 +440,7 @@ export const assignmentService = {
     return updated;
   },
 
-  // Allows a student to submit a file answer for an ASSIGNMENT-type item.
+  // Submits a file answer for a file-based assignment
   async submitFileAnswer(studentId: string, assignmentId: string, answerFileUrl: string) {
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId },

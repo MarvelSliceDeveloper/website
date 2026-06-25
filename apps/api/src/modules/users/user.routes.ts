@@ -15,6 +15,7 @@ function handleError(res: Response, error: unknown) {
 }
 
 // GET /api/users — list all users (admin only)
+// Lists all users in the system
 router.get('/', async (_req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany({
@@ -28,6 +29,7 @@ router.get('/', async (_req: Request, res: Response) => {
 });
 
 // POST /api/users — create a new user (admin only)
+// Creates a new user account
 router.post('/', async (req: Request, res: Response) => {
   try {
     const { name, email, password, role } = req.body;
@@ -63,6 +65,7 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 // PATCH /api/users/:id — update user name, email, role (admin only)
+// Updates a user's details
 router.patch('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -106,6 +109,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
 });
 
 // DELETE /api/users/:id — delete a user (admin only)
+// Deletes a user and their related records
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

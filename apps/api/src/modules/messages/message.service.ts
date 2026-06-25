@@ -1,9 +1,7 @@
 import { prisma } from '../../utils/prisma';
 
 export const messageService = {
-  /**
-   * Send a direct message from one user to another.
-   */
+  // Sends a direct message between users
   async send(data: {
     senderId: string;
     receiverId: string;
@@ -24,9 +22,7 @@ export const messageService = {
     }
   },
 
-  /**
-   * List conversations for a user — returns the most recent message per other user.
-   */
+  // Lists conversations with the latest message per user
   async listConversations(userId: string) {
     if (!prisma || !('message' in prisma)) return [];
     try {
@@ -57,9 +53,7 @@ export const messageService = {
     }
   },
 
-  /**
-   * Get the full message thread between two users.
-   */
+  // Gets the full message thread between two users
   async getThread(userId: string, otherUserId: string) {
     if (!prisma || !('message' in prisma)) return [];
     try {
@@ -81,9 +75,7 @@ export const messageService = {
     }
   },
 
-  /**
-   * Mark a single message as read.
-   */
+  // Marks a message as read by the receiver
   async markAsRead(messageId: string, userId: string) {
     if (!prisma || !('message' in prisma)) return 0;
     try {
@@ -98,9 +90,7 @@ export const messageService = {
     }
   },
 
-  /**
-   * Count unread messages for a user.
-   */
+  // Counts unread messages for a user
   async unreadCount(userId: string) {
     if (!prisma || !('message' in prisma)) return 0;
     try {

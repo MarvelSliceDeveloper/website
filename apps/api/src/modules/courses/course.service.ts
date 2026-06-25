@@ -27,6 +27,7 @@ export const UpdateCourseSchema = z.object({
 
 // --- Helpers ---
 
+// Generates a URL-safe slug from a title string
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
@@ -37,6 +38,7 @@ function generateSlug(title: string): string {
     .replace(/^-|-$/g, '');
 }
 
+// Ensures a slug is unique by appending a counter if needed
 async function ensureUniqueSlug(baseSlug: string): Promise<string> {
   let slug = baseSlug;
   let counter = 1;
@@ -59,9 +61,7 @@ async function ensureUniqueSlug(baseSlug: string): Promise<string> {
 // --- Service ---
 
 export const courseService = {
-  /**
-   * Create a new course in DRAFT status.
-   */
+  // Creates a new course in DRAFT status
   async createCourse(adminUserId: string, data: z.infer<typeof CreateCourseSchema>) {
     const slug = await ensureUniqueSlug(generateSlug(data.title));
 
@@ -82,9 +82,7 @@ export const courseService = {
     });
   },
 
-  /**
-   * List courses with optional filters.
-   */
+  // Lists courses with optional filters
   async listCourses(filters: {
     status?: string;
     category?: string;
@@ -134,9 +132,7 @@ export const courseService = {
     return { courses, total, page, limit };
   },
 
-  /**
-   * Get a single course by ID with its modules.
-   */
+  // Gets a single course by ID with its modules
   async getCourseById(courseId: string) {
     const course = await prisma.course.findUnique({
       where: { id: courseId },
@@ -152,9 +148,7 @@ export const courseService = {
     return course;
   },
 
-  /**
-   * Update course fields.
-   */
+  // Updates course fields
   async updateCourse(courseId: string, data: z.infer<typeof UpdateCourseSchema>) {
     const existing = await prisma.course.findUnique({ where: { id: courseId } });
     if (!existing) throw new Error('Course not found');
@@ -172,9 +166,7 @@ export const courseService = {
     });
   },
 
-  /**
-   * Soft-delete a course (set status to ARCHIVED).
-   */
+  // Soft-deletes a course (sets status to ARCHIVED)
   async deleteCourse(courseId: string) {
     const existing = await prisma.course.findUnique({ where: { id: courseId } });
     if (!existing) throw new Error('Course not found');
@@ -185,10 +177,7 @@ export const courseService = {
     });
   },
 
-  /**
-   * Publish a course after validation.
-   * Returns a checklist with pass/fail status per item.
-   */
+  // Publishes a course after validation checklist
   async publishCourse(courseId: string) {
     const course = await prisma.course.findUnique({
       where: { id: courseId },
@@ -227,9 +216,7 @@ export const courseService = {
     return { published: true, checklist };
   },
 
-  /**
-   * Unpublish a course (revert to DRAFT).
-   */
+  // Unpublishes a course (reverts to DRAFT)
   async unpublishCourse(courseId: string) {
     const existing = await prisma.course.findUnique({ where: { id: courseId } });
     if (!existing) throw new Error('Course not found');

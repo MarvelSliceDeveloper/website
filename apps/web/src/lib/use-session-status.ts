@@ -3,6 +3,7 @@ import type { LiveSession } from "@/lib/student-mock-data";
 
 export type ComputedStatus = "LIVE" | "UPCOMING" | "PAST";
 
+// Hook that computes LIVE/UPCOMING/PAST status every 30s
 export function useComputedStatus(session: LiveSession): ComputedStatus {
   const getStatus = (): ComputedStatus => {
     const now = Date.now();
