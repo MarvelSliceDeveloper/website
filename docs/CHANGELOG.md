@@ -4,6 +4,17 @@
 
 ---
 
+## 2026-06-27 — Critical Fixes: Rate Limiting, Support Ticket Resolution, and Student Enrollment Toasts ✅
+
+### Express Rate Limiter
+- **Relocated** rate limiting middleware in `apps/api/src/index.ts` to register before modular route mountings, ensuring all modular endpoints are correctly rate-limited.
+
+### Unified Ticket Resolution
+- **Updated** `ticketService.getTicket` to perform a parallel search of both `SupportTicket` and `MentorshipTicket` tables if the `type` query parameter is omitted, resolving `404 Not Found` bugs when opening or replying to support tickets via the client portal.
+
+### Student Course Enrollment UX
+- **Refactored** `handleEnroll` in `apps/web/src/app/student/page.tsx` to handle async requests safely with `try-catch`, show user feedback via `sonner` toasts (`toast.success` and `toast.error`), and trigger a portal-wide data reload upon success.
+
 ## 2026-06-25 — Code Cleanup: Removed Duplicate Ticket Modules, Dead Code, Typed VideoPlayer ✅
 
 ### Consolidated Ticket System

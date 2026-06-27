@@ -23,7 +23,7 @@
 
 ## Current Limitations
 1. **Default JWT fallback secret exists** (`auth.middleware.ts`, `auth.service.ts`) if env not set; risky for production.
-2. **Global rate limiter applied after route mounts** in `index.ts`; may not protect earlier middleware/handlers as intended.
+2. **Global rate limiter applied after route mounts** — [RESOLVED] Relocated before route mounting blocks in `index.ts` to ensure all endpoints are rate-limited correctly.
 3. **Error contract is inconsistent** (string messages vs Zod error arrays), requiring defensive frontend parsing.
 4. **Permission checks are partly duplicated** (middleware + service-level checks), increasing drift risk.
 5. **Session overlap logic is simplified** in `session.service.ts` and may not catch all edge overlaps.

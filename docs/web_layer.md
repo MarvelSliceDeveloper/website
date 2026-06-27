@@ -27,7 +27,7 @@
 ## Current Limitations
 1. **Network-dependency in build**: Google font fetch in `layout.tsx` can fail in restricted/offline CI.
 2. **Mixed fallback strategy**: some screens silently fallback to empty/mock data on API failure, which can hide backend issues.
-3. **No central toast/error UX standard**: many pages use `alert()` or local error text.
+3. **No central toast/error UX standard** — [PARTIALLY RESOLVED] Standardized toast notifications on support, settings, and student course enrollment actions using `sonner` toasts.
 4. **API typing is partial**: several pages still rely on `any` for API payloads.
 5. **Client-heavy data loading** in student page can increase render-time complexity and harden debugging.
 

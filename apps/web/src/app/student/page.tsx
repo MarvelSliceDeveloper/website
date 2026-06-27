@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import StudentPortalShell, { type Breadcrumb } from "@/components/StudentPortalShell";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 // Types
 import type { ViewState } from "./_types/student-portal";
@@ -409,8 +410,14 @@ export default function StudentPortalPage() {
   // ── Enroll handler ────────────────────────────────────────────────────────
 
   async function handleEnroll(courseId: string) {
-
-    await api.post("/api/courses/enroll", { courseId });
+    try {
+      await api.post("/api/courses/enroll", { courseId });
+      toast.success("Enrollment request submitted! Wait for admin approval.");
+      await loadData();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to submit enrollment request");
+      throw err;
+    }
   }
 
   // ── Loading / Error states ────────────────────────────────────────────────

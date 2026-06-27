@@ -143,15 +143,47 @@ export const ticketService = {
       return ticket ? { ...ticket, type: 'SUPPORT' as const } : null;
     }
 
-    const ticket = await prisma.mentorshipTicket.findUnique({
-      where: { id },
-      include: {
-        student: { select: userSelect },
-        mentor: { select: userSelect },
-        course: { select: { id: true, title: true } },
-      },
-    });
-    return ticket ? { ...ticket, type: 'MENTORSHIP' as const } : null;
+    if (type === 'MENTORSHIP') {
+      const ticket = await prisma.mentorshipTicket.findUnique({
+        where: { id },
+        include: {
+          student: { select: userSelect },
+          mentor: { select: userSelect },
+          course: { select: { id: true, title: true } },
+        },
+      });
+      return ticket ? { ...ticket, type: 'MENTORSHIP' as const } : null;
+    }
+
+    // Try both if type is not specified
+    const [supportTicket, mentorshipTicket] = await Promise.all([
+      prisma.supportTicket.findUnique({
+        where: { id },
+        include: {
+          user: { select: userWithRoleSelect },
+          messages: {
+            include: { sender: { select: { id: true, name: true, role: true } } },
+            orderBy: { createdAt: 'asc' },
+          },
+        },
+      }).catch(() => null),
+      prisma.mentorshipTicket.findUnique({
+        where: { id },
+        include: {
+          student: { select: userSelect },
+          mentor: { select: userSelect },
+          course: { select: { id: true, title: true } },
+        },
+      }).catch(() => null),
+    ]);
+
+    if (supportTicket) {
+      return { ...supportTicket, type: 'SUPPORT' as const };
+    }
+    if (mentorshipTicket) {
+      return { ...mentorshipTicket, type: 'MENTORSHIP' as const };
+    }
+    return null;
   },
 
   // ─── MENTORSHIP-SPECIFIC ───

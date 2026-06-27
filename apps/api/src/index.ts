@@ -68,6 +68,13 @@ app.use(cors({
 
 app.use('/uploads', express.static(uploadsRoot));
 
+// Rate Limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
+
 // Mount Modular Routes
 app.use('/api/auth', authRouter);
 app.use('/api/calendar', calendarRouter);
@@ -93,13 +100,6 @@ app.use('/api/tickets', ticketRouter);
 
 // Events webhook — for Teams-created meetings (no auth required)
 app.post('/api/webhooks/events', eventsWebhookController.handleEventsWebhook);
-
-// Rate Limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-});
-app.use(limiter);
 
 // Health Check
 app.get('/health', (req: Request, res: Response) => {
