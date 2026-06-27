@@ -37,7 +37,7 @@
   --muted-foreground: #3f4a69;
 }
 
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

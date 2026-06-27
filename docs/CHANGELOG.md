@@ -4,6 +4,25 @@
 
 ---
 
+## 2026-06-27 — Student Portal UI Overhaul: Support, Inbox, and CSS Fix
+
+### Support Page Redesign (`/student/support`)
+- **Wrapped** page in `StudentPortalShell` for consistent header, notifications, and theme toggle.
+- **Implemented** two-column split layout for desktop: scrollable ticket list on the left (`lg:col-span-5`), ticket detail/chat panel on the right (`lg:col-span-7`), inside a `glass-card`.
+- **Enhanced** chat conversation UI with rounded bubbles, differentiated sender styling, and a polished empty-state placeholder.
+- **Responsive fallback**: single-column view on mobile with a back-to-list button.
+
+### Inbox Page Redesign (`/student/inbox`)
+- **Wrapped** page in `StudentPortalShell` for consistent navigation.
+- **Added** left sidebar (`lg:col-span-3`) with notification stats (total, unread, read counts) and vertical filter tabs.
+- **Improved** notification cards with type badges, animated unread dots, and toast feedback on mark-read / delete actions.
+- **Enhanced** empty states with contextual messaging per filter mode.
+
+### Tailwind CSS v4 Theme Fix (`globals.css`)
+- **Changed** `@theme inline {` to `@theme {` to align with the standard Tailwind CSS v4 specification.
+
+---
+
 ## 2026-06-27 — Critical Fixes: Rate Limiting, Support Ticket Resolution, and Student Enrollment Toasts ✅
 
 ### Express Rate Limiter

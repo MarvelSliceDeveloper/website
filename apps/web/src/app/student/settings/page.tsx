@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import Link from "next/link";
+import StudentPortalShell from "@/components/StudentPortalShell";
 import {
   IconBell,
   IconCalendarEvent,
@@ -15,7 +16,13 @@ import {
   IconTicket,
   IconMessage,
   IconRefresh,
-  IconArrowLeft,
+  IconUser,
+  IconMail,
+  IconShield,
+  IconHelp,
+  IconInbox,
+  IconChevronRight,
+  IconPalette,
 } from "@tabler/icons-react";
 
 const NOTIFICATION_TYPES = [
@@ -42,10 +49,17 @@ const TYPE_CONFIG: Record<string, { label: string; description: string; icon: Re
   SUPPORT_TICKET_STATUS_CHANGED: { label: "Support Ticket Status Change", description: "When your ticket status changes", icon: <IconRefresh size={18} /> },
 };
 
+type SettingsSection = "notifications" | "appearance";
+
 export default function SettingsPage() {
+  const router = useRouter();
   const [preferences, setPreferences] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [studentName, setStudentName] = useState("Student");
+  const [studentEmail, setStudentEmail] = useState("");
+  const [studentRole, setStudentRole] = useState("STUDENT");
+  const [activeSection, setActiveSection] = useState<SettingsSection>("notifications");
 
   useEffect(() => {
     api.get<{ preferences: { type: string; enabled: boolean }[] }>("/api/notifications/preferences")
@@ -58,6 +72,19 @@ export default function SettingsPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+  }, []);
+
+  // Load user profile for shell header
+  useEffect(() => {
+    api.get<{ user: { name: string; email: string; role: string } }>("/api/auth/me")
+      .then((res) => {
+        if (res?.user) {
+          setStudentName(res.user.name || "Student");
+          setStudentEmail(res.user.email || "");
+          setStudentRole(res.user.role || "STUDENT");
+        }
+      })
+      .catch(() => {});
   }, []);
 
   async function toggle(type: string) {
@@ -78,58 +105,68 @@ export default function SettingsPage() {
   }
 
   const hasPrefs = Object.keys(preferences).length > 0;
+  const enabledCount = Object.values(preferences).filter(Boolean).length;
+  const totalCount = NOTIFICATION_TYPES.length;
 
-  if (loading) {
+  // ── Sidebar sections ───────────────────────────────────────────────
+
+  const sidebarSections: { id: SettingsSection; label: string; icon: React.ReactNode; description: string }[] = [
+    { id: "notifications", label: "Notifications", icon: <IconBell size={18} />, description: "Manage alert preferences" },
+    { id: "appearance", label: "Appearance", icon: <IconPalette size={18} />, description: "Theme and display" },
+  ];
+
+  const quickLinks = [
+    { label: "Support", icon: <IconHelp size={16} />, href: "/student/support" },
+    { label: "Inbox", icon: <IconInbox size={16} />, href: "/student/inbox" },
+  ];
+
+  // ── Notification preferences panel ─────────────────────────────────
+
+  function renderNotifications() {
+    if (loading) {
+      return (
+        <div className="animate-pulse space-y-3 p-6">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-16 rounded-xl bg-card-hover/60" />
+          ))}
+        </div>
+      );
+    }
+
     return (
-      <div className="mx-auto max-w-2xl space-y-6">
-        <div className="animate-pulse space-y-3">
-          <div className="h-5 w-24 rounded bg-card-hover" />
-          <div className="h-7 w-48 rounded bg-card-hover" />
-          <div className="h-4 w-64 rounded bg-card-hover" />
-          <div className="h-80 rounded-xl bg-card-hover" />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mx-auto max-w-2xl space-y-8">
-      <Link href="/student" className="btn-secondary text-xs inline-flex items-center gap-1.5 w-fit">
-          <IconArrowLeft size={14} /> Back to Dashboard
-        </Link>
-
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Student</p>
-          <h1 className="mt-1.5 text-2xl font-bold text-foreground">Settings</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Manage your notification preferences.</p>
-        </div>
-
-      <div className="rounded-xl border border-border/60 bg-card">
+      <>
         <div className="flex items-center gap-3 border-b border-border px-6 py-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 text-primary">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
             <IconBell size={20} />
           </div>
-          <div>
+          <div className="flex-1">
             <p className="font-semibold text-foreground">Notification Preferences</p>
             <p className="text-sm text-muted-foreground">Choose which notifications you want to receive.</p>
           </div>
+          <div className="hidden sm:flex items-center gap-2 text-xs text-muted">
+            <span className="rounded-full bg-primary/10 px-2.5 py-1 font-medium text-primary">
+              {hasPrefs ? enabledCount : totalCount} / {totalCount} active
+            </span>
+          </div>
         </div>
 
-        <div className="divide-y divide-border">
+        <div className="divide-y divide-border/60">
           {NOTIFICATION_TYPES.map((type) => {
             const config = TYPE_CONFIG[type];
             const enabled = preferences[type] ?? true;
             return (
               <div
                 key={type}
-                className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-card-hover"
+                className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-card-hover/50"
               >
                 <div className="flex items-center gap-3.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                  <div className={`flex h-9 w-9 items-center justify-center rounded-lg shrink-0 transition-colors ${
+                    enabled ? "bg-primary/10 text-primary" : "bg-muted/10 text-muted"
+                  }`}>
                     {config.icon}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground">{config.label}</p>
+                    <p className={`text-sm font-medium transition-colors ${enabled ? "text-foreground" : "text-muted-foreground"}`}>{config.label}</p>
                     <p className="text-xs text-muted-foreground">{config.description}</p>
                   </div>
                 </div>
@@ -152,11 +189,146 @@ export default function SettingsPage() {
         </div>
 
         {!hasPrefs && (
-          <div className="px-6 py-5 text-center text-sm text-muted">
+          <div className="px-6 py-5 text-center text-sm text-muted border-t border-border/60">
             Default preferences are active. Toggle any switch to customize.
           </div>
         )}
+      </>
+    );
+  }
+
+  // ── Appearance panel ───────────────────────────────────────────────
+
+  function renderAppearance() {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+            <IconPalette size={20} />
+          </div>
+          <div>
+            <p className="font-semibold text-foreground">Appearance</p>
+            <p className="text-sm text-muted-foreground">Customize your visual preferences.</p>
+          </div>
+        </div>
+
+        <div className="glass-card p-5 space-y-4">
+          <p className="text-sm font-medium text-foreground">Theme</p>
+          <p className="text-xs text-muted-foreground">
+            Use the moon/sun toggle in the top header bar to switch between dark and light modes.
+            Your preference is saved automatically.
+          </p>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-20 rounded-lg bg-[#0b1020] border border-border/60 flex items-center justify-center">
+              <span className="text-[10px] font-medium text-white/70">Dark</span>
+            </div>
+            <div className="h-10 w-20 rounded-lg bg-[#f4f7ff] border border-border/60 flex items-center justify-center">
+              <span className="text-[10px] font-medium text-[#1a2238]">Light</span>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    );
+  }
+
+  // ── Main render ────────────────────────────────────────────────────
+
+  return (
+    <StudentPortalShell
+      studentName={studentName}
+      studentEmail={studentEmail}
+      showBack
+      onBack={() => window.history.back()}
+    >
+      <div className="space-y-6">
+        {/* Page header */}
+        <div>
+          <p className="sp-eyebrow">Student</p>
+          <h1 className="mt-1.5 text-2xl font-bold text-foreground">Settings</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Manage your account and preferences.</p>
+        </div>
+
+        {/* Desktop two-column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+          {/* Left sidebar */}
+          <div className="lg:col-span-4 xl:col-span-3 space-y-4">
+            {/* Profile card */}
+            <div className="glass-card p-5 space-y-4">
+              <div className="flex items-center gap-3.5">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-primary to-violet-600 text-lg font-bold text-white shrink-0">
+                  {studentName.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground truncate">{studentName}</p>
+                  <p className="text-xs text-muted-foreground truncate">{studentEmail || "—"}</p>
+                </div>
+              </div>
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                  <IconUser size={14} className="shrink-0" />
+                  <span>{studentName}</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                  <IconMail size={14} className="shrink-0" />
+                  <span className="truncate">{studentEmail || "—"}</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                  <IconShield size={14} className="shrink-0" />
+                  <span className="capitalize">{studentRole.toLowerCase()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Settings sections */}
+            <div className="glass-card p-2 space-y-0.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted px-3 pt-2 pb-1.5">Settings</p>
+              {sidebarSections.map((section) => (
+                <button
+                  key={section.id}
+                  onClick={() => setActiveSection(section.id)}
+                  className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
+                    activeSection === section.id
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
+                  }`}
+                >
+                  <span className="shrink-0">{section.icon}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">{section.label}</p>
+                    <p className="text-[11px] opacity-70">{section.description}</p>
+                  </div>
+                  <IconChevronRight size={14} className={`shrink-0 transition-colors ${
+                    activeSection === section.id ? "text-primary" : "text-muted/50"
+                  }`} />
+                </button>
+              ))}
+            </div>
+
+            {/* Quick links */}
+            <div className="glass-card p-2 space-y-0.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted px-3 pt-2 pb-1.5">Quick Links</p>
+              {quickLinks.map((link) => (
+                <button
+                  key={link.label}
+                  onClick={() => router.push(link.href)}
+                  className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+                >
+                  <span className="shrink-0">{link.icon}</span>
+                  <span className="text-sm font-medium">{link.label}</span>
+                  <IconChevronRight size={14} className="ml-auto shrink-0 text-muted/50" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: active settings panel */}
+          <div className="lg:col-span-8 xl:col-span-9 rounded-xl border border-border/60 bg-card overflow-hidden">
+            {activeSection === "notifications" && renderNotifications()}
+            {activeSection === "appearance" && renderAppearance()}
+          </div>
+        </div>
+      </div>
+    </StudentPortalShell>
   );
 }

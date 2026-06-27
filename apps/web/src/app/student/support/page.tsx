@@ -6,15 +6,18 @@ import { timeAgo } from "@/lib/time-ago";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Skeleton } from "@/components/shared/Skeleton";
+import StudentPortalShell from "@/components/StudentPortalShell";
 import {
   IconHelp,
   IconSend,
   IconMessage,
   IconX,
-  IconArrowLeft,
+  IconPlus,
+  IconLifebuoy,
+  IconMessageCircle,
+  IconClock,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
-import Link from "next/link";
 
 interface SupportMessage {
   id: string;
@@ -55,6 +58,8 @@ export default function StudentSupportPage() {
   const [submitting, setSubmitting] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
+  const [studentName, setStudentName] = useState("Student");
+  const [studentEmail, setStudentEmail] = useState("");
 
   const fetchTickets = useCallback(async () => {
     try {
@@ -65,6 +70,18 @@ export default function StudentSupportPage() {
   }, []);
 
   useEffect(() => { fetchTickets(); }, [fetchTickets]);
+
+  // Load user profile for shell header
+  useEffect(() => {
+    api.get<{ user: { name: string; email: string } }>("/api/auth/me")
+      .then((res) => {
+        if (res?.user) {
+          setStudentName(res.user.name || "Student");
+          setStudentEmail(res.user.email || "");
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   async function openTicket(ticketId: string) {
     const promise = api.get<{ ticket: SupportTicket }>(`/api/tickets/${ticketId}`);
@@ -116,120 +133,104 @@ export default function StudentSupportPage() {
     finally { setSendingReply(false); }
   }
 
-  if (selectedTicket) {
-    return (
-      <div className="mx-auto max-w-3xl space-y-6">
-        <Link href="/student" className="btn-secondary text-xs inline-flex items-center gap-1.5 w-fit">
-          <IconArrowLeft size={14} /> Back to Dashboard
-        </Link>
+  // ── Ticket detail panel (right side on desktop) ──────────────────────
 
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Student</p>
-            <h1 className="mt-1 text-2xl font-bold text-foreground">{selectedTicket.title}</h1>
-            <div className="mt-2 flex items-center gap-3">
-              <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${STATUS_CONFIG[selectedTicket.status]?.classes || ""}`}>
-                {STATUS_CONFIG[selectedTicket.status]?.label || selectedTicket.status}
-              </span>
-              <span className="text-xs text-muted">{timeAgo(selectedTicket.createdAt)}</span>
+  function renderTicketDetail() {
+    if (!selectedTicket) return null;
+
+    return (
+      <div className="flex flex-col h-full">
+        {/* Ticket header */}
+        <div className="flex items-start justify-between gap-4 p-5 border-b border-border/60">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2.5 mb-1.5">
+              <StatusBadge status={selectedTicket.status} config={STATUS_CONFIG} />
+              <span className="text-[11px] text-muted">{timeAgo(selectedTicket.createdAt)}</span>
             </div>
+            <h2 className="text-lg font-semibold text-foreground leading-snug">{selectedTicket.title}</h2>
           </div>
           <button
             onClick={() => setSelectedTicket(null)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-border-hover transition-colors shrink-0"
           >
             <IconX size={16} />
           </button>
         </div>
 
-        <p className="text-sm text-muted-foreground border-l-2 border-border pl-4">{selectedTicket.description}</p>
+        {/* Original description */}
+        <div className="px-5 py-4 border-b border-border/40">
+          <p className="text-xs font-medium text-muted uppercase tracking-wider mb-1.5">Description</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">{selectedTicket.description}</p>
+        </div>
 
-        <div className="rounded-xl border border-border/60 bg-card">
-          <div className="border-b border-border px-5 py-3.5">
-            <p className="text-sm font-semibold text-foreground">
-              Conversation {selectedTicket.messages?.length ? `(${selectedTicket.messages.length})` : ""}
-            </p>
-          </div>
-          <div className="max-h-96 overflow-y-auto space-y-3 p-5">
-            {(!selectedTicket.messages || selectedTicket.messages.length === 0) ? (
-              <p className="text-center text-sm text-muted py-10">No messages yet. Admin will respond shortly.</p>
-            ) : (
-              selectedTicket.messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.sender.role === "ADMIN" ? "justify-start" : "justify-end"}`}
-                >
-                  <div className={`max-w-lg rounded-xl px-4 py-2.5 text-sm ${
-                    msg.sender.role === "ADMIN"
-                      ? "bg-card-hover text-foreground border border-border"
-                      : "bg-primary text-white"
-                  }`}>
-                    <p className="text-[10px] font-semibold mb-1 opacity-70 uppercase tracking-wider">
-                      {msg.sender.role === "ADMIN" ? "Admin" : "You"}
-                    </p>
-                    <p className="leading-relaxed">{msg.message}</p>
-                    <p className="text-[10px] mt-1.5 opacity-60">{timeAgo(msg.createdAt)}</p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-          {selectedTicket.status !== "CLOSED" && (
-            <div className="border-t border-border p-5">
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), sendReply())}
-                  placeholder="Type your reply..."
-                  className="field flex-1"
-                />
-                <button
-                  onClick={sendReply}
-                  disabled={!replyText.trim() || sendingReply}
-                  className="btn-primary text-sm flex items-center gap-1.5"
-                >
-                  <IconSend size={14} /> Send
-                </button>
+        {/* Conversation */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-3">
+          {(!selectedTicket.messages || selectedTicket.messages.length === 0) ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/10">
+                <IconMessageCircle size={24} className="text-muted" />
               </div>
+              <p className="text-sm text-muted-foreground">No messages yet</p>
+              <p className="text-xs text-muted">Admin will respond shortly.</p>
             </div>
+          ) : (
+            selectedTicket.messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex ${msg.sender.role === "ADMIN" ? "justify-start" : "justify-end"}`}
+              >
+                <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
+                  msg.sender.role === "ADMIN"
+                    ? "bg-card-hover text-foreground border border-border/60 rounded-tl-md"
+                    : "bg-primary text-white rounded-tr-md"
+                }`}>
+                  <p className="text-[10px] font-semibold mb-1 opacity-60 uppercase tracking-wider">
+                    {msg.sender.role === "ADMIN" ? "Admin" : "You"}
+                  </p>
+                  <p className="leading-relaxed">{msg.message}</p>
+                  <p className="text-[10px] mt-1.5 opacity-50">{timeAgo(msg.createdAt)}</p>
+                </div>
+              </div>
+            ))
           )}
         </div>
-      </div>
-    );
-  }
 
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-3xl space-y-6">
-        <Skeleton lines={4} />
-      </div>
-    );
-  }
-
-  return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <Link href="/student" className="btn-secondary text-xs inline-flex items-center gap-1.5 w-fit">
-          <IconArrowLeft size={14} /> Back to Dashboard
-        </Link>
-
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Student</p>
-            <h1 className="mt-1.5 text-2xl font-bold text-foreground">Support</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Report issues or ask questions about login, courses, or anything else.
-            </p>
+        {/* Reply input */}
+        {selectedTicket.status !== "CLOSED" && (
+          <div className="border-t border-border/60 p-4">
+            <div className="flex gap-2.5">
+              <input
+                type="text"
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), sendReply())}
+                placeholder="Type your reply..."
+                className="field flex-1"
+              />
+              <button
+                onClick={sendReply}
+                disabled={!replyText.trim() || sendingReply}
+                className="btn-primary text-sm flex items-center gap-1.5 shrink-0"
+              >
+                <IconSend size={14} /> Send
+              </button>
+            </div>
           </div>
-          <button onClick={() => { setShowForm((v) => !v); }} className="btn-primary">
-            {showForm ? "Cancel" : "New Ticket"}
-          </button>
-        </div>
+        )}
+      </div>
+    );
+  }
 
-      {showForm && (
-        <form onSubmit={createTicket} className="rounded-xl border border-border/60 bg-card p-6 space-y-4">
-          <p className="font-semibold text-foreground">Create Support Ticket</p>
+  // ── New ticket form (right side on desktop) ──────────────────────────
+
+  function renderNewTicketForm() {
+    return (
+      <div className="p-6 space-y-5">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">Create Support Ticket</h2>
+          <p className="text-sm text-muted-foreground mt-1">Describe your issue and we&#39;ll get back to you.</p>
+        </div>
+        <form onSubmit={createTicket} className="space-y-4">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-muted-foreground">Title</label>
             <input
@@ -248,61 +249,162 @@ export default function StudentSupportPage() {
               value={newDescription}
               onChange={(e) => setNewDescription(e.target.value)}
               placeholder="Describe your issue in detail..."
-              rows={4}
+              rows={6}
               className="field w-full resize-none"
               required
               minLength={10}
             />
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={() => setShowForm(false)} className="btn-secondary text-sm">Cancel</button>
             <button type="submit" disabled={submitting} className="btn-primary text-sm">
               {submitting ? "Submitting..." : "Submit Ticket"}
             </button>
           </div>
         </form>
-      )}
-
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted mb-4">Your Tickets</p>
-
-        {tickets.length === 0 ? (
-          <EmptyState
-            icon={<IconHelp size={28} />}
-            title="No support tickets"
-            description="Create a ticket and admin will help you out."
-          />
-        ) : (
-          <div className="space-y-2.5">
-            {tickets.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => openTicket(t.id)}
-                className="w-full flex items-start gap-4 rounded-xl border border-border/60 bg-card p-4 text-left transition-all hover:bg-card-hover hover:border-border"
-              >
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/20 text-primary shrink-0 mt-0.5">
-                  <IconHelp size={16} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2.5">
-                    <p className="text-sm font-medium text-foreground truncate">{t.title}</p>
-                    <StatusBadge status={t.status} config={STATUS_CONFIG} />
-                  </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">{t.description}</p>
-                  <div className="mt-1.5 flex items-center gap-4 text-[11px] text-muted">
-                    <span>{timeAgo(t.createdAt)}</span>
-                    {t._count && (
-                      <span className="flex items-center gap-1">
-                        <IconMessage size={12} /> {t._count.messages} {t._count.messages === 1 ? "message" : "messages"}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
-    </div>
+    );
+  }
+
+  // ── Empty right panel placeholder ────────────────────────────────────
+
+  function renderEmptyDetail() {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center gap-4 px-8">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+          <IconLifebuoy size={32} className="text-primary" />
+        </div>
+        <div>
+          <p className="text-base font-semibold text-foreground">Select a ticket</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Choose a ticket from the list to view the conversation, or create a new one.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Ticket list card ─────────────────────────────────────────────────
+
+  function renderTicketCard(t: SupportTicket) {
+    const isActive = selectedTicket?.id === t.id;
+
+    return (
+      <button
+        key={t.id}
+        onClick={() => { openTicket(t.id); setShowForm(false); }}
+        className={`w-full flex items-start gap-3.5 rounded-xl border p-4 text-left transition-all ${
+          isActive
+            ? "border-primary/40 bg-primary/5 shadow-sm shadow-primary/5"
+            : "border-border/60 bg-card hover:bg-card-hover hover:border-border"
+        }`}
+      >
+        <div className={`flex h-9 w-9 items-center justify-center rounded-full shrink-0 mt-0.5 ${
+          isActive ? "bg-primary/20 text-primary" : "bg-primary/10 text-primary"
+        }`}>
+          <IconHelp size={16} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-0.5">
+            <p className="text-sm font-medium text-foreground truncate">{t.title}</p>
+          </div>
+          <p className="text-xs text-muted-foreground line-clamp-1">{t.description}</p>
+          <div className="mt-2 flex items-center gap-3 flex-wrap">
+            <StatusBadge status={t.status} config={STATUS_CONFIG} />
+            <span className="flex items-center gap-1 text-[11px] text-muted">
+              <IconClock size={11} /> {timeAgo(t.createdAt)}
+            </span>
+            {t._count && (
+              <span className="flex items-center gap-1 text-[11px] text-muted">
+                <IconMessage size={11} /> {t._count.messages}
+              </span>
+            )}
+          </div>
+        </div>
+      </button>
+    );
+  }
+
+  // ── Main render ──────────────────────────────────────────────────────
+
+  return (
+    <StudentPortalShell
+      studentName={studentName}
+      studentEmail={studentEmail}
+      showBack
+      onBack={() => window.history.back()}
+    >
+      <div className="space-y-6">
+        {/* Page header */}
+        <div>
+          <p className="sp-eyebrow">Student</p>
+          <h1 className="mt-1.5 text-2xl font-bold text-foreground">Support</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Report issues or ask questions about login, courses, or anything else.
+          </p>
+        </div>
+
+        {/* Desktop two-column layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" style={{ minHeight: "calc(100vh - 260px)" }}>
+
+          {/* Left: ticket list */}
+          <div className={`lg:col-span-5 xl:col-span-4 flex flex-col gap-3 ${selectedTicket && !showForm ? "hidden lg:flex" : "flex"}`}>
+            {/* New ticket button */}
+            <button
+              onClick={() => { setShowForm((v) => !v); setSelectedTicket(null); }}
+              className="btn-primary w-full flex items-center justify-center gap-2 py-2.5"
+            >
+              <IconPlus size={16} />
+              {showForm ? "Cancel" : "New Ticket"}
+            </button>
+
+            {/* Ticket list */}
+            {loading ? (
+              <div className="space-y-3">
+                <Skeleton lines={3} />
+                <Skeleton lines={3} />
+                <Skeleton lines={3} />
+              </div>
+            ) : tickets.length === 0 ? (
+              <EmptyState
+                icon={<IconHelp size={28} />}
+                title="No support tickets"
+                description="Create a ticket and admin will help you out."
+              />
+            ) : (
+              <div className="space-y-2">
+                {tickets.map((t) => renderTicketCard(t))}
+              </div>
+            )}
+          </div>
+
+          {/* Right: detail / form / empty */}
+          <div className={`lg:col-span-7 xl:col-span-8 glass-card overflow-hidden lg:sticky lg:top-24 ${selectedTicket || showForm ? "flex" : "hidden lg:flex"}`}
+            style={{ minHeight: "520px", maxHeight: "calc(100vh - 180px)" }}
+          >
+            <div className="flex flex-col w-full h-full">
+              {/* Mobile back button */}
+              {(selectedTicket || showForm) && (
+                <div className="lg:hidden border-b border-border/60 px-4 py-2.5">
+                  <button
+                    onClick={() => { setSelectedTicket(null); setShowForm(false); }}
+                    className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+                  >
+                    ← Back to tickets
+                  </button>
+                </div>
+              )}
+
+              {showForm
+                ? renderNewTicketForm()
+                : selectedTicket
+                  ? renderTicketDetail()
+                  : renderEmptyDetail()
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </StudentPortalShell>
   );
 }
