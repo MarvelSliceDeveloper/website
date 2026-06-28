@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -24,10 +25,12 @@ const roleIcons: Record<string, string> = {
 };
 
 export default function AdminUsersPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("");
+  const roleFilter = searchParams.get("role") || "";
 
   // Create user modal
   const [showModal, setShowModal] = useState(false);
@@ -153,7 +156,7 @@ export default function AdminUsersPage() {
         {(["STUDENT", "INSTRUCTOR", "ADMIN"] as const).map((role) => (
           <button
             key={role}
-            onClick={() => setRoleFilter(roleFilter === role ? "" : role)}
+            onClick={() => router.replace(roleFilter === role ? "/admin/users" : `/admin/users?role=${role}`)}
             className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
               roleFilter === role ? roleStyles[role] : "border-border text-muted-foreground hover:bg-card-hover"
             }`}

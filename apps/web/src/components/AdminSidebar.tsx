@@ -34,7 +34,14 @@ type NavItem = {
 
 const overviewItems: NavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard", icon: IconLayoutDashboard },
-  { label: "Inbox", href: "/admin/inbox", icon: IconMail },
+  { label: "Inbox", href: "/admin/inbox", icon: IconMail, 
+    children: [
+      { label: "Notifications", href: "/admin/inbox" },
+      { label: "Mentorship Tickets", href: "/admin/inbox/tickets" },
+      { label: "Support", href: "/admin/inbox/support" },
+      { label: "Messages", href: "/admin/inbox/messages" },
+    ],
+  },
   {
     label: "Courses",
     href: "/admin/courses",
