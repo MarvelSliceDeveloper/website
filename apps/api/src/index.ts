@@ -53,6 +53,7 @@ import { messageRouter } from './modules/messages/message.routes';
 import { mentorshipRouter } from './modules/mentorship/mentorship.routes';
 import { supportRouter } from './modules/support/support.routes';
 import ticketRouter from './modules/tickets/ticket.routes';
+import { noteRouter } from './modules/notes/notes.routes';
 
 const app = express();
 
@@ -97,6 +98,7 @@ app.use('/api/admin/dashboard', dashboardRouter);
 app.use('/api/messages', messageRouter);
 app.use('/api/support', supportRouter);
 app.use('/api/tickets', ticketRouter);
+app.use('/api/notes', noteRouter);
 
 // Events webhook — for Teams-created meetings (no auth required)
 app.post('/api/webhooks/events', eventsWebhookController.handleEventsWebhook);

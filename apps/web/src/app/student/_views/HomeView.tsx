@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { IconArrowRight, IconBook, IconCalendar, IconCertificate, IconHeart, IconPlayerPlay, IconVideo, IconClock, IconHelp, IconMessage, IconPlus } from "@tabler/icons-react";
+import { IconArrowRight, IconBook, IconCalendar, IconCertificate, IconHeart, IconPlayerPlay, IconVideo, IconClock, IconHelp, IconMessage, IconPlus, IconNotebook } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import type { ViewState } from "../_types/student-portal";
@@ -36,6 +36,7 @@ interface HomeViewProps {
     notifications: boolean;
     messages: boolean;
     support: boolean;
+    notes: boolean;
   };
   firstBatchId?: string; // for the Recordings shortcut
   navigate: (v: ViewState) => void;
@@ -111,7 +112,7 @@ export default function HomeView({
   navigate,
 }: HomeViewProps) {
   const router = useRouter();
-  const [activeInlineTab, setActiveInlineTab] = useState<"courses" | "calendar" | "sessions" | "support">("courses");
+  const [activeInlineTab, setActiveInlineTab] = useState<"courses" | "calendar" | "sessions" | "support" | "notes">("courses");
   const [supportTickets, setSupportTickets] = useState<Array<{ id: string; title: string; description: string; status: string; createdAt: string; _count?: { messages: number } }>>([]);
   const [supportLoading, setSupportLoading] = useState(false);
   const [showSupportForm, setShowSupportForm] = useState(false);
@@ -214,10 +215,11 @@ export default function HomeView({
     { key: "notifications", label: "Notifications", enabled: sectionApiAvailability.notifications },
     { key: "messages", label: "Messages", enabled: sectionApiAvailability.messages },
     { key: "support", label: "Support", enabled: sectionApiAvailability.support },
+    { key: "notes", label: "Notes", enabled: sectionApiAvailability.notes },
   ];
 
   function handleSectionTabChange(key: string) {
-    if (key === "courses" || key === "calendar" || key === "sessions" || key === "support") {
+    if (key === "courses" || key === "calendar" || key === "sessions" || key === "support" || key === "notes") {
       setActiveInlineTab(key as typeof activeInlineTab);
       if (key === "support") fetchSupportTickets();
     }
@@ -451,6 +453,24 @@ export default function HomeView({
             >
               View All Tickets →
             </button>
+          </div>
+        )}
+
+        {activeInlineTab === "notes" && (
+          <div className="space-y-3">
+            <div className="mb-4">
+              <p className="sp-eyebrow">Notes</p>
+              <p className="mt-1 text-sm text-muted-foreground">Your study notes</p>
+            </div>
+            <a
+              href="/student/notes"
+              className="inline-flex w-full items-center gap-3 rounded-xl border border-border/50 bg-card/50 p-4 hover:bg-card-hover transition-colors"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/20 text-primary">
+                <IconNotebook size={20} />
+              </div>
+              <span className="text-sm font-medium text-foreground">Go to Notes &rarr;</span>
+            </a>
           </div>
         )}
       </div>

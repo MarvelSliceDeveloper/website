@@ -313,7 +313,9 @@ export default function StudentPortalPage() {
     sessions: true,
     notifications: false,
     messages: false,
+    mentorship: false,
     support: true,
+    notes: true,
   };
 
   // ── Navigation helpers ────────────────────────────────────────────────────

@@ -1,16 +1,19 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import {
   IconArrowLeft,
   IconBell,
-  IconChevronDown,
   IconMoon,
   IconSun,
+  IconX,                  
+  IconChevronDown,
+  IconHelp,
+  IconLayoutDashboard,  
   IconLogout,
   IconSettings,
-  IconX,
   IconSchool,
   IconEye,
 } from "@tabler/icons-react";
@@ -52,6 +55,7 @@ export default function StudentPortalShell({
   hideHeader = false,
 }: StudentPortalShellProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [notifOpen, setNotifOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("light");
@@ -308,7 +312,6 @@ export default function StudentPortalShell({
         </div>
       </header>
       )}
-
       <main className={`w-full ${hideHeader ? "" : "mx-auto max-w-7xl px-4 py-6 md:px-6"}`}>
         {children}
       </main>

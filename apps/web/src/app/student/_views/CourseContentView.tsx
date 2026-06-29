@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   IconBook2,
   IconVideo,
+  IconPencil,
   IconCode,
   IconNotes,
   IconFileDescription,
@@ -13,13 +14,24 @@ import {
   IconBookmark,
   IconCheck,
   IconX,
+  IconTrash,
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import { MOCK_ENABLED } from "@/lib/student-mock-data";
 import { VideoPlayer } from "./_comps/VideoPlayer";
 import { LessonSidebar } from "./_comps/LessonSidebar";
 import { SessionSidebar } from "./_comps/SessionSidebar";
-import type { CourseContentData, RailTab, SidebarTab, Note, CourseContentViewProps } from "./_comps/types";
+import RichEditor from "@/components/editor/RichEditor";
+import type { CourseContentData, RailTab, SidebarTab, CourseContentViewProps } from "./_comps/types";
+
+interface ApiNote {
+  id: string;
+  title: string;
+  body: string;
+  moduleId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 const railIcons: Record<RailTab, React.ReactNode> = {
   lesson: <IconBook2 size={18} />,
@@ -31,13 +43,13 @@ const railIcons: Record<RailTab, React.ReactNode> = {
 
 const railLabels: Record<RailTab, string> = {
   lesson: "Lessons",
-  editor: "Editor",
+  editor: "Code",
   note: "Notes",
   session: "Session",
   resource: "Study",
 };
 
-export default function CourseContentView({ courseId, navigate, goBack }: CourseContentViewProps) {
+export default function CourseContentView({ courseId, navigate: _navigate, goBack }: CourseContentViewProps) {
   const [data, setData] = useState<CourseContentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -47,13 +59,35 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
   const [selectedRecordingId, setSelectedRecordingId] = useState<string | null>(null);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>("all");
-
-  const [savedNotes, setSavedNotes] = useState<Note[]>([]);
-  const [noteTitle, setNoteTitle] = useState("");
-  const [noteBody, setNoteBody] = useState("");
-  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
-  const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [retryKey, setRetryKey] = useState(0);
+
+  // Notes state (API-backed)
+  const [notes, setNotes] = useState<ApiNote[]>([]);
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editNoteTitle, setEditNoteTitle] = useState("");
+  const [editNoteBody, setEditNoteBody] = useState("");
+
+  // New note form
+  const [showNewNote, setShowNewNote] = useState(false);
+  const [newNoteTitle, setNewNoteTitle] = useState("");
+  const [newNoteBody, setNewNoteBody] = useState("");
+
+  // Sticky-note state (per-module floating overlay, shares Note CRUD)
+  const [showStickyNote, setShowStickyNote] = useState(false);
+  const [stickyNoteId, setStickyNoteId] = useState<string | null>(null);
+  const [stickyNoteBody, setStickyNoteBody] = useState("");
+  const [stickyNoteStatus, setStickyNoteStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const stickyNoteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stickyNoteBodyRef = useRef(stickyNoteBody);
+  useEffect(() => {
+    stickyNoteBodyRef.current = stickyNoteBody;
+  }, [stickyNoteBody]);
+
+  // Bookmarks (in-memory, UI only)
+  const [bookmarks, setBookmarks] = useState<string[]>([]);
+
+  // ── Data fetching ──────────────────────────────────────────────────────
 
   useEffect(() => {
     let cancelled = false;
@@ -106,6 +140,107 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
     return () => { cancelled = true; };
   }, [courseId, retryKey]);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await api.get<{ notes: ApiNote[] }>(`/api/notes?courseId=${courseId}`);
+        if (!cancelled) setNotes(data.notes || []);
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, [courseId]);
+
+  // ── Sticky-note load per module (from existing notes list) ────────────
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    const existing = notes.find((n) => n.moduleId === selectedModuleId);
+    setStickyNoteId(existing?.id ?? null);
+    setStickyNoteBody(existing?.body ?? "");
+  }, [selectedModuleId, notes]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // ── Sticky-note auto-save (debounced, shared endpoint with Notes) ─────
+
+  const saveStickyNote = useCallback(async (body: string) => {
+    if (!selectedModuleId) return;
+    setStickyNoteStatus("saving");
+    try {
+      if (stickyNoteId) {
+        await api.patch(`/api/notes/${stickyNoteId}`, { body });
+        setNotes((prev) => prev.map((n) => (n.id === stickyNoteId ? { ...n, body } : n)));
+      } else {
+        const res = await api.post<{ note: ApiNote }>("/api/notes", {
+          courseId,
+          moduleId: selectedModuleId,
+          title: `${data?.course?.title ?? "Notes"} - Notes`,
+          body,
+        });
+        setStickyNoteId(res.note.id);
+        setNotes((prev) => [res.note, ...prev]);
+      }
+      setStickyNoteStatus("saved");
+      setTimeout(() => setStickyNoteStatus("idle"), 2000);
+    } catch {
+      setStickyNoteStatus("idle");
+    }
+  }, [courseId, selectedModuleId, stickyNoteId, data?.course?.title]);
+
+  const handleStickyNoteChange = useCallback((html: string) => {
+    setStickyNoteBody(html);
+    if (stickyNoteTimer.current) clearTimeout(stickyNoteTimer.current);
+    setStickyNoteStatus("saving");
+    stickyNoteTimer.current = setTimeout(() => {
+      saveStickyNote(stickyNoteBodyRef.current);
+    }, 1500);
+  }, [saveStickyNote]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (stickyNoteTimer.current) clearTimeout(stickyNoteTimer.current);
+    };
+  }, []);
+
+  // ── Note CRUD ──────────────────────────────────────────────────────────
+
+  async function createNote() {
+    if (!newNoteTitle.trim() && !newNoteBody.trim()) return;
+    try {
+      const res = await api.post<{ note: ApiNote }>("/api/notes", {
+        courseId,
+        title: newNoteTitle.trim(),
+        body: newNoteBody,
+      });
+      setNotes((prev) => [res.note, ...prev]);
+      setNewNoteTitle("");
+      setNewNoteBody("");
+      setShowNewNote(false);
+    } catch { /* ignore */ }
+  }
+
+  async function deleteNote(id: string) {
+    try {
+      await api.delete(`/api/notes/${id}`);
+      setNotes((prev) => prev.filter((n) => n.id !== id));
+      if (selectedNoteId === id) setSelectedNoteId(null);
+      if (editingNoteId === id) setEditingNoteId(null);
+    } catch { /* ignore */ }
+  }
+
+  async function saveNoteEdit(id: string) {
+    try {
+      await api.patch(`/api/notes/${id}`, { title: editNoteTitle, body: editNoteBody });
+      setNotes((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, title: editNoteTitle, body: editNoteBody } : n))
+      );
+      setEditingNoteId(null);
+    } catch { /* ignore */ }
+  }
+
+  // ── Navigation ─────────────────────────────────────────────────────────
+
   const toggleModule = (moduleId: string) => {
     setExpandedModules((prev) => {
       const next = new Set(prev);
@@ -136,8 +271,10 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
 
   const selectedModule = data?.modules.find((m) => m.id === selectedModuleId) ?? null;
   const selectedRecording = data?.recordings.find((r) => r.id === selectedRecordingId) ?? null;
-  const selectedNote = savedNotes.find((n) => n.id === selectedNoteId) ?? null;
+  const selectedNote = notes.find((n) => n.id === selectedNoteId) ?? null;
   const currentModuleIndex = data?.modules.findIndex((m) => m.id === selectedModuleId) ?? -1;
+
+  // ── Loading / Error ────────────────────────────────────────────────────
 
   if (loading) {
     return (
@@ -185,84 +322,169 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
     </>
   );
 
-  const renderEditorMain = () => (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 px-4 py-2 bg-[hsl(220,15%,10%)] border-b border-white/5">
-        <span className="text-xs text-white/40">main.ts</span>
-        <span className="text-xs text-white/40">|</span>
-        <span className="text-xs text-white/30">utils/helpers.ts</span>
-        <div className="flex-1" />
-        <span className="text-xs text-white/20">TypeScript</span>
+  // ── Scratchpad tab (was "Editor") ──────────────────────────────────────
+
+  const renderCodeEditorMain = () => (
+    <div className="p-6 max-w-3xl mx-auto space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold text-foreground">
+          Code Editor {selectedModule ? `— ${selectedModule.title}` : ""}
+        </h2>
       </div>
-      <div className="flex-1 bg-[hsl(220,15%,8%)] p-4 font-mono text-sm leading-relaxed overflow-auto">
-        <div className="space-y-1.5">
-          <div><span className="text-blue-400">import</span><span className="text-white/70"> </span><span className="text-orange-300">{'"reflect-metadata"'}</span><span className="text-white/70">;</span></div>
-          <div><span className="text-blue-400">import</span><span className="text-white/70">{' {'} </span><span className="text-yellow-300">Injectable</span><span className="text-white/70">, </span><span className="text-yellow-300">Component</span><span className="text-white/70">{' } '}</span><span className="text-blue-400">from</span><span className="text-white/70"> </span><span className="text-orange-300">{'"@nestjs/common"'}</span><span className="text-white/70">;</span></div>
-          <div><br /></div>
-          <div><span className="text-green-400">{'// This is a work in progress — editor coming soon'}</span></div>
-          <div><br /></div>
-          <div><span className="text-blue-400">interface</span><span className="text-white/70"> </span><span className="text-yellow-300">User</span><span className="text-white/70">{' {'}</span></div>
-          <div className="ml-4"><span className="text-white/70">  </span><span className="text-cyan-300">id</span><span className="text-white/70">: </span><span className="text-blue-400">string</span><span className="text-white/70">;</span></div>
-          <div className="ml-4"><span className="text-white/70">  </span><span className="text-cyan-300">name</span><span className="text-white/70">: </span><span className="text-blue-400">string</span><span className="text-white/70">;</span></div>
-          <div className="ml-4"><span className="text-white/70">  </span><span className="text-cyan-300">email</span><span className="text-white/70">: </span><span className="text-blue-400">string</span><span className="text-white/70">;</span></div>
-          <div className="ml-4"><span className="text-white/70">  </span><span className="text-cyan-300">role</span><span className="text-white/70">: </span><span className="text-blue-400">{'"STUDENT"'}</span><span className="text-white/70"> | </span><span className="text-blue-400">{'"INSTRUCTOR"'}</span><span className="text-white/70"> | </span><span className="text-blue-400">{'"ADMIN"'}</span><span className="text-white/70">;</span></div>
-          <div><span className="text-white/70">{'}'}</span></div>
-          <div><br /></div>
-          <div><span className="text-blue-400">function</span><span className="text-white/70"> </span><span className="text-yellow-300">greet</span><span className="text-white/70">(</span><span className="text-cyan-300">user</span><span className="text-white/70">: </span><span className="text-yellow-300">User</span><span className="text-white/70">): </span><span className="text-blue-400">string</span><span className="text-white/70">{' {'}</span></div>
-          <div className="ml-4"><span className="text-blue-400">return</span><span className="text-white/70"> </span><span className="text-green-400">{'`Hello, ${user.name}!`'}</span><span className="text-white/70">;</span></div>
-          <div><span className="text-white/70">{'}'}</span></div>
-          <div><br /></div>
-          <div className="opacity-30 cursor-not-allowed"><span className="text-green-400">{'// Interactive editor will be available in a future update'}</span></div>
+      {!selectedModule ? (
+        <div className="flex flex-col items-center justify-center h-64 text-center gap-3 text-muted-foreground">
+          <IconCode size={40} className="opacity-30" />
+          <p className="text-sm">Select a lesson to open the code editor</p>
         </div>
-      </div>
+      ) : (
+        <textarea
+          className="w-full h-80 font-mono text-sm bg-[#1e1e2e] text-[#cdd6f4] border border-border rounded-xl p-4 resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+          placeholder="// Code editor coming soon..."
+          readOnly
+        />
+      )}
     </div>
   );
 
-  const renderNoteMain = () => (
-    selectedNote ? (
-      <div className="p-6 max-w-2xl">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">{selectedNote.title || "Untitled"}</h2>
-          <button onClick={() => setSelectedNoteId(null)} className="text-muted-foreground hover:text-foreground">
-            <IconX size={18} />
-          </button>
+  const renderCodeEditorSidebar = () => (
+    <div className="flex flex-col items-center justify-center h-full text-center gap-3 px-4 text-muted-foreground">
+      <IconCode size={36} className="opacity-20" />
+      <p className="text-xs font-medium text-foreground">Code Editor</p>
+      <p className="text-[11px]">Edit and run code alongside your lessons.</p>
+    </div>
+  );
+
+  // ── Notes tab ──────────────────────────────────────────────────────────
+
+  const renderNoteMain = () => {
+    if (editingNoteId) {
+      const note = notes.find((n) => n.id === editingNoteId);
+      if (!note) return null;
+      return (
+        <div className="p-6 max-w-2xl space-y-3">
+          <input
+            type="text"
+            value={editNoteTitle}
+            onChange={(e) => setEditNoteTitle(e.target.value)}
+            placeholder="Note title..."
+            className="field w-full text-base font-semibold"
+          />
+          <RichEditor
+            content={editNoteBody}
+            onChange={setEditNoteBody}
+            placeholder="Write your note..."
+            minHeight="200px"
+          />
+          <div className="flex justify-end gap-2">
+            <button onClick={() => setEditingNoteId(null)} className="btn-secondary text-xs">
+              Cancel
+            </button>
+            <button onClick={() => saveNoteEdit(note.id)} className="btn-primary text-xs">
+              Save
+            </button>
+          </div>
         </div>
-        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedNote.body}</p>
-        <p className="text-xs text-muted mt-4">
-          Created {new Date(selectedNote.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-        </p>
-      </div>
-    ) : (
+      );
+    }
+
+    if (selectedNote) {
+      return (
+        <div className="p-6 max-w-2xl">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-foreground">{selectedNote.title || "Untitled"}</h2>
+            <div className="flex gap-1">
+              <button
+                onClick={() => { setEditingNoteId(selectedNote.id); setEditNoteTitle(selectedNote.title); setEditNoteBody(selectedNote.body); }}
+                className="rounded-lg p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                title="Edit"
+              >
+                <IconPencil size={15} />
+              </button>
+              <button onClick={() => setSelectedNoteId(null)} className="text-muted-foreground hover:text-foreground transition-colors" title="Close">
+                <IconX size={18} />
+              </button>
+            </div>
+          </div>
+          <div className="prose prose-sm max-w-none text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: selectedNote.body }} />
+          <p className="text-xs text-muted mt-4">
+            Created {new Date(selectedNote.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+          </p>
+        </div>
+      );
+    }
+
+    return (
       <div className="flex flex-col items-center justify-center h-full text-center gap-3 text-muted-foreground">
         <IconNotes size={40} className="opacity-30" />
         <p className="text-sm">Select a note from the sidebar</p>
       </div>
-    )
-  );
+    );
+  };
 
   const renderNoteSidebar = () => (
     <div className="flex flex-col h-full">
       <div className="p-3 border-b border-border space-y-2 flex-shrink-0">
-        <input value={noteTitle} onChange={(e) => setNoteTitle(e.target.value)} placeholder="Note title..." className="field text-xs px-2.5 py-1.5 w-full" />
-        <textarea value={noteBody} onChange={(e) => setNoteBody(e.target.value)} placeholder="Write your notes here..." className="field min-h-[80px] resize-y text-xs px-2.5 py-1.5 w-full" />
-        <button onClick={() => { if (!noteTitle.trim() && !noteBody.trim()) return; setSavedNotes((prev) => [...prev, { id: crypto.randomUUID(), title: noteTitle.trim(), body: noteBody.trim(), createdAt: new Date().toISOString() }]); setNoteTitle(""); setNoteBody(""); }} className="btn-primary text-[11px] w-full">
-          <IconCheck size={12} /> Add Note
-        </button>
-      </div>
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
-        {savedNotes.length > 0 && <p className="text-[11px] font-medium text-muted-foreground">Saved notes ({savedNotes.length})</p>}
-        {savedNotes.map((n) => (
-          <div key={n.id} onClick={() => setSelectedNoteId(n.id === selectedNoteId ? null : n.id)} className={`glass-card p-2.5 space-y-1 cursor-pointer transition-colors ${selectedNoteId === n.id ? "ring-1 ring-primary" : ""}`}>
-            <div className="flex items-start justify-between gap-1">
-              <p className="text-xs font-medium text-foreground">{n.title || "Untitled"}</p>
-              <button onClick={(e) => { e.stopPropagation(); setSavedNotes((prev) => prev.filter((x) => x.id !== n.id)); }} className="text-muted-foreground hover:text-danger transition-colors shrink-0">
-                <IconX size={13} />
+        {showNewNote ? (
+          <div className="space-y-2">
+            <input
+              value={newNoteTitle}
+              onChange={(e) => setNewNoteTitle(e.target.value)}
+              placeholder="Note title..."
+              className="field text-xs px-2.5 py-1.5 w-full"
+            />
+            <RichEditor
+              content={newNoteBody}
+              onChange={setNewNoteBody}
+              placeholder="Write your notes here..."
+              minHeight="100px"
+            />
+            <div className="flex gap-1">
+              <button onClick={createNote} className="btn-primary text-[11px] flex-1">
+                <IconCheck size={12} /> Save
+              </button>
+              <button onClick={() => { setShowNewNote(false); setNewNoteTitle(""); setNewNoteBody(""); }} className="btn-secondary text-[11px]">
+                Cancel
               </button>
             </div>
-            {n.body && <p className="text-[11px] text-muted-foreground whitespace-pre-wrap line-clamp-2">{n.body}</p>}
-            <p className="text-[10px] text-muted">{new Date(n.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</p>
+          </div>
+        ) : (
+          <button onClick={() => setShowNewNote(true)} className="btn-primary text-[11px] w-full">
+            <IconCheck size={12} /> Add Note
+          </button>
+        )}
+      </div>
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+        {notes.length > 0 && (
+          <p className="text-[11px] font-medium text-muted-foreground">Saved notes ({notes.length})</p>
+        )}
+        {notes.map((n) => (
+          <div
+            key={n.id}
+            onClick={() => { setSelectedNoteId(n.id === selectedNoteId ? null : n.id); setEditingNoteId(null); }}
+            className={`glass-card p-2.5 space-y-1 cursor-pointer transition-colors ${selectedNoteId === n.id ? "ring-1 ring-primary" : ""}`}
+          >
+            <div className="flex items-start justify-between gap-1">
+              <p className="text-xs font-medium text-foreground">{n.title || "Untitled"}</p>
+              <button
+                onClick={(e) => { e.stopPropagation(); deleteNote(n.id); }}
+                className="text-muted-foreground hover:text-danger transition-colors shrink-0"
+                title="Delete"
+              >
+                <IconTrash size={12} />
+              </button>
+            </div>
+            <p className="text-[11px] text-muted-foreground whitespace-pre-wrap line-clamp-2">
+              {n.body.replace(/<[^>]+>/g, "").slice(0, 100)}
+            </p>
+            <p className="text-[10px] text-muted">
+              {new Date(n.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+            </p>
           </div>
         ))}
+        {notes.length === 0 && bookmarks.length === 0 && (
+          <p className="text-xs text-muted-foreground text-center py-6">No notes yet. Add one above.</p>
+        )}
+
         {bookmarks.length > 0 && (
           <div className="pt-3 border-t border-border">
             <p className="text-[11px] font-medium text-muted-foreground mb-2">Bookmarked</p>
@@ -270,7 +492,11 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
               const mod = data.modules.find((m) => m.id === bId);
               if (!mod) return null;
               return (
-                <button key={bId} onClick={() => { selectModule(bId); setActiveRail("lesson"); }} className="flex w-full items-center gap-2 rounded-md border border-border px-2.5 py-2 text-left text-xs hover:bg-muted/5 transition-colors">
+                <button
+                  key={bId}
+                  onClick={() => { selectModule(bId); setActiveRail("lesson"); }}
+                  className="flex w-full items-center gap-2 rounded-md border border-border px-2.5 py-2 text-left text-xs hover:bg-muted/5 transition-colors"
+                >
                   <IconBookmark size={12} className="text-warning shrink-0" />
                   <span className="truncate text-muted-foreground">{mod.title}</span>
                 </button>
@@ -278,12 +504,11 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
             })}
           </div>
         )}
-        {savedNotes.length === 0 && bookmarks.length === 0 && (
-          <p className="text-xs text-muted-foreground text-center py-6">No notes yet. Start adding notes above.</p>
-        )}
       </div>
     </div>
   );
+
+  // ── Session, Resource tabs (unchanged) ────────────────────────────────
 
   const renderSessionMain = () => {
     const activeSessions = data.sessions.filter((s) => s.isLive);
@@ -377,14 +602,6 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
     );
   };
 
-  const renderEditorSidebar = () => (
-    <div className="flex flex-col items-center justify-center h-full text-center gap-3 px-4 text-muted-foreground">
-      <IconCode size={36} className="opacity-20" />
-      <p className="text-xs">Interactive code editor</p>
-      <p className="text-[11px]">Write, test, and debug TypeScript code directly in your browser.</p>
-    </div>
-  );
-
   // ── Render ─────────────────────────────────────────────────────────────
 
   return (
@@ -401,7 +618,7 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
 
         <div className="flex-1 overflow-y-auto p-5">
           {activeRail === "lesson" && renderLessonMain()}
-          {activeRail === "editor" && renderEditorMain()}
+          {activeRail === "editor" && renderCodeEditorMain()}
           {activeRail === "note" && renderNoteMain()}
           {activeRail === "session" && renderSessionMain()}
           {activeRail === "resource" && renderResourceMain()}
@@ -424,7 +641,7 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
 
       <div className="w-[340px] flex-shrink-0 bg-background border-l border-border flex flex-col overflow-hidden">
         {activeRail === "lesson" && <LessonSidebar data={data} selectedModuleId={selectedModuleId} selectedRecordingId={selectedRecordingId} expandedModules={expandedModules} bookmarks={bookmarks} onSelectModule={selectModule} onSelectRecording={selectRecording} onToggleModule={toggleModule} onToggleBookmark={toggleBookmark} />}
-        {activeRail === "editor" && renderEditorSidebar()}
+        {activeRail === "editor" && renderCodeEditorSidebar()}
         {activeRail === "note" && renderNoteSidebar()}
         {activeRail === "session" && <SessionSidebar data={data} sidebarTab={sidebarTab} onSetSidebarTab={setSidebarTab} />}
         {activeRail === "resource" && renderResourceSidebar()}
@@ -438,6 +655,60 @@ export default function CourseContentView({ courseId, navigate, goBack }: Course
           </button>
         ))}
       </div>
+
+      {/* Floating sticky-note toggle */}
+      <button
+        onClick={() => setShowStickyNote((v) => !v)}
+        className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-xl transition-transform hover:scale-105 active:scale-95"
+        title={showStickyNote ? "Close sticky notes" : "Open sticky notes"}
+      >
+        <IconNotes size={22} />
+      </button>
+
+      {/* Sticky-note overlay */}
+      {showStickyNote && (
+        <div className="fixed bottom-24 right-6 z-50 w-80 -rotate-1 rounded-2xl border border-yellow-300/40 bg-yellow-50/95 shadow-2xl shadow-black/20 backdrop-blur-sm">
+          <div className="flex items-center justify-between px-4 pt-3 pb-1">
+            <div className="flex items-center gap-1.5">
+              <span className="text-lg">📌</span>
+              <span className="text-xs font-semibold text-yellow-800">Sticky Notes</span>
+            </div>
+            <button
+              onClick={() => setShowStickyNote(false)}
+              className="rounded-md p-0.5 text-yellow-700/60 hover:text-yellow-900 transition-colors"
+            >
+              <IconX size={16} />
+            </button>
+          </div>
+          <div className="px-3 pb-3">
+            <p className="text-[10px] text-yellow-700/50 mb-1.5">
+              {!selectedModuleId
+                ? "Select a lesson to take notes"
+                : stickyNoteStatus === "saving"
+                  ? "Saving..."
+                  : stickyNoteStatus === "saved"
+                    ? "Saved ✓"
+                    : selectedModule
+                      ? `Notes for: ${selectedModule.title}`
+                      : ""}
+            </p>
+            {selectedModuleId ? (
+              <RichEditor
+                content={stickyNoteBody}
+                onChange={handleStickyNoteChange}
+                placeholder="Quick notes..."
+                minHeight="120px"
+                autoFocus={false}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-24 text-yellow-700/40 text-xs">
+                No lesson selected
+              </div>
+            )}
+          </div>
+          <div className="absolute -top-1 left-4 h-3 w-3 rotate-45 bg-yellow-50 border-l border-t border-yellow-300/40" />
+        </div>
+      )}
     </div>
   );
 }
