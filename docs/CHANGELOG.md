@@ -4,6 +4,39 @@
 
 ---
 
+## 2026-06-30 — Calendar ↔ Sessions Sync Fixes + Role Workflows ✅
+
+### Fix A — Admin Calendar Duration (Bug)
+- **File:** `apps/web/src/app/admin/calendar/page.tsx:67`
+- **Change:** `s.endDateTime` → `s.endedAt`
+- **Why:** Code was reading a non-existent field. Every event fell back to `start + 1hr` regardless of actual duration.
+
+### Fix B — Session Edits Not Synced to Calendar (Bug)
+- **File:** `apps/api/src/modules/sessions/session.service.ts:242-261`
+- **Change:** `updateSession()` now syncs title, start, and end changes to both `LiveSession` and `CalendarEvent` records.
+- **Why:** Editing a session's title or time was invisible to the student calendar view. The `CalendarEvent` was never updated.
+
+### Fix C — Canceled Sessions Lingering in Student Calendar (Bug)
+- **File:** `apps/api/src/modules/sessions/session.service.ts:295-304`
+- **Change:** Instructor soft-cancel now deletes the linked `CalendarEvent` inside a transaction, matching the admin hard-delete behavior.
+- **Why:** Canceled sessions kept appearing in student calendars because only the `LiveSession.endedAt` was set — the `CalendarEvent` was untouched.
+
+### Fix D — `endedAt` Dual Meaning (Cleanup)
+- **Files:** `apps/api/prisma/schema.prisma:158` + `session.service.ts`
+- **Change:** Added `scheduledEndAt DateTime` field to `LiveSession` model. On create, both `scheduledEndAt` and `endedAt` are set to `endDateTime`. On update, both update. On cancel, only `endedAt` is overwritten — `scheduledEndAt` preserves the original scheduled end.
+- **Why:** `endedAt` was used for both "scheduled end time" and "cancel timestamp", causing data loss on early cancellation.
+
+### Fix E — `/student/calendar` Sidebar Link 404 (Bug)
+- **Files:** `apps/web/src/components/Sidebar.tsx:34` + `apps/web/src/app/student/page.tsx:301-304`
+- **Change:** Sidebar link changed from `"/student/calendar"` to `"/student?view=calendar"`. Student page now reads `?view=calendar` query param on mount and auto-navigates to the Calendar view.
+- **Why:** The student calendar is rendered via SPA view stack on `/student`, but the sidebar pointed to a non-existent route. All other SPA-only views (Dashboard, Sessions) had the same issue.
+
+### Documentation
+- **Created:** `docs/plan-to-work/calendar-session-sync.md` — Plan document tracking all fixes (marked completed).
+- **Created:** `docs/plan-to-work/calendar-session-workflows.md` — Comprehensive role-based workflow documentation for Admin, Instructor, and Student covering all Calendar and Sessions operations with data flow diagrams and state machine.
+
+---
+
 ## 2026-06-27 — Student Portal UI Overhaul: Support, Inbox, and CSS Fix
 
 ### Support Page Redesign (`/student/support`)

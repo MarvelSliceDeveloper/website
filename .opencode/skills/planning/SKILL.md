@@ -47,4 +47,4 @@ Before writing code, review how similar existing code is structured. Adhere to:
 ## step 6: Use the planning workflow for all new tasks
 -when the plan start add it under docs 'docs/plan-to-work/<task-name>.md' and and when the plan is completed add it under 'docs/plan-completed/<task-name>.md'
 -and if any important thing also mention below the plan in the same file
-
+-always after completed a job the chnagelog must be updated in the 'docs/changelog.md' file with the task name and a brief description of what was done.
