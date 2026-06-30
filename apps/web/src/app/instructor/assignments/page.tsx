@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { AssignmentsPageContent } from "./_comps/AssignmentsPageContent";
+import InstructorAssignmentsContent from "./_components/InstructorAssignmentsContent";
 
 export default function InstructorAssignmentsPage() {
     return (
@@ -8,7 +8,7 @@ export default function InstructorAssignmentsPage() {
                 <p className="text-muted animate-pulse">Loading assignments...</p>
             </div>
         }>
-            <AssignmentsPageContent />
+            <InstructorAssignmentsContent />
         </Suspense>
     );
 }

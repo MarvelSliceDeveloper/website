@@ -4,6 +4,8 @@
 # Tech Stack: Next.js 14 + Express + TypeScript + Prisma + PostgreSQL + Redis
 # Monorepo: Turborepo + pnpm workspaces
 
+.omo/*
+
 # ─────────────────────────────────
 # Dependencies
 # ─────────────────────────────────

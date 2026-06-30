@@ -48,7 +48,11 @@ export const ticketController = {
         const mentorId = type === 'MENTORSHIP' ? undefined : undefined;
         tickets = await ticketService.listTickets({ role, type, status, mentorId });
       } else if (role === 'INSTRUCTOR') {
-        tickets = await ticketService.listTickets({ mentorId: req.user!.userId, type: 'MENTORSHIP', status });
+        if (type === 'SUPPORT') {
+          tickets = await ticketService.listTickets({ userId: req.user!.userId, type: 'SUPPORT', status });
+        } else {
+          tickets = await ticketService.listTickets({ mentorId: req.user!.userId, type: 'MENTORSHIP', status });
+        }
       } else {
         tickets = await ticketService.listTickets({ userId: req.user!.userId, type, status });
       }
