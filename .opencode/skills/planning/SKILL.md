@@ -43,3 +43,8 @@ Before writing code, review how similar existing code is structured. Adhere to:
 - Add a brief one-line comment for each logical block or non-trivial function explaining what it does.
 - Keep comments concise — no essays. Focus on the "why" not the "what" when the code is already clear.
 - Use JSDoc-style comments for exported functions describing purpose, params, and return values.
+
+## step 6: Use the planning workflow for all new tasks
+-when the plan start add it under docs 'docs/plan-to-work/<task-name>.md' and and when the plan is completed add it under 'docs/plan-completed/<task-name>.md'
+-and if any important thing also mention below the plan in the same file
+

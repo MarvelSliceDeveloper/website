@@ -31,7 +31,7 @@ const growthItems: NavItem[] = [
   { label: "1-on-1 Mentorship", href: "/student/mentorship", icon: IconUsers },
   { label: "My Notes", href: "/student/notes", icon: IconNotes },
   { label: "Support", href: "/student/support", icon: IconHelp },
-  { label: "Calendar", href: "/student/calendar", icon: IconCalendar },
+  { label: "Calendar", href: "/student?view=calendar", icon: IconCalendar },
   { label: "Certificates", href: "/student/certificates", icon: IconCertificate },
 ];
 

@@ -99,6 +99,7 @@ export const sessionService = {
         teamsMeetingId,
         joinUrl,
         scheduledAt: new Date(startDateTime),
+        scheduledEndAt: new Date(endDateTime),
         endedAt: new Date(endDateTime),
         createdFrom: customJoinUrl && customJoinUrl.trim() ? 'LMS_CUSTOM' : 'LMS',
         createdBy: userId,
@@ -239,19 +240,25 @@ export const sessionService = {
     }
 
     const updateData: any = {};
+    if (data.title) updateData.title = data.title;
     if (data.startDateTime) updateData.scheduledAt = new Date(data.startDateTime);
+    if (data.endDateTime) {
+      updateData.scheduledEndAt = new Date(data.endDateTime);
+      updateData.endedAt = new Date(data.endDateTime);
+    }
 
     const updated = await prisma.liveSession.update({
       where: { id: sessionId },
       data: updateData,
     });
 
-    // Update the associated CalendarEvent if dates changed
-    if (data.startDateTime || data.endDateTime) {
-      const calendarUpdate: any = {};
-      if (data.startDateTime) calendarUpdate.startAt = new Date(data.startDateTime);
-      if (data.endDateTime) calendarUpdate.endAt = new Date(data.endDateTime);
+    // Sync changes to the associated CalendarEvent
+    const calendarUpdate: any = {};
+    if (data.title) calendarUpdate.title = data.title;
+    if (data.startDateTime) calendarUpdate.startAt = new Date(data.startDateTime);
+    if (data.endDateTime) calendarUpdate.endAt = new Date(data.endDateTime);
 
+    if (Object.keys(calendarUpdate).length > 0) {
       await prisma.calendarEvent.updateMany({
         where: { sessionId },
         data: calendarUpdate,
@@ -292,9 +299,12 @@ export const sessionService = {
       if (session.batch.instructorId !== userId) {
         throw new Error('Only the assigned instructor or an admin can cancel this session');
       }
-      return prisma.liveSession.update({
-        where: { id: sessionId },
-        data: { endedAt: new Date() },
+      return prisma.$transaction(async (tx) => {
+        await tx.calendarEvent.deleteMany({ where: { sessionId } });
+        return tx.liveSession.update({
+          where: { id: sessionId },
+          data: { endedAt: new Date() },
+        });
       });
     }
   },
@@ -324,6 +334,7 @@ export const sessionService = {
         teamsMeetingId: data.teamsMeetingId,
         joinUrl: data.joinUrl,
         scheduledAt: data.scheduledAt,
+        scheduledEndAt: data.scheduledAt,
         createdFrom: 'TEAMS',
         createdBy: 'SYSTEM', // System webhook created this
       },

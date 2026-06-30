@@ -64,8 +64,8 @@ export default function AdminCalendarPage() {
         const color = colorMap[courseTitle];
 
         const startStr = s.scheduledAt;
-        const endMs = s.endDateTime
-          ? new Date(s.endDateTime).getTime()
+        const endMs = s.endedAt
+          ? new Date(s.endedAt).getTime()
           : new Date(startStr).getTime() + 3600000;
 
         return {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { IconNotes, IconTrash, IconFilter, IconChevronRight, IconBook } from "@tabler/icons-react";
 import { toast } from "sonner";
@@ -29,6 +30,7 @@ function stripHtml(html: string): string {
 }
 
 export default function StudentNotesPage() {
+  const router = useRouter();
   const [notes, setNotes] = useState<NoteItem[]>([]);
   const [courses, setCourses] = useState<CourseInfo[]>([]);
   const [courseFilter, setCourseFilter] = useState<string>("");
@@ -73,7 +75,7 @@ export default function StudentNotesPage() {
           setStudentEmail(res.user.email || "");
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   async function deleteNote(id: string) {
@@ -118,7 +120,9 @@ export default function StudentNotesPage() {
       studentName={studentName}
       studentEmail={studentEmail}
       showBack
-      onBack={() => window.history.back()}
+      onBack={() => {
+        router.push("/student");
+      }}
     >
       <div className="space-y-6">
         <div>
@@ -137,11 +141,10 @@ export default function StudentNotesPage() {
               </p>
               <button
                 onClick={() => setCourseFilter("")}
-                className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  !courseFilter
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
-                }`}
+                className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${!courseFilter
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
+                  }`}
               >
                 <IconNotes size={15} />
                 All Notes
@@ -151,11 +154,10 @@ export default function StudentNotesPage() {
                 <button
                   key={c.id}
                   onClick={() => setCourseFilter(c.id)}
-                  className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                    courseFilter === c.id
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
-                  }`}
+                  className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${courseFilter === c.id
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
+                    }`}
                 >
                   <IconBook size={15} />
                   <span className="truncate">{c.title}</span>
@@ -185,9 +187,8 @@ export default function StudentNotesPage() {
               notes.map((note) => (
                 <div
                   key={note.id}
-                  className={`glass-card overflow-hidden transition-all ${
-                    editingNoteId === note.id ? "ring-2 ring-primary/30" : ""
-                  }`}
+                  className={`glass-card overflow-hidden transition-all ${editingNoteId === note.id ? "ring-2 ring-primary/30" : ""
+                    }`}
                 >
                   {editingNoteId === note.id ? (
                     <div className="p-4 space-y-3">

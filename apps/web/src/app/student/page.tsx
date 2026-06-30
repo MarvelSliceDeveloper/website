@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import StudentPortalShell, { type Breadcrumb } from "@/components/StudentPortalShell";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -296,7 +297,12 @@ function buildBreadcrumbs(
 // ─── Main Portal Page ─────────────────────────────────────────────────────────
 
 export default function StudentPortalPage() {
-  const [viewStack, setViewStack] = useState<ViewState[]>([{ view: "HOME" }]);
+  const searchParams = useSearchParams();
+  const [viewStack, setViewStack] = useState<ViewState[]>(() => {
+    const viewParam = searchParams?.get("view");
+    if (viewParam === "calendar") return [{ view: "CALENDAR" }];
+    return [{ view: "HOME" }];
+  });
   const [data, setData] = useState<PortalData | null>(null);
   const [batchCache, setBatchCache] = useState<Record<string, Batch>>({});
   const [loadingBatch, setLoadingBatch] = useState(false);

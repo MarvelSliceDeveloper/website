@@ -15,6 +15,7 @@ import {
   IconCheck,
   IconX,
   IconTrash,
+  IconPlus,
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import { MOCK_ENABLED } from "@/lib/student-mock-data";
@@ -22,6 +23,7 @@ import { VideoPlayer } from "./_comps/VideoPlayer";
 import { LessonSidebar } from "./_comps/LessonSidebar";
 import { SessionSidebar } from "./_comps/SessionSidebar";
 import RichEditor from "@/components/editor/RichEditor";
+import StickyNoteWidget from "@/components/StickyNoteWidget";
 import type { CourseContentData, RailTab, SidebarTab, CourseContentViewProps } from "./_comps/types";
 
 interface ApiNote {
@@ -68,21 +70,13 @@ export default function CourseContentView({ courseId, navigate: _navigate, goBac
   const [editNoteTitle, setEditNoteTitle] = useState("");
   const [editNoteBody, setEditNoteBody] = useState("");
 
-  // New note form
+  // New note form - now shown in main area when editingNoteId === "new"
   const [showNewNote, setShowNewNote] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState("");
   const [newNoteBody, setNewNoteBody] = useState("");
 
-  // Sticky-note state (per-module floating overlay, shares Note CRUD)
-  const [showStickyNote, setShowStickyNote] = useState(false);
-  const [stickyNoteId, setStickyNoteId] = useState<string | null>(null);
-  const [stickyNoteBody, setStickyNoteBody] = useState("");
-  const [stickyNoteStatus, setStickyNoteStatus] = useState<"idle" | "saving" | "saved">("idle");
-  const stickyNoteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const stickyNoteBodyRef = useRef(stickyNoteBody);
-  useEffect(() => {
-    stickyNoteBodyRef.current = stickyNoteBody;
-  }, [stickyNoteBody]);
+  // Sticky-note widget state (replaces old inline sticky)
+  const [showStickyWidget, setShowStickyWidget] = useState(false);
 
   // Bookmarks (in-memory, UI only)
   const [bookmarks, setBookmarks] = useState<string[]>([]);
@@ -151,72 +145,38 @@ export default function CourseContentView({ courseId, navigate: _navigate, goBac
     return () => { cancelled = true; };
   }, [courseId]);
 
-  // ── Sticky-note load per module (from existing notes list) ────────────
-
-  /* eslint-disable react-hooks/set-state-in-effect */
-  useEffect(() => {
-    const existing = notes.find((n) => n.moduleId === selectedModuleId);
-    setStickyNoteId(existing?.id ?? null);
-    setStickyNoteBody(existing?.body ?? "");
-  }, [selectedModuleId, notes]);
-  /* eslint-enable react-hooks/set-state-in-effect */
-
-  // ── Sticky-note auto-save (debounced, shared endpoint with Notes) ─────
-
-  const saveStickyNote = useCallback(async (body: string) => {
-    if (!selectedModuleId) return;
-    setStickyNoteStatus("saving");
-    try {
-      if (stickyNoteId) {
-        await api.patch(`/api/notes/${stickyNoteId}`, { body });
-        setNotes((prev) => prev.map((n) => (n.id === stickyNoteId ? { ...n, body } : n)));
-      } else {
-        const res = await api.post<{ note: ApiNote }>("/api/notes", {
-          courseId,
-          moduleId: selectedModuleId,
-          title: `${data?.course?.title ?? "Notes"} - Notes`,
-          body,
-        });
-        setStickyNoteId(res.note.id);
-        setNotes((prev) => [res.note, ...prev]);
-      }
-      setStickyNoteStatus("saved");
-      setTimeout(() => setStickyNoteStatus("idle"), 2000);
-    } catch {
-      setStickyNoteStatus("idle");
-    }
-  }, [courseId, selectedModuleId, stickyNoteId, data?.course?.title]);
-
-  const handleStickyNoteChange = useCallback((html: string) => {
-    setStickyNoteBody(html);
-    if (stickyNoteTimer.current) clearTimeout(stickyNoteTimer.current);
-    setStickyNoteStatus("saving");
-    stickyNoteTimer.current = setTimeout(() => {
-      saveStickyNote(stickyNoteBodyRef.current);
-    }, 1500);
-  }, [saveStickyNote]);
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (stickyNoteTimer.current) clearTimeout(stickyNoteTimer.current);
-    };
-  }, []);
-
   // ── Note CRUD ──────────────────────────────────────────────────────────
 
   async function createNote() {
     if (!newNoteTitle.trim() && !newNoteBody.trim()) return;
     try {
+      // Check if there's an existing note for this module to append to
+      const existingModuleNote = notes.find((n) => n.moduleId === selectedModuleId);
+      let body = newNoteBody;
+      
+      if (existingModuleNote) {
+        // Append with date separator
+        const todayHeader = new Date().toLocaleDateString("en-IN", { 
+          weekday: "short", day: "numeric", month: "short", year: "numeric" 
+        });
+        body = `${existingModuleNote.body}\n\n<hr/>\n\n<!-- DATE: ${todayHeader} -->\n${newNoteBody}`;
+      }
+      
       const res = await api.post<{ note: ApiNote }>("/api/notes", {
         courseId,
-        title: newNoteTitle.trim(),
-        body: newNoteBody,
+        moduleId: selectedModuleId || undefined,
+        title: newNoteTitle.trim() || `${data?.course?.title ?? "Notes"} - Notes`,
+        body,
       });
       setNotes((prev) => [res.note, ...prev]);
       setNewNoteTitle("");
       setNewNoteBody("");
       setShowNewNote(false);
+      setEditingNoteId(null);
+      // If we created a note for the current module, switch to show it
+      if (selectedModuleId && !existingModuleNote) {
+        setSelectedNoteId(res.note.id);
+      }
     } catch { /* ignore */ }
   }
 
@@ -357,6 +317,35 @@ export default function CourseContentView({ courseId, navigate: _navigate, goBac
   // ── Notes tab ──────────────────────────────────────────────────────────
 
   const renderNoteMain = () => {
+    // Handle creating a new note (triggered from sidebar "Add Note" button)
+    if (editingNoteId === "new") {
+      return (
+        <div className="p-6 max-w-2xl space-y-3">
+          <input
+            value={newNoteTitle}
+            onChange={(e) => setNewNoteTitle(e.target.value)}
+            placeholder="Note title..."
+            className="field w-full text-base font-semibold"
+            autoFocus
+          />
+          <RichEditor
+            content={newNoteBody}
+            onChange={setNewNoteBody}
+            placeholder="Write your note..."
+            minHeight="300px"
+          />
+          <div className="flex justify-end gap-2">
+            <button onClick={() => { setEditingNoteId(null); setNewNoteTitle(""); setNewNoteBody(""); }} className="btn-secondary text-xs">
+              Cancel
+            </button>
+            <button onClick={createNote} className="btn-primary text-xs">
+              <IconCheck size={12} /> Save Note
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     if (editingNoteId) {
       const note = notes.find((n) => n.id === editingNoteId);
       if (!note) return null;
@@ -417,6 +406,7 @@ export default function CourseContentView({ courseId, navigate: _navigate, goBac
       <div className="flex flex-col items-center justify-center h-full text-center gap-3 text-muted-foreground">
         <IconNotes size={40} className="opacity-30" />
         <p className="text-sm">Select a note from the sidebar</p>
+        <p className="text-xs">Or click "Add Note" in the sidebar to create a new one</p>
       </div>
     );
   };
@@ -424,34 +414,18 @@ export default function CourseContentView({ courseId, navigate: _navigate, goBac
   const renderNoteSidebar = () => (
     <div className="flex flex-col h-full">
       <div className="p-3 border-b border-border space-y-2 flex-shrink-0">
-        {showNewNote ? (
-          <div className="space-y-2">
-            <input
-              value={newNoteTitle}
-              onChange={(e) => setNewNoteTitle(e.target.value)}
-              placeholder="Note title..."
-              className="field text-xs px-2.5 py-1.5 w-full"
-            />
-            <RichEditor
-              content={newNoteBody}
-              onChange={setNewNoteBody}
-              placeholder="Write your notes here..."
-              minHeight="100px"
-            />
-            <div className="flex gap-1">
-              <button onClick={createNote} className="btn-primary text-[11px] flex-1">
-                <IconCheck size={12} /> Save
-              </button>
-              <button onClick={() => { setShowNewNote(false); setNewNoteTitle(""); setNewNoteBody(""); }} className="btn-secondary text-[11px]">
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button onClick={() => setShowNewNote(true)} className="btn-primary text-[11px] w-full">
-            <IconCheck size={12} /> Add Note
-          </button>
-        )}
+        <button
+          onClick={() => { 
+            setActiveRail("note"); 
+            setEditingNoteId("new"); 
+            setSelectedNoteId(null); 
+            setNewNoteTitle(""); 
+            setNewNoteBody(""); 
+          }}
+          className="btn-primary text-[11px] w-full"
+        >
+          <IconPlus size={12} /> Add Note
+        </button>
       </div>
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {notes.length > 0 && (
@@ -482,7 +456,7 @@ export default function CourseContentView({ courseId, navigate: _navigate, goBac
           </div>
         ))}
         {notes.length === 0 && bookmarks.length === 0 && (
-          <p className="text-xs text-muted-foreground text-center py-6">No notes yet. Add one above.</p>
+          <p className="text-xs text-muted-foreground text-center py-6">No notes yet. Click "Add Note" above to create one.</p>
         )}
 
         {bookmarks.length > 0 && (
@@ -656,59 +630,24 @@ export default function CourseContentView({ courseId, navigate: _navigate, goBac
         ))}
       </div>
 
+      {/* Sticky Note Widget - Draggable & Resizable */}
+      {selectedModuleId && showStickyWidget && (
+        <StickyNoteWidget
+          courseId={courseId}
+          moduleId={selectedModuleId}
+          moduleTitle={selectedModule?.title}
+          onClose={() => setShowStickyWidget(false)}
+        />
+      )}
+
       {/* Floating sticky-note toggle */}
       <button
-        onClick={() => setShowStickyNote((v) => !v)}
-        className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-xl transition-transform hover:scale-105 active:scale-95"
-        title={showStickyNote ? "Close sticky notes" : "Open sticky notes"}
+        onClick={() => setShowStickyWidget((v) => !v)}
+        className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-xl transition-transform hover:scale-105 active:scale-95"
+        title={showStickyWidget ? "Close sticky notes" : "Open sticky notes"}
       >
         <IconNotes size={22} />
       </button>
-
-      {/* Sticky-note overlay */}
-      {showStickyNote && (
-        <div className="fixed bottom-24 right-6 z-50 w-80 -rotate-1 rounded-2xl border border-yellow-300/40 bg-yellow-50/95 shadow-2xl shadow-black/20 backdrop-blur-sm">
-          <div className="flex items-center justify-between px-4 pt-3 pb-1">
-            <div className="flex items-center gap-1.5">
-              <span className="text-lg">📌</span>
-              <span className="text-xs font-semibold text-yellow-800">Sticky Notes</span>
-            </div>
-            <button
-              onClick={() => setShowStickyNote(false)}
-              className="rounded-md p-0.5 text-yellow-700/60 hover:text-yellow-900 transition-colors"
-            >
-              <IconX size={16} />
-            </button>
-          </div>
-          <div className="px-3 pb-3">
-            <p className="text-[10px] text-yellow-700/50 mb-1.5">
-              {!selectedModuleId
-                ? "Select a lesson to take notes"
-                : stickyNoteStatus === "saving"
-                  ? "Saving..."
-                  : stickyNoteStatus === "saved"
-                    ? "Saved ✓"
-                    : selectedModule
-                      ? `Notes for: ${selectedModule.title}`
-                      : ""}
-            </p>
-            {selectedModuleId ? (
-              <RichEditor
-                content={stickyNoteBody}
-                onChange={handleStickyNoteChange}
-                placeholder="Quick notes..."
-                minHeight="120px"
-                autoFocus={false}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-24 text-yellow-700/40 text-xs">
-                No lesson selected
-              </div>
-            )}
-          </div>
-          <div className="absolute -top-1 left-4 h-3 w-3 rotate-45 bg-yellow-50 border-l border-t border-yellow-300/40" />
-        </div>
-      )}
     </div>
   );
 }

@@ -8,7 +8,8 @@ export const notesController = {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
       const courseId = req.query.courseId as string | undefined;
       const moduleId = req.query.moduleId as string | undefined;
-      const notes = await notesService.list(req.user.userId, courseId, moduleId);
+      const isSticky = req.query.isSticky === 'true' ? true : undefined;
+      const notes = await notesService.list(req.user.userId, courseId, moduleId, isSticky);
       return res.status(200).json({ notes });
     } catch (error: any) {
       console.error('Error listing notes:', error.message);
@@ -31,7 +32,7 @@ export const notesController = {
   async create(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
-      const { courseId, moduleId, title, body } = req.body;
+      const { courseId, moduleId, title, body, isSticky } = req.body;
       if (!courseId) return res.status(400).json({ error: 'courseId is required' });
       const note = await notesService.create({
         userId: req.user.userId,
@@ -39,6 +40,7 @@ export const notesController = {
         moduleId: moduleId || undefined,
         title: title || '',
         body: body || '',
+        isSticky: isSticky || false,
       });
       return res.status(201).json({ note });
     } catch (error: any) {
@@ -50,8 +52,8 @@ export const notesController = {
   async update(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
-      const { title, body, pinned } = req.body;
-      const result = await notesService.update(req.params.id, req.user.userId, { title, body, pinned });
+      const { title, body, pinned, isSticky } = req.body;
+      const result = await notesService.update(req.params.id, req.user.userId, { title, body, pinned, isSticky });
       if (result.count === 0) return res.status(404).json({ error: 'Note not found' });
       return res.status(200).json({ message: 'Note updated' });
     } catch (error: any) {
