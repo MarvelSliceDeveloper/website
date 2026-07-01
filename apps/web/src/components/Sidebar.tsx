@@ -80,10 +80,8 @@ function NavGroup({
 // Student sidebar with nav groups and sign-out
 export default function Sidebar({
   collapsed = false,
-  onToggleCollapse,
 }: {
   collapsed?: boolean;
-  onToggleCollapse: () => void;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -92,7 +90,7 @@ export default function Sidebar({
   async function handleSignOut() {
     try {
       await api.post("/api/auth/logout");
-    } catch (e) {
+    } catch {
       // ignore — still redirect
     }
     router.push("/login");

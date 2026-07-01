@@ -44,16 +44,25 @@ export default function CertificatesPage() {
             setIsLoading(true);
             const response = await api.get<CertificatesResponse>("/api/certificates/my");
             setData(response);
-        } catch (loadError: any) {
-            toast.error(loadError.message || "Failed to load certificates");
+        } catch (loadError: unknown) {
+            toast.error(loadError instanceof Error ? loadError.message : "Failed to load certificates");
         } finally {
             setIsLoading(false);
         }
     };
 
-    useEffect(() => {
-        loadCertificates();
-    }, []);
+  useEffect(() => {
+    api.get<CertificatesResponse>("/api/certificates/my")
+      .then((response) => {
+        setData(response);
+      })
+      .catch((loadError: unknown) => {
+        toast.error(loadError instanceof Error ? loadError.message : "Failed to load certificates");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []);
 
     const claimCertificate = async (courseId: string) => {
         try {
@@ -61,8 +70,8 @@ export default function CertificatesPage() {
             await api.post("/api/certificates/claim", { courseId });
             toast.success("Certificate claimed successfully!");
             await loadCertificates();
-        } catch (claimError: any) {
-            toast.error(claimError.message || "Failed to claim certificate");
+        } catch (claimError: unknown) {
+            toast.error(claimError instanceof Error ? claimError.message : "Failed to claim certificate");
         } finally {
             setClaimingCourseId(null);
         }

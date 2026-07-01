@@ -7,7 +7,7 @@ import { timeAgo } from "@/lib/time-ago";
 import type { NotificationItem } from "@/lib/notifications";
 import { NotificationIcon } from "@/lib/notifications";
 import StudentPortalShell from "@/components/StudentPortalShell";
-import { toast, getErrorMessage } from "@/lib/toast";
+import { toast } from "@/lib/toast";
 
 export default function StudentInboxPage() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -25,7 +25,16 @@ export default function StudentInboxPage() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
+  useEffect(() => {
+    api.get<{ notifications: NotificationItem[] }>("/api/notifications")
+      .then((data) => {
+        setNotifications(data.notifications || []);
+      })
+      .catch(() => {})
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
   // Load user profile for shell header
   useEffect(() => {

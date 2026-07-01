@@ -37,7 +37,12 @@ function NotificationsTab() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => {
+    api.get<{ notifications: NotificationItem[] }>("/api/notifications")
+      .then((data) => setNotifications(data.notifications || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   async function markAsRead(id: string) {
     await api.patch(`/api/notifications/${id}/read`, {});

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -30,12 +31,12 @@ export default function CreateCoursePage() {
 
   useEffect(() => {
     if (!thumbnailFile) {
-      setThumbnailPreview(null);
+      Promise.resolve().then(() => setThumbnailPreview(null));
       return;
     }
 
     const objectUrl = URL.createObjectURL(thumbnailFile);
-    setThumbnailPreview(objectUrl);
+    Promise.resolve().then(() => setThumbnailPreview(objectUrl));
 
     return () => URL.revokeObjectURL(objectUrl);
   }, [thumbnailFile]);
@@ -82,17 +83,17 @@ export default function CreateCoursePage() {
         uploadData.append("thumbnail", thumbnailFile);
         try {
           await api.post(`/api/admin/courses/${course.id}/thumbnail`, uploadData);
-        } catch (uploadError: any) {
+        } catch (uploadError: unknown) {
           toast.error(
-            uploadError?.message ||
+            (uploadError instanceof Error ? uploadError.message : String(uploadError)) ||
             "Course created, but thumbnail upload failed. You can upload it in the editor."
           );
         }
       }
 
       router.push(`/admin/courses/${course.id}`);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to create course");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to create course");
     } finally {
       setSubmitting(false);
     }
@@ -164,10 +165,13 @@ export default function CreateCoursePage() {
           <div className="flex flex-wrap items-center gap-4">
             <div className="h-20 w-28 overflow-hidden rounded-lg border border-border bg-card flex items-center justify-center text-xl">
               {thumbnailPreview ? (
-                <img
+                <Image
                   src={thumbnailPreview}
                   alt="Course thumbnail preview"
+                  width={112}
+                  height={80}
                   className="h-full w-full object-cover"
+                  unoptimized
                 />
               ) : (
                 "\ud83d\udcda"
@@ -223,7 +227,7 @@ export default function CreateCoursePage() {
         <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-muted-foreground">
           <p className="font-medium text-foreground mb-1">What happens next?</p>
           <p>
-            The course will be created as a <strong>Draft</strong>. You'll then
+            The course will be created as a <strong>Draft</strong>. You&apos;ll then
             be taken to the course editor where you can add modules, upload
             videos, design the landing page, and publish when ready.
           </p>

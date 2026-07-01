@@ -66,74 +66,54 @@ export default function ScheduleSessionPage() {
 
   // Fetch courses and instructors on mount
   useEffect(() => {
-    async function fetchCourses() {
-      try {
-        const data = await api.get<{ courses: Course[] }>("/api/admin/courses?limit=100");
-        setCourses(data.courses || []);
-      } catch (err: any) {
+    api.get<{ courses: Course[] }>("/api/admin/courses?limit=100")
+      .then((data) => setCourses(data.courses || []))
+      .catch((err: unknown) => {
         console.error("Failed to load courses:", err);
         toast.error("Failed to load courses. Please refresh.");
-      } finally {
-        setLoadingCourses(false);
-      }
-    }
-    async function fetchInstructors() {
-      try {
-        const data = await api.get<Instructor[]>("/api/admin/batches/instructors");
-        setInstructors(data || []);
-      } catch (err: any) {
+      })
+      .finally(() => setLoadingCourses(false));
+
+    api.get<Instructor[]>("/api/admin/batches/instructors")
+      .then((data) => setInstructors(data || []))
+      .catch((err: unknown) => {
         console.error("Failed to load instructors:", err);
-      } finally {
-        setLoadingInstructors(false);
-      }
-    }
-    fetchCourses();
-    fetchInstructors();
+      })
+      .finally(() => setLoadingInstructors(false));
   }, []);
 
   // Fetch batches and modules when course changes
   useEffect(() => {
     if (!selectedCourseId) {
-      setBatches([]);
-      setModules([]);
-      setForm((prev) => ({ ...prev, batchId: "", moduleId: "", instructorOverride: "", customJoinUrl: "" }));
+      Promise.resolve().then(() => {
+        setBatches([]);
+        setModules([]);
+        setForm((prev) => ({ ...prev, batchId: "", moduleId: "", instructorOverride: "", customJoinUrl: "" }));
+      });
       return;
     }
 
-    setForm((prev) => ({ ...prev, batchId: "", moduleId: "", instructorOverride: "", customJoinUrl: "" }));
-    
-    // Fetch batches for this course
-    async function fetchCourseBatches() {
+    Promise.resolve().then(() => {
       setLoadingBatches(true);
-      try {
-        const data = await api.get<Batch[]>(`/api/admin/batches?courseId=${selectedCourseId}`);
-        setBatches(Array.isArray(data) ? data : []);
-      } catch (err: any) {
+      setLoadingModules(true);
+      setForm((prev) => ({ ...prev, batchId: "", moduleId: "", instructorOverride: "", customJoinUrl: "" }));
+    });
+    
+    api.get<Batch[]>(`/api/admin/batches?courseId=${selectedCourseId}`)
+      .then((data) => setBatches(Array.isArray(data) ? data : []))
+      .catch((err: unknown) => {
         console.error("Failed to load course batches:", err);
         setBatches([]);
-      } finally {
-        setLoadingBatches(false);
-      }
-    }
+      })
+      .finally(() => setLoadingBatches(false));
 
-    // Fetch modules for this course
-    async function fetchCourseModules() {
-      setLoadingModules(true);
-      try {
-        const data = await api.get<{ modules: Module[] }>(
-          `/api/admin/courses/${selectedCourseId}`
-        );
-        setModules(data.modules || []);
-      } catch (err: any) {
+    api.get<{ modules: Module[] }>(`/api/admin/courses/${selectedCourseId}`)
+      .then((data) => setModules(data.modules || []))
+      .catch((err: unknown) => {
         console.error("Failed to load course modules:", err);
         setModules([]);
-      } finally {
-        setLoadingModules(false);
-      }
-    }
-
-    fetchCourseBatches();
-    fetchCourseModules();
+      })
+      .finally(() => setLoadingModules(false));
   }, [selectedCourseId]);
 
   const update = (field: string, value: string) => {
@@ -180,8 +160,8 @@ export default function ScheduleSessionPage() {
 
       router.push("/admin/sessions");
       router.refresh();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to schedule live session.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to schedule live session.");
     } finally {
       setSubmitting(false);
     }

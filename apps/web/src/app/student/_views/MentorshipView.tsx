@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toast, getErrorMessage } from "@/lib/toast";
+import { toast } from "@/lib/toast";
 import type { MentorshipTicket } from "@/lib/student-mock-data";
 import type { EnrolledCourse } from "@/lib/student-mock-data";
 

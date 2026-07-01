@@ -205,9 +205,9 @@ function NavGroup({
     });
 
     if (activeGroup && manuallyCollapsed !== activeGroup.label) {
-      setExpandedGroup(activeGroup.label);
+      Promise.resolve().then(() => setExpandedGroup(activeGroup.label));
     }
-  }, [pathname, collapsed, items]);
+  }, [pathname, collapsed, items, manuallyCollapsed]);
 
   const toggleGroup = (groupLabel: string) => {
     setExpandedGroup((prev) => {
@@ -323,10 +323,8 @@ function NavGroup({
 // Admin sidebar with collapsible multi-level navigation
 export default function AdminSidebar({
   collapsed = false,
-  onToggleCollapse,
 }: {
   collapsed?: boolean;
-  onToggleCollapse: () => void;
 }) {
   const pathname = usePathname();
   const router = useRouter();

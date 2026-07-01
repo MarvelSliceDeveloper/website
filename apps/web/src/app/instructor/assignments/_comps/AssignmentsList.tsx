@@ -5,10 +5,9 @@ interface Props {
   assignments: Assignment[];
   selectedId: string | null;
   onSelect: (a: Assignment) => void;
-  onBack: () => void;
 }
 
-export function AssignmentsList({ assignments, selectedId, onSelect, onBack }: Props) {
+export function AssignmentsList({ assignments, selectedId, onSelect }: Props) {
   if (assignments.length === 0) {
     return (
       <div className="glass-card p-12 text-center border border-border/80">

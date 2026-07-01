@@ -5,12 +5,10 @@ import type { EnrolledCourse } from "@/lib/student-mock-data";
 
 interface CourseCompletedViewProps {
   courses: EnrolledCourse[];
-  onGoBack: () => void;
 }
 
 export default function CourseCompletedView({
   courses,
-  onGoBack,
 }: CourseCompletedViewProps) {
   const completedCourses = courses.filter((c) => c.status === "COMPLETED");
 

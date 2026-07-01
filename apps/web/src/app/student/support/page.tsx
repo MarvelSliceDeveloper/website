@@ -17,7 +17,7 @@ import {
   IconMessageCircle,
   IconClock,
 } from "@tabler/icons-react";
-import { toast, getErrorMessage } from "@/lib/toast";
+import { toast } from "@/lib/toast";
 
 interface SupportMessage {
   id: string;
@@ -69,7 +69,16 @@ export default function StudentSupportPage() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchTickets(); }, [fetchTickets]);
+  useEffect(() => {
+    api.get<{ tickets: SupportTicket[] }>("/api/tickets?type=SUPPORT")
+      .then((data) => {
+        setTickets(data.tickets || []);
+      })
+      .catch(() => {})
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
   // Load user profile for shell header
   useEffect(() => {

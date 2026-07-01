@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, type MouseEvent, type ChangeEvent } from "react";
+import { useState, useRef, useEffect, useCallback, type MouseEvent } from "react";
 
 type VideoPlayerProps = {
   url?: string;
@@ -65,7 +65,7 @@ function VideoPlayer({ url = "", initialTime = 0, onProgress }: VideoPlayerProps
 
   const togglePlay = () => {
     if (!videoRef.current) { setPlaying(p => !p); return; }
-    videoRef.current.paused ? videoRef.current.play() : videoRef.current.pause();
+    if (videoRef.current.paused) { videoRef.current.play(); } else { videoRef.current.pause(); }
     setPlaying(p => !p);
   };
 
@@ -90,7 +90,9 @@ function VideoPlayer({ url = "", initialTime = 0, onProgress }: VideoPlayerProps
   const pct = duration ? (current / duration) * 100 : 0;
 
   useEffect(() => {
-    setCurrent(initialTime || 0);
+    Promise.resolve().then(() => {
+      setCurrent(initialTime || 0);
+    });
     if (videoRef.current && typeof initialTime === "number") {
       videoRef.current.currentTime = initialTime;
     }
@@ -302,255 +304,5 @@ const navItems: { id: string; icon: IconKey; active?: boolean }[] = [
   { id: "calendar", icon: "calendar" },
   { id: "chat", icon: "chat", active: true },
 ];
-
-function Sidebar({ active, setActive }: { active: string; setActive: (id: string) => void }) {
-  return (
-    <div style={{
-      width: 56, minHeight: "100vh", background: "#0d0d10",
-      borderRight: "1px solid rgba(255,255,255,0.05)",
-      display: "flex", flexDirection: "column", alignItems: "center",
-      padding: "14px 0", gap: 4, flexShrink: 0,
-    }}>
-      {/* Avatar */}
-      <div style={{
-        width: 34, height: 34, borderRadius: 10,
-        background: "linear-gradient(135deg, #7c6ee0, #5f50c0)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        color: "#fff", fontSize: 14, fontWeight: 700,
-        fontFamily: "'Plus Jakarta Sans', sans-serif",
-        marginBottom: 18, flexShrink: 0, cursor: "pointer",
-        boxShadow: "0 2px 10px rgba(108,92,231,0.35)",
-      }}>L</div>
-
-      {navItems.map(item => (
-        <button key={item.id} onClick={() => setActive(item.id)} style={{
-          width: 40, height: 40, borderRadius: 10,
-          background: active === item.id ? "rgba(108,92,231,0.2)" : "transparent",
-          border: active === item.id ? "1px solid rgba(108,92,231,0.3)" : "1px solid transparent",
-          color: active === item.id ? "#a09af0" : "rgba(255,255,255,0.35)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", transition: "all 0.2s",
-        }}
-          onMouseEnter={e => { if (active !== item.id) { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; } }}
-          onMouseLeave={e => { if (active !== item.id) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.35)"; } }}
-        >
-          <Icon d={icons[item.icon]} size={18} strokeWidth={active === item.id ? 1.8 : 1.5} />
-        </button>
-      ))}
-    </div>
-  );
-}
-
-/* ─── Header ───────────────────────────────────────────────────── */
-function Header() {
-  const [searchFocused, setSearchFocused] = useState(false);
-  return (
-    <div style={{
-      height: 58, background: "#0d0d10",
-      borderBottom: "1px solid rgba(255,255,255,0.05)",
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "0 24px", flexShrink: 0, gap: 16,
-    }}>
-      {/* Left */}
-      <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ color: "#f0ede8", fontSize: 15, fontWeight: 600, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Welcome back</span>
-          <span style={{ fontSize: 15 }}>👋</span>
-        </div>
-        <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: "'Plus Jakarta Sans', sans-serif", marginTop: 1 }}>
-          Here's what's happening today
-        </div>
-      </div>
-
-      {/* Right */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        {/* Search */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: 8,
-          background: searchFocused ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.04)",
-          border: `1px solid ${searchFocused ? "rgba(108,92,231,0.4)" : "rgba(255,255,255,0.07)"}`,
-          borderRadius: 10, padding: "7px 12px",
-          transition: "all 0.2s", cursor: "text", minWidth: 180,
-        }}>
-          <Icon d={icons.search} size={14} stroke="rgba(255,255,255,0.35)" strokeWidth={2} />
-          <input
-            placeholder="Search content"
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
-            style={{ background: "none", border: "none", outline: "none", color: "rgba(255,255,255,0.7)", fontSize: 12, fontFamily: "'Plus Jakarta Sans', sans-serif", width: "100%" }}
-          />
-          <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <span style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "rgba(255,255,255,0.3)", fontSize: 10, padding: "2px 5px", fontFamily: "monospace" }}>⌘</span>
-            <span style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 4, color: "rgba(255,255,255,0.3)", fontSize: 10, padding: "2px 5px", fontFamily: "monospace" }}>K</span>
-          </div>
-        </div>
-
-        {/* Bell */}
-        <div style={{ position: "relative", cursor: "pointer" }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.07)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "rgba(255,255,255,0.55)",
-          }}>
-            <Icon d={icons.bell} size={16} strokeWidth={1.8} />
-          </div>
-          <div style={{
-            position: "absolute", top: -3, right: -3,
-            width: 17, height: 17, borderRadius: "50%",
-            background: "#7c6ee0",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", fontSize: 9, fontWeight: 700,
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
-            border: "2px solid #0d0d10",
-          }}>3</div>
-        </div>
-
-        {/* Profile */}
-        <div style={{
-          width: 34, height: 34, borderRadius: 9,
-          background: "rgba(255,255,255,0.06)",
-          border: "1px solid rgba(255,255,255,0.1)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          color: "rgba(255,255,255,0.5)", cursor: "pointer",
-        }}>
-          <Icon d={icons.more} size={16} strokeWidth={2.5} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Main Content ─────────────────────────────────────────────── */
-function CourseContent() {
-  const chapters = [
-    { num: "01", title: "Introduction to the Course", dur: "5:20", done: true },
-    { num: "02", title: "Setting Up Your Environment", dur: "12:44", done: true },
-    { num: "03", title: "Core Concepts Deep Dive", dur: "37:45", active: true },
-    { num: "04", title: "Building Your First Project", dur: "28:10" },
-    { num: "05", title: "Advanced Patterns", dur: "41:03" },
-    { num: "06", title: "Testing & Deployment", dur: "19:55" },
-  ];
-
-  return (
-    <div style={{ flex: 1, display: "flex", gap: 0, height: "100%", overflow: "hidden" }}>
-      {/* Video area */}
-      <div style={{ flex: 1, padding: 24, overflowY: "auto", display: "flex", flexDirection: "column", gap: 20 }}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-            <span style={{ background: "rgba(108,92,231,0.15)", border: "1px solid rgba(108,92,231,0.25)", color: "#a09af0", fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 6, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-              Chapter 03
-            </span>
-            <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 10 }}>·</span>
-            <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>37:45</span>
-          </div>
-          <h1 style={{ color: "#f0ede8", fontSize: 18, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", margin: 0, lineHeight: 1.3 }}>
-            Core Concepts Deep Dive
-          </h1>
-          <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, fontFamily: "'Plus Jakarta Sans', sans-serif", margin: "8px 0 0", lineHeight: 1.6 }}>
-            Master the foundational concepts with hands-on examples and real-world applications.
-          </p>
-        </div>
-
-        <VideoPlayer />
-
-        {/* Progress */}
-        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: 16, display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-              <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Course Progress</span>
-              <span style={{ color: "#a09af0", fontSize: 11, fontFamily: "'DM Mono', monospace" }}>38%</span>
-            </div>
-            <div style={{ height: 4, background: "rgba(255,255,255,0.07)", borderRadius: 99 }}>
-              <div style={{ width: "38%", height: "100%", background: "linear-gradient(90deg, #7c6ee0, #a09af0)", borderRadius: 99 }} />
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 16 }}>
-            {[["2", "Completed"], ["1", "In Progress"], ["3", "Remaining"]].map(([n, l]) => (
-              <div key={l} style={{ textAlign: "center" }}>
-                <div style={{ color: "#f0ede8", fontSize: 16, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{n}</div>
-                <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 10, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{l}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Chapter list */}
-      <div style={{
-        width: 280, borderLeft: "1px solid rgba(255,255,255,0.05)",
-        overflowY: "auto", padding: "20px 0", flexShrink: 0,
-      }}>
-        <div style={{ padding: "0 18px 14px", color: "rgba(255,255,255,0.4)", fontSize: 10, fontWeight: 600, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-          Chapters
-        </div>
-        {chapters.map(ch => (
-          <div key={ch.num} style={{
-            display: "flex", alignItems: "flex-start", gap: 12,
-            padding: "12px 18px", cursor: "pointer",
-            background: ch.active ? "rgba(108,92,231,0.1)" : "transparent",
-            borderLeft: ch.active ? "2px solid #7c6ee0" : "2px solid transparent",
-            transition: "background 0.2s",
-          }}
-            onMouseEnter={e => { if (!ch.active) e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
-            onMouseLeave={e => { if (!ch.active) e.currentTarget.style.background = "transparent"; }}
-          >
-            <div style={{
-              width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-              background: ch.done ? "rgba(108,92,231,0.2)" : ch.active ? "rgba(108,92,231,0.25)" : "rgba(255,255,255,0.05)",
-              border: `1px solid ${ch.done || ch.active ? "rgba(108,92,231,0.3)" : "rgba(255,255,255,0.08)"}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: ch.done ? "#a09af0" : ch.active ? "#c4bff8" : "rgba(255,255,255,0.25)",
-              fontSize: 10, fontWeight: 700, fontFamily: "'DM Mono', monospace",
-            }}>
-              {ch.done ? "✓" : ch.num}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ color: ch.active ? "#e8e5ff" : ch.done ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.45)", fontSize: 12, fontWeight: ch.active ? 600 : 400, fontFamily: "'Plus Jakarta Sans', sans-serif", lineHeight: 1.35, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {ch.title}
-              </div>
-              <div style={{ color: "rgba(255,255,255,0.25)", fontSize: 10, marginTop: 3, fontFamily: "'DM Mono', monospace" }}>
-                {ch.dur}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Root App ─────────────────────────────────────────────────── */
-function VideoPlayerDemo() {
-  const [activeNav, setActiveNav] = useState("videos");
-
-  return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@300;400&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #0d0d10; }
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
-        input[type=range] { -webkit-appearance: none; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #fff; cursor: pointer; }
-        select option { background: #0d0d10; color: rgba(255,255,255,0.8); }
-      `}</style>
-
-      <div style={{ display: "flex", height: "100vh", background: "#0d0d10", overflow: "hidden" }}>
-        <Sidebar active={activeNav} setActive={setActiveNav} />
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          <Header />
-          <div style={{ flex: 1, overflow: "hidden" }}>
-            <CourseContent />
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
 
 export default VideoPlayer;

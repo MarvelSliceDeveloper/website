@@ -25,16 +25,18 @@ type NotificationItem = {
 
 // Top header bar with notifications, theme toggle, and settings
 export default function Header({
-  isSidebarCollapsed = false,
-  onToggleSidebar = () => { },
   inboxHref = "/admin/inbox",
 }: {
-  isSidebarCollapsed?: boolean;
-  onToggleSidebar?: () => void;
   inboxHref?: string;
 }) {
   const router = useRouter();
-  const [theme, setTheme] = useState<"dark" | "light">("light");
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    if (typeof window !== "undefined") {
+      const saved = window.localStorage.getItem("lms-theme");
+      return saved === "dark" ? "dark" : "light";
+    }
+    return "light";
+  });
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -52,10 +54,19 @@ export default function Header({
   }, []);
 
   useEffect(() => {
-    loadNotifications();
-    const interval = setInterval(loadNotifications, 30000);
+    const doFetch = () => {
+      api.get<{ notifications: NotificationItem[]; unreadCount: number }>("/api/notifications")
+        .then((data) => {
+          setNotifications(data.notifications || []);
+          setUnreadCount(data.unreadCount || 0);
+        })
+        .catch(() => {});
+    };
+
+    doFetch();
+    const interval = setInterval(doFetch, 30000);
     return () => clearInterval(interval);
-  }, [loadNotifications]);
+  }, []);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -70,7 +81,6 @@ export default function Header({
   useEffect(() => {
     const saved = window.localStorage.getItem("lms-theme");
     const initialTheme = saved === "dark" ? "dark" : "light";
-    setTheme(initialTheme);
     document.documentElement.setAttribute("data-theme", initialTheme);
   }, []);
 

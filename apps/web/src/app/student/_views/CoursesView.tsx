@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { IconArrowRight, IconClock, IconSearch } from "@tabler/icons-react";
 import type { ViewState } from "../_types/student-portal";
 import type { EnrolledCourse } from "@/lib/student-mock-data";
@@ -104,13 +105,15 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
                 {/* Large Thumbnail */}
                 <div className="relative h-40 w-full overflow-hidden bg-card">
                   {(() => {
-                    const thumb = (course as any).thumbnailUrl || (course as any).thumbnail;
+                    const thumb = (course as EnrolledCourse & { thumbnailUrl?: string }).thumbnailUrl || course.thumbnail;
                     const isValidUrl = thumb && (thumb.startsWith("/") || thumb.startsWith("http"));
                     return isValidUrl ? (
-                      <img
+                      <Image
                         src={thumb}
-                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                        className="object-cover transition-transform group-hover:scale-105"
                         alt={course.title}
+                        fill
+                        unoptimized
                         onError={(e) => {
                           e.currentTarget.style.display = "none";
                           const parent = e.currentTarget.parentElement;

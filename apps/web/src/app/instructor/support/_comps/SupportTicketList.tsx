@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { api } from "@/lib/api";
 import { timeAgo } from "@/lib/time-ago";
-import { Skeleton } from "@/components/shared/Skeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import {
@@ -36,7 +35,16 @@ export default function SupportTicketList({ onSelectTicket, onNewTicket }: Suppo
     }
   }, []);
 
-  useEffect(() => { fetchTickets(); }, [fetchTickets]);
+  useEffect(() => {
+    api.get<{ tickets: SupportTicket[] }>("/api/tickets?type=SUPPORT")
+      .then((data) => {
+        setTickets(data.tickets || []);
+      })
+      .catch(() => {})
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
   const countsByTab = useMemo(() => {
     const counts: Record<FilterTab, number> = { all: tickets.length, open: 0, in_progress: 0, resolved: 0, closed: 0 };

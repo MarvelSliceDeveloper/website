@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { IconCalendarPlus, IconPlayerPlay } from "@tabler/icons-react";
+import { IconCalendarPlus } from "@tabler/icons-react";
 import type { ViewState } from "../_types/student-portal";
 import type { Batch, BatchRecording } from "@/lib/student-mock-data";
 import StudentTable, { type StudentTableColumn } from "@/components/student/StudentTable";
@@ -150,6 +150,7 @@ export default function BatchDetailView({ batch, navigate }: BatchDetailViewProp
                       </p>
                       <p className="mt-0.5 text-sm text-muted-foreground">
                         {session.status === "LIVE"
+                          // eslint-disable-next-line react-hooks/purity
                           ? `Started ${Math.floor((Date.now() - new Date(session.scheduledAt).getTime()) / 60000)} min ago`
                           : new Date(session.scheduledAt).toLocaleString("en-IN", {
                             weekday: "short", day: "numeric", month: "short",

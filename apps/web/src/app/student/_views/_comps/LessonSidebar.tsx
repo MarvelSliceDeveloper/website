@@ -1,5 +1,5 @@
 import { IconCheck, IconPlayerPlay, IconChevronDown, IconChevronUp, IconBookmark, IconFileDescription } from "@tabler/icons-react";
-import type { CourseContentData, CourseModule } from "./types";
+import type { CourseContentData } from "./types";
 
 interface Props {
   data: CourseContentData;

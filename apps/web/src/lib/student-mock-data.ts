@@ -159,7 +159,6 @@ export interface OverdueAssignment {
 
 const now = new Date();
 const inOneHour = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
-const inTwoHours = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
 const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
 const tomorrowPlusTwoHours = new Date(now.getTime() + 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
 const inTwoDays = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString();

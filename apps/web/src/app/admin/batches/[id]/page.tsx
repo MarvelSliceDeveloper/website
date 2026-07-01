@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
@@ -45,16 +45,11 @@ const statusStyles: Record<string, string> = {
 
 export default function BatchDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   const [batch, setBatch] = useState<Batch | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"students" | "sessions">("students");
 
-  // Add student form
-  const [studentEmail, setStudentEmail] = useState("");
-  const [addingStudent, setAddingStudent] = useState(false);
-
-  const fetchBatch = useCallback(async () => {
+  const fetchBatch = async () => {
     try {
       const data = await api.get<Batch>(`/api/admin/batches/${id}`);
       setBatch(data);
@@ -63,11 +58,14 @@ export default function BatchDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  };
 
   useEffect(() => {
-    fetchBatch();
-  }, [fetchBatch]);
+    api.get<Batch>(`/api/admin/batches/${id}`)
+      .then(setBatch)
+      .catch(() => setBatch(null))
+      .finally(() => setLoading(false));
+  }, [id]);
 
   const handleRemoveStudent = async (userId: string, name: string) => {
     if (!confirm(`Remove ${name} from this batch?`)) return;

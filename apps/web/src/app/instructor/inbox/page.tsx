@@ -3,11 +3,18 @@
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { IconTrash, IconArrowLeft, IconBell, IconCheck, IconEye, IconMessage } from "@tabler/icons-react";
-import { toast, getErrorMessage } from "@/lib/toast";
+import { toast } from "@/lib/toast";
 import { useRouter } from "next/navigation";
 import { timeAgo } from "@/lib/time-ago";
 import type { NotificationItem } from "@/lib/notifications";
 import { NotificationIcon } from "@/lib/notifications";
+
+interface MessageRecord {
+  id: string;
+  body: string;
+  senderId: string;
+  createdAt: string;
+}
 
 interface Conversation {
   id: string;
@@ -80,7 +87,16 @@ function NotificationsTab() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => {
+    api.get<{ notifications: NotificationItem[] }>("/api/notifications")
+      .then((data) => {
+        setNotifications(data.notifications || []);
+      })
+      .catch(() => {})
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
   async function markAsRead(id: string) {
     await api.patch(`/api/notifications/${id}/read`, {});
@@ -151,7 +167,7 @@ function MessagesTab() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [thread, setThread] = useState<any[]>([]);
+  const [thread, setThread] = useState<MessageRecord[]>([]);
   const [newMessage, setNewMessage] = useState("");
 
   const fetchConversations = useCallback(async () => {
@@ -162,12 +178,21 @@ function MessagesTab() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchConversations(); }, [fetchConversations]);
+  useEffect(() => {
+    api.get<{ conversations: Conversation[] }>("/api/messages/conversations")
+      .then((data) => {
+        setConversations(data.conversations || []);
+      })
+      .catch(() => {})
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
   const openThread = async (userId: string) => {
     setSelectedUserId(userId);
     try {
-      const data = await api.get<{ messages: any[] }>(`/api/messages/${userId}`);
+      const data = await api.get<{ messages: MessageRecord[] }>(`/api/messages/${userId}`);
       setThread(data.messages || []);
     } catch { setThread([]); }
   };
@@ -222,7 +247,7 @@ function MessagesTab() {
         {selectedUserId ? (
           <>
             <div className="max-h-80 overflow-y-auto p-4 space-y-3">
-              {thread.map((msg: any) => (
+              {thread.map((msg: MessageRecord) => (
                 <div
                   key={msg.id}
                   className={`flex ${msg.senderId === selectedUserId ? "justify-start" : "justify-end"}`}

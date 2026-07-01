@@ -8,12 +8,7 @@ import {
   IconPlus,
   IconTrash,
   IconCheck,
-  IconX,
-  IconUsers,
   IconCalendar,
-  IconAward,
-  IconBook,
-  IconMessageCircle,
 } from "@tabler/icons-react";
 import { toast, getErrorMessage } from "@/lib/toast";
 
@@ -145,9 +140,9 @@ export default function InstructorAssignmentsContent() {
         ]);
         setBatches(batchesRes || []);
         setAssignments(assignmentsRes.assignments || []);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Error loading instructor assignment data:", err);
-        if (err.message?.includes("Authentication") || err.message?.includes("401")) {
+        if (err instanceof Error && (err.message?.includes("Authentication") || err.message?.includes("401"))) {
           window.location.href = "/login";
         }
       } finally {
@@ -172,29 +167,21 @@ export default function InstructorAssignmentsContent() {
 
   // Fetch submissions when selected assignment changes
   useEffect(() => {
-    if (!selectedAssignment) {
-      setSubmissions([]);
-      setSelectedSubmission(null);
-      return;
-    }
+    if (!selectedAssignment) return;
 
     const assignmentId = selectedAssignment.id;
 
-    async function loadSubmissions() {
-      try {
-        setLoadingSubmissions(true);
-        setSelectedSubmission(null);
-        const res = await api.get<{ submissions: StudentSubmission[] }>(
-          `/api/assignments/${assignmentId}/submissions`
-        );
-        setSubmissions(res.submissions || []);
-      } catch (err) {
-        console.error("Error loading submissions:", err);
-      } finally {
-        setLoadingSubmissions(false);
-      }
-    }
-    loadSubmissions();
+    Promise.resolve().then(() => setSelectedSubmission(null));
+
+    api.get<{ submissions: StudentSubmission[] }>(
+      `/api/assignments/${assignmentId}/submissions`
+    ).then((res) => {
+      setSubmissions(res.submissions || []);
+    }).catch((err) => {
+      console.error("Error loading submissions:", err);
+    }).finally(() => {
+      setLoadingSubmissions(false);
+    });
   }, [selectedAssignment]);
 
   // Fetches detailed response answers and scores for a specific student submission.
@@ -242,7 +229,7 @@ export default function InstructorAssignmentsContent() {
           }
           : null
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error("Error saving grade: " + getErrorMessage(err));
     } finally {
       setSubmitting(false);
@@ -319,7 +306,7 @@ export default function InstructorAssignmentsContent() {
       const res = await api.post<{ fileUrl: string }>("/api/assignments/upload-pdf", formData);
       setFormQuestionPdfUrl(res.fileUrl);
       toast.success("Question PDF uploaded successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error("Upload failed: " + getErrorMessage(err));
     } finally {
       setUploadingPdf(false);
@@ -407,7 +394,7 @@ export default function InstructorAssignmentsContent() {
       setAssignments(assignmentsRes.assignments || []);
       setActiveTab("list");
       toast.success("Assignment created successfully!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error("Error creating assignment: " + getErrorMessage(err));
     } finally {
       setSubmitting(false);
@@ -890,10 +877,6 @@ export default function InstructorAssignmentsContent() {
                         const response = selectedSubmission.questionResponses.find(
                           (r) => r.questionId === q.id
                         );
-                        const selectedOption = q.options.find(
-                          (o) => o.id === response?.selectedOptionId
-                        );
-
                         return (
                           <div key={q.id} className="p-3 rounded-lg border border-border/50 bg-background/30 text-xs">
                             <p className="font-semibold text-foreground">
@@ -1025,7 +1008,7 @@ export default function InstructorAssignmentsContent() {
 
             {filteredAssignments.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground text-sm">
-                📚 No assignments posted yet. Click "+ Create Assignment" to post one!
+                📚 No assignments posted yet. Click &ldquo;+ Create Assignment&rdquo; to post one!
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

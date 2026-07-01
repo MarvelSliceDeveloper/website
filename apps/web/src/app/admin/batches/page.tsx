@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 
@@ -39,17 +39,16 @@ export default function AdminBatchesPage() {
 
 function BatchesPageContent() {
   const searchParams = useSearchParams();
-  const statusParam = searchParams.get("status") || "";
+  const router = useRouter();
+  const statusFilter = searchParams.get("status") || "";
 
   const [batches, setBatches] = useState<Batch[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState(statusParam);
 
-  const fetchBatches = async () => {
-    setLoading(true);
+  const fetchBatches = async (status: string) => {
     try {
       const params: Record<string, string> = {};
-      if (statusFilter) params.status = statusFilter;
+      if (status) params.status = status;
       const data = await api.get<Batch[]>("/api/admin/batches", params);
       setBatches(data);
     } catch {
@@ -60,11 +59,10 @@ function BatchesPageContent() {
   };
 
   useEffect(() => {
-    setStatusFilter(statusParam);
-  }, [statusParam]);
-
-  useEffect(() => {
-    fetchBatches();
+    api.get<Batch[]>("/api/admin/batches", statusFilter ? { status: statusFilter } : {})
+      .then(setBatches)
+      .catch(() => setBatches([]))
+      .finally(() => setLoading(false));
   }, [statusFilter]);
 
   const handleDelete = async (id: string, name: string) => {
@@ -72,7 +70,7 @@ function BatchesPageContent() {
     try {
       await api.delete(`/api/admin/batches/${id}`);
       toast.success(`Batch "${name}" deleted`);
-      fetchBatches();
+      fetchBatches(statusFilter);
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
@@ -95,7 +93,7 @@ function BatchesPageContent() {
         {["", "UPCOMING", "ACTIVE", "COMPLETED"].map((s) => (
           <button
             key={s}
-            onClick={() => setStatusFilter(s)}
+            onClick={() => router.push(s ? `/admin/batches?status=${s}` : "/admin/batches")}
             className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
               statusFilter === s
                 ? "bg-primary/15 text-primary-hover border border-primary/25"

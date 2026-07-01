@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { toast, getErrorMessage } from "@/lib/toast";
+import { toast } from "@/lib/toast";
 import { api } from "@/lib/api";
 
 type MentorshipTicket = {

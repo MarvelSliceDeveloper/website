@@ -36,6 +36,9 @@ export function useResizable({
   const sizeRef = useRef({ width: initialWidth, height: initialHeight });
   const dragStartRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
+  const mouseUpRef = useRef<(() => void) | null>(null);
+  const touchEndRef = useRef<((() => void) | null)>(null);
+
   const clampSize = useCallback(
     (w: number, h: number) => ({
       width: Math.max(minWidth, Math.min(w, maxWidth)),
@@ -67,7 +70,7 @@ export function useResizable({
     setIsResizing(false);
     onResizeEnd?.(sizeRef.current);
     document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("mouseup", handleMouseUp);
+    document.removeEventListener("mouseup", mouseUpRef.current!);
   }, [handleMouseMove, onResizeEnd]);
 
   const handleTouchMove = useCallback(
@@ -94,8 +97,13 @@ export function useResizable({
     setIsResizing(false);
     onResizeEnd?.(sizeRef.current);
     document.removeEventListener("touchmove", handleTouchMove);
-    document.removeEventListener("touchend", handleTouchEnd);
+    document.removeEventListener("touchend", touchEndRef.current!);
   }, [handleTouchMove, onResizeEnd]);
+
+  useEffect(() => {
+    mouseUpRef.current = handleMouseUp;
+    touchEndRef.current = handleTouchEnd;
+  }, [handleMouseUp, handleTouchEnd]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {

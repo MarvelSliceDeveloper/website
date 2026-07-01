@@ -4,17 +4,13 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import {
-  IconVideo,
   IconRefresh,
   IconUsers,
-  IconCalendar,
   IconCheck,
-  IconSearch,
   IconX,
   IconEdit,
   IconTrash,
   IconPlus,
-  IconLink
 } from "@tabler/icons-react";
 import { toast, getErrorMessage } from "@/lib/toast";
 
@@ -84,9 +80,9 @@ function SessionsPageContent() {
 
   // CRUD states
   const [courses, setCourses] = useState<Course[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
-  const [loadingCourses, setLoadingCourses] = useState(false);
   const [loadingBatches, setLoadingBatches] = useState(false);
   const [loadingModules, setLoadingModules] = useState(false);
 
@@ -110,9 +106,9 @@ function SessionsPageContent() {
     try {
       const response = await api.get<{ sessions?: Session[] }>("/api/sessions");
       setSessions(Array.isArray(response.sessions) ? response.sessions : []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      if (err.message?.includes("Authentication") || err.message?.includes("401")) {
+      if (err instanceof Error && (err.message?.includes("Authentication") || err.message?.includes("401"))) {
         window.location.href = "/login";
       }
       setSessions([]);
@@ -122,7 +118,20 @@ function SessionsPageContent() {
   };
 
   useEffect(() => {
-    fetchSessions();
+    api.get<{ sessions?: Session[] }>("/api/sessions")
+      .then((response) => {
+        setSessions(Array.isArray(response.sessions) ? response.sessions : []);
+      })
+      .catch((err: unknown) => {
+        console.error(err);
+        if (err instanceof Error && (err.message?.includes("Authentication") || err.message?.includes("401"))) {
+          window.location.href = "/login";
+        }
+        setSessions([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   // Fetch courses when create modal opens
@@ -150,30 +159,23 @@ function SessionsPageContent() {
 
   // Fetch batches & modules when course selection changes
   useEffect(() => {
-    if (!form.courseId) {
-      setBatches([]);
-      setModules([]);
-      return;
-    }
+    if (!form.courseId) return;
 
-    async function loadCourseOptions() {
-      setLoadingBatches(true);
-      setLoadingModules(true);
-      try {
-        const batchData = await api.get<Batch[]>(`/api/admin/batches?courseId=${form.courseId}`);
+    api.get<Batch[]>(`/api/admin/batches?courseId=${form.courseId}`)
+      .then((batchData) => {
         setBatches(Array.isArray(batchData) ? batchData : []);
-
-        const courseData = await api.get<{ modules: Module[] }>(`/api/admin/courses/${form.courseId}`);
+        return api.get<{ modules: Module[] }>(`/api/admin/courses/${form.courseId}`);
+      })
+      .then((courseData) => {
         setModules(courseData.modules || []);
-      } catch (err) {
+      })
+      .catch((err) => {
         console.error(err);
-      } finally {
+      })
+      .finally(() => {
         setLoadingBatches(false);
         setLoadingModules(false);
-      }
-    }
-
-    loadCourseOptions();
+      });
   }, [form.courseId]);
 
   const handleCreateSession = async (e: React.FormEvent) => {
@@ -192,7 +194,7 @@ function SessionsPageContent() {
 
       setShowCreateModal(false);
       fetchSessions();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
       setSubmitting(false);
@@ -228,7 +230,7 @@ function SessionsPageContent() {
       setShowEditModal(false);
       setEditingSession(null);
       fetchSessions();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
       setSubmitting(false);
@@ -242,7 +244,7 @@ function SessionsPageContent() {
       await api.delete(`/api/sessions/${sessionId}`);
       toast.success("Session cancelled successfully!");
       fetchSessions();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     }
   };
@@ -253,7 +255,7 @@ function SessionsPageContent() {
       await api.post(`/api/recordings/${sessionId}/sync`);
       toast.success("Recording synced successfully! The video is now available for students.");
       fetchSessions();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
       setSyncingId(null);
@@ -266,7 +268,7 @@ function SessionsPageContent() {
     try {
       const data = await api.get<{ attendance: AttendanceRecord[] }>(`/api/attendance/${session.id}`);
       setAttendance(data.attendance || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setAttendance([]);
     } finally {

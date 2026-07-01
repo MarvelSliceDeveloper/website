@@ -2,10 +2,21 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import ModuleStudyMaterialsSection from "./_components/ModuleStudyMaterialsSection";
 import { toast } from "sonner";
+
+type Resource = {
+  id: string;
+  name: string;
+  originalName: string;
+  url: string;
+  fileType: string;
+  size: number;
+  uploadedAt: string;
+};
 
 type Module = {
   id: string;
@@ -17,7 +28,7 @@ type Module = {
   videoEmbedId: string | null;
   durationSeconds: number | null;
   isFreePreview: boolean;
-  resources: any[];
+  resources: Resource[];
 };
 
 type Course = {
@@ -106,8 +117,19 @@ export default function CourseDetailPage() {
   }, [id]);
 
   useEffect(() => {
-    fetchCourse();
-  }, [fetchCourse]);
+    api.get<Course>(`/api/admin/courses/${id}`)
+      .then((data) => {
+        setCourse(data);
+        setForm({
+          title: data.title,
+          description: data.description,
+          price: data.price,
+          category: data.category || "",
+        });
+      })
+      .catch(() => toast.error("Failed to load course"))
+      .finally(() => setLoading(false));
+  }, [id]);
 
   const handleSaveCourse = async () => {
     setSaving(true);
@@ -120,8 +142,8 @@ export default function CourseDetailPage() {
       });
       toast.success("Course saved!");
       fetchCourse();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to save");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to save");
     } finally {
       setSaving(false);
     }
@@ -143,8 +165,8 @@ export default function CourseDetailPage() {
       await api.post(`/api/admin/courses/${id}/thumbnail`, uploadData);
       toast.success("Thumbnail updated.");
       fetchCourse();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to upload thumbnail");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to upload thumbnail");
     } finally {
       setThumbnailUploading(false);
     }
@@ -152,21 +174,21 @@ export default function CourseDetailPage() {
 
   const handlePublish = async () => {
     try {
-      const result = await api.post<{ published: boolean; checklist: any[] }>(
+      const result = await api.post<{ published: boolean; checklist: ChecklistItem[] }>(
         `/api/admin/courses/${id}/publish`
       );
       if (!result.published) {
         const fails = result.checklist
-          .filter((c: any) => !c.passed)
-          .map((c: any) => `\u2022 ${c.item}`)
+          .filter((c: ChecklistItem) => !c.passed)
+          .map((c: ChecklistItem) => `\u2022 ${c.item}`)
           .join("\n");
         toast.error(`Cannot publish:\n${fails}`);
         return;
       }
       toast.success("Course published");
       fetchCourse();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to publish");
     }
   };
 
@@ -175,8 +197,8 @@ export default function CourseDetailPage() {
       await api.post(`/api/admin/courses/${id}/unpublish`);
       toast.success("Course unpublished");
       fetchCourse();
-    } catch (err: any) {
-      toast.error(err.message);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to unpublish");
     }
   };
 
@@ -186,8 +208,8 @@ export default function CourseDetailPage() {
       await api.delete(`/api/admin/courses/${id}`);
       toast.success("Course archived");
       router.push("/admin/courses");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to archive course");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to archive course");
     }
   };
 
@@ -283,7 +305,7 @@ export default function CourseDetailPage() {
 
       {/* Live Sessions Tab */}
       {activeTab === "sessions" && (
-        <SessionsTab courseId={id} courseTitle={course.title} />
+        <SessionsTab courseId={id} />
       )}
 
       {/* Recordings Tab */}
@@ -309,10 +331,23 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
   );
 }
 
+type ChecklistItem = {
+  item: string;
+  passed: boolean;
+  message?: string;
+};
+
+type CourseFormData = {
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+};
+
 function CourseDetailsTab({
   course, form, setForm, thumbnailUploading, saving, onThumbnailUpload, onSave,
 }: {
-  course: Course; form: any; setForm: any; thumbnailUploading: boolean; saving: boolean; onThumbnailUpload: (file: File) => void; onSave: () => void;
+  course: Course; form: CourseFormData; setForm: React.Dispatch<React.SetStateAction<CourseFormData>>; thumbnailUploading: boolean; saving: boolean; onThumbnailUpload: (file: File) => void; onSave: () => void;
 }) {
   return (
     <div className="glass-card p-6 space-y-4">
@@ -323,7 +358,7 @@ function CourseDetailsTab({
         <div className="flex flex-wrap items-center gap-4">
           <div className="h-20 w-28 overflow-hidden rounded-lg border border-border bg-card flex items-center justify-center text-xl">
             {course.thumbnailUrl ? (
-              <img src={course.thumbnailUrl} alt="Course thumbnail" className="h-full w-full object-cover" />
+              <Image src={course.thumbnailUrl} alt="Course thumbnail" width={112} height={80} className="h-full w-full object-cover" unoptimized />
             ) : "\uD83D\uDCDA"}
           </div>
           <div className="space-y-1">
@@ -348,7 +383,7 @@ function CourseDetailsTab({
         <input
           type="text"
           value={form.title}
-          onChange={(e) => setForm((p: any) => ({ ...p, title: e.target.value }))}
+          onChange={(e) => setForm((p: CourseFormData) => ({ ...p, title: e.target.value }))}
           className="field"
         />
       </div>
@@ -357,7 +392,7 @@ function CourseDetailsTab({
         <label className="mb-1.5 block text-sm font-medium text-foreground">Description</label>
         <textarea
           value={form.description}
-          onChange={(e) => setForm((p: any) => ({ ...p, description: e.target.value }))}
+          onChange={(e) => setForm((p: CourseFormData) => ({ ...p, description: e.target.value }))}
           className="field min-h-[100px] resize-y"
         />
       </div>
@@ -368,7 +403,7 @@ function CourseDetailsTab({
           <input
             type="text"
             value={form.category}
-            onChange={(e) => setForm((p: any) => ({ ...p, category: e.target.value }))}
+            onChange={(e) => setForm((p: CourseFormData) => ({ ...p, category: e.target.value }))}
             className="field"
           />
         </div>
@@ -377,7 +412,7 @@ function CourseDetailsTab({
           <input
             type="number"
             value={form.price}
-            onChange={(e) => setForm((p: any) => ({ ...p, price: Number(e.target.value) }))}
+            onChange={(e) => setForm((p: CourseFormData) => ({ ...p, price: Number(e.target.value) }))}
             className="field"
             min={0}
           />
@@ -437,8 +472,8 @@ function ModuleCard({ module: mod, courseId, onChanged }: {
       });
       setEditing(false);
       onChanged();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update module");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to update module");
     }
   };
 
@@ -515,7 +550,7 @@ function AddModuleForm({ courseId, onAdded }: { courseId: string; onAdded: () =>
       setForm({ title: "", description: "", videoUrl: "" });
       setShow(false);
       onAdded();
-    } catch (err: any) { toast.error(err.message || "Failed to add module"); }
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : "Failed to add module"); }
     finally { setAdding(false); }
   };
 
@@ -540,7 +575,7 @@ function AddModuleForm({ courseId, onAdded }: { courseId: string; onAdded: () =>
 
 // --- Live Sessions Tab ---
 
-function SessionsTab({ courseId, courseTitle }: { courseId: string; courseTitle: string }) {
+function SessionsTab({ courseId }: { courseId: string }) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncingId, setSyncingId] = useState<string | null>(null);
@@ -553,7 +588,12 @@ function SessionsTab({ courseId, courseTitle }: { courseId: string; courseTitle:
     finally { setLoading(false); }
   }, [courseId]);
 
-  useEffect(() => { fetchSessions(); }, [fetchSessions]);
+  useEffect(() => {
+    api.get<{ sessions: Session[] }>(`/api/admin/courses/${courseId}/sessions`)
+      .then((data) => setSessions(data.sessions || []))
+      .catch(() => setSessions([]))
+      .finally(() => setLoading(false));
+  }, [courseId]);
 
   const handleSync = async (sessionId: string) => {
     setSyncingId(sessionId);
@@ -561,8 +601,8 @@ function SessionsTab({ courseId, courseTitle }: { courseId: string; courseTitle:
       await api.post(`/api/recordings/${sessionId}/sync`);
       toast.success("Recording synced successfully!");
       fetchSessions();
-    } catch (err: any) {
-      toast.error(err.message || "No recording found yet.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "No recording found yet.");
     } finally { setSyncingId(null); }
   };
 
@@ -639,7 +679,12 @@ function RecordingsTab({ courseId }: { courseId: string }) {
     finally { setLoading(false); }
   }, [courseId]);
 
-  useEffect(() => { fetchRecordings(); }, [fetchRecordings]);
+  useEffect(() => {
+    api.get<{ recordings: Recording[] }>(`/api/admin/courses/${courseId}/recordings`)
+      .then((data) => setRecordings(data.recordings || []))
+      .catch(() => setRecordings([]))
+      .finally(() => setLoading(false));
+  }, [courseId]);
 
   return (
     <div className="space-y-4">

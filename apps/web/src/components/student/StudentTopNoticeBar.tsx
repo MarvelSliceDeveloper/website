@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { IconX } from "@tabler/icons-react";
 
 interface StudentTopNoticeBarProps {
@@ -17,12 +17,10 @@ export default function StudentTopNoticeBar({
     ctaHref,
     dismissKey = "lms-student-top-notice-dismissed",
 }: StudentTopNoticeBarProps) {
-    const [hidden, setHidden] = useState(false);
-
-    useEffect(() => {
-        const dismissed = window.localStorage.getItem(dismissKey);
-        if (dismissed === "1") setHidden(true);
-    }, [dismissKey]);
+    const [hidden, setHidden] = useState(() => {
+        if (typeof window === "undefined") return false;
+        return window.localStorage.getItem(dismissKey) === "1";
+    });
 
     if (hidden) return null;
 

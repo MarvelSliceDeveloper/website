@@ -62,7 +62,6 @@ type SubmissionResult = {
 
 interface QuizOverdueViewProps {
   quizzes: OverdueAssignment[];
-  onGoBack: () => void;
 }
 
 type SubView =
@@ -70,7 +69,7 @@ type SubView =
   | { type: "QUIZ"; assignmentId: string; data: AssignmentQuestions }
   | { type: "RESULT"; data: SubmissionResult };
 
-export default function QuizOverdueView({ quizzes, onGoBack }: QuizOverdueViewProps) {
+export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
   const [subView, setSubView] = useState<SubView>({ type: "LIST" });
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -94,7 +93,7 @@ export default function QuizOverdueView({ quizzes, onGoBack }: QuizOverdueViewPr
       const data = await api.get<AssignmentQuestions>(`/api/assignments/${assignmentId}/questions`);
       setSelectedAnswers({});
       setSubView({ type: "QUIZ", assignmentId, data });
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
       setLoading(false);
@@ -108,7 +107,7 @@ export default function QuizOverdueView({ quizzes, onGoBack }: QuizOverdueViewPr
         `/api/assignments/submissions/${submissionId}/result`
       );
       setSubView({ type: "RESULT", data: resultRes.result });
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
       setLoading(false);
@@ -142,7 +141,7 @@ export default function QuizOverdueView({ quizzes, onGoBack }: QuizOverdueViewPr
       );
       setLocallySubmittedIds((prev) => [...prev, assignmentId]);
       setSubView({ type: "RESULT", data: resultRes.result });
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
       setSubmitting(false);

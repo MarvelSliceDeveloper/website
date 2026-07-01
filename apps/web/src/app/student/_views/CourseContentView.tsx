@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState } from "react";
 import {
   IconBook2,
   IconVideo,
@@ -51,7 +51,7 @@ const railLabels: Record<RailTab, string> = {
   resource: "Study",
 };
 
-export default function CourseContentView({ courseId, navigate: _navigate, goBack }: CourseContentViewProps) {
+export default function CourseContentView({ courseId, goBack }: CourseContentViewProps) {
   const [data, setData] = useState<CourseContentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -406,7 +406,7 @@ export default function CourseContentView({ courseId, navigate: _navigate, goBac
       <div className="flex flex-col items-center justify-center h-full text-center gap-3 text-muted-foreground">
         <IconNotes size={40} className="opacity-30" />
         <p className="text-sm">Select a note from the sidebar</p>
-        <p className="text-xs">Or click "Add Note" in the sidebar to create a new one</p>
+        <p className="text-xs">Or click &ldquo;Add Note&rdquo; in the sidebar to create a new one</p>
       </div>
     );
   };
@@ -456,7 +456,7 @@ export default function CourseContentView({ courseId, navigate: _navigate, goBac
           </div>
         ))}
         {notes.length === 0 && bookmarks.length === 0 && (
-          <p className="text-xs text-muted-foreground text-center py-6">No notes yet. Click "Add Note" above to create one.</p>
+          <p className="text-xs text-muted-foreground text-center py-6">No notes yet. Click &ldquo;Add Note&rdquo; above to create one.</p>
         )}
 
         {bookmarks.length > 0 && (

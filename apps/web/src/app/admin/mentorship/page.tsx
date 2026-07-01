@@ -65,10 +65,6 @@ export default function AdminMentorshipPage() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [filter, setFilter] = useState<string>("all");
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const fetchData = async () => {
     try {
       setIsLoading(true);
@@ -93,6 +89,10 @@ export default function AdminMentorshipPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    Promise.resolve().then(() => fetchData());
+  }, []);
 
   const filteredTickets =
     filter === "all"
@@ -338,8 +338,8 @@ function TicketManageModal({
       await api.patch(`/api/mentorship/tickets/${ticket.id}/assign`, { mentorId: selectedMentor });
       toast.success("Mentor assigned successfully");
       onUpdate();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to assign mentor");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to assign mentor");
     } finally {
       setIsSubmitting(false);
     }
@@ -360,8 +360,8 @@ function TicketManageModal({
       });
       toast.success("Session scheduled successfully");
       onUpdate();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to schedule session");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to schedule session");
     } finally {
       setIsSubmitting(false);
     }
@@ -374,8 +374,8 @@ function TicketManageModal({
       toast.success("Mentorship marked as completed");
       onUpdate();
       onClose();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to complete");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to complete");
     } finally {
       setIsSubmitting(false);
     }
@@ -388,8 +388,8 @@ function TicketManageModal({
       toast.success("Mentorship request cancelled");
       onUpdate();
       onClose();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to cancel");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to cancel");
     } finally {
       setIsSubmitting(false);
     }

@@ -17,12 +17,10 @@ import type { OverdueAssignment } from "@/lib/student-mock-data";
 
 interface AssignmentOverdueViewProps {
   assignments: OverdueAssignment[];
-  onGoBack: () => void;
 }
 
 export default function AssignmentOverdueView({
   assignments,
-  onGoBack,
 }: AssignmentOverdueViewProps) {
   const [uploading, setUploading] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -75,7 +73,7 @@ export default function AssignmentOverdueView({
       toast.success("Assignment submitted successfully!");
       setActiveUploadId(null);
       setSelectedFile(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
       setUploading(null);

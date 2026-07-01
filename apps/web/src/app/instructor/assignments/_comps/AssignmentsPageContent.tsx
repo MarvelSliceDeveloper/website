@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { IconPlus, IconUsers, IconCalendar, IconClipboardList } from "@tabler/icons-react";
-import { toast, getErrorMessage } from "@/lib/toast";
+import { toast } from "@/lib/toast";
 import { AssignmentCreateForm } from "./AssignmentCreateForm";
 import { SubmissionReviewPanel } from "./SubmissionReviewPanel";
 import type { Batch, Assignment, StudentSubmission, FormQuestion } from "./types";
@@ -32,18 +32,14 @@ export function AssignmentsPageContent() {
     a.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  useEffect(() => {
-    loadInitialData();
-  }, []);
-
   const loadInitialData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const batchesRes: any = await api.get("/api/instructor/batches");
-      const assignmentsRes: any = await api.get("/api/instructor/assignments");
-      setBatches(batchesRes.batches ?? batchesRes);
-      setAssignments(assignmentsRes.assignments ?? assignmentsRes);
+      const batchesRes = await api.get<{ batches: Batch[] }>("/api/instructor/batches");
+      const assignmentsRes = await api.get<{ assignments: Assignment[] }>("/api/instructor/assignments");
+      setBatches(batchesRes.batches ?? batchesRes as unknown as Batch[]);
+      setAssignments(assignmentsRes.assignments ?? assignmentsRes as unknown as Assignment[]);
       if (!selectedBatchId && batchesRes.batches?.length > 0) {
         setSelectedBatchId(batchesRes.batches[0].id);
       }
@@ -54,21 +50,43 @@ export function AssignmentsPageContent() {
     }
   };
 
-  useEffect(() => {
-    if (selectedAssignment) loadSubmissions(selectedAssignment.id);
-  }, [selectedAssignment]);
-
   const loadSubmissions = async (assignmentId: string) => {
     setLoadingSubmissions(true);
     try {
-      const res: any = await api.get(`/api/instructor/assignments/${assignmentId}/submissions`);
-      setSubmissions(res.submissions ?? res);
+      const res = await api.get<{ submissions: StudentSubmission[] }>(`/api/instructor/assignments/${assignmentId}/submissions`);
+      setSubmissions(res.submissions ?? res as unknown as StudentSubmission[]);
     } catch {
       setSubmissions([]);
     } finally {
       setLoadingSubmissions(false);
     }
   };
+
+  useEffect(() => {
+    api.get<{ batches: Batch[] }>("/api/instructor/batches")
+      .then((batchesRes) => {
+        const batchesData = batchesRes.batches ?? batchesRes as unknown as Batch[];
+        setBatches(batchesData);
+        if (!selectedBatchId && batchesData.length > 0) {
+          setSelectedBatchId(batchesData[0].id);
+        }
+      })
+      .catch(() => setError("Failed to load data. Please refresh the page."))
+      .finally(() => setLoading(false));
+    api.get<{ assignments: Assignment[] }>("/api/instructor/assignments")
+      .then((assignmentsRes) => {
+        setAssignments(assignmentsRes.assignments ?? assignmentsRes as unknown as Assignment[]);
+      })
+      .catch(() => setError("Failed to load data. Please refresh the page."));
+  }, []);
+
+  useEffect(() => {
+    if (!selectedAssignment) return;
+    api.get<{ submissions: StudentSubmission[] }>(`/api/instructor/assignments/${selectedAssignment.id}/submissions`)
+      .then((res) => setSubmissions(res.submissions ?? res as unknown as StudentSubmission[]))
+      .catch(() => setSubmissions([]))
+      .finally(() => setLoadingSubmissions(false));
+  }, [selectedAssignment]);
 
   const handleCreateAssignment = async (data: {
     title: string;

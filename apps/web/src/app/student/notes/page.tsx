@@ -151,16 +151,6 @@ export default function StudentNotesPage() {
     }
   }
 
-  async function toggleSticky(id: string, currentIsSticky: boolean) {
-    try {
-      await api.patch(`/api/notes/${id}`, { isSticky: !currentIsSticky });
-      setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, isSticky: !currentIsSticky } : n)));
-      toast.success(currentIsSticky ? "Note unpinned" : "Note pinned");
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
-  }
-
   const filteredNotes = notes.filter((note) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();

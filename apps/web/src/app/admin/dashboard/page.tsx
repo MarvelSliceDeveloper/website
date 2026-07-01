@@ -21,6 +21,28 @@ import {
   Legend,
 } from "recharts";
 
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ color: string; name: string; value: number }>;
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+  if (active && payload?.length) {
+    return (
+      <div className="glass-card !p-3 text-sm">
+        <p className="font-semibold text-foreground">{label}</p>
+        {payload.map((entry, i) => (
+          <p key={i} style={{ color: entry.color }} className="text-muted-foreground">
+            {entry.name}: {entry.value}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 const quickActions = [
   { label: "Create Course", href: "/admin/courses/new", icon: "📝" },
   { label: "Manage Batches", href: "/admin/batches", icon: "👥" },
@@ -109,22 +131,6 @@ export default function AdminDashboardPage() {
   ];
 
   const formatStatValue = (value: number | null) => (value === null ? "—" : value.toString());
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload?.length) {
-      return (
-        <div className="glass-card !p-3 text-sm">
-          <p className="font-semibold text-foreground">{label}</p>
-          {payload.map((entry: any, i: number) => (
-            <p key={i} style={{ color: entry.color }} className="text-muted-foreground">
-              {entry.name}: {entry.value}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="space-y-6">

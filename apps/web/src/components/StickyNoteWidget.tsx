@@ -167,7 +167,7 @@ export default function StickyNoteWidget({ courseId, moduleId, moduleTitle, onCl
   }, [moduleId, storageKey]);
 
   // Auto-save with debounce
-  const save = useCallback(async (noteBody: string) => {
+  const save = useCallback(async () => {
     if (!moduleId || !isMountedRef.current) return;
 
     setStatus("saving");
@@ -209,27 +209,27 @@ export default function StickyNoteWidget({ courseId, moduleId, moduleTitle, onCl
   }, [courseId, moduleId, moduleTitle, saveToLocal]);
 
   // Debounced save
-  const debouncedSave = useCallback((noteBody: string) => {
+  const debouncedSave = useCallback(() => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
-      save(noteBody);
+      save();
     }, 1500);
   }, [save]);
 
   const handleContentChange = useCallback((html: string) => {
     bodyRef.current = html;
     setBody(html);
-    debouncedSave(html);
+    debouncedSave();
   }, [debouncedSave]);
 
   const handleManualSave = useCallback(async () => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    await save(bodyRef.current);
+    await save();
   }, [save]);
 
   const handleClose = useCallback(() => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    save(bodyRef.current);
+    save();
     setTimeout(() => onClose(), 300);
   }, [save, onClose]);
 

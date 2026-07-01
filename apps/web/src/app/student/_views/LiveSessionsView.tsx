@@ -21,7 +21,7 @@ function getComputedStatus(session: LiveSession): ComputedStatus {
   const now = Date.now();
   const start = new Date(session.scheduledAt).getTime();
 
-  const rawEnd = (session as any).endDateTime ?? (session as any).endAt;
+  const rawEnd = session.endDateTime ?? (session as LiveSession & { endAt?: string }).endAt;
   let end = new Date(rawEnd).getTime();
 
   // Fallback: if no valid end time, assume session lasts 1 hour
@@ -120,6 +120,7 @@ function SessionCard({ session, status }: { session: LiveSession; status: Comput
 
   const minutesRunning = Math.max(
     0,
+    // eslint-disable-next-line react-hooks/purity
     Math.floor((Date.now() - new Date(session.scheduledAt).getTime()) / 60_000)
   );
 

@@ -177,7 +177,6 @@ export function SubmissionReviewPanel({
                   <p className="text-[10px] font-bold text-muted uppercase tracking-wider">Student Responses</p>
                   {selectedSubmission.assignment.questions.map((q, idx) => {
                     const response = selectedSubmission.questionResponses.find((r) => r.questionId === q.id);
-                    const selectedOption = q.options.find((o) => o.id === response?.selectedOptionId);
                     return (
                       <div key={q.id} className="p-3 rounded-lg border border-border/50 bg-background/30 text-xs">
                         <p className="font-semibold text-foreground">{idx + 1}. {q.questionText}</p>

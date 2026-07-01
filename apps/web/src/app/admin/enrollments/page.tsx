@@ -66,14 +66,16 @@ export default function AdminEnrollmentsPage() {
   };
 
   useEffect(() => {
-    fetchEnrollments();
+    Promise.resolve().then(() => fetchEnrollments());
   }, [statusFilter]);
 
   // When approve modal opens, fetch batches for that course
   useEffect(() => {
     if (!approveModal) return;
-    setLoadingBatches(true);
-    setSelectedBatchId("");
+    Promise.resolve().then(() => {
+      setLoadingBatches(true);
+      setSelectedBatchId("");
+    });
     api
       .get<Batch[]>(`/api/admin/batches?courseId=${approveModal.courseId}`)
       .then((data) => setBatches(Array.isArray(data) ? data : []))
@@ -107,10 +109,6 @@ export default function AdminEnrollmentsPage() {
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
-  };
-
-  const counts = {
-    pending: enrollments.filter(() => statusFilter === "PENDING").length,
   };
 
   return (

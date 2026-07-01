@@ -30,12 +30,18 @@ const COLORS = {
 };
 const PIE_COLORS = [COLORS.primary, COLORS.accent, COLORS.success, COLORS.warning, COLORS.danger];
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+type CustomTooltipProps = {
+  active?: boolean;
+  payload?: Array<{ color: string; name: string; value: number }>;
+  label?: string;
+};
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload?.length) {
     return (
       <div className="glass-card !p-3 text-sm">
         <p className="font-semibold text-foreground">{label}</p>
-        {payload.map((entry: any, i: number) => (
+        {payload.map((entry, i: number) => (
           <p key={i} style={{ color: entry.color }} className="text-muted-foreground">
             {entry.name}: {entry.value}
           </p>

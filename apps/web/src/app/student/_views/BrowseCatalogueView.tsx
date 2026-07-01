@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { IconSearch } from "@tabler/icons-react";
 import type { CatalogueCourse } from "@/lib/student-mock-data";
 import type { ViewState } from "../_types/student-portal";
@@ -79,13 +80,16 @@ export default function BrowseCatalogueView({ courses, navigate }: BrowseCatalog
                 {/* Thumbnail */}
                 <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-card text-3xl overflow-hidden">
                   {(() => {
-                    const thumb = (course as any).thumbnailUrl || (course as any).thumbnail;
+                    const thumb = (course as CatalogueCourse & { thumbnailUrl?: string }).thumbnailUrl || course.thumbnail;
                     const isValidUrl = thumb && (thumb.startsWith("/") || thumb.startsWith("http"));
                     return isValidUrl ? (
-                      <img
+                      <Image
                         src={thumb}
                         className="h-full w-full object-cover"
                         alt={course.title}
+                        width={56}
+                        height={56}
+                        unoptimized
                         onError={(e) => {
                           e.currentTarget.style.display = "none";
                           const parent = e.currentTarget.parentElement;

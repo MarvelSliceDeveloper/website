@@ -50,7 +50,12 @@ export default function AdminInboxSupportPage() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchTickets(); }, [fetchTickets]);
+  useEffect(() => {
+    api.get<{ tickets: SupportTicketItem[] }>("/api/support/tickets")
+      .then((data) => setTickets(data.tickets || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   async function openTicket(ticketId: string) {
     try {

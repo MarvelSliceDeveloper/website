@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { toast } from "sonner";
 
 interface Resource {
   id: string;
@@ -76,7 +75,9 @@ export default function ModuleStudyMaterialsSection({
   const selectedModule = modules.find((m) => m.id === selectedModuleId);
 
   useEffect(() => {
-    setResources(selectedModule?.resources as Resource[] || []);
+    Promise.resolve().then(() => {
+      setResources(selectedModule?.resources as Resource[] || []);
+    });
   }, [selectedModule]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,8 +115,8 @@ export default function ModuleStudyMaterialsSection({
       onResourcesUpdated();
       e.target.value = "";
       setTimeout(() => setUploadSuccess(""), 3000);
-    } catch (err: any) {
-      setUploadError(err.message || "Failed to upload file");
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : "Failed to upload file");
     } finally {
       setUploading(false);
     }
@@ -130,8 +131,8 @@ export default function ModuleStudyMaterialsSection({
       );
       setResources((prev) => prev.filter((r) => r.id !== resourceId));
       onResourcesUpdated();
-    } catch (err: any) {
-      setUploadError(err.message || "Failed to delete resource");
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : "Failed to delete resource");
     } finally {
       setDeleting(null);
     }

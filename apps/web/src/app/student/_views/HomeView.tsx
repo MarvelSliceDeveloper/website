@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { IconArrowRight, IconBook, IconCalendar, IconCertificate, IconHeart, IconPlayerPlay, IconVideo, IconClock, IconHelp, IconMessage, IconPlus, IconNotebook } from "@tabler/icons-react";
 import { api } from "@/lib/api";
-import { toast, getErrorMessage } from "@/lib/toast";
+import { toast } from "@/lib/toast";
 import type { ViewState } from "../_types/student-portal";
 import type {
   DashboardStats,
@@ -106,7 +107,6 @@ export default function HomeView({
   enrolledCourses = [],
   calendarEvents = [],
   studentName = "Student",
-  studentEmail = "student@example.com",
   sectionApiAvailability,
   firstBatchId,
   navigate,
@@ -155,6 +155,7 @@ export default function HomeView({
   }
 
   function supportTimeAgo(dateStr: string) {
+    // eslint-disable-next-line react-hooks/purity
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 1) return "Just now";
@@ -593,10 +594,13 @@ export default function HomeView({
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-2xl overflow-hidden">
                   {item.thumbnail && (item.thumbnail.startsWith("/") || item.thumbnail.startsWith("http")) ? (
-                    <img
+                    <Image
                       src={item.thumbnail}
                       className="h-full w-full object-cover"
                       alt=""
+                      width={48}
+                      height={48}
+                      unoptimized
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
                         const parent = e.currentTarget.parentElement;

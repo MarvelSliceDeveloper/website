@@ -2,9 +2,16 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
-import { IconMessage, IconSend } from "@tabler/icons-react";
+import { IconMessage } from "@tabler/icons-react";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { timeAgo } from "@/lib/time-ago";
+
+interface Message {
+  id: string;
+  senderId: string;
+  body: string;
+  createdAt: string;
+}
 
 interface Conversation {
   id: string;
@@ -20,7 +27,7 @@ export default function AdminInboxMessagesPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [thread, setThread] = useState<any[]>([]);
+  const [thread, setThread] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
 
   const fetchConversations = useCallback(async () => {
@@ -31,12 +38,17 @@ export default function AdminInboxMessagesPage() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchConversations(); }, [fetchConversations]);
+  useEffect(() => {
+    api.get<{ conversations: Conversation[] }>("/api/messages/conversations")
+      .then((data) => setConversations(data.conversations || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   const openThread = async (userId: string) => {
     setSelectedUserId(userId);
     try {
-      const data = await api.get<{ messages: any[] }>(`/api/messages/${userId}`);
+      const data = await api.get<{ messages: Message[] }>(`/api/messages/${userId}`);
       setThread(data.messages || []);
     } catch { setThread([]); }
   };
@@ -102,7 +114,7 @@ export default function AdminInboxMessagesPage() {
           {selectedUserId ? (
             <>
               <div className="max-h-80 overflow-y-auto p-4 space-y-3">
-                {thread.map((msg: any) => (
+                {thread.map((msg: Message) => (
                   <div
                     key={msg.id}
                     className={`flex ${msg.senderId === selectedUserId ? "justify-start" : "justify-end"}`}

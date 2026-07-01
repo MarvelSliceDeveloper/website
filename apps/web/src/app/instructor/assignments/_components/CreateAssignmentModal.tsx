@@ -80,7 +80,7 @@ export default function CreateAssignmentModal({
 
       onAssignmentCreated();
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
       setCreating(false);

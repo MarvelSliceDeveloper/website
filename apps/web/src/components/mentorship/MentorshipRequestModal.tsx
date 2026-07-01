@@ -47,7 +47,7 @@ export function MentorshipRequestModal({
       await onSubmit(formData);
       setFormData({ title: "", description: "", preferredDate: "", preferredTime: "" });
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
       setIsSubmitting(false);

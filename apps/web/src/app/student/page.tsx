@@ -4,7 +4,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import StudentPortalShell, { type Breadcrumb } from "@/components/StudentPortalShell";
 import { api } from "@/lib/api";
-import { toast, getErrorMessage } from "@/lib/toast";
+import { toast } from "@/lib/toast";
 
 // Types
 import type { ViewState } from "./_types/student-portal";
@@ -79,6 +79,31 @@ interface ApiBatchSessionRecord {
   } | null;
 }
 
+interface ApiSessionRecord {
+  id: string;
+  title: string;
+  scheduledAt: string;
+  scheduledEndAt: string;
+  joinUrl: string;
+  recording: { id: string } | null;
+  batch?: {
+    name: string;
+    course?: { title: string };
+    instructor?: { name: string };
+  };
+  module?: { title: string } | null;
+}
+
+interface ApiMentorshipTicket {
+  id: string;
+  title: string;
+  status: string;
+  createdAt: string;
+  notes?: string | null;
+  course?: { title: string } | null;
+  mentor?: { name: string } | null;
+}
+
 interface ApiBatchDetailResponse {
   batch: {
     id: string;
@@ -136,9 +161,9 @@ async function fetchPortalData(): Promise<PortalData> {
   // Real API calls — run in parallel
   const [enrolled, sessionsData, calEvents, tickets, certs, catalogue, overdueAssignments] = await Promise.all([
     api.get<{ courses: EnrolledCourse[] }>("/api/courses/enrolled").catch(() => ({ courses: [] })),
-    api.get<{ sessions: any[] }>("/api/sessions").catch(() => ({ sessions: [] })),
+    api.get<{ sessions: ApiSessionRecord[] }>("/api/sessions").catch(() => ({ sessions: [] })),
     api.get<{ events: CalendarEvent[] }>("/api/calendar/events").catch(() => ({ events: [] })),
-    api.get<{ tickets: any[] }>("/api/mentorship/tickets/my").catch(() => ({ tickets: [] })),
+    api.get<{ tickets: ApiMentorshipTicket[] }>("/api/mentorship/tickets/my").catch(() => ({ tickets: [] })),
     api.get<{ certificates: Certificate[] }>("/api/certificates/my").catch(() => ({ certificates: [] })),
     api.get<{ courses: CatalogueCourse[] }>("/api/courses/catalogue").catch(() => ({ courses: [] })),
     api
@@ -146,9 +171,8 @@ async function fetchPortalData(): Promise<PortalData> {
       .catch(() => ({ items: [] })),
   ]);
 
-  const now = new Date();
   // AFTER ✅ — endDateTime passed through, status computed dynamically
-  const mappedSessions: LiveSession[] = (sessionsData.sessions || []).map((s: any) => ({
+  const mappedSessions: LiveSession[] = (sessionsData.sessions || []).map((s: ApiSessionRecord) => ({
     id: s.id,
     title: s.title || (s.module
       ? `Module ${s.module.title} — ${s.batch?.course?.title}`
@@ -177,11 +201,11 @@ async function fetchPortalData(): Promise<PortalData> {
     batches: {}, // batches loaded on demand via API
     liveSessions: mappedSessions,
     calendarEvents: calEvents.events,
-    mentorshipTickets: (tickets.tickets || []).map((t: any) => ({
+    mentorshipTickets: (tickets.tickets || []).map((t: ApiMentorshipTicket) => ({
       id: t.id,
       courseTitle: t.course?.title || "General",
       topic: t.title,
-      status: t.status,
+      status: t.status as MentorshipTicket["status"],
       createdAt: t.createdAt,
       notes: t.notes || undefined,
       instructor: t.mentor?.name || undefined,
@@ -366,8 +390,12 @@ function StudentPortalContent() {
 
   useEffect(() => {
     let active = true;
-    setIsLoading(true);
-    loadData()
+    fetchPortalData()
+      .then((d) => {
+        if (!active) return;
+        setData(d);
+        setBatchCache(d.batches);
+      })
       .catch((e) => {
         if (active) setError(e instanceof Error ? e.message : "Failed to load portal data");
       })
@@ -375,7 +403,7 @@ function StudentPortalContent() {
         if (active) setIsLoading(false);
       });
     return () => { active = false; };
-  }, [loadData]);
+  }, []);
 
   // Load current user profile for greeting
   useEffect(() => {
@@ -397,12 +425,10 @@ function StudentPortalContent() {
     const batchId = currentView.params?.batchId;
     if (!batchId || batchCache[batchId]) return;
     let active = true;
-    setLoadingBatch(true);
     fetchBatch(batchId).then((b) => {
-      if (!active || !b) return;
-      setBatchCache((prev) => ({ ...prev, [batchId]: b }));
-    }).finally(() => {
-      if (active) setLoadingBatch(false);
+      if (active && b) {
+        setBatchCache((prev) => ({ ...prev, [batchId]: b }));
+      }
     });
     return () => { active = false; };
   }, [currentView, batchCache]);
@@ -437,8 +463,8 @@ function StudentPortalContent() {
       await api.post("/api/courses/enroll", { courseId });
       toast.success("Enrollment request submitted! Wait for admin approval.");
       await loadData();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to submit enrollment request");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to submit enrollment request");
       throw err;
     }
   }
@@ -576,7 +602,6 @@ function StudentPortalContent() {
         return (
           <AssignmentOverdueView
             assignments={portalData.overdueAssignments.filter((a) => a.type === "ASSIGNMENT")}
-            onGoBack={goBack}
           />
         );
 
@@ -584,7 +609,6 @@ function StudentPortalContent() {
         return (
           <QuizOverdueView
             quizzes={portalData.overdueAssignments.filter((a) => a.type === "QUIZ")}
-            onGoBack={goBack}
           />
         );
 
@@ -592,7 +616,6 @@ function StudentPortalContent() {
         return (
           <CourseCompletedView
             courses={portalData.enrolledCourses}
-            onGoBack={goBack}
           />
         );
 

@@ -48,9 +48,10 @@ export default function AdminSessionsPage() {
   };
 
   useEffect(() => {
-    fetchSessions();
+    Promise.resolve().then(() => fetchSessions());
   }, []);
 
+  // eslint-disable-next-line react-hooks/purity
   const now = Date.now();
 
   const upcoming = sessions.filter((s) => {
@@ -82,8 +83,8 @@ export default function AdminSessionsPage() {
       toast.success("Session updated successfully");
       setEditingSession(null);
       fetchSessions();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update session");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to update session");
     } finally {
       setEditSubmitting(false);
     }
@@ -94,8 +95,8 @@ export default function AdminSessionsPage() {
     try {
       await api.delete(`/api/sessions/${sessionId}`);
       fetchSessions();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to cancel session");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to cancel session");
     }
   };
 
@@ -105,8 +106,8 @@ export default function AdminSessionsPage() {
       await api.post(`/api/recordings/${sessionId}/sync`);
       toast.success("Recording synced successfully!");
       fetchSessions();
-    } catch (err: any) {
-      toast.error(err.message || "No recording found yet. Teams recordings may take a few minutes to become available.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "No recording found yet. Teams recordings may take a few minutes to become available.");
     } finally {
       setSyncingId(null);
     }

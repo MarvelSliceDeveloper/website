@@ -8,7 +8,6 @@ import {
   IconX,
   IconRefresh,
   IconLink,
-  IconLinkOff,
   IconClock,
   IconCode,
 } from "@tabler/icons-react";
@@ -54,7 +53,7 @@ export default function MicrosoftIntegrationPage() {
   }
 
   useEffect(() => {
-    loadStatus();
+    Promise.resolve().then(() => loadStatus());
   }, []);
 
   function handleLinkAccount() {

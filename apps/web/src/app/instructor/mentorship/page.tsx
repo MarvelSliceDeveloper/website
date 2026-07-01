@@ -62,7 +62,18 @@ function InstructorMentorshipContent() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchTickets(); }, [fetchTickets]);
+  useEffect(() => {
+    api.get<{ tickets: MentorshipTicket[] }>("/api/mentorship/tickets")
+      .then((data) => {
+        setTickets(data.tickets || []);
+      })
+      .catch(() => {
+        setTickets([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
   const filtered = statusFilter === "all"
     ? tickets
@@ -93,7 +104,7 @@ function InstructorMentorshipContent() {
       toast.success("Mentorship session scheduled");
       setActionTicket(null);
       fetchTickets();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally { setProcessing(false); }
   };
@@ -106,7 +117,7 @@ function InstructorMentorshipContent() {
       await api.patch(`/api/mentorship/tickets/${ticketId}/complete`, { notes: notes || undefined });
       toast.success("Mentorship session marked as completed");
       fetchTickets();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally { setProcessing(false); }
   };
@@ -118,7 +129,7 @@ function InstructorMentorshipContent() {
       await api.patch(`/api/mentorship/tickets/${ticketId}/cancel`);
       toast.success("Mentorship request cancelled");
       fetchTickets();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally { setProcessing(false); }
   };

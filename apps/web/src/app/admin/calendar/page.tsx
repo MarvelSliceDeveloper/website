@@ -14,6 +14,14 @@ type Instructor = {
   name: string;
 };
 
+type SessionData = {
+  id: string;
+  scheduledAt: string;
+  endedAt: string | null;
+  joinUrl: string;
+  batch?: { name: string; course?: { title: string } };
+};
+
 type CalendarEvent = {
   id: string;
   title: string;
@@ -36,38 +44,34 @@ export default function AdminCalendarPage() {
   const [loading, setLoading] = useState(true);
   const [courseColorMap, setCourseColorMap] = useState<Record<string, string>>({});
 
-  const fetchInstructors = useCallback(async () => {
+  const fetchInstructors = async () => {
     try {
       const data = await api.get<Instructor[]>("/api/admin/batches/instructors");
       setInstructors(data || []);
     } catch { /* ignore */ }
-  }, []);
+  };
 
-  const fetchEvents = useCallback(async () => {
-    setLoading(true);
+  const fetchEvents = async () => {
     try {
       const params: Record<string, string> = {};
       if (selectedInstructor) params.instructorId = selectedInstructor;
-
-      const data = await api.get<{ sessions: any[] }>("/api/sessions", params);
+      const data = await api.get<{ sessions: SessionData[] }>("/api/sessions", params);
       const sessions = Array.isArray(data.sessions) ? data.sessions : [];
 
       const colorMap: Record<string, string> = {};
       let colorIdx = 0;
 
-      const mapped = sessions.map((s: any) => {
+      const mapped = sessions.map((s: SessionData) => {
         const courseTitle = s.batch?.course?.title || "Unknown";
         if (!colorMap[courseTitle]) {
           colorMap[courseTitle] = COURSE_COLORS[colorIdx % COURSE_COLORS.length];
           colorIdx++;
         }
         const color = colorMap[courseTitle];
-
         const startStr = s.scheduledAt;
         const endMs = s.endedAt
           ? new Date(s.endedAt).getTime()
           : new Date(startStr).getTime() + 3600000;
-
         return {
           id: s.id,
           title: `${courseTitle} - ${s.batch?.name || ""}`,
@@ -82,16 +86,48 @@ export default function AdminCalendarPage() {
       setEvents(mapped);
       setCourseColorMap(colorMap);
     } catch { setEvents([]); }
-    finally { setLoading(false); }
+  };
+
+  useEffect(() => {
+    api.get<Instructor[]>("/api/admin/batches/instructors")
+      .then((data) => setInstructors(data || []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const params: Record<string, string> = {};
+    if (selectedInstructor) params.instructorId = selectedInstructor;
+    api.get<{ sessions: SessionData[] }>("/api/sessions", params)
+      .then((data) => {
+        const sessions = Array.isArray(data.sessions) ? data.sessions : [];
+        const colorMap: Record<string, string> = {};
+        let colorIdx = 0;
+        const mapped = sessions.map((s: SessionData) => {
+          const courseTitle = s.batch?.course?.title || "Unknown";
+          if (!colorMap[courseTitle]) {
+            colorMap[courseTitle] = COURSE_COLORS[colorIdx % COURSE_COLORS.length];
+            colorIdx++;
+          }
+          const color = colorMap[courseTitle];
+          const startStr = s.scheduledAt;
+          const endMs = s.endedAt
+            ? new Date(s.endedAt).getTime()
+            : new Date(startStr).getTime() + 3600000;
+          return {
+            id: s.id,
+            title: `${courseTitle} - ${s.batch?.name || ""}`,
+            start: startStr,
+            end: new Date(endMs).toISOString(),
+            backgroundColor: color,
+            borderColor: color,
+            url: s.joinUrl,
+          };
+        });
+        setEvents(mapped);
+        setCourseColorMap(colorMap);
+      })
+      .catch(() => setEvents([]));
   }, [selectedInstructor]);
-
-  useEffect(() => {
-    fetchInstructors();
-  }, [fetchInstructors]);
-
-  useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
 
   function handleEventClick(info: EventClickArg) {
     if (info.event.url) {

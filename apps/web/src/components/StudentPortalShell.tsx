@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
   IconArrowLeft,
@@ -10,14 +9,11 @@ import {
   IconSun,
   IconX,                  
   IconChevronDown,
-  IconHelp,
-  IconLayoutDashboard,  
   IconLogout,
   IconSettings,
   IconSchool,
   IconEye,
 } from "@tabler/icons-react";
-import StudentTopNoticeBar from "@/components/student/StudentTopNoticeBar";
 import { api } from "@/lib/api";
 import { timeAgo } from "@/lib/time-ago";
 import type { NotificationItem } from "@/lib/notifications";
@@ -55,10 +51,14 @@ export default function StudentPortalShell({
   hideHeader = false,
 }: StudentPortalShellProps) {
   const router = useRouter();
-  const pathname = usePathname();
+  usePathname();
   const [notifOpen, setNotifOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">("light");
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    if (typeof window === "undefined") return "dark";
+    const saved = window.localStorage.getItem("lms-theme");
+    return saved === "light" ? "light" : "dark";
+  });
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -77,17 +77,14 @@ export default function StudentPortalShell({
   }, []);
 
   useEffect(() => {
-    fetchNotifications();
+    Promise.resolve().then(() => fetchNotifications());
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem("lms-theme");
-    const nextTheme = saved === "light" ? "light" : "dark";
-    setTheme(nextTheme);
-    document.documentElement.setAttribute("data-theme", nextTheme);
-  }, []);
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -122,7 +119,7 @@ export default function StudentPortalShell({
   async function handleSignOut() {
     try {
       await api.post("/api/auth/logout");
-    } catch (e) { /* ignore */ }
+    } catch { /* ignore */ }
     router.push("/login");
   }
 

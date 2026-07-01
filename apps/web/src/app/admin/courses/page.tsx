@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -73,12 +74,12 @@ function CoursesPageContent() {
   };
 
   useEffect(() => {
-    setStatusFilter(statusParam);
+    Promise.resolve().then(() => setStatusFilter(statusParam));
   }, [statusParam]);
 
   useEffect(() => {
-    fetchCourses();
-  }, [statusFilter]);
+    Promise.resolve().then(() => fetchCourses());
+  }, [statusFilter, search]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,15 +100,17 @@ function CoursesPageContent() {
     }
   };
 
+type ChecklistItem = { item: string; passed: boolean };
+
   const handlePublish = async (id: string) => {
     try {
-      const result = await api.post<{ published: boolean; checklist: any[] }>(
+      const result = await api.post<{ published: boolean; checklist: ChecklistItem[] }>(
         `/api/admin/courses/${id}/publish`
       );
       if (!result.published) {
         const failedItems = result.checklist
-          .filter((c: any) => !c.passed)
-          .map((c: any) => `• ${c.item}`)
+          .filter((c: ChecklistItem) => !c.passed)
+          .map((c: ChecklistItem) => `• ${c.item}`)
           .join("\n");
         toast.error(`Cannot publish. Fix these:\n${failedItems}`);
         return;
@@ -234,10 +237,13 @@ function CoursesPageContent() {
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-14 shrink-0 rounded-lg bg-gradient-to-br from-primary/30 to-accent/20 flex items-center justify-center text-lg overflow-hidden">
                           {course.thumbnailUrl ? (
-                            <img
+                            <Image
                               src={course.thumbnailUrl}
                               alt=""
+                              width={56}
+                              height={40}
                               className="h-full w-full object-cover"
+                              unoptimized
                             />
                           ) : (
                             "📚"

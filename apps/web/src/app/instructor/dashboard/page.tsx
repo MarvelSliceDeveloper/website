@@ -135,9 +135,9 @@ export default function InstructorDashboardPage() {
           totalStudents,
           pendingAssignments: allPendingSubmissions.length,
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Failed to load dashboard data:", err);
-        if (err.message?.includes("Authentication") || err.message?.includes("401")) {
+        if (err instanceof Error && (err.message?.includes("Authentication") || err.message?.includes("401"))) {
           window.location.href = "/login";
         }
       } finally {

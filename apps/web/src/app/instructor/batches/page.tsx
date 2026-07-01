@@ -4,7 +4,6 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import {
-  IconUsers,
   IconCalendar,
   IconUserCheck,
   IconVideo,
@@ -45,9 +44,9 @@ function BatchesPageContent() {
       try {
         const data = await api.get<Batch[]>("/api/admin/batches");
         setBatches(Array.isArray(data) ? data : []);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Failed to load batches:", err);
-        if (err.message?.includes("Authentication") || err.message?.includes("401")) {
+        if (err instanceof Error && (err.message?.includes("Authentication") || err.message?.includes("401"))) {
           window.location.href = "/login";
         }
       } finally {

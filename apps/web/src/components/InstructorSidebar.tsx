@@ -154,9 +154,9 @@ function NavGroup({
     });
 
     if (activeGroup && manuallyCollapsed !== activeGroup.label) {
-      setExpandedGroup(activeGroup.label);
+      Promise.resolve().then(() => setExpandedGroup(activeGroup.label));
     }
-  }, [pathname, collapsed, items]);
+  }, [pathname, collapsed, items, manuallyCollapsed]);
 
   const toggleGroup = (groupLabel: string) => {
     setExpandedGroup((prev) => {
@@ -272,10 +272,8 @@ function NavGroup({
 // Instructor sidebar with nav groups and sign-out
 export default function InstructorSidebar({
   collapsed = false,
-  onToggleCollapse,
 }: {
   collapsed?: boolean;
-  onToggleCollapse: () => void;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -284,7 +282,7 @@ export default function InstructorSidebar({
   async function handleSignOut() {
     try {
       await api.post("/api/auth/logout");
-    } catch (e) {
+    } catch {
       // ignore
     }
     router.push("/login");

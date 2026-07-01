@@ -28,6 +28,9 @@ export function useDraggable({
   const dragStartRef = useRef({ x: 0, y: 0 });
   const elementRef = useRef<HTMLDivElement | null>(null);
 
+  const mouseUpRef = useRef<(() => void) | null>(null);
+  const touchEndRef = useRef<((() => void) | null)>(null);
+
   const clampPosition = useCallback(
     (x: number, y: number, el: HTMLDivElement | null) => {
       if (bounds === "viewport") {
@@ -77,7 +80,7 @@ export function useDraggable({
     setIsDragging(false);
     onDragEnd?.(positionRef.current);
     document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("mouseup", handleMouseUp);
+    document.removeEventListener("mouseup", mouseUpRef.current!);
   }, [handleMouseMove, onDragEnd]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
@@ -102,8 +105,13 @@ export function useDraggable({
     setIsDragging(false);
     onDragEnd?.(positionRef.current);
     document.removeEventListener("touchmove", handleTouchMove);
-    document.removeEventListener("touchend", handleTouchEnd);
+    document.removeEventListener("touchend", touchEndRef.current!);
   }, [handleTouchMove, onDragEnd]);
+
+  useEffect(() => {
+    mouseUpRef.current = handleMouseUp;
+    touchEndRef.current = handleTouchEnd;
+  }, [handleMouseUp, handleTouchEnd]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;

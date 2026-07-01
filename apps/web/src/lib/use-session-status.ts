@@ -9,7 +9,7 @@ export function useComputedStatus(session: LiveSession): ComputedStatus {
     const now = Date.now();
     const start = new Date(session.scheduledAt).getTime();
 
-    const rawEnd = (session as any).endDateTime ?? (session as any).endAt;
+    const rawEnd = session.endDateTime ?? (session as LiveSession & { endAt?: string }).endAt;
     let end = new Date(rawEnd).getTime();
 
     // Fallback: if no valid end time, assume session lasts 1 hour
@@ -28,7 +28,7 @@ export function useComputedStatus(session: LiveSession): ComputedStatus {
   useEffect(() => {
     const interval = setInterval(() => setStatus(getStatus()), 30_000);
     return () => clearInterval(interval);
-  }, [session.scheduledAt, (session as any).endDateTime, (session as any).endAt]);
+  }, [session.scheduledAt, session.endDateTime]);
 
   return status;
 }
