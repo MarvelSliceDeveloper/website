@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { IconMessage, IconSend } from "@tabler/icons-react";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { timeAgo } from "@/lib/time-ago";
 
 interface Conversation {
@@ -48,7 +48,7 @@ export default function AdminInboxMessagesPage() {
       toast.success("Message sent");
       setNewMessage("");
       openThread(selectedUserId);
-    } catch { toast.error("Failed to send message"); }
+    } catch (err) { toast.error(getErrorMessage(err)); }
   };
 
   if (loading) return <div className="h-40 animate-pulse rounded-xl bg-card-hover border border-border" />;

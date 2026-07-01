@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { api } from "@/lib/api";
 
 type CourseOption = { id: string; title: string };
@@ -49,8 +49,8 @@ export default function CreateBatchPage() {
       });
 
       router.push(`/admin/batches/${batch.id}`);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to create batch");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }

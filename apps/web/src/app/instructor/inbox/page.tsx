@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { IconTrash, IconArrowLeft, IconBell, IconCheck, IconEye, IconMessage } from "@tabler/icons-react";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { useRouter } from "next/navigation";
 import { timeAgo } from "@/lib/time-ago";
 import type { NotificationItem } from "@/lib/notifications";

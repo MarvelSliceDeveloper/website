@@ -13,6 +13,9 @@ export const CreateSessionSchema = z.object({
   endDateTime: z.string().datetime({ message: 'Must be a valid ISO 8601 datetime' }),
   customJoinUrl: z.string().optional().nullable(),
   instructorOverride: z.string().optional().nullable(),
+}).refine(data => new Date(data.startDateTime) < new Date(data.endDateTime), {
+  message: 'startDateTime must be before endDateTime',
+  path: ['endDateTime'],
 });
 
 export const UpdateSessionSchema = z.object({
@@ -48,11 +51,9 @@ export const sessionService = {
     const overlapping = await prisma.liveSession.findFirst({
       where: {
         batchId,
-        scheduledAt: { lte: new Date(endDateTime) },
-        endedAt: null, // only check non-ended sessions
-        OR: [
-          { scheduledAt: { gte: new Date(startDateTime) } },
-        ],
+        endedAt: null, // only check non-ended/cancelled sessions
+        scheduledAt: { lt: new Date(endDateTime) },
+        scheduledEndAt: { gt: new Date(startDateTime) },
       },
     });
 
@@ -96,13 +97,15 @@ export const sessionService = {
       data: {
         batchId,
         moduleId,
+        title,
         teamsMeetingId,
         joinUrl,
         scheduledAt: new Date(startDateTime),
         scheduledEndAt: new Date(endDateTime),
-        endedAt: new Date(endDateTime),
+        endedAt: null, // session hasn't ended yet — set when explicitly ended/cancelled
         createdFrom: customJoinUrl && customJoinUrl.trim() ? 'LMS_CUSTOM' : 'LMS',
         createdBy: userId,
+        instructorId: finalInstructorId,
       },
     });
 
@@ -133,6 +136,8 @@ export const sessionService = {
     status?: 'scheduled' | 'live' | 'completed' | 'cancelled';
     instructorId?: string;
     studentId?: string;
+    page?: number;
+    limit?: number;
   }) {
     const where: any = {};
 
@@ -178,20 +183,28 @@ export const sessionService = {
 
     // Status filter
     const now = new Date();
+    const bufferMs = 15 * 60 * 1000;
     if (filters.status === 'scheduled') {
       where.scheduledAt = { gt: now };
     } else if (filters.status === 'live') {
       where.scheduledAt = { lte: now };
-      where.OR = [
-        { endedAt: null },
-        { endedAt: { gte: now } },
-      ];
+      where.endedAt = null;
+      where.scheduledEndAt = { gte: new Date(now.getTime() - bufferMs) };
     } else if (filters.status === 'completed') {
-      where.endedAt = { lt: now };
+      where.OR = [
+        { endedAt: { not: null } },
+        { scheduledEndAt: { lt: new Date(now.getTime() - bufferMs) } },
+      ];
     }
+
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 50;
+    const skip = (page - 1) * limit;
 
     return prisma.liveSession.findMany({
       where,
+      skip,
+      take: limit,
       include: {
         batch: {
           select: {
@@ -244,7 +257,7 @@ export const sessionService = {
     if (data.startDateTime) updateData.scheduledAt = new Date(data.startDateTime);
     if (data.endDateTime) {
       updateData.scheduledEndAt = new Date(data.endDateTime);
-      updateData.endedAt = new Date(data.endDateTime);
+      // Do NOT set endedAt — that represents actual end, not scheduled end
     }
 
     const updated = await prisma.liveSession.update({
@@ -283,7 +296,15 @@ export const sessionService = {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new Error('User not found');
 
-    await notificationService.notifySessionCancelled(sessionId);
+    // Non-admin must be the assigned instructor
+    if (user.role !== 'ADMIN' && session.batch.instructorId !== userId) {
+      throw new Error('Only the assigned instructor or an admin can cancel this session');
+    }
+
+    // Fire notification after authorization check
+    await notificationService.notifySessionCancelled(sessionId).catch(err => {
+      console.error('Failed to send cancellation notification:', err.message);
+    });
 
     if (user.role === 'ADMIN') {
       return prisma.$transaction(async (tx) => {
@@ -295,18 +316,15 @@ export const sessionService = {
         }
         return tx.liveSession.delete({ where: { id: sessionId } });
       });
-    } else {
-      if (session.batch.instructorId !== userId) {
-        throw new Error('Only the assigned instructor or an admin can cancel this session');
-      }
-      return prisma.$transaction(async (tx) => {
-        await tx.calendarEvent.deleteMany({ where: { sessionId } });
-        return tx.liveSession.update({
-          where: { id: sessionId },
-          data: { endedAt: new Date() },
-        });
-      });
     }
+
+    return prisma.$transaction(async (tx) => {
+      await tx.calendarEvent.deleteMany({ where: { sessionId } });
+      return tx.liveSession.update({
+        where: { id: sessionId },
+        data: { endedAt: new Date() },
+      });
+    });
   },
 
   // Creates a session from Teams webhook event (idempotent)
@@ -316,6 +334,7 @@ export const sessionService = {
     batchId: string;
     moduleId?: string;
     scheduledAt: Date;
+    scheduledEndAt?: Date;
     title: string;
   }) {
     // Idempotency: check if already exists
@@ -331,10 +350,11 @@ export const sessionService = {
       data: {
         batchId: data.batchId,
         moduleId: data.moduleId,
+        title: data.title,
         teamsMeetingId: data.teamsMeetingId,
         joinUrl: data.joinUrl,
         scheduledAt: data.scheduledAt,
-        scheduledEndAt: data.scheduledAt,
+        scheduledEndAt: data.scheduledEndAt ?? data.scheduledAt,
         createdFrom: 'TEAMS',
         createdBy: 'SYSTEM', // System webhook created this
       },
@@ -346,7 +366,7 @@ export const sessionService = {
         msEventId: `teams-${data.teamsMeetingId}`,
         title: data.title,
         startAt: data.scheduledAt,
-        endAt: data.scheduledAt, // Exact end time unknown from webhook
+        endAt: data.scheduledEndAt ?? data.scheduledAt,
         joinUrl: data.joinUrl,
         sessionId: session.id,
       },

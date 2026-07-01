@@ -15,7 +15,7 @@ import {
   IconBook,
   IconMessageCircle,
 } from "@tabler/icons-react";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 
 type Batch = {
   id: string;
@@ -243,7 +243,7 @@ export default function InstructorAssignmentsContent() {
           : null
       );
     } catch (err: any) {
-      toast.error(`Error saving grade: ${err.message}`);
+      toast.error("Error saving grade: " + getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -320,7 +320,7 @@ export default function InstructorAssignmentsContent() {
       setFormQuestionPdfUrl(res.fileUrl);
       toast.success("Question PDF uploaded successfully!");
     } catch (err: any) {
-      toast.error(`Upload failed: ${err.message}`);
+      toast.error("Upload failed: " + getErrorMessage(err));
     } finally {
       setUploadingPdf(false);
     }
@@ -408,7 +408,7 @@ export default function InstructorAssignmentsContent() {
       setActiveTab("list");
       toast.success("Assignment created successfully!");
     } catch (err: any) {
-      toast.error(`Error creating assignment: ${err.message}`);
+      toast.error("Error creating assignment: " + getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }

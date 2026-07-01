@@ -103,6 +103,7 @@ async function handleEventCreatedOrUpdated(userId: string, msEventId: string) {
   const teamsMeetingId = event.onlineMeeting?.conferenceId || msEventId;
   const joinUrl = event.onlineMeeting.joinUrl;
   const scheduledAt = new Date(event.start.dateTime + 'Z');
+  const scheduledEndAt = event.end?.dateTime ? new Date(event.end.dateTime + 'Z') : undefined;
   const title = event.subject || 'Teams Meeting';
 
   // Check if this meeting is already tracked
@@ -117,13 +118,18 @@ async function handleEventCreatedOrUpdated(userId: string, msEventId: string) {
 
   if (existingSession) {
     // Update the existing session if the schedule changed
+    // Do NOT set endedAt — that represents actual end, not scheduled end
+    const updateData: any = {
+      scheduledAt,
+      scheduledEndAt: event.end?.dateTime ? new Date(event.end.dateTime + 'Z') : undefined,
+      joinUrl,
+    };
+    // Only include scheduledEndAt if we have a valid date
+    if (!updateData.scheduledEndAt) delete updateData.scheduledEndAt;
+
     await prisma.liveSession.update({
       where: { id: existingSession.id },
-      data: {
-        scheduledAt,
-        joinUrl,
-        endedAt: event.end.dateTime ? new Date(event.end.dateTime + 'Z') : undefined,
-      },
+      data: updateData,
     });
 
     // Update associated CalendarEvent
@@ -194,6 +200,7 @@ async function handleEventCreatedOrUpdated(userId: string, msEventId: string) {
     batchId: instructorBatch.id,
     moduleId: firstModule.id,
     scheduledAt,
+    scheduledEndAt,
     title,
   });
 

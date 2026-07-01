@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { IconArrowRight, IconBook, IconCalendar, IconCertificate, IconHeart, IconPlayerPlay, IconVideo, IconClock, IconHelp, IconMessage, IconPlus, IconNotebook } from "@tabler/icons-react";
 import { api } from "@/lib/api";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 import type { ViewState } from "../_types/student-portal";
 import type {
   DashboardStats,

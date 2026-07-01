@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 
 type Course = {
   id: string;
@@ -90,9 +90,10 @@ function CoursesPageContent() {
     setDeleting(id);
     try {
       await api.delete(`/api/admin/courses/${id}`);
+      toast.success("Course archived");
       fetchCourses();
-    } catch {
-      toast.error("Failed to archive course");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     } finally {
       setDeleting(null);
     }
@@ -113,8 +114,8 @@ function CoursesPageContent() {
       }
       toast.success("Course published");
       fetchCourses();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to publish");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   };
 
@@ -123,8 +124,8 @@ function CoursesPageContent() {
       await api.post(`/api/admin/courses/${id}/unpublish`);
       toast.success("Course unpublished");
       fetchCourses();
-    } catch {
-      toast.error("Failed to unpublish");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   };
 

@@ -52,8 +52,8 @@ export const notesController = {
   async update(req: AuthRequest, res: Response) {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
-      const { title, body, pinned, isSticky } = req.body;
-      const result = await notesService.update(req.params.id, req.user.userId, { title, body, pinned, isSticky });
+      const { title, body, isSticky } = req.body;
+      const result = await notesService.update(req.params.id, req.user.userId, { title, body, isSticky });
       if (result.count === 0) return res.status(404).json({ error: 'Note not found' });
       return res.status(200).json({ message: 'Note updated' });
     } catch (error: any) {

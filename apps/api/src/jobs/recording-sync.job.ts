@@ -13,7 +13,8 @@ export const recordingSyncJob = {
     console.log('[RecordingSyncJob] Starting automated recordings sync...');
     try {
       const now = new Date();
-      // Assume a session is past/ended if endedAt is set OR scheduledAt is more than 90 minutes ago
+      // A session is eligible for recording sync if it was explicitly ended
+      // OR its scheduled end time was at least 90 minutes ago (recording needs time to appear)
       const cutoffTime = new Date(now.getTime() - 90 * 60 * 1000);
 
       const pastSessionsWithoutRecordings = (await prisma.liveSession.findMany({
@@ -23,7 +24,7 @@ export const recordingSyncJob = {
           },
           OR: [
             { endedAt: { not: null } },
-            { scheduledAt: { lte: cutoffTime } },
+            { scheduledEndAt: { lte: cutoffTime } },
           ],
         },
         select: {

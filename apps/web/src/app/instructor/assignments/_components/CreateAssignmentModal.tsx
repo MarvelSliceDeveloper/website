@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { api } from "@/lib/api";
 
 interface Batch {
@@ -81,7 +81,7 @@ export default function CreateAssignmentModal({
       onAssignmentCreated();
       onClose();
     } catch (err: any) {
-      toast.error(err.message || "Failed to create assignment");
+      toast.error(getErrorMessage(err));
     } finally {
       setCreating(false);
     }

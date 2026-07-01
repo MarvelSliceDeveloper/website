@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { timeAgo } from "@/lib/time-ago";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 import {
   IconArrowLeft,
   IconSend,

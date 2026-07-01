@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { IconNotes, IconTrash, IconFilter, IconChevronRight, IconBook } from "@tabler/icons-react";
-import { toast } from "sonner";
+import { IconNotes, IconTrash, IconFilter, IconChevronRight, IconBook, IconStar, IconPlus, IconSearch, IconX } from "@tabler/icons-react";
+import { toast, getErrorMessage } from "@/lib/toast";
 import StudentPortalShell from "@/components/StudentPortalShell";
 import RichEditor from "@/components/editor/RichEditor";
 
@@ -18,6 +18,7 @@ interface NoteItem {
   title: string;
   body: string;
   moduleId: string | null;
+  isSticky: boolean;
   createdAt: string;
   updatedAt: string;
   course: CourseInfo;
@@ -34,13 +35,23 @@ export default function StudentNotesPage() {
   const [notes, setNotes] = useState<NoteItem[]>([]);
   const [courses, setCourses] = useState<CourseInfo[]>([]);
   const [courseFilter, setCourseFilter] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [studentName, setStudentName] = useState("Student");
   const [studentEmail, setStudentEmail] = useState("");
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
+  const [editIsSticky, setEditIsSticky] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    courseId: "",
+    title: "",
+    body: "",
+    isSticky: false,
+  });
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,7 +61,10 @@ export default function StudentNotesPage() {
         const params = courseFilter ? `?courseId=${courseFilter}` : "";
         const data = await api.get<{ notes: NoteItem[] }>(`/api/notes${params}`);
         if (!cancelled) setNotes(data.notes || []);
-      } catch { /* ignore */ }
+      } catch (err) {
+        toast.error(getErrorMessage(err));
+        if (!cancelled) setNotes([]);
+      }
       finally { if (!cancelled) setLoading(false); }
     })();
     return () => { cancelled = true; };
@@ -62,7 +76,9 @@ export default function StudentNotesPage() {
       try {
         const data = await api.get<{ courses: CourseInfo[] }>("/api/courses/enrolled");
         if (!cancelled) setCourses(data.courses || []);
-      } catch { /* ignore */ }
+      } catch (err) {
+        toast.error(getErrorMessage(err));
+      }
     })();
     return () => { cancelled = true; };
   }, []);
@@ -79,13 +95,15 @@ export default function StudentNotesPage() {
   }, []);
 
   async function deleteNote(id: string) {
+    const confirmed = window.confirm("Are you sure you want to delete this note?");
+    if (!confirmed) return;
     try {
       await api.delete(`/api/notes/${id}`);
       setNotes((prev) => prev.filter((n) => n.id !== id));
       if (editingNoteId === id) setEditingNoteId(null);
       toast.success("Note deleted");
-    } catch {
-      toast.error("Failed to delete note");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }
 
@@ -93,17 +111,18 @@ export default function StudentNotesPage() {
     setEditingNoteId(note.id);
     setEditTitle(note.title);
     setEditBody(note.body);
+    setEditIsSticky(note.isSticky || false);
   }
 
   async function saveEdit(id: string) {
     setSaving(true);
     try {
-      await api.patch(`/api/notes/${id}`, { title: editTitle, body: editBody });
-      setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, title: editTitle, body: editBody } : n)));
+      await api.patch(`/api/notes/${id}`, { title: editTitle, body: editBody, isSticky: editIsSticky });
+      setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, title: editTitle, body: editBody, isSticky: editIsSticky } : n)));
       setEditingNoteId(null);
       toast.success("Note updated");
-    } catch {
-      toast.error("Failed to update note");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     } finally {
       setSaving(false);
     }
@@ -113,7 +132,44 @@ export default function StudentNotesPage() {
     setEditingNoteId(null);
     setEditTitle("");
     setEditBody("");
+    setEditIsSticky(false);
   }
+
+  async function createNote(e: React.FormEvent) {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      const note = await api.post<{ note: NoteItem }>("/api/notes", createForm);
+      setNotes((prev) => [note.note, ...prev]);
+      setShowCreateModal(false);
+      setCreateForm({ courseId: "", title: "", body: "", isSticky: false });
+      toast.success("Note created");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  async function toggleSticky(id: string, currentIsSticky: boolean) {
+    try {
+      await api.patch(`/api/notes/${id}`, { isSticky: !currentIsSticky });
+      setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, isSticky: !currentIsSticky } : n)));
+      toast.success(currentIsSticky ? "Note unpinned" : "Note pinned");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  }
+
+  const filteredNotes = notes.filter((note) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      note.title.toLowerCase().includes(q) ||
+      stripHtml(note.body).toLowerCase().includes(q) ||
+      note.course.title.toLowerCase().includes(q)
+    );
+  });
 
   return (
     <StudentPortalShell
@@ -127,10 +183,39 @@ export default function StudentNotesPage() {
       <div className="space-y-6">
         <div>
           <p className="sp-eyebrow">Student</p>
-          <h1 className="mt-1.5 text-2xl font-bold text-foreground">My Notes</h1>
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="mt-1.5 text-2xl font-bold text-foreground">My Notes</h1>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="btn-primary flex items-center gap-1.5 text-sm"
+            >
+              <IconPlus size={16} /> New Note
+            </button>
+          </div>
           <p className="mt-1 text-sm text-muted-foreground">
             {notes.length} note{notes.length !== 1 ? "s" : ""} across {courses.length} course{courses.length !== 1 ? "s" : ""}
           </p>
+        </div>
+
+        <div className="flex gap-2">
+          <div className="relative flex-1 max-w-md">
+            <IconSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+            <input
+              type="text"
+              placeholder="Search notes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="field w-full pl-9 pr-9 text-sm"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
+              >
+                <IconX size={14} />
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
@@ -173,18 +258,18 @@ export default function StudentNotesPage() {
                   <div key={i} className="h-24 animate-pulse rounded-xl bg-card-hover/60 border border-border/40" />
                 ))}
               </div>
-            ) : notes.length === 0 ? (
+            ) : filteredNotes.length === 0 ? (
               <div className="glass-card flex flex-col items-center justify-center py-20 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-5">
                   <IconNotes size={32} />
                 </div>
-                <p className="text-base font-semibold text-foreground">No notes yet</p>
+                <p className="text-base font-semibold text-foreground">No notes found</p>
                 <p className="mt-1.5 text-sm text-muted-foreground max-w-sm">
-                  Notes you create inside your courses will appear here.
+                  Try adjusting your search or filter.
                 </p>
               </div>
             ) : (
-              notes.map((note) => (
+              filteredNotes.map((note) => (
                 <div
                   key={note.id}
                   className={`glass-card overflow-hidden transition-all ${editingNoteId === note.id ? "ring-2 ring-primary/30" : ""
@@ -225,10 +310,13 @@ export default function StudentNotesPage() {
                             {note.moduleId && (
                               <span className="text-[10px] text-muted-foreground">Module note</span>
                             )}
+                            {note.isSticky && (
+                              <IconStar size={12} className="text-warning fill-current" />
+                            )}
                           </div>
-                          {note.title && (
-                            <p className="text-sm font-medium text-foreground mt-1">{note.title}</p>
-                          )}
+                          <p className="text-sm font-medium text-foreground mt-1">
+                            {note.title || "Untitled Note"}
+                          </p>
                           {note.body && (
                             <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                               {stripHtml(note.body)}
@@ -258,6 +346,80 @@ export default function StudentNotesPage() {
           </div>
         </div>
       </div>
+
+      {/* Create Note Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="glass-card w-full max-w-lg p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-foreground">Create Note</h2>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <IconX size={20} />
+              </button>
+            </div>
+            <form onSubmit={createNote} className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-muted mb-1 block">Course</label>
+                <select
+                  value={createForm.courseId}
+                  onChange={(e) => setCreateForm({ ...createForm, courseId: e.target.value })}
+                  className="field w-full text-sm"
+                  required
+                >
+                  <option value="">Select a course...</option>
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}>{c.title}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted mb-1 block">Title</label>
+                <input
+                  type="text"
+                  value={createForm.title}
+                  onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
+                  placeholder="Note title..."
+                  className="field w-full text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted mb-1 block">Content</label>
+                <RichEditor
+                  content={createForm.body}
+                  onChange={(body) => setCreateForm({ ...createForm, body })}
+                  placeholder="Write your note..."
+                  minHeight="120px"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setCreateForm({ ...createForm, isSticky: !createForm.isSticky })}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-warning"
+                >
+                  <IconStar size={14} className={createForm.isSticky ? "text-warning fill-current" : ""} />
+                  Pin to top
+                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className="btn-secondary text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={creating || !createForm.courseId} className="btn-primary text-xs">
+                    {creating ? "Creating..." : "Create Note"}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </StudentPortalShell>
   );
 }

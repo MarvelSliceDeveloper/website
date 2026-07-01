@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 
 interface MentorshipRequestModalProps {
   isOpen: boolean;
@@ -48,7 +48,7 @@ export function MentorshipRequestModal({
       setFormData({ title: "", description: "", preferredDate: "", preferredTime: "" });
       onClose();
     } catch (err: any) {
-      toast.error(err.message || "Failed to submit request");
+      toast.error(getErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }

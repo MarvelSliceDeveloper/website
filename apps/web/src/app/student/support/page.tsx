@@ -17,7 +17,7 @@ import {
   IconMessageCircle,
   IconClock,
 } from "@tabler/icons-react";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 
 interface SupportMessage {
   id: string;

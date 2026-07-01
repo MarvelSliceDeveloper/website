@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import StudentPortalShell, { type Breadcrumb } from "@/components/StudentPortalShell";
 import { api } from "@/lib/api";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 
 // Types
 import type { ViewState } from "./_types/student-portal";
@@ -68,7 +68,7 @@ interface PortalData {
 interface ApiBatchSessionRecord {
   id: string;
   scheduledAt: string;
-  endDateTime: string;
+  scheduledEndAt: string;
   module?: {
     id: string;
     title: string;
@@ -150,17 +150,17 @@ async function fetchPortalData(): Promise<PortalData> {
   // AFTER ✅ — endDateTime passed through, status computed dynamically
   const mappedSessions: LiveSession[] = (sessionsData.sessions || []).map((s: any) => ({
     id: s.id,
-    title: s.module
+    title: s.title || (s.module
       ? `Module ${s.module.title} — ${s.batch?.course?.title}`
-      : `Live Session — ${s.batch?.course?.title}`,
+      : `Live Session — ${s.batch?.course?.title}`),
     courseTitle: s.batch?.course?.title || "Unknown Course",
     instructor: s.batch?.instructor?.name || "TBD",
     batchLabel: s.batch?.name || "—",
-    status: computeSessionStatus(s.scheduledAt, s.endDateTime),
+    status: computeSessionStatus(s.scheduledAt, s.scheduledEndAt),
     scheduledAt: s.scheduledAt,
-    endDateTime: s.endDateTime,   // ✅ THIS was missing
+    endDateTime: s.scheduledEndAt,
     joinUrl: s.joinUrl,
-    recordingSyncingIn: s.endDateTime && new Date(s.endDateTime) <= new Date() && !s.recording
+    recordingSyncingIn: s.scheduledEndAt && new Date(s.scheduledEndAt) <= new Date() && !s.recording
       ? "~20 min"
       : undefined,
   }));
@@ -246,9 +246,9 @@ async function fetchBatch(batchId: string): Promise<Batch | null> {
         id: session.id,
         dayLabel: `Day ${index + 1}`,
         title: session.module?.title ?? "Session",
-        status: computeSessionStatus(session.scheduledAt, session.endDateTime),
+        status: computeSessionStatus(session.scheduledAt, session.scheduledEndAt),
         scheduledAt: session.scheduledAt,
-        endDateTime: session.endDateTime,
+        endDateTime: session.scheduledEndAt,
         instructor: batch.instructor.name,
       })),
       recordings,
@@ -297,6 +297,21 @@ function buildBreadcrumbs(
 // ─── Main Portal Page ─────────────────────────────────────────────────────────
 
 export default function StudentPortalPage() {
+  return (
+    <Suspense fallback={
+      <StudentPortalShell>
+        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-border border-t-primary" />
+          <p className="text-sm text-muted-foreground">Loading your portal…</p>
+        </div>
+      </StudentPortalShell>
+    }>
+      <StudentPortalContent />
+    </Suspense>
+  );
+}
+
+function StudentPortalContent() {
   const searchParams = useSearchParams();
   const [viewStack, setViewStack] = useState<ViewState[]>(() => {
     const viewParam = searchParams?.get("view");

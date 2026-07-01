@@ -7,7 +7,7 @@ import { timeAgo } from "@/lib/time-ago";
 import type { NotificationItem } from "@/lib/notifications";
 import { NotificationIcon } from "@/lib/notifications";
 import StudentPortalShell from "@/components/StudentPortalShell";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 
 export default function StudentInboxPage() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 import {
   IconAlertCircle,
   IconCheck,
@@ -95,7 +95,7 @@ export default function QuizOverdueView({ quizzes, onGoBack }: QuizOverdueViewPr
       setSelectedAnswers({});
       setSubView({ type: "QUIZ", assignmentId, data });
     } catch (err: any) {
-      toast.error(err.message || "Failed to load quiz questions.");
+      toast.error(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -109,7 +109,7 @@ export default function QuizOverdueView({ quizzes, onGoBack }: QuizOverdueViewPr
       );
       setSubView({ type: "RESULT", data: resultRes.result });
     } catch (err: any) {
-      toast.error(err.message || "Failed to load quiz results.");
+      toast.error(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -143,7 +143,7 @@ export default function QuizOverdueView({ quizzes, onGoBack }: QuizOverdueViewPr
       setLocallySubmittedIds((prev) => [...prev, assignmentId]);
       setSubView({ type: "RESULT", data: resultRes.result });
     } catch (err: any) {
-      toast.error(err.message || "Failed to submit answers.");
+      toast.error(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }

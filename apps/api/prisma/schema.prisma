@@ -152,12 +152,13 @@ model LiveSession {
   id             String         @id @default(cuid())
   batchId        String // Which batch this session is for
   moduleId       String?
+  title          String // Session title
   teamsMeetingId String         @unique
   joinUrl        String
   scheduledAt    DateTime
   scheduledEndAt DateTime
-  endedAt        DateTime?
-  createdFrom    String // LMS, TEAMS
+  endedAt        DateTime?      // null = not ended; set when cancelled/admin-ends
+  createdFrom    String // LMS, LMS_CUSTOM, TEAMS
   createdBy      String // Admin user ID
   batch          Batch          @relation(fields: [batchId], references: [id])
   module         Module?        @relation(fields: [moduleId], references: [id])
@@ -438,7 +439,6 @@ model Note {
   moduleId  String?
   title     String   @default("")
   body      String   @default("")
-  pinned    Boolean  @default(false)
   isSticky  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

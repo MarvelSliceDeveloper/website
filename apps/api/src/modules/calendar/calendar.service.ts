@@ -19,10 +19,12 @@ type CalendarEventWithSession = Prisma.CalendarEventGetPayload<{
 /**
  * Checks if a session is currently live.
  * Adds a 15-min buffer after endAt (sessions often run over).
+ * If sessionEndedAt is set (non-null), the session was explicitly ended and is not live.
  */
-export function isSessionLive(startAt: Date, endAt: Date): boolean {
+export function isSessionLive(startAt: Date, endAt: Date, sessionEndedAt?: Date | null): boolean {
+  if (sessionEndedAt) return false;
   const now = new Date();
-  const bufferMs = 15 * 60 * 1000; // 15 minutes
+  const bufferMs = 15 * 60 * 1000;
   return now >= startAt && now <= new Date(endAt.getTime() + bufferMs);
 }
 
@@ -31,7 +33,6 @@ export function isSessionLive(startAt: Date, endAt: Date): boolean {
  * Upserts by msEventId — creates new events or updates existing ones.
  */
 export async function syncCalendarForUser(userId: string, startDate: string, endDate: string) {
-  // Fetch events from Microsoft Graph
   const msEvents: MsCalendarEvent[] = await getCalendarView(userId, startDate, endDate);
 
   const results = {
@@ -45,8 +46,6 @@ export async function syncCalendarForUser(userId: string, startDate: string, end
     const endAt = new Date(event.end.dateTime + 'Z');
     const joinUrl = event.onlineMeeting?.joinUrl || null;
 
-    // Try to match this event to an existing LiveSession by checking if the joinUrl
-    // matches any LiveSession's joinUrl
     let sessionId: string | null = null;
     if (joinUrl) {
       const matchedSession = await prisma.liveSession.findFirst({
@@ -58,7 +57,6 @@ export async function syncCalendarForUser(userId: string, startDate: string, end
       }
     }
 
-    // Upsert the calendar event
     const existing = await prisma.calendarEvent.findUnique({
       where: { msEventId: event.id },
     });
@@ -119,6 +117,7 @@ export async function getEventsForUser(startDate: string, endDate: string) {
 
 /**
  * Get today's events with live status computed.
+ * Respects session cancellation via endedAt.
  */
 export async function getTodayEvents() {
   const now = new Date();
@@ -146,36 +145,48 @@ export async function getTodayEvents() {
 
   return events.map((event) => ({
     ...event,
-    isLive: isSessionLive(event.startAt, event.endAt),
+    isLive: isSessionLive(event.startAt, event.endAt, event.session?.endedAt),
   }));
 }
 
 /**
  * Get currently live sessions only.
+ * Queries LiveSession directly (not CalendarEvent) for accuracy.
  */
 export async function getLiveSessions() {
   const now = new Date();
   const bufferMs = 15 * 60 * 1000;
   const bufferedNow = new Date(now.getTime() - bufferMs);
 
-  const events: CalendarEventWithSession[] = await prisma.calendarEvent.findMany({
+  const sessions = await prisma.liveSession.findMany({
     where: {
-      startAt: { lte: now },
-      endAt: { gte: bufferedNow },
+      scheduledAt: { lte: now },
+      endedAt: null,
+      scheduledEndAt: { gte: bufferedNow },
     },
     include: {
-      session: {
+      batch: {
         select: {
           id: true,
-          batchId: true,
+          name: true,
+          course: { select: { id: true, title: true } },
+          instructor: { select: { id: true, name: true } },
+        },
+      },
+      module: { select: { id: true, title: true } },
+      calendarEvent: {
+        select: {
+          id: true,
+          msEventId: true,
+          startAt: true,
+          endAt: true,
+          title: true,
           joinUrl: true,
-          scheduledAt: true,
-          endedAt: true,
         },
       },
     },
-    orderBy: { startAt: 'asc' },
+    orderBy: { scheduledAt: 'asc' },
   });
 
-  return events.filter((event) => isSessionLive(event.startAt, event.endAt));
+  return sessions;
 }

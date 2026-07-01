@@ -8,9 +8,10 @@ import { toast } from "sonner";
 
 type Session = {
   id: string;
+  title?: string;
   joinUrl: string;
   scheduledAt: string;
-  endDateTime: string;
+  scheduledEndAt: string;
   endedAt: string | null;
   createdFrom: string;
   createdBy: string;
@@ -53,11 +54,11 @@ export default function AdminSessionsPage() {
   const now = Date.now();
 
   const upcoming = sessions.filter((s) => {
-    const end = s.endDateTime ? new Date(s.endDateTime).getTime() : NaN;
+    const end = s.scheduledEndAt ? new Date(s.scheduledEndAt).getTime() : NaN;
     return !s.endedAt && (isNaN(end) || end > now);
   });
   const past = sessions.filter((s) => {
-    const end = s.endDateTime ? new Date(s.endDateTime).getTime() : NaN;
+    const end = s.scheduledEndAt ? new Date(s.scheduledEndAt).getTime() : NaN;
     return s.endedAt || (!isNaN(end) && end <= now);
   });
 

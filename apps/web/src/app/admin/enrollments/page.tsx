@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 
 type EnrollmentRequest = {
   id: string;
@@ -91,8 +91,8 @@ export default function AdminEnrollmentsPage() {
       toast.success("Enrollment approved and assigned to batch");
       setApproveModal(null);
       fetchEnrollments();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to approve enrollment");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     } finally {
       setProcessing(false);
     }
@@ -104,8 +104,8 @@ export default function AdminEnrollmentsPage() {
       await api.patch(`/api/admin/enrollments/${id}/reject`);
       toast.success("Enrollment rejected");
       fetchEnrollments();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to reject enrollment");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   };
 

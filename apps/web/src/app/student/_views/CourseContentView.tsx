@@ -606,6 +606,9 @@ export default function CourseContentView({ courseId, navigate: _navigate, goBac
             <div className="flex-1" />
             <span className="text-xs text-muted-foreground">{currentModuleIndex >= 0 ? `Module ${currentModuleIndex + 1} of ${data.modules.length}` : ""}</span>
             <div className="flex-1" />
+            <button onClick={() => { setActiveRail("note"); setEditingNoteId("new"); setNewNoteTitle(""); setNewNoteBody(""); }} className="btn-secondary text-xs gap-1.5">
+              <IconPencil size={13} /> Take Note
+            </button>
             <button onClick={() => { const nextIdx = currentModuleIndex + 1; if (nextIdx < data.modules.length) { const next = data.modules[nextIdx]; selectModule(next.id); setExpandedModules((prevSet) => new Set([...prevSet, next.id])); } }} disabled={currentModuleIndex >= data.modules.length - 1} className="btn-primary text-xs gap-1.5">
               Continue <IconArrowRight size={13} />
             </button>

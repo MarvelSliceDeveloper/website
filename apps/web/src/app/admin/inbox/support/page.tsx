@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { IconArrowLeft, IconSend } from "@tabler/icons-react";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { timeAgo } from "@/lib/time-ago";
 
 interface SupportTicketItem {
@@ -56,8 +56,8 @@ export default function AdminInboxSupportPage() {
     try {
       const data = await api.get<{ ticket: SupportTicketItem }>(`/api/support/tickets/${ticketId}`);
       setSelectedTicket(data.ticket);
-    } catch {
-      toast.error("Failed to load ticket");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }
 
@@ -68,8 +68,8 @@ export default function AdminInboxSupportPage() {
       await api.post(`/api/support/tickets/${selectedTicket.id}/messages`, { message: replyText });
       setReplyText("");
       openTicket(selectedTicket.id);
-    } catch {
-      toast.error("Failed to send reply");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     } finally {
       setSendingReply(false);
     }
@@ -83,8 +83,8 @@ export default function AdminInboxSupportPage() {
       toast.success("Status updated");
       openTicket(selectedTicket.id);
       fetchTickets();
-    } catch {
-      toast.error("Failed to update status");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     } finally {
       setUpdatingStatus(false);
     }

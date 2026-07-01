@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 
 type Batch = {
   id: string;
@@ -73,8 +73,8 @@ function BatchesPageContent() {
       await api.delete(`/api/admin/batches/${id}`);
       toast.success(`Batch "${name}" deleted`);
       fetchBatches();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to delete batch");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   };
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 
 type User = {
   id: string;
@@ -55,7 +55,10 @@ export default function AdminUsersPage() {
     setLoading(true);
     api.get<User[]>("/api/users")
       .then(setUsers)
-      .catch(() => setUsers([]))
+      .catch((err) => {
+        toast.error(getErrorMessage(err));
+        setUsers([]);
+      })
       .finally(() => setLoading(false));
   };
 
@@ -71,10 +74,10 @@ export default function AdminUsersPage() {
       await api.post("/api/users", form);
       setForm({ name: "", email: "", password: "", role: "STUDENT" });
       setShowModal(false);
+      toast.success("User created successfully");
       fetchUsers();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to create user.";
-      toast.error(message);
+      toast.error(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -88,10 +91,10 @@ export default function AdminUsersPage() {
     try {
       await api.patch(`/api/users/${editUser.id}`, editForm);
       setEditUser(null);
+      toast.success("User updated successfully");
       fetchUsers();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to update user.";
-      toast.error(message);
+      toast.error(getErrorMessage(err));
     } finally {
       setEditing(false);
     }
@@ -104,10 +107,10 @@ export default function AdminUsersPage() {
     try {
       await api.delete(`/api/users/${deleteUserId}`);
       setDeleteUserId(null);
+      toast.success("User deleted successfully");
       fetchUsers();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to delete user.";
-      toast.error(message);
+      toast.error(getErrorMessage(err));
     } finally {
       setDeleting(false);
     }

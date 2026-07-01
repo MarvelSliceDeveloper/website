@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { api } from "@/lib/api";
 import {
   IconAlertCircle,
@@ -76,7 +76,7 @@ export default function AssignmentOverdueView({
       setActiveUploadId(null);
       setSelectedFile(null);
     } catch (err: any) {
-      toast.error(err.message || "Failed to upload file.");
+      toast.error(getErrorMessage(err));
     } finally {
       setUploading(null);
     }

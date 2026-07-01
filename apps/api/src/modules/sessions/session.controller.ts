@@ -37,7 +37,7 @@ export const sessionController = {
     try {
       if (!req.user) return res.status(401).json({ error: 'Authentication required' });
 
-      const { batchId, courseId, status } = req.query;
+      const { batchId, courseId, status, page, limit } = req.query;
 
       // Only filter by instructorId for INSTRUCTOR role — admins should see all sessions
       const sessions = await sessionService.listSessions({
@@ -46,6 +46,8 @@ export const sessionController = {
         status: status as 'scheduled' | 'live' | 'completed' | 'cancelled' | undefined,
         instructorId: req.user.role === 'INSTRUCTOR' ? req.user.userId : undefined,
         studentId: req.user.role === 'STUDENT' ? req.user.userId : undefined,
+        page: page ? parseInt(page as string, 10) : undefined,
+        limit: limit ? parseInt(limit as string, 10) : undefined,
       });
 
       return res.status(200).json({ sessions });

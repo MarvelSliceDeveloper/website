@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 
 type TicketStatus = "OPEN" | "ASSIGNED" | "SCHEDULED" | "COMPLETED" | "CANCELLED";
 
@@ -94,7 +94,7 @@ function InstructorMentorshipContent() {
       setActionTicket(null);
       fetchTickets();
     } catch (err: any) {
-      toast.error(err.message || "Failed to schedule");
+      toast.error(getErrorMessage(err));
     } finally { setProcessing(false); }
   };
 
@@ -107,7 +107,7 @@ function InstructorMentorshipContent() {
       toast.success("Mentorship session marked as completed");
       fetchTickets();
     } catch (err: any) {
-      toast.error(err.message || "Failed to complete");
+      toast.error(getErrorMessage(err));
     } finally { setProcessing(false); }
   };
 
@@ -119,7 +119,7 @@ function InstructorMentorshipContent() {
       toast.success("Mentorship request cancelled");
       fetchTickets();
     } catch (err: any) {
-      toast.error(err.message || "Failed to cancel");
+      toast.error(getErrorMessage(err));
     } finally { setProcessing(false); }
   };
 

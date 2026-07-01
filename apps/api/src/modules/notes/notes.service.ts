@@ -21,7 +21,7 @@ export const notesService = {
     return prisma.note.create({ data });
   },
 
-  async update(id: string, userId: string, data: { title?: string; body?: string; pinned?: boolean; isSticky?: boolean }) {
+  async update(id: string, userId: string, data: { title?: string; body?: string; isSticky?: boolean }) {
     return prisma.note.updateMany({ where: { id, userId }, data });
   },
 

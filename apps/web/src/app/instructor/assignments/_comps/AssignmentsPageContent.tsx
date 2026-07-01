@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { IconPlus, IconUsers, IconCalendar, IconClipboardList } from "@tabler/icons-react";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { AssignmentCreateForm } from "./AssignmentCreateForm";
 import { SubmissionReviewPanel } from "./SubmissionReviewPanel";
 import type { Batch, Assignment, StudentSubmission, FormQuestion } from "./types";

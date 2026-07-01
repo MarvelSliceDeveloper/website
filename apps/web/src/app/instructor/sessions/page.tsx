@@ -16,7 +16,7 @@ import {
   IconPlus,
   IconLink
 } from "@tabler/icons-react";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 
 type Course = {
   id: string;
@@ -193,7 +193,7 @@ function SessionsPageContent() {
       setShowCreateModal(false);
       fetchSessions();
     } catch (err: any) {
-      toast.error(err.message || "Failed to schedule session");
+      toast.error(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -229,7 +229,7 @@ function SessionsPageContent() {
       setEditingSession(null);
       fetchSessions();
     } catch (err: any) {
-      toast.error(err.message || "Failed to update session");
+      toast.error(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -243,7 +243,7 @@ function SessionsPageContent() {
       toast.success("Session cancelled successfully!");
       fetchSessions();
     } catch (err: any) {
-      toast.error(err.message || "Failed to cancel session");
+      toast.error(getErrorMessage(err));
     }
   };
 
@@ -254,7 +254,7 @@ function SessionsPageContent() {
       toast.success("Recording synced successfully! The video is now available for students.");
       fetchSessions();
     } catch (err: any) {
-      toast.error(err.message || "No recording was found on Teams. Please note that Teams recordings take a few minutes to process after a session ends.");
+      toast.error(getErrorMessage(err));
     } finally {
       setSyncingId(null);
     }

@@ -71,6 +71,9 @@ export default function RichEditor({
 
   if (!editor) return null;
 
+  const wordCount = editor.getText().trim().split(/\s+/).filter(Boolean).length;
+  const charCount = editor.getText().length;
+
   return (
     <div className="rich-editor rounded-xl border border-border/60 bg-card overflow-hidden">
       <div className="flex flex-wrap items-center gap-0.5 border-b border-border/60 bg-muted/10 px-2 py-1.5">
@@ -110,6 +113,10 @@ export default function RichEditor({
         className="prose prose-sm max-w-none px-4 py-3 [&_.ProseMirror]:outline-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:text-muted [&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror]:min-h-[200px]"
         style={{ minHeight }}
       />
+      <div className="border-t border-border/60 bg-muted/5 px-3 py-1.5 text-[10px] text-muted flex justify-between items-center">
+        <span>{wordCount} words</span>
+        <span>{charCount} characters</span>
+      </div>
     </div>
   );
 }
