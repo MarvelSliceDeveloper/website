@@ -205,22 +205,72 @@ export const ticketService = {
     });
   },
 
-  // Schedules a session for a mentorship ticket
   async scheduleSession(ticketId: string, adminId: string, data: ScheduleSessionInput) {
-    return prisma.mentorshipTicket.update({
+    const ticket = await prisma.mentorshipTicket.findUnique({
       where: { id: ticketId },
-      data: {
-        scheduledAt: new Date(data.scheduledAt),
-        teamsMeetingId: data.teamsMeetingId || null,
-        joinUrl: data.joinUrl || null,
-        status: TicketStatus.SCHEDULED,
-      },
       include: {
-        student: { select: userSelect },
-        mentor: { select: userSelect },
-        course: { select: { id: true, title: true } },
+        student: { select: { id: true, name: true } },
+        mentor: { select: { id: true, name: true } },
       },
     });
+
+    if (!ticket) throw new Error('Ticket not found');
+    if (ticket.status !== TicketStatus.ASSIGNED && ticket.status !== TicketStatus.OPEN) {
+      throw new Error('Ticket must be in ASSIGNED or OPEN status to schedule');
+    }
+
+    const scheduledAt = new Date(data.scheduledAt);
+    const scheduledEndAt = new Date(scheduledAt.getTime() + 60 * 60 * 1000);
+    const teamsMeetingId = data.teamsMeetingId || `mentorship-${ticketId}`;
+    const joinUrl = data.joinUrl || '';
+    const mentorId = ticket.mentorId || adminId;
+
+    const [updatedTicket] = await prisma.$transaction(async (tx) => {
+      const updated = await tx.mentorshipTicket.update({
+        where: { id: ticketId },
+        data: {
+          scheduledAt,
+          teamsMeetingId: data.teamsMeetingId || null,
+          joinUrl: data.joinUrl || null,
+          status: TicketStatus.SCHEDULED,
+        },
+        include: {
+          student: { select: userSelect },
+          mentor: { select: userSelect },
+          course: { select: { id: true, title: true } },
+        },
+      });
+
+      const session = await tx.liveSession.create({
+        data: {
+          batchId: null,
+          title: `Mentorship: ${ticket.title} — ${ticket.student.name}`,
+          teamsMeetingId,
+          joinUrl,
+          scheduledAt,
+          scheduledEndAt,
+          createdFrom: 'MENTORSHIP',
+          createdBy: adminId,
+          instructorId: mentorId,
+          mentorshipTicketId: ticketId,
+        },
+      });
+
+      await tx.calendarEvent.create({
+        data: {
+          msEventId: `mentorship-${ticketId}`,
+          title: `Mentorship: ${ticket.title} — ${ticket.student.name}`,
+          startAt: scheduledAt,
+          endAt: scheduledEndAt,
+          joinUrl,
+          sessionId: session.id,
+        },
+      });
+
+      return [updated];
+    });
+
+    return updatedTicket;
   },
 
   // Marks a mentorship ticket as completed
@@ -236,17 +286,32 @@ export const ticketService = {
     });
   },
 
-  // Cancels a mentorship ticket
   async cancelMentorshipTicket(ticketId: string) {
-    return prisma.mentorshipTicket.update({
-      where: { id: ticketId },
-      data: { status: TicketStatus.CANCELLED, resolvedAt: new Date() },
-      include: {
-        student: { select: userSelect },
-        mentor: { select: userSelect },
-        course: { select: { id: true, title: true } },
-      },
+    const [updated] = await prisma.$transaction(async (tx) => {
+      const linkedSession = await tx.liveSession.findFirst({
+        where: { mentorshipTicketId: ticketId },
+        select: { id: true },
+      });
+
+      if (linkedSession) {
+        await tx.calendarEvent.deleteMany({ where: { sessionId: linkedSession.id } });
+        await tx.liveSession.delete({ where: { id: linkedSession.id } });
+      }
+
+      const ticket = await tx.mentorshipTicket.update({
+        where: { id: ticketId },
+        data: { status: TicketStatus.CANCELLED, resolvedAt: new Date() },
+        include: {
+          student: { select: userSelect },
+          mentor: { select: userSelect },
+          course: { select: { id: true, title: true } },
+        },
+      });
+
+      return [ticket];
     });
+
+    return updated;
   },
 
   // Gets all users eligible to be mentors

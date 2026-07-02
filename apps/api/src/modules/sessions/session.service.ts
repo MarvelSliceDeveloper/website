@@ -172,11 +172,11 @@ export const sessionService = {
     if (filters.courseId) batchFilter.courseId = filters.courseId;
 
     if (filters.instructorId) {
-      // Find sessions where the batch's instructor matches
-      where.batch = {
-        instructorId: filters.instructorId,
-        ...(filters.courseId ? { courseId: filters.courseId } : {}),
-      };
+      // Include batch sessions where the instructor teaches AND mentorship sessions where they are the mentor
+      where.OR = [
+        { batch: { instructorId: filters.instructorId, ...(filters.courseId ? { courseId: filters.courseId } : {}) } },
+        { instructorId: filters.instructorId, batchId: null },
+      ];
     } else if (filters.courseId) {
       where.batch = batchFilter;
     }
@@ -245,10 +245,9 @@ export const sessionService = {
 
     if (!session) throw new Error('Session not found');
 
-    // In actual implementation, roleGuard middleware ensures only ADMIN or the specific INSTRUCTOR can access.
-    // We double check instructor ownership here if they aren't admin.
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (user?.role === 'INSTRUCTOR' && session.batch.instructorId !== userId) {
+    const sessionInstructorId = session.batch?.instructorId || session.instructorId;
+    if (user?.role === 'INSTRUCTOR' && sessionInstructorId !== userId) {
       throw new Error('Only the assigned instructor or an admin can update this session');
     }
 
@@ -296,8 +295,9 @@ export const sessionService = {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new Error('User not found');
 
-    // Non-admin must be the assigned instructor
-    if (user.role !== 'ADMIN' && session.batch.instructorId !== userId) {
+    // Non-admin must be the assigned instructor (check batch instructor for regular sessions, instructorId for mentorship)
+    const sessionInstructorId = session.batch?.instructorId || session.instructorId;
+    if (user.role !== 'ADMIN' && sessionInstructorId !== userId) {
       throw new Error('Only the assigned instructor or an admin can cancel this session');
     }
 

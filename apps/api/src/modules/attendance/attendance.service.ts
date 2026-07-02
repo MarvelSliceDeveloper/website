@@ -23,7 +23,7 @@ export const attendanceService = {
     }
 
     // 2. Verify student enrollment in the batch of this session
-    if (session.batch.enrollments.length === 0) {
+    if (!session.batch || session.batch.enrollments.length === 0) {
       throw new Error('You are not enrolled in the batch for this session');
     }
 

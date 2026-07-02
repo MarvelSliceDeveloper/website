@@ -82,4 +82,41 @@ export const notificationController = {
       return res.status(500).json({ error: 'Failed to update preference' });
     }
   },
+
+  async sendNotification(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+
+      const { targetType, targetIds, title, message, type } = req.body;
+
+      if (!targetType || !['ALL_USERS', 'BATCH', 'COURSE'].includes(targetType)) {
+        return res.status(400).json({ error: 'targetType must be ALL_USERS, BATCH, or COURSE' });
+      }
+      if (targetType !== 'ALL_USERS' && (!targetIds || !Array.isArray(targetIds) || targetIds.length === 0)) {
+        return res.status(400).json({ error: 'targetIds must be a non-empty array for BATCH or COURSE targets' });
+      }
+      if (!title || typeof title !== 'string' || title.trim().length === 0) {
+        return res.status(400).json({ error: 'title is required' });
+      }
+      if (!message || typeof message !== 'string' || message.trim().length === 0) {
+        return res.status(400).json({ error: 'message is required' });
+      }
+
+      const result = await notificationService.sendNotification(req.user.userId, req.user.role, {
+        targetType,
+        targetIds: targetIds ?? [],
+        title: title.trim(),
+        message: message.trim(),
+        type,
+      });
+
+      return res.status(200).json({
+        message: `Notification sent to ${result.count} users`,
+        count: result.count,
+      });
+    } catch (error: any) {
+      console.error('Error sending notification:', error.message);
+      return res.status(500).json({ error: 'Failed to send notification' });
+    }
+  },
 };

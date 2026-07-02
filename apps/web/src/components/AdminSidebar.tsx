@@ -12,6 +12,7 @@ import {
   IconMail,
   IconLogout,
   IconMessages,
+  IconSend,
   IconUsers,
   IconUsersGroup,
   IconVideo,
@@ -38,6 +39,7 @@ const overviewItems: NavItem[] = [
   { label: "Inbox", href: "/admin/inbox", icon: IconMail, 
     children: [
       { label: "Notifications", href: "/admin/inbox" },
+      { label: "Send Notification", href: "/admin/notifications/send" },
       { label: "Mentorship Tickets", href: "/admin/inbox/tickets" },
       { label: "Support", href: "/admin/inbox/support" },
       { label: "Messages", href: "/admin/inbox/messages" },

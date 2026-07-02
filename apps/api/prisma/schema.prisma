@@ -149,24 +149,26 @@ model EnrollmentRequest {
 
 // Admin creates Teams meeting → assigns to a batch
 model LiveSession {
-  id             String         @id @default(cuid())
-  batchId        String // Which batch this session is for
-  moduleId       String?
-  title          String // Session title
-  teamsMeetingId String         @unique
-  joinUrl        String
-  scheduledAt    DateTime
-  scheduledEndAt DateTime
-  endedAt        DateTime?      // null = not ended; set when cancelled/admin-ends
-  createdFrom    String // LMS, LMS_CUSTOM, TEAMS
-  createdBy      String // Admin user ID
-  batch          Batch          @relation(fields: [batchId], references: [id])
-  module         Module?        @relation(fields: [moduleId], references: [id])
-  recording      Recording?
-  calendarEvent  CalendarEvent?
-  attendance     Attendance[]
-  instructorId   String?
-  instructor     User?          @relation("SessionInstructor", fields: [instructorId], references: [id])
+  id                 String             @id @default(cuid())
+  batchId            String? // null for mentorship sessions
+  moduleId           String?
+  title              String // Session title
+  teamsMeetingId     String             @unique
+  joinUrl            String
+  scheduledAt        DateTime
+  scheduledEndAt     DateTime
+  endedAt            DateTime?          // null = not ended; set when cancelled/admin-ends
+  createdFrom        String // LMS, LMS_CUSTOM, TEAMS, MENTORSHIP
+  createdBy          String // Admin user ID
+  mentorshipTicketId String?            @unique // link back to mentorship ticket
+  batch              Batch?             @relation(fields: [batchId], references: [id])
+  module             Module?            @relation(fields: [moduleId], references: [id])
+  mentorshipTicket   MentorshipTicket?  @relation(fields: [mentorshipTicketId], references: [id])
+  recording          Recording?
+  calendarEvent      CalendarEvent?
+  attendance         Attendance[]
+  instructorId       String?
+  instructor         User?              @relation("SessionInstructor", fields: [instructorId], references: [id])
 }
 
 model Recording {
@@ -260,6 +262,7 @@ model MentorshipTicket {
   student       User         @relation("TicketStudent", fields: [studentId], references: [id])
   mentor        User?        @relation("TicketMentor", fields: [mentorId], references: [id])
   course        Course?      @relation(fields: [courseId], references: [id])
+  liveSession   LiveSession?
 }
 
 // Support tickets — users (students/instructors) raise issues to admin

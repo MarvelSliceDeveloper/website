@@ -87,7 +87,9 @@ async function buildCourseCompletionMap(userId: string) {
     }
 
     for (const recording of recordings) {
-        const courseId = batchToCourse.get(recording.session.batchId);
+        const batchId = recording.session.batchId;
+        if (!batchId) continue;
+        const courseId = batchToCourse.get(batchId);
         if (!courseId) continue;
 
         const stats = recordingsByCourse.get(courseId);

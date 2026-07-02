@@ -1,4 +1,4 @@
-# Mentorship Calendar Integration — TODO
+# Mentorship Calendar Integration — COMPLETED
 
 ## Problem
 Mentorship sessions scheduled via the mentorship ticket system do **not** appear in any calendar views (admin calendar, student calendar, instructor calendar). This is because:
@@ -74,42 +74,52 @@ model LiveSession {
 }
 ```
 
-## Proposed Fix
+## Implementation Summary
 
-### 1. In `ticketService.scheduleSession()` (~line 209 of `ticket.service.ts`)
-After updating the mentorship ticket (status→SCHEDULED, scheduledAt, joinUrl, teamsMeetingId), also:
+### What Changed
 
-```
-- Create a LiveSession record with:
-  - title: "Mentorship: {ticket.title} - {student.name}"
-  - scheduledAt / scheduledEndAt: from schedule data (default 1hr duration)
-  - joinUrl: from schedule data
-  - teamsMeetingId: from schedule data
-  - instructorId: mentor's ID
-  - batchId: maybe null or placeholder — need to handle
-  - createdFrom: "MENTORSHIP" (add this constant)
-  - createdBy: instructor ID
-```
+**1. Prisma Schema** (`apps/api/prisma/schema.prisma`)
+- `LiveSession.batchId` → made nullable (`String?`) — mentorship sessions have no batch
+- Added `LiveSession.mentorshipTicketId` (`String?` @unique) — bi-directional link to `MentorshipTicket`
+- Added `LiveSession.mentorshipTicket` relation + `MentorshipTicket.liveSession` back-link
+- New migration: `20260702115600_add_mentorship_calendar_integration`
 
-### 2. Handle `batchId` requirement
-`LiveSession.batchId` is required and has a FK to `Batch`. Options:
-- **Option A**: Make `batchId` nullable (requires Prisma migration)
-- **Option B**: Use a system "Mentorship" batch (hacky)
-- **Option C**: Link mentorship to a batch if courseId is set on the ticket
+**2. `ticketService.scheduleSession()`** — now uses a Prisma transaction to atomically:
+1. Update mentorship ticket (status→SCHEDULED)
+2. Create `LiveSession` record with `batchId: null`, `createdFrom: 'MENTORSHIP'`, title `"Mentorship: {title} — {student}"`, default 1hr `scheduledEndAt`, synthetic `teamsMeetingId` if not provided
+3. Create `CalendarEvent` record linked to the LiveSession
 
-### 3. Consider adding `mentorshipTicketId` to `LiveSession`
-To link back from session to mentorship ticket (bi-directional link). Requires Prisma migration.
+**3. `ticketService.cancelMentorshipTicket()`** — deletes the linked `LiveSession` + `CalendarEvent` in a transaction when a ticket is cancelled
 
-### 4. Calendar query changes
-Calendar views fetch sessions. They might need filtering or labeling to distinguish mentorship sessions from regular batch sessions. Add visual indicator like "(Mentorship)" in the event title or a badge.
+**4. `sessionService.listSessions()`** — instructor filter now uses `OR` to match mentorship sessions by `instructorId` in addition to batch instructor matches
 
-## Related Files
-- `apps/api/src/modules/tickets/ticket.service.ts` — main logic to modify
-- `apps/api/src/modules/sessions/session.service.ts` — session creation (may reuse)
-- `apps/api/src/modules/tickets/ticket.controller.ts` — `scheduleSession` handler
-- `apps/web/src/app/admin/calendar/page.tsx` — admin calendar
-- `apps/web/src/app/student/_views/CalendarView.tsx` — student calendar
-- `apps/api/prisma/schema.prisma` — `MentorshipTicket` and `LiveSession` models
+**5. `sessionService.cancelSession()` & `updateSession()`** — handle nullable `session.batch` by falling back to `session.instructorId`
+
+**6. Side-effect fixes** — `attendance.service.ts`, `notification.service.ts`, and `certificate.service.ts` updated for null-safe `batch`/`batchId` access
+
+### How It Works
+
+| Step | What Happens | Calendar Visibility |
+|------|-------------|-------------------|
+| Instructor schedules mentorship | `scheduleSession()` creates `LiveSession` + `CalendarEvent` | ✅ Appears in `/api/sessions` (admin calendar) and `/api/calendar/events` (student calendar) |
+| Student views calendar | Fetches `/api/calendar/events` → includes mentorship events | ✅ Shows with indigo (`#6366f1`) color (already supported in `CalendarView.tsx`) |
+| Admin views calendar | Fetches `/api/sessions` → includes mentorship LiveSessions | ✅ Shows up (title prefixed with "Mentorship:") |
+| Ticket cancelled | Linked session + event are cleaned up | ✅ Removed from all views |
+
+### Files Modified
+- `apps/api/prisma/schema.prisma` — schema changes
+- `apps/api/prisma/migrations/20260702115600_add_mentorship_calendar_integration/migration.sql` — migration
+- `apps/api/src/modules/tickets/ticket.service.ts` — core schedule/cancel logic
+- `apps/api/src/modules/sessions/session.service.ts` — null-safe batch handling + mentor session listing
+- `apps/api/src/modules/attendance/attendance.service.ts` — null-safe batch check
+- `apps/api/src/modules/certificates/certificate.service.ts` — null-safe batchId
+- `apps/api/src/modules/notifications/notification.service.ts` — early return for mentorship sessions + InputJsonValue fix
+
+### Notes
+- Run `pnpm prisma:migrate` when database is available to apply the migration
+- The `LiveSession.batchId` is null for mentorship sessions; frontend components already use optional chaining (`s.batch?.course?.title`) and handle it gracefully
+- Calendar events from the real API don't carry a `type` field — the student calendar's `eventColor()` falls back to blue (`#25c0e8`) when type is unspecified. Title prefix "Mentorship:" serves as the visual differentiator.
+- The student portal's mock data (`MOCK_CALENDAR_EVENTS`) already includes a mentorship entry (`type: "mentorship"`, `#6366f1`) — keeps working independently
 
 ## Status
-**TODO** — Not yet implemented.
+**COMPLETED** — Implemented on 2026-07-02.

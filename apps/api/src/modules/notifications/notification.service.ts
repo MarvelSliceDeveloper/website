@@ -1,12 +1,13 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../utils/prisma';
-import type { InputJsonValue } from '@prisma/client';
+import { UserRole } from '@lms/types';
 
 interface NotificationCreateData {
   userId: string;
   title: string;
   message: string;
   type: string;
-  metadata?: InputJsonValue;
+  metadata?: Prisma.InputJsonValue;
 }
 
 // Chunk array into smaller batches to avoid DB parameter limits
@@ -245,6 +246,7 @@ export const notificationService = {
       })
       : 'unspecified time';
 
+    if (!session.batch) return;
     const message = `${session.batch.course.title} — ${session.batch.name}: A live session is scheduled for ${startStr}`;
 
     const userIds = new Set<string>();
@@ -290,7 +292,7 @@ export const notificationService = {
       },
     });
 
-    if (!session) return;
+    if (!session || !session.batch) return;
 
     const message = `Recording is now available for ${session.batch.course.title} — ${session.batch.name}`;
 
@@ -335,7 +337,7 @@ export const notificationService = {
         },
       },
     });
-    if (!session) return;
+    if (!session || !session.batch) return;
 
     const message = `Session cancelled for ${session.batch.course.title} — ${session.batch.name}`;
     const userIds = new Set<string>();
@@ -562,5 +564,116 @@ export const notificationService = {
       type: 'ASSIGNMENT_GRADED',
       metadata: { submissionId: submission.id, assignmentId: submission.assignmentId },
     });
+  },
+
+  /**
+   * Send a custom notification to a targeted audience.
+   * - ADMIN can target ALL_USERS, BATCH, or COURSE
+   * - INSTRUCTOR can only target BATCH and must be the assigned instructor
+   */
+  async sendNotification(
+    senderId: string,
+    senderRole: UserRole,
+    options: {
+      targetType: 'ALL_USERS' | 'BATCH' | 'COURSE';
+      targetIds: string[];
+      title: string;
+      message: string;
+      type?: string;
+    },
+  ): Promise<{ count: number }> {
+    const { targetType, targetIds, title, message } = options;
+    const type = options.type ?? 'CUSTOM_NOTIFICATION';
+
+    if (senderRole !== UserRole.ADMIN && senderRole !== UserRole.INSTRUCTOR) {
+      return { count: 0 };
+    }
+
+    if (senderRole === UserRole.INSTRUCTOR && targetType !== 'BATCH') {
+      console.warn(`Instructor ${senderId} attempted invalid targetType: ${targetType}`);
+      return { count: 0 };
+    }
+
+    if (!title || !message) {
+      console.warn('sendNotification called with empty title or message');
+      return { count: 0 };
+    }
+
+    let userIds: string[] = [];
+
+    if (targetType === 'ALL_USERS') {
+      if (senderRole !== UserRole.ADMIN) return { count: 0 };
+      const users = await prisma.user.findMany({ select: { id: true } });
+      userIds = users.map((u) => u.id);
+    } else if (targetType === 'BATCH') {
+      if (!targetIds || targetIds.length === 0) return { count: 0 };
+
+      if (senderRole === UserRole.INSTRUCTOR) {
+        const batches = await prisma.batch.findMany({
+          where: { id: { in: targetIds } },
+          select: { id: true, instructorId: true },
+        });
+        const unauthorized = batches.filter((b) => b.instructorId !== senderId);
+        if (unauthorized.length > 0) {
+          console.warn(`Instructor ${senderId} not assigned to batches: ${unauthorized.map((b) => b.id).join(', ')}`);
+          return { count: 0 };
+        }
+      }
+
+      const [enrollments, batches] = await Promise.all([
+        prisma.enrollmentRequest.findMany({
+          where: { batchId: { in: targetIds }, status: 'APPROVED' },
+          select: { userId: true },
+        }),
+        prisma.batch.findMany({
+          where: { id: { in: targetIds } },
+          select: { instructorId: true },
+        }),
+      ]);
+
+      const idSet = new Set<string>();
+      for (const e of enrollments) if (e.userId) idSet.add(e.userId);
+      for (const b of batches) if (b.instructorId) idSet.add(b.instructorId);
+      userIds = Array.from(idSet);
+    } else if (targetType === 'COURSE') {
+      if (senderRole !== UserRole.ADMIN) return { count: 0 };
+      if (!targetIds || targetIds.length === 0) return { count: 0 };
+
+      const batches = await prisma.batch.findMany({
+        where: { courseId: { in: targetIds } },
+        select: { id: true, instructorId: true },
+      });
+      const batchIds = batches.map((b) => b.id);
+
+      if (batchIds.length === 0) return { count: 0 };
+
+      const enrollments = await prisma.enrollmentRequest.findMany({
+        where: { batchId: { in: batchIds }, status: 'APPROVED' },
+        select: { userId: true },
+      });
+
+      const idSet = new Set<string>();
+      for (const e of enrollments) if (e.userId) idSet.add(e.userId);
+      for (const b of batches) if (b.instructorId) idSet.add(b.instructorId);
+      userIds = Array.from(idSet);
+    }
+
+    if (userIds.length === 0) return { count: 0 };
+
+    const notifications = userIds.map((userId) => ({
+      userId,
+      title,
+      message,
+      type,
+      metadata: {
+        sentBy: senderId,
+        senderRole,
+        targetType,
+        targetIds,
+      },
+    }));
+
+    const count = await this.createMany(notifications);
+    return { count };
   },
 };

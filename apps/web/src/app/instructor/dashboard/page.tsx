@@ -217,7 +217,7 @@ export default function InstructorDashboardPage() {
                         })}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                        {session.batch.course.title} · Batch: {session.batch.name}
+                        {session.batch ? `${session.batch.course.title} · Batch: ${session.batch.name}` : session.title}
                       </p>
                     </div>
                   </div>

@@ -1,4 +1,4 @@
-import { IconBell, IconEye, IconCheck, IconX, IconHelp, IconMessage } from "@tabler/icons-react";
+import { IconBell, IconEye, IconCheck, IconX, IconHelp, IconMessage, IconSend } from "@tabler/icons-react";
 
 export interface NotificationItem {
   id: string;
@@ -19,6 +19,7 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   SUPPORT_TICKET_CREATED: <IconHelp size={16} />,
   SUPPORT_TICKET_RESPONDED: <IconMessage size={16} />,
   SUPPORT_TICKET_STATUS_CHANGED: <IconCheck size={16} />,
+  CUSTOM_NOTIFICATION: <IconSend size={16} />,
 };
 
 const COLOR_MAP: Record<string, string> = {
@@ -31,6 +32,7 @@ const COLOR_MAP: Record<string, string> = {
   SUPPORT_TICKET_CREATED: "bg-primary/20 text-primary",
   SUPPORT_TICKET_RESPONDED: "bg-accent/20 text-accent",
   SUPPORT_TICKET_STATUS_CHANGED: "bg-success/20 text-success",
+  CUSTOM_NOTIFICATION: "bg-primary/20 text-primary",
 };
 
 interface Props {

@@ -8,6 +8,7 @@ import {
   IconClipboardList,
   IconLayoutDashboard,
   IconLogout,
+  IconSend,
   IconUsers,
   IconVideo,
   IconMail,
@@ -33,6 +34,11 @@ type NavItem = {
 const overviewItems: NavItem[] = [
   { label: "Dashboard", href: "/instructor/dashboard", icon: IconLayoutDashboard },
   { label: "Inbox", href: "/instructor/inbox", icon: IconMail },
+  {
+    label: "Send Notification",
+    href: "/instructor/notifications/send",
+    icon: IconSend,
+  },
   {
     label: "My Sessions",
     href: "/instructor/sessions",
