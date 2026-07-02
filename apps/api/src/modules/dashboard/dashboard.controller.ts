@@ -5,63 +5,53 @@ import { prisma } from '../../utils/prisma';
 export const dashboardController = {
   async getStats(req: AuthRequest, res: Response) {
     try {
-      const [
-        studentsPerCourse,
-        batchDistribution,
-        userRoleDistribution,
-        recentEnrollments,
-        topCourses,
-        revenueTrend,
-        enrollmentTrend,
-      ] = await Promise.all([
-        prisma.enrollmentRequest.groupBy({
-          by: ['courseId'],
-          where: { status: 'APPROVED' },
-          _count: { id: true },
-          orderBy: { _count: { id: 'desc' } },
-        }),
+      const studentsPerCourse = await prisma.enrollmentRequest.groupBy({
+        by: ['courseId'],
+        where: { status: 'APPROVED' },
+        _count: { id: true },
+        orderBy: { _count: { id: 'desc' } },
+      });
 
-        prisma.batch.groupBy({
-          by: ['status'],
-          _count: { id: true },
-        }),
+      const batchDistribution = await prisma.batch.groupBy({
+        by: ['status'],
+        _count: { id: true },
+      });
 
-        prisma.user.groupBy({
-          by: ['role'],
-          _count: { id: true },
-        }),
+      const userRoleDistribution = await prisma.user.groupBy({
+        by: ['role'],
+        _count: { id: true },
+      });
 
-        prisma.enrollmentRequest.findMany({
-          take: 10,
-          orderBy: { appliedAt: 'desc' },
-          include: {
-            user: { select: { id: true, name: true, email: true } },
-          },
-        }),
+      const recentEnrollments = await prisma.enrollmentRequest.findMany({
+        take: 10,
+        orderBy: { appliedAt: 'desc' },
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+        },
+      });
 
-        prisma.enrollmentRequest.groupBy({
-          by: ['courseId'],
-          where: { status: 'APPROVED' },
-          _count: { id: true },
-          orderBy: { _count: { id: 'desc' } },
-          take: 5,
-        }),
+      const topCourses = await prisma.enrollmentRequest.groupBy({
+        by: ['courseId'],
+        where: { status: 'APPROVED' },
+        _count: { id: true },
+        orderBy: { _count: { id: 'desc' } },
+        take: 5,
+      });
 
-        prisma.payment.findMany({
-          where: { status: 'paid' },
-          select: { amount: true, createdAt: true },
-          orderBy: { createdAt: 'asc' },
-        }),
+      const revenueTrend = await prisma.payment.findMany({
+        where: { status: 'paid' },
+        select: { amount: true, createdAt: true },
+        orderBy: { createdAt: 'asc' },
+      });
 
-        prisma.$queryRaw`
-          SELECT
-            DATE_TRUNC('month', "appliedAt")::date AS month,
-            COUNT(*)::int AS count
-          FROM "EnrollmentRequest"
-          GROUP BY DATE_TRUNC('month', "appliedAt")
-          ORDER BY month ASC
-        `,
-      ]);
+      const enrollmentTrend = await prisma.$queryRaw`
+        SELECT
+          DATE_TRUNC('month', "appliedAt")::date AS month,
+          COUNT(*)::int AS count
+        FROM "EnrollmentRequest"
+        GROUP BY DATE_TRUNC('month', "appliedAt")
+        ORDER BY month ASC
+      `;
 
       const courseIds1 = studentsPerCourse.map((s) => s.courseId);
       const courses1 = await prisma.course.findMany({
@@ -102,22 +92,21 @@ export const dashboardController = {
         .map(([month, total]) => ({ month, total }))
         .sort((a, b) => a.month.localeCompare(b.month));
 
-      const recentEnrollmentsResolved = await Promise.all(
-        recentEnrollments.map(async (e) => {
-          const course = await prisma.course.findUnique({
-            where: { id: e.courseId },
-            select: { title: true },
-          });
-          return {
-            id: e.id,
-            userName: e.user.name,
-            userEmail: e.user.email,
-            courseTitle: course?.title || 'Unknown',
-            status: e.status,
-            appliedAt: e.appliedAt,
-          };
-        })
-      );
+      const enrollmentCourseIds = recentEnrollments.map((e) => e.courseId);
+      const enrollmentCourses = await prisma.course.findMany({
+        where: { id: { in: enrollmentCourseIds } },
+        select: { id: true, title: true },
+      });
+      const enrollmentCourseMap = new Map(enrollmentCourses.map((c) => [c.id, c.title]));
+
+      const recentEnrollmentsResolved = recentEnrollments.map((e) => ({
+        id: e.id,
+        userName: e.user.name,
+        userEmail: e.user.email,
+        courseTitle: enrollmentCourseMap.get(e.courseId) || 'Unknown',
+        status: e.status,
+        appliedAt: e.appliedAt,
+      }));
 
       res.json({
         studentsPerCourse: studentsPerCourseResolved,

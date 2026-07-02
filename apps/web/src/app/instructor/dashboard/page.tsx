@@ -35,7 +35,8 @@ type Session = {
   joinUrl: string;
   scheduledAt: string;
   endedAt: string | null;
-  batch: { name: string; course: { title: string } };
+  title?: string;
+  batch?: { name: string; course: { title: string } } | null;
 };
 
 type Batch = {

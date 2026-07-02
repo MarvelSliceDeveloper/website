@@ -201,6 +201,7 @@ function NavGroup({
 
   // Auto-expand the group whose child matches the current pathname,
   // but only if the user hasn't manually collapsed that group.
+  // If no child group matches, collapse any previously auto-expanded group.
   useEffect(() => {
     if (collapsed) return;
 
@@ -214,6 +215,8 @@ function NavGroup({
 
     if (activeGroup && manuallyCollapsed !== activeGroup.label) {
       Promise.resolve().then(() => setExpandedGroup(activeGroup.label));
+    } else if (!activeGroup && manuallyCollapsed === null) {
+      Promise.resolve().then(() => setExpandedGroup(null));
     }
   }, [pathname, collapsed, items, manuallyCollapsed]);
 
