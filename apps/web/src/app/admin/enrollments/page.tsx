@@ -1,8 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { FormModal } from "@/components/admin/FormModal";
+import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
+import { EmptyState } from "@/components/admin/EmptyState";
+import { IconClock, IconCircleCheck, IconCircleX } from "@tabler/icons-react";
 
 type EnrollmentRequest = {
   id: string;
@@ -33,10 +38,10 @@ const statusStyles: Record<string, string> = {
   REJECTED: "bg-danger/15 text-danger border-danger/25",
 };
 
-const statusIcons: Record<string, string> = {
-  PENDING: "⏳",
-  APPROVED: "✅",
-  REJECTED: "❌",
+const statusIcons: Record<string, ComponentType<{ size?: number; stroke?: number }>> = {
+  PENDING: IconClock,
+  APPROVED: IconCircleCheck,
+  REJECTED: IconCircleX,
 };
 
 export default function AdminEnrollmentsPage() {
@@ -112,65 +117,50 @@ export default function AdminEnrollmentsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-          Admin
-        </p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">
-          Enrollment Requests
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Review, approve, and assign students to course batches.
-        </p>
-      </div>
+    <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <AdminPageHeader
+        title="Enrollment Requests"
+        description="Review, approve, and assign students to course batches."
+      />
 
       {/* Status filters */}
       <div className="flex gap-1.5">
-        {(["PENDING", "APPROVED", "REJECTED"] as const).map((s) => (
-          <button
-            key={s}
-            onClick={() => setStatusFilter(s)}
-            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-              statusFilter === s
-                ? statusStyles[s]
-                : "border-border text-muted-foreground hover:bg-card-hover"
-            }`}
-          >
-            <span>{statusIcons[s]}</span>
-            {s}
-          </button>
-        ))}
+        {(["PENDING", "APPROVED", "REJECTED"] as const).map((s) => {
+          const Icon = statusIcons[s];
+          return (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+                statusFilter === s
+                  ? statusStyles[s]
+                  : "border-border text-muted-foreground hover:bg-card-hover"
+              }`}
+            >
+              <Icon size={16} stroke={1.5} />
+              {s}
+            </button>
+          );
+        })}
       </div>
 
       {/* Enrollment Cards */}
       {loading ? (
-        <div className="glass-card p-12 text-center">
-          <p className="text-muted animate-pulse">Loading enrollment requests...</p>
-        </div>
+        <CardSkeleton count={4} />
       ) : enrollments.length === 0 ? (
-        <div className="glass-card p-12 text-center">
-          <div className="text-4xl mb-3">
-            {statusFilter === "PENDING" ? "🎉" : "📋"}
-          </div>
-          <p className="text-lg font-semibold text-foreground">
-            {statusFilter === "PENDING"
-              ? "No pending requests"
-              : `No ${statusFilter.toLowerCase()} enrollments`}
-          </p>
-          <p className="text-sm text-muted-foreground mt-1">
-            {statusFilter === "PENDING"
-              ? "All enrollment requests have been reviewed."
-              : "Check the other filters to find what you're looking for."}
-          </p>
-        </div>
+        statusFilter === "PENDING" ? (
+          <EmptyState icon={IconClock} title="No pending requests" description="All enrollment requests have been reviewed." />
+        ) : statusFilter === "APPROVED" ? (
+          <EmptyState icon={IconCircleCheck} title="No approved enrollments" description="Check the other filters to find what you're looking for." />
+        ) : (
+          <EmptyState icon={IconCircleX} title="No rejected enrollments" description="Check the other filters to find what you're looking for." />
+        )
       ) : (
         <div className="space-y-3">
           {enrollments.map((enrollment) => (
             <div
               key={enrollment.id}
-              className="glass-card p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+              className="glass-card p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none"
             >
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary/30 to-accent/20 text-sm font-bold text-foreground">
@@ -200,7 +190,10 @@ export default function AdminEnrollmentsPage() {
                 <span
                   className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[enrollment.status]}`}
                 >
-                  {statusIcons[enrollment.status]} {enrollment.status}
+                  {(() => {
+                    const StatusIcon = statusIcons[enrollment.status];
+                    return <StatusIcon size={14} stroke={1.5} />;
+                  })()} {enrollment.status}
                 </span>
 
                 {enrollment.status === "PENDING" && (
@@ -227,59 +220,12 @@ export default function AdminEnrollmentsPage() {
 
       {/* Approve Modal — assign to batch */}
       {approveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md glass-card p-6 shadow-2xl space-y-4 animate-in scale-in duration-200">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <h3 className="text-lg font-bold text-foreground">
-                Approve & Assign to Batch
-              </h3>
-              <button
-                onClick={() => setApproveModal(null)}
-                className="text-muted-foreground hover:text-foreground text-xl"
-              >
-                &times;
-              </button>
-            </div>
-
-            <div className="space-y-2 text-sm">
-              <p>
-                <span className="text-muted">Student:</span>{" "}
-                <span className="font-medium text-foreground">{approveModal.user.name}</span>
-              </p>
-              <p>
-                <span className="text-muted">Course:</span>{" "}
-                <span className="font-medium text-foreground">{approveModal.courseTitle}</span>
-              </p>
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground">
-                Assign to Batch <span className="text-danger">*</span>
-              </label>
-              {loadingBatches ? (
-                <div className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border" />
-              ) : batches.length === 0 ? (
-                <div className="rounded-xl border border-warning/20 bg-warning/5 px-4 py-3 text-xs text-warning">
-                  No batches found for this course. Create a batch first before approving.
-                </div>
-              ) : (
-                <select
-                  value={selectedBatchId}
-                  onChange={(e) => setSelectedBatchId(e.target.value)}
-                  className="field w-full"
-                >
-                  <option value="">-- Select Batch --</option>
-                  {batches.map((batch) => (
-                    <option key={batch.id} value={batch.id}>
-                      {batch.name} — {batch._count?.enrollments || 0}
-                      {batch.maxStudents ? `/${batch.maxStudents}` : ""} students
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-border/50">
+        <FormModal
+          open={true}
+          onClose={() => setApproveModal(null)}
+          title="Approve & Assign to Batch"
+          footer={
+            <>
               <button
                 onClick={() => setApproveModal(null)}
                 className="btn-secondary text-sm"
@@ -301,9 +247,47 @@ export default function AdminEnrollmentsPage() {
                   "Approve & Assign"
                 )}
               </button>
-            </div>
+            </>
+          }
+        >
+          <div className="space-y-2 text-sm">
+            <p>
+              <span className="text-muted">Student:</span>{" "}
+              <span className="font-medium text-foreground">{approveModal.user.name}</span>
+            </p>
+            <p>
+              <span className="text-muted">Course:</span>{" "}
+              <span className="font-medium text-foreground">{approveModal.courseTitle}</span>
+            </p>
           </div>
-        </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Assign to Batch <span className="text-danger">*</span>
+            </label>
+            {loadingBatches ? (
+              <div className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border" />
+            ) : batches.length === 0 ? (
+              <div className="rounded-xl border border-warning/20 bg-warning/5 px-4 py-3 text-xs text-warning">
+                No batches found for this course. Create a batch first before approving.
+              </div>
+            ) : (
+              <select
+                value={selectedBatchId}
+                onChange={(e) => setSelectedBatchId(e.target.value)}
+                className="field w-full"
+              >
+                <option value="">-- Select Batch --</option>
+                {batches.map((batch) => (
+                  <option key={batch.id} value={batch.id}>
+                    {batch.name} — {batch._count?.enrollments || 0}
+                    {batch.maxStudents ? `/${batch.maxStudents}` : ""} students
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        </FormModal>
       )}
     </div>
   );

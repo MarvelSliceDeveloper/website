@@ -17,6 +17,7 @@ import {
   IconVideo,
   IconCalendar,
   IconChevronDown,
+  IconSettings,
 } from "@tabler/icons-react";
 
 type NavItemChild = {
@@ -124,6 +125,11 @@ const overviewItems: NavItem[] = [
     label: "Microsoft",
     href: "/admin/microsoft",
     icon: IconBrandWindows,
+  },
+  {
+    label: "Settings",
+    href: "/admin/settings",
+    icon: IconSettings,
   },
 ];
 

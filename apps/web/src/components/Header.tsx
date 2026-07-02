@@ -202,6 +202,7 @@ export default function Header({
           </div>
 
           <button
+            onClick={() => router.push(inboxHref.replace("/inbox", "/settings"))}
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
             aria-label="Settings"
           >

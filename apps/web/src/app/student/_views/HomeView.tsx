@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { IconArrowRight, IconBook, IconCalendar, IconCertificate, IconHeart, IconPlayerPlay, IconVideo, IconClock, IconHelp, IconMessage, IconPlus, IconNotebook } from "@tabler/icons-react";
+import { IconArrowRight, IconBook, IconCalendar, IconCertificate, IconHeart, IconPlayerPlay, IconVideo, IconClock, IconHelp, IconMessage, IconPlus, IconNotebook, IconPencil, IconAlertCircle } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import type { ViewState } from "../_types/student-portal";
@@ -185,7 +185,7 @@ export default function HomeView({
       id: "assignment-overdue",
       label: "Assignment Overdue",
       value: overdueAssignments.filter((item) => item.status === "PENDING" && item.type === "ASSIGNMENT").length,
-      icon: <span className="text-lg">📝</span>,
+      icon: <IconPencil size={20} className="text-danger" />,
       gradient: "bg-gradient-to-br from-danger/20 to-red-400/10",
       onClick: () => navigate({ view: "ASSIGNMENT_OVERDUE" }),
       liveBadge: overdueAssignments.some((item) => item.status === "PENDING" && item.type === "ASSIGNMENT") ? "Overdue" : undefined,
@@ -194,7 +194,7 @@ export default function HomeView({
       id: "quiz-overdue",
       label: "Quiz Overdue",
       value: overdueAssignments.filter((item) => item.status === "PENDING" && item.type === "QUIZ").length,
-      icon: <span className="text-lg">⏰</span>,
+      icon: <IconClock size={20} className="text-accent" />,
       gradient: "bg-gradient-to-br from-accent/20 to-cyan-400/10",
       onClick: () => navigate({ view: "QUIZ_OVERDUE" }),
       liveBadge: overdueAssignments.some((item) => item.status === "PENDING" && item.type === "QUIZ") ? "Overdue" : undefined,
@@ -227,11 +227,11 @@ export default function HomeView({
   }
 
   return (
-    <div className="sp-view-enter space-y-8">
+    <div className="sp-view-enter space-y-8 motion-reduce:animate-none">
       {/* ── Greeting ─────────────────────────────────────────────────────── */}
-      <div>
+      <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
         <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-          {greeting}, {studentName} 👋
+          {greeting}, {studentName}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">Here&apos;s everything in one place.</p>
       </div>
@@ -475,7 +475,7 @@ export default function HomeView({
           </div>
         )}
       </div>
-      <div>
+      <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-75">
         <p className="sp-eyebrow mb-3">Sections</p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {SECTION_CARDS.map((card, i) => (
@@ -522,7 +522,7 @@ export default function HomeView({
       />
 
       {/* ── Today's Schedule ──────────────────────────────────────────────── */}
-      <div className="glass-card p-5">
+      <div className="glass-card p-5 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
         <div className="mb-3 flex items-center justify-between">
           <div>
             <p className="sp-eyebrow">Today</p>
@@ -592,7 +592,7 @@ export default function HomeView({
                 onClick={() => navigate({ view: "RECORDING_PLAYER", params: { batchId: item.batchId, sessionId: item.recordingId } })}
                 className="glass-card group flex w-full items-center gap-4 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30"
               >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-2xl overflow-hidden">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card overflow-hidden">
                   {item.thumbnail && (item.thumbnail.startsWith("/") || item.thumbnail.startsWith("http")) ? (
                     <Image
                       src={item.thumbnail}
@@ -605,12 +605,16 @@ export default function HomeView({
                         e.currentTarget.style.display = "none";
                         const parent = e.currentTarget.parentElement;
                         if (parent) {
-                          parent.textContent = "📚";
+                          const fallback = document.createElement("div");
+                          fallback.className = "flex items-center justify-center w-full h-full";
+                          fallback.innerHTML =
+                            '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-primary"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5A2.5 2.5 0 0 1 4 19.5z"/><path d="M8 2v20"/><path d="M12 6h4"/><path d="M12 10h4"/><path d="M12 14h4"/></svg>';
+                          parent.append(fallback);
                         }
                       }}
                     />
                   ) : (
-                    item.thumbnail || "📚"
+                    <IconBook size={22} stroke={1.5} className="text-primary" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -44,50 +44,6 @@ export default function AdminCalendarPage() {
   const [loading, setLoading] = useState(true);
   const [courseColorMap, setCourseColorMap] = useState<Record<string, string>>({});
 
-  const fetchInstructors = async () => {
-    try {
-      const data = await api.get<Instructor[]>("/api/admin/batches/instructors");
-      setInstructors(data || []);
-    } catch { /* ignore */ }
-  };
-
-  const fetchEvents = async () => {
-    try {
-      const params: Record<string, string> = {};
-      if (selectedInstructor) params.instructorId = selectedInstructor;
-      const data = await api.get<{ sessions: SessionData[] }>("/api/sessions", params);
-      const sessions = Array.isArray(data.sessions) ? data.sessions : [];
-
-      const colorMap: Record<string, string> = {};
-      let colorIdx = 0;
-
-      const mapped = sessions.map((s: SessionData) => {
-        const courseTitle = s.batch?.course?.title || "Unknown";
-        if (!colorMap[courseTitle]) {
-          colorMap[courseTitle] = COURSE_COLORS[colorIdx % COURSE_COLORS.length];
-          colorIdx++;
-        }
-        const color = colorMap[courseTitle];
-        const startStr = s.scheduledAt;
-        const endMs = s.endedAt
-          ? new Date(s.endedAt).getTime()
-          : new Date(startStr).getTime() + 3600000;
-        return {
-          id: s.id,
-          title: `${courseTitle} - ${s.batch?.name || ""}`,
-          start: startStr,
-          end: new Date(endMs).toISOString(),
-          backgroundColor: color,
-          borderColor: color,
-          url: s.joinUrl,
-        };
-      });
-
-      setEvents(mapped);
-      setCourseColorMap(colorMap);
-    } catch { setEvents([]); }
-  };
-
   useEffect(() => {
     api.get<Instructor[]>("/api/admin/batches/instructors")
       .then((data) => setInstructors(data || []))
@@ -95,6 +51,7 @@ export default function AdminCalendarPage() {
   }, []);
 
   useEffect(() => {
+    setLoading(true);
     const params: Record<string, string> = {};
     if (selectedInstructor) params.instructorId = selectedInstructor;
     api.get<{ sessions: SessionData[] }>("/api/sessions", params)
@@ -126,7 +83,8 @@ export default function AdminCalendarPage() {
         setEvents(mapped);
         setCourseColorMap(colorMap);
       })
-      .catch(() => setEvents([]));
+      .catch(() => setEvents([]))
+      .finally(() => setLoading(false));
   }, [selectedInstructor]);
 
   function handleEventClick(info: EventClickArg) {

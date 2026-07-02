@@ -5,6 +5,10 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { IconUsersGroup } from "@tabler/icons-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
+import { EmptyState } from "@/components/admin/EmptyState";
 
 type Batch = {
   id: string;
@@ -27,11 +31,7 @@ const statusStyles: Record<string, string> = {
 
 export default function AdminBatchesPage() {
   return (
-    <Suspense fallback={
-      <div className="glass-card p-12 text-center">
-        <p className="text-muted animate-pulse">Loading batches...</p>
-      </div>
-    }>
+    <Suspense fallback={<CardSkeleton count={6} />}>
       <BatchesPageContent />
     </Suspense>
   );
@@ -77,16 +77,15 @@ function BatchesPageContent() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
       {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Admin</p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">Batch Management</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{batches.length} batch{batches.length !== 1 ? "es" : ""}</p>
-        </div>
-        <Link href="/admin/batches/new" className="btn-primary">+ Create Batch</Link>
-      </div>
+      <AdminPageHeader
+        title="Batch Management"
+        description={`${batches.length} batch${batches.length !== 1 ? "es" : ""}`}
+        action={
+          <Link href="/admin/batches/new" className="btn-primary">+ Create Batch</Link>
+        }
+      />
 
       {/* Filters */}
       <div className="flex gap-1.5">
@@ -107,20 +106,20 @@ function BatchesPageContent() {
 
       {/* Batch Cards */}
       {loading ? (
-        <div className="glass-card p-12 text-center">
-          <p className="text-muted animate-pulse">Loading batches...</p>
-        </div>
+        <CardSkeleton count={6} />
       ) : batches.length === 0 ? (
-        <div className="glass-card p-12 text-center">
-          <div className="text-4xl mb-3">👥</div>
-          <p className="text-lg font-semibold text-foreground">No batches yet</p>
-          <p className="text-sm text-muted-foreground mt-1">Create your first batch to start enrolling students.</p>
-          <Link href="/admin/batches/new" className="btn-primary mt-4 inline-flex">+ Create Batch</Link>
-        </div>
+        <EmptyState
+          icon={IconUsersGroup}
+          title="No batches yet"
+          description="Create your first batch to start enrolling students."
+          action={
+            <Link href="/admin/batches/new" className="btn-primary inline-flex">+ Create Batch</Link>
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {batches.map((batch) => (
-            <div key={batch.id} className="glass-card overflow-hidden">
+            <div key={batch.id} className="glass-card overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none">
               <div className="p-5 space-y-3">
                 <div className="flex items-start justify-between">
                   <div className="min-w-0">

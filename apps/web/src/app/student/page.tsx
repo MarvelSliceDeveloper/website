@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { IconAlertCircle, IconSearch } from "@tabler/icons-react";
 import StudentPortalShell, { type Breadcrumb } from "@/components/StudentPortalShell";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
@@ -474,9 +475,9 @@ function StudentPortalContent() {
   if (isLoading) {
     return (
       <StudentPortalShell>
-        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 animate-in fade-in duration-500">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-border border-t-primary" />
-          <p className="text-sm text-muted-foreground">Loading your portal…</p>
+          <p className="text-sm text-muted-foreground">Loading your portal...</p>
         </div>
       </StudentPortalShell>
     );
@@ -486,7 +487,7 @@ function StudentPortalContent() {
     return (
       <StudentPortalShell>
         <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-          <span className="text-4xl">⚠️</span>
+          <IconAlertCircle size={40} stroke={1.2} className="text-danger" />
           <p className="font-semibold text-foreground">Failed to load portal</p>
           <p className="text-sm text-muted-foreground">{error}</p>
           <button onClick={() => window.location.reload()} className="btn-primary text-sm">
@@ -650,7 +651,7 @@ function StudentPortalContent() {
 
 function LoadingView({ message }: { message: string }) {
   return (
-    <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3">
+    <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 animate-in fade-in duration-500">
       <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
       <p className="text-sm text-muted-foreground">{message}</p>
     </div>
@@ -660,7 +661,7 @@ function LoadingView({ message }: { message: string }) {
 function NotFoundView() {
   return (
     <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center">
-      <span className="text-4xl">🔍</span>
+      <IconSearch size={40} stroke={1.2} className="text-muted" />
       <p className="font-semibold text-foreground">Page not found</p>
       <p className="text-sm text-muted-foreground">This view doesn&apos;t exist in the portal.</p>
     </div>

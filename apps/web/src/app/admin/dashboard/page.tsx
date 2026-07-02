@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import StatCard from "@/components/admin/StatCard";
+import { ChartSkeleton } from "@/components/admin/LoadingSkeleton";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { MOCK_DASHBOARD_CHARTS, MOCK_ENABLED } from "@/lib/student-mock-data";
@@ -20,6 +22,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import { IconEdit, IconUsersGroup, IconCalendar, IconTicket, IconBook, IconVideo, IconSchool, IconTrendingUp, IconChartPie, IconCurrencyDollar } from "@tabler/icons-react";
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -44,10 +47,10 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 };
 
 const quickActions = [
-  { label: "Create Course", href: "/admin/courses/new", icon: "📝" },
-  { label: "Manage Batches", href: "/admin/batches", icon: "👥" },
-  { label: "View Sessions", href: "/admin/sessions", icon: "📅" },
-  { label: "Mentorship Tickets", href: "/admin/mentorship", icon: "🎫" },
+  { label: "Create Course", href: "/admin/courses/new", icon: IconEdit, gradient: "from-primary to-violet-500" },
+  { label: "Manage Batches", href: "/admin/batches", icon: IconUsersGroup, gradient: "from-accent to-cyan-400" },
+  { label: "View Sessions", href: "/admin/sessions", icon: IconCalendar, gradient: "from-success to-emerald-400" },
+  { label: "Mentorship Tickets", href: "/admin/mentorship", icon: IconTicket, gradient: "from-warning to-amber-400" },
 ];
 
 const COLORS = {
@@ -124,16 +127,14 @@ export default function AdminDashboardPage() {
   }, []);
 
   const statsCards = [
-    { label: "Total Courses", value: stats.totalCourses, icon: "📚", color: "from-primary to-violet-500", href: "/admin/courses" },
-    { label: "Active Batches", value: stats.activeBatches, icon: "👥", color: "from-accent to-cyan-400", href: "/admin/batches" },
-    { label: "Live Sessions", value: stats.liveSessions, icon: "🎥", color: "from-success to-emerald-400", href: "/admin/sessions" },
-    { label: "Total Students", value: stats.totalStudents, icon: "🎓", color: "from-warning to-amber-400", href: "/admin/users" },
+    { label: "Total Courses", value: stats.totalCourses, icon: IconBook, gradient: "from-primary to-violet-500", href: "/admin/courses" },
+    { label: "Active Batches", value: stats.activeBatches, icon: IconUsersGroup, gradient: "from-accent to-cyan-400", href: "/admin/batches" },
+    { label: "Live Sessions", value: stats.liveSessions, icon: IconVideo, gradient: "from-success to-emerald-400", href: "/admin/sessions" },
+    { label: "Total Students", value: stats.totalStudents, icon: IconSchool, gradient: "from-warning to-amber-400", href: "/admin/users" },
   ];
 
-  const formatStatValue = (value: number | null) => (value === null ? "—" : value.toString());
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
       {/* Header */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Admin</p>
@@ -142,21 +143,9 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 [&>*]:animate-in [&>*]:fade-in [&>*]:slide-in-from-bottom-2 [&>*]:duration-400">
         {statsCards.map((stat) => (
-          <Link key={stat.label} href={stat.href} className="glass-card p-5 group cursor-pointer">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted">{stat.label}</p>
-                <p className="mt-2 text-3xl font-bold text-foreground">{formatStatValue(stat.value)}</p>
-              </div>
-              <div
-                className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${stat.color} text-lg group-hover:scale-110 transition-transform`}
-              >
-                {stat.icon}
-              </div>
-            </div>
-          </Link>
+          <StatCard key={stat.label} {...stat} loading={loading} />
         ))}
       </div>
 
@@ -164,9 +153,12 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Students per Course */}
         <div className="glass-card p-6">
-          <h3 className="text-base font-semibold text-foreground mb-4">Students per Course</h3>
+          <div className="flex items-center gap-2 mb-4">
+            <IconBook size={18} stroke={1.5} className="text-primary" />
+            <h3 className="text-base font-semibold text-foreground">Students per Course</h3>
+          </div>
           {loading ? (
-            <div className="h-64 flex items-center justify-center text-muted-foreground">Loading...</div>
+            <ChartSkeleton height={280} />
           ) : chartData?.studentsPerCourse?.length ? (
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={chartData.studentsPerCourse} margin={{ top: 5, right: 20, left: 0, bottom: 60 }}>
@@ -190,9 +182,12 @@ export default function AdminDashboardPage() {
 
         {/* Enrollment Growth Over Time */}
         <div className="glass-card p-6">
-          <h3 className="text-base font-semibold text-foreground mb-4">Enrollment Growth</h3>
+          <div className="flex items-center gap-2 mb-4">
+            <IconTrendingUp size={18} stroke={1.5} className="text-primary" />
+            <h3 className="text-base font-semibold text-foreground">Enrollment Growth</h3>
+          </div>
           {loading ? (
-            <div className="h-64 flex items-center justify-center text-muted-foreground">Loading...</div>
+            <ChartSkeleton height={280} />
           ) : chartData?.enrollmentTrend?.length ? (
             <ResponsiveContainer width="100%" height={280}>
               <AreaChart data={chartData.enrollmentTrend} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
@@ -223,9 +218,12 @@ export default function AdminDashboardPage() {
 
         {/* Batch Status Distribution */}
         <div className="glass-card p-6">
-          <h3 className="text-base font-semibold text-foreground mb-4">Batch Distribution</h3>
+          <div className="flex items-center gap-2 mb-4">
+            <IconChartPie size={18} stroke={1.5} className="text-primary" />
+            <h3 className="text-base font-semibold text-foreground">Batch Distribution</h3>
+          </div>
           {loading ? (
-            <div className="h-64 flex items-center justify-center text-muted-foreground">Loading...</div>
+            <ChartSkeleton height={280} />
           ) : chartData?.batchDistribution?.length ? (
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
@@ -258,9 +256,12 @@ export default function AdminDashboardPage() {
 
         {/* Monthly Revenue */}
         <div className="glass-card p-6">
-          <h3 className="text-base font-semibold text-foreground mb-4">Monthly Revenue</h3>
+          <div className="flex items-center gap-2 mb-4">
+            <IconCurrencyDollar size={18} stroke={1.5} className="text-primary" />
+            <h3 className="text-base font-semibold text-foreground">Monthly Revenue</h3>
+          </div>
           {loading ? (
-            <div className="h-64 flex items-center justify-center text-muted-foreground">Loading...</div>
+            <ChartSkeleton height={280} />
           ) : chartData?.revenueTrend?.length ? (
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={chartData.revenueTrend} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
@@ -285,9 +286,13 @@ export default function AdminDashboardPage() {
             <Link
               key={action.label}
               href={action.href}
-              className="panel p-4 text-center hover:border-primary/30 hover:bg-card-hover transition-all group"
+              className="glass-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
             >
-              <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">{action.icon}</div>
+              <div
+                className={`mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${action.gradient} text-white group-hover:scale-110 transition-transform`}
+              >
+                <action.icon size={20} stroke={1.8} />
+              </div>
               <p className="text-sm font-medium text-foreground">{action.label}</p>
             </Link>
           ))}

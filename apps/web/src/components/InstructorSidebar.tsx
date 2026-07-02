@@ -14,6 +14,7 @@ import {
   IconMessageCircle,
   IconChevronDown,
   IconHelp,
+  IconSettings,
 } from "@tabler/icons-react";
 
 type NavItemChild = {
@@ -74,6 +75,7 @@ const overviewItems: NavItem[] = [
     ],
   },
   { label: "Support", href: "/instructor/support", icon: IconHelp },
+  { label: "Settings", href: "/instructor/settings", icon: IconSettings },
 ];
 
 // Link for a child nav item under a parent group

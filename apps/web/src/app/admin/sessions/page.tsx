@@ -3,8 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { IconEdit, IconTrash, IconX, IconRefresh } from "@tabler/icons-react";
+import { IconEdit, IconTrash, IconRefresh, IconCalendar, IconMovie, IconVideo } from "@tabler/icons-react";
 import { toast } from "sonner";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { FormModal } from "@/components/admin/FormModal";
+import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
+import { EmptyState } from "@/components/admin/EmptyState";
 
 type Session = {
   id: string;
@@ -114,28 +118,22 @@ export default function AdminSessionsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Admin</p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">Sessions</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{sessions.length} total sessions</p>
-        </div>
-        <Link href="/admin/sessions/new" className="btn-primary">+ Schedule Session</Link>
-      </div>
+    <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <AdminPageHeader
+        title="Sessions"
+        description={`${sessions.length} total sessions`}
+        action={<Link href="/admin/sessions/new" className="btn-primary">+ Schedule Session</Link>}
+      />
 
       {loading ? (
-        <div className="glass-card p-12 text-center">
-          <p className="text-muted animate-pulse">Loading sessions...</p>
-        </div>
+        <CardSkeleton count={4} />
       ) : sessions.length === 0 ? (
-        <div className="glass-card p-12 text-center">
-          <div className="text-4xl mb-3">🎥</div>
-          <p className="text-lg font-semibold text-foreground">No sessions yet</p>
-          <p className="text-sm text-muted-foreground mt-1">Schedule a live session for a batch.</p>
-          <Link href="/admin/sessions/new" className="btn-primary mt-4 inline-flex">+ Schedule Session</Link>
-        </div>
+        <EmptyState
+          icon={IconVideo}
+          title="No sessions yet"
+          description="Schedule a live session for a batch."
+          action={<Link href="/admin/sessions/new" className="btn-primary inline-flex">+ Schedule Session</Link>}
+        />
       ) : (
         <div className="space-y-6">
           {/* Upcoming */}
@@ -183,43 +181,38 @@ export default function AdminSessionsPage() {
       )}
 
       {/* Edit Modal */}
-      {editingSession && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="glass-card w-full max-w-lg overflow-hidden border border-border shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between border-b border-border bg-card p-4">
-              <h3 className="font-bold text-foreground">Edit Session</h3>
-              <button onClick={() => setEditingSession(null)} className="rounded-lg p-1 hover:bg-card-hover text-muted-foreground">
-                <IconX size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleEditSubmit} className="p-4 space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Session Title</label>
-                <input type="text" className="field" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Start</label>
-                  <input type="datetime-local" className="field" value={editStart} onChange={(e) => setEditStart(e.target.value)} required />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">End</label>
-                  <input type="datetime-local" className="field" value={editEnd} onChange={(e) => setEditEnd(e.target.value)} required />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setEditingSession(null)} className="btn-secondary text-xs px-4">Cancel</button>
-                <button type="submit" disabled={editSubmitting} className="btn-primary text-xs px-4">
-                  {editSubmitting ? "Saving..." : "Save Changes"}
-                </button>
-              </div>
-            </form>
+      <FormModal
+        open={editingSession !== null}
+        onClose={() => setEditingSession(null)}
+        title="Edit Session"
+        size="lg"
+        footer={
+          <>
+            <button type="button" onClick={() => setEditingSession(null)} className="btn-secondary text-xs px-4">Cancel</button>
+            <button type="submit" form="edit-session-form" disabled={editSubmitting} className="btn-primary text-xs px-4">
+              {editSubmitting ? "Saving..." : "Save Changes"}
+            </button>
+          </>
+        }
+      >
+        <form id="edit-session-form" onSubmit={handleEditSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Session Title</label>
+            <input type="text" className="field" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />
           </div>
-        </div>
-      )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Start</label>
+              <input type="datetime-local" className="field" value={editStart} onChange={(e) => setEditStart(e.target.value)} required />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">End</label>
+              <input type="datetime-local" className="field" value={editEnd} onChange={(e) => setEditEnd(e.target.value)} required />
+            </div>
+          </div>
+        </form>
+      </FormModal>
     </div>
   );
 }
@@ -240,11 +233,11 @@ function SessionCard({
   syncing?: boolean;
 }) {
   return (
-    <div className="glass-card p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="glass-card p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none">
       <div className="flex items-start gap-3">
         <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${upcoming ? "bg-primary/20" : "bg-muted/10"
           }`}>
-          {upcoming ? "📅" : "🎬"}
+          {upcoming ? <IconCalendar size={20} /> : <IconMovie size={20} />}
         </div>
         <div>
           <p className="text-sm font-semibold text-foreground">

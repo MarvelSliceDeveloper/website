@@ -11,6 +11,12 @@ router.post('/logout', authController.logout);
 // GET /api/auth/me — return current authenticated user
 router.get('/me', requireAuth, authController.me);
 
+// PATCH /api/auth/me/profile — update name
+router.patch('/me/profile', requireAuth, authController.updateProfile);
+
+// PATCH /api/auth/me/password — change password
+router.patch('/me/password', requireAuth, authController.changePassword);
+
 // --- Microsoft Azure AD OAuth ---
 router.get('/azure-ad/status', requireAuth, authController.azureAdStatus);
 router.get('/azure-ad/login', requireAuth, authController.azureAdLogin);

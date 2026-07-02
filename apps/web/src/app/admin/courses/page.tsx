@@ -6,6 +6,12 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { IconBook } from "@tabler/icons-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import DataTable from "@/components/admin/DataTable";
+import type { DataTableColumn } from "@/components/admin/DataTable";
+import { TableSkeleton } from "@/components/admin/LoadingSkeleton";
+import { EmptyState } from "@/components/admin/EmptyState";
 
 type Course = {
   id: string;
@@ -25,6 +31,8 @@ type CourseListResponse = {
   page: number;
   limit: number;
 };
+
+type ChecklistItem = { item: string; passed: boolean };
 
 const statusStyles: Record<string, string> = {
   DRAFT: "bg-warning/15 text-warning border-warning/25",
@@ -66,7 +74,6 @@ function CoursesPageContent() {
       setCourses(data.courses);
       setTotal(data.total);
     } catch {
-      // API not available — show empty state
       setCourses([]);
     } finally {
       setLoading(false);
@@ -100,8 +107,6 @@ function CoursesPageContent() {
     }
   };
 
-type ChecklistItem = { item: string; passed: boolean };
-
   const handlePublish = async (id: string) => {
     try {
       const result = await api.post<{ published: boolean; checklist: ChecklistItem[] }>(
@@ -132,27 +137,138 @@ type ChecklistItem = { item: string; passed: boolean };
     }
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-            Admin
-          </p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">
-            Course Management
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {total} course{total !== 1 ? "s" : ""} total
-          </p>
+  const columns: DataTableColumn<Course>[] = [
+    {
+      key: "title",
+      label: "Course",
+      render: (_, course) => (
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-14 shrink-0 rounded-lg bg-gradient-to-br from-primary/30 to-accent/20 flex items-center justify-center overflow-hidden">
+            {course.thumbnailUrl ? (
+              <Image
+                src={course.thumbnailUrl}
+                alt=""
+                width={56}
+                height={40}
+                className="h-full w-full object-cover"
+                unoptimized
+              />
+            ) : (
+              <IconBook size={20} stroke={1.5} className="text-muted" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <Link
+              href={`/admin/courses/${course.id}`}
+              className="text-sm font-semibold text-foreground hover:text-primary-hover transition-colors truncate block"
+            >
+              {course.title}
+            </Link>
+            {course.category && (
+              <p className="text-xs text-muted truncate">{course.category}</p>
+            )}
+          </div>
         </div>
-        <Link href="/admin/courses/new" className="btn-primary">
-          + Create Course
-        </Link>
-      </div>
+      ),
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (_, course) => (
+        <span
+          className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[course.status]}`}
+        >
+          {course.status}
+        </span>
+      ),
+    },
+    {
+      key: "_count.modules",
+      label: "Modules",
+      render: (_, course) => (
+        <span className="text-sm text-muted-foreground">{course._count.modules}</span>
+      ),
+    },
+    {
+      key: "_count.batches",
+      label: "Batches",
+      render: (_, course) => (
+        <span className="text-sm text-muted-foreground">{course._count.batches}</span>
+      ),
+    },
+    {
+      key: "price",
+      label: "Price",
+      render: (_, course) => (
+        <span className="text-sm font-medium text-foreground">
+          {course.price === 0 ? (
+            <span className="text-success">Free</span>
+          ) : (
+            `₹${course.price.toLocaleString()}`
+          )}
+        </span>
+      ),
+    },
+    {
+      key: "updatedAt",
+      label: "Updated",
+      render: (_, course) => (
+        <span className="text-xs text-muted">
+          {new Date(course.updatedAt).toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })}
+        </span>
+      ),
+    },
+    {
+      key: "id",
+      label: "Actions",
+      render: (_, course) => (
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/admin/courses/${course.id}`}
+            className="text-xs font-medium text-primary hover:text-primary-hover transition-colors"
+          >
+            Edit
+          </Link>
+          {course.status === "DRAFT" && (
+            <button
+              onClick={() => handlePublish(course.id)}
+              className="text-xs font-medium text-success hover:text-success/80 transition-colors"
+            >
+              Publish
+            </button>
+          )}
+          {course.status === "PUBLISHED" && (
+            <button
+              onClick={() => handleUnpublish(course.id)}
+              className="text-xs font-medium text-warning hover:text-warning/80 transition-colors"
+            >
+              Unpublish
+            </button>
+          )}
+          <button
+            onClick={() => handleDelete(course.id, course.title)}
+            disabled={deleting === course.id}
+            className="btn-danger text-xs disabled:opacity-50"
+          >
+            {deleting === course.id ? "..." : "Archive"}
+          </button>
+        </div>
+      ),
+    },
+  ];
 
-      {/* Filters */}
+  return (
+    <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <AdminPageHeader
+        title="Course Management"
+        description={`${total} course${total !== 1 ? "s" : ""} total`}
+        action={<Link href="/admin/courses/new" className="btn-primary">+ Create Course</Link>}
+      />
+
       <div className="flex flex-wrap items-center gap-3">
         <form onSubmit={handleSearch} className="flex-1 min-w-[200px]">
           <input
@@ -181,172 +297,17 @@ type ChecklistItem = { item: string; passed: boolean };
         </div>
       </div>
 
-      {/* Course Table */}
       {loading ? (
-        <div className="glass-card p-12 text-center">
-          <p className="text-muted animate-pulse">Loading courses...</p>
-        </div>
+        <TableSkeleton rows={5} columns={7} />
       ) : courses.length === 0 ? (
-        <div className="glass-card p-12 text-center">
-          <div className="text-4xl mb-3">📚</div>
-          <p className="text-lg font-semibold text-foreground">No courses yet</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Create your first course to get started.
-          </p>
-          <Link href="/admin/courses/new" className="btn-primary mt-4 inline-flex">
-            + Create Course
-          </Link>
-        </div>
+        <EmptyState
+          icon={IconBook}
+          title="No courses yet"
+          description="Create your first course to get started."
+          action={<Link href="/admin/courses/new" className="btn-primary mt-4 inline-flex">+ Create Course</Link>}
+        />
       ) : (
-        <div className="glass-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
-              <thead>
-                <tr className="border-b border-border text-left">
-                  <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
-                    Course
-                  </th>
-                  <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
-                    Status
-                  </th>
-                  <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
-                    Modules
-                  </th>
-                  <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
-                    Batches
-                  </th>
-                  <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
-                    Price
-                  </th>
-                  <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
-                    Updated
-                  </th>
-                  <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50">
-                {courses.map((course) => (
-                  <tr
-                    key={course.id}
-                    className="transition-colors hover:bg-card-hover/50"
-                  >
-                    {/* Course title + thumbnail */}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-14 shrink-0 rounded-lg bg-gradient-to-br from-primary/30 to-accent/20 flex items-center justify-center text-lg overflow-hidden">
-                          {course.thumbnailUrl ? (
-                            <Image
-                              src={course.thumbnailUrl}
-                              alt=""
-                              width={56}
-                              height={40}
-                              className="h-full w-full object-cover"
-                              unoptimized
-                            />
-                          ) : (
-                            "📚"
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <Link
-                            href={`/admin/courses/${course.id}`}
-                            className="text-sm font-semibold text-foreground hover:text-primary-hover transition-colors truncate block"
-                          >
-                            {course.title}
-                          </Link>
-                          {course.category && (
-                            <p className="text-xs text-muted truncate">
-                              {course.category}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Status */}
-                    <td className="px-5 py-4">
-                      <span
-                        className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${
-                          statusStyles[course.status]
-                        }`}
-                      >
-                        {course.status}
-                      </span>
-                    </td>
-
-                    {/* Modules */}
-                    <td className="px-5 py-4 text-sm text-muted-foreground">
-                      {course._count.modules}
-                    </td>
-
-                    {/* Batches */}
-                    <td className="px-5 py-4 text-sm text-muted-foreground">
-                      {course._count.batches}
-                    </td>
-
-                    {/* Price */}
-                    <td className="px-5 py-4 text-sm font-medium text-foreground">
-                      {course.price === 0 ? (
-                        <span className="text-success">Free</span>
-                      ) : (
-                        `₹${course.price.toLocaleString()}`
-                      )}
-                    </td>
-
-                    {/* Updated */}
-                    <td className="px-5 py-4 text-xs text-muted">
-                      {new Date(course.updatedAt).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/admin/courses/${course.id}`}
-                          className="text-xs font-medium text-primary hover:text-primary-hover transition-colors"
-                        >
-                          Edit
-                        </Link>
-
-                        {course.status === "DRAFT" && (
-                          <button
-                            onClick={() => handlePublish(course.id)}
-                            className="text-xs font-medium text-success hover:text-success/80 transition-colors"
-                          >
-                            Publish
-                          </button>
-                        )}
-
-                        {course.status === "PUBLISHED" && (
-                          <button
-                            onClick={() => handleUnpublish(course.id)}
-                            className="text-xs font-medium text-warning hover:text-warning/80 transition-colors"
-                          >
-                            Unpublish
-                          </button>
-                        )}
-
-                        <button
-                          onClick={() => handleDelete(course.id, course.title)}
-                          disabled={deleting === course.id}
-                          className="btn-danger text-xs disabled:opacity-50"
-                        >
-                          {deleting === course.id ? "..." : "Archive"}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <DataTable columns={columns} data={courses} />
       )}
     </div>
   );

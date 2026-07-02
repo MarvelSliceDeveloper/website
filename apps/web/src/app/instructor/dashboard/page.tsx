@@ -10,6 +10,7 @@ import {
   IconCalendar,
   IconClock,
   IconClipboardList,
+  IconExternalLink,
 } from "@tabler/icons-react";
 
 type DashboardStats = {
@@ -148,31 +149,31 @@ export default function InstructorDashboardPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
       {/* Welcome Banner */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-400">Instructor</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Instructor</p>
         <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">Dashboard</h1>
         <p className="mt-1 text-sm text-muted-foreground">Welcome back! Here is a summary of your workspace.</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 [&>*]:animate-in [&>*]:fade-in [&>*]:slide-in-from-bottom-2 [&>*]:duration-400">
         {[
-          { label: "Assigned Batches", value: stats?.totalBatches, icon: IconUsers, color: "text-violet-400" },
-          { label: "Total Sessions", value: stats?.totalSessions, icon: IconVideo, color: "text-emerald-400" },
-          { label: "Active Students", value: stats?.totalStudents, icon: IconBook, color: "text-sky-400" },
-          { label: "Pending Submissions", value: stats?.pendingAssignments, icon: IconClipboardList, color: "text-amber-400" },
+          { label: "Assigned Batches", value: stats?.totalBatches, icon: IconUsers, gradient: "from-violet-500 to-purple-600" },
+          { label: "Total Sessions", value: stats?.totalSessions, icon: IconVideo, gradient: "from-emerald-500 to-teal-600" },
+          { label: "Active Students", value: stats?.totalStudents, icon: IconBook, gradient: "from-sky-500 to-blue-600" },
+          { label: "Pending Submissions", value: stats?.pendingAssignments, icon: IconClipboardList, gradient: "from-amber-500 to-orange-600" },
         ].map((stat, idx) => (
-          <div key={idx} className="glass-card p-5 flex items-center justify-between border border-border/80">
+          <div key={idx} className="glass-card p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground font-medium">{stat.label}</p>
+              <p className="text-xs font-medium uppercase tracking-[0.1em] text-muted">{stat.label}</p>
               <p className="text-3xl font-bold text-foreground">
-                {loading || stat.value === undefined ? "—" : stat.value}
+                {loading || stat.value === undefined ? "\u2014" : stat.value}
               </p>
             </div>
-            <div className={`p-3 rounded-xl bg-card border border-border/60 ${stat.color}`}>
-              <stat.icon size={22} />
+            <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${stat.gradient} text-white`}>
+              <stat.icon size={20} stroke={1.8} />
             </div>
           </div>
         ))}
@@ -183,10 +184,11 @@ export default function InstructorDashboardPage() {
         <div className="lg:col-span-2 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground flex items-center gap-2">
-              <IconCalendar size={15} /> Upcoming Schedule
+              <IconCalendar size={15} stroke={1.8} /> Upcoming Schedule
             </h2>
-            <Link href="/instructor/sessions" className="text-xs text-violet-400 hover:text-violet-300 font-medium">
-              View all sessions →
+            <Link href="/instructor/sessions" className="text-xs text-primary hover:text-primary-hover font-medium transition-colors">
+              View all sessions
+              <IconExternalLink size={12} className="inline ml-1" />
             </Link>
           </div>
 
@@ -195,24 +197,26 @@ export default function InstructorDashboardPage() {
               Loading schedule...
             </div>
           ) : upcomingSessions.length === 0 ? (
-            <div className="glass-card p-8 text-center text-sm text-muted-foreground">
-              No upcoming sessions scheduled.
+            <div className="glass-card p-10 text-center">
+              <IconCalendar size={36} stroke={1.2} className="mx-auto text-muted/40 mb-3" />
+              <p className="text-sm font-medium text-foreground">No upcoming sessions</p>
+              <p className="text-xs text-muted-foreground mt-1">Your scheduled classes will appear here.</p>
             </div>
           ) : (
             <div className="space-y-3">
               {upcomingSessions.map((session) => (
-                <div key={session.id} className="glass-card p-4 flex items-center justify-between border border-border/80 hover:border-violet-500/20 transition-all duration-200">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/20 text-violet-400">
-                      📅
+                <div key={session.id} className="glass-card p-4 flex items-center justify-between hover:border-primary/20 transition-all duration-200">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white">
+                      <IconVideo size={18} stroke={1.8} />
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">
                         {new Date(session.scheduledAt).toLocaleString("en-IN", {
                           weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
                         })}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
                         {session.batch.course.title} · Batch: {session.batch.name}
                       </p>
                     </div>
@@ -221,9 +225,10 @@ export default function InstructorDashboardPage() {
                     href={session.joinUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn-primary text-xs px-3 py-1.5"
+                    className="btn-primary text-xs px-3 py-1.5 shrink-0 ml-3"
                   >
-                    Start Class →
+                    Start Class
+                    <IconExternalLink size={13} stroke={2} />
                   </a>
                 </div>
               ))}
@@ -234,21 +239,23 @@ export default function InstructorDashboardPage() {
         {/* Assignments Pending Grading */}
         <div className="space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground flex items-center gap-2">
-            <IconClipboardList size={15} /> Needs Grading
+            <IconClipboardList size={15} stroke={1.8} /> Needs Grading
           </h2>
 
           <div className="space-y-3">
             {loading ? (
-              <div className="glass-card p-6 text-center text-sm text-muted animate-pulse">
+              <div className="glass-card p-8 text-center text-sm text-muted animate-pulse">
                 Loading submissions...
               </div>
             ) : submissions.length === 0 ? (
-              <div className="glass-card p-6 text-center text-sm text-muted-foreground">
-                No submissions waiting for grading.
+              <div className="glass-card p-10 text-center">
+                <IconClipboardList size={36} stroke={1.2} className="mx-auto text-muted/40 mb-3" />
+                <p className="text-sm font-medium text-foreground">All caught up</p>
+                <p className="text-xs text-muted-foreground mt-1">No submissions waiting for grading.</p>
               </div>
             ) : null}
             {submissions.map((sub) => (
-              <div key={sub.id} className="glass-card p-4 space-y-3 border border-border/80 hover:border-amber-500/20 transition-all duration-200">
+              <div key={sub.id} className="glass-card p-4 space-y-3 hover:border-amber-500/20 transition-all duration-200">
                 <div>
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] uppercase font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
@@ -268,7 +275,7 @@ export default function InstructorDashboardPage() {
                 </div>
                 <button
                   onClick={() => window.location.href = "/instructor/assignments"}
-                  className="btn-secondary w-full justify-center text-xs py-1.5 border-amber-500/20 text-amber-400 hover:bg-amber-500/10"
+                  className="btn-secondary w-full justify-center text-xs py-1.5"
                 >
                   Review & Grade
                 </button>

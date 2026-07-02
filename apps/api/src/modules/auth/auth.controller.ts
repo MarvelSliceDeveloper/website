@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import bcrypt from 'bcryptjs';
 import { authService, RegisterSchema, LoginSchema } from './auth.service';
 import { ZodError } from 'zod';
 import { prisma } from '../../utils/prisma';
@@ -234,5 +235,66 @@ export const authController = {
       console.error('[AzureOAuth] Fatal callback error:', error);
       return res.status(500).send(`Internal server error during authentication: ${(error as Error).message}`);
     }
-  }
+  },
+
+  // PATCH /api/auth/me/profile — update current user's name
+  async updateProfile(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+
+      const { name } = req.body;
+      if (!name || typeof name !== 'string' || name.trim().length < 2 || name.trim().length > 100) {
+        return res.status(400).json({ error: 'Name must be between 2 and 100 characters' });
+      }
+
+      const updated = await prisma.user.update({
+        where: { id: req.user.userId },
+        data: { name: name.trim() },
+        select: { id: true, name: true, email: true, role: true },
+      });
+
+      return res.json({ user: updated });
+    } catch (error: unknown) {
+      return res.status(500).json({ error: (error as Error).message });
+    }
+  },
+
+  // PATCH /api/auth/me/password — change current user's password
+  async changePassword(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || typeof currentPassword !== 'string') {
+        return res.status(400).json({ error: 'Current password is required' });
+      }
+      if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 8) {
+        return res.status(400).json({ error: 'New password must be at least 8 characters' });
+      }
+
+      const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+      if (!user) return res.status(404).json({ error: 'User not found' });
+
+      // Check if user has a password set (might be SSO-only)
+      if (!user.passwordHash) {
+        return res.status(400).json({ error: 'Cannot change password. Account uses SSO authentication.' });
+      }
+
+      const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!isMatch) {
+        return res.status(400).json({ error: 'Current password is incorrect' });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      await prisma.user.update({
+        where: { id: req.user.userId },
+        data: { passwordHash: hashedPassword },
+      });
+
+      return res.json({ message: 'Password changed successfully' });
+    } catch (error: unknown) {
+      return res.status(500).json({ error: (error as Error).message });
+    }
+  },
 };
