@@ -55,10 +55,11 @@ function YouTubePlayer({ embedId }: { embedId: string }) {
   return (
     <div className="absolute inset-0" onContextMenu={(e) => e.preventDefault()}>
       <iframe
-        src={`https://www.youtube.com/embed/${embedId}?rel=0`}
+        src={`https://www.youtube.com/embed/${embedId}?rel=0&modestbranding=1&iv_load_policy=3`}
         className="absolute inset-0 h-full w-full"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
+        sandbox="allow-same-origin allow-scripts allow-presentation"
       />
       <div className="absolute bottom-0 right-0 w-24 h-8 z-10 cursor-default" />
     </div>
