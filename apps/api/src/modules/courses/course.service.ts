@@ -227,4 +227,85 @@ export const courseService = {
       data: { status: 'DRAFT', publishedAt: null },
     });
   },
+
+  async recoverCourse(courseId: string) {
+    const existing = await prisma.course.findUnique({ where: { id: courseId } });
+    if (!existing) throw new Error('Course not found');
+    if (existing.status !== 'ARCHIVED') throw new Error('Only archived courses can be recovered');
+
+    return prisma.course.update({
+      where: { id: courseId },
+      data: { status: 'DRAFT' },
+    });
+  },
+
+  // Permanently deletes a course and all related records (irreversible)
+  async permanentDeleteCourse(courseId: string) {
+    const existing = await prisma.course.findUnique({ where: { id: courseId } });
+    if (!existing) throw new Error('Course not found');
+
+    await prisma.$transaction(async (tx) => {
+      // Gather batch & module IDs for cascading cleanups
+      const batchIds = (await tx.batch.findMany({ where: { courseId }, select: { id: true } })).map((b: { id: string }) => b.id);
+      const moduleIds = (await tx.module.findMany({ where: { courseId }, select: { id: true } })).map((m: { id: string }) => m.id);
+
+      // Collect session IDs from batches and modules
+      const orConditions: Record<string, unknown>[] = [];
+      if (batchIds.length) orConditions.push({ batchId: { in: batchIds } });
+      if (moduleIds.length) orConditions.push({ moduleId: { in: moduleIds } });
+      const sessionIds = orConditions.length
+        ? (await tx.liveSession.findMany({ where: { OR: orConditions }, select: { id: true } })).map((s: { id: string }) => s.id)
+        : [];
+
+      // Recording → Progress chain
+      if (sessionIds.length) {
+        const recordingIds = (await tx.recording.findMany({ where: { sessionId: { in: sessionIds } }, select: { id: true } })).map((r: { id: string }) => r.id);
+        await tx.progress.deleteMany({ where: { recordingId: { in: recordingIds } } });
+        await tx.recording.deleteMany({ where: { sessionId: { in: sessionIds } } });
+        await tx.attendance.deleteMany({ where: { sessionId: { in: sessionIds } } });
+        await tx.calendarEvent.deleteMany({ where: { sessionId: { in: sessionIds } } });
+        await tx.liveSession.deleteMany({ where: { id: { in: sessionIds } } });
+      }
+
+      // Assignment chain (assignments may link to course or its batches)
+      const assignmentWhere: Record<string, unknown>[] = [{ courseId }];
+      if (batchIds.length) assignmentWhere.push({ batchId: { in: batchIds } });
+      const assignmentIds = (await tx.assignment.findMany({ where: { OR: assignmentWhere }, select: { id: true } })).map((a: { id: string }) => a.id);
+
+      if (assignmentIds.length) {
+        const questionIds = (await tx.assignmentQuestion.findMany({ where: { assignmentId: { in: assignmentIds } }, select: { id: true } })).map((q: { id: string }) => q.id);
+        await tx.assignmentMcqOption.deleteMany({ where: { questionId: { in: questionIds } } });
+        await tx.studentQuestionResponse.deleteMany({ where: { questionId: { in: questionIds } } });
+        await tx.assignmentQuestion.deleteMany({ where: { assignmentId: { in: assignmentIds } } });
+
+        const submissionIds = (await tx.assignmentSubmission.findMany({ where: { assignmentId: { in: assignmentIds } }, select: { id: true } })).map((s: { id: string }) => s.id);
+        await tx.studentQuestionResponse.deleteMany({ where: { submissionId: { in: submissionIds } } });
+        await tx.assignmentSubmission.deleteMany({ where: { assignmentId: { in: assignmentIds } } });
+
+        await tx.assignment.deleteMany({ where: { id: { in: assignmentIds } } });
+      }
+
+      // Enrollment → Payment
+      const enrollmentIds = (await tx.enrollmentRequest.findMany({ where: { courseId }, select: { id: true } })).map((e: { id: string }) => e.id);
+      await tx.payment.deleteMany({ where: { enrollmentId: { in: enrollmentIds } } });
+      await tx.enrollmentRequest.deleteMany({ where: { courseId } });
+
+      // Quiz → Question (via module)
+      if (moduleIds.length) {
+        const quizIds = (await tx.quiz.findMany({ where: { moduleId: { in: moduleIds } }, select: { id: true } })).map((q: { id: string }) => q.id);
+        await tx.question.deleteMany({ where: { quizId: { in: quizIds } } });
+        await tx.quiz.deleteMany({ where: { moduleId: { in: moduleIds } } });
+      }
+
+      // Direct course-dependent tables
+      await tx.module.deleteMany({ where: { courseId } });
+      await tx.batch.deleteMany({ where: { courseId } });
+      await tx.note.deleteMany({ where: { courseId } });
+      await tx.certificate.deleteMany({ where: { courseId } });
+      await tx.mentorshipTicket.deleteMany({ where: { courseId } });
+
+      // Finally delete the course itself
+      await tx.course.delete({ where: { id: courseId } });
+    });
+  },
 };

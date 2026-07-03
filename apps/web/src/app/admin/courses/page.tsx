@@ -62,6 +62,8 @@ function CoursesPageContent() {
   const [statusFilter, setStatusFilter] = useState(statusParam);
   const [search, setSearch] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [purging, setPurging] = useState<string | null>(null);
+  const [recovering, setRecovering] = useState<string | null>(null);
 
   const fetchCourses = async () => {
     setLoading(true);
@@ -134,6 +136,33 @@ function CoursesPageContent() {
       fetchCourses();
     } catch (err) {
       toast.error(getErrorMessage(err));
+    }
+  };
+
+  const handleRecover = async (id: string) => {
+    setRecovering(id);
+    try {
+      await api.post(`/api/admin/courses/${id}/recover`);
+      toast.success("Course recovered to draft");
+      fetchCourses();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setRecovering(null);
+    }
+  };
+
+  const handlePermanentDelete = async (id: string, title: string) => {
+    if (!confirm(`Permanently delete "${title}"? This will remove all associated modules, batches, enrollments, and data. This cannot be undone.`)) return;
+    setPurging(id);
+    try {
+      await api.delete(`/api/admin/courses/${id}/permanent`);
+      toast.success("Course permanently deleted");
+      fetchCourses();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setPurging(null);
     }
   };
 
@@ -249,13 +278,33 @@ function CoursesPageContent() {
               Unpublish
             </button>
           )}
-          <button
-            onClick={() => handleDelete(course.id, course.title)}
-            disabled={deleting === course.id}
-            className="btn-danger text-xs disabled:opacity-50"
-          >
-            {deleting === course.id ? "..." : "Archive"}
-          </button>
+          {course.status !== "ARCHIVED" && (
+            <button
+              onClick={() => handleDelete(course.id, course.title)}
+              disabled={deleting === course.id}
+              className="btn-danger text-xs disabled:opacity-50"
+            >
+              {deleting === course.id ? "..." : "Archive"}
+            </button>
+          )}
+          {course.status === "ARCHIVED" && (
+            <>
+              <button
+                onClick={() => handleRecover(course.id)}
+                disabled={recovering === course.id}
+                className="text-xs font-medium text-success hover:text-success/80 transition-colors disabled:opacity-50"
+              >
+                {recovering === course.id ? "..." : "Recover"}
+              </button>
+              <button
+                onClick={() => handlePermanentDelete(course.id, course.title)}
+                disabled={purging === course.id}
+                className="text-xs font-medium text-danger hover:text-danger/80 transition-colors disabled:opacity-50"
+              >
+                {purging === course.id ? "..." : "Delete Permanently"}
+              </button>
+            </>
+          )}
         </div>
       ),
     },

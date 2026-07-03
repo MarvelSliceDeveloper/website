@@ -296,22 +296,47 @@ export default function HomeView({
               <p className="py-6 text-center text-sm text-muted">No upcoming events</p>
             ) : (
               <div className="space-y-2">
-                {calendarEvents.slice(0, 5).map((event) => (
-                  <div
-                    key={event.id}
-                    className="flex items-center justify-between rounded-lg border border-border/40 bg-card/50 p-3"
-                  >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <IconClock size={16} className="text-accent shrink-0" />
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-foreground text-sm">{event.title}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {new Date(event.startAt).toLocaleDateString()}
-                        </p>
+                {calendarEvents.slice(0, 5).map((event) => {
+                  const now = Date.now();
+                  const start = new Date(event.startAt).getTime();
+                  const end = new Date(event.endAt).getTime();
+                  const isLive = now >= start && now < end;
+                  return (
+                    <div
+                      key={event.id}
+                      className="flex items-center justify-between rounded-lg border border-border/40 bg-card/50 p-3"
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {isLive ? (
+                          <span className="live-pulse h-2.5 w-2.5 shrink-0 rounded-full bg-danger" />
+                        ) : (
+                          <IconClock size={16} className="text-accent shrink-0" />
+                        )}
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-foreground text-sm">{event.title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {isLive
+                              ? "Live Now"
+                              : new Date(event.startAt).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
+                      {event.joinUrl && (
+                        <a
+                          href={event.joinUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`shrink-0 ml-2 px-3 py-1 text-xs rounded-lg font-medium ${isLive
+                            ? "bg-danger text-white hover:bg-danger/90"
+                            : "border border-border bg-background text-foreground hover:bg-card-hover"
+                            }`}
+                        >
+                          {isLive ? "Join" : "Link"}
+                        </a>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
             <button

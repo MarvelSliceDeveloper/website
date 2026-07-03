@@ -101,6 +101,7 @@ interface ApiMentorshipTicket {
   status: string;
   createdAt: string;
   notes?: string | null;
+  joinUrl?: string | null;
   course?: { title: string } | null;
   mentor?: { name: string } | null;
 }
@@ -135,9 +136,8 @@ interface ApiRecordingResponse {
 function computeSessionStatus(scheduledAt: string, endDateTime?: string): "LIVE" | "UPCOMING" | "PAST" {
   const now = Date.now();
   const start = new Date(scheduledAt).getTime();
-  const end = endDateTime ? new Date(endDateTime).getTime() : NaN;
+  const end = endDateTime ? new Date(endDateTime).getTime() : start + 60 * 60 * 1000; // fallback to 1hr
 
-  if (isNaN(end)) return "UPCOMING";
   if (now >= start && now < end) return "LIVE";
   if (now >= end) return "PAST";
   return "UPCOMING";
@@ -210,6 +210,7 @@ async function fetchPortalData(): Promise<PortalData> {
       createdAt: t.createdAt,
       notes: t.notes || undefined,
       instructor: t.mentor?.name || undefined,
+      joinUrl: t.joinUrl || undefined,
     })),
     certificates: certs.certificates,
     catalogue: catalogue.courses,

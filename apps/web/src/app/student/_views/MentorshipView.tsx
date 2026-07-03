@@ -177,9 +177,21 @@ function TicketCard({ ticket, showNotes = false }: { ticket: MentorshipTicket; s
             {new Date(ticket.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
           </p>
         </div>
-        <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${cfg.classes}`}>
-          {cfg.label}
-        </span>
+        <div className="flex items-center gap-2">
+          {ticket.status === "SCHEDULED" && ticket.joinUrl && (
+            <a
+              href={ticket.joinUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary text-xs"
+            >
+              Join Now
+            </a>
+          )}
+          <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${cfg.classes}`}>
+            {cfg.label}
+          </span>
+        </div>
       </div>
       {showNotes && ticket.notes && (
         <div className="mt-3">

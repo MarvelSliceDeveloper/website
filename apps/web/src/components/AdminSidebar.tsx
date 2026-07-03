@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
 import {
   IconBook,
   IconBrandWindows,
@@ -380,7 +381,10 @@ export default function AdminSidebar({
           </div>
         </div>
         <button
-          onClick={() => router.push("/login")}
+          onClick={async () => {
+            await api.post("/api/auth/logout");
+            router.push("/login");
+          }}
           className="btn-danger w-full justify-center"
         >
           <IconLogout size={18} stroke={1.8} className="shrink-0" />

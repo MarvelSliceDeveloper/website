@@ -275,15 +275,32 @@ export const ticketService = {
 
   // Marks a mentorship ticket as completed
   async completeTicket(ticketId: string, data?: CompleteTicketInput) {
-    return prisma.mentorshipTicket.update({
-      where: { id: ticketId },
-      data: { status: TicketStatus.COMPLETED, resolvedAt: new Date(), notes: data?.notes || null },
-      include: {
-        student: { select: userSelect },
-        mentor: { select: userSelect },
-        course: { select: { id: true, title: true } },
-      },
+    const [updatedTicket] = await prisma.$transaction(async (tx) => {
+      const linkedSession = await tx.liveSession.findFirst({
+        where: { mentorshipTicketId: ticketId },
+        select: { id: true },
+      });
+      if (linkedSession) {
+        await tx.liveSession.update({
+          where: { id: linkedSession.id },
+          data: { endedAt: new Date() },
+        });
+      }
+
+      const ticket = await tx.mentorshipTicket.update({
+        where: { id: ticketId },
+        data: { status: TicketStatus.COMPLETED, resolvedAt: new Date(), notes: data?.notes || null },
+        include: {
+          student: { select: userSelect },
+          mentor: { select: userSelect },
+          course: { select: { id: true, title: true } },
+        },
+      });
+
+      return [ticket];
     });
+
+    return updatedTicket;
   },
 
   async cancelMentorshipTicket(ticketId: string) {
