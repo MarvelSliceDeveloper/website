@@ -1,8 +1,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { courseController } from './course.controller';
 import { moduleController } from './module.controller';
+import { lessonController } from './lesson.controller';
 import { uploadCourseThumbnail } from './course.upload';
-import { uploadModuleResource } from './modules.upload';
+import { uploadLessonResource } from './modules.upload';
 import { requireAuth, requireRole } from '../../middleware/auth.middleware';
 import { UserRole } from '@lms/types';
 
@@ -74,26 +75,39 @@ router.put('/modules/:id', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), m
 // DELETE /api/admin/modules/:id — delete a module
 router.delete('/modules/:id', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), moduleController.deleteModule);
 
-// --- Module Resources Routes ---
+// --- Lesson Routes ---
 
-// POST /api/admin/courses/:courseId/modules/:id/resources — upload resource file
+// POST /api/admin/courses/modules/:moduleId/lessons — add a lesson to a module
+router.post('/modules/:moduleId/lessons', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), lessonController.addLesson);
+
+// PATCH /api/admin/courses/modules/:moduleId/lessons/reorder — reorder lessons
+router.patch('/modules/:moduleId/lessons/reorder', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), lessonController.reorderLessons);
+
+// PUT /api/admin/courses/modules/lessons/:id — update a lesson
+router.put('/modules/lessons/:id', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), lessonController.updateLesson);
+
+// DELETE /api/admin/courses/modules/lessons/:id — delete a lesson
+router.delete('/modules/lessons/:id', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), lessonController.deleteLesson);
+
+// --- Lesson Resource Routes ---
+
+// POST /api/admin/courses/:courseId/lessons/:lessonId/resources — upload resource file to a lesson
 router.post(
-  '/:courseId/modules/:id/resources',
+  '/:courseId/lessons/:lessonId/resources',
   requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
   (req: Request, res: Response, next: NextFunction) =>
-    uploadModuleResource(req, res, (err) => {
-      if (err) {
-        return res.status(400).json({ error: err.message });
-      }
+    uploadLessonResource(req, res, (err) => {
+      if (err) return res.status(400).json({ error: err.message });
       return next();
     }),
-  moduleController.uploadResource
+  lessonController.uploadResource
 );
 
-// DELETE /api/admin/courses/modules/:id/resources/:resourceId — delete resource file
+// DELETE /api/admin/courses/lessons/:lessonId/resources/:resourceId — delete resource from lesson
 router.delete(
-  '/modules/:id/resources/:resourceId',
+  '/lessons/:lessonId/resources/:resourceId',
   requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
-  moduleController.deleteResource
+  lessonController.deleteResource
 );
+
 export const courseRouter = router;

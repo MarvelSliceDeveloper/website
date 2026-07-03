@@ -114,35 +114,82 @@ async function main() {
 
   console.log('✅ Courses created');
 
-  // ─── Modules ──────────────────────────────────────────────────────────────
-  await upsertModules(pythonCourse.id, [
-    { title: 'Python Basics', description: 'Variables, data types, control flow.', order: 0 },
-    { title: 'Data Structures', description: 'Lists, tuples, dicts, sets.', order: 1 },
-    { title: 'File & IO', description: 'Reading and writing files.', order: 2 },
-    { title: 'Pandas & NumPy', description: 'Data manipulation with Pandas and NumPy.', order: 3 },
-    { title: 'Visualisation', description: 'Matplotlib and Seaborn.', order: 4 },
+  // ─── Modules (containers) ─────────────────────────────────────────────────
+  const pythonModules = await upsertModules(pythonCourse.id, [
+    { title: 'Python Fundamentals', description: 'Core Python concepts.', order: 0 },
+    { title: 'Data Manipulation', description: 'Working with data.', order: 1 },
+    { title: 'Visualisation & ML', description: 'Charts and machine learning.', order: 2 },
   ]);
 
-  await upsertModules(reactCourse.id, [
-    { title: 'React Basics', description: 'Components, JSX, props.', order: 0 },
-    { title: 'Hooks & State', description: 'useState, useEffect, custom hooks.', order: 1 },
-    { title: 'Server Components', description: 'React Server Components and Next.js.', order: 2 },
+  const reactModules = await upsertModules(reactCourse.id, [
+    { title: 'React Core', description: 'Components, JSX, props.', order: 0 },
+    { title: 'Advanced React', description: 'Hooks, state, patterns.', order: 1 },
+    { title: 'Next.js', description: 'Server Components and routing.', order: 2 },
   ]);
 
-  await upsertModules(awsCourse.id, [
-    { title: 'AWS Fundamentals', description: 'Regions, AZs, IAM basics.', order: 0 },
-    { title: 'Compute & Storage', description: 'EC2, S3, EBS, CloudFront.', order: 1 },
-    { title: 'Networking & VPC', description: 'VPC, subnets, NAT, security groups.', order: 2 },
-    { title: 'Security & IAM', description: 'IAM policies, roles, best practices.', order: 3 },
+  const awsModules = await upsertModules(awsCourse.id, [
+    { title: 'AWS Core', description: 'Fundamentals and IAM.', order: 0 },
+    { title: 'Compute & Storage', description: 'EC2, S3, EBS.', order: 1 },
+    { title: 'Networking & Security', description: 'VPC, security groups, best practices.', order: 2 },
   ]);
 
-  await upsertModules(jsCourse.id, [
-    { title: 'JS Basics', description: 'Variables, functions, objects.', order: 0 },
-    { title: 'DOM & Events', description: 'Manipulating the DOM, event handling.', order: 1 },
-    { title: 'Async JS', description: 'Callbacks, Promises, async/await.', order: 2 },
+  const jsModules = await upsertModules(jsCourse.id, [
+    { title: 'JS Fundamentals', description: 'Variables, functions, objects.', order: 0 },
+    { title: 'DOM & Async', description: 'DOM manipulation and async JS.', order: 1 },
   ]);
 
   console.log('✅ Modules created');
+
+  // ─── Lessons ──────────────────────────────────────────────────────────────
+  await upsertLessons(pythonModules[0].id, [
+    { title: 'Variables & Data Types', description: 'Strings, numbers, booleans.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 900, order: 0 },
+    { title: 'Control Flow', description: 'if/else, loops.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 1200, order: 1 },
+    { title: 'Functions', description: 'Defining and calling functions.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 1100, order: 2 },
+  ]);
+  await upsertLessons(pythonModules[1].id, [
+    { title: 'Lists & Tuples', description: 'Ordered collections.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 1000, order: 0 },
+    { title: 'Dicts & Sets', description: 'Key-value pairs and unique sets.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 900, order: 1 },
+  ]);
+  await upsertLessons(pythonModules[2].id, [
+    { title: 'Matplotlib Basics', description: 'Line charts, bar charts.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 1300, order: 0 },
+    { title: 'NumPy Intro', description: 'Arrays and vector operations.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 1100, order: 1 },
+  ]);
+
+  await upsertLessons(reactModules[0].id, [
+    { title: 'JSX & Components', description: 'Building blocks of React.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 1000, order: 0 },
+    { title: 'Props & State', description: 'Data flow in React.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 1200, order: 1 },
+  ]);
+  await upsertLessons(reactModules[1].id, [
+    { title: 'useState & useEffect', description: 'Core hooks.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 1100, order: 0 },
+    { title: 'Custom Hooks', description: 'Reusable logic.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 900, order: 1 },
+  ]);
+  await upsertLessons(reactModules[2].id, [
+    { title: 'Server Components', description: 'RSC and data fetching.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 1200, order: 0 },
+  ]);
+
+  await upsertLessons(awsModules[0].id, [
+    { title: 'AWS Regions & AZs', description: 'Global infrastructure.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 800, order: 0 },
+    { title: 'IAM Policies', description: 'Users, groups, roles.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 1000, order: 1 },
+  ]);
+  await upsertLessons(awsModules[1].id, [
+    { title: 'EC2 Instances', description: 'Virtual servers.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 1200, order: 0 },
+    { title: 'S3 Storage', description: 'Object storage.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 900, order: 1 },
+  ]);
+  await upsertLessons(awsModules[2].id, [
+    { title: 'VPC & Subnets', description: 'Network isolation.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 1100, order: 0 },
+    { title: 'Security Best Practices', description: 'Securing your cloud.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 1000, order: 1 },
+  ]);
+
+  await upsertLessons(jsModules[0].id, [
+    { title: 'Variables & Scope', description: 'var, let, const, hoisting.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 900, order: 0 },
+    { title: 'Functions & Closures', description: 'First-class functions.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 1100, order: 1 },
+  ]);
+  await upsertLessons(jsModules[1].id, [
+    { title: 'DOM Manipulation', description: 'Selecting and updating DOM.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 1000, order: 0 },
+    { title: 'Promises & Async/Await', description: 'Async programming.', videoUrl: 'https://youtube.com/watch?v=dQw4w9WgXcQ', durationSeconds: 1200, order: 1 },
+  ]);
+
+  console.log('✅ Lessons created');
 
   // ─── Batches ──────────────────────────────────────────────────────────────
   const pythonBatch = await upsertBatch({
@@ -281,7 +328,9 @@ async function upsertCourse(data: {
 
 async function upsertModules(courseId: string, modules: { title: string; description: string; order: number }[]) {
   const existing = await prisma.module.count({ where: { courseId } });
-  if (existing > 0) return;
+  if (existing > 0) {
+    return prisma.module.findMany({ where: { courseId }, orderBy: { order: 'asc' } });
+  }
 
   await prisma.module.createMany({
     data: modules.map((m) => ({
@@ -289,8 +338,28 @@ async function upsertModules(courseId: string, modules: { title: string; descrip
       title: m.title,
       description: m.description,
       order: m.order,
-      durationSeconds: 1800,
       isFreePreview: m.order === 0,
+    })),
+  });
+
+  return prisma.module.findMany({ where: { courseId }, orderBy: { order: 'asc' } });
+}
+
+async function upsertLessons(moduleId: string, lessons: { title: string; description: string; videoUrl: string; durationSeconds: number; order: number }[]) {
+  const existing = await prisma.lesson.count({ where: { moduleId } });
+  if (existing > 0) return;
+
+  await prisma.lesson.createMany({
+    data: lessons.map((l) => ({
+      moduleId,
+      title: l.title,
+      description: l.description,
+      order: l.order,
+      videoType: 'youtube',
+      videoUrl: l.videoUrl,
+      videoEmbedId: 'dQw4w9WgXcQ',
+      durationSeconds: l.durationSeconds,
+      isFreePreview: l.order === 0,
     })),
   });
 }

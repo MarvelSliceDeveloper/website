@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
@@ -145,11 +144,9 @@ export default function StudentPortalShell({
 
             {!hideLogo && (
               <div className="flex items-center gap-2">
-                <Image
-                  src="/images/Marvel_logo.png"
+                <img
+                  src="/images/logo.svg"
                   alt="LMS Logo"
-                  width={170}
-                  height={48}
                   className="h-12 w-auto object-contain"
                 />
                 <span className="text-base font-bold text-foreground">Marvel Slice</span>

@@ -83,3 +83,34 @@ export function buildModuleResourceUrl(
   const protocol = req.protocol;
   return `${protocol}://${host}/uploads/modules/${courseId}/${moduleId}/${filename}`;
 }
+
+const lessonStorage = multer.diskStorage({
+  destination: (req, _file, cb) => {
+    const courseId = req.params.courseId || 'unknown';
+    const lessonId = req.params.lessonId || 'unknown';
+    const dir = path.join(modulesUploadsDir, courseId, 'lessons', lessonId);
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (_req, file, cb) => {
+    const ext = extensionByMime[file.mimetype] || '.bin';
+    cb(null, `${crypto.randomUUID()}${ext}`);
+  },
+});
+
+export const uploadLessonResource = multer({
+  storage: lessonStorage,
+  fileFilter,
+  limits: { fileSize: MAX_RESOURCE_BYTES },
+}).single(MODULE_RESOURCE_FIELD);
+
+export function buildLessonResourceUrl(
+  req: Request,
+  courseId: string,
+  lessonId: string,
+  filename: string
+) {
+  const host = req.get('host');
+  const protocol = req.protocol;
+  return `${protocol}://${host}/uploads/modules/${courseId}/lessons/${lessonId}/${filename}`;
+}

@@ -195,13 +195,16 @@ router.get('/:courseId/content', async (req: AuthRequest, res: Response) => {
 
     const batchId = enrollment.batchId;
 
-    // Fetch course with modules
+    // Fetch course with modules and lessons
     const course = await prisma.course.findUnique({
       where: { id: courseId },
       include: {
         modules: {
           orderBy: { order: 'asc' },
           include: {
+            lessons: {
+              orderBy: { order: 'asc' },
+            },
             quizzes: {
               include: { questions: true }
             }
@@ -273,7 +276,7 @@ router.get('/:courseId/content', async (req: AuthRequest, res: Response) => {
         });
     }
 
-    // Build modules with completion info
+    // Build modules with lessons and completion info
     const modules = course.modules.map(m => {
       const moduleRecordings = recordings.filter(r => r.moduleId === m.id);
       const moduleSessions = sessions.filter(s => s.moduleId === m.id);
@@ -281,17 +284,26 @@ router.get('/:courseId/content', async (req: AuthRequest, res: Response) => {
       const completedItems = moduleRecordings.filter(r => r.isCompleted).length;
       const completionPercent = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
+      const lessons = m.lessons.map(l => ({
+        id: l.id,
+        title: l.title,
+        description: l.description,
+        order: l.order,
+        videoType: l.videoType,
+        videoUrl: l.videoUrl,
+        videoEmbedId: l.videoEmbedId,
+        durationSeconds: l.durationSeconds,
+        isFreePreview: l.isFreePreview,
+        resources: l.resources,
+      }));
+
       return {
         id: m.id,
         title: m.title,
         description: m.description,
         order: m.order,
-        videoType: m.videoType,
-        videoUrl: m.videoUrl,
-        videoEmbedId: m.videoEmbedId,
-        durationSeconds: m.durationSeconds,
         isFreePreview: m.isFreePreview,
-        resources: m.resources,
+        lessons,
         completionPercent,
         recordingsCount: moduleRecordings.length,
         sessionsCount: moduleSessions.length,

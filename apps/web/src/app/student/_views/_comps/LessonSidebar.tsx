@@ -1,13 +1,15 @@
-import { IconCheck, IconPlayerPlay, IconChevronDown, IconChevronUp, IconBookmark, IconFileDescription } from "@tabler/icons-react";
-import type { CourseContentData } from "./types";
+import { IconCheck, IconPlayerPlay, IconBrandYoutube, IconChevronDown, IconChevronUp, IconBookmark, IconFileDescription } from "@tabler/icons-react";
+import type { CourseContentData, CourseLesson } from "./types";
 
 interface Props {
   data: CourseContentData;
   selectedModuleId: string | null;
+  selectedLessonId: string | null;
   selectedRecordingId: string | null;
   expandedModules: Set<string>;
   bookmarks: string[];
   onSelectModule: (id: string) => void;
+  onSelectLesson: (lesson: CourseLesson, moduleId: string) => void;
   onSelectRecording: (id: string) => void;
   onToggleModule: (id: string) => void;
   onToggleBookmark: (id: string) => void;
@@ -16,10 +18,12 @@ interface Props {
 export function LessonSidebar({
   data,
   selectedModuleId,
+  selectedLessonId,
   selectedRecordingId,
   expandedModules,
   bookmarks,
   onSelectModule,
+  onSelectLesson,
   onSelectRecording,
   onToggleModule,
   onToggleBookmark,
@@ -44,7 +48,7 @@ export function LessonSidebar({
             return (
               <div key={mod.id}>
                 <div
-                  onClick={() => { onSelectModule(mod.id); onToggleModule(mod.id); }}
+                  onClick={() => { onToggleModule(mod.id); }}
                   className={`flex items-center gap-2.5 px-4 py-2.5 cursor-pointer transition-colors ${isSelected ? "bg-primary/[0.04]" : "hover:bg-muted/5"}`}
                 >
                   <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[12px] flex-shrink-0 border ${
@@ -59,9 +63,7 @@ export function LessonSidebar({
                   <span className={`text-[12px] font-medium flex-1 truncate ${isSelected ? "text-primary" : "text-foreground"}`}>
                     {mod.title}
                   </span>
-                  <span className="text-[12px] text-muted shrink-0">
-                    {mod.durationSeconds ? `${Math.floor(mod.durationSeconds / 60)}m` : "—"}
-                  </span>
+                  <span className="text-[12px] text-muted shrink-0">{mod.lessons.length} lessons</span>
                   <button
                     onClick={(e) => { e.stopPropagation(); onToggleBookmark(mod.id); }}
                     className="p-0.5 rounded hover:bg-muted/10 transition-colors"
@@ -78,21 +80,32 @@ export function LessonSidebar({
 
                 {isExpanded && (
                   <div className="pl-11 pr-3 pb-1.5 space-y-0.5">
-                    {(mod.videoUrl || mod.videoEmbedId) && (
-                      <div
-                        onClick={() => { onSelectModule(mod.id); onSelectRecording(""); }}
-                        className={`flex items-center gap-2 py-1.5 px-3 rounded-md cursor-pointer transition-colors ${selectedModuleId === mod.id && !selectedRecordingId ? "bg-primary/10" : "hover:bg-muted/5"}`}
-                      >
-                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${selectedModuleId === mod.id && !selectedRecordingId ? "bg-primary" : "bg-border"}`} />
-                        <span className={`text-xs flex-1 truncate ${selectedModuleId === mod.id && !selectedRecordingId ? "text-primary font-medium" : "text-muted-foreground"}`}>
-                          Video Lesson
-                        </span>
-                        <span className="text-[11px] text-muted">
-                          {mod.durationSeconds ? `${Math.floor(mod.durationSeconds / 60)}:${String(mod.durationSeconds % 60).padStart(2, "0")}` : "—"}
-                        </span>
-                      </div>
-                    )}
+                    {/* Lessons inside module */}
+                    {mod.lessons.map((lesson) => {
+                      const isLessonSelected = selectedLessonId === lesson.id && !selectedRecordingId;
+                      return (
+                        <div
+                          key={lesson.id}
+                          onClick={() => { onSelectLesson(lesson, mod.id); }}
+                          className={`flex items-center gap-2 py-1.5 px-3 rounded-md cursor-pointer transition-colors ${isLessonSelected ? "bg-primary/10" : "hover:bg-muted/5"}`}
+                        >
+                          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isLessonSelected ? "bg-primary" : "bg-border"}`} />
+                          {lesson.videoType === "youtube" ? (
+                            <IconBrandYoutube size={13} className="shrink-0 text-danger/70" />
+                          ) : lesson.videoUrl ? (
+                            <IconPlayerPlay size={12} className="shrink-0 text-primary/60" />
+                          ) : null}
+                          <span className={`text-xs flex-1 truncate ${isLessonSelected ? "text-primary font-medium" : "text-muted-foreground"}`}>
+                            {lesson.title}
+                          </span>
+                          <span className="text-[11px] text-muted">
+                            {lesson.durationSeconds ? `${Math.floor(lesson.durationSeconds / 60)}:${String(lesson.durationSeconds % 60).padStart(2, "0")}` : "—"}
+                          </span>
+                        </div>
+                      );
+                    })}
 
+                    {/* Recordings */}
                     {modRecordings.map((rec) => (
                       <div
                         key={rec.id}
@@ -107,25 +120,8 @@ export function LessonSidebar({
                       </div>
                     ))}
 
-                    {modRecordings.length === 0 && !mod.videoUrl && !mod.videoEmbedId && (
+                    {mod.lessons.length === 0 && modRecordings.length === 0 && (
                       <p className="py-1.5 text-[11px] text-muted italic">No content available</p>
-                    )}
-
-                    {mod.resources?.length > 0 && (
-                      <>
-                        <div className="my-1.5 border-t border-border/20" />
-                        <div className="flex items-center gap-1.5 px-3 py-1">
-                          <IconFileDescription size={12} className="text-muted-foreground" />
-                          <span className="text-[11px] font-medium text-muted-foreground">Study Material</span>
-                        </div>
-                        {mod.resources.map((r, ri) => (
-                          <a key={ri} href={r.url} target="_blank" rel="noreferrer"
-                            className="flex items-center gap-2 py-1.5 px-3 rounded-md hover:bg-muted/5 transition-colors text-xs text-muted-foreground">
-                            <IconFileDescription size={13} className="shrink-0 text-muted" />
-                            {r.name}
-                          </a>
-                        ))}
-                      </>
                     )}
                   </div>
                 )}

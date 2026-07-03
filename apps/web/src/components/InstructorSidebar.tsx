@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -303,11 +302,9 @@ export default function InstructorSidebar({
     >
       <div className={`flex h-16 items-center border-b border-border ${collapsed ? "justify-center px-2" : "gap-2.5 px-4"}`}>
         <div className={`flex items-center gap-2 min-w-0 ${collapsed ? "hidden" : "block"}`}>
-          <Image
-            src="/images/Marvel_logo.png"
+          <img
+            src="/images/logo.svg"
             alt="LMS Logo"
-            width={200}
-            height={56}
             className="h-14 w-auto object-contain"
           />
           <span className="text-lg font-bold text-foreground">Marvel Slice</span>

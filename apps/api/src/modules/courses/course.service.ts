@@ -139,6 +139,9 @@ export const courseService = {
       include: {
         modules: {
           orderBy: { order: 'asc' },
+          include: {
+            lessons: { orderBy: { order: 'asc' } },
+          },
         },
         _count: { select: { batches: true } },
       },
@@ -181,17 +184,23 @@ export const courseService = {
   async publishCourse(courseId: string) {
     const course = await prisma.course.findUnique({
       where: { id: courseId },
-      include: { modules: true },
+      include: {
+        modules: {
+          include: { lessons: true },
+        },
+      },
     });
 
     if (!course) throw new Error('Course not found');
+
+    const allLessons = course.modules.flatMap(m => m.lessons);
 
     // Pre-publish checklist
     const checklist = [
       { item: 'Course has a title', passed: !!course.title },
       { item: 'Course has a description', passed: !!course.description && course.description.length > 0 },
       { item: 'At least one module exists', passed: course.modules.length > 0 },
-      { item: 'At least one module has a video', passed: course.modules.some(m => !!m.videoUrl || !!m.videoEmbedId) },
+      { item: 'At least one lesson has a video', passed: allLessons.some(l => !!l.videoUrl || !!l.videoEmbedId) },
       { item: 'Thumbnail image is uploaded', passed: !!course.thumbnailUrl },
     ];
 
@@ -201,8 +210,8 @@ export const courseService = {
       return { published: false, checklist };
     }
 
-    // Compute total duration from modules
-    const totalSeconds = course.modules.reduce((sum, m) => sum + (m.durationSeconds || 0), 0);
+    // Compute total duration from lessons
+    const totalSeconds = allLessons.reduce((sum, l) => sum + (l.durationSeconds || 0), 0);
 
     await prisma.course.update({
       where: { id: courseId },

@@ -65,18 +65,7 @@ export default function StickyNoteWidget({ courseId, moduleId, moduleTitle, onCl
 
   const [contentLoaded, setContentLoaded] = useState(false);
 
-  // Append daily date header if today is a new session
-  const ensureTodaySection = useCallback((existingBody: string) => {
-    const today = new Date().toLocaleDateString("en-IN", {
-      weekday: "short", day: "numeric", month: "short", year: "numeric",
-    });
-    const marker = `data-sticky-date="${today}"`;
-    if (existingBody.includes(marker)) return existingBody;
-    // Prepend new date section
-    return `<div ${marker} style="font-weight:600;font-size:0.75rem;color:#92400e;margin-bottom:4px;">📌 ${today}</div>\n\n${existingBody}`;
-  }, []);
-
-  // Load existing note on mount (with daily date-section append)
+  // Load existing note on mount
   useEffect(() => {
     if (!moduleId) return;
 
@@ -121,22 +110,11 @@ export default function StickyNoteWidget({ courseId, moduleId, moduleTitle, onCl
 
       if (!isMountedRef.current) return;
 
-      // Ensure today's date section exists
-      const bodyWithDate = ensureTodaySection(loadedBody);
-
       if (loadedId) {
         setNoteId(loadedId);
-        setBody(bodyWithDate);
-        // If date section was added, persist it
-        if (bodyWithDate !== loadedBody) {
-          await api.patch(`/api/notes/${loadedId}`, { body: bodyWithDate }).catch(() => {});
-        }
+        setBody(loadedBody);
       } else {
-        // New note: prepend today's date header
-        const today = new Date().toLocaleDateString("en-IN", {
-          weekday: "short", day: "numeric", month: "short", year: "numeric",
-        });
-        setBody(`<div data-sticky-date="${today}" style="font-weight:600;font-size:0.72rem;color:#92400e;margin-bottom:4px;">📌 ${today}</div>\n\n`);
+        setBody("");
       }
 
       if (isMountedRef.current) setContentLoaded(true);
@@ -148,7 +126,7 @@ export default function StickyNoteWidget({ courseId, moduleId, moduleTitle, onCl
       isMountedRef.current = false;
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [courseId, moduleId, storageKey, ensureTodaySection]);
+  }, [courseId, moduleId, storageKey]);
 
   // Sync refs with state for use in callbacks
   useEffect(() => { noteIdRef.current = noteId; }, [noteId]);

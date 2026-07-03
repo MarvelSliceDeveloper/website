@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import ModuleStudyMaterialsSection from "./_components/ModuleStudyMaterialsSection";
 import { toast } from "sonner";
+import { IconGripVertical, IconBrandYoutube, IconPlayerPlay, IconFileDescription, IconQuestionMark, IconPlus, IconTrash, IconDeviceFloppy, IconX } from "@tabler/icons-react";
 
 type Resource = {
   id: string;
@@ -18,7 +19,7 @@ type Resource = {
   uploadedAt: string;
 };
 
-type Module = {
+type Lesson = {
   id: string;
   title: string;
   description: string | null;
@@ -29,6 +30,15 @@ type Module = {
   durationSeconds: number | null;
   isFreePreview: boolean;
   resources: Resource[];
+};
+
+type Module = {
+  id: string;
+  title: string;
+  description: string | null;
+  order: number;
+  isFreePreview: boolean;
+  lessons: Lesson[];
 };
 
 type Course = {
@@ -426,28 +436,74 @@ function CourseDetailsTab({
   );
 }
 
-// --- Content Tab (Modules) ---
+// --- Content Tab — Visual Course Builder ---
 
 function ContentTab({ courseId, modules, onContentChanged }: { courseId: string; modules: Module[]; onContentChanged: () => void }) {
+  const [items, setItems] = useState(modules);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
+
+  useEffect(() => { setItems(modules); }, [modules]);
+
+  const handleDragStart = (index: number) => { setDragIndex(index); };
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setOverIndex(index);
+  };
+  const handleDragLeave = () => { setOverIndex(null); };
+  const handleDrop = async (dropIdx: number) => {
+    if (dragIndex === null || dragIndex === dropIdx) { reset(); return; }
+    const reordered = [...items];
+    const [moved] = reordered.splice(dragIndex, 1);
+    reordered.splice(dropIdx, 0, moved);
+    setItems(reordered);
+    try {
+      await api.patch(`/api/admin/courses/${courseId}/modules/reorder`, {
+        moduleIds: reordered.map((m) => m.id),
+      });
+      onContentChanged();
+    } catch { toast.error("Failed to reorder"); onContentChanged(); }
+    reset();
+  };
+  const reset = () => { setDragIndex(null); setOverIndex(null); };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-foreground">Modules ({modules.length})</h2>
+        <h2 className="text-base font-semibold text-foreground">Course Builder</h2>
+        <span className="text-xs text-muted">{items.length} module{items.length !== 1 ? "s" : ""}</span>
       </div>
 
-      {modules.length === 0 ? (
-        <div className="glass-card p-8 text-center">
-          <p className="text-muted-foreground text-sm">No modules yet. Add your first module below.</p>
+      {items.length === 0 ? (
+        <div className="glass-card p-10 text-center space-y-3">
+          <div className="flex justify-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 border border-primary/20">
+              <IconPlus size={24} className="text-primary" />
+            </div>
+          </div>
+          <p className="text-sm font-medium text-foreground">No modules yet</p>
+          <p className="text-xs text-muted-foreground max-w-xs mx-auto">Add your first module to start building the course content. Drag to reorder anytime.</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {modules.map((mod) => (
-            <ModuleCard
-              key={mod.id}
-              module={mod}
-              courseId={courseId}
-              onChanged={onContentChanged}
-            />
+        <div className="space-y-2">
+          {items.map((mod, idx) => (
+            <div key={mod.id}>
+              {overIndex === idx && dragIndex !== idx && overIndex !== null && (
+                <div className="h-1 rounded-full bg-primary/40 mx-1 transition-all" />
+              )}
+              <ModuleCard
+                module={mod}
+                index={idx}
+                courseId={courseId}
+                onChanged={onContentChanged}
+                onDragStart={() => handleDragStart(idx)}
+                onDragOver={(e) => handleDragOver(e, idx)}
+                onDragLeave={handleDragLeave}
+                onDrop={() => handleDrop(idx)}
+                isDragging={dragIndex === idx}
+              />
+            </div>
           ))}
         </div>
       )}
@@ -457,18 +513,22 @@ function ContentTab({ courseId, modules, onContentChanged }: { courseId: string;
   );
 }
 
-function ModuleCard({ module: mod, courseId, onChanged }: {
-  module: Module; courseId: string; onChanged: () => void;
+function ModuleCard({ module: mod, index, courseId, onChanged, onDragStart, onDragOver, onDragLeave, onDrop, isDragging }: {
+  module: Module; index: number; courseId: string; onChanged: () => void;
+  onDragStart: () => void; onDragOver: (e: React.DragEvent) => void; onDragLeave: () => void;
+  onDrop: () => void; isDragging: boolean;
 }) {
+  const [expanded, setExpanded] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ title: mod.title, description: mod.description || "", videoUrl: mod.videoUrl || "" });
+  const [editForm, setEditForm] = useState({ title: mod.title, description: mod.description || "" });
+  const [lessonDragIdx, setLessonDragIdx] = useState<number | null>(null);
+  const [lessonOverIdx, setLessonOverIdx] = useState<number | null>(null);
 
   const handleSave = async () => {
     try {
       await api.put(`/api/admin/courses/modules/${mod.id}`, {
         title: editForm.title,
         description: editForm.description || undefined,
-        videoUrl: editForm.videoUrl || undefined,
       });
       setEditing(false);
       onChanged();
@@ -478,76 +538,224 @@ function ModuleCard({ module: mod, courseId, onChanged }: {
   };
 
   const handleDelete = async () => {
-    if (!confirm(`Delete module "${mod.title}"?`)) return;
+    if (!confirm(`Delete module "${mod.title}" and all its lessons?`)) return;
     try {
       await api.delete(`/api/admin/courses/modules/${mod.id}`);
       onChanged();
     } catch { toast.error("Failed to delete module"); }
   };
 
-  const handleMove = async (direction: "up" | "down") => {
+  const handleLessonDrop = async (dropIdx: number) => {
+    if (lessonDragIdx === null || lessonDragIdx === dropIdx) { setLessonDragIdx(null); setLessonOverIdx(null); return; }
+    const reordered = [...mod.lessons];
+    const [moved] = reordered.splice(lessonDragIdx, 1);
+    reordered.splice(dropIdx, 0, moved);
+    setLessonDragIdx(null);
+    setLessonOverIdx(null);
     try {
-      const allModules = await api.get<Course>(`/api/admin/courses/${courseId}`);
-      const sorted = [...allModules.modules].sort((a: Module, b: Module) => a.order - b.order);
-      const idx = sorted.findIndex((m: Module) => m.id === mod.id);
-      if ((direction === "up" && idx === 0) || (direction === "down" && idx === sorted.length - 1)) return;
-      const swapIdx = direction === "up" ? idx - 1 : idx + 1;
-      [sorted[idx], sorted[swapIdx]] = [sorted[swapIdx], sorted[idx]];
-      await api.patch(`/api/admin/courses/${courseId}/modules/reorder`, { moduleIds: sorted.map((m: Module) => m.id) });
+      await api.patch(`/api/admin/courses/modules/${mod.id}/lessons/reorder`, {
+        lessonIds: reordered.map((l) => l.id),
+      });
       onChanged();
-    } catch { toast.error("Failed to reorder"); }
+    } catch { toast.error("Failed to reorder lessons"); onChanged(); }
   };
 
   return (
-    <div className="glass-card overflow-hidden">
-      <div className="p-4 flex items-start gap-3">
-        <div className="flex flex-col gap-0.5 pt-1">
-          <button onClick={() => handleMove("up")} className="text-muted hover:text-foreground disabled:opacity-20 text-xs" title="Move up">▲</button>
-          <button onClick={() => handleMove("down")} className="text-muted hover:text-foreground disabled:opacity-20 text-xs" title="Move down">▼</button>
+    <div className={`glass-card overflow-hidden transition-all duration-200 ${isDragging ? "opacity-40 scale-[0.97]" : "hover:border-primary/30"}`}>
+      {/* Module header */}
+      <div className="p-3.5 flex items-start gap-3">
+        <div className="flex flex-col items-center gap-1 pt-1.5 cursor-grab active:cursor-grabbing text-muted hover:text-foreground transition-colors" onDragStart={onDragStart} onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={(e) => { e.preventDefault(); onDrop(); }} onDragEnd={() => {}}>
+          <IconGripVertical size={16} />
         </div>
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-xs font-bold text-primary-hover">{mod.order + 1}</div>
+
+        <div className="flex flex-col items-center gap-1.5 shrink-0">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
+            {index + 1}
+          </div>
+        </div>
+
         <div className="flex-1 min-w-0">
           {editing ? (
             <div className="space-y-2">
-              <input type="text" value={editForm.title} onChange={(e) => setEditForm(p => ({ ...p, title: e.target.value }))} className="field" />
-              <input type="text" value={editForm.description} onChange={(e) => setEditForm(p => ({ ...p, description: e.target.value }))} placeholder="Description" className="field" />
-              <input type="url" value={editForm.videoUrl} onChange={(e) => setEditForm(p => ({ ...p, videoUrl: e.target.value }))} placeholder="Video URL" className="field" />
-              <div className="flex gap-2">
-                <button onClick={handleSave} className="btn-primary text-xs">Save</button>
-                <button onClick={() => setEditing(false)} className="btn-secondary text-xs">Cancel</button>
+              <input type="text" value={editForm.title} onChange={(e) => setEditForm(p => ({ ...p, title: e.target.value }))} className="field text-sm" autoFocus />
+              <input type="text" value={editForm.description} onChange={(e) => setEditForm(p => ({ ...p, description: e.target.value }))} placeholder="Short description" className="field text-xs" />
+              <div className="flex items-center gap-2">
+                <button onClick={handleSave} className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1"><IconDeviceFloppy size={14} /> Save</button>
+                <button onClick={() => setEditing(false)} className="btn-secondary text-xs px-3 py-1.5">Cancel</button>
               </div>
             </div>
           ) : (
-            <p className="text-sm font-semibold text-foreground">{mod.title}</p>
+            <>
+              <p className="text-sm font-semibold text-foreground leading-tight">{mod.title}</p>
+              {mod.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{mod.description}</p>}
+            </>
           )}
-          {!editing && mod.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{mod.description}</p>}
+          {!editing && (
+            <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted">
+              <span>{mod.lessons.length} lesson{mod.lessons.length !== 1 ? "s" : ""}</span>
+            </div>
+          )}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button onClick={() => setEditing(!editing)} className="text-xs font-medium text-primary hover:text-primary-hover transition-colors">
-            {editing ? "Cancel" : "Edit"}
-          </button>
-          <button onClick={handleDelete} className="text-xs font-medium text-danger hover:text-danger/80 transition-colors">Delete</button>
-        </div>
+
+        {!editing && (
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button onClick={() => setExpanded(!expanded)} className="text-muted hover:text-foreground transition-colors p-1">
+              <span className={`inline-block transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}>&#x25B6;</span>
+            </button>
+            <button onClick={() => setEditing(true)} className="text-xs font-medium text-primary hover:text-primary-hover transition-colors px-2 py-1 rounded-md hover:bg-primary/5">Edit</button>
+            <button onClick={handleDelete} className="p-1.5 text-muted hover:text-danger transition-colors rounded-md hover:bg-danger/5" title="Delete module"><IconTrash size={15} /></button>
+          </div>
+        )}
       </div>
+
+      {/* Lessons list (collapsible) */}
+      {expanded && (
+        <div className="border-t border-border/40">
+          {mod.lessons.length === 0 ? (
+            <div className="px-4 py-4 text-center">
+              <p className="text-xs text-muted-foreground">No lessons yet. Add one below.</p>
+            </div>
+          ) : (
+            <div className="py-2 px-2 space-y-1">
+              {mod.lessons.map((lesson, lidx) => (
+                <div key={lesson.id}>
+                  {lessonOverIdx === lidx && lessonDragIdx !== lidx && lessonOverIdx !== null && (
+                    <div className="h-0.5 rounded-full bg-primary/30 mx-6" />
+                  )}
+                  <LessonCard
+                    lesson={lesson}
+                    index={lidx}
+                    onChanged={onChanged}
+                    onDragStart={() => setLessonDragIdx(lidx)}
+                    onDragOver={(e) => { e.preventDefault(); setLessonOverIdx(lidx); }}
+                    onDragLeave={() => setLessonOverIdx(null)}
+                    onDrop={() => handleLessonDrop(lidx)}
+                    isDragging={lessonDragIdx === lidx}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          <AddLessonForm moduleId={mod.id} courseId={courseId} onAdded={onChanged} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LessonCard({ lesson, index, onChanged, onDragStart, onDragOver, onDragLeave, onDrop, isDragging }: {
+  lesson: Lesson; index: number; onChanged: () => void;
+  onDragStart: () => void; onDragOver: (e: React.DragEvent) => void; onDragLeave: () => void;
+  onDrop: () => void; isDragging: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ title: lesson.title, description: lesson.description || "", videoUrl: lesson.videoUrl || "" });
+
+  const handleSave = async () => {
+    try {
+      await api.put(`/api/admin/courses/modules/lessons/${lesson.id}`, {
+        title: editForm.title,
+        description: editForm.description || undefined,
+        videoUrl: editForm.videoUrl || undefined,
+      });
+      setEditing(false);
+      onChanged();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to update lesson");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(`Delete lesson "${lesson.title}"?`)) return;
+    try {
+      await api.delete(`/api/admin/courses/modules/lessons/${lesson.id}`);
+      onChanged();
+    } catch { toast.error("Failed to delete lesson"); }
+  };
+
+  const contentType = lesson.videoType === "youtube" ? "youtube" : lesson.videoUrl ? "video" : "text";
+
+  return (
+    <div
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => { e.preventDefault(); onDrop(); }}
+      onDragEnd={() => {}}
+      className={`flex items-start gap-2.5 px-3.5 py-2.5 rounded-lg transition-all duration-200 ml-6 ${
+        isDragging ? "opacity-40 scale-[0.98]" : "hover:bg-card/50"
+      }`}
+    >
+      {/* Drag handle */}
+      <div className="pt-1 cursor-grab active:cursor-grabbing text-muted hover:text-foreground transition-colors">
+        <IconGripVertical size={12} />
+      </div>
+
+      {/* Order badge + type */}
+      <div className="flex flex-col items-center gap-1 shrink-0">
+        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-muted/20 text-[10px] font-bold text-muted-foreground">
+          {index + 1}
+        </div>
+        {contentType === "youtube" ? (
+          <IconBrandYoutube size={12} className="text-danger/70" />
+        ) : contentType === "video" ? (
+          <IconPlayerPlay size={11} className="text-primary/60" />
+        ) : null}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        {editing ? (
+          <div className="space-y-1.5">
+            <input type="text" value={editForm.title} onChange={(e) => setEditForm(p => ({ ...p, title: e.target.value }))} className="field text-xs" autoFocus />
+            <input type="text" value={editForm.description} onChange={(e) => setEditForm(p => ({ ...p, description: e.target.value }))} placeholder="Description" className="field text-[11px]" />
+            <div className="flex items-center gap-1.5">
+              <input type="url" value={editForm.videoUrl} onChange={(e) => setEditForm(p => ({ ...p, videoUrl: e.target.value }))} placeholder="Video URL (YouTube, Vimeo...)" className="field text-[11px] flex-1" />
+              <button onClick={handleSave} className="btn-primary text-[10px] px-2 py-1"><IconDeviceFloppy size={12} /></button>
+              <button onClick={() => setEditing(false)} className="btn-secondary text-[10px] px-2 py-1"><IconX size={12} /></button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <p className="text-xs font-medium text-foreground leading-tight">{lesson.title}</p>
+            {lesson.description && <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{lesson.description}</p>}
+          </>
+        )}
+        {!editing && (
+          <div className="flex items-center gap-2 mt-1 text-[9px] text-muted">
+            {lesson.durationSeconds && <span>{Math.floor(lesson.durationSeconds / 60)} min</span>}
+            {lesson.videoType && <span className="capitalize bg-muted/10 px-1 py-0.5 rounded">{lesson.videoType}</span>}
+          </div>
+        )}
+      </div>
+
+      {/* Actions */}
+      {!editing && (
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button onClick={() => setEditing(true)} className="text-[10px] font-medium text-primary hover:text-primary-hover transition-colors px-1.5 py-1 rounded hover:bg-primary/5">Edit</button>
+          <button onClick={handleDelete} className="p-1 text-muted hover:text-danger transition-colors rounded hover:bg-danger/5"><IconTrash size={12} /></button>
+        </div>
+      )}
     </div>
   );
 }
 
 function AddModuleForm({ courseId, onAdded }: { courseId: string; onAdded: () => void }) {
   const [show, setShow] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", videoUrl: "" });
+  const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
   const [adding, setAdding] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { if (show) inputRef.current?.focus(); }, [show]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAdding(true);
     try {
-      await api.post(`/api/admin/courses/${courseId}/modules`, {
-        title: form.title,
-        description: form.description || undefined,
-        videoUrl: form.videoUrl || undefined,
-      });
-      setForm({ title: "", description: "", videoUrl: "" });
+      await api.post(`/api/admin/courses/${courseId}/modules`, { title, description: desc || undefined });
+      setTitle(""); setDesc("");
       setShow(false);
       onAdded();
     } catch (err: unknown) { toast.error(err instanceof Error ? err.message : "Failed to add module"); }
@@ -555,19 +763,71 @@ function AddModuleForm({ courseId, onAdded }: { courseId: string; onAdded: () =>
   };
 
   return (
-    <div className="glass-card p-4">
+    <div className="border-2 border-dashed border-border/60 rounded-xl hover:border-primary/30 transition-colors">
       {show ? (
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <input type="text" value={form.title} onChange={(e) => setForm(p => ({ ...p, title: e.target.value }))} placeholder="Module title" className="field" required />
-          <input type="text" value={form.description} onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Short description (optional)" className="field" />
-          <input type="url" value={form.videoUrl} onChange={(e) => setForm(p => ({ ...p, videoUrl: e.target.value }))} placeholder="Video URL (optional)" className="field" />
+        <form onSubmit={handleSubmit} className="p-4 space-y-3">
+          <input ref={inputRef} type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Module title (required)" className="field" required />
+          <input type="text" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Short description (optional)" className="field" />
           <div className="flex gap-2">
-            <button type="submit" disabled={adding} className="btn-primary text-sm">{adding ? "Adding..." : "Add Module"}</button>
+            <button type="submit" disabled={adding} className="btn-primary text-sm flex items-center gap-1.5">
+              {adding ? "Adding..." : <><IconPlus size={16} /> Add Module</>}
+            </button>
             <button type="button" onClick={() => setShow(false)} className="btn-secondary text-sm">Cancel</button>
           </div>
         </form>
       ) : (
-        <button onClick={() => setShow(true)} className="btn-secondary w-full justify-center">+ Add Module</button>
+        <button onClick={() => setShow(true)} className="flex items-center justify-center gap-2 w-full py-4 text-sm font-medium text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+          <IconPlus size={18} /> Add Module
+        </button>
+      )}
+    </div>
+  );
+}
+
+function AddLessonForm({ moduleId, courseId, onAdded }: { moduleId: string; courseId: string; onAdded: () => void }) {
+  const [show, setShow] = useState(false);
+  const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [adding, setAdding] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { if (show) inputRef.current?.focus(); }, [show]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdding(true);
+    try {
+      await api.post(`/api/admin/courses/modules/${moduleId}/lessons`, {
+        title,
+        description: desc || undefined,
+        videoUrl: videoUrl || undefined,
+      });
+      setTitle(""); setDesc(""); setVideoUrl("");
+      setShow(false);
+      onAdded();
+    } catch (err: unknown) { toast.error(err instanceof Error ? err.message : "Failed to add lesson"); }
+    finally { setAdding(false); }
+  };
+
+  return (
+    <div className="border-t border-border/30 ml-6">
+      {show ? (
+        <form onSubmit={handleSubmit} className="p-3 space-y-2">
+          <input ref={inputRef} type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Lesson title (required)" className="field text-xs" required />
+          <input type="text" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Short description (optional)" className="field text-xs" />
+          <input type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="Video URL — YouTube, Vimeo (optional)" className="field text-xs" />
+          <div className="flex gap-2">
+            <button type="submit" disabled={adding} className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1">
+              {adding ? "Adding..." : <><IconPlus size={14} /> Add Lesson</>}
+            </button>
+            <button type="button" onClick={() => setShow(false)} className="btn-secondary text-xs px-3 py-1.5">Cancel</button>
+          </div>
+        </form>
+      ) : (
+        <button onClick={() => setShow(true)} className="flex items-center justify-center gap-1.5 w-full py-2.5 text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors">
+          <IconPlus size={14} /> Add Lesson
+        </button>
       )}
     </div>
   );

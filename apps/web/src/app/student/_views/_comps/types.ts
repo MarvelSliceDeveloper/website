@@ -1,6 +1,6 @@
 import type { ViewState } from "../../_types/student-portal";
 
-export interface CourseModule {
+export interface CourseLesson {
   id: string;
   title: string;
   description: string | null;
@@ -11,6 +11,15 @@ export interface CourseModule {
   durationSeconds: number | null;
   isFreePreview: boolean;
   resources: Array<{ name: string; url: string }>;
+}
+
+export interface CourseModule {
+  id: string;
+  title: string;
+  description: string | null;
+  order: number;
+  isFreePreview: boolean;
+  lessons: CourseLesson[];
   completionPercent: number;
   recordingsCount: number;
   sessionsCount: number;

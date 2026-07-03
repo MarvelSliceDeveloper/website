@@ -1,12 +1,12 @@
 import { IconPlayerPlay, IconVideo } from "@tabler/icons-react";
-import type { CourseModule, CourseRecording } from "./types";
+import type { CourseLesson, CourseRecording } from "./types";
 
 interface Props {
-  module: CourseModule | null;
+  lesson: CourseLesson | null;
   recording: CourseRecording | null;
 }
 
-export function VideoPlayer({ module, recording }: Props) {
+export function VideoPlayer({ lesson, recording }: Props) {
   if (recording) {
     return (
       <>
@@ -31,21 +31,13 @@ export function VideoPlayer({ module, recording }: Props) {
     );
   }
 
-  if (module?.videoUrl || module?.videoEmbedId) {
-    const embedId = module.videoEmbedId;
-    if (module.videoType === "youtube" && embedId) {
-      return (
-        <iframe
-          src={`https://www.youtube.com/embed/${embedId}?rel=0`}
-          className="absolute inset-0 h-full w-full"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          title={module.title}
-        />
-      );
+  if (lesson?.videoUrl || lesson?.videoEmbedId) {
+    const embedId = lesson.videoEmbedId;
+    if (lesson.videoType === "youtube" && embedId) {
+      return <YouTubePlayer embedId={embedId} />;
     }
-    if (module.videoUrl) {
-      return <video className="absolute inset-0 h-full w-full" controls src={module.videoUrl} />;
+    if (lesson.videoUrl) {
+      return <video className="absolute inset-0 h-full w-full" controls src={lesson.videoUrl} />;
     }
   }
 
@@ -55,6 +47,20 @@ export function VideoPlayer({ module, recording }: Props) {
         <IconVideo size={24} className="text-white" />
       </div>
       <p className="absolute bottom-4 text-xs text-white/40">Select a lesson to start learning</p>
+    </div>
+  );
+}
+
+function YouTubePlayer({ embedId }: { embedId: string }) {
+  return (
+    <div className="absolute inset-0" onContextMenu={(e) => e.preventDefault()}>
+      <iframe
+        src={`https://www.youtube.com/embed/${embedId}?rel=0`}
+        className="absolute inset-0 h-full w-full"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+      <div className="absolute bottom-0 right-0 w-24 h-8 z-10 cursor-default" />
     </div>
   );
 }

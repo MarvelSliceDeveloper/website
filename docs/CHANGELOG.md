@@ -2,8 +2,31 @@
 
 > Lightweight record of recent changes in the workspace.
 
-<<<<<<< HEAD
-=======
+---
+
+## 2026-07-03 — Hierarchical Module-Lesson Structure ✅
+
+### Changed: Module-Lesson Hierarchy with Student Dropdown Navigation
+- **Prisma schema**: Added `Lesson` model (`id`, `moduleId`, `title`, `order`, `videoType`, `videoUrl`, `videoEmbedId`, `durationSeconds`, `isFreePreview`, `resources`); removed video/resources fields from `Module`
+- **Seed script**: `upsertLessons` creates lessons per module with YouTube video data
+- **Lesson service/controller/routes**: Full CRUD + reorder + resource add/delete under `/api/admin/courses/modules/:moduleId/lessons`
+- **Course service**: `getCourseById` includes ordered lessons; `publishCourse` checks lessons instead of modules
+- **Module service/controller**: Stripped video/resource fields; Module is now a pure container
+- **Admin ContentTab**: Collapsible module containers with draggable LessonCard list + AddLessonForm
+- **Student types/sidebar/player**: `CourseLesson` interface; sidebar shows expandable modules with lesson dropdown; `VideoPlayer` accepts lesson instead of module
+- **Student `CourseContentView`**: Lesson-level selection state, flat prev/next across all lessons
+- **Study Materials tab**: Resources upload to first lesson of selected module via lesson resource endpoints
+
+---
+
+## 2026-07-03 — White-Label YouTube Player ✅
+
+### Changed: YouTube Embed → Custom Player with Zero Branding
+- **Rewrote** `apps/web/src/app/student/_views/_comps/VideoPlayer.tsx` to use **YouTube IFrame Player API** with `controls=0`, `modestbranding=1`, `rel=0`, `iv_load_policy=3`, `fs=0` — no visible YouTube controls or logo
+- **Added** transparent click overlay that intercepts all interactions on the video area — prevents right-click "Copy video URL" and clicking through to YouTube
+- **Added** custom play button overlay with gradient background (matches app theme) — shown on idle/paused, hidden during playback
+- Click anywhere on the video toggles play/pause via the API
+
 ---
 
 ## 2026-07-03 — k6 Load Testing Harness ✅
@@ -54,7 +77,6 @@
 
 ---
 
->>>>>>> a5b28c7a5abfd248772301f46bbd788e0a1eb6c5
 ## 2026-06-30 — Calendar ↔ Sessions Sync Fixes + Role Workflows ✅
 
 ### Fix A — Admin Calendar Duration (Bug)

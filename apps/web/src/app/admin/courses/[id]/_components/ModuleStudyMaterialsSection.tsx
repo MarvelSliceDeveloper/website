@@ -13,11 +13,18 @@ interface Resource {
   uploadedAt: string;
 }
 
+interface Lesson {
+  id: string;
+  title: string;
+  description: string | null;
+  resources: Resource[];
+}
+
 interface Module {
   id: string;
   title: string;
   description: string | null;
-  resources?: Resource[];
+  lessons: Lesson[];
 }
 
 interface Props {
@@ -66,6 +73,7 @@ export default function ModuleStudyMaterialsSection({
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(
     modules[0]?.id || null
   );
+  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [resources, setResources] = useState<Resource[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -73,11 +81,17 @@ export default function ModuleStudyMaterialsSection({
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const selectedModule = modules.find((m) => m.id === selectedModuleId);
+  const selectedLesson = selectedModule?.lessons.find((l) => l.id === selectedLessonId) ?? selectedModule?.lessons[0] ?? null;
 
   useEffect(() => {
-    Promise.resolve().then(() => {
-      setResources(selectedModule?.resources as Resource[] || []);
-    });
+    const lesson = selectedModule?.lessons[0] ?? null;
+    if (lesson) {
+      setSelectedLessonId(lesson.id);
+      setResources(lesson.resources || []);
+    } else {
+      setSelectedLessonId(null);
+      setResources([]);
+    }
   }, [selectedModule]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,11 +116,13 @@ export default function ModuleStudyMaterialsSection({
     setUploading(true);
 
     try {
+      if (!selectedLessonId) { setUploadError("No lesson available for this module"); setUploading(false); return; }
+
       const uploadData = new FormData();
       uploadData.append("resource", file);
 
       const resource = await api.post<Resource>(
-        `/api/admin/courses/${courseId}/modules/${selectedModuleId}/resources`,
+        `/api/admin/courses/${courseId}/lessons/${selectedLessonId}/resources`,
         uploadData
       );
 
@@ -124,10 +140,11 @@ export default function ModuleStudyMaterialsSection({
 
   const handleDeleteResource = async (resourceId: string) => {
     if (!confirm("Delete this resource?")) return;
+    if (!selectedLessonId) return;
     setDeleting(resourceId);
     try {
       await api.delete(
-        `/api/admin/courses/modules/${selectedModuleId}/resources/${resourceId}`
+        `/api/admin/courses/lessons/${selectedLessonId}/resources/${resourceId}`
       );
       setResources((prev) => prev.filter((r) => r.id !== resourceId));
       onResourcesUpdated();

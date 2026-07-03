@@ -7,7 +7,6 @@ import {
   UpdateModuleSchema,
   ReorderModulesSchema,
 } from './module.service';
-import { buildModuleResourceUrl } from './modules.upload';
 
 export const moduleController = {
   // Creates a new module in a course
@@ -74,48 +73,4 @@ export const moduleController = {
     }
   },
 
-  // Uploads a resource file to a module
-  async uploadResource(req: AuthRequest, res: Response) {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: 'Resource file is required' });
-      }
-
-      const moduleId = req.params.id;
-      const courseId = req.params.courseId;
-      const url = buildModuleResourceUrl(req, courseId, moduleId, req.file.filename);
-
-      const resource = await moduleService.addResource(
-        moduleId,
-        req.file.filename,
-        req.file.originalname,
-        req.file.mimetype,
-        req.file.size,
-        url
-      );
-
-      return res.status(201).json(resource);
-    } catch (error: any) {
-      if (error.message === 'Module not found') {
-        return res.status(404).json({ error: error.message });
-      }
-      return res.status(400).json({ error: error.message });
-    }
-  },
-
-  // Deletes a resource file from a module
-  async deleteResource(req: AuthRequest, res: Response) {
-    try {
-      const moduleId = req.params.id;
-      const resourceId = req.params.resourceId;
-
-      await moduleService.deleteResource(moduleId, resourceId);
-      return res.json({ message: 'Resource deleted successfully' });
-    } catch (error: any) {
-      if (error.message === 'Module not found' || error.message === 'Resource not found') {
-        return res.status(404).json({ error: error.message });
-      }
-      return res.status(500).json({ error: error.message });
-    }
-  },
 };

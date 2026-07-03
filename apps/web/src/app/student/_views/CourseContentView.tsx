@@ -24,7 +24,7 @@ import { LessonSidebar } from "./_comps/LessonSidebar";
 import { SessionSidebar } from "./_comps/SessionSidebar";
 import RichEditor from "@/components/editor/RichEditor";
 import StickyNoteWidget from "@/components/StickyNoteWidget";
-import type { CourseContentData, RailTab, SidebarTab, CourseContentViewProps } from "./_comps/types";
+import type { CourseContentData, CourseLesson, RailTab, SidebarTab, CourseContentViewProps } from "./_comps/types";
 
 interface ApiNote {
   id: string;
@@ -58,6 +58,7 @@ export default function CourseContentView({ courseId, goBack }: CourseContentVie
 
   const [activeRail, setActiveRail] = useState<RailTab>("lesson");
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [selectedRecordingId, setSelectedRecordingId] = useState<string | null>(null);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>("all");
@@ -96,11 +97,25 @@ export default function CourseContentView({ courseId, goBack }: CourseContentVie
             course: { id: courseId, title: "Introduction to TypeScript", description: "Master TypeScript with hands-on projects. Covers types, generics, decorators, and real-world patterns.", thumbnailUrl: null, status: "PUBLISHED" },
             batch: { id: "b1", name: "TypeScript Batch — June 2025", status: "ACTIVE", startDate: "2025-06-01T00:00:00.000Z", endDate: "2025-12-01T00:00:00.000Z" },
             modules: [
-              { id: "m1", title: "Getting started", description: "Setup, tooling, and your first .ts file", order: 1, videoType: "youtube", videoUrl: null, videoEmbedId: "dQw4w9WgXcQ", durationSeconds: 1200, isFreePreview: true, resources: [], completionPercent: 100, recordingsCount: 1, sessionsCount: 1, hasQuiz: false },
-              { id: "m2", title: "Types and interfaces", description: "Understanding TypeScript type system", order: 2, videoType: "youtube", videoUrl: null, videoEmbedId: "R-HLU9Fl5ug", durationSeconds: 1800, isFreePreview: false, resources: [], completionPercent: 65, recordingsCount: 1, sessionsCount: 1, hasQuiz: true },
-              { id: "m3", title: "Generics and utility types", description: "Advanced type patterns", order: 3, videoType: null, videoUrl: null, videoEmbedId: null, durationSeconds: 2400, isFreePreview: false, resources: [{ name: "Cheatsheet.pdf", url: "#" }], completionPercent: 20, recordingsCount: 0, sessionsCount: 0, hasQuiz: false },
-              { id: "m4", title: "Classes and decorators", description: "OOP patterns in TypeScript", order: 4, videoType: null, videoUrl: null, videoEmbedId: null, durationSeconds: 2100, isFreePreview: false, resources: [], completionPercent: 0, recordingsCount: 0, sessionsCount: 1, hasQuiz: false },
-              { id: "m5", title: "Project and assessment", description: "Final project", order: 5, videoType: null, videoUrl: null, videoEmbedId: null, durationSeconds: 1500, isFreePreview: false, resources: [], completionPercent: 0, recordingsCount: 0, sessionsCount: 0, hasQuiz: true },
+              { id: "m1", title: "Getting started", description: "Setup, tooling, and your first .ts file", order: 1, isFreePreview: true, lessons: [
+                { id: "l1", title: "Introduction & Setup", description: "Installing TypeScript", order: 1, videoType: "youtube", videoUrl: null, videoEmbedId: "dQw4w9WgXcQ", durationSeconds: 600, isFreePreview: true, resources: [] },
+                { id: "l2", title: "Your First Program", description: "Hello World", order: 2, videoType: "youtube", videoUrl: null, videoEmbedId: "dQw4w9WgXcQ", durationSeconds: 600, isFreePreview: true, resources: [] },
+              ], completionPercent: 100, recordingsCount: 1, sessionsCount: 1, hasQuiz: false },
+              { id: "m2", title: "Types and interfaces", description: "Understanding TypeScript type system", order: 2, isFreePreview: false, lessons: [
+                { id: "l3", title: "Basic Types", description: "string, number, boolean", order: 1, videoType: "youtube", videoUrl: null, videoEmbedId: "R-HLU9Fl5ug", durationSeconds: 900, isFreePreview: false, resources: [] },
+                { id: "l4", title: "Interfaces", description: "Defining shapes", order: 2, videoType: "youtube", videoUrl: null, videoEmbedId: "R-HLU9Fl5ug", durationSeconds: 900, isFreePreview: false, resources: [] },
+              ], completionPercent: 65, recordingsCount: 1, sessionsCount: 1, hasQuiz: true },
+              { id: "m3", title: "Generics and utility types", description: "Advanced type patterns", order: 3, isFreePreview: false, lessons: [
+                { id: "l5", title: "Generics", description: "Reusable type parameters", order: 1, videoType: null, videoUrl: null, videoEmbedId: null, durationSeconds: 1200, isFreePreview: false, resources: [{ name: "Cheatsheet.pdf", url: "#" }] },
+                { id: "l6", title: "Utility Types", description: "Partial, Pick, Omit", order: 2, videoType: null, videoUrl: null, videoEmbedId: null, durationSeconds: 1200, isFreePreview: false, resources: [] },
+              ], completionPercent: 20, recordingsCount: 0, sessionsCount: 0, hasQuiz: false },
+              { id: "m4", title: "Classes and decorators", description: "OOP patterns in TypeScript", order: 4, isFreePreview: false, lessons: [
+                { id: "l7", title: "Classes", description: "Class syntax in TS", order: 1, videoType: null, videoUrl: null, videoEmbedId: null, durationSeconds: 1050, isFreePreview: false, resources: [] },
+                { id: "l8", title: "Decorators", description: "Annotation pattern", order: 2, videoType: null, videoUrl: null, videoEmbedId: null, durationSeconds: 1050, isFreePreview: false, resources: [] },
+              ], completionPercent: 0, recordingsCount: 0, sessionsCount: 1, hasQuiz: false },
+              { id: "m5", title: "Project and assessment", description: "Final project", order: 5, isFreePreview: false, lessons: [
+                { id: "l9", title: "Final Project", description: "Build a TS app", order: 1, videoType: null, videoUrl: null, videoEmbedId: null, durationSeconds: 1500, isFreePreview: false, resources: [] },
+              ], completionPercent: 0, recordingsCount: 0, sessionsCount: 0, hasQuiz: true },
             ],
             sessions: [
               { id: "s1", moduleId: "m1", moduleTitle: "Getting started", scheduledAt: new Date(Date.now() - 86400000 * 2).toISOString(), endedAt: new Date(Date.now() - 86400000 * 2 + 3600000).toISOString(), joinUrl: "#", isLive: false, isUpcoming: false, hasRecording: true },
@@ -120,8 +135,12 @@ export default function CourseContentView({ courseId, goBack }: CourseContentVie
         if (cancelled) return;
         setData(res);
         if (res.modules.length > 0) {
-          setSelectedModuleId(res.modules[0].id);
-          setExpandedModules(new Set([res.modules[0].id]));
+          const firstModule = res.modules[0];
+          setSelectedModuleId(firstModule.id);
+          setExpandedModules(new Set([firstModule.id]));
+          if (firstModule.lessons.length > 0) {
+            setSelectedLessonId(firstModule.lessons[0].id);
+          }
         }
       } catch (err: unknown) {
         if (cancelled) return;
@@ -219,6 +238,16 @@ export default function CourseContentView({ courseId, goBack }: CourseContentVie
     }
   };
 
+  const selectLesson = (lesson: CourseLesson, moduleId: string) => {
+    setSelectedLessonId(lesson.id);
+    setSelectedModuleId(moduleId);
+    setSelectedRecordingId(null);
+    setActiveRail("lesson");
+    if (!expandedModules.has(moduleId)) {
+      setExpandedModules((prev) => new Set([...prev, moduleId]));
+    }
+  };
+
   const selectRecording = (recordingId: string) => {
     setSelectedRecordingId(recordingId || null);
   };
@@ -230,9 +259,11 @@ export default function CourseContentView({ courseId, goBack }: CourseContentVie
   };
 
   const selectedModule = data?.modules.find((m) => m.id === selectedModuleId) ?? null;
+  const selectedLesson = selectedModule?.lessons.find((l) => l.id === selectedLessonId) ?? null;
   const selectedRecording = data?.recordings.find((r) => r.id === selectedRecordingId) ?? null;
   const selectedNote = notes.find((n) => n.id === selectedNoteId) ?? null;
   const currentModuleIndex = data?.modules.findIndex((m) => m.id === selectedModuleId) ?? -1;
+  const currentLessonIndex = selectedModule?.lessons.findIndex((l) => l.id === selectedLessonId) ?? -1;
 
   // ── Loading / Error ────────────────────────────────────────────────────
 
@@ -261,22 +292,23 @@ export default function CourseContentView({ courseId, goBack }: CourseContentVie
   const renderLessonMain = () => (
     <>
       <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-gradient-to-br from-[hsl(230,25%,12%)] to-[hsl(230,25%,8%)]">
-        <VideoPlayer module={selectedModule} recording={selectedRecording} />
+        <VideoPlayer lesson={selectedLesson} recording={selectedRecording} />
       </div>
       <div className="px-1">
         <h2 className="text-base font-semibold text-foreground mt-4">
-          {selectedRecording?.title ?? selectedModule?.title ?? "Select a lesson"}
+          {selectedRecording?.title ?? selectedLesson?.title ?? selectedModule?.title ?? "Select a lesson"}
         </h2>
         <p className="text-xs text-muted-foreground mt-0.5">
-          {currentModuleIndex >= 0 ? `Module ${currentModuleIndex + 1}` : ""}
-          {selectedModule?.durationSeconds ? ` · ${Math.floor(selectedModule.durationSeconds / 60)} min` : ""}
-          {selectedModule?.description && selectedModule.description.split(".")[0] ? ` · ${selectedModule.description.split(".")[0]}` : ""}
+          {currentLessonIndex >= 0 ? `Lesson ${currentLessonIndex + 1}` : ""}
+          {currentModuleIndex >= 0 ? ` · Module ${currentModuleIndex + 1}` : ""}
+          {selectedLesson?.durationSeconds ? ` · ${Math.floor(selectedLesson.durationSeconds / 60)} min` : ""}
+          {selectedLesson?.description?.split(".")[0] ? ` · ${selectedLesson.description.split(".")[0]}` : ""}
         </p>
       </div>
       <div className="glass-card p-4 mt-4">
         <h3 className="text-sm font-medium text-foreground mb-1.5">About this lesson</h3>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          {selectedModule?.description ?? selectedRecording?.title ?? "Select a lesson from the sidebar to view details."}
+          {selectedLesson?.description ?? selectedRecording?.title ?? "Select a lesson from the sidebar to view details."}
         </p>
       </div>
     </>
@@ -288,10 +320,10 @@ export default function CourseContentView({ courseId, goBack }: CourseContentVie
     <div className="p-6 max-w-3xl mx-auto space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-semibold text-foreground">
-          Code Editor {selectedModule ? `— ${selectedModule.title}` : ""}
+          Code Editor {selectedLesson ? `— ${selectedLesson.title}` : selectedModule ? `— ${selectedModule.title}` : ""}
         </h2>
       </div>
-      {!selectedModule ? (
+      {!selectedLesson && !selectedModule ? (
         <div className="flex flex-col items-center justify-center h-64 text-center gap-3 text-muted-foreground">
           <IconCode size={40} className="opacity-30" />
           <p className="text-sm">Select a lesson to open the code editor</p>
@@ -517,8 +549,8 @@ export default function CourseContentView({ courseId, goBack }: CourseContentVie
   };
 
   const renderResourceMain = () => {
-    const modulesWithResources = data.modules.filter((m) => m.resources && m.resources.length > 0);
-    if (modulesWithResources.length === 0) {
+    const lessonsWithResources = data.modules.flatMap((m) => m.lessons.filter((l) => l.resources && l.resources.length > 0));
+    if (lessonsWithResources.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center h-full text-center gap-3 text-muted-foreground">
           <IconFileDescription size={40} className="opacity-30" />
@@ -530,11 +562,11 @@ export default function CourseContentView({ courseId, goBack }: CourseContentVie
     return (
       <div className="p-6 max-w-2xl space-y-6">
         <h2 className="text-base font-semibold text-foreground">Study Material</h2>
-        {modulesWithResources.map((mod) => (
-          <div key={mod.id}>
-            <h3 className="text-sm font-medium text-foreground mb-2">{mod.title}</h3>
+        {lessonsWithResources.map((lesson) => (
+          <div key={lesson.id}>
+            <h3 className="text-sm font-medium text-foreground mb-2">{lesson.title}</h3>
             <div className="space-y-1.5">
-              {mod.resources.map((r, ri) => (
+              {lesson.resources.map((r, ri) => (
                 <a key={ri} href={r.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-lg border border-border px-3.5 py-2.5 text-sm hover:bg-muted/5 transition-colors">
                   <IconFileDescription size={18} className="shrink-0 text-primary" />
                   <span className="text-foreground font-medium">{r.name}</span>
@@ -548,24 +580,24 @@ export default function CourseContentView({ courseId, goBack }: CourseContentVie
   };
 
   const renderResourceSidebar = () => {
-    const modulesWithResources = data.modules.filter((m) => m.resources && m.resources.length > 0);
+    const lessonsWithResources = data.modules.flatMap((m) => m.lessons.filter((l) => l.resources && l.resources.length > 0));
     return (
       <div className="flex flex-col h-full">
         <div className="p-4 border-b border-border flex-shrink-0">
           <p className="text-sm font-medium text-foreground">Study Material</p>
-          <p className="text-[17px] text-muted-foreground mt-0.5">{modulesWithResources.length} module{modulesWithResources.length !== 1 ? "s" : ""} with resources</p>
+          <p className="text-[17px] text-muted-foreground mt-0.5">{lessonsWithResources.length} lesson{lessonsWithResources.length !== 1 ? "s" : ""} with resources</p>
         </div>
         <div className="flex-1 overflow-y-auto">
-          {modulesWithResources.length === 0 ? (
+          {lessonsWithResources.length === 0 ? (
             <p className="text-xs text-muted-foreground text-center py-8">No resources yet</p>
           ) : (
-            modulesWithResources.map((mod) => (
-              <div key={mod.id} className="px-4 py-3 border-b border-border/30 last:border-b-0">
+            lessonsWithResources.map((lesson) => (
+              <div key={lesson.id} className="px-4 py-3 border-b border-border/30 last:border-b-0">
                 <div className="flex items-center gap-2.5">
                   <IconFileDescription size={14} className="shrink-0 text-muted-foreground" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-foreground truncate">{mod.title}</p>
-                    <p className="text-[11px] text-muted-foreground">{mod.resources.length} file{mod.resources.length !== 1 ? "s" : ""}</p>
+                    <p className="text-xs font-medium text-foreground truncate">{lesson.title}</p>
+                    <p className="text-[11px] text-muted-foreground">{lesson.resources.length} file{lesson.resources.length !== 1 ? "s" : ""}</p>
                   </div>
                 </div>
               </div>
@@ -600,16 +632,35 @@ export default function CourseContentView({ courseId, goBack }: CourseContentVie
 
         {activeRail === "lesson" && (
           <div className="flex items-center gap-3 px-5 py-2.5 bg-background border-t border-border flex-shrink-0">
-            <button onClick={() => { const prevIdx = currentModuleIndex - 1; if (prevIdx >= 0) { const prev = data.modules[prevIdx]; selectModule(prev.id); setExpandedModules((prevSet) => new Set([...prevSet, prev.id])); } }} disabled={currentModuleIndex <= 0} className="btn-secondary text-xs gap-1">
+            <button onClick={() => {
+              // Find previous lesson in flattened list
+              const allLessons = data.modules.flatMap(m => m.lessons.map(l => ({ lesson: l, moduleId: m.id })));
+              const curIdx = allLessons.findIndex(x => x.lesson.id === selectedLessonId);
+              if (curIdx > 0) {
+                const prev = allLessons[curIdx - 1];
+                selectLesson(prev.lesson, prev.moduleId);
+                setExpandedModules((prevSet) => new Set([...prevSet, prev.moduleId]));
+              }
+            }} disabled={!selectedLessonId || (data.modules.flatMap(m => m.lessons).findIndex(l => l.id === selectedLessonId) <= 0)} className="btn-secondary text-xs gap-1">
               <IconArrowLeft size={13} /> Previous
             </button>
             <div className="flex-1" />
-            <span className="text-xs text-muted-foreground">{currentModuleIndex >= 0 ? `Module ${currentModuleIndex + 1} of ${data.modules.length}` : ""}</span>
+            <span className="text-xs text-muted-foreground">
+              {selectedLessonId ? `Lesson ${(data.modules.flatMap(m => m.lessons).findIndex(l => l.id === selectedLessonId)) + 1} of ${data.modules.reduce((s, m) => s + m.lessons.length, 0)}` : ""}
+            </span>
             <div className="flex-1" />
             <button onClick={() => { setActiveRail("note"); setEditingNoteId("new"); setNewNoteTitle(""); setNewNoteBody(""); }} className="btn-secondary text-xs gap-1.5">
               <IconPencil size={13} /> Take Note
             </button>
-            <button onClick={() => { const nextIdx = currentModuleIndex + 1; if (nextIdx < data.modules.length) { const next = data.modules[nextIdx]; selectModule(next.id); setExpandedModules((prevSet) => new Set([...prevSet, next.id])); } }} disabled={currentModuleIndex >= data.modules.length - 1} className="btn-primary text-xs gap-1.5">
+            <button onClick={() => {
+              const allLessons = data.modules.flatMap(m => m.lessons.map(l => ({ lesson: l, moduleId: m.id })));
+              const curIdx = allLessons.findIndex(x => x.lesson.id === selectedLessonId);
+              if (curIdx >= 0 && curIdx < allLessons.length - 1) {
+                const next = allLessons[curIdx + 1];
+                selectLesson(next.lesson, next.moduleId);
+                setExpandedModules((prevSet) => new Set([...prevSet, next.moduleId]));
+              }
+            }} disabled={!selectedLessonId || (data.modules.flatMap(m => m.lessons).findIndex(l => l.id === selectedLessonId) >= data.modules.reduce((s, m) => s + m.lessons.length, 0) - 1)} className="btn-primary text-xs gap-1.5">
               Continue <IconArrowRight size={13} />
             </button>
           </div>
@@ -617,7 +668,7 @@ export default function CourseContentView({ courseId, goBack }: CourseContentVie
       </div>
 
       <div className="w-[340px] flex-shrink-0 bg-background border-l border-border flex flex-col overflow-hidden">
-        {activeRail === "lesson" && <LessonSidebar data={data} selectedModuleId={selectedModuleId} selectedRecordingId={selectedRecordingId} expandedModules={expandedModules} bookmarks={bookmarks} onSelectModule={selectModule} onSelectRecording={selectRecording} onToggleModule={toggleModule} onToggleBookmark={toggleBookmark} />}
+        {activeRail === "lesson" && <LessonSidebar data={data} selectedModuleId={selectedModuleId} selectedLessonId={selectedLessonId} selectedRecordingId={selectedRecordingId} expandedModules={expandedModules} bookmarks={bookmarks} onSelectModule={selectModule} onSelectLesson={selectLesson} onSelectRecording={selectRecording} onToggleModule={toggleModule} onToggleBookmark={toggleBookmark} />}
         {activeRail === "editor" && renderCodeEditorSidebar()}
         {activeRail === "note" && renderNoteSidebar()}
         {activeRail === "session" && <SessionSidebar data={data} sidebarTab={sidebarTab} onSetSidebarTab={setSidebarTab} />}
