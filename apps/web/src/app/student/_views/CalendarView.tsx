@@ -129,12 +129,34 @@ export default function CalendarView({ events }: CalendarViewProps) {
                         : "Date not available"}
                     </p>
                   </div>
-                  <span
-                    className="flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium text-white"
-                    style={{ background: statusColor(status) }}
-                  >
-                    {statusLabel(status)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {status === "present" && e.joinUrl && (
+                      <a
+                        href={e.joinUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-primary px-3 py-1 text-xs"
+                      >
+                        Join Now
+                      </a>
+                    )}
+                    {status === "upcoming" && e.joinUrl && (
+                      <a
+                        href={e.joinUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-secondary px-3 py-1 text-xs"
+                      >
+                        Open Link
+                      </a>
+                    )}
+                    <span
+                      className="flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium text-white"
+                      style={{ background: statusColor(status) }}
+                    >
+                      {statusLabel(status)}
+                    </span>
+                  </div>
                 </div>
               );
             })}

@@ -98,6 +98,27 @@ pnpm dev                      # API :4000 + Web :3000
 
 ---
 
+## Testing
+
+### Playwright (E2E)
+- **`apps/web/e2e/`** — 54 tests across 4 spec files (auth, student, instructor, admin)
+- Chromium-only via `playwright install chromium`
+- Run: `pnpm test:e2e` (requires API + Web running)
+- API-driven data setup + UI verification pattern
+
+### k6 (Load Testing)
+- **`apps/api/k6/`** — 4 test profiles:
+  - `smoke.js` — 1 VU, 10s sanity check (health + login + /me)
+  - `load.js` — ramp 0→20→50 VU across 3.5 min, p95 < 1s threshold
+  - `scenarios.js` — role-based mix (3 admin, 5 instructor, 30 student)
+  - `heavy.js` — ramp 0→50→100 VU over 2 min, hold 100 for 2 min, p95 < 2s threshold
+- Shared `helpers.js` for login + cookie jar auth
+- Run: `pnpm test:load:smoke`, `pnpm test:load`, `pnpm test:load:scenarios`, `pnpm test:load:heavy`
+
+  > **Note:** At 100 concurrent VUs, the API shows degraded performance (p95 ~12s). Bottleneck suspected at login endpoint (bcrypt + DB) and Node.js event loop saturation. Investigation deferred.
+
+---
+
 ## Architecture Notes
 
 - **Student portal** is a single-page view-stack (state machine in `student/page.tsx`) — not a multi-route layout. All 10 views render in-place.

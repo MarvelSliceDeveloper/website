@@ -93,6 +93,7 @@ export interface MentorshipTicket {
   createdAt: string;
   notes?: string;
   instructor?: string;
+  joinUrl?: string;
 }
 
 export interface Certificate {

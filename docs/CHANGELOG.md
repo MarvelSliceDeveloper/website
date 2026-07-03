@@ -2,6 +2,59 @@
 
 > Lightweight record of recent changes in the workspace.
 
+<<<<<<< HEAD
+=======
+---
+
+## 2026-07-03 — k6 Load Testing Harness ✅
+
+### Added: k6 Test Suite
+- **Installed** k6 v2.1.0 locally (standalone binary in repo root)
+- **Created** `apps/api/k6/` with 4 files:
+  - `helpers.js` — shared base URL, seed user credentials, login function with cookie jar, threshold builder
+  - `smoke.js` — 1 VU × 10s sanity test (health check, login, /me endpoint)
+  - `load.js` — ramp from 0→20→50 VUs over 3.5 min testing health, auth, courses, sessions, mentorship. Fails if p95 > 1s or error rate > 5%
+  - `scenarios.js` — realistic role-weighted mix: 3 admin VU, 5 instructor VU, 30 student VU with role-specific request patterns
+- **Added** `pnpm` scripts: `test:load`, `test:load:smoke`, `test:load:scenarios` in root `package.json`
+
+### Added: Heavy Load Profile (100 VUs)
+- **Created** `apps/api/k6/heavy.js` — ramp 0→50→100 VUs over 2 min, hold 100 for 2 min, ramp down. Thresholds: p95 < 2s, error rate < 10%
+- **Added** `pnpm test:load:heavy` script
+
+---
+
+## 2026-07-03 — Permanent Course Deletion for Archived Courses ✅
+
+### Added: Permanent Delete Endpoint + UI
+- **API**: Added `DELETE /api/admin/courses/:id/permanent` (admin-only) that hard-deletes a course and all related data in a transaction
+- **Service**: Added `permanentDeleteCourse()` in `course.service.ts` — cascading cleanup of modules, batches, sessions, recordings, assignments, enrollments, payments, notes, certificates, and mentorship tickets before deleting the course record
+- **Controller**: Added `permanentDelete` handler in `course.controller.ts`
+- **UI**: Added "Delete Permanently" button in admin courses page for ARCHIVED courses only, with a destructive confirmation dialog
+
+---
+
+## 2026-07-03 — Playwright E2E Test Suite ✅
+
+### Added: Playwright E2E Tests (Chromium-only)
+- Installed `@playwright/test` — Chromium-only via `playwright install chromium`
+- Created `apps/web/playwright.config.ts` — single Chromium project, HTML + list reporters
+- Created `apps/web/e2e/auth.setup.ts` — shared API login helper for admin/instructor/student
+- Updated root `package.json`, `apps/web/package.json`, `turbo.json` with `test:e2e` scripts
+
+### Upgraded: Smoke → Deep Workflow Tests
+- **auth.spec.ts** — 10 tests: UI login for all 3 roles with redirect verification, API auth cookie, invalid credentials, empty email validation, user registration via API + UI verify, password visibility toggle, logout, unauthenticated redirect
+- **student.spec.ts** — 12 tests: 9 page smoke (Dashboard through Settings) + 3 deep workflows (sidebar nav items, support ticket creation, settings notification toggles)
+- **instructor.spec.ts** — 12 tests: 9 page smoke (Dashboard through Settings) + 3 deep workflows (dashboard stat cards, batches list with cards/empty state, assignments list)
+- **admin.spec.ts** — 20 tests: 16 page smoke (Dashboard through Settings) + 4 API-driven deep workflows (create course → verify in list, publish course → verify status badge, create batch → verify in list, batch detail page with full info)
+- Total: **54 tests** across **4 test files**
+- All deep tests use API-driven data setup + UI verification for robust, repeatable E2E coverage
+
+### Plan
+- `.omo/plans/playwright-e2e.md` → `docs/plan-completed/playwright-e2e.md`
+
+---
+
+>>>>>>> a5b28c7a5abfd248772301f46bbd788e0a1eb6c5
 ## 2026-06-30 — Calendar ↔ Sessions Sync Fixes + Role Workflows ✅
 
 ### Fix A — Admin Calendar Duration (Bug)

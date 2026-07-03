@@ -106,6 +106,19 @@ export const courseController = {
     }
   },
 
+  // Permanently deletes a course and all related data (irreversible)
+  async permanentDelete(req: AuthRequest, res: Response) {
+    try {
+      await courseService.permanentDeleteCourse(req.params.id);
+      return res.status(200).json({ message: 'Course permanently deleted' });
+    } catch (error: any) {
+      if (error.message === 'Course not found') {
+        return res.status(404).json({ error: error.message });
+      }
+      return res.status(500).json({ error: error.message });
+    }
+  },
+
   // Publishes a course after validation
   async publish(req: AuthRequest, res: Response) {
     try {
@@ -126,6 +139,19 @@ export const courseController = {
         return res.status(404).json({ error: error.message });
       }
       return res.status(500).json({ error: error.message });
+    }
+  },
+
+  // Recovers an archived course back to DRAFT
+  async recover(req: AuthRequest, res: Response) {
+    try {
+      const course = await courseService.recoverCourse(req.params.id);
+      return res.json({ message: 'Course recovered', course });
+    } catch (error: any) {
+      if (error.message === 'Course not found') {
+        return res.status(404).json({ error: error.message });
+      }
+      return res.status(400).json({ error: error.message });
     }
   },
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
@@ -7,7 +8,7 @@ import {
   IconBell,
   IconMoon,
   IconSun,
-  IconX,                  
+  IconX,
   IconChevronDown,
   IconLogout,
   IconSettings,
@@ -54,11 +55,7 @@ export default function StudentPortalShell({
   usePathname();
   const [notifOpen, setNotifOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">(() => {
-    if (typeof window === "undefined") return "dark";
-    const saved = window.localStorage.getItem("lms-theme");
-    return saved === "light" ? "light" : "dark";
-  });
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -81,6 +78,13 @@ export default function StudentPortalShell({
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, [fetchNotifications]);
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("lms-theme");
+    if (saved === "light" || saved === "dark") {
+      setTheme(saved);
+    }
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -141,12 +145,14 @@ export default function StudentPortalShell({
 
             {!hideLogo && (
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-linear-to-br from-primary to-violet-600">
-                  <IconSchool size={17} className="text-white" />
-                </div>
-                <span className="hidden text-sm font-bold tracking-tight text-foreground sm:inline">
-                  LMS <span className="text-primary">Portal</span>
-                </span>
+                <Image
+                  src="/images/Marvel_logo.png"
+                  alt="LMS Logo"
+                  width={170}
+                  height={48}
+                  className="h-12 w-auto object-contain"
+                />
+                <span className="text-base font-bold text-foreground">Marvel Slice</span>
               </div>
             )}
 

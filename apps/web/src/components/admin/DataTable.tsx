@@ -8,7 +8,7 @@ export interface DataTableColumn<T> {
   key: string;
   label: string;
   sortable?: boolean;
-  render?: (value: unknown, row: T) => ReactNode;
+  render?: (value: unknown, row: T, index: number) => ReactNode;
 }
 
 interface DataTableProps<T> {
@@ -65,9 +65,9 @@ export default function DataTable<T>({
     }
   };
 
-  const renderCell = (row: T, col: DataTableColumn<T>) => {
+  const renderCell = (row: T, col: DataTableColumn<T>, index: number) => {
     if (col.render) {
-      return col.render((row as Record<string, unknown>)[col.key], row);
+      return col.render((row as Record<string, unknown>)[col.key], row, index);
     }
     return String((row as Record<string, unknown>)[col.key] ?? "");
   };
@@ -139,15 +139,15 @@ export default function DataTable<T>({
             </tr>
           </thead>
           <tbody className="divide-y divide-border/50">
-            {sorted.map((row, i) => (
-              <tr key={i} className="hover:bg-card-hover/50 transition-colors">
-                {columns.map((col) => (
-                  <td key={col.key} className="px-5 py-3 text-sm text-foreground">
-                    {renderCell(row, col)}
-                  </td>
+              {sorted.map((row, i) => (
+                  <tr key={i} className="hover:bg-card-hover/50 transition-colors">
+                    {columns.map((col) => (
+                      <td key={col.key} className="px-5 py-3 text-sm text-foreground">
+                        {renderCell(row, col, i)}
+                      </td>
+                    ))}
+                  </tr>
                 ))}
-              </tr>
-            ))}
           </tbody>
         </table>
       </div>
@@ -162,7 +162,7 @@ export default function DataTable<T>({
                   {col.label}
                 </span>
                 <span className="text-sm text-foreground text-right">
-                  {renderCell(row, col)}
+                  {renderCell(row, col, i)}
                 </span>
               </div>
             ))}

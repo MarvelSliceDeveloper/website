@@ -33,9 +33,9 @@ const roleStyles: Record<string, string> = {
 };
 
 const roleIcons: Record<string, React.ReactNode> = {
-  ADMIN: <IconShield size={14} />,
-  INSTRUCTOR: <IconChalkboardTeacher size={14} />,
-  STUDENT: <IconSchool size={14} />,
+  ADMIN: <IconShield size={25} />,
+  INSTRUCTOR: <IconChalkboardTeacher size={25} />,
+  STUDENT: <IconSchool size={25} />,
 };
 
 export default function AdminUsersPage() {
@@ -152,6 +152,13 @@ export default function AdminUsersPage() {
   };
 
   const columns: DataTableColumn<User>[] = [
+    {
+      key: "sno",
+      label: "S.No",
+      render: (_, __, index) => (
+        <span className="text-sm text-muted-foreground">{index + 1}</span>
+      ),
+    },
     {
       key: "name",
       label: "User",

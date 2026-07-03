@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "../lib/api";
@@ -101,12 +102,15 @@ export default function Sidebar({
       className={`fixed left-0 top-0 z-40 hidden h-full flex-col border-r border-border bg-card transition-[width] duration-200 lg:flex ${collapsed ? "w-16" : "w-64"}`}
     >
       <div className={`flex h-16 items-center border-b border-border ${collapsed ? "justify-center px-2" : "gap-2.5 px-4"}`}>
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white">
-          LM
-        </div>
-        <div className={`min-w-0 ${collapsed ? "hidden" : "block"}`}>
-          <p className="truncate text-sm font-semibold text-foreground">LMS Portal</p>
-          <p className="text-xs text-muted">Student Area</p>
+        <div className={`flex items-center gap-2 min-w-0 ${collapsed ? "hidden" : "block"}`}>
+          <Image
+            src="/images/Marvel_logo.png"
+            alt="LMS Logo"
+            width={200}
+            height={56}
+            className="h-14 w-auto object-contain"
+          />
+          <span className="text-lg font-bold text-foreground">Marvel Slice</span>
         </div>
       </div>
 

@@ -1,8 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
 import {
   IconBook,
   IconBrandWindows,
@@ -349,8 +351,15 @@ export default function AdminSidebar({
         className={`flex h-16 items-center border-b border-border ${collapsed ? "justify-center px-2" : "gap-2.5 px-4"
           }`}
         >
-        <div className={`min-w-0 flex-1 ${collapsed ? "hidden" : "block"}`}>
-          <p className="truncate text-sm font-semibold text-foreground">LMS Portal</p>
+        <div className={`flex items-center gap-2 min-w-0 flex-1 ${collapsed ? "hidden" : "block"}`}>
+          <Image
+            src="/images/Marvel_logo.png"
+            alt="LMS Logo"
+            width={200}
+            height={56}
+            className="h-14 w-auto object-contain"
+          />
+          <span className="text-lg font-bold text-foreground">Marvel Slice</span>
         </div>
       </div>
 
@@ -380,7 +389,10 @@ export default function AdminSidebar({
           </div>
         </div>
         <button
-          onClick={() => router.push("/login")}
+          onClick={async () => {
+            await api.post("/api/auth/logout");
+            router.push("/login");
+          }}
           className="btn-danger w-full justify-center"
         >
           <IconLogout size={18} stroke={1.8} className="shrink-0" />

@@ -54,6 +54,7 @@ import { mentorshipRouter } from './modules/mentorship/mentorship.routes';
 import { supportRouter } from './modules/support/support.routes';
 import ticketRouter from './modules/tickets/ticket.routes';
 import { noteRouter } from './modules/notes/notes.routes';
+import { prisma } from './utils/prisma';
 
 const app = express();
 
@@ -116,9 +117,23 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
 const PORT = process.env.PORT || 4000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   logger.info(`API Server running on port ${PORT}`);
   // Start the background Teams recording poller
   recordingSyncJob.start();
 });
+
+const shutdown = async (signal: string) => {
+  logger.info(`${signal} received — shutting down gracefully...`);
+  recordingSyncJob.stop();
+  server.close(async () => {
+    await prisma.$disconnect();
+    logger.info('Prisma disconnected, server closed.');
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(1), 10_000);
+};
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
 

@@ -42,6 +42,12 @@ router.post(
 // DELETE /api/admin/courses/:id — soft-delete (archive) course
 router.delete('/:id', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), courseController.delete);
 
+// DELETE /api/admin/courses/:id/permanent — permanently delete course and all related data (admin only)
+router.delete('/:id/permanent', requireRole([UserRole.ADMIN]), courseController.permanentDelete);
+
+// POST /api/admin/courses/:id/recover — recover from archive to draft
+router.post('/:id/recover', requireRole([UserRole.ADMIN]), courseController.recover);
+
 // POST /api/admin/courses/:id/publish — validate and publish
 router.post('/:id/publish', requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]), courseController.publish);
 

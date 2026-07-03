@@ -459,11 +459,13 @@ function TicketManageModal({
             </div>
           )}
 
-          {/* Step 2: Schedule Session */}
-          {(ticket.status === "OPEN" || ticket.status === "ASSIGNED") && (
+          {/* Step 2: Schedule / Edit Session */}
+          {(ticket.status === "OPEN" || ticket.status === "ASSIGNED" || ticket.status === "SCHEDULED") && (
             <div className="border border-border rounded-lg p-4">
               <h3 className="text-sm font-semibold text-foreground mb-3">
-                {ticket.status === "ASSIGNED"
+                {ticket.status === "SCHEDULED"
+                  ? "Edit Session"
+                  : ticket.status === "ASSIGNED"
                   ? "Schedule Session"
                   : "Step 2: Schedule Session (Optional)"}
               </h3>

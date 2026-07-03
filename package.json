@@ -21,9 +21,13 @@
     "test:watch": "turbo test -- --watch",
     "test:coverage": "turbo test -- --coverage",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "test:e2e": "playwright test",
-    "test:e2e:headed": "playwright test --headed",
+    "test:e2e": "turbo test:e2e",
+    "test:e2e:headed": "turbo test:e2e -- --headed",
     "test:all": "pnpm test && pnpm test:integration && pnpm test:e2e",
+    "test:load": "k6 run apps/api/k6/load.js",
+    "test:load:smoke": "k6 run apps/api/k6/smoke.js",
+    "test:load:scenarios": "k6 run apps/api/k6/scenarios.js",
+    "test:load:heavy": "k6 run apps/api/k6/heavy.js",
     "prisma:reset": "cd apps/api && npx prisma db push --force-reset && npx prisma db seed",
     "prisma:migrate": "cd apps/api && npx prisma migrate dev",
     "prisma:seed": "cd apps/api && npx prisma db seed",
@@ -33,9 +37,10 @@
   },
   "devDependencies": {
     "prettier": "^3.2.5",
-    "turbo": "^1.13.0",
+    "turbo": "^2.5.0",
     "typescript": "^5.4.5"
   },
+  "packageManager": "pnpm@11.1.1",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=8.0.0"
