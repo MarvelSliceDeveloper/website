@@ -2,36 +2,40 @@
 
 > Lightweight record of recent changes in the workspace.
 
----
-
 ## 2026-06-30 — Calendar ↔ Sessions Sync Fixes + Role Workflows ✅
 
 ### Fix A — Admin Calendar Duration (Bug)
+
 - **File:** `apps/web/src/app/admin/calendar/page.tsx:67`
 - **Change:** `s.endDateTime` → `s.endedAt`
 - **Why:** Code was reading a non-existent field. Every event fell back to `start + 1hr` regardless of actual duration.
 
 ### Fix B — Session Edits Not Synced to Calendar (Bug)
+
 - **File:** `apps/api/src/modules/sessions/session.service.ts:242-261`
 - **Change:** `updateSession()` now syncs title, start, and end changes to both `LiveSession` and `CalendarEvent` records.
 - **Why:** Editing a session's title or time was invisible to the student calendar view. The `CalendarEvent` was never updated.
 
 ### Fix C — Canceled Sessions Lingering in Student Calendar (Bug)
+
 - **File:** `apps/api/src/modules/sessions/session.service.ts:295-304`
 - **Change:** Instructor soft-cancel now deletes the linked `CalendarEvent` inside a transaction, matching the admin hard-delete behavior.
 - **Why:** Canceled sessions kept appearing in student calendars because only the `LiveSession.endedAt` was set — the `CalendarEvent` was untouched.
 
 ### Fix D — `endedAt` Dual Meaning (Cleanup)
+
 - **Files:** `apps/api/prisma/schema.prisma:158` + `session.service.ts`
 - **Change:** Added `scheduledEndAt DateTime` field to `LiveSession` model. On create, both `scheduledEndAt` and `endedAt` are set to `endDateTime`. On update, both update. On cancel, only `endedAt` is overwritten — `scheduledEndAt` preserves the original scheduled end.
 - **Why:** `endedAt` was used for both "scheduled end time" and "cancel timestamp", causing data loss on early cancellation.
 
 ### Fix E — `/student/calendar` Sidebar Link 404 (Bug)
+
 - **Files:** `apps/web/src/components/Sidebar.tsx:34` + `apps/web/src/app/student/page.tsx:301-304`
 - **Change:** Sidebar link changed from `"/student/calendar"` to `"/student?view=calendar"`. Student page now reads `?view=calendar` query param on mount and auto-navigates to the Calendar view.
 - **Why:** The student calendar is rendered via SPA view stack on `/student`, but the sidebar pointed to a non-existent route. All other SPA-only views (Dashboard, Sessions) had the same issue.
 
 ### Documentation
+
 - **Created:** `docs/plan-to-work/calendar-session-sync.md` — Plan document tracking all fixes (marked completed).
 - **Created:** `docs/plan-to-work/calendar-session-workflows.md` — Comprehensive role-based workflow documentation for Admin, Instructor, and Student covering all Calendar and Sessions operations with data flow diagrams and state machine.
 
@@ -40,18 +44,21 @@
 ## 2026-06-27 — Student Portal UI Overhaul: Support, Inbox, and CSS Fix
 
 ### Support Page Redesign (`/student/support`)
+
 - **Wrapped** page in `StudentPortalShell` for consistent header, notifications, and theme toggle.
 - **Implemented** two-column split layout for desktop: scrollable ticket list on the left (`lg:col-span-5`), ticket detail/chat panel on the right (`lg:col-span-7`), inside a `glass-card`.
 - **Enhanced** chat conversation UI with rounded bubbles, differentiated sender styling, and a polished empty-state placeholder.
 - **Responsive fallback**: single-column view on mobile with a back-to-list button.
 
 ### Inbox Page Redesign (`/student/inbox`)
+
 - **Wrapped** page in `StudentPortalShell` for consistent navigation.
 - **Added** left sidebar (`lg:col-span-3`) with notification stats (total, unread, read counts) and vertical filter tabs.
 - **Improved** notification cards with type badges, animated unread dots, and toast feedback on mark-read / delete actions.
 - **Enhanced** empty states with contextual messaging per filter mode.
 
 ### Tailwind CSS v4 Theme Fix (`globals.css`)
+
 - **Changed** `@theme inline {` to `@theme {` to align with the standard Tailwind CSS v4 specification.
 
 ---
@@ -59,22 +66,27 @@
 ## 2026-06-27 — Critical Fixes: Rate Limiting, Support Ticket Resolution, and Student Enrollment Toasts ✅
 
 ### Express Rate Limiter
+
 - **Relocated** rate limiting middleware in `apps/api/src/index.ts` to register before modular route mountings, ensuring all modular endpoints are correctly rate-limited.
 
 ### Unified Ticket Resolution
+
 - **Updated** `ticketService.getTicket` to perform a parallel search of both `SupportTicket` and `MentorshipTicket` tables if the `type` query parameter is omitted, resolving `404 Not Found` bugs when opening or replying to support tickets via the client portal.
 
 ### Student Course Enrollment UX
+
 - **Refactored** `handleEnroll` in `apps/web/src/app/student/page.tsx` to handle async requests safely with `try-catch`, show user feedback via `sonner` toasts (`toast.success` and `toast.error`), and trigger a portal-wide data reload upon success.
 
 ## 2026-06-25 — Code Cleanup: Removed Duplicate Ticket Modules, Dead Code, Typed VideoPlayer ✅
 
 ### Consolidated Ticket System
+
 - **Removed** old `mentorship.service.ts`, `mentorship.controller.ts`, `support.service.ts`, `support.controller.ts`
 - **Rewired** `mentorship.routes.ts` and `support.routes.ts` to delegate to the unified `ticketController`/`ticketService` — same URL paths (`/api/mentorship/*`, `/api/support/*`), consolidated logic underneath
 - Frontend pages untouched — all existing API calls continue to work
 
 ### Removed Dead/Unused Code
+
 - `notification.service.ts`: Deleted unused `shouldNotify()` function
 - `certificate.routes.ts`: Wired up `GET /` and `POST /claim` routes (service/controller were already implemented)
 - `auth.controller.ts` / `auth.service.ts`: Removed debug `console.log` statements
@@ -82,15 +94,18 @@
 - **Frontend**: Removed 9 unused icon imports across `StudentPortalShell`, `Sidebar`, `AdminSidebar`, `InstructorSidebar`, `MentorshipTickets`
 
 ### Fixed Duplicate Logic Bugs
+
 - `Header.tsx`: Replaced local `timeAgo` with import from `@/lib/time-ago` — fixed `"just now"` → `"Just now"` casing inconsistency
 - `StudentPortalShell.tsx`: Fixed localStorage key `lms-student-theme` → `lms-theme` (was inconsistent with `Header.tsx`)
 
 ### VideoPlayer.tsx — Fully Typed
+
 - Removed `// @ts-nocheck`, added proper TypeScript types to all components and functions
 - Fixed `CtrlBtn` icon prop type to accept `string | string[]` (some SVG paths are arrays)
 - Added `IconKey` type for the demo sidebar navigation
 
 ### Added Function Documentation
+
 - Added `// what this does` line comments across 25 frontend component files
 
 ## 2026-06-17 — Support Ticket System + Student Pages Polish ✅
