@@ -167,65 +167,56 @@ export default function InstructorDashboardPage() {
     loadData();
   }, []);
 
+  const greeting =
+    new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 17 ? "Good afternoon" : "Good evening";
+
   return (
     <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
-      {/* Welcome Banner */}
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-          Instructor
-        </p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">
-          Dashboard
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Welcome back! Here is a summary of your workspace.
-        </p>
+      {/* Greeting Banner */}
+      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-r from-primary/15 via-primary/5 to-accent/10 p-5 sm:p-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(109,125,255,0.15),transparent_60%)]" />
+        <div className="relative flex items-center gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary to-accent text-xl font-bold text-white shadow-lg shadow-primary/30">
+            I
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Instructor</p>
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">{greeting}!</h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">Here is a summary of your workspace.</p>
+          </div>
+          <div className="hidden items-center gap-4 sm:flex">
+            <div className="text-right">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Batches</p>
+              <p className="text-lg font-bold text-primary">{loading ? "\u2014" : stats?.totalBatches ?? "\u2014"}</p>
+            </div>
+            <div className="h-8 w-px bg-border/60" />
+            <div className="text-right">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Students</p>
+              <p className="text-lg font-bold text-success">{loading ? "\u2014" : stats?.totalStudents ?? "\u2014"}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 [&>*]:animate-in [&>*]:fade-in [&>*]:slide-in-from-bottom-2 [&>*]:duration-400">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          {
-            label: "Assigned Batches",
-            value: stats?.totalBatches,
-            icon: IconUsers,
-            gradient: "from-violet-500 to-purple-600",
-          },
-          {
-            label: "Total Sessions",
-            value: stats?.totalSessions,
-            icon: IconVideo,
-            gradient: "from-emerald-500 to-teal-600",
-          },
-          {
-            label: "Active Students",
-            value: stats?.totalStudents,
-            icon: IconBook,
-            gradient: "from-sky-500 to-blue-600",
-          },
-          {
-            label: "Pending Submissions",
-            value: stats?.pendingAssignments,
-            icon: IconClipboardList,
-            gradient: "from-amber-500 to-orange-600",
-          },
-        ].map((stat, idx) => (
-          <div
-            key={idx}
-            className="glass-card p-5 flex items-center justify-between"
-          >
-            <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-[0.1em] text-muted">
-                {stat.label}
-              </p>
-              <p className="text-3xl font-bold text-foreground">
-                {loading || stat.value === undefined ? "\u2014" : stat.value}
-              </p>
-            </div>
-            <div
-              className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${stat.gradient} text-white`}
-            >
-              <stat.icon size={20} stroke={1.8} />
+          { label: "Assigned Batches", value: stats?.totalBatches, icon: IconUsers, gradient: "from-violet-500 to-purple-600", color: "violet" },
+          { label: "Total Sessions", value: stats?.totalSessions, icon: IconVideo, gradient: "from-emerald-500 to-teal-600", color: "emerald" },
+          { label: "Active Students", value: stats?.totalStudents, icon: IconBook, gradient: "from-sky-500 to-blue-600", color: "sky" },
+          { label: "Pending Submissions", value: stats?.pendingAssignments, icon: IconClipboardList, gradient: "from-amber-500 to-orange-600", color: "amber" },
+        ].map((stat) => (
+          <div key={stat.label} className="glass-card p-5 group hover:-translate-y-0.5 transition-all cursor-default">
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <p className="text-xs font-medium uppercase tracking-[0.1em] text-muted">{stat.label}</p>
+                <p className="text-3xl font-bold text-foreground">
+                  {loading || stat.value === undefined ? "\u2014" : stat.value}
+                </p>
+              </div>
+              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${stat.gradient} text-white shadow-sm group-hover:scale-110 transition-transform`}>
+                <stat.icon size={20} stroke={1.8} />
+              </div>
             </div>
           </div>
         ))}

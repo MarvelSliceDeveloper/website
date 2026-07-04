@@ -16,6 +16,8 @@ import {
   IconChevronDown,
   IconHelp,
   IconSettings,
+  IconMenu2,
+  IconX,
 } from "@tabler/icons-react";
 
 type NavItemChild = {
@@ -303,8 +305,10 @@ function NavGroup({
 // Instructor sidebar with nav groups and sign-out
 export default function InstructorSidebar({
   collapsed = false,
+  onToggleCollapse,
 }: {
   collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -338,6 +342,13 @@ export default function InstructorSidebar({
             Marvel Slice
           </span>
         </div>
+        <button
+          onClick={onToggleCollapse}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <IconMenu2 size={18} /> : <IconX size={16} />}
+        </button>
       </div>
 
       <nav

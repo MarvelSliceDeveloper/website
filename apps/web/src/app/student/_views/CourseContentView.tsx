@@ -84,13 +84,12 @@ export default function CourseContentView({
   const [editNoteTitle, setEditNoteTitle] = useState("");
   const [editNoteBody, setEditNoteBody] = useState("");
 
-  // New note form - now shown in main area when editingNoteId === "new"
-  const [showNewNote, setShowNewNote] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState("");
   const [newNoteBody, setNewNoteBody] = useState("");
 
   // Sticky-note widget state (replaces old inline sticky)
   const [showStickyWidget, setShowStickyWidget] = useState(false);
+  const [railCollapsed, setRailCollapsed] = useState(false);
 
   // Bookmarks (in-memory, UI only)
   const [bookmarks, setBookmarks] = useState<string[]>([]);
@@ -1086,15 +1085,10 @@ export default function CourseContentView({
             </span>
             <div className="flex-1" />
             <button
-              onClick={() => {
-                setActiveRail("note");
-                setEditingNoteId("new");
-                setNewNoteTitle("");
-                setNewNoteBody("");
-              }}
-              className="btn-secondary text-xs gap-1.5"
+              onClick={() => setShowStickyWidget((v) => !v)}
+              className={`btn-secondary text-xs gap-1.5 ${showStickyWidget ? "border-primary/40 bg-primary/10" : ""}`}
             >
-              <IconPencil size={13} /> Take Note
+              <IconPencil size={13} /> {showStickyWidget ? "Close Notes" : "Take Note"}
             </button>
             <button
               onClick={() => {
@@ -1155,23 +1149,42 @@ export default function CourseContentView({
         {activeRail === "resource" && renderResourceSidebar()}
       </div>
 
-      <div className="w-[118px] flex-shrink-0 bg-background border-l border-border flex flex-col items-center py-3 overflow-y-auto">
-        {(["lesson", "editor", "note", "session", "resource"] as RailTab[]).map(
-          (tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveRail(tab)}
-              className={`w-20 h-20 rounded-lg flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors mb-0.5 ${activeRail === tab ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/5 hover:text-foreground"}`}
-              title={railLabels[tab]}
-            >
-              {railIcons[tab]}
-              <span className="text-[15px] font-medium leading-none">
-                {railLabels[tab]}
-              </span>
-            </button>
-          ),
-        )}
+      <div className={`flex-shrink-0 bg-background border-l border-border flex flex-col overflow-hidden transition-all duration-200 ${railCollapsed ? "w-0 border-l-0" : "w-[118px]"}`}>
+        <div className="flex flex-col items-center py-3 overflow-y-auto flex-1">
+          <button
+            onClick={() => setRailCollapsed((v) => !v)}
+            className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+            title={railCollapsed ? "Show sidebar" : "Hide sidebar"}
+          >
+            {railCollapsed ? <IconArrowLeft size={16} /> : <IconX size={16} />}
+          </button>
+          {(["lesson", "editor", "note", "session", "resource"] as RailTab[]).map(
+            (tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveRail(tab)}
+                className={`w-20 h-20 rounded-lg flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors mb-0.5 ${activeRail === tab ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/5 hover:text-foreground"}`}
+                title={railLabels[tab]}
+              >
+                {railIcons[tab]}
+                <span className="text-[15px] font-medium leading-none">
+                  {railLabels[tab]}
+                </span>
+              </button>
+            ),
+          )}
+        </div>
       </div>
+      {/* Expand button when rail is collapsed */}
+      {railCollapsed && (
+        <button
+          onClick={() => setRailCollapsed(false)}
+          className="fixed right-3 top-1/2 z-30 flex h-10 w-6 -translate-y-1/2 items-center justify-center rounded-l-lg bg-card border border-border text-muted-foreground hover:text-foreground transition-colors shadow-sm"
+          title="Show sidebar"
+        >
+          <IconArrowLeft size={14} className="rotate-180" />
+        </button>
+      )}
 
       {/* Sticky Note Widget - Draggable & Resizable */}
       {selectedModuleId && showStickyWidget && (

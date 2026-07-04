@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import {
   IconArrowRight,
   IconBook,
@@ -17,7 +16,6 @@ import {
   IconPlus,
   IconNotebook,
   IconPencil,
-  IconAlertCircle,
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
@@ -35,7 +33,6 @@ import StudentSectionTabs, {
   type StudentSectionTab,
 } from "@/components/student/StudentSectionTabs";
 import StudentStatTiles from "@/components/student/StudentStatTiles";
-import OverdueAssignmentsPanel from "@/components/student/OverdueAssignmentsPanel";
 
 interface HomeViewProps {
   stats: DashboardStats;
@@ -114,6 +111,15 @@ const SECTION_CARDS = [
     border: "hover:border-violet-400/30",
   },
 ];
+
+const CARD_ICON_STYLES: Record<string, string> = {
+  courses: "bg-primary/15 text-primary border-primary/25",
+  live: "bg-danger/15 text-danger border-danger/25",
+  calendar: "bg-accent/15 text-accent border-accent/25",
+  certificates: "bg-warning/15 text-warning border-warning/25",
+  mentorship: "bg-success/15 text-success border-success/25",
+  recordings: "bg-violet-500/15 text-violet-400 border-violet-500/25",
+};
 
 export default function HomeView({
   stats,
@@ -224,52 +230,53 @@ export default function HomeView({
     (t) => t.status === "OPEN" || t.status === "ASSIGNED",
   ).length;
 
+  const pendingAssignments = overdueAssignments.filter(
+    (item) => item.status === "PENDING" && item.type === "ASSIGNMENT",
+  ).length;
+  const pendingQuizzes = overdueAssignments.filter(
+    (item) => item.status === "PENDING" && item.type === "QUIZ",
+  ).length;
+
   const statTiles = [
     {
       id: "enrolled",
       label: "Courses To Do",
       value: stats.enrolledCount,
-      icon: <IconBook size={20} className="text-primary" />,
+      icon: <IconBook size={20} />,
       gradient: "bg-gradient-to-br from-primary/20 to-violet-500/10",
       onClick: () => navigate({ view: "COURSES" }),
+      iconColor: "primary",
+      trend: { value: 0, label: "this month" },
     },
     {
       id: "assignment-overdue",
       label: "Assignment Overdue",
-      value: overdueAssignments.filter(
-        (item) => item.status === "PENDING" && item.type === "ASSIGNMENT",
-      ).length,
-      icon: <IconPencil size={20} className="text-danger" />,
+      value: pendingAssignments,
+      icon: <IconPencil size={20} />,
       gradient: "bg-gradient-to-br from-danger/20 to-red-400/10",
       onClick: () => navigate({ view: "ASSIGNMENT_OVERDUE" }),
-      liveBadge: overdueAssignments.some(
-        (item) => item.status === "PENDING" && item.type === "ASSIGNMENT",
-      )
-        ? "Overdue"
-        : undefined,
+      iconColor: "danger",
+      liveBadge: pendingAssignments > 0 ? "Overdue" : undefined,
     },
     {
       id: "quiz-overdue",
       label: "Quiz Overdue",
-      value: overdueAssignments.filter(
-        (item) => item.status === "PENDING" && item.type === "QUIZ",
-      ).length,
-      icon: <IconClock size={20} className="text-accent" />,
+      value: pendingQuizzes,
+      icon: <IconClock size={20} />,
       gradient: "bg-gradient-to-br from-accent/20 to-cyan-400/10",
       onClick: () => navigate({ view: "QUIZ_OVERDUE" }),
-      liveBadge: overdueAssignments.some(
-        (item) => item.status === "PENDING" && item.type === "QUIZ",
-      )
-        ? "Overdue"
-        : undefined,
+      iconColor: "accent",
+      liveBadge: pendingQuizzes > 0 ? "Overdue" : undefined,
     },
     {
       id: "completed",
       label: "Completed Course",
       value: stats.completedCount,
-      icon: <IconCertificate size={20} className="text-success" />,
+      icon: <IconCertificate size={20} />,
       gradient: "bg-gradient-to-br from-success/20 to-emerald-400/10",
       onClick: () => navigate({ view: "COURSE_COMPLETED" }),
+      iconColor: "success",
+      trend: { value: stats.completedCount > 0 ? 5 : 0, label: "this month" },
     },
   ];
 
@@ -320,20 +327,170 @@ export default function HomeView({
     }
   }
 
+  const overdueTotal = pendingAssignments + pendingQuizzes;
+
   return (
-    <div className="sp-view-enter space-y-8 motion-reduce:animate-none">
-      {/* ── Greeting ─────────────────────────────────────────────────────── */}
-      <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-        <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-          {greeting}, {studentName}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Here&apos;s everything in one place.
-        </p>
+    <div className="sp-view-enter space-y-6 motion-reduce:animate-none">
+      {/* ── Greeting Banner ──────────────────────────────────────────────── */}
+      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-r from-primary/15 via-primary/5 to-accent/10 p-5 sm:p-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(109,125,255,0.15),transparent_60%)]" />
+        <div className="relative flex items-center gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary to-accent text-xl font-bold text-white shadow-lg shadow-primary/30">
+            {studentName.charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">
+              {greeting}, {studentName}
+            </h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">{dateStr}</p>
+          </div>
+          <div className="hidden items-center gap-4 sm:flex">
+            <div className="text-right">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Streak</p>
+              <p className="text-lg font-bold text-warning">5 days</p>
+            </div>
+            <div className="h-8 w-px bg-border/60" />
+            <div className="text-right">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">This Week</p>
+              <p className="text-lg font-bold text-success">{liveCount} live</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* ── Stats Strip ───────────────────────────────────────────────────── */}
-      <StudentStatTiles tiles={statTiles} />
+      {/* ── Two-Column: Stats + Schedule ─────────────────────────────────── */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
+        {/* ═══ LEFT COLUMN ════════════════════════════════════════════════ */}
+        <div className="min-w-0 space-y-6">
+          <StudentStatTiles tiles={statTiles} />
+        </div>
+
+      {/* ═══ RIGHT COLUMN ═══════════════════════════════════════════════ */}
+        <div className="space-y-6">
+          {/* ── Today's Schedule ───────────────────────────────────────── */}
+          <div className="glass-card p-5">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="sp-eyebrow">{`Today's Schedule`}</p>
+              <button
+                onClick={() => navigate({ view: "CALENDAR" })}
+                className="text-[11px] font-medium text-primary hover:text-primary-hover transition-colors"
+              >
+                View All
+              </button>
+            </div>
+            <div className="divide-y divide-border/60">
+              {liveSessionsToday.filter((s) => s.status !== "PAST").length === 0
+              ? (
+                <p className="py-4 text-center text-sm text-muted">
+                  No events scheduled today
+                </p>
+              ) : (
+                <>
+                  {liveSessionsToday
+                    .filter((s) => s.status !== "PAST")
+                    .slice(0, 4)
+                    .map((s) => {
+                      const start = new Date(s.scheduledAt);
+                      const end = new Date(s.endDateTime);
+                      const timeStr = `${start.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false })} - ${end.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
+                      return (
+                        <div key={s.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                              s.status === "LIVE"
+                                ? "bg-danger/15 text-danger"
+                                : "bg-accent/10 text-accent"
+                            }`}>
+                              {s.status === "LIVE"
+                                ? <span className="live-pulse h-2.5 w-2.5 rounded-full bg-current" />
+                                : <IconClock size={16} />
+                              }
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium text-foreground">
+                                {s.title}
+                              </p>
+                              <span className="inline-flex items-center gap-1 text-[11px] text-muted">
+                                <IconClock size={11} />
+                                {timeStr}
+                              </span>
+                            </div>
+                          </div>
+                          {s.status === "LIVE" && s.joinUrl && (
+                            <a
+                              href={s.joinUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="btn-primary shrink-0 ml-2 px-3 py-1 text-xs"
+                            >
+                              Join
+                            </a>
+                          )}
+                        </div>
+                      );
+                    })}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* ── Overdue Summary ─────────────────────────────────────────── */}
+          <div className="glass-card p-5">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="sp-eyebrow">Overdue</p>
+              {overdueTotal > 0 && (
+                <span className="rounded-full bg-danger/10 px-2 py-0.5 text-[10px] font-bold text-danger">
+                  {overdueTotal} items
+                </span>
+              )}
+            </div>
+            <div className="space-y-3">
+              {overdueTotal === 0 ? (
+                <p className="py-4 text-center text-sm text-muted">
+                  All caught up! No overdue items.
+                </p>
+              ) : (
+                <>
+                  <button
+                    onClick={() => navigate({ view: "ASSIGNMENT_OVERDUE" })}
+                    className="flex w-full items-center gap-3 rounded-xl border border-border/50 bg-card/50 p-3 text-left transition-all hover:bg-card-hover hover:border-danger/30"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-danger/15 text-danger">
+                      <IconPencil size={18} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground">
+                        {pendingAssignments} Assignment{pendingAssignments !== 1 ? "s" : ""} Overdue
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Click to view & submit
+                      </p>
+                    </div>
+                    <IconArrowRight size={14} className="shrink-0 text-muted" />
+                  </button>
+                  <button
+                    onClick={() => navigate({ view: "QUIZ_OVERDUE" })}
+                    className="flex w-full items-center gap-3 rounded-xl border border-border/50 bg-card/50 p-3 text-left transition-all hover:bg-card-hover hover:border-accent/30"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
+                      <IconClock size={18} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground">
+                        {pendingQuizzes} Quiz{pendingQuizzes !== 1 ? "zes" : ""} Overdue
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Click to attempt
+                      </p>
+                    </div>
+                    <IconArrowRight size={14} className="shrink-0 text-muted" />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* ── Section Tabs ──────────────────────────────────────────────────── */}
       <StudentSectionTabs
@@ -408,10 +565,10 @@ export default function HomeView({
             ) : (
               <div className="space-y-2">
                 {calendarEvents.slice(0, 5).map((event) => {
-                  const now = Date.now();
+                  const nowTs = now.getTime();
                   const start = new Date(event.startAt).getTime();
                   const end = new Date(event.endAt).getTime();
-                  const isLive = now >= start && now < end;
+                  const isLive = nowTs >= start && nowTs < end;
                   return (
                     <div
                       key={event.id}
@@ -669,235 +826,163 @@ export default function HomeView({
           </div>
         )}
       </div>
-      <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-75">
-        <p className="sp-eyebrow mb-3">Sections</p>
+      {/* ── Quick Access Cards ───────────────────────────────────────────── */}
+      <div>
+        <p className="sp-eyebrow mb-3">Quick Access</p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {SECTION_CARDS.map((card, i) => (
-            <button
-              key={card.id}
-              onClick={() => {
-                const view =
-                  "viewFn" in card
-                    ? (card as { viewFn: (id?: string) => ViewState }).viewFn(
-                        firstBatchId,
-                      )
-                    : (card as { view: ViewState }).view;
-                navigate(view);
-              }}
-              className={`glass-card group relative flex items-center gap-4 overflow-hidden p-5 text-left transition-all hover:-translate-y-1 hover:shadow-lg ${card.border}`}
-              style={{ animationDelay: `${i * 50}ms` }}
-            >
-              {/* bg glow */}
-              <div
-                className={`absolute inset-0 bg-linear-to-br ${card.gradient} opacity-0 transition-opacity group-hover:opacity-100`}
-              />
-              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card shadow-sm">
-                {card.icon}
-              </div>
-              <div className="relative min-w-0">
-                {card.isLive && liveCount > 0 && (
-                  <span className="mb-1 flex items-center gap-1.5">
-                    <span className="live-pulse h-2 w-2 rounded-full bg-danger" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-danger">
-                      {liveCount} Live
-                    </span>
-                  </span>
-                )}
-                <p className="truncate font-semibold text-foreground">
-                  {card.title}
-                </p>
-                {card.id === "mentorship" && openTicketCount > 0 && (
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {openTicketCount} open request
-                    {openTicketCount > 1 ? "s" : ""}
-                  </p>
-                )}
-              </div>
-              <IconArrowRight
-                size={15}
-                className="relative ml-auto shrink-0 text-muted opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100"
-              />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <OverdueAssignmentsPanel
-        items={overdueAssignments}
-        onView={() => navigate({ view: "COURSES" })}
-      />
-
-      {/* ── Today's Schedule ──────────────────────────────────────────────── */}
-      <div className="glass-card p-5 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
-        <div className="mb-3 flex items-center justify-between">
-          <div>
-            <p className="sp-eyebrow">Today</p>
-            <p className="mt-0.5 text-sm font-semibold text-foreground">
-              {dateStr}
-            </p>
-          </div>
-          <span className="text-xs text-muted">
-            {liveCount + openTicketCount} events
-          </span>
-        </div>
-        <div className="divide-y divide-border/60">
-          {liveSessionsToday.filter((s) => s.status !== "PAST").length === 0 &&
-          openTickets.length === 0 ? (
-            <p className="py-3 text-sm text-muted">
-              No live sessions or mentorship requests today.
-            </p>
-          ) : (
-            <>
-              {liveSessionsToday
-                .filter((s) => s.status !== "PAST")
-                .slice(0, 3)
-                .map((s) => (
-                  <div
-                    key={s.id}
-                    className="flex items-center justify-between py-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      {s.status === "LIVE" ? (
-                        <span className="live-pulse h-2.5 w-2.5 shrink-0 rounded-full bg-danger" />
-                      ) : (
-                        <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-accent/60" />
-                      )}
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
-                          {s.title}
-                        </p>
-                        <p className="text-xs text-muted">{s.courseTitle}</p>
-                      </div>
-                    </div>
-                    {s.status === "LIVE" && s.joinUrl && (
-                      <a
-                        href={s.joinUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="btn-primary px-3 py-1.5 text-xs"
-                      >
-                        Join
-                      </a>
-                    )}
-                  </div>
-                ))}
-              {openTickets.slice(0, 2).map((t) => (
+          {SECTION_CARDS.map((card, i) => {
+            const iconStyle = CARD_ICON_STYLES[card.id] || CARD_ICON_STYLES.courses;
+            return (
+              <button
+                key={card.id}
+                onClick={() => {
+                  const view =
+                    "viewFn" in card
+                      ? (card as { viewFn: (id?: string) => ViewState }).viewFn(
+                          firstBatchId,
+                        )
+                      : (card as { view: ViewState }).view;
+                  navigate(view);
+                }}
+                className={`glass-card group relative flex items-center gap-4 overflow-hidden p-5 text-left transition-all hover:-translate-y-1 hover:shadow-lg ${card.border}`}
+                style={{ animationDelay: `${i * 50}ms` }}
+              >
                 <div
-                  key={t.id}
-                  className="flex items-center justify-between py-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-warning/70" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {t.topic}
-                      </p>
-                      <p className="text-xs text-muted">
-                        Mentorship · {t.courseTitle}
-                      </p>
-                    </div>
+                  className={`absolute inset-0 bg-linear-to-br ${card.gradient} opacity-0 transition-opacity group-hover:opacity-100`}
+                />
+                <div className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border shadow-sm ${iconStyle}`}>
+                  <div className="[&>svg]:size-[22px]">
+                    {card.icon}
                   </div>
-                  <span className="text-xs text-warning">Open</span>
                 </div>
-              ))}
-            </>
-          )}
+                <div className="relative min-w-0 flex-1">
+                  {card.isLive && liveCount > 0 && (
+                    <span className="mb-1 flex items-center gap-1.5">
+                      <span className="live-pulse h-2 w-2 rounded-full bg-danger" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-danger">
+                        {liveCount} Live
+                      </span>
+                    </span>
+                  )}
+                  <p className="truncate font-semibold text-foreground">
+                    {card.title}
+                  </p>
+                  {card.id === "mentorship" && openTicketCount > 0 && (
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {openTicketCount} open request
+                      {openTicketCount > 1 ? "s" : ""}
+                    </p>
+                  )}
+                </div>
+                <IconArrowRight
+                  size={15}
+                  className="relative ml-auto shrink-0 text-muted opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100"
+                />
+              </button>
+            );
+          })}
         </div>
-        <button
-          onClick={() => navigate({ view: "CALENDAR" })}
-          className="mt-3 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
-        >
-          View Full Calendar →
-        </button>
       </div>
 
       {/* ── Continue Learning ─────────────────────────────────────────────── */}
       {continueLearning.length > 0 && (
         <div>
-          <p className="sp-eyebrow mb-3">Continue Learning</p>
-          <div className="space-y-3">
-            {continueLearning.map((item) => (
-              <button
-                key={item.recordingId}
-                onClick={() =>
-                  navigate({
-                    view: "RECORDING_PLAYER",
-                    params: {
-                      batchId: item.batchId,
-                      sessionId: item.recordingId,
-                    },
-                  })
-                }
-                className="glass-card group flex w-full items-center gap-4 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30"
-              >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card overflow-hidden">
-                  {item.thumbnail &&
-                  (item.thumbnail.startsWith("/") ||
-                    item.thumbnail.startsWith("http")) ? (
-                    <Image
-                      src={item.thumbnail}
-                      className="h-full w-full object-cover"
-                      alt=""
-                      width={48}
-                      height={48}
-                      unoptimized
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                        const parent = e.currentTarget.parentElement;
-                        if (parent) {
-                          const fallback = document.createElement("div");
-                          fallback.className =
-                            "flex items-center justify-center w-full h-full";
-                          fallback.innerHTML =
-                            '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-primary"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5A2.5 2.5 0 0 1 4 19.5z"/><path d="M8 2v20"/><path d="M12 6h4"/><path d="M12 10h4"/><path d="M12 14h4"/></svg>';
-                          parent.append(fallback);
-                        }
-                      }}
-                    />
-                  ) : (
-                    <IconBook size={22} stroke={1.5} className="text-primary" />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {item.courseTitle}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted">
-                    {item.dayLabel} · {item.watchedPercent}% watched
-                  </p>
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-border">
-                    <div
-                      className="h-full rounded-full bg-linear-to-r from-primary to-accent transition-all"
-                      style={{ width: `${item.watchedPercent}%` }}
-                    />
+          <div className="mb-3 flex items-center justify-between">
+            <p className="sp-eyebrow">Continue Learning</p>
+            <span className="text-xs text-muted-foreground">
+              {continueLearning.length} in progress
+            </span>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {continueLearning.map((item) => {
+              const pct = item.watchedPercent;
+              const size = 44;
+              const stroke = 3;
+              const r = (size - stroke) / 2;
+              const circumference = 2 * Math.PI * r;
+              const offset = circumference - (pct / 100) * circumference;
+              return (
+                <button
+                  key={item.recordingId}
+                  onClick={() =>
+                    navigate({
+                      view: "RECORDING_PLAYER",
+                      params: {
+                        batchId: item.batchId,
+                        sessionId: item.recordingId,
+                      },
+                    })
+                  }
+                  className="glass-card group flex w-full items-center gap-4 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30"
+                >
+                  <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card">
+                    <svg width={size} height={size} className="absolute inset-0">
+                      <circle
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={r}
+                        fill="none"
+                        stroke="var(--border)"
+                        strokeWidth={stroke}
+                      />
+                      <circle
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={r}
+                        fill="none"
+                        stroke="var(--primary)"
+                        strokeWidth={stroke}
+                        strokeDasharray={circumference}
+                        strokeDashoffset={offset}
+                        strokeLinecap="round"
+                        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+                        className="transition-all duration-700"
+                      />
+                    </svg>
+                    <span className="relative text-[11px] font-bold text-primary">
+                      {pct}%
+                    </span>
                   </div>
-                </div>
-                <span className="text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                  Resume →
-                </span>
-              </button>
-            ))}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {item.courseTitle}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {item.dayLabel}
+                    </p>
+                  </div>
+                  <span className="btn-primary shrink-0 px-3 py-1 text-xs opacity-0 transition-opacity group-hover:opacity-100">
+                    Resume
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
       {/* ── Browse Courses CTA ────────────────────────────────────────────── */}
-      <div className="glass-card flex flex-col items-start justify-between gap-4 border-primary/20 bg-linear-to-br from-primary/10 via-card to-card p-6 sm:flex-row sm:items-center">
-        <div>
-          <p className="sp-eyebrow">Catalogue</p>
-          <h2 className="mt-1 text-lg font-bold text-foreground">
-            Explore new courses
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Expand your skills. New batches starting every month.
-          </p>
+      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-br from-primary/15 via-primary/5 to-violet-500/10 p-6 sm:p-8">
+        <div className="absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-24 w-24 translate-y-4 rounded-full bg-accent/10 blur-2xl" />
+        <div className="relative flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <p className="sp-eyebrow">Course Catalogue</p>
+            <h2 className="mt-1 text-xl font-bold text-foreground">
+              Expand your skills
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground max-w-md">
+              New batches starting every month. Find the perfect course to accelerate your career.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate({ view: "BROWSE_CATALOGUE" })}
+            className="btn-primary shrink-0 gap-2"
+          >
+            Browse Courses
+            <IconArrowRight size={16} />
+          </button>
         </div>
-        <button
-          onClick={() => navigate({ view: "BROWSE_CATALOGUE" })}
-          className="btn-primary shrink-0"
-        >
-          Browse Courses →
-        </button>
       </div>
     </div>
   );

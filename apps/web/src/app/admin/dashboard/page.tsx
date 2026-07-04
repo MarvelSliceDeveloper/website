@@ -221,19 +221,38 @@ export default function AdminDashboardPage() {
     },
   ];
 
+  const totalRevenue = chartData?.revenueTrend?.reduce((s, r) => s + r.total, 0) ?? 0;
+
   return (
     <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
-      {/* Header */}
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-          Admin
-        </p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">
-          Dashboard
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Platform overview and quick actions.
-        </p>
+      {/* Greeting Banner */}
+      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-r from-primary/15 via-primary/5 to-accent/10 p-5 sm:p-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(109,125,255,0.15),transparent_60%)]" />
+        <div className="relative flex items-center gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary to-accent text-xl font-bold text-white shadow-lg shadow-primary/30">
+            A
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Admin</p>
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">Dashboard</h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">Platform overview and quick actions.</p>
+          </div>
+          <div className="hidden items-center gap-4 sm:flex">
+            <div className="text-right">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Revenue</p>
+              <p className="text-lg font-bold text-success">
+                {loading ? "\u2014" : `\u20B9${(totalRevenue / 1000).toFixed(0)}k`}
+              </p>
+            </div>
+            <div className="h-8 w-px bg-border/60" />
+            <div className="text-right">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Students</p>
+              <p className="text-lg font-bold text-primary">
+                {loading ? "\u2014" : stats.totalStudents ?? "\u2014"}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Stats */}
