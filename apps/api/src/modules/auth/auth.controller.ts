@@ -146,7 +146,7 @@ export const authController = {
 
     if (error) {
       console.error('[AzureOAuth] Microsoft callback error:', error, error_description);
-      return res.status(400).send(`Authentication failed: ${error_description || error}`);
+      return res.status(400).json({ error: `Authentication failed: ${error_description || error}` });
     }
 
     if (!code || !state) {

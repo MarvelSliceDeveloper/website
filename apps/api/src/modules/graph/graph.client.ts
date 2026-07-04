@@ -152,6 +152,11 @@ export class GraphClient {
 
       const url = endpoint.startsWith('http') ? endpoint : `${GRAPH_BASE_URL}${endpoint}`;
       
+      const parsedUrl = new URL(url);
+      if (parsedUrl.hostname !== 'graph.microsoft.com') {
+        throw new GraphError(400, 'InvalidEndpoint', 'Only Microsoft Graph endpoints are allowed');
+      }
+
       const response = await fetch(url, {
         ...options,
         headers: {

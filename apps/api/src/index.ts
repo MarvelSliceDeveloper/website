@@ -30,6 +30,7 @@ const logger = pino({
 });
 
 import cookieParser from 'cookie-parser';
+import { doubleCsrf } from 'csrf-csrf';
 import { authRouter } from './modules/auth/auth.routes';
 import { calendarRouter } from './modules/calendar/calendar.routes';
 import { webhookRouter } from './modules/calendar/webhook.routes';
@@ -67,6 +68,23 @@ app.use(cors({
   origin: process.env.WEB_URL || 'http://localhost:3000',
   credentials: true
 }));
+
+// CSRF protection setup
+const {
+  doubleCsrfProtection,
+  generateToken,
+} = doubleCsrf({
+  getSecret: () => process.env.CSRF_SECRET || 'csrf-secret-change-in-production-32chars',
+  cookieName: 'x-csrf-token',
+  cookieOptions: {
+    httpOnly: true,
+    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+  },
+  size: 64,
+  getTokenFromRequest: (req) => req.headers['x-csrf-token'] as string,
+});
 
 app.use('/uploads', express.static(uploadsRoot));
 
@@ -107,9 +125,21 @@ app.use('/api/notes', noteRouter);
 // Events webhook — for Teams-created meetings (no auth required)
 app.post('/api/webhooks/events', eventsWebhookController.handleEventsWebhook);
 
+// CSRF token endpoint (frontend fetches this to get a token for state-changing requests)
+app.get('/api/csrf-token', (req: Request, res: Response) => {
+  res.json({ csrfToken: generateToken(req, res) });
+});
+
 // Health Check
 app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// CSRF protection for all state-changing requests (exempt webhooks — called by Microsoft, not the frontend)
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+  if (req.path.startsWith('/api/webhooks/')) return next();
+  doubleCsrfProtection(req, res, next);
 });
 
 // Global Error Handler

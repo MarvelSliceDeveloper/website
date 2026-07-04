@@ -4,6 +4,21 @@ interface FetchOptions extends RequestInit {
   params?: Record<string, string>;
 }
 
+let csrfTokenPromise: Promise<string> | null = null;
+
+async function fetchCsrfToken(): Promise<string> {
+  const res = await fetch(`${API_BASE}/api/csrf-token`, { credentials: "include" });
+  const data = await res.json();
+  return data.csrfToken;
+}
+
+function getCsrfToken(): Promise<string> {
+  if (!csrfTokenPromise) {
+    csrfTokenPromise = fetchCsrfToken();
+  }
+  return csrfTokenPromise;
+}
+
 async function request<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { params, ...fetchOptions } = options;
   const isFormData =
@@ -15,13 +30,24 @@ async function request<T>(endpoint: string, options: FetchOptions = {}): Promise
     url += `?${searchParams.toString()}`;
   }
 
+  const isStateChanging = !["GET", "HEAD", "OPTIONS"].includes(
+    (fetchOptions.method || "GET").toUpperCase()
+  );
+
+  const headers: Record<string, string> = {
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
+    ...(fetchOptions.headers as Record<string, string>),
+  };
+
+  if (isStateChanging) {
+    const token = await getCsrfToken();
+    headers["x-csrf-token"] = token;
+  }
+
   const res = await fetch(url, {
     ...fetchOptions,
     credentials: "include",
-    headers: {
-      ...(isFormData ? {} : { "Content-Type": "application/json" }),
-      ...fetchOptions.headers,
-    },
+    headers,
   });
 
   if (!res.ok) {

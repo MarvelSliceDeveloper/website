@@ -20,7 +20,7 @@ export const webhookController = {
     const validationToken = req.query.validationToken as string;
     if (validationToken) {
       // Must return the token as plain text with 200 status
-      return res.status(200).contentType('text/plain').send(validationToken);
+      return res.status(200).contentType('text/plain').send(validationToken.replace(/[<>]/g, ''));
     }
 
     // Step 2: Process change notifications

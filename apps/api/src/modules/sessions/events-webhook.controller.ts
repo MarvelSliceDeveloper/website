@@ -19,7 +19,7 @@ export const eventsWebhookController = {
     // Step 1: Handle validation request from Microsoft
     const validationToken = req.query.validationToken as string;
     if (validationToken) {
-      return res.status(200).contentType('text/plain').send(validationToken);
+      return res.status(200).contentType('text/plain').send(validationToken.replace(/[<>]/g, ''));
     }
 
     // Step 2: Respond immediately — MS requires response within 3 seconds

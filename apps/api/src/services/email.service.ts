@@ -160,7 +160,7 @@ export const emailService = {
         tags: ["notification", type.toLowerCase()],
       });
     } catch (error: unknown) {
-      console.error(`[email] Failed to send notification email (type: ${type}):`, error);
+      console.error(`[email] Failed to send notification email (type: ${String(type)}):`, error);
       return false;
     }
   },

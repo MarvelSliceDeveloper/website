@@ -480,7 +480,7 @@ export default function CourseContentView({ courseId, goBack }: CourseContentVie
               </button>
             </div>
             <p className="text-[11px] text-muted-foreground whitespace-pre-wrap line-clamp-2">
-              {n.body.replace(/<[^>]+>/g, "").slice(0, 100)}
+              {n.body.slice(0, 100)}
             </p>
             <p className="text-[10px] text-muted">
               {new Date(n.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}

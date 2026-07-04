@@ -72,7 +72,7 @@ export const recordingService = {
       if (error instanceof GraphError && (error.statusCode === 401 || error.statusCode === 403)) {
         console.error(`[RecordingSync] Auth/Token error for session ${sessionId} (${error.statusCode} ${error.graphErrorCode}): ${error.message}`);
       } else {
-        console.error(`[RecordingSync] Failed to sync recordings for session ${sessionId}:`, error.message);
+        console.error(`[RecordingSync] Failed to sync recordings for session ${sessionId}:`, String(error.message));
       }
       throw error;
     }
