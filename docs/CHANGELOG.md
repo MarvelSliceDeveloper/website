@@ -4,7 +4,40 @@
 
 ---
 
-## 2026-07-03 — Hierarchical Module-Lesson Structure ✅
+## 2026-07-04 — Brevo Email Integration & Bugfixes ✅
+
+### Added: Brevo Email Provider with React Email Templates
+- **New package** `packages/email-templates/` with 13 React Email templates + `BaseLayout`
+- **Email service** (`apps/api/src/services/email.service.ts`): `sendEmail`, `sendWelcomeEmail`, `sendNotificationEmail` via Brevo v6 API
+- **Template mapping**: All notification types mapped to React Email components with subject/text generators
+- **Welcome email** on user self-registration (auth service) and admin-created users (user routes)
+- **Company logo** in all emails via BaseLayout, served from `public/images/` via Express static
+- **Documentation**: `docs/EMAIL_INTEGRATION.md` — setup guide, testing, troubleshooting, API reference
+
+### Fixed: Enrollment Email Not Dispatching
+- Exported `dispatchEmailsForNotification` from `notification.service.ts` (was module-private)
+- Added `dispatchEmailsForNotification()` call in enrollment approval and rejection handlers with course/batch data
+
+### Fixed: Seed Email Preferences Blocking All Emails
+- Seed set `email: false` for all users (only 6 of 15 types) — no notification emails ever sent
+- Changed to `email: true` for all users across all 15 notification types
+- Fixed `ts-node` → `tsx` in Prisma seed command (package.json)
+
+### Fixed: Missing Preference = No Email
+- `dispatchEmailsForNotification` filtered out users with no `NotificationPreference` record
+- Changed logic: no preference record → default email-enabled (matches schema `enabled: true` default)
+
+### Fixed: Lucide Icon Type Mismatches (Web Build)
+- `StatCard.tsx`, `AdminSidebar.tsx`, `InstructorSidebar.tsx`, `Sidebar.tsx`, `EmptyState.tsx`, `ConfirmModal.tsx`, `admin/enrollments/page.tsx`
+- Widened `ComponentType<{ size?: number; ... }>` to accept `size?: number | string` matching Lucide's `IconProps`
+
+### Fixed: User Delete Foreign Key Violation
+- Added `notificationPreference.deleteMany` to user deletion cleanup in `user.routes.ts`
+
+### Changed: Brevo → Resend (Deferred)
+- User chose to keep Brevo for now. Docs and changelog updated.
+
+---
 
 ### Changed: Module-Lesson Hierarchy with Student Dropdown Navigation
 - **Prisma schema**: Added `Lesson` model (`id`, `moduleId`, `title`, `order`, `videoType`, `videoUrl`, `videoEmbedId`, `durationSeconds`, `isFreePreview`, `resources`); removed video/resources fields from `Module`

@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../utils/prisma';
 import { UserRole } from '@lms/types';
+import { emailService } from '../../services/email.service';
 
 interface NotificationCreateData {
   userId: string;
@@ -15,6 +16,57 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   const res: T[][] = [];
   for (let i = 0; i < arr.length; i += size) res.push(arr.slice(i, i + size));
   return res;
+}
+
+/**
+ * Dispatch emails to opted-in users after in-app notifications are created.
+ * Batch-fetches users and preferences to avoid N+1 queries.
+ * Fire-and-forget — catches all errors internally.
+ */
+export async function dispatchEmailsForNotification(
+  userIds: string[],
+  type: string,
+  data: Record<string, unknown>
+): Promise<void> {
+  if (!userIds || userIds.length === 0) return;
+
+  try {
+    const [users, preferences] = await Promise.all([
+      prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, name: true, email: true },
+      }),
+      prisma.notificationPreference.findMany({
+        where: { userId: { in: userIds }, type },
+        select: { userId: true, email: true },
+      }),
+    ]);
+
+    const prefMap = new Map<string, boolean>();
+    for (const pref of preferences) {
+      prefMap.set(pref.userId, pref.email);
+    }
+
+    const optedInUsers = users.filter((user) => {
+      const emailEnabled = prefMap.get(user.id);
+      // No preference record = default to email-enabled (schema default: enabled=true)
+      return (emailEnabled === undefined || emailEnabled === true) && user.email;
+    });
+
+    if (optedInUsers.length === 0) return;
+
+    for (const user of optedInUsers) {
+      emailService.sendNotificationEmail(
+        { name: user.name, email: user.email },
+        type,
+        data
+      ).catch((err) => {
+        console.error(`[notification] Failed to send email to ${user.email}:`, err);
+      });
+    }
+  } catch (err) {
+    console.error('[notification] Error dispatching emails:', err);
+  }
 }
 
 export const notificationService = {
@@ -271,6 +323,15 @@ export const notificationService = {
     if (notifications.length > 0) {
       await this.createMany(notifications);
     }
+
+    const emailData = {
+      sessionTitle: title,
+      scheduledAt: startStr,
+      joinUrl: session.joinUrl,
+      courseName: session.batch.course.title,
+      batchName: session.batch.name,
+    };
+    dispatchEmailsForNotification(Array.from(userIds), 'SESSION_SCHEDULED', emailData);
   },
 
   /**
@@ -317,6 +378,13 @@ export const notificationService = {
     if (notifications.length > 0) {
       await this.createMany(notifications);
     }
+
+    const emailData = {
+      sessionTitle: session.title,
+      courseName: session.batch.course.title,
+      batchName: session.batch.name,
+    };
+    dispatchEmailsForNotification(Array.from(userIds), 'RECORDING_AVAILABLE', emailData);
   },
 
   /**
@@ -355,6 +423,13 @@ export const notificationService = {
       metadata: { sessionId: session.id, batchId: session.batchId },
     }));
     if (notifications.length > 0) await this.createMany(notifications);
+
+    const emailData = {
+      sessionTitle: session.title,
+      courseName: session.batch.course.title,
+      batchName: session.batch.name,
+    };
+    dispatchEmailsForNotification(Array.from(userIds), 'SESSION_CANCELLED', emailData);
   },
 
   /**
@@ -396,6 +471,12 @@ export const notificationService = {
         }))
       );
     }
+
+    const emailData = {
+      ticketTitle: ticket.title,
+      courseName: ticket.course?.title,
+    };
+    dispatchEmailsForNotification([ticket.studentId], 'MENTORSHIP_CREATED', emailData);
   },
 
   /**
@@ -428,6 +509,13 @@ export const notificationService = {
       metadata: { ticketId: ticket.id },
     }));
     if (notifications.length > 0) await this.createMany(notifications);
+
+    const emailData = {
+      ticketTitle: ticket.title,
+      status,
+      label,
+    };
+    dispatchEmailsForNotification(userIds, `MENTORSHIP_${status}`, emailData);
   },
 
   /**
@@ -467,6 +555,9 @@ export const notificationService = {
         }))
       );
     }
+
+    const emailData = { ticketTitle: ticket.title };
+    dispatchEmailsForNotification([ticket.userId], 'SUPPORT_TICKET_CREATED', emailData);
   },
 
   /**
@@ -490,7 +581,6 @@ export const notificationService = {
     const isAdminSender = adminIds.includes(senderId);
 
     if (isAdminSender) {
-      // Admin replied — notify the ticket creator
       await this.create({
         userId: ticket.userId,
         title: 'New Reply on Support Ticket',
@@ -498,8 +588,10 @@ export const notificationService = {
         type: 'SUPPORT_TICKET_RESPONDED',
         metadata: { ticketId: ticket.id },
       });
+
+      const emailData = { ticketTitle: ticket.title, senderName: 'Admin' };
+      dispatchEmailsForNotification([ticket.userId], 'SUPPORT_TICKET_RESPONDED', emailData);
     } else {
-      // User replied — notify all admins
       if (adminIds.length > 0) {
         await this.createMany(
           admins.map((admin) => ({
@@ -541,6 +633,9 @@ export const notificationService = {
       type: 'SUPPORT_TICKET_STATUS_CHANGED',
       metadata: { ticketId: ticket.id, status },
     });
+
+    const emailData = { ticketTitle: ticket.title, status, label };
+    dispatchEmailsForNotification([ticket.userId], 'SUPPORT_TICKET_STATUS_CHANGED', emailData);
   },
 
   /**
@@ -564,6 +659,13 @@ export const notificationService = {
       type: 'ASSIGNMENT_GRADED',
       metadata: { submissionId: submission.id, assignmentId: submission.assignmentId },
     });
+
+    const emailData = {
+      assignmentTitle: submission.assignment.title,
+      grade: submission.grade,
+      feedback: submission.feedback,
+    };
+    dispatchEmailsForNotification([submission.studentId], 'ASSIGNMENT_GRADED', emailData);
   },
 
   /**
@@ -674,6 +776,7 @@ export const notificationService = {
     }));
 
     const count = await this.createMany(notifications);
+    dispatchEmailsForNotification(userIds, type, { title, message, sentBy: senderId, senderRole, targetType, targetIds });
     return { count };
   },
 };

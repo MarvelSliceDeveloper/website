@@ -7,7 +7,7 @@ import { IconTrendingUp, IconTrendingDown } from "@tabler/icons-react";
 interface StatCardProps {
   label: string;
   value: string | number | null;
-  icon: React.ComponentType<{ size?: number; stroke?: number }>;
+  icon: React.ComponentType<{ size?: number | string; stroke?: number | string }>;
   href?: string;
   trend?: {
     direction: "up" | "down";

@@ -12,7 +12,7 @@ interface ConfirmModalProps {
   confirmDisabled?: boolean;
   confirmLoading?: boolean;
   variant?: "danger" | "primary";
-  icon?: ComponentType<{ size?: number; stroke?: number }>;
+  icon?: ComponentType<{ size?: number | string; stroke?: number | string }>;
 }
 
 export function ConfirmModal({

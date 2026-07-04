@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../../utils/prisma';
 import { z } from 'zod';
 import { UserRole } from '@lms/types';
+import { emailService } from '../../services/email.service';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_min_32_chars_long!';
 const JWT_EXPIRY = process.env.JWT_EXPIRY || '15m';
@@ -39,6 +40,10 @@ export const authService = {
         email: normalizedEmail,
         passwordHash: hashedPassword,
       }
+    });
+
+    emailService.sendWelcomeEmail({ name, email: normalizedEmail }).catch((err) => {
+      console.error('[auth] Failed to send welcome email:', err);
     });
 
     return this.generateTokens(user);

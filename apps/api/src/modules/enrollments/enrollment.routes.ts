@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import { requireAuth, requireRole, AuthRequest } from '../../middleware/auth.middleware';
 import { UserRole } from '@lms/types';
 import { prisma } from '../../utils/prisma';
-import { notificationService } from '../notifications/notification.service';
+import { notificationService, dispatchEmailsForNotification } from '../notifications/notification.service';
 
 const router = Router();
 
@@ -77,7 +77,10 @@ router.patch('/:id/approve', async (req: AuthRequest, res: Response) => {
     // Verify batch exists and belongs to the correct course
     const batch = await prisma.batch.findUnique({
       where: { id: batchId },
-      include: { _count: { select: { enrollments: true } } },
+      include: {
+        _count: { select: { enrollments: true } },
+        course: { select: { title: true } },
+      },
     });
     if (!batch) {
       return res.status(404).json({ error: 'Batch not found' });
@@ -105,6 +108,15 @@ router.patch('/:id/approve', async (req: AuthRequest, res: Response) => {
       message: `Your enrollment has been approved. You've been assigned to batch "${batch.name}".`,
       metadata: { courseId: enrollment.courseId, batchId },
     });
+
+    dispatchEmailsForNotification(
+      [enrollment.userId],
+      'ENROLLMENT_APPROVED',
+      {
+        courseName: batch.course?.title || 'Course',
+        batchName: batch.name || '',
+      }
+    );
 
     return res.json({ message: 'Enrollment approved', enrollment: updated });
   } catch (error: any) {
@@ -134,6 +146,11 @@ router.patch('/:id/reject', async (req: AuthRequest, res: Response) => {
       },
     });
 
+    const course = await prisma.course.findUnique({
+      where: { id: enrollment.courseId },
+      select: { title: true },
+    });
+
     await notificationService.create({
       userId: enrollment.userId,
       type: 'ENROLLMENT_REJECTED',
@@ -141,6 +158,15 @@ router.patch('/:id/reject', async (req: AuthRequest, res: Response) => {
       message: 'Unfortunately, your enrollment request was not approved at this time.',
       metadata: { courseId: enrollment.courseId },
     });
+
+    dispatchEmailsForNotification(
+      [enrollment.userId],
+      'ENROLLMENT_REJECTED',
+      {
+        courseName: course?.title || 'Course',
+        reason: undefined,
+      }
+    );
 
     return res.json({ message: 'Enrollment rejected', enrollment: updated });
   } catch (error: any) {

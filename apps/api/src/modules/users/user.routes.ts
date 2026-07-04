@@ -3,6 +3,7 @@ import { prisma } from '../../utils/prisma';
 import { requireAuth, requireRole } from '../../middleware/auth.middleware';
 import { UserRole } from '@lms/types';
 import bcrypt from 'bcryptjs';
+import { emailService } from '../../services/email.service';
 
 const router = Router();
 
@@ -56,6 +57,10 @@ router.post('/', async (req: Request, res: Response) => {
         role: role as UserRole,
       },
       select: { id: true, name: true, email: true, role: true },
+    });
+
+    emailService.sendWelcomeEmail({ name: user.name, email: user.email }).catch((err) => {
+      console.error('[users] Failed to send welcome email:', err);
     });
 
     return res.status(201).json(user);
@@ -146,6 +151,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
 
       // Delete owned records
       await tx.notification.deleteMany({ where: { userId: id } });
+      await tx.notificationPreference.deleteMany({ where: { userId: id } });
       await tx.progress.deleteMany({ where: { userId: id } });
       await tx.certificate.deleteMany({ where: { userId: id } });
       await tx.enrollmentRequest.deleteMany({ where: { userId: id } });

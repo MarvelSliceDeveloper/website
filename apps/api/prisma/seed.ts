@@ -273,15 +273,21 @@ async function main() {
 
   // ─── Notification Preferences ──────────────────────────────────────────
   const allUsers = [admin, demoInstructor, ravi, priya, suresh, vikram, anita, demoStudent, ...moreStudents];
-  const notifTypes = ['SESSION_SCHEDULED', 'SESSION_CANCELLED', 'RECORDING_AVAILABLE',
-    'ENROLLMENT_APPROVED', 'ENROLLMENT_REJECTED', 'ASSIGNMENT_GRADED'];
+  const notifTypes = [
+    'SESSION_SCHEDULED', 'SESSION_CANCELLED', 'RECORDING_AVAILABLE',
+    'ENROLLMENT_APPROVED', 'ENROLLMENT_REJECTED', 'ASSIGNMENT_GRADED',
+    'MENTORSHIP_CREATED', 'MENTORSHIP_ASSIGNED', 'MENTORSHIP_SCHEDULED',
+    'MENTORSHIP_COMPLETED', 'MENTORSHIP_CANCELLED',
+    'SUPPORT_TICKET_CREATED', 'SUPPORT_TICKET_RESPONDED', 'SUPPORT_TICKET_STATUS_CHANGED',
+    'CUSTOM_NOTIFICATION',
+  ];
 
   for (const user of allUsers) {
     for (const type of notifTypes) {
       await prisma.notificationPreference.upsert({
         where: { userId_type: { userId: user.id, type } },
         update: {},
-        create: { userId: user.id, type, enabled: true, email: false },
+        create: { userId: user.id, type, enabled: true, email: true },
       });
     }
   }

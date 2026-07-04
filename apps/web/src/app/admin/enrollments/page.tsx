@@ -38,7 +38,7 @@ const statusStyles: Record<string, string> = {
   REJECTED: "bg-danger/15 text-danger border-danger/25",
 };
 
-const statusIcons: Record<string, ComponentType<{ size?: number; stroke?: number }>> = {
+const statusIcons: Record<string, ComponentType<{ size?: number | string; stroke?: number | string }>> = {
   PENDING: IconClock,
   APPROVED: IconCircleCheck,
   REJECTED: IconCircleX,

@@ -1,0 +1,234 @@
+import { BrevoClient } from "@getbrevo/brevo";
+import { render } from "@react-email/render";
+import {
+  WelcomeEmail,
+  SessionScheduled,
+  SessionCancelled,
+  RecordingAvailable,
+  EnrollmentApproved,
+  EnrollmentRejected,
+  AssignmentGraded,
+  MentorshipCreated,
+  MentorshipStatusChanged,
+  SupportTicketCreated,
+  SupportTicketReply,
+  SupportTicketStatusChanged,
+  CustomNotification,
+} from "@lms/email-templates";
+
+type EmailTemplateComponent = (props: Record<string, unknown>) => React.ReactElement;
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const NOTIFICATION_EMAIL_TEMPLATES: Record<string, EmailTemplateComponent> = {
+  SESSION_SCHEDULED: SessionScheduled as unknown as EmailTemplateComponent,
+  SESSION_CANCELLED: SessionCancelled as unknown as EmailTemplateComponent,
+  RECORDING_AVAILABLE: RecordingAvailable as unknown as EmailTemplateComponent,
+  ENROLLMENT_APPROVED: EnrollmentApproved as unknown as EmailTemplateComponent,
+  ENROLLMENT_REJECTED: EnrollmentRejected as unknown as EmailTemplateComponent,
+  ASSIGNMENT_GRADED: AssignmentGraded as unknown as EmailTemplateComponent,
+  MENTORSHIP_CREATED: MentorshipCreated as unknown as EmailTemplateComponent,
+  MENTORSHIP_ASSIGNED: MentorshipStatusChanged as unknown as EmailTemplateComponent,
+  MENTORSHIP_SCHEDULED: MentorshipStatusChanged as unknown as EmailTemplateComponent,
+  MENTORSHIP_COMPLETED: MentorshipStatusChanged as unknown as EmailTemplateComponent,
+  MENTORSHIP_CANCELLED: MentorshipStatusChanged as unknown as EmailTemplateComponent,
+  SUPPORT_TICKET_CREATED: SupportTicketCreated as unknown as EmailTemplateComponent,
+  SUPPORT_TICKET_RESPONDED: SupportTicketReply as unknown as EmailTemplateComponent,
+  SUPPORT_TICKET_STATUS_CHANGED: SupportTicketStatusChanged as unknown as EmailTemplateComponent,
+  CUSTOM_NOTIFICATION: CustomNotification as unknown as EmailTemplateComponent,
+};
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+function getSenderConfig() {
+  return {
+    name: process.env.EMAIL_FROM_NAME || "LMS Portal",
+    email: process.env.EMAIL_FROM_EMAIL || "noreply@localhost",
+  };
+}
+
+function isConfigured(): boolean {
+  return !!process.env.BREVO_API_KEY;
+}
+
+let brevoClient: BrevoClient | null = null;
+
+function getBrevoClient(): BrevoClient | null {
+  if (!isConfigured()) {
+    return null;
+  }
+
+  if (!brevoClient) {
+    brevoClient = new BrevoClient({
+      apiKey: process.env.BREVO_API_KEY!,
+    });
+  }
+
+  return brevoClient;
+}
+
+interface SendEmailOptions {
+  to: { email: string; name?: string }[];
+  subject: string;
+  html: string;
+  text?: string;
+  tags?: string[];
+}
+
+export const emailService = {
+  async sendEmail(options: SendEmailOptions): Promise<boolean> {
+    const client = getBrevoClient();
+    if (!client) {
+      console.warn("[email] BREVO_API_KEY not set — skipping email send");
+      return false;
+    }
+
+    const sender = getSenderConfig();
+
+    try {
+      const result = await client.transactionalEmails.sendTransacEmail({
+        sender,
+        to: options.to,
+        subject: options.subject,
+        htmlContent: options.html,
+        textContent: options.text,
+        tags: options.tags,
+      });
+
+      console.log("[email] Sent successfully, messageId:", result.messageId);
+      return true;
+    } catch (error: unknown) {
+      const err = error as { body?: { message?: string }; message?: string };
+      console.error("[email] Failed to send:", err.body?.message || err.message || error);
+      return false;
+    }
+  },
+
+  async sendWelcomeEmail(user: { name: string; email: string }): Promise<boolean> {
+    if (!isConfigured()) {
+      console.warn("[email] BREVO_API_KEY not set — skipping welcome email");
+      return false;
+    }
+
+    try {
+      const html = await render(
+        WelcomeEmail({ userName: user.name })
+      );
+
+      return this.sendEmail({
+        to: [{ email: user.email, name: user.name }],
+        subject: "Welcome to LMS Portal!",
+        html,
+        text: `Hi ${user.name},\n\nWelcome to LMS Portal! Your account has been created successfully.\n\nBest regards,\nLMS Portal Team`,
+        tags: ["welcome", "onboarding"],
+      });
+    } catch (error: unknown) {
+      console.error("[email] Failed to render/send welcome email:", error);
+      return false;
+    }
+  },
+
+  async sendNotificationEmail(
+    user: { name: string; email: string },
+    type: string,
+    data: Record<string, unknown>
+  ): Promise<boolean> {
+    if (!isConfigured()) {
+      console.warn("[email] BREVO_API_KEY not set — skipping notification email");
+      return false;
+    }
+
+    try {
+      const TemplateComponent = NOTIFICATION_EMAIL_TEMPLATES[type] || CustomNotification;
+
+      const templateData = { ...data };
+
+      if (type === "CUSTOM_NOTIFICATION" || !NOTIFICATION_EMAIL_TEMPLATES[type]) {
+        templateData.title = (data.title as string) || "Notification";
+        templateData.message = (data.message as string) || "You have a new notification.";
+      }
+
+      const html = await render(
+        TemplateComponent(templateData)
+      );
+
+      const subject = this.getSubjectForType(type, data);
+
+      return this.sendEmail({
+        to: [{ email: user.email, name: user.name }],
+        subject,
+        html,
+        text: this.getTextForType(type, data),
+        tags: ["notification", type.toLowerCase()],
+      });
+    } catch (error: unknown) {
+      console.error(`[email] Failed to send notification email (type: ${type}):`, error);
+      return false;
+    }
+  },
+
+  getSubjectForType(type: string, data: Record<string, unknown>): string {
+    const courseName = (data.courseName as string) || "";
+    const suffix = courseName ? ` — ${courseName}` : "";
+
+    switch (type) {
+      case "SESSION_SCHEDULED":
+        return `Live Session Scheduled${suffix}`;
+      case "SESSION_CANCELLED":
+        return `Session Cancelled${suffix}`;
+      case "RECORDING_AVAILABLE":
+        return `Recording Available${suffix}`;
+      case "ENROLLMENT_APPROVED":
+        return `Enrollment Approved — ${courseName}`;
+      case "ENROLLMENT_REJECTED":
+        return `Enrollment Update — ${courseName}`;
+      case "ASSIGNMENT_GRADED":
+        return `Assignment Graded — ${(data.assignmentTitle as string) || ""}`;
+      case "MENTORSHIP_CREATED":
+        return `Mentorship Request Submitted`;
+      case "MENTORSHIP_ASSIGNED":
+      case "MENTORSHIP_SCHEDULED":
+      case "MENTORSHIP_COMPLETED":
+      case "MENTORSHIP_CANCELLED":
+        return `Mentorship Update — ${(data.label as string) || type}`;
+      case "SUPPORT_TICKET_CREATED":
+        return `Support Ticket Submitted`;
+      case "SUPPORT_TICKET_RESPONDED":
+        return `New Reply on Support Ticket`;
+      case "SUPPORT_TICKET_STATUS_CHANGED":
+        return `Support Ticket Update — ${(data.label as string) || ""}`;
+      case "CUSTOM_NOTIFICATION":
+        return (data.title as string) || "Notification from LMS Portal";
+      default:
+        return "Notification from LMS Portal";
+    }
+  },
+
+  getTextForType(type: string, data: Record<string, unknown>): string {
+    const courseName = (data.courseName as string) || "";
+    const batchName = (data.batchName as string) || "";
+
+    switch (type) {
+      case "SESSION_SCHEDULED":
+        return `A live session has been scheduled for ${courseName} — ${batchName}. Session: ${data.sessionTitle || ""}, Time: ${data.scheduledAt || ""}. Join URL: ${data.joinUrl || ""}`;
+      case "SESSION_CANCELLED":
+        return `Session cancelled for ${courseName} — ${batchName}. Session: ${data.sessionTitle || ""}`;
+      case "RECORDING_AVAILABLE":
+        return `Recording is now available for ${courseName} — ${batchName}. Session: ${data.sessionTitle || ""}`;
+      case "ENROLLMENT_APPROVED":
+        return `Your enrollment for ${courseName} has been approved. Batch: ${batchName}`;
+      case "ENROLLMENT_REJECTED":
+        return `Your enrollment for ${courseName} was not approved. ${data.reason ? `Reason: ${data.reason}` : ""}`;
+      case "ASSIGNMENT_GRADED":
+        return `Your assignment "${data.assignmentTitle || ""}" has been graded. ${data.grade ? `Grade: ${data.grade}` : ""}`;
+      case "MENTORSHIP_CREATED":
+        return `Your mentorship request "${data.ticketTitle || ""}" has been submitted.`;
+      case "SUPPORT_TICKET_CREATED":
+        return `Your support ticket "${data.ticketTitle || ""}" has been submitted.`;
+      case "SUPPORT_TICKET_RESPONDED":
+        return `${data.senderName || "Admin"} replied to your support ticket "${data.ticketTitle || ""}".`;
+      case "CUSTOM_NOTIFICATION":
+        return `${data.title || "Notification"}: ${data.message || ""}`;
+      default:
+        return `You have a new notification from LMS Portal.`;
+    }
+  },
+};

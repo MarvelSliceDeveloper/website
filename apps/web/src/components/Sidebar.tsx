@@ -18,7 +18,7 @@ import {
 type NavItem = {
   label: string;
   href: string;
-  icon: React.ComponentType<{ size?: number; stroke?: number; className?: string }>;
+  icon: React.ComponentType<{ size?: number | string; stroke?: number | string; className?: string }>;
 };
 
 const learnItems: NavItem[] = [

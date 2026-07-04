@@ -3,7 +3,7 @@
 import type { ReactNode, ComponentType } from "react";
 
 interface EmptyStateProps {
-  icon: ComponentType<{ size?: number; stroke?: number }>;
+  icon: ComponentType<{ size?: number | string; stroke?: number | string }>;
   title: string;
   description?: string;
   action?: ReactNode;

@@ -70,6 +70,9 @@ app.use(cors({
 
 app.use('/uploads', express.static(uploadsRoot));
 
+const publicRoot = path.resolve(__dirname, '..', '..', '..', 'public');
+app.use('/images', express.static(path.join(publicRoot, 'images')));
+
 // Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
