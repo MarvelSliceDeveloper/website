@@ -1,0 +1,138 @@
+version: 2
+updates:
+  # ───────────────────────────────
+  # Root workspace (dev tooling)
+  # ───────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 5
+    groups:
+      turbo:
+        patterns: ["turbo"]
+      typescript:
+        patterns: ["typescript"]
+      prettier:
+        patterns: ["prettier"]
+
+  # ───────────────────────────────
+  # API server
+  # ───────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/apps/api"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 10
+    groups:
+      prisma:
+        patterns: ["@prisma/*", "prisma"]
+      express:
+        patterns: ["express", "@types/express"]
+      auth:
+        patterns:
+          - "jsonwebtoken"
+          - "@types/jsonwebtoken"
+          - "bcryptjs"
+          - "@types/bcryptjs"
+      eslint:
+        patterns:
+          - "eslint"
+          - "@typescript-eslint/*"
+      testing:
+        patterns: ["vitest", "tsx", "tsup"]
+    ignore:
+      # workspace deps managed by monorepo
+      - dependency-name: "@lms/*"
+
+  # ───────────────────────────────
+  # Web app (Next.js)
+  # ───────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/apps/web"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 10
+    groups:
+      next:
+        patterns: ["next", "eslint-config-next"]
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      tiptap:
+        patterns: ["@tiptap/*"]
+      fullcalendar:
+        patterns: ["@fullcalendar/*"]
+      tailwind:
+        patterns: ["tailwindcss", "@tailwindcss/*", "postcss"]
+      playwright:
+        patterns: ["@playwright/*"]
+
+  # ───────────────────────────────
+  # Shared packages
+  # ───────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/packages/config"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 3
+    groups:
+      zod:
+        patterns: ["zod"]
+
+  - package-ecosystem: "npm"
+    directory: "/packages/email-templates"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 3
+    groups:
+      react-email:
+        patterns: ["@react-email/*"]
+
+  - package-ecosystem: "npm"
+    directory: "/packages/types"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 3
+
+  - package-ecosystem: "npm"
+    directory: "/packages/utils"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 3
+
+  # ───────────────────────────────
+  # Docker images (Postgres, Redis, pgAdmin)
+  # ───────────────────────────────
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 3
