@@ -16,7 +16,7 @@
     "@lms/types": "workspace:*",
     "@lms/utils": "workspace:*",
     "@getbrevo/brevo": "^6.0.2",
-    "@prisma/client": "^5.14.0",
+    "@prisma/client": "^7.8.0",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
