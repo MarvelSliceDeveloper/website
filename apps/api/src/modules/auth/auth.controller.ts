@@ -5,6 +5,25 @@ import { ZodError } from "zod";
 import { prisma } from "../../utils/prisma";
 import { AuthRequest } from "../../middleware/auth.middleware";
 
+// Parse a JWT expiry string like "7d", "15m", "1h" into milliseconds
+function parseExpiryToMs(expiry: string): number {
+  const match = expiry.match(/^(\d+)([dhm])$/);
+  if (!match) return 7 * 24 * 60 * 60 * 1000; // default 7 days
+  const num = parseInt(match[1], 10);
+  switch (match[2]) {
+    case "d":
+      return num * 24 * 60 * 60 * 1000;
+    case "h":
+      return num * 60 * 60 * 1000;
+    case "m":
+      return num * 60 * 1000;
+    default:
+      return 7 * 24 * 60 * 60 * 1000;
+  }
+}
+
+const ACCESS_TOKEN_MAX_AGE = parseExpiryToMs(process.env.JWT_EXPIRY || "7d");
+
 export const authController = {
   // POST /api/auth/register — create a new user account
   async register(req: Request, res: Response) {
@@ -16,7 +35,7 @@ export const authController = {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
-        maxAge: 15 * 60 * 1000,
+        maxAge: ACCESS_TOKEN_MAX_AGE,
       });
 
       return res.status(201).json(result);
@@ -38,7 +57,7 @@ export const authController = {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
-        maxAge: 15 * 60 * 1000,
+        maxAge: ACCESS_TOKEN_MAX_AGE,
       });
 
       return res.status(200).json(result);

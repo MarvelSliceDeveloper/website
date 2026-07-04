@@ -19,29 +19,6 @@ export const ReorderModulesSchema = z.object({
   moduleIds: z.array(z.string().cuid()),
 });
 
-// --- Video URL Parser ---
-
-// Parses a video URL to extract type and embed ID
-function parseVideoUrl(url: string): { type: string; embedId: string } | null {
-  // YouTube
-  const ytMatch = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
-  );
-  if (ytMatch) return { type: "youtube", embedId: ytMatch[1] };
-
-  // Vimeo
-  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeoMatch) return { type: "vimeo", embedId: vimeoMatch[1] };
-
-  // Loom
-  const loomMatch = url.match(/loom\.com\/(?:share|embed)\/([a-zA-Z0-9]+)/);
-  if (loomMatch) return { type: "loom", embedId: loomMatch[1] };
-
-  return null;
-}
-
-// --- Service ---
-
 export const moduleService = {
   // Adds a module (container) to a course with auto-assigned order
   async addModule(courseId: string, data: z.infer<typeof CreateModuleSchema>) {

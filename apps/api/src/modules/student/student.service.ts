@@ -39,10 +39,12 @@ export const studentService = {
     const batchIds = enrollments.map((e) => e.batchId as string);
     if (batchIds.length === 0) return [];
 
-    // Fetch all assignments for these batches
+    // Fetch all overdue assignments for these batches
+    const now = new Date();
     const assignments = await prisma.assignment.findMany({
       where: {
         batchId: { in: batchIds },
+        dueDate: { lt: now },
       },
       include: {
         course: { select: { title: true } },

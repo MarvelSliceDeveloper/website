@@ -2,8 +2,17 @@ import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { UserRole } from "@lms/types";
 
-const JWT_SECRET =
-  process.env.JWT_SECRET || "fallback_secret_min_32_chars_long!";
+function assertEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+function getJwtSecret(): string {
+  return assertEnv("JWT_SECRET");
+}
 
 export interface AuthRequest extends Request {
   user?: {
@@ -30,7 +39,7 @@ export const requireAuth = (
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthRequest["user"];
+    const decoded = jwt.verify(token, getJwtSecret()) as AuthRequest["user"];
     req.user = decoded;
 
     next();

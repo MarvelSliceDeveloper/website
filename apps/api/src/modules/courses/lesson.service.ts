@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
+import { parseVideoUrl } from "../../utils/video";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -21,18 +22,6 @@ export const UpdateLessonSchema = CreateLessonSchema.partial();
 export const ReorderLessonsSchema = z.object({
   lessonIds: z.array(z.string().cuid()),
 });
-
-function parseVideoUrl(url: string): { type: string; embedId: string } | null {
-  const ytMatch = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
-  );
-  if (ytMatch) return { type: "youtube", embedId: ytMatch[1] };
-  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeoMatch) return { type: "vimeo", embedId: vimeoMatch[1] };
-  const loomMatch = url.match(/loom\.com\/(?:share|embed)\/([a-zA-Z0-9]+)/);
-  if (loomMatch) return { type: "loom", embedId: loomMatch[1] };
-  return null;
-}
 
 export const lessonService = {
   async getLessonsByModule(moduleId: string) {

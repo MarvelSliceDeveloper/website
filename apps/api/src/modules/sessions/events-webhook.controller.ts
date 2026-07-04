@@ -3,8 +3,15 @@ import { prisma } from "../../utils/prisma";
 import { sessionService } from "../sessions/session.service";
 import { GraphClient } from "../graph";
 
-const WEBHOOK_CLIENT_STATE =
-  process.env.MS_WEBHOOK_CLIENT_STATE || "secretClientValue";
+function getWebhookClientState(): string {
+  const value = process.env.MS_WEBHOOK_CLIENT_STATE;
+  if (!value) {
+    throw new Error(
+      "Missing required environment variable: MS_WEBHOOK_CLIENT_STATE",
+    );
+  }
+  return value;
+}
 
 /**
  * Webhook controller for handling Teams event change notifications.
@@ -39,7 +46,7 @@ export const eventsWebhookController = {
       for (const notification of notifications) {
         try {
           // Validate clientState
-          if (notification.clientState !== WEBHOOK_CLIENT_STATE) {
+          if (notification.clientState !== getWebhookClientState()) {
             console.warn("[EventsWebhook] Invalid clientState, skipping");
             continue;
           }

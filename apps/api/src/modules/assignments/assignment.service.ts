@@ -58,9 +58,6 @@ export const GradeSubmissionSchema = z.object({
   feedback: z.string().optional(),
 });
 
-// Keep backward-compatible alias
-export const CreateAssignmentSchema = CreateQuizSchema;
-
 export const assignmentService = {
   // ── Helper: verify instructor owns the batch ─────────────────────────────
   // Verifies the instructor owns the given batch
@@ -148,15 +145,6 @@ export const assignmentService = {
         maxPoints: data.maxPoints,
       },
     });
-  },
-
-  // Backward-compatible alias that delegates to createQuiz
-  // Creates an assignment (alias for createQuiz)
-  async createAssignment(
-    instructorId: string,
-    data: z.infer<typeof CreateQuizSchema>,
-  ) {
-    return this.createQuiz(instructorId, data);
   },
 
   // Lists assignments filtered by role and batch

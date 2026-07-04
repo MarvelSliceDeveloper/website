@@ -40,18 +40,9 @@
     "@commitlint/cli": "^21.2.0",
     "@commitlint/config-conventional": "^21.2.0",
     "husky": "^9.1.7",
-    "lint-staged": "^17.0.8",
     "prettier": "^3.2.5",
     "turbo": "^2.5.0",
     "typescript": "^5.4.5"
-  },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
-      "prettier --check"
-    ],
-    "*.{json,css,md}": [
-      "prettier --check"
-    ]
   },
   "packageManager": "pnpm@11.1.1",
   "engines": {

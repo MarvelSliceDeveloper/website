@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
+import { UserRole } from "@lms/types";
 
 // --- Zod Schemas ---
 
@@ -181,19 +182,21 @@ export const batchService = {
 
   // Adds students to a batch via approved enrollments
   async addStudents(batchId: string, userIds: string[]) {
-    const batch = await prisma.batch.findUnique({
-      where: { id: batchId },
-      include: { _count: { select: { enrollments: true } } },
-    });
+    const [batch, approvedCount] = await Promise.all([
+      prisma.batch.findUnique({ where: { id: batchId } }),
+      prisma.enrollmentRequest.count({
+        where: { batchId, status: "APPROVED" },
+      }),
+    ]);
     if (!batch) throw new Error("Batch not found");
 
-    // Check capacity
+    // Check capacity (only count approved enrollments)
     if (
       batch.maxStudents &&
-      batch._count.enrollments + userIds.length > batch.maxStudents
+      approvedCount + userIds.length > batch.maxStudents
     ) {
       throw new Error(
-        `Batch capacity exceeded. Max: ${batch.maxStudents}, current: ${batch._count.enrollments}`,
+        `Batch capacity exceeded. Max: ${batch.maxStudents}, current: ${approvedCount}`,
       );
     }
 
@@ -223,7 +226,21 @@ export const batchService = {
   },
 
   // Removes a student from a batch
-  async removeStudent(batchId: string, userId: string) {
+  async removeStudent(
+    batchId: string,
+    userId: string,
+    authUser: { userId: string; role: string },
+  ) {
+    if (authUser.role === UserRole.INSTRUCTOR) {
+      const batch = await prisma.batch.findUnique({
+        where: { id: batchId },
+        select: { instructorId: true },
+      });
+      if (!batch) throw new Error("Batch not found");
+      if (batch.instructorId !== authUser.userId)
+        throw new Error("You can only remove students from your own batches");
+    }
+
     const enrollment = await prisma.enrollmentRequest.findFirst({
       where: { batchId, userId, status: "APPROVED" },
     });

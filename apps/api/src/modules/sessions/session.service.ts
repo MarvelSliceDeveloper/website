@@ -68,9 +68,12 @@ export const sessionService = {
     const overlapping = await prisma.liveSession.findFirst({
       where: {
         batchId,
-        endedAt: null, // only check non-ended/cancelled sessions
+        endedAt: null,
         scheduledAt: { lt: new Date(endDateTime) },
-        scheduledEndAt: { gt: new Date(startDateTime) },
+        AND: [
+          { scheduledEndAt: { gt: new Date(startDateTime) } },
+          { scheduledEndAt: { gt: new Date() } },
+        ],
       },
     });
 

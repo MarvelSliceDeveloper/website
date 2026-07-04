@@ -2,8 +2,15 @@ import { Request, Response } from "express";
 import { syncCalendarForUser } from "./calendar.service";
 import { prisma } from "../../utils/prisma";
 
-const WEBHOOK_CLIENT_STATE =
-  process.env.MS_WEBHOOK_CLIENT_STATE || "secretClientValue";
+function getWebhookClientState(): string {
+  const value = process.env.MS_WEBHOOK_CLIENT_STATE;
+  if (!value) {
+    throw new Error(
+      "Missing required environment variable: MS_WEBHOOK_CLIENT_STATE",
+    );
+  }
+  return value;
+}
 
 export const webhookController = {
   /**
@@ -41,7 +48,7 @@ export const webhookController = {
       for (const notification of notifications) {
         try {
           // Validate clientState to ensure notification came from our subscription
-          if (notification.clientState !== WEBHOOK_CLIENT_STATE) {
+          if (notification.clientState !== getWebhookClientState()) {
             console.warn(
               "[Webhook] Invalid clientState, skipping notification",
             );

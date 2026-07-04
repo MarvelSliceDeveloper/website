@@ -119,7 +119,9 @@ export const batchController = {
   // Removes a student from a batch
   async removeStudent(req: AuthRequest, res: Response) {
     try {
-      await batchService.removeStudent(req.params.id, req.params.uid);
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
+      await batchService.removeStudent(req.params.id, req.params.uid, req.user);
       return res.json({ message: "Student removed from batch" });
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
