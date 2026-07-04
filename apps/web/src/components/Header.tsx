@@ -45,17 +45,23 @@ export default function Header({
   // Fetch notifications from API
   const loadNotifications = useCallback(async () => {
     try {
-      const data = await api.get<{ notifications: NotificationItem[]; unreadCount: number }>(
-        "/api/notifications"
-      );
+      const data = await api.get<{
+        notifications: NotificationItem[];
+        unreadCount: number;
+      }>("/api/notifications");
       setNotifications(data.notifications || []);
       setUnreadCount(data.unreadCount || 0);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   useEffect(() => {
     const doFetch = () => {
-      api.get<{ notifications: NotificationItem[]; unreadCount: number }>("/api/notifications")
+      api
+        .get<{ notifications: NotificationItem[]; unreadCount: number }>(
+          "/api/notifications",
+        )
         .then((data) => {
           setNotifications(data.notifications || []);
           setUnreadCount(data.unreadCount || 0);
@@ -98,7 +104,9 @@ export default function Header({
       await api.post("/api/notifications/read-all");
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       setUnreadCount(0);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
 
   // Mark a single notification as read
@@ -106,10 +114,12 @@ export default function Header({
     try {
       await api.patch(`/api/notifications/${id}/read`, {});
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+        prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
       );
       setUnreadCount((c) => Math.max(0, c - 1));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
 
   return (
@@ -117,8 +127,12 @@ export default function Header({
       <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 md:flex-nowrap md:px-6">
         <div className="flex items-center gap-3">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-muted">LMS Workspace</p>
-            <h2 className="text-sm font-semibold text-foreground md:text-base">Welcome back</h2>
+            <p className="text-xs uppercase tracking-[0.18em] text-muted">
+              LMS Workspace
+            </p>
+            <h2 className="text-sm font-semibold text-foreground md:text-base">
+              Welcome back
+            </h2>
           </div>
         </div>
 
@@ -143,10 +157,15 @@ export default function Header({
             {notifOpen && (
               <div className="absolute right-0 top-11 z-50 w-80 rounded-2xl border border-border bg-card shadow-2xl">
                 <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                  <p className="text-sm font-semibold text-foreground">Notifications</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    Notifications
+                  </p>
                   <div className="flex items-center gap-2">
                     {unreadCount > 0 && (
-                      <button onClick={markAllRead} className="text-[11px] text-primary hover:underline">
+                      <button
+                        onClick={markAllRead}
+                        className="text-[11px] text-primary hover:underline"
+                      >
                         Mark all read
                       </button>
                     )}
@@ -161,7 +180,9 @@ export default function Header({
                 </div>
                 <div className="max-h-72 overflow-y-auto">
                   {notifications.length === 0 ? (
-                    <p className="px-4 py-6 text-center text-sm text-muted">No notifications</p>
+                    <p className="px-4 py-6 text-center text-sm text-muted">
+                      No notifications
+                    </p>
                   ) : (
                     notifications.slice(0, 5).map((item) => (
                       <div
@@ -169,9 +190,15 @@ export default function Header({
                         className={`group flex items-start gap-2 border-b border-border/50 px-4 py-3 last:border-0 ${!item.read ? "bg-primary/5" : ""}`}
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-foreground">{item.title}</p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">{item.message}</p>
-                          <p className="mt-0.5 text-[11px] text-muted">{timeAgo(item.createdAt)}</p>
+                          <p className="text-sm font-medium text-foreground">
+                            {item.title}
+                          </p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {item.message}
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-muted">
+                            {timeAgo(item.createdAt)}
+                          </p>
                         </div>
                         {!item.read && (
                           <button
@@ -189,7 +216,10 @@ export default function Header({
                 {notifications.length > 0 && (
                   <div className="border-t border-border px-4 py-2.5">
                     <button
-                      onClick={() => { router.push(inboxHref); setNotifOpen(false); }}
+                      onClick={() => {
+                        router.push(inboxHref);
+                        setNotifOpen(false);
+                      }}
                       className="flex w-full items-center justify-center gap-1.5 text-xs font-medium text-primary hover:text-primary-hover transition-colors"
                     >
                       View all notifications
@@ -202,7 +232,9 @@ export default function Header({
           </div>
 
           <button
-            onClick={() => router.push(inboxHref.replace("/inbox", "/settings"))}
+            onClick={() =>
+              router.push(inboxHref.replace("/inbox", "/settings"))
+            }
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
             aria-label="Settings"
           >
@@ -211,9 +243,15 @@ export default function Header({
           <button
             onClick={toggleTheme}
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label={
+              theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+            }
           >
-            {theme === "light" ? <IconSun size={17} stroke={1.8} /> : <IconMoon size={17} stroke={1.8} />}
+            {theme === "light" ? (
+              <IconSun size={17} stroke={1.8} />
+            ) : (
+              <IconMoon size={17} stroke={1.8} />
+            )}
           </button>
         </div>
       </div>

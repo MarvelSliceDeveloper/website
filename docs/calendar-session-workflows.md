@@ -373,10 +373,10 @@ Student (or any user with linked MS account) clicks "Sync Calendar" in settings
 
 ## Fixes Applied
 
-| Fix | What | Why |
-|-----|------|-----|
-| A | Admin calendar reads `endedAt` instead of undefined `endDateTime` | Events always showed 1hr duration |
-| B | Session updates sync title + dates to both LiveSession and CalendarEvent | Edits were invisible to student calendar |
-| C | Instructor cancel deletes CalendarEvent | Canceled sessions kept appearing |
-| D | Added `scheduledEndAt` to LiveSession | `endedAt` conflicted between scheduled end and cancel timestamp |
-| E | Sidebar Calendar link → `/student?view=calendar` | Link 404ed, no route existed |
+| Fix | What                                                                     | Why                                                             |
+| --- | ------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| A   | Admin calendar reads `endedAt` instead of undefined `endDateTime`        | Events always showed 1hr duration                               |
+| B   | Session updates sync title + dates to both LiveSession and CalendarEvent | Edits were invisible to student calendar                        |
+| C   | Instructor cancel deletes CalendarEvent                                  | Canceled sessions kept appearing                                |
+| D   | Added `scheduledEndAt` to LiveSession                                    | `endedAt` conflicted between scheduled end and cancel timestamp |
+| E   | Sidebar Calendar link → `/student?view=calendar`                         | Link 404ed, no route existed                                    |

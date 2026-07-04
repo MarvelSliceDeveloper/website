@@ -21,7 +21,8 @@ function getComputedStatus(session: LiveSession): ComputedStatus {
   const now = Date.now();
   const start = new Date(session.scheduledAt).getTime();
 
-  const rawEnd = session.endDateTime ?? (session as LiveSession & { endAt?: string }).endAt;
+  const rawEnd =
+    session.endDateTime ?? (session as LiveSession & { endAt?: string }).endAt;
   let end = new Date(rawEnd).getTime();
 
   // Fallback: if no valid end time, assume session lasts 1 hour
@@ -46,17 +47,17 @@ export default function LiveSessionsView({ sessions }: LiveSessionsViewProps) {
   const grouped =
     filter === "ALL"
       ? [
-        { label: "🔴 Live Now", items: liveNow },
-        { label: "Upcoming", items: upcoming },
-        { label: "Past", items: past },
-      ].filter((g) => g.items.length > 0)
+          { label: "🔴 Live Now", items: liveNow },
+          { label: "Upcoming", items: upcoming },
+          { label: "Past", items: past },
+        ].filter((g) => g.items.length > 0)
       : [
-        {
-          label: "",
-          // ✅ Filter using real time — not stale server status
-          items: sessions.filter((s) => getComputedStatus(s) === filter),
-        },
-      ];
+          {
+            label: "",
+            // ✅ Filter using real time — not stale server status
+            items: sessions.filter((s) => getComputedStatus(s) === filter),
+          },
+        ];
 
   return (
     <div className="sp-view-enter space-y-6">
@@ -72,10 +73,11 @@ export default function LiveSessionsView({ sessions }: LiveSessionsViewProps) {
           <button
             key={f.value}
             onClick={() => setFilter(f.value)}
-            className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-sm font-medium transition-all ${filter === f.value
-              ? "border-primary bg-primary/15 text-primary"
-              : "border-border bg-card text-muted-foreground hover:border-border-hover hover:text-foreground"
-              }`}
+            className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-sm font-medium transition-all ${
+              filter === f.value
+                ? "border-primary bg-primary/15 text-primary"
+                : "border-border bg-card text-muted-foreground hover:border-border-hover hover:text-foreground"
+            }`}
           >
             {f.label}
           </button>
@@ -96,7 +98,11 @@ export default function LiveSessionsView({ sessions }: LiveSessionsViewProps) {
           <div key={group.label} className="space-y-3">
             {group.label && <p className="sp-eyebrow">{group.label}</p>}
             {group.items.map((session) => (
-              <SessionCard key={session.id} session={session} status={getComputedStatus(session)} />
+              <SessionCard
+                key={session.id}
+                session={session}
+                status={getComputedStatus(session)}
+              />
             ))}
           </div>
         ))
@@ -105,7 +111,13 @@ export default function LiveSessionsView({ sessions }: LiveSessionsViewProps) {
   );
 }
 
-function SessionCard({ session, status }: { session: LiveSession; status: ComputedStatus }) {
+function SessionCard({
+  session,
+  status,
+}: {
+  session: LiveSession;
+  status: ComputedStatus;
+}) {
   const isLive = status === "LIVE";
   const isPast = status === "PAST";
   const [joining, setJoining] = useState(false);
@@ -121,7 +133,7 @@ function SessionCard({ session, status }: { session: LiveSession; status: Comput
   const minutesRunning = Math.max(
     0,
     // eslint-disable-next-line react-hooks/purity
-    Math.floor((Date.now() - new Date(session.scheduledAt).getTime()) / 60_000)
+    Math.floor((Date.now() - new Date(session.scheduledAt).getTime()) / 60_000),
   );
 
   const handleJoin = async () => {
@@ -138,7 +150,9 @@ function SessionCard({ session, status }: { session: LiveSession; status: Comput
   };
 
   return (
-    <div className={`glass-card p-5 transition-all ${isLive ? "border-danger/30 bg-danger/5" : ""}`}>
+    <div
+      className={`glass-card p-5 transition-all ${isLive ? "border-danger/30 bg-danger/5" : ""}`}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex flex-wrap items-center gap-2">

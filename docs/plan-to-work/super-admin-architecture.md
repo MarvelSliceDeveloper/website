@@ -45,6 +45,7 @@ model SystemSetting {
 ```
 
 Predefined settings:
+
 - `super_admin_id` — auto-set when a SUPER_ADMIN exists
 - `platform_name` — display name for the LMS
 - `default_session_duration_minutes` — default meeting length
@@ -103,7 +104,7 @@ Ensure `SUPER_ADMIN` role is included in the JWT token payload (already uses `Us
 **New file:** `apps/api/src/utils/super-admin.ts`
 
 ```typescript
-export function getSuperAdminId(): Promise<string | null>
+export function getSuperAdminId(): Promise<string | null>;
 ```
 
 Queries `User` with role `SUPER_ADMIN` that has `msAccessToken` set. Cache result briefly (e.g., 5 min in-memory).
@@ -152,29 +153,29 @@ The `GraphClient` itself stays the same — it just needs to be called with the 
 
 ### 4.1 API Keys
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `GET` | `/api/admin/api-keys` | SUPER_ADMIN | List all API keys (key is masked) |
-| `POST` | `/api/admin/api-keys` | SUPER_ADMIN | Create new API key (returns plaintext once) |
-| `DELETE` | `/api/admin/api-keys/:id` | SUPER_ADMIN | Revoke/delete an API key |
+| Method   | Endpoint                  | Auth        | Description                                 |
+| -------- | ------------------------- | ----------- | ------------------------------------------- |
+| `GET`    | `/api/admin/api-keys`     | SUPER_ADMIN | List all API keys (key is masked)           |
+| `POST`   | `/api/admin/api-keys`     | SUPER_ADMIN | Create new API key (returns plaintext once) |
+| `DELETE` | `/api/admin/api-keys/:id` | SUPER_ADMIN | Revoke/delete an API key                    |
 
 **New file:** `apps/api/src/modules/api-keys/` — controller, service, routes
 
 ### 4.2 System Settings
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `GET` | `/api/admin/settings` | SUPER_ADMIN | List all settings |
-| `PUT` | `/api/admin/settings/:key` | SUPER_ADMIN | Update a setting value |
+| Method | Endpoint                   | Auth        | Description            |
+| ------ | -------------------------- | ----------- | ---------------------- |
+| `GET`  | `/api/admin/settings`      | SUPER_ADMIN | List all settings      |
+| `PUT`  | `/api/admin/settings/:key` | SUPER_ADMIN | Update a setting value |
 
 **New file:** `apps/api/src/modules/settings/` — controller, service, routes
 
 ### 4.3 Activity Logs
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `GET` | `/api/admin/logs` | SUPER_ADMIN + ADMIN | Query GraphApiLog with filters (date, action, status, userId) |
-| `GET` | `/api/admin/logs/stats` | SUPER_ADMIN | Aggregated stats (error rate, failure count, top errors) |
+| Method | Endpoint                | Auth                | Description                                                   |
+| ------ | ----------------------- | ------------------- | ------------------------------------------------------------- |
+| `GET`  | `/api/admin/logs`       | SUPER_ADMIN + ADMIN | Query GraphApiLog with filters (date, action, status, userId) |
+| `GET`  | `/api/admin/logs/stats` | SUPER_ADMIN         | Aggregated stats (error rate, failure count, top errors)      |
 
 **New file:** `apps/api/src/modules/logs/` — controller, service, routes
 
@@ -252,6 +253,7 @@ The `GraphClient` itself stays the same — it just needs to be called with the 
 ## Files to Create/Modify
 
 ### New Files
+
 - `apps/api/src/utils/super-admin.ts` — getSuperAdminId helper
 - `apps/api/src/modules/api-keys/api-key.controller.ts`
 - `apps/api/src/modules/api-keys/api-key.service.ts`
@@ -268,6 +270,7 @@ The `GraphClient` itself stays the same — it just needs to be called with the 
 - `packages/types/src/super-admin.ts` — if additional types needed
 
 ### Modified Files
+
 - `apps/api/prisma/schema.prisma` — Role enum, new models
 - `apps/api/prisma/seed.ts` — SUPER_ADMIN seed
 - `apps/api/src/middleware/auth.middleware.ts` — SUPER_ADMIN inheritance

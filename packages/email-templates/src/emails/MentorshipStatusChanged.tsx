@@ -23,9 +23,7 @@ export default function MentorshipStatusChanged({
   const color = STATUS_COLORS[status] || "#6b7280";
 
   return (
-    <BaseLayout
-      previewText={`Mentorship update: ${label}`}
-    >
+    <BaseLayout previewText={`Mentorship update: ${label}`}>
       <Heading style={headingStyle}>Mentorship Update</Heading>
       <Text style={textStyle}>
         There's an update on your mentorship request.

@@ -23,7 +23,10 @@ export function AdminPageHeader({
           {breadcrumbs.map((crumb, index) => (
             <span key={crumb.href} className="flex items-center gap-1">
               {index > 0 && <IconChevronRight size={14} />}
-              <a href={crumb.href} className="hover:text-foreground transition-colors">
+              <a
+                href={crumb.href}
+                className="hover:text-foreground transition-colors"
+              >
                 {crumb.label}
               </a>
             </span>

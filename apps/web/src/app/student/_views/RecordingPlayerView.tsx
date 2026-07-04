@@ -9,8 +9,13 @@ interface RecordingPlayerViewProps {
   onSelectRecording?: (recordingId: string) => void;
 }
 
-export default function RecordingPlayerView({ batch, recordingId, onSelectRecording }: RecordingPlayerViewProps) {
-  const recording = batch.recordings.find((r) => r.id === recordingId) ?? batch.recordings[0];
+export default function RecordingPlayerView({
+  batch,
+  recordingId,
+  onSelectRecording,
+}: RecordingPlayerViewProps) {
+  const recording =
+    batch.recordings.find((r) => r.id === recordingId) ?? batch.recordings[0];
   const [watchedSecs, setWatchedSecs] = useState(0);
   const [openModuleId, setOpenModuleId] = useState(batch.modules[0]?.id ?? "");
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -38,7 +43,13 @@ export default function RecordingPlayerView({ batch, recordingId, onSelectRecord
   const modules =
     batch.modules.length > 0
       ? batch.modules
-      : [{ id: "default-module", title: "Session Recordings", completionPercent: 0 }];
+      : [
+          {
+            id: "default-module",
+            title: "Session Recordings",
+            completionPercent: 0,
+          },
+        ];
 
   const recordingsByModule = modules.map((module) => ({
     module,
@@ -46,18 +57,23 @@ export default function RecordingPlayerView({ batch, recordingId, onSelectRecord
   }));
 
   const unassignedRecordings = batch.recordings.filter(
-    (item) => !item.moduleId || !modules.some((module) => module.id === item.moduleId)
+    (item) =>
+      !item.moduleId || !modules.some((module) => module.id === item.moduleId),
   );
 
   const groups =
     unassignedRecordings.length > 0
       ? [
-        ...recordingsByModule,
-        {
-          module: { id: "unassigned", title: "Unassigned", completionPercent: 0 },
-          recordings: unassignedRecordings,
-        },
-      ]
+          ...recordingsByModule,
+          {
+            module: {
+              id: "unassigned",
+              title: "Unassigned",
+              completionPercent: 0,
+            },
+            recordings: unassignedRecordings,
+          },
+        ]
       : recordingsByModule;
 
   return (
@@ -70,14 +86,21 @@ export default function RecordingPlayerView({ batch, recordingId, onSelectRecord
             <div className="relative flex aspect-video w-full flex-col items-center justify-center bg-linear-to-br from-card to-background">
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-primary/40 bg-primary/10 text-primary backdrop-blur-sm transition-transform hover:scale-105">
-                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 translate-x-0.5">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="h-8 w-8 translate-x-0.5"
+                  >
                     <path d="M8 5v14l11-7z" />
                   </svg>
                 </div>
               </div>
               <div className="absolute bottom-0 left-0 right-0 p-4">
                 <div className="mb-2 h-1 overflow-hidden rounded-full bg-white/20">
-                  <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${watchedPct}%` }} />
+                  <div
+                    className="h-full rounded-full bg-primary transition-all"
+                    style={{ width: `${watchedPct}%` }}
+                  />
                 </div>
                 <div className="flex items-center justify-between text-xs text-white/60">
                   <span>Recording preview — real URL required</span>
@@ -94,14 +117,19 @@ export default function RecordingPlayerView({ batch, recordingId, onSelectRecord
               {recording.dayLabel} — {recording.title}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {batch.courseTitle} · {batch.batchLabel} · Duration: {recording.duration}
+              {batch.courseTitle} · {batch.batchLabel} · Duration:{" "}
+              {recording.duration}
             </p>
             {watchedSecs > 0 ? (
-              <p className="mt-1 text-xs text-success">✅ Progress auto-saving every 10 seconds</p>
+              <p className="mt-1 text-xs text-success">
+                ✅ Progress auto-saving every 10 seconds
+              </p>
             ) : null}
           </div>
           <div className="flex flex-wrap gap-2">
-            <button className="btn-secondary text-sm">Download Attachment</button>
+            <button className="btn-secondary text-sm">
+              Download Attachment
+            </button>
             <button className="btn-primary text-sm">Mark as Complete</button>
           </div>
         </div>
@@ -113,19 +141,28 @@ export default function RecordingPlayerView({ batch, recordingId, onSelectRecord
           {groups.map(({ module, recordings }) => {
             const expanded = openModuleId === module.id;
             return (
-              <div key={module.id} className="rounded-xl border border-border bg-card">
+              <div
+                key={module.id}
+                className="rounded-xl border border-border bg-card"
+              >
                 <button
                   onClick={() => setOpenModuleId(expanded ? "" : module.id)}
                   className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left"
                 >
-                  <span className="font-medium text-foreground">{module.title}</span>
-                  <span className="text-xs text-muted">{expanded ? "−" : "+"}</span>
+                  <span className="font-medium text-foreground">
+                    {module.title}
+                  </span>
+                  <span className="text-xs text-muted">
+                    {expanded ? "−" : "+"}
+                  </span>
                 </button>
 
                 {expanded ? (
                   <div className="space-y-2 border-t border-border p-2">
                     {recordings.length === 0 ? (
-                      <p className="px-2 py-2 text-xs text-muted-foreground">No recordings in this module.</p>
+                      <p className="px-2 py-2 text-xs text-muted-foreground">
+                        No recordings in this module.
+                      </p>
                     ) : (
                       recordings.map((rec) => {
                         const active = rec.id === recording.id;
@@ -133,12 +170,15 @@ export default function RecordingPlayerView({ batch, recordingId, onSelectRecord
                           <button
                             key={rec.id}
                             onClick={() => onSelectRecording?.(rec.id)}
-                            className={`flex w-full items-start gap-3 rounded-lg border px-3 py-2 text-left transition-colors ${active
-                              ? "border-primary/30 bg-primary/15 text-primary"
-                              : "border-border bg-card hover:bg-card-hover"
-                              }`}
+                            className={`flex w-full items-start gap-3 rounded-lg border px-3 py-2 text-left transition-colors ${
+                              active
+                                ? "border-primary/30 bg-primary/15 text-primary"
+                                : "border-border bg-card hover:bg-card-hover"
+                            }`}
                           >
-                            <span className={`mt-1 h-2 w-2 rounded-full ${active ? "bg-primary" : "bg-muted/70"}`} />
+                            <span
+                              className={`mt-1 h-2 w-2 rounded-full ${active ? "bg-primary" : "bg-muted/70"}`}
+                            />
                             <span className="min-w-0 flex-1">
                               <span className="block truncate text-sm font-medium">
                                 {rec.dayLabel} — {rec.title}

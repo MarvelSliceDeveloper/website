@@ -5,20 +5,29 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 
-type BatchOption = { id: string; name: string; course: { id: string; title: string } };
+type BatchOption = {
+  id: string;
+  name: string;
+  course: { id: string; title: string };
+};
 
 export default function InstructorSendNotificationPage() {
   const router = useRouter();
 
   const [batches, setBatches] = useState<BatchOption[]>([]);
-  const [selectedBatchIds, setSelectedBatchIds] = useState<Set<string>>(new Set());
+  const [selectedBatchIds, setSelectedBatchIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [confirmShow, setConfirmShow] = useState(false);
 
   useEffect(() => {
-    api.get<BatchOption[]>("/api/admin/batches").then(setBatches).catch(() => {});
+    api
+      .get<BatchOption[]>("/api/admin/batches")
+      .then(setBatches)
+      .catch(() => {});
   }, []);
 
   async function handleSend() {
@@ -33,12 +42,15 @@ export default function InstructorSendNotificationPage() {
 
     setSending(true);
     try {
-      const res = await api.post<{ message: string; count: number }>("/api/notifications/send", {
-        targetType: "BATCH",
-        targetIds: Array.from(selectedBatchIds),
-        title: title.trim(),
-        message: message.trim(),
-      });
+      const res = await api.post<{ message: string; count: number }>(
+        "/api/notifications/send",
+        {
+          targetType: "BATCH",
+          targetIds: Array.from(selectedBatchIds),
+          title: title.trim(),
+          message: message.trim(),
+        },
+      );
       toast.success(res.message || `Sent to ${res.count} users`);
       setTitle("");
       setMessage("");
@@ -69,8 +81,12 @@ export default function InstructorSendNotificationPage() {
         >
           ← Back
         </button>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Instructor</p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground">Send Notification</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
+          Instructor
+        </p>
+        <h1 className="mt-1 text-2xl font-bold text-foreground">
+          Send Notification
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Send a custom notification to students in your batches.
         </p>
@@ -79,7 +95,9 @@ export default function InstructorSendNotificationPage() {
       <div className="glass-card space-y-5 p-6">
         {/* Target type (locked to BATCH) */}
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">Target Audience</label>
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
+            Target Audience
+          </label>
           <input
             type="text"
             value="Your Assigned Batches"
@@ -95,7 +113,9 @@ export default function InstructorSendNotificationPage() {
           </label>
           <div className="max-h-48 space-y-1 overflow-y-auto rounded-xl border border-border/60 p-2">
             {batches.length === 0 && (
-              <p className="py-4 text-center text-sm text-muted">No batches assigned to you</p>
+              <p className="py-4 text-center text-sm text-muted">
+                No batches assigned to you
+              </p>
             )}
             {batches.map((b) => (
               <label
@@ -114,7 +134,9 @@ export default function InstructorSendNotificationPage() {
                 />
                 <span className="flex-1">
                   {b.name}
-                  <span className="ml-2 text-xs text-muted">{b.course.title}</span>
+                  <span className="ml-2 text-xs text-muted">
+                    {b.course.title}
+                  </span>
                 </span>
               </label>
             ))}
@@ -153,7 +175,11 @@ export default function InstructorSendNotificationPage() {
 
         {/* Send button */}
         <div className="flex items-center justify-end gap-3 pt-2">
-          <button type="button" onClick={() => router.back()} className="btn-secondary">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="btn-secondary"
+          >
             Cancel
           </button>
           <button
@@ -173,7 +199,8 @@ export default function InstructorSendNotificationPage() {
           <div className="mx-4 w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl">
             <h2 className="text-lg font-bold text-foreground">Confirm Send</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              This will send &quot;{title.trim()}&quot; to students in {selectedBatchIds.size} batch(es). Are you sure?
+              This will send &quot;{title.trim()}&quot; to students in{" "}
+              {selectedBatchIds.size} batch(es). Are you sure?
             </p>
             <div className="mt-5 flex justify-end gap-3">
               <button
@@ -183,7 +210,11 @@ export default function InstructorSendNotificationPage() {
               >
                 Cancel
               </button>
-              <button onClick={handleSend} className="btn-primary" disabled={sending}>
+              <button
+                onClick={handleSend}
+                className="btn-primary"
+                disabled={sending}
+              >
                 {sending ? "Sending..." : "Yes, Send"}
               </button>
             </div>

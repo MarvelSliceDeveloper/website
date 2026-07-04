@@ -1,6 +1,6 @@
-import type { Prisma } from '@prisma/client';
-import { prisma } from '../../utils/prisma';
-import { getCalendarView, CalendarEvent as MsCalendarEvent } from '../graph';
+import type { Prisma } from "@prisma/client";
+import { prisma } from "../../utils/prisma";
+import { getCalendarView, CalendarEvent as MsCalendarEvent } from "../graph";
 
 type CalendarEventWithSession = Prisma.CalendarEventGetPayload<{
   include: {
@@ -21,7 +21,11 @@ type CalendarEventWithSession = Prisma.CalendarEventGetPayload<{
  * Adds a 15-min buffer after endAt (sessions often run over).
  * If sessionEndedAt is set (non-null), the session was explicitly ended and is not live.
  */
-export function isSessionLive(startAt: Date, endAt: Date, sessionEndedAt?: Date | null): boolean {
+export function isSessionLive(
+  startAt: Date,
+  endAt: Date,
+  sessionEndedAt?: Date | null,
+): boolean {
   if (sessionEndedAt) return false;
   const now = new Date();
   const bufferMs = 15 * 60 * 1000;
@@ -32,8 +36,16 @@ export function isSessionLive(startAt: Date, endAt: Date, sessionEndedAt?: Date 
  * Sync Microsoft Calendar events into the CalendarEvent table for a given user.
  * Upserts by msEventId — creates new events or updates existing ones.
  */
-export async function syncCalendarForUser(userId: string, startDate: string, endDate: string) {
-  const msEvents: MsCalendarEvent[] = await getCalendarView(userId, startDate, endDate);
+export async function syncCalendarForUser(
+  userId: string,
+  startDate: string,
+  endDate: string,
+) {
+  const msEvents: MsCalendarEvent[] = await getCalendarView(
+    userId,
+    startDate,
+    endDate,
+  );
 
   const results = {
     created: 0,
@@ -42,8 +54,8 @@ export async function syncCalendarForUser(userId: string, startDate: string, end
   };
 
   for (const event of msEvents) {
-    const startAt = new Date(event.start.dateTime + 'Z');
-    const endAt = new Date(event.end.dateTime + 'Z');
+    const startAt = new Date(event.start.dateTime + "Z");
+    const endAt = new Date(event.end.dateTime + "Z");
     const joinUrl = event.onlineMeeting?.joinUrl || null;
 
     let sessionId: string | null = null;
@@ -111,7 +123,7 @@ export async function getEventsForUser(startDate: string, endDate: string) {
         },
       },
     },
-    orderBy: { startAt: 'asc' },
+    orderBy: { startAt: "asc" },
   });
 }
 
@@ -122,26 +134,34 @@ export async function getEventsForUser(startDate: string, endDate: string) {
 export async function getTodayEvents() {
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  const endOfDay = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    23,
+    59,
+    59,
+  );
 
-  const events: CalendarEventWithSession[] = await prisma.calendarEvent.findMany({
-    where: {
-      startAt: { gte: startOfDay },
-      endAt: { lte: endOfDay },
-    },
-    include: {
-      session: {
-        select: {
-          id: true,
-          batchId: true,
-          joinUrl: true,
-          scheduledAt: true,
-          endedAt: true,
+  const events: CalendarEventWithSession[] =
+    await prisma.calendarEvent.findMany({
+      where: {
+        startAt: { gte: startOfDay },
+        endAt: { lte: endOfDay },
+      },
+      include: {
+        session: {
+          select: {
+            id: true,
+            batchId: true,
+            joinUrl: true,
+            scheduledAt: true,
+            endedAt: true,
+          },
         },
       },
-    },
-    orderBy: { startAt: 'asc' },
-  });
+      orderBy: { startAt: "asc" },
+    });
 
   return events.map((event) => ({
     ...event,
@@ -185,7 +205,7 @@ export async function getLiveSessions() {
         },
       },
     },
-    orderBy: { scheduledAt: 'asc' },
+    orderBy: { scheduledAt: "asc" },
   });
 
   return sessions;

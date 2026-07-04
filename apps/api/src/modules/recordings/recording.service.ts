@@ -1,7 +1,7 @@
-import { prisma } from '../../utils/prisma';
-import { getMeetingRecordings } from '../graph/graph.recordings';
-import { GraphError } from '../graph/graph.client';
-import { notificationService } from '../notifications/notification.service';
+import { prisma } from "../../utils/prisma";
+import { getMeetingRecordings } from "../graph/graph.recordings";
+import { GraphError } from "../graph/graph.client";
+import { notificationService } from "../notifications/notification.service";
 
 export const recordingService = {
   // Syncs recordings from Microsoft Teams for a session
@@ -27,17 +27,29 @@ export const recordingService = {
     const teamsMeetingId = session.teamsMeetingId;
 
     // Skip sessions without a real Teams meeting (custom URL, error, or fallback)
-    if (!teamsMeetingId || teamsMeetingId.startsWith('custom-') || teamsMeetingId.startsWith('teams-error') || teamsMeetingId.startsWith('fallback-')) {
-      console.log(`[RecordingSync] Skipping session ${sessionId}: no real Teams meeting (${teamsMeetingId || 'empty'})`);
+    if (
+      !teamsMeetingId ||
+      teamsMeetingId.startsWith("custom-") ||
+      teamsMeetingId.startsWith("teams-error") ||
+      teamsMeetingId.startsWith("fallback-")
+    ) {
+      console.log(
+        `[RecordingSync] Skipping session ${sessionId}: no real Teams meeting (${teamsMeetingId || "empty"})`,
+      );
       return null;
     }
 
     try {
       // 2. Fetch recordings from Microsoft Graph using the creator's tokens
-      const msRecordings = await getMeetingRecordings(creatorId, teamsMeetingId);
+      const msRecordings = await getMeetingRecordings(
+        creatorId,
+        teamsMeetingId,
+      );
 
       if (!msRecordings || msRecordings.length === 0) {
-        console.log(`[RecordingSync] No recordings found yet for session ${sessionId}`);
+        console.log(
+          `[RecordingSync] No recordings found yet for session ${sessionId}`,
+        );
         return null;
       }
 
@@ -49,30 +61,44 @@ export const recordingService = {
         data: {
           sessionId,
           teamsRecordingId: msRecording.id,
-          sharePointUrl: msRecording.webUrl || '', // The webUrl points to SharePoint/OneDrive
+          sharePointUrl: msRecording.webUrl || "", // The webUrl points to SharePoint/OneDrive
           duration: 0, // Duration is not always immediately available in metadata
           syncedAt: new Date(),
         },
       });
 
-      console.log(`[RecordingSync] Successfully synced recording for session ${sessionId}`);
+      console.log(
+        `[RecordingSync] Successfully synced recording for session ${sessionId}`,
+      );
 
       // Notify students that the recording is ready
-      await notificationService.notifyRecordingAvailable(sessionId).catch(err => {
-        console.error('Failed to send recording notifications:', err.message);
-      });
+      await notificationService
+        .notifyRecordingAvailable(sessionId)
+        .catch((err) => {
+          console.error("Failed to send recording notifications:", err.message);
+        });
 
       return recording;
     } catch (error: any) {
       if (error instanceof GraphError && error.statusCode === 404) {
-        console.log(`[RecordingSync] Meeting or recordings not found for session ${sessionId}`);
+        console.log(
+          `[RecordingSync] Meeting or recordings not found for session ${sessionId}`,
+        );
         return null;
       }
       // Token/auth errors — log the specific issue for debugging
-      if (error instanceof GraphError && (error.statusCode === 401 || error.statusCode === 403)) {
-        console.error(`[RecordingSync] Auth/Token error for session ${sessionId} (${error.statusCode} ${error.graphErrorCode}): ${error.message}`);
+      if (
+        error instanceof GraphError &&
+        (error.statusCode === 401 || error.statusCode === 403)
+      ) {
+        console.error(
+          `[RecordingSync] Auth/Token error for session ${sessionId} (${error.statusCode} ${error.graphErrorCode}): ${error.message}`,
+        );
       } else {
-        console.error(`[RecordingSync] Failed to sync recordings for session ${sessionId}:`, String(error.message));
+        console.error(
+          `[RecordingSync] Failed to sync recordings for session ${sessionId}:`,
+          String(error.message),
+        );
       }
       throw error;
     }
@@ -82,7 +108,7 @@ export const recordingService = {
   async getRecordingsForBatch(batchId: string, userId: string) {
     // Verify enrollment
     const enrollment = await prisma.enrollmentRequest.findFirst({
-      where: { userId, batchId, status: 'APPROVED' },
+      where: { userId, batchId, status: "APPROVED" },
     });
 
     // If not enrolled and not the instructor, access denied
@@ -94,7 +120,7 @@ export const recordingService = {
     if (!enrollment && batch?.instructorId !== userId) {
       // Allow ADMINs bypass if necessary, usually handled by guards.
       // For now we keep it strict to the service layer rules.
-      throw new Error('Access denied: You are not enrolled in this batch');
+      throw new Error("Access denied: You are not enrolled in this batch");
     }
 
     const recordings = await prisma.recording.findMany({
@@ -115,10 +141,10 @@ export const recordingService = {
           select: { watchedSeconds: true, completedAt: true },
         },
       },
-      orderBy: { session: { scheduledAt: 'asc' } },
+      orderBy: { session: { scheduledAt: "asc" } },
     });
 
-    return recordings.map((recording: typeof recordings[number]) => ({
+    return recordings.map((recording: (typeof recordings)[number]) => ({
       ...recording,
       sessionId: recording.session.id,
       moduleId: recording.session.moduleId,
@@ -133,7 +159,13 @@ export const recordingService = {
       include: {
         session: {
           include: {
-            batch: { select: { name: true, instructorId: true, course: { select: { title: true } } } },
+            batch: {
+              select: {
+                name: true,
+                instructorId: true,
+                course: { select: { title: true } },
+              },
+            },
             module: { select: { title: true } },
           },
         },
@@ -144,21 +176,25 @@ export const recordingService = {
     });
 
     if (!recording) {
-      throw new Error('Recording not found');
+      throw new Error("Recording not found");
     }
 
     return recording;
   },
 
   // Tracks watch progress and marks complete at 90%
-  async updateProgress(userId: string, recordingId: string, watchedSeconds: number) {
+  async updateProgress(
+    userId: string,
+    recordingId: string,
+    watchedSeconds: number,
+  ) {
     // 1. Get recording to check duration
     const recording = await prisma.recording.findUnique({
       where: { id: recordingId },
       select: { duration: true },
     });
 
-    if (!recording) throw new Error('Recording not found');
+    if (!recording) throw new Error("Recording not found");
 
     // 2. Update progress record
     const progress = await prisma.progress.upsert({
@@ -201,17 +237,21 @@ export const recordingService = {
       },
     });
 
-    if (!recording) throw new Error('Recording not found');
+    if (!recording) throw new Error("Recording not found");
 
     // For recordings, we use the session creator's token as they are the "owner"
     // of the meeting and recording.
     const creatorId = recording.session.createdBy;
 
     // Import dynamically to avoid circular dependencies if any
-    const { getRecordingContent } = await import('../graph/graph.recordings');
+    const { getRecordingContent } = await import("../graph/graph.recordings");
 
     try {
-      const contentUrl = await getRecordingContent(creatorId, recording.session.teamsMeetingId, recording.teamsRecordingId);
+      const contentUrl = await getRecordingContent(
+        creatorId,
+        recording.session.teamsMeetingId,
+        recording.teamsRecordingId,
+      );
 
       return {
         url: contentUrl,

@@ -1,4 +1,4 @@
-import { GraphClient } from './graph.client';
+import { GraphClient } from "./graph.client";
 
 export interface CallRecord {
   id: string;
@@ -24,11 +24,16 @@ export interface RecordingSession {
  * Fetch call records for a given date range.
  * Requires Application permission: CallRecords.Read.All
  */
-export async function getCallRecords(startDateTime: string, endDateTime: string): Promise<CallRecord[]> {
+export async function getCallRecords(
+  startDateTime: string,
+  endDateTime: string,
+): Promise<CallRecord[]> {
   const client = new GraphClient({ useAppToken: true });
   // OData filter requires ISO 8601 date strings
   const filter = `startDateTime ge '${startDateTime}' and startDateTime le '${endDateTime}'`;
-  const response = await client.get(`/communications/callRecords?$filter=${encodeURIComponent(filter)}`) as { value: CallRecord[] };
+  const response = (await client.get(
+    `/communications/callRecords?$filter=${encodeURIComponent(filter)}`,
+  )) as { value: CallRecord[] };
   return response.value;
 }
 
@@ -37,9 +42,13 @@ export async function getCallRecords(startDateTime: string, endDateTime: string)
  * Used to drill into meeting participants and segments.
  * Requires Application permission: CallRecords.Read.All
  */
-export async function getCallRecordSessions(callId: string): Promise<RecordingSession[]> {
+export async function getCallRecordSessions(
+  callId: string,
+): Promise<RecordingSession[]> {
   const client = new GraphClient({ useAppToken: true });
-  const response = await client.get(`/communications/callRecords/${callId}/sessions`) as { value: RecordingSession[] };
+  const response = (await client.get(
+    `/communications/callRecords/${callId}/sessions`,
+  )) as { value: RecordingSession[] };
   return response.value;
 }
 
@@ -48,9 +57,14 @@ export async function getCallRecordSessions(callId: string): Promise<RecordingSe
  * Uses delegated permissions: OnlineMeetingRecording.Read.All
  * The meeting organizer's userId is required.
  */
-export async function getMeetingRecordings(userId: string, meetingId: string): Promise<any[]> {
+export async function getMeetingRecordings(
+  userId: string,
+  meetingId: string,
+): Promise<any[]> {
   const client = new GraphClient({ userId });
-  const response = await client.get(`/me/onlineMeetings/${meetingId}/recordings`) as { value: any[] };
+  const response = (await client.get(
+    `/me/onlineMeetings/${meetingId}/recordings`,
+  )) as { value: any[] };
   return response.value;
 }
 
@@ -58,15 +72,22 @@ export async function getMeetingRecordings(userId: string, meetingId: string): P
  * Fetch a specific recording's content (binary stream URL).
  * Returns a download URL that can be used to stream the video.
  */
-export async function getRecordingContent(userId: string, meetingId: string, recordingId: string): Promise<string> {
+export async function getRecordingContent(
+  userId: string,
+  meetingId: string,
+  recordingId: string,
+): Promise<string> {
   const client = new GraphClient({ userId });
   // Set redirect to manual so we can catch the 302 and extract the Location header
-  const response = await client.getRaw(`/me/onlineMeetings/${meetingId}/recordings/${recordingId}/content`, {
-    redirect: 'manual'
-  });
-  
+  const response = await client.getRaw(
+    `/me/onlineMeetings/${meetingId}/recordings/${recordingId}/content`,
+    {
+      redirect: "manual",
+    },
+  );
+
   if (response.status === 302 || response.status === 301) {
-    const redirectUrl = response.headers.get('Location');
+    const redirectUrl = response.headers.get("Location");
     if (redirectUrl) return redirectUrl;
   }
 

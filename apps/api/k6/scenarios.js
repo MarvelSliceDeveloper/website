@@ -74,24 +74,42 @@ export default function (authData) {
 
 function adminFlow() {
   // Admin: manage mentorship, view all courses, view stats
-  http.get(`${BASE_URL}/api/mentorship/tickets`, { tags: { name: "admin_tickets" } });
-  http.get(`${BASE_URL}/api/mentorship/mentors`, { tags: { name: "admin_mentors" } });
-  http.get(`${BASE_URL}/api/mentorship/stats`, { tags: { name: "admin_stats" } });
-  http.get(`${BASE_URL}/api/courses/enrolled`, { tags: { name: "admin_courses" } });
+  http.get(`${BASE_URL}/api/mentorship/tickets`, {
+    tags: { name: "admin_tickets" },
+  });
+  http.get(`${BASE_URL}/api/mentorship/mentors`, {
+    tags: { name: "admin_mentors" },
+  });
+  http.get(`${BASE_URL}/api/mentorship/stats`, {
+    tags: { name: "admin_stats" },
+  });
+  http.get(`${BASE_URL}/api/courses/enrolled`, {
+    tags: { name: "admin_courses" },
+  });
   http.get(`${BASE_URL}/api/sessions`, { tags: { name: "admin_sessions" } });
 }
 
 function instructorFlow() {
   // Instructor: view assigned tickets, sessions
-  http.get(`${BASE_URL}/api/mentorship/tickets`, { tags: { name: "instructor_tickets" } });
-  http.get(`${BASE_URL}/api/sessions`, { tags: { name: "instructor_sessions" } });
-  http.get(`${BASE_URL}/api/courses/enrolled`, { tags: { name: "instructor_courses" } });
+  http.get(`${BASE_URL}/api/mentorship/tickets`, {
+    tags: { name: "instructor_tickets" },
+  });
+  http.get(`${BASE_URL}/api/sessions`, {
+    tags: { name: "instructor_sessions" },
+  });
+  http.get(`${BASE_URL}/api/courses/enrolled`, {
+    tags: { name: "instructor_courses" },
+  });
 }
 
 function studentFlow() {
   // Student: enrolled courses, live sessions, mentorship tickets
-  http.get(`${BASE_URL}/api/courses/enrolled`, { tags: { name: "student_courses" } });
+  http.get(`${BASE_URL}/api/courses/enrolled`, {
+    tags: { name: "student_courses" },
+  });
   http.get(`${BASE_URL}/api/sessions`, { tags: { name: "student_sessions" } });
-  http.get(`${BASE_URL}/api/mentorship/tickets/my`, { tags: { name: "student_tickets" } });
+  http.get(`${BASE_URL}/api/mentorship/tickets/my`, {
+    tags: { name: "student_tickets" },
+  });
   http.get(`${BASE_URL}/api/auth/me`, { tags: { name: "student_me" } });
 }

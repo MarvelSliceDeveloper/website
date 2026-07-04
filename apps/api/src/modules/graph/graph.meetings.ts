@@ -1,4 +1,4 @@
-import { GraphClient } from './graph.client';
+import { GraphClient } from "./graph.client";
 
 export interface CreateMeetingRequest {
   startDateTime: string;
@@ -15,12 +15,20 @@ export interface OnlineMeeting {
   // Other fields exist but these are the ones we typically need
 }
 
-export async function createOnlineMeeting(userId: string, data: CreateMeetingRequest): Promise<OnlineMeeting> {
+export async function createOnlineMeeting(
+  userId: string,
+  data: CreateMeetingRequest,
+): Promise<OnlineMeeting> {
   const client = new GraphClient({ userId });
-  return client.post('/me/onlineMeetings', data) as Promise<OnlineMeeting>;
+  return client.post("/me/onlineMeetings", data) as Promise<OnlineMeeting>;
 }
 
-export async function getOnlineMeeting(userId: string, meetingId: string): Promise<OnlineMeeting> {
+export async function getOnlineMeeting(
+  userId: string,
+  meetingId: string,
+): Promise<OnlineMeeting> {
   const client = new GraphClient({ userId });
-  return client.get(`/me/onlineMeetings/${meetingId}`) as Promise<OnlineMeeting>;
+  return client.get(
+    `/me/onlineMeetings/${meetingId}`,
+  ) as Promise<OnlineMeeting>;
 }

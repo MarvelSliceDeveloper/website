@@ -1,4 +1,4 @@
-import { GraphClient } from './graph.client';
+import { GraphClient } from "./graph.client";
 
 export interface CalendarEvent {
   id: string;
@@ -21,7 +21,7 @@ export interface CalendarEvent {
 export interface CreateEventRequest {
   subject: string;
   body?: {
-    contentType: 'HTML' | 'Text';
+    contentType: "HTML" | "Text";
     content: string;
   };
   start: {
@@ -33,20 +33,29 @@ export interface CreateEventRequest {
     timeZone: string;
   };
   isOnlineMeeting?: boolean;
-  onlineMeetingProvider?: 'teamsForBusiness';
+  onlineMeetingProvider?: "teamsForBusiness";
 }
 
-export async function getCalendarView(userId: string, startDateTime: string, endDateTime: string): Promise<CalendarEvent[]> {
+export async function getCalendarView(
+  userId: string,
+  startDateTime: string,
+  endDateTime: string,
+): Promise<CalendarEvent[]> {
   const client = new GraphClient({ userId });
   const params = new URLSearchParams({
     startDateTime,
     endDateTime,
   });
-  const response = await client.get(`/me/calendarView?${params.toString()}`) as { value: CalendarEvent[] };
+  const response = (await client.get(
+    `/me/calendarView?${params.toString()}`,
+  )) as { value: CalendarEvent[] };
   return response.value;
 }
 
-export async function createCalendarEvent(userId: string, data: CreateEventRequest): Promise<CalendarEvent> {
+export async function createCalendarEvent(
+  userId: string,
+  data: CreateEventRequest,
+): Promise<CalendarEvent> {
   const client = new GraphClient({ userId });
-  return client.post('/me/events', data) as Promise<CalendarEvent>;
+  return client.post("/me/events", data) as Promise<CalendarEvent>;
 }

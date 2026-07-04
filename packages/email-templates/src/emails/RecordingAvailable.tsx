@@ -16,9 +16,7 @@ export default function RecordingAvailable({
   recordingUrl,
 }: RecordingAvailableProps) {
   return (
-    <BaseLayout
-      previewText={`Recording available: ${sessionTitle}`}
-    >
+    <BaseLayout previewText={`Recording available: ${sessionTitle}`}>
       <Heading style={headingStyle}>Recording Available</Heading>
       <Text style={textStyle}>
         The recording for a recent live session is now available.

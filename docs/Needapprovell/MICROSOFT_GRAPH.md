@@ -49,15 +49,15 @@ The web app never calls Graph directly. It uses LMS REST endpoints (`POST /api/s
 
 ### Module layout
 
-| File | Responsibility |
-|------|----------------|
-| `graph.client.ts` | HTTP client to `https://graph.microsoft.com/v1.0` with retries (401 refresh, 429/503 backoff) |
-| `graph.auth.ts` | Delegated user tokens + application (`client_credentials`) tokens |
-| `graph.meetings.ts` | Create/read Teams online meetings |
-| `graph.calendar.ts` | Read calendar view, create Outlook events (create is unused in flows) |
-| `graph.recordings.ts` | List meeting recordings, resolve playback URLs |
-| `graph.subscriptions.ts` | Create/renew/delete Graph change subscriptions |
-| `graph.users.ts` | Fetch `/me` profile (defined, not wired to routes yet) |
+| File                     | Responsibility                                                                                |
+| ------------------------ | --------------------------------------------------------------------------------------------- |
+| `graph.client.ts`        | HTTP client to `https://graph.microsoft.com/v1.0` with retries (401 refresh, 429/503 backoff) |
+| `graph.auth.ts`          | Delegated user tokens + application (`client_credentials`) tokens                             |
+| `graph.meetings.ts`      | Create/read Teams online meetings                                                             |
+| `graph.calendar.ts`      | Read calendar view, create Outlook events (create is unused in flows)                         |
+| `graph.recordings.ts`    | List meeting recordings, resolve playback URLs                                                |
+| `graph.subscriptions.ts` | Create/renew/delete Graph change subscriptions                                                |
+| `graph.users.ts`         | Fetch `/me` profile (defined, not wired to routes yet)                                        |
 
 There is **no Microsoft Graph SDK** in this project — all calls use native `fetch`.
 
@@ -148,16 +148,16 @@ POST https://graph.microsoft.com/v1.0/me/onlineMeetings
 
 **Response fields used:**
 
-| Graph field | Stored as |
-|-------------|-----------|
-| `id` | `LiveSession.teamsMeetingId` |
-| `joinWebUrl` | `LiveSession.joinUrl` |
+| Graph field  | Stored as                    |
+| ------------ | ---------------------------- |
+| `id`         | `LiveSession.teamsMeetingId` |
+| `joinWebUrl` | `LiveSession.joinUrl`        |
 
 ### What gets saved locally
 
-| Table | Notes |
-|-------|-------|
-| `LiveSession` | `createdFrom: 'LMS'` (or `'LMS_CUSTOM'` if manual URL) |
+| Table           | Notes                                                                            |
+| --------------- | -------------------------------------------------------------------------------- |
+| `LiveSession`   | `createdFrom: 'LMS'` (or `'LMS_CUSTOM'` if manual URL)                           |
 | `CalendarEvent` | Synthetic `msEventId: lms-session-{sessionId}` — **not** a real Outlook event ID |
 
 LMS-created sessions use the **onlineMeetings** API only. They do **not** create a corresponding Outlook calendar event via `POST /me/events`.
@@ -175,12 +175,12 @@ This allows local development without Azure, but recordings and real Teams joins
 
 ### Required Azure permissions (delegated)
 
-| Permission | Purpose |
-|------------|---------|
-| `OnlineMeetings.ReadWrite` | Create Teams meetings |
-| `Calendars.ReadWrite` | Calendar sync (separate flow) |
-| `User.Read` | User identity |
-| `offline_access` | Refresh tokens |
+| Permission                 | Purpose                       |
+| -------------------------- | ----------------------------- |
+| `OnlineMeetings.ReadWrite` | Create Teams meetings         |
+| `Calendars.ReadWrite`      | Calendar sync (separate flow) |
+| `User.Read`                | User identity                 |
+| `offline_access`           | Refresh tokens                |
 
 ---
 
@@ -207,11 +207,11 @@ GET https://graph.microsoft.com/v1.0/me/calendarView?startDateTime={iso}&endDate
 
 ### Read endpoints (local DB only — no Graph call)
 
-| LMS endpoint | Description |
-|--------------|-------------|
-| `GET /api/calendar/events?start=&end=` | Events in date range |
-| `GET /api/calendar/events/today` | Today's events |
-| `GET /api/calendar/live` | Sessions currently live (15-min end buffer) |
+| LMS endpoint                           | Description                                 |
+| -------------------------------------- | ------------------------------------------- |
+| `GET /api/calendar/events?start=&end=` | Events in date range                        |
+| `GET /api/calendar/events/today`       | Today's events                              |
+| `GET /api/calendar/live`               | Sessions currently live (15-min end buffer) |
 
 ### Unused helper
 
@@ -258,11 +258,11 @@ GET https://graph.microsoft.com/v1.0/me/onlineMeetings/{meetingId}/recordings/{r
 
 ### What gets stored
 
-| Field | Source |
-|-------|--------|
-| `Recording.teamsRecordingId` | Graph recording `id` |
-| `Recording.sharePointUrl` | Graph recording `webUrl` |
-| `Recording.duration` | `0` initially (not always in metadata) |
+| Field                        | Source                                 |
+| ---------------------------- | -------------------------------------- |
+| `Recording.teamsRecordingId` | Graph recording `id`                   |
+| `Recording.sharePointUrl`    | Graph recording `webUrl`               |
+| `Recording.duration`         | `0` initially (not always in metadata) |
 
 ### Recording permissions note
 
@@ -272,9 +272,9 @@ Code comments reference `OnlineMeetingRecording.Read.All`, but the refresh-token
 
 These use **application** permissions and are **not integrated** into any flow:
 
-| Function | Graph endpoint |
-|----------|----------------|
-| `getCallRecords()` | `GET /communications/callRecords?$filter=...` |
+| Function                  | Graph endpoint                                  |
+| ------------------------- | ----------------------------------------------- |
+| `getCallRecords()`        | `GET /communications/callRecords?$filter=...`   |
 | `getCallRecordSessions()` | `GET /communications/callRecords/{id}/sessions` |
 
 Requires: `CallRecords.Read.All` (application, admin consent).
@@ -298,9 +298,9 @@ createSubscription(resource, notificationUrl, expirationDateTime, clientState?)
 
 Example subscription resource paths:
 
-| Resource | Webhook |
-|----------|---------|
-| `/users/{msUserId}/events` | `POST {API_URL}/api/webhooks/events` |
+| Resource                   | Webhook                                |
+| -------------------------- | -------------------------------------- |
+| `/users/{msUserId}/events` | `POST {API_URL}/api/webhooks/events`   |
 | `/users/{msUserId}/events` | `POST {API_URL}/api/webhooks/calendar` |
 
 `notificationUrl` must be **publicly reachable** (use ngrok or similar in local dev).
@@ -320,11 +320,11 @@ The handler must respond with the token as **plain text** (`200 OK`).
 **Endpoint:** `POST /api/webhooks/calendar`  
 **File:** `calendar/webhook.controller.ts`
 
-| Step | Action |
-|------|--------|
-| Validate `clientState` | Must match `MS_WEBHOOK_CLIENT_STATE` |
-| Resolve user | Lookup `User` by `msUserId` from resource path |
-| Re-sync | `syncCalendarForUser()` for next 30 days |
+| Step                   | Action                                         |
+| ---------------------- | ---------------------------------------------- |
+| Validate `clientState` | Must match `MS_WEBHOOK_CLIENT_STATE`           |
+| Resolve user           | Lookup `User` by `msUserId` from resource path |
+| Re-sync                | `syncCalendarForUser()` for next 30 days       |
 
 Does **not** create `LiveSession` rows — only refreshes `CalendarEvent` data.
 
@@ -333,10 +333,10 @@ Does **not** create `LiveSession` rows — only refreshes `CalendarEvent` data.
 **Endpoint:** `POST /api/webhooks/events`  
 **File:** `sessions/events-webhook.controller.ts`
 
-| `changeType` | Action |
-|--------------|--------|
+| `changeType`          | Action                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------ |
 | `created` / `updated` | `GET /me/events/{eventId}` — if Teams online meeting, create or update `LiveSession` |
-| `deleted` | Mark linked session `endedAt`, delete `CalendarEvent` |
+| `deleted`             | Mark linked session `endedAt`, delete `CalendarEvent`                                |
 
 **Teams → LMS session creation:**
 
@@ -360,48 +360,48 @@ Default if unset: `secretClientValue` (change this in production).
 
 ## Graph API endpoint reference
 
-| Graph path | Method | Auth | Used by | Status |
-|------------|--------|------|---------|--------|
-| `/me/onlineMeetings` | POST | Delegated | `createOnlineMeeting` | **Active** |
-| `/me/onlineMeetings/{id}` | GET | Delegated | `getOnlineMeeting` | Defined, unused |
-| `/me/calendarView` | GET | Delegated | `getCalendarView` | **Active** |
-| `/me/events` | POST | Delegated | `createCalendarEvent` | Defined, unused |
-| `/me/events/{id}` | GET | Delegated | `events-webhook.controller` | **Active** |
-| `/me/onlineMeetings/{id}/recordings` | GET | Delegated | `getMeetingRecordings` | **Active** |
-| `/me/onlineMeetings/{id}/recordings/{id}/content` | GET | Delegated | `getRecordingContent` | **Active** |
-| `/me` | GET | Delegated | `getMsUserProfile` | Defined, unused |
-| `/communications/callRecords` | GET | Application | `getCallRecords` | Defined, unused |
-| `/communications/callRecords/{id}/sessions` | GET | Application | `getCallRecordSessions` | Defined, unused |
-| `/subscriptions` | POST | Application | `createSubscription` | Defined, no caller |
-| `/subscriptions/{id}` | PATCH | Application | `renewSubscription` | Defined, no caller |
-| `/subscriptions/{id}` | DELETE | Application | `deleteSubscription` | Defined, no caller |
+| Graph path                                        | Method | Auth        | Used by                     | Status             |
+| ------------------------------------------------- | ------ | ----------- | --------------------------- | ------------------ |
+| `/me/onlineMeetings`                              | POST   | Delegated   | `createOnlineMeeting`       | **Active**         |
+| `/me/onlineMeetings/{id}`                         | GET    | Delegated   | `getOnlineMeeting`          | Defined, unused    |
+| `/me/calendarView`                                | GET    | Delegated   | `getCalendarView`           | **Active**         |
+| `/me/events`                                      | POST   | Delegated   | `createCalendarEvent`       | Defined, unused    |
+| `/me/events/{id}`                                 | GET    | Delegated   | `events-webhook.controller` | **Active**         |
+| `/me/onlineMeetings/{id}/recordings`              | GET    | Delegated   | `getMeetingRecordings`      | **Active**         |
+| `/me/onlineMeetings/{id}/recordings/{id}/content` | GET    | Delegated   | `getRecordingContent`       | **Active**         |
+| `/me`                                             | GET    | Delegated   | `getMsUserProfile`          | Defined, unused    |
+| `/communications/callRecords`                     | GET    | Application | `getCallRecords`            | Defined, unused    |
+| `/communications/callRecords/{id}/sessions`       | GET    | Application | `getCallRecordSessions`     | Defined, unused    |
+| `/subscriptions`                                  | POST   | Application | `createSubscription`        | Defined, no caller |
+| `/subscriptions/{id}`                             | PATCH  | Application | `renewSubscription`         | Defined, no caller |
+| `/subscriptions/{id}`                             | DELETE | Application | `deleteSubscription`        | Defined, no caller |
 
 ### Error handling
 
 `GraphClient` maps common Graph errors to friendly messages:
 
-| Graph code | User-facing message |
-|------------|---------------------|
-| `InvalidAuthenticationToken` | Microsoft session expired — sign in again |
-| `ResourceNotFound` | Resource not found |
-| `ErrorAccessDenied` | No permission for Teams/Calendar action |
-| `MailboxNotEnabledForRESTAPI` | Mailbox not enabled for REST API |
-| `AuthenticationError` | Re-link Microsoft account |
+| Graph code                    | User-facing message                       |
+| ----------------------------- | ----------------------------------------- |
+| `InvalidAuthenticationToken`  | Microsoft session expired — sign in again |
+| `ResourceNotFound`            | Resource not found                        |
+| `ErrorAccessDenied`           | No permission for Teams/Calendar action   |
+| `MailboxNotEnabledForRESTAPI` | Mailbox not enabled for REST API          |
+| `AuthenticationError`         | Re-link Microsoft account                 |
 
 ---
 
 ## LMS REST API mapping
 
-| Feature | LMS endpoint | Graph involved |
-|---------|--------------|----------------|
-| Schedule session + Teams meeting | `POST /api/sessions` | `POST /me/onlineMeetings` |
-| List sessions | `GET /api/sessions` | No |
-| Sync calendar | `POST /api/calendar/sync` | `GET /me/calendarView` |
-| View calendar | `GET /api/calendar/events` | No (local DB) |
-| Sync recording | `POST /api/recordings/:sessionId/sync` | `GET .../recordings` |
-| Playback URL | `GET /api/recordings/:id/url` | `GET .../recordings/{id}/content` |
-| Calendar webhook | `POST /api/webhooks/calendar` | Triggers calendar sync |
-| Teams events webhook | `POST /api/webhooks/events` | `GET /me/events/{id}` |
+| Feature                          | LMS endpoint                           | Graph involved                    |
+| -------------------------------- | -------------------------------------- | --------------------------------- |
+| Schedule session + Teams meeting | `POST /api/sessions`                   | `POST /me/onlineMeetings`         |
+| List sessions                    | `GET /api/sessions`                    | No                                |
+| Sync calendar                    | `POST /api/calendar/sync`              | `GET /me/calendarView`            |
+| View calendar                    | `GET /api/calendar/events`             | No (local DB)                     |
+| Sync recording                   | `POST /api/recordings/:sessionId/sync` | `GET .../recordings`              |
+| Playback URL                     | `GET /api/recordings/:id/url`          | `GET .../recordings/{id}/content` |
+| Calendar webhook                 | `POST /api/webhooks/calendar`          | Triggers calendar sync            |
+| Teams events webhook             | `POST /api/webhooks/events`            | `GET /me/events/{id}`             |
 
 ---
 
@@ -416,20 +416,20 @@ Default if unset: `secretClientValue` (change this in production).
 
 **Delegated permissions (required for core flows):**
 
-| Permission | Used for |
-|------------|----------|
-| `OnlineMeetings.ReadWrite` | Create Teams meetings |
-| `Calendars.ReadWrite` | Calendar sync |
-| `User.Read` | Profile / identity |
-| `offline_access` | Refresh tokens |
+| Permission                        | Used for                                              |
+| --------------------------------- | ----------------------------------------------------- |
+| `OnlineMeetings.ReadWrite`        | Create Teams meetings                                 |
+| `Calendars.ReadWrite`             | Calendar sync                                         |
+| `User.Read`                       | Profile / identity                                    |
+| `offline_access`                  | Refresh tokens                                        |
 | `OnlineMeetingRecording.Read.All` | Recording list/playback (recommended — add to scopes) |
 
 **Application permissions (optional / future):**
 
-| Permission | Used for |
-|------------|----------|
-| `CallRecords.Read.All` | Call-record based recording discovery (unused) |
-| `Subscription` scopes for webhooks | Change notifications |
+| Permission                         | Used for                                       |
+| ---------------------------------- | ---------------------------------------------- |
+| `CallRecords.Read.All`             | Call-record based recording discovery (unused) |
+| `Subscription` scopes for webhooks | Change notifications                           |
 
 5. Grant **admin consent** for the tenant (especially application permissions)
 6. Copy **Application (client) ID**, **Directory (tenant) ID**, and **client secret** into `.env`
@@ -444,15 +444,15 @@ For **recordings**, the **session creator's** token is used. This allows adminis
 
 ## Environment variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `MS_CLIENT_ID` | Yes (for Graph) | Azure AD application (client) ID |
-| `MS_CLIENT_SECRET` | Yes (for Graph) | Azure AD client secret |
-| `MS_TENANT_ID` | No | Tenant ID (default: `common`) |
-| `MS_REDIRECT_URI` | Yes (for token refresh) | OAuth redirect URI |
-| `TOKEN_ENCRYPTION_KEY` | Yes | Min 32 chars — encrypts MS tokens in DB |
-| `MS_WEBHOOK_CLIENT_STATE` | Recommended | Secret validated on webhook notifications (default: `secretClientValue`) |
-| `API_URL` | Yes (for webhooks) | Public API base URL for subscription `notificationUrl` |
+| Variable                  | Required                | Description                                                              |
+| ------------------------- | ----------------------- | ------------------------------------------------------------------------ |
+| `MS_CLIENT_ID`            | Yes (for Graph)         | Azure AD application (client) ID                                         |
+| `MS_CLIENT_SECRET`        | Yes (for Graph)         | Azure AD client secret                                                   |
+| `MS_TENANT_ID`            | No                      | Tenant ID (default: `common`)                                            |
+| `MS_REDIRECT_URI`         | Yes (for token refresh) | OAuth redirect URI                                                       |
+| `TOKEN_ENCRYPTION_KEY`    | Yes                     | Min 32 chars — encrypts MS tokens in DB                                  |
+| `MS_WEBHOOK_CLIENT_STATE` | Recommended             | Secret validated on webhook notifications (default: `secretClientValue`) |
+| `API_URL`                 | Yes (for webhooks)      | Public API base URL for subscription `notificationUrl`                   |
 
 Example `.env` block:
 
@@ -470,17 +470,17 @@ API_URL=http://localhost:4000
 
 ## Database fields
 
-| Model | Field | Purpose |
-|-------|-------|---------|
-| `User` | `msUserId` | Microsoft user ID (webhook user lookup) |
-| `User` | `msAccessToken` | Encrypted delegated access token |
-| `User` | `msRefreshToken` | Encrypted refresh token |
-| `LiveSession` | `teamsMeetingId` | Graph online meeting ID |
-| `LiveSession` | `joinUrl` | Teams join link |
-| `LiveSession` | `createdFrom` | `LMS`, `LMS_CUSTOM`, or `TEAMS` |
-| `CalendarEvent` | `msEventId` | Outlook event ID (or synthetic for LMS-created) |
-| `Recording` | `teamsRecordingId` | Graph recording ID |
-| `Recording` | `sharePointUrl` | SharePoint/OneDrive link from Graph |
+| Model           | Field              | Purpose                                         |
+| --------------- | ------------------ | ----------------------------------------------- |
+| `User`          | `msUserId`         | Microsoft user ID (webhook user lookup)         |
+| `User`          | `msAccessToken`    | Encrypted delegated access token                |
+| `User`          | `msRefreshToken`   | Encrypted refresh token                         |
+| `LiveSession`   | `teamsMeetingId`   | Graph online meeting ID                         |
+| `LiveSession`   | `joinUrl`          | Teams join link                                 |
+| `LiveSession`   | `createdFrom`      | `LMS`, `LMS_CUSTOM`, or `TEAMS`                 |
+| `CalendarEvent` | `msEventId`        | Outlook event ID (or synthetic for LMS-created) |
+| `Recording`     | `teamsRecordingId` | Graph recording ID                              |
+| `Recording`     | `sharePointUrl`    | SharePoint/OneDrive link from Graph             |
 
 ---
 

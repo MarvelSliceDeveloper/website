@@ -38,7 +38,10 @@ const statusStyles: Record<string, string> = {
   REJECTED: "bg-danger/15 text-danger border-danger/25",
 };
 
-const statusIcons: Record<string, ComponentType<{ size?: number | string; stroke?: number | string }>> = {
+const statusIcons: Record<
+  string,
+  ComponentType<{ size?: number | string; stroke?: number | string }>
+> = {
   PENDING: IconClock,
   APPROVED: IconCircleCheck,
   REJECTED: IconCircleX,
@@ -50,7 +53,9 @@ export default function AdminEnrollmentsPage() {
   const [statusFilter, setStatusFilter] = useState("PENDING");
 
   // Approve modal state
-  const [approveModal, setApproveModal] = useState<EnrollmentRequest | null>(null);
+  const [approveModal, setApproveModal] = useState<EnrollmentRequest | null>(
+    null,
+  );
   const [batches, setBatches] = useState<Batch[]>([]);
   const [loadingBatches, setLoadingBatches] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState("");
@@ -60,7 +65,7 @@ export default function AdminEnrollmentsPage() {
     setLoading(true);
     try {
       const data = await api.get<{ enrollments: EnrollmentRequest[] }>(
-        `/api/admin/enrollments?status=${statusFilter}`
+        `/api/admin/enrollments?status=${statusFilter}`,
       );
       setEnrollments(data.enrollments || []);
     } catch {
@@ -106,7 +111,8 @@ export default function AdminEnrollmentsPage() {
   };
 
   const handleReject = async (id: string) => {
-    if (!confirm("Are you sure you want to reject this enrollment request?")) return;
+    if (!confirm("Are you sure you want to reject this enrollment request?"))
+      return;
     try {
       await api.patch(`/api/admin/enrollments/${id}/reject`);
       toast.success("Enrollment rejected");
@@ -149,11 +155,23 @@ export default function AdminEnrollmentsPage() {
         <CardSkeleton count={4} />
       ) : enrollments.length === 0 ? (
         statusFilter === "PENDING" ? (
-          <EmptyState icon={IconClock} title="No pending requests" description="All enrollment requests have been reviewed." />
+          <EmptyState
+            icon={IconClock}
+            title="No pending requests"
+            description="All enrollment requests have been reviewed."
+          />
         ) : statusFilter === "APPROVED" ? (
-          <EmptyState icon={IconCircleCheck} title="No approved enrollments" description="Check the other filters to find what you're looking for." />
+          <EmptyState
+            icon={IconCircleCheck}
+            title="No approved enrollments"
+            description="Check the other filters to find what you're looking for."
+          />
         ) : (
-          <EmptyState icon={IconCircleX} title="No rejected enrollments" description="Check the other filters to find what you're looking for." />
+          <EmptyState
+            icon={IconCircleX}
+            title="No rejected enrollments"
+            description="Check the other filters to find what you're looking for."
+          />
         )
       ) : (
         <div className="space-y-3">
@@ -167,16 +185,26 @@ export default function AdminEnrollmentsPage() {
                   {enrollment.user.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-semibold text-foreground">{enrollment.user.name}</p>
-                  <p className="text-xs text-muted-foreground">{enrollment.user.email}</p>
+                  <p className="font-semibold text-foreground">
+                    {enrollment.user.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {enrollment.user.email}
+                  </p>
                   <p className="mt-0.5 text-xs text-muted">
-                    Course: <span className="text-foreground font-medium">{enrollment.courseTitle}</span>
+                    Course:{" "}
+                    <span className="text-foreground font-medium">
+                      {enrollment.courseTitle}
+                    </span>
                     {" · "}Applied:{" "}
-                    {new Date(enrollment.appliedAt).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                    {new Date(enrollment.appliedAt).toLocaleDateString(
+                      "en-IN",
+                      {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      },
+                    )}
                   </p>
                   {enrollment.batchName && (
                     <p className="text-xs text-success mt-0.5">
@@ -193,7 +221,8 @@ export default function AdminEnrollmentsPage() {
                   {(() => {
                     const StatusIcon = statusIcons[enrollment.status];
                     return <StatusIcon size={14} stroke={1.5} />;
-                  })()} {enrollment.status}
+                  })()}{" "}
+                  {enrollment.status}
                 </span>
 
                 {enrollment.status === "PENDING" && (
@@ -253,11 +282,15 @@ export default function AdminEnrollmentsPage() {
           <div className="space-y-2 text-sm">
             <p>
               <span className="text-muted">Student:</span>{" "}
-              <span className="font-medium text-foreground">{approveModal.user.name}</span>
+              <span className="font-medium text-foreground">
+                {approveModal.user.name}
+              </span>
             </p>
             <p>
               <span className="text-muted">Course:</span>{" "}
-              <span className="font-medium text-foreground">{approveModal.courseTitle}</span>
+              <span className="font-medium text-foreground">
+                {approveModal.courseTitle}
+              </span>
             </p>
           </div>
 
@@ -269,7 +302,8 @@ export default function AdminEnrollmentsPage() {
               <div className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border" />
             ) : batches.length === 0 ? (
               <div className="rounded-xl border border-warning/20 bg-warning/5 px-4 py-3 text-xs text-warning">
-                No batches found for this course. Create a batch first before approving.
+                No batches found for this course. Create a batch first before
+                approving.
               </div>
             ) : (
               <select

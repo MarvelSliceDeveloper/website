@@ -39,9 +39,22 @@ export const FILTER_TABS: FilterTabDef[] = [
   { key: "closed", label: "Closed", status: "CLOSED" },
 ];
 
-export const STATUS_CONFIG: Record<string, { label: string; classes: string }> = {
-  OPEN: { label: "Open", classes: "border-warning/30 bg-warning/10 text-warning" },
-  IN_PROGRESS: { label: "In Progress", classes: "border-accent/30 bg-accent/10 text-accent" },
-  RESOLVED: { label: "Resolved", classes: "border-success/30 bg-success/10 text-success" },
-  CLOSED: { label: "Closed", classes: "border-muted/30 bg-muted/10 text-muted" },
-};
+export const STATUS_CONFIG: Record<string, { label: string; classes: string }> =
+  {
+    OPEN: {
+      label: "Open",
+      classes: "border-warning/30 bg-warning/10 text-warning",
+    },
+    IN_PROGRESS: {
+      label: "In Progress",
+      classes: "border-accent/30 bg-accent/10 text-accent",
+    },
+    RESOLVED: {
+      label: "Resolved",
+      classes: "border-success/30 bg-success/10 text-success",
+    },
+    CLOSED: {
+      label: "Closed",
+      classes: "border-muted/30 bg-muted/10 text-muted",
+    },
+  };

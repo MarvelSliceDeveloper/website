@@ -12,9 +12,7 @@ export default function EnrollmentRejected({
   reason,
 }: EnrollmentRejectedProps) {
   return (
-    <BaseLayout
-      previewText={`Enrollment update: ${courseName}`}
-    >
+    <BaseLayout previewText={`Enrollment update: ${courseName}`}>
       <Heading style={headingStyle}>Enrollment Update</Heading>
       <Text style={textStyle}>
         We've reviewed your enrollment request for the following course.
@@ -32,7 +30,8 @@ export default function EnrollmentRejected({
         </Section>
       )}
       <Text style={textStyle}>
-        If you believe this is an error, please contact our support team for assistance.
+        If you believe this is an error, please contact our support team for
+        assistance.
       </Text>
     </BaseLayout>
   );

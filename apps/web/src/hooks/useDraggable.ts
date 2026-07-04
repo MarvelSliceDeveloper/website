@@ -29,7 +29,7 @@ export function useDraggable({
   const elementRef = useRef<HTMLDivElement | null>(null);
 
   const mouseUpRef = useRef<(() => void) | null>(null);
-  const touchEndRef = useRef<((() => void) | null)>(null);
+  const touchEndRef = useRef<(() => void) | null>(null);
 
   const clampPosition = useCallback(
     (x: number, y: number, el: HTMLDivElement | null) => {
@@ -56,23 +56,26 @@ export function useDraggable({
       }
       return { x, y };
     },
-    [bounds]
+    [bounds],
   );
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDraggingRef.current) return;
-    e.preventDefault();
-    const dx = e.clientX - dragStartRef.current.x;
-    const dy = e.clientY - dragStartRef.current.y;
-    const newPos = {
-      x: positionRef.current.x + dx,
-      y: positionRef.current.y + dy,
-    };
-    const clamped = clampPosition(newPos.x, newPos.y, elementRef.current);
-    positionRef.current = clamped;
-    dragStartRef.current = { x: e.clientX, y: e.clientY };
-    setPosition(clamped);
-  }, [clampPosition]);
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isDraggingRef.current) return;
+      e.preventDefault();
+      const dx = e.clientX - dragStartRef.current.x;
+      const dy = e.clientY - dragStartRef.current.y;
+      const newPos = {
+        x: positionRef.current.x + dx,
+        y: positionRef.current.y + dy,
+      };
+      const clamped = clampPosition(newPos.x, newPos.y, elementRef.current);
+      positionRef.current = clamped;
+      dragStartRef.current = { x: e.clientX, y: e.clientY };
+      setPosition(clamped);
+    },
+    [clampPosition],
+  );
 
   const handleMouseUp = useCallback(() => {
     if (!isDraggingRef.current) return;
@@ -83,21 +86,24 @@ export function useDraggable({
     document.removeEventListener("mouseup", mouseUpRef.current!);
   }, [handleMouseMove, onDragEnd]);
 
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (!isDraggingRef.current) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    const dx = touch.clientX - dragStartRef.current.x;
-    const dy = touch.clientY - dragStartRef.current.y;
-    const newPos = {
-      x: positionRef.current.x + dx,
-      y: positionRef.current.y + dy,
-    };
-    const clamped = clampPosition(newPos.x, newPos.y, elementRef.current);
-    positionRef.current = clamped;
-    dragStartRef.current = { x: touch.clientX, y: touch.clientY };
-    setPosition(clamped);
-  }, [clampPosition]);
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
+      if (!isDraggingRef.current) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      const dx = touch.clientX - dragStartRef.current.x;
+      const dy = touch.clientY - dragStartRef.current.y;
+      const newPos = {
+        x: positionRef.current.x + dx,
+        y: positionRef.current.y + dy,
+      };
+      const clamped = clampPosition(newPos.x, newPos.y, elementRef.current);
+      positionRef.current = clamped;
+      dragStartRef.current = { x: touch.clientX, y: touch.clientY };
+      setPosition(clamped);
+    },
+    [clampPosition],
+  );
 
   const handleTouchEnd = useCallback(() => {
     if (!isDraggingRef.current) return;
@@ -113,28 +119,42 @@ export function useDraggable({
     touchEndRef.current = handleTouchEnd;
   }, [handleMouseUp, handleTouchEnd]);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    e.stopPropagation();
-    dragStartRef.current = { x: e.clientX, y: e.clientY };
-    positionRef.current = { x: positionRef.current.x, y: positionRef.current.y };
-    isDraggingRef.current = true;
-    setIsDragging(true);
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  }, [handleMouseMove, handleMouseUp]);
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      dragStartRef.current = { x: e.clientX, y: e.clientY };
+      positionRef.current = {
+        x: positionRef.current.x,
+        y: positionRef.current.y,
+      };
+      isDraggingRef.current = true;
+      setIsDragging(true);
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    },
+    [handleMouseMove, handleMouseUp],
+  );
 
-  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-    const touch = e.touches[0];
-    dragStartRef.current = { x: touch.clientX, y: touch.clientY };
-    positionRef.current = { x: positionRef.current.x, y: positionRef.current.y };
-    isDraggingRef.current = true;
-    setIsDragging(true);
-    document.addEventListener("touchmove", handleTouchMove, { passive: false });
-    document.addEventListener("touchend", handleTouchEnd);
-  }, [handleTouchMove, handleTouchEnd]);
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+      const touch = e.touches[0];
+      dragStartRef.current = { x: touch.clientX, y: touch.clientY };
+      positionRef.current = {
+        x: positionRef.current.x,
+        y: positionRef.current.y,
+      };
+      isDraggingRef.current = true;
+      setIsDragging(true);
+      document.addEventListener("touchmove", handleTouchMove, {
+        passive: false,
+      });
+      document.addEventListener("touchend", handleTouchEnd);
+    },
+    [handleTouchMove, handleTouchEnd],
+  );
 
   const setRef = useCallback((el: HTMLDivElement | null) => {
     elementRef.current = el;

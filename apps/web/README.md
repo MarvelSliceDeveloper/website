@@ -22,12 +22,15 @@ This Next.js 14 application uses the **App Router** and serves as the unified fr
 ```
 
 ## Styling
+
 We use **Tailwind CSS** mapped to standard design tokens. Do not use raw colors (e.g., `text-red-500`); instead, use semantic tokens (e.g., `text-destructive`).
 
 ## Data Fetching
+
 This app leverages Server Components by default. Fetch data directly in `page.tsx` or `layout.tsx` when possible. Pass data down to interactive Client Components (marked with `"use client"`).
 
 Client-side requests to `/api/*` are rewritten by Next.js to the backend API defined by `NEXT_PUBLIC_API_URL` and default to `http://localhost:4000` in local development.
 
 ## Authentication
+
 The login form calls `POST /api/auth/login` on the API server and relies on the HTTP-only auth cookie. Run the API and seed demo users with `pnpm prisma:seed` before signing in.

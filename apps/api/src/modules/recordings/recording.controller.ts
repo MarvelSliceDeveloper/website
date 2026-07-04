@@ -1,17 +1,18 @@
-import { Response } from 'express';
-import { AuthRequest } from '../../middleware/auth.middleware';
-import { recordingService } from './recording.service';
+import { Response } from "express";
+import { AuthRequest } from "../../middleware/auth.middleware";
+import { recordingService } from "./recording.service";
 
 export const recordingController = {
   // GET /api/recordings?batchId= — lists recordings for a batch
   async listForBatch(req: AuthRequest, res: Response) {
     try {
       const { batchId } = req.query;
-      if (!batchId) return res.status(400).json({ error: 'batchId is required' });
+      if (!batchId)
+        return res.status(400).json({ error: "batchId is required" });
 
       const recordings = await recordingService.getRecordingsForBatch(
         batchId as string,
-        req.user!.userId
+        req.user!.userId,
       );
       res.json({ recordings });
     } catch (error: any) {
@@ -24,7 +25,7 @@ export const recordingController = {
     try {
       const recording = await recordingService.getRecording(
         req.params.id,
-        req.user!.userId
+        req.user!.userId,
       );
       res.json({ recording });
     } catch (error: any) {
@@ -37,11 +38,11 @@ export const recordingController = {
     try {
       const data = await recordingService.getPlaybackUrl(
         req.params.id,
-        req.user!.userId
+        req.user!.userId,
       );
       res.json(data);
     } catch (error: any) {
-      res.status(500).json({ error: 'Failed to fetch recording URL' });
+      res.status(500).json({ error: "Failed to fetch recording URL" });
     }
   },
 
@@ -50,13 +51,15 @@ export const recordingController = {
     try {
       const { recordingId, watchedSeconds } = req.body;
       if (!recordingId || watchedSeconds === undefined) {
-        return res.status(400).json({ error: 'recordingId and watchedSeconds are required' });
+        return res
+          .status(400)
+          .json({ error: "recordingId and watchedSeconds are required" });
       }
 
       const progress = await recordingService.updateProgress(
         req.user!.userId,
         recordingId,
-        watchedSeconds
+        watchedSeconds,
       );
       res.json({ progress });
     } catch (error: any) {
@@ -67,11 +70,15 @@ export const recordingController = {
   // POST /api/recordings/:sessionId/sync — manually syncs a recording
   async manualSync(req: AuthRequest, res: Response) {
     try {
-      const recording = await recordingService.syncRecordingsForSession(req.params.sessionId);
+      const recording = await recordingService.syncRecordingsForSession(
+        req.params.sessionId,
+      );
       if (!recording) {
-        return res.status(404).json({ error: 'Recording not found in Microsoft Teams yet' });
+        return res
+          .status(404)
+          .json({ error: "Recording not found in Microsoft Teams yet" });
       }
-      res.json({ message: 'Recording synced successfully', recording });
+      res.json({ message: "Recording synced successfully", recording });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

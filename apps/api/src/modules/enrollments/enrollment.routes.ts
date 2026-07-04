@@ -1,8 +1,15 @@
-import { Router, Response } from 'express';
-import { requireAuth, requireRole, AuthRequest } from '../../middleware/auth.middleware';
-import { UserRole } from '@lms/types';
-import { prisma } from '../../utils/prisma';
-import { notificationService, dispatchEmailsForNotification } from '../notifications/notification.service';
+import { Router, Response } from "express";
+import {
+  requireAuth,
+  requireRole,
+  AuthRequest,
+} from "../../middleware/auth.middleware";
+import { UserRole } from "@lms/types";
+import { prisma } from "../../utils/prisma";
+import {
+  notificationService,
+  dispatchEmailsForNotification,
+} from "../notifications/notification.service";
 
 const router = Router();
 
@@ -11,7 +18,7 @@ router.use(requireRole([UserRole.ADMIN]));
 
 // GET /api/admin/enrollments — list enrollment requests with filters
 // Lists all enrollment requests with optional filters
-router.get('/', async (req: AuthRequest, res: Response) => {
+router.get("/", async (req: AuthRequest, res: Response) => {
   try {
     const { status, courseId } = req.query;
 
@@ -25,7 +32,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
         user: { select: { id: true, name: true, email: true } },
         batch: { select: { id: true, name: true } },
       },
-      orderBy: { appliedAt: 'desc' },
+      orderBy: { appliedAt: "desc" },
     });
 
     // Fetch course titles separately since enrollmentRequest doesn't have a direct course relation
@@ -40,7 +47,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
       id: e.id,
       userId: e.userId,
       courseId: e.courseId,
-      courseTitle: courseMap.get(e.courseId) || 'Unknown',
+      courseTitle: courseMap.get(e.courseId) || "Unknown",
       batchId: e.batchId,
       batchName: e.batch?.name || null,
       status: e.status,
@@ -57,21 +64,27 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 
 // PATCH /api/admin/enrollments/:id/approve — approve and assign to batch
 // Approves an enrollment and assigns to a batch
-router.patch('/:id/approve', async (req: AuthRequest, res: Response) => {
+router.patch("/:id/approve", async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { batchId } = req.body;
 
     if (!batchId) {
-      return res.status(400).json({ error: 'batchId is required to approve an enrollment' });
+      return res
+        .status(400)
+        .json({ error: "batchId is required to approve an enrollment" });
     }
 
-    const enrollment = await prisma.enrollmentRequest.findUnique({ where: { id } });
+    const enrollment = await prisma.enrollmentRequest.findUnique({
+      where: { id },
+    });
     if (!enrollment) {
-      return res.status(404).json({ error: 'Enrollment request not found' });
+      return res.status(404).json({ error: "Enrollment request not found" });
     }
-    if (enrollment.status !== 'PENDING') {
-      return res.status(400).json({ error: `Cannot approve enrollment with status: ${enrollment.status}` });
+    if (enrollment.status !== "PENDING") {
+      return res.status(400).json({
+        error: `Cannot approve enrollment with status: ${enrollment.status}`,
+      });
     }
 
     // Verify batch exists and belongs to the correct course
@@ -83,19 +96,23 @@ router.patch('/:id/approve', async (req: AuthRequest, res: Response) => {
       },
     });
     if (!batch) {
-      return res.status(404).json({ error: 'Batch not found' });
+      return res.status(404).json({ error: "Batch not found" });
     }
     if (batch.courseId !== enrollment.courseId) {
-      return res.status(400).json({ error: 'Batch does not belong to the enrolled course' });
+      return res
+        .status(400)
+        .json({ error: "Batch does not belong to the enrolled course" });
     }
     if (batch.maxStudents && batch._count.enrollments >= batch.maxStudents) {
-      return res.status(400).json({ error: 'Batch has reached maximum capacity' });
+      return res
+        .status(400)
+        .json({ error: "Batch has reached maximum capacity" });
     }
 
     const updated = await prisma.enrollmentRequest.update({
       where: { id },
       data: {
-        status: 'APPROVED',
+        status: "APPROVED",
         batchId,
         reviewedAt: new Date(),
       },
@@ -103,22 +120,18 @@ router.patch('/:id/approve', async (req: AuthRequest, res: Response) => {
 
     await notificationService.create({
       userId: enrollment.userId,
-      type: 'ENROLLMENT_APPROVED',
-      title: 'Enrollment Approved!',
+      type: "ENROLLMENT_APPROVED",
+      title: "Enrollment Approved!",
       message: `Your enrollment has been approved. You've been assigned to batch "${batch.name}".`,
       metadata: { courseId: enrollment.courseId, batchId },
     });
 
-    dispatchEmailsForNotification(
-      [enrollment.userId],
-      'ENROLLMENT_APPROVED',
-      {
-        courseName: batch.course?.title || 'Course',
-        batchName: batch.name || '',
-      }
-    );
+    dispatchEmailsForNotification([enrollment.userId], "ENROLLMENT_APPROVED", {
+      courseName: batch.course?.title || "Course",
+      batchName: batch.name || "",
+    });
 
-    return res.json({ message: 'Enrollment approved', enrollment: updated });
+    return res.json({ message: "Enrollment approved", enrollment: updated });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }
@@ -126,22 +139,26 @@ router.patch('/:id/approve', async (req: AuthRequest, res: Response) => {
 
 // PATCH /api/admin/enrollments/:id/reject — reject enrollment
 // Rejects an enrollment request
-router.patch('/:id/reject', async (req: AuthRequest, res: Response) => {
+router.patch("/:id/reject", async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
-    const enrollment = await prisma.enrollmentRequest.findUnique({ where: { id } });
+    const enrollment = await prisma.enrollmentRequest.findUnique({
+      where: { id },
+    });
     if (!enrollment) {
-      return res.status(404).json({ error: 'Enrollment request not found' });
+      return res.status(404).json({ error: "Enrollment request not found" });
     }
-    if (enrollment.status !== 'PENDING') {
-      return res.status(400).json({ error: `Cannot reject enrollment with status: ${enrollment.status}` });
+    if (enrollment.status !== "PENDING") {
+      return res.status(400).json({
+        error: `Cannot reject enrollment with status: ${enrollment.status}`,
+      });
     }
 
     const updated = await prisma.enrollmentRequest.update({
       where: { id },
       data: {
-        status: 'REJECTED',
+        status: "REJECTED",
         reviewedAt: new Date(),
       },
     });
@@ -153,22 +170,19 @@ router.patch('/:id/reject', async (req: AuthRequest, res: Response) => {
 
     await notificationService.create({
       userId: enrollment.userId,
-      type: 'ENROLLMENT_REJECTED',
-      title: 'Enrollment Update',
-      message: 'Unfortunately, your enrollment request was not approved at this time.',
+      type: "ENROLLMENT_REJECTED",
+      title: "Enrollment Update",
+      message:
+        "Unfortunately, your enrollment request was not approved at this time.",
       metadata: { courseId: enrollment.courseId },
     });
 
-    dispatchEmailsForNotification(
-      [enrollment.userId],
-      'ENROLLMENT_REJECTED',
-      {
-        courseName: course?.title || 'Course',
-        reason: undefined,
-      }
-    );
+    dispatchEmailsForNotification([enrollment.userId], "ENROLLMENT_REJECTED", {
+      courseName: course?.title || "Course",
+      reason: undefined,
+    });
 
-    return res.json({ message: 'Enrollment rejected', enrollment: updated });
+    return res.json({ message: "Enrollment rejected", enrollment: updated });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }

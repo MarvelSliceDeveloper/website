@@ -23,7 +23,10 @@ export default function () {
   const loginRes = http.post(
     `${BASE_URL}/api/auth/login`,
     JSON.stringify({ email: "admin@lms.local", password: "admin123" }),
-    { headers: { "Content-Type": "application/json" }, tags: { name: "login" } }
+    {
+      headers: { "Content-Type": "application/json" },
+      tags: { name: "login" },
+    },
   );
   check(loginRes, { "login status 200": (r) => r.status === 200 });
 

@@ -8,18 +8,44 @@ import type { EnrolledCourse } from "@/lib/student-mock-data";
 interface MentorshipViewProps {
   tickets: MentorshipTicket[];
   enrolledCourses: EnrolledCourse[];
-  onSubmit?: (courseId: string, topic: string, preferredDate: string) => Promise<void>;
+  onSubmit?: (
+    courseId: string,
+    topic: string,
+    preferredDate: string,
+  ) => Promise<void>;
 }
 
-const statusConfig: Record<MentorshipTicket["status"], { label: string; classes: string }> = {
-  OPEN:      { label: "Waiting review",  classes: "border-warning/30 bg-warning/10 text-warning" },
-  ASSIGNED:  { label: "Mentor assigned", classes: "border-accent/30 bg-accent/10 text-accent" },
-  SCHEDULED: { label: "Scheduled",       classes: "border-success/30 bg-success/10 text-success" },
-  COMPLETED: { label: "Resolved",        classes: "border-primary/30 bg-primary/10 text-primary" },
-  CANCELLED: { label: "Cancelled",       classes: "border-danger/30 bg-danger/10 text-danger" },
+const statusConfig: Record<
+  MentorshipTicket["status"],
+  { label: string; classes: string }
+> = {
+  OPEN: {
+    label: "Waiting review",
+    classes: "border-warning/30 bg-warning/10 text-warning",
+  },
+  ASSIGNED: {
+    label: "Mentor assigned",
+    classes: "border-accent/30 bg-accent/10 text-accent",
+  },
+  SCHEDULED: {
+    label: "Scheduled",
+    classes: "border-success/30 bg-success/10 text-success",
+  },
+  COMPLETED: {
+    label: "Resolved",
+    classes: "border-primary/30 bg-primary/10 text-primary",
+  },
+  CANCELLED: {
+    label: "Cancelled",
+    classes: "border-danger/30 bg-danger/10 text-danger",
+  },
 };
 
-export default function MentorshipView({ tickets, enrolledCourses, onSubmit }: MentorshipViewProps) {
+export default function MentorshipView({
+  tickets,
+  enrolledCourses,
+  onSubmit,
+}: MentorshipViewProps) {
   const [showForm, setShowForm] = useState(false);
   const [courseId, setCourseId] = useState(enrolledCourses[0]?.id ?? "");
   const [topic, setTopic] = useState("");
@@ -27,8 +53,15 @@ export default function MentorshipView({ tickets, enrolledCourses, onSubmit }: M
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const openTickets = tickets.filter((t) => t.status === "OPEN" || t.status === "ASSIGNED" || t.status === "SCHEDULED");
-  const pastTickets  = tickets.filter((t) => t.status === "COMPLETED" || t.status === "CANCELLED");
+  const openTickets = tickets.filter(
+    (t) =>
+      t.status === "OPEN" ||
+      t.status === "ASSIGNED" ||
+      t.status === "SCHEDULED",
+  );
+  const pastTickets = tickets.filter(
+    (t) => t.status === "COMPLETED" || t.status === "CANCELLED",
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -54,7 +87,9 @@ export default function MentorshipView({ tickets, enrolledCourses, onSubmit }: M
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="sp-eyebrow">Support</p>
-          <h1 className="text-2xl font-bold text-foreground">1-on-1 Mentorship</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            1-on-1 Mentorship
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Need focused help? Request a private session with your instructor.
           </p>
@@ -80,16 +115,22 @@ export default function MentorshipView({ tickets, enrolledCourses, onSubmit }: M
           <p className="font-semibold text-foreground">New Session Request</p>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">Course</label>
+            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">
+              Course
+            </label>
             <select
               value={courseId}
               onChange={(e) => setCourseId(e.target.value)}
               className="field"
               required
             >
-              {enrolledCourses.filter((c) => c.status === "ACTIVE").map((c) => (
-                <option key={c.id} value={c.id}>{c.title}</option>
-              ))}
+              {enrolledCourses
+                .filter((c) => c.status === "ACTIVE")
+                .map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title}
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -120,10 +161,18 @@ export default function MentorshipView({ tickets, enrolledCourses, onSubmit }: M
           </div>
 
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setShowForm(false)} className="btn-secondary text-sm">
+            <button
+              type="button"
+              onClick={() => setShowForm(false)}
+              className="btn-secondary text-sm"
+            >
               Cancel
             </button>
-            <button type="submit" disabled={submitting} className="btn-primary text-sm">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-primary text-sm"
+            >
               {submitting ? "Submitting…" : "Submit Request"}
             </button>
           </div>
@@ -136,11 +185,15 @@ export default function MentorshipView({ tickets, enrolledCourses, onSubmit }: M
         {openTickets.length === 0 ? (
           <div className="glass-card flex flex-col items-center gap-3 py-10 text-center">
             <span className="text-3xl">🎫</span>
-            <p className="text-sm text-muted-foreground">No open or assigned tickets.</p>
+            <p className="text-sm text-muted-foreground">
+              No open or assigned tickets.
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
-            {openTickets.map((t) => <TicketCard key={t.id} ticket={t} />)}
+            {openTickets.map((t) => (
+              <TicketCard key={t.id} ticket={t} />
+            ))}
           </div>
         )}
       </div>
@@ -152,7 +205,9 @@ export default function MentorshipView({ tickets, enrolledCourses, onSubmit }: M
           <p className="text-sm text-muted-foreground">No past sessions yet.</p>
         ) : (
           <div className="space-y-3">
-            {pastTickets.map((t) => <TicketCard key={t.id} ticket={t} showNotes />)}
+            {pastTickets.map((t) => (
+              <TicketCard key={t.id} ticket={t} showNotes />
+            ))}
           </div>
         )}
       </div>
@@ -160,7 +215,13 @@ export default function MentorshipView({ tickets, enrolledCourses, onSubmit }: M
   );
 }
 
-function TicketCard({ ticket, showNotes = false }: { ticket: MentorshipTicket; showNotes?: boolean }) {
+function TicketCard({
+  ticket,
+  showNotes = false,
+}: {
+  ticket: MentorshipTicket;
+  showNotes?: boolean;
+}) {
   const [expanded, setExpanded] = useState(false);
   const cfg = statusConfig[ticket.status];
 
@@ -174,7 +235,11 @@ function TicketCard({ ticket, showNotes = false }: { ticket: MentorshipTicket; s
             {ticket.instructor && ` · Instructor: ${ticket.instructor}`}
           </p>
           <p className="mt-0.5 text-xs text-muted">
-            {new Date(ticket.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+            {new Date(ticket.createdAt).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -188,7 +253,9 @@ function TicketCard({ ticket, showNotes = false }: { ticket: MentorshipTicket; s
               Join Now
             </a>
           )}
-          <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${cfg.classes}`}>
+          <span
+            className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${cfg.classes}`}
+          >
             {cfg.label}
           </span>
         </div>

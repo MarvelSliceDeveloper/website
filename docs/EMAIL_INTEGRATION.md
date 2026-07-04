@@ -60,6 +60,7 @@ EMAIL_FROM_EMAIL=your-personal-email@gmail.com
 ```
 
 **Important for free accounts:**
+
 - `EMAIL_FROM_EMAIL` must match your Brevo account email OR be a verified sender
 - For testing, use your personal email (Gmail, Outlook, etc.)
 - You can customize `EMAIL_FROM_NAME` to "LMS Portal" or any name
@@ -79,6 +80,7 @@ pnpm dev
 ```
 
 The server logs will show:
+
 - `[email] Sent successfully, messageId: ...` when emails send
 - `[email] BREVO_API_KEY not set — skipping email send` if not configured
 
@@ -88,21 +90,21 @@ The server logs will show:
 
 All templates are React Email components in `packages/email-templates/`:
 
-| Template | Trigger | Subject |
-|----------|---------|---------|
-| `WelcomeEmail` | User registration | "Welcome to LMS Portal!" |
-| `SessionScheduled` | Live session created | "Live Session Scheduled — {course}" |
-| `SessionCancelled` | Live session cancelled | "Session Cancelled — {course}" |
-| `RecordingAvailable` | Recording uploaded | "Recording Available — {course}" |
-| `EnrollmentApproved` | Admin approves enrollment | "Enrollment Approved — {course}" |
-| `EnrollmentRejected` | Admin rejects enrollment | "Enrollment Update — {course}" |
-| `AssignmentGraded` | Assignment graded | "Assignment Graded — {title}" |
-| `MentorshipCreated` | Mentorship request submitted | "Mentorship Request Submitted" |
-| `MentorshipStatusChanged` | Mentorship status update | "Mentorship Update — {label}" |
-| `SupportTicketCreated` | Support ticket submitted | "Support Ticket Submitted" |
-| `SupportTicketReply` | Admin replies to ticket | "New Reply on Support Ticket" |
-| `SupportTicketStatusChanged` | Ticket status update | "Support Ticket Update — {label}" |
-| `CustomNotification` | Fallback/unknown type | Custom title from data |
+| Template                     | Trigger                      | Subject                             |
+| ---------------------------- | ---------------------------- | ----------------------------------- |
+| `WelcomeEmail`               | User registration            | "Welcome to LMS Portal!"            |
+| `SessionScheduled`           | Live session created         | "Live Session Scheduled — {course}" |
+| `SessionCancelled`           | Live session cancelled       | "Session Cancelled — {course}"      |
+| `RecordingAvailable`         | Recording uploaded           | "Recording Available — {course}"    |
+| `EnrollmentApproved`         | Admin approves enrollment    | "Enrollment Approved — {course}"    |
+| `EnrollmentRejected`         | Admin rejects enrollment     | "Enrollment Update — {course}"      |
+| `AssignmentGraded`           | Assignment graded            | "Assignment Graded — {title}"       |
+| `MentorshipCreated`          | Mentorship request submitted | "Mentorship Request Submitted"      |
+| `MentorshipStatusChanged`    | Mentorship status update     | "Mentorship Update — {label}"       |
+| `SupportTicketCreated`       | Support ticket submitted     | "Support Ticket Submitted"          |
+| `SupportTicketReply`         | Admin replies to ticket      | "New Reply on Support Ticket"       |
+| `SupportTicketStatusChanged` | Ticket status update         | "Support Ticket Update — {label}"   |
+| `CustomNotification`         | Fallback/unknown type        | Custom title from data              |
 
 ---
 
@@ -110,22 +112,22 @@ All templates are React Email components in `packages/email-templates/`:
 
 Every email is sent **fire-and-forget** (non-blocking). If Brevo is not configured, emails are silently skipped.
 
-| Action | Email Sent? | Type |
-|--------|-------------|------|
-| User self-registers (`POST /api/auth/register`) | ✅ | Welcome email |
-| Admin creates user (`POST /api/users`) | ✅ | Welcome email |
-| Schedule live session | ✅ | SESSION_SCHEDULED |
-| Cancel live session | ✅ | SESSION_CANCELLED |
-| Upload recording | ✅ | RECORDING_AVAILABLE |
-| Approve enrollment | ✅ | ENROLLMENT_APPROVED |
-| Reject enrollment | ✅ | ENROLLMENT_REJECTED |
-| Grade assignment | ✅ | ASSIGNMENT_GRADED |
-| Submit mentorship request | ✅ | MENTORSHIP_CREATED |
-| Update mentorship status | ✅ | MENTORSHIP_ASSIGNED/SCHEDULED/COMPLETED/CANCELLED |
-| Submit support ticket | ✅ | SUPPORT_TICKET_CREATED |
-| Reply to support ticket | ✅ | SUPPORT_TICKET_RESPONDED |
-| Update ticket status | ✅ | SUPPORT_TICKET_STATUS_CHANGED |
-| Admin sends custom notification | ✅ | CUSTOM_NOTIFICATION |
+| Action                                          | Email Sent? | Type                                              |
+| ----------------------------------------------- | ----------- | ------------------------------------------------- |
+| User self-registers (`POST /api/auth/register`) | ✅          | Welcome email                                     |
+| Admin creates user (`POST /api/users`)          | ✅          | Welcome email                                     |
+| Schedule live session                           | ✅          | SESSION_SCHEDULED                                 |
+| Cancel live session                             | ✅          | SESSION_CANCELLED                                 |
+| Upload recording                                | ✅          | RECORDING_AVAILABLE                               |
+| Approve enrollment                              | ✅          | ENROLLMENT_APPROVED                               |
+| Reject enrollment                               | ✅          | ENROLLMENT_REJECTED                               |
+| Grade assignment                                | ✅          | ASSIGNMENT_GRADED                                 |
+| Submit mentorship request                       | ✅          | MENTORSHIP_CREATED                                |
+| Update mentorship status                        | ✅          | MENTORSHIP_ASSIGNED/SCHEDULED/COMPLETED/CANCELLED |
+| Submit support ticket                           | ✅          | SUPPORT_TICKET_CREATED                            |
+| Reply to support ticket                         | ✅          | SUPPORT_TICKET_RESPONDED                          |
+| Update ticket status                            | ✅          | SUPPORT_TICKET_STATUS_CHANGED                     |
+| Admin sends custom notification                 | ✅          | CUSTOM_NOTIFICATION                               |
 
 **User control:** Each user can toggle email on/off per notification type via Notification Preferences in the UI. Only users with `email: true` for a given type receive the email. If no preference record exists (new user), email defaults to enabled.
 
@@ -193,6 +195,7 @@ curl -X POST http://localhost:4000/api/auth/login \
 ```
 
 Then perform actions:
+
 - Schedule a live session → triggers `SessionScheduled` email
 - Approve/reject enrollment → triggers enrollment email
 - Grade an assignment → triggers `AssignmentGraded` email
@@ -220,12 +223,14 @@ curl -X POST https://api.brevo.com/v3/smtp/email \
 ### Emails not sending?
 
 1. **Check API server logs:**
+
    ```bash
    # Look for email-related logs
    pnpm dev 2>&1 | grep -i email
    ```
 
 2. **Verify environment variables:**
+
    ```bash
    # In Node.js console or API health endpoint
    console.log(process.env.BREVO_API_KEY ? 'Key set' : 'Key missing');
@@ -272,8 +277,8 @@ await emailService.sendEmail({
   to: [{ email: "user@example.com", name: "John Doe" }],
   subject: "Hello",
   html: "<h1>Hello!</h1>",
-  text: "Hello!",  // Optional plain text fallback
-  tags: ["test"]   // Optional tags for tracking
+  text: "Hello!", // Optional plain text fallback
+  tags: ["test"], // Optional tags for tracking
 });
 ```
 
@@ -284,7 +289,7 @@ Send welcome email to new user.
 ```typescript
 await emailService.sendWelcomeEmail({
   name: "John Doe",
-  email: "john@example.com"
+  email: "john@example.com",
 });
 ```
 
@@ -301,8 +306,8 @@ await emailService.sendNotificationEmail(
     courseName: "React Masterclass",
     batchName: "Batch A",
     scheduledAt: "2024-01-15T10:00:00Z",
-    joinUrl: "https://teams.microsoft.com/..."
-  }
+    joinUrl: "https://teams.microsoft.com/...",
+  },
 );
 ```
 
@@ -357,12 +362,12 @@ const NOTIFICATION_EMAIL_TEMPLATES = {
 
 ## Free Tier Limitations
 
-| Feature | Free Tier | Paid ($9+/month) |
-|---------|-----------|------------------|
-| Emails/day | 300 | 10,000+ |
-| Sender email | Your Brevo email only | Custom domains |
-| Brevo branding | Included | Removable |
-| API access | Full | Full |
+| Feature        | Free Tier             | Paid ($9+/month) |
+| -------------- | --------------------- | ---------------- |
+| Emails/day     | 300                   | 10,000+          |
+| Sender email   | Your Brevo email only | Custom domains   |
+| Brevo branding | Included              | Removable        |
+| API access     | Full                  | Full             |
 
 **Recommendation:** Free tier is perfect for development and small deployments.
 

@@ -42,11 +42,13 @@ const statusStyles: Record<string, string> = {
 
 export default function AdminCoursesPage() {
   return (
-    <Suspense fallback={
-      <div className="glass-card p-12 text-center">
-        <p className="text-muted animate-pulse">Loading courses...</p>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="glass-card p-12 text-center">
+          <p className="text-muted animate-pulse">Loading courses...</p>
+        </div>
+      }
+    >
       <CoursesPageContent />
     </Suspense>
   );
@@ -72,7 +74,10 @@ function CoursesPageContent() {
       if (statusFilter) params.status = statusFilter;
       if (search) params.search = search;
 
-      const data = await api.get<CourseListResponse>("/api/admin/courses", params);
+      const data = await api.get<CourseListResponse>(
+        "/api/admin/courses",
+        params,
+      );
       setCourses(data.courses);
       setTotal(data.total);
     } catch {
@@ -111,9 +116,10 @@ function CoursesPageContent() {
 
   const handlePublish = async (id: string) => {
     try {
-      const result = await api.post<{ published: boolean; checklist: ChecklistItem[] }>(
-        `/api/admin/courses/${id}/publish`
-      );
+      const result = await api.post<{
+        published: boolean;
+        checklist: ChecklistItem[];
+      }>(`/api/admin/courses/${id}/publish`);
       if (!result.published) {
         const failedItems = result.checklist
           .filter((c: ChecklistItem) => !c.passed)
@@ -153,7 +159,12 @@ function CoursesPageContent() {
   };
 
   const handlePermanentDelete = async (id: string, title: string) => {
-    if (!confirm(`Permanently delete "${title}"? This will remove all associated modules, batches, enrollments, and data. This cannot be undone.`)) return;
+    if (
+      !confirm(
+        `Permanently delete "${title}"? This will remove all associated modules, batches, enrollments, and data. This cannot be undone.`,
+      )
+    )
+      return;
     setPurging(id);
     try {
       await api.delete(`/api/admin/courses/${id}/permanent`);
@@ -215,14 +226,18 @@ function CoursesPageContent() {
       key: "_count.modules",
       label: "Modules",
       render: (_, course) => (
-        <span className="text-sm text-muted-foreground">{course._count.modules}</span>
+        <span className="text-sm text-muted-foreground">
+          {course._count.modules}
+        </span>
       ),
     },
     {
       key: "_count.batches",
       label: "Batches",
       render: (_, course) => (
-        <span className="text-sm text-muted-foreground">{course._count.batches}</span>
+        <span className="text-sm text-muted-foreground">
+          {course._count.batches}
+        </span>
       ),
     },
     {
@@ -315,7 +330,11 @@ function CoursesPageContent() {
       <AdminPageHeader
         title="Course Management"
         description={`${total} course${total !== 1 ? "s" : ""} total`}
-        action={<Link href="/admin/courses/new" className="btn-primary">+ Create Course</Link>}
+        action={
+          <Link href="/admin/courses/new" className="btn-primary">
+            + Create Course
+          </Link>
+        }
       />
 
       <div className="flex flex-wrap items-center gap-3">
@@ -353,7 +372,14 @@ function CoursesPageContent() {
           icon={IconBook}
           title="No courses yet"
           description="Create your first course to get started."
-          action={<Link href="/admin/courses/new" className="btn-primary mt-4 inline-flex">+ Create Course</Link>}
+          action={
+            <Link
+              href="/admin/courses/new"
+              className="btn-primary mt-4 inline-flex"
+            >
+              + Create Course
+            </Link>
+          }
         />
       ) : (
         <DataTable columns={columns} data={courses} />

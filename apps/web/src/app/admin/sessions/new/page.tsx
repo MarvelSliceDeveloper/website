@@ -4,7 +4,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { IconCalendar, IconVideo, IconUsersGroup, IconBook, IconLink } from "@tabler/icons-react";
+import {
+  IconCalendar,
+  IconVideo,
+  IconUsersGroup,
+  IconBook,
+  IconLink,
+} from "@tabler/icons-react";
 
 interface Course {
   id: string;
@@ -39,13 +45,13 @@ interface Instructor {
 export default function ScheduleSessionPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
-  
+
   // Data lists
   const [courses, setCourses] = useState<Course[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
   const [instructors, setInstructors] = useState<Instructor[]>([]);
-  
+
   // Loading states
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [loadingBatches, setLoadingBatches] = useState(false);
@@ -66,7 +72,8 @@ export default function ScheduleSessionPage() {
 
   // Fetch courses and instructors on mount
   useEffect(() => {
-    api.get<{ courses: Course[] }>("/api/admin/courses?limit=100")
+    api
+      .get<{ courses: Course[] }>("/api/admin/courses?limit=100")
       .then((data) => setCourses(data.courses || []))
       .catch((err: unknown) => {
         console.error("Failed to load courses:", err);
@@ -74,7 +81,8 @@ export default function ScheduleSessionPage() {
       })
       .finally(() => setLoadingCourses(false));
 
-    api.get<Instructor[]>("/api/admin/batches/instructors")
+    api
+      .get<Instructor[]>("/api/admin/batches/instructors")
       .then((data) => setInstructors(data || []))
       .catch((err: unknown) => {
         console.error("Failed to load instructors:", err);
@@ -88,7 +96,13 @@ export default function ScheduleSessionPage() {
       Promise.resolve().then(() => {
         setBatches([]);
         setModules([]);
-        setForm((prev) => ({ ...prev, batchId: "", moduleId: "", instructorOverride: "", customJoinUrl: "" }));
+        setForm((prev) => ({
+          ...prev,
+          batchId: "",
+          moduleId: "",
+          instructorOverride: "",
+          customJoinUrl: "",
+        }));
       });
       return;
     }
@@ -96,10 +110,17 @@ export default function ScheduleSessionPage() {
     Promise.resolve().then(() => {
       setLoadingBatches(true);
       setLoadingModules(true);
-      setForm((prev) => ({ ...prev, batchId: "", moduleId: "", instructorOverride: "", customJoinUrl: "" }));
+      setForm((prev) => ({
+        ...prev,
+        batchId: "",
+        moduleId: "",
+        instructorOverride: "",
+        customJoinUrl: "",
+      }));
     });
-    
-    api.get<Batch[]>(`/api/admin/batches?courseId=${selectedCourseId}`)
+
+    api
+      .get<Batch[]>(`/api/admin/batches?courseId=${selectedCourseId}`)
       .then((data) => setBatches(Array.isArray(data) ? data : []))
       .catch((err: unknown) => {
         console.error("Failed to load course batches:", err);
@@ -107,7 +128,8 @@ export default function ScheduleSessionPage() {
       })
       .finally(() => setLoadingBatches(false));
 
-    api.get<{ modules: Module[] }>(`/api/admin/courses/${selectedCourseId}`)
+    api
+      .get<{ modules: Module[] }>(`/api/admin/courses/${selectedCourseId}`)
       .then((data) => setModules(data.modules || []))
       .catch((err: unknown) => {
         console.error("Failed to load course modules:", err);
@@ -161,7 +183,9 @@ export default function ScheduleSessionPage() {
       router.push("/admin/sessions");
       router.refresh();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to schedule live session.");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to schedule live session.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -184,7 +208,8 @@ export default function ScheduleSessionPage() {
           Schedule Live Session
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Select a course, assign the session to an active student batch, and schedule the online meeting.
+          Select a course, assign the session to an active student batch, and
+          schedule the online meeting.
         </p>
       </div>
 
@@ -225,7 +250,8 @@ export default function ScheduleSessionPage() {
               <div className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border" />
             ) : batches.length === 0 ? (
               <div className="rounded-xl border border-warning/20 bg-warning/5 px-4 py-3 text-xs text-warning">
-                No active student batches found for this course. Please create a batch for this course first.
+                No active student batches found for this course. Please create a
+                batch for this course first.
               </div>
             ) : (
               <select
@@ -260,7 +286,9 @@ export default function ScheduleSessionPage() {
                 onChange={(e) => update("moduleId", e.target.value)}
                 className="field w-full"
               >
-                <option value="">-- General / Introductory Session (No specific module) --</option>
+                <option value="">
+                  -- General / Introductory Session (No specific module) --
+                </option>
                 {modules.map((mod) => (
                   <option key={mod.id} value={mod.id}>
                     Module {mod.order}: {mod.title}
@@ -269,7 +297,8 @@ export default function ScheduleSessionPage() {
               </select>
             )}
             <p className="mt-1 text-xs text-muted">
-              Optional. Linking to a module organizes the session under that course section.
+              Optional. Linking to a module organizes the session under that
+              course section.
             </p>
           </div>
         )}
@@ -292,13 +321,15 @@ export default function ScheduleSessionPage() {
                 <option value="">— Use batch instructor (default)</option>
                 {instructors.map((inst) => (
                   <option key={inst.id} value={inst.id}>
-                    {inst.name} ({inst.email}) {inst.role === "ADMIN" ? "🛡️ Admin" : "👨‍🏫 Instructor"}
+                    {inst.name} ({inst.email}){" "}
+                    {inst.role === "ADMIN" ? "🛡️ Admin" : "👨‍🏫 Instructor"}
                   </option>
                 ))}
               </select>
             )}
             <p className="mt-1 text-xs text-muted">
-              Optional. Override the batch&apos;s default instructor — useful if you (admin) want to lead the session yourself.
+              Optional. Override the batch&apos;s default instructor — useful if
+              you (admin) want to lead the session yourself.
             </p>
           </div>
         )}
@@ -318,7 +349,9 @@ export default function ScheduleSessionPage() {
               className="field w-full"
             />
             <p className="mt-1 text-xs text-muted">
-              Paste a Google Meet, Zoom, or Teams link here. Leave blank to auto-create a Teams meeting via Graph API (requires a Teams license).
+              Paste a Google Meet, Zoom, or Teams link here. Leave blank to
+              auto-create a Teams meeting via Graph API (requires a Teams
+              license).
             </p>
           </div>
         )}
@@ -380,8 +413,10 @@ export default function ScheduleSessionPage() {
           <div>
             <p className="font-semibold text-foreground mb-0.5">Meeting Link</p>
             <p>
-              Provide a Custom Join URL above (Google Meet, Zoom, etc.) — or leave it blank to auto-create a Teams meeting
-              via Microsoft Graph (requires a Teams license). Students receive the link in their dashboard.
+              Provide a Custom Join URL above (Google Meet, Zoom, etc.) — or
+              leave it blank to auto-create a Teams meeting via Microsoft Graph
+              (requires a Teams license). Students receive the link in their
+              dashboard.
             </p>
           </div>
         </div>
@@ -398,7 +433,9 @@ export default function ScheduleSessionPage() {
           <button
             type="submit"
             className="btn-primary flex items-center gap-2"
-            disabled={submitting || loadingCourses || !selectedCourseId || !form.batchId}
+            disabled={
+              submitting || loadingCourses || !selectedCourseId || !form.batchId
+            }
           >
             {submitting ? (
               <>

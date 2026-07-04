@@ -12,9 +12,7 @@ export default function EnrollmentApproved({
   batchName,
 }: EnrollmentApprovedProps) {
   return (
-    <BaseLayout
-      previewText={`Enrollment approved: ${courseName}`}
-    >
+    <BaseLayout previewText={`Enrollment approved: ${courseName}`}>
       <Heading style={headingStyle}>Enrollment Approved! 🎉</Heading>
       <Text style={textStyle}>
         Great news! Your enrollment has been approved.
@@ -26,7 +24,8 @@ export default function EnrollmentApproved({
         <Text style={valueStyle}>{batchName}</Text>
       </Section>
       <Text style={textStyle}>
-        You now have full access to the course materials, live sessions, and recordings.
+        You now have full access to the course materials, live sessions, and
+        recordings.
       </Text>
       <Section style={buttonContainerStyle}>
         <Button

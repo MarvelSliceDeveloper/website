@@ -6,24 +6,24 @@ A **full-featured Learning Management System** built as a pnpm Turborepo monorep
 
 ## Who Uses It
 
-| User | Portal | What They Do |
-|---|---|---|
-| **Admin** | `/admin/*` | Create courses, manage batches, schedule live sessions, assign mentors, review enrollments, manage users |
-| **Instructor** | `/instructor/*` | Take live sessions, create MCQ assignments, grade submissions, mentor students |
-| **Student** | `/student/` (single-page) | Enroll in courses, attend live classes, watch recordings, submit assignments, take quizzes, track progress, claim certificates |
+| User           | Portal                    | What They Do                                                                                                                   |
+| -------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Admin**      | `/admin/*`                | Create courses, manage batches, schedule live sessions, assign mentors, review enrollments, manage users                       |
+| **Instructor** | `/instructor/*`           | Take live sessions, create MCQ assignments, grade submissions, mentor students                                                 |
+| **Student**    | `/student/` (single-page) | Enroll in courses, attend live classes, watch recordings, submit assignments, take quizzes, track progress, claim certificates |
 
 ---
 
 ## Tech Stack
 
-| Layer | Tech |
-|---|---|
-| **Frontend** | Next.js 16 + React 19 + TypeScript 5, Tailwind CSS v4, Tabler Icons |
-| **Backend** | Express + TypeScript (compiled via tsup), Prisma ORM, PostgreSQL 16, Redis 7 |
-| **Auth** | JWT (httpOnly cookies), bcryptjs, role-based guards (STUDENT / INSTRUCTOR / ADMIN) |
-| **Payments** | Razorpay |
-| **External** | Microsoft Graph API (Teams meetings, calendar sync, recording sync) |
-| **Infra** | Docker Compose (Postgres + pgAdmin + Redis), Turborepo + pnpm workspaces |
+| Layer        | Tech                                                                               |
+| ------------ | ---------------------------------------------------------------------------------- |
+| **Frontend** | Next.js 16 + React 19 + TypeScript 5, Tailwind CSS v4, Tabler Icons                |
+| **Backend**  | Express + TypeScript (compiled via tsup), Prisma ORM, PostgreSQL 16, Redis 7       |
+| **Auth**     | JWT (httpOnly cookies), bcryptjs, role-based guards (STUDENT / INSTRUCTOR / ADMIN) |
+| **Payments** | Razorpay                                                                           |
+| **External** | Microsoft Graph API (Teams meetings, calendar sync, recording sync)                |
+| **Infra**    | Docker Compose (Postgres + pgAdmin + Redis), Turborepo + pnpm workspaces           |
 
 ---
 
@@ -50,35 +50,42 @@ LMS/
 ## Key Features
 
 ### Course Management
+
 - CRUD courses with thumbnails, modules, resources
 - Publish / unpublish / archive lifecycle
 - Student catalogue browsing + enrollment with approval pipeline
 
 ### Batch (Cohort) Management
+
 - Group students into batches per course
 - Assign instructors to batches
 - Track start/end dates and max student capacity
 
 ### Live Sessions
+
 - Schedule sessions with auto-created Microsoft Teams meetings
 - Or provide custom join URLs (Zoom, Google Meet)
 - Attendance tracking, recording sync, calendar integration
 
 ### Assignments & Quizzes
+
 - Instructors create MCQ quizzes with auto-grading
 - File-upload assignments for subjective work
 - Grade override and feedback system
 
 ### Mentorship
+
 - Students request 1-on-1 mentorship
 - Admin assigns mentors; mentor and student schedule sessions
 - Full lifecycle: OPEN → ASSIGNED → SCHEDULED → COMPLETED / CANCELLED
 
 ### Certificates
+
 - Auto-issued when students complete all recordings in a course
 - Claimable certificates page with print support
 
 ### Microsoft Graph Integration
+
 - Teams meeting creation, calendar sync, recording retrieval
 - Webhook subscriptions for real-time updates
 - Token refresh with AES-256-GCM encrypted storage
@@ -101,12 +108,14 @@ pnpm dev                      # API :4000 + Web :3000
 ## Testing
 
 ### Playwright (E2E)
+
 - **`apps/web/e2e/`** — 54 tests across 4 spec files (auth, student, instructor, admin)
 - Chromium-only via `playwright install chromium`
 - Run: `pnpm test:e2e` (requires API + Web running)
 - API-driven data setup + UI verification pattern
 
 ### k6 (Load Testing)
+
 - **`apps/api/k6/`** — 4 test profiles:
   - `smoke.js` — 1 VU, 10s sanity check (health + login + /me)
   - `load.js` — ramp 0→20→50 VU across 3.5 min, p95 < 1s threshold

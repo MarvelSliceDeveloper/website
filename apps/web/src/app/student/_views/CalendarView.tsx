@@ -49,14 +49,14 @@ function statusColor(status: SessionStatus): string {
 export default function CalendarView({ events }: CalendarViewProps) {
   const fcEvents = Array.isArray(events)
     ? events.map((e) => ({
-      id: e.id,
-      title: e.title,
-      start: e.startAt,
-      end: e.endAt,
-      backgroundColor: eventColor(e.type),
-      borderColor: eventColor(e.type),
-      url: e.joinUrl,
-    }))
+        id: e.id,
+        title: e.title,
+        start: e.startAt,
+        end: e.endAt,
+        backgroundColor: eventColor(e.type),
+        borderColor: eventColor(e.type),
+        url: e.joinUrl,
+      }))
     : [];
 
   return (
@@ -78,7 +78,10 @@ export default function CalendarView({ events }: CalendarViewProps) {
           { color: "#6366f1", label: "Mentorship" },
         ].map((l) => (
           <span key={l.label} className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full" style={{ background: l.color }} />
+            <span
+              className="h-2.5 w-2.5 rounded-full"
+              style={{ background: l.color }}
+            />
             {l.label}
           </span>
         ))}
@@ -101,7 +104,9 @@ export default function CalendarView({ events }: CalendarViewProps) {
         {events.length === 0 ? (
           <div className="glass-card flex flex-col items-center gap-3 py-12 text-center">
             <span className="text-4xl">📅</span>
-            <p className="text-sm text-muted-foreground">No sessions this week.</p>
+            <p className="text-sm text-muted-foreground">
+              No sessions this week.
+            </p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -111,21 +116,26 @@ export default function CalendarView({ events }: CalendarViewProps) {
               const status = getSessionStatus(e.startAt, e.endAt);
 
               return (
-                <div key={e.id} className="glass-card flex items-center gap-4 p-4">
+                <div
+                  key={e.id}
+                  className="glass-card flex items-center gap-4 p-4"
+                >
                   <div
                     className="h-8 w-1 flex-shrink-0 rounded-full"
                     style={{ background: eventColor(e.type) }}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">{e.title}</p>
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {e.title}
+                    </p>
                     <p className="text-xs text-muted">
                       {isValid
                         ? start.toLocaleString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })
+                            day: "numeric",
+                            month: "short",
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })
                         : "Date not available"}
                     </p>
                   </div>

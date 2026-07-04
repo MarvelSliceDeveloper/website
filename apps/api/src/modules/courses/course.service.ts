@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { prisma } from '../../utils/prisma';
+import { z } from "zod";
+import { prisma } from "../../utils/prisma";
 
 // --- Zod Schemas ---
 
@@ -32,10 +32,10 @@ function generateSlug(title: string): string {
   return title
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 // Ensures a slug is unique by appending a counter if needed
@@ -51,7 +51,10 @@ async function ensureUniqueSlug(baseSlug: string): Promise<string> {
       counter++;
     }
   } catch (err: any) {
-    console.warn('Could not verify slug uniqueness (DB may be outdated):', err.message || err);
+    console.warn(
+      "Could not verify slug uniqueness (DB may be outdated):",
+      err.message || err,
+    );
     return baseSlug;
   }
 
@@ -62,7 +65,10 @@ async function ensureUniqueSlug(baseSlug: string): Promise<string> {
 
 export const courseService = {
   // Creates a new course in DRAFT status
-  async createCourse(adminUserId: string, data: z.infer<typeof CreateCourseSchema>) {
+  async createCourse(
+    adminUserId: string,
+    data: z.infer<typeof CreateCourseSchema>,
+  ) {
     const slug = await ensureUniqueSlug(generateSlug(data.title));
 
     return prisma.course.create({
@@ -77,7 +83,7 @@ export const courseService = {
         thumbnailUrl: data.thumbnailUrl,
         coverImageUrl: data.coverImageUrl,
         createdBy: adminUserId,
-        status: 'DRAFT',
+        status: "DRAFT",
       },
     });
   },
@@ -98,7 +104,7 @@ export const courseService = {
 
     // Exclude archived by default unless explicitly requested
     if (!filters.status) {
-      where.status = { not: 'ARCHIVED' };
+      where.status = { not: "ARCHIVED" };
     }
 
     if (filters.category) {
@@ -107,8 +113,8 @@ export const courseService = {
 
     if (filters.search) {
       where.OR = [
-        { title: { contains: filters.search, mode: 'insensitive' } },
-        { description: { contains: filters.search, mode: 'insensitive' } },
+        { title: { contains: filters.search, mode: "insensitive" } },
+        { description: { contains: filters.search, mode: "insensitive" } },
       ];
     }
 
@@ -122,7 +128,7 @@ export const courseService = {
         include: {
           _count: { select: { modules: true, batches: true } },
         },
-        orderBy: { updatedAt: 'desc' },
+        orderBy: { updatedAt: "desc" },
         skip,
         take: limit,
       }),
@@ -138,23 +144,28 @@ export const courseService = {
       where: { id: courseId },
       include: {
         modules: {
-          orderBy: { order: 'asc' },
+          orderBy: { order: "asc" },
           include: {
-            lessons: { orderBy: { order: 'asc' } },
+            lessons: { orderBy: { order: "asc" } },
           },
         },
         _count: { select: { batches: true } },
       },
     });
 
-    if (!course) throw new Error('Course not found');
+    if (!course) throw new Error("Course not found");
     return course;
   },
 
   // Updates course fields
-  async updateCourse(courseId: string, data: z.infer<typeof UpdateCourseSchema>) {
-    const existing = await prisma.course.findUnique({ where: { id: courseId } });
-    if (!existing) throw new Error('Course not found');
+  async updateCourse(
+    courseId: string,
+    data: z.infer<typeof UpdateCourseSchema>,
+  ) {
+    const existing = await prisma.course.findUnique({
+      where: { id: courseId },
+    });
+    if (!existing) throw new Error("Course not found");
 
     const updateData: any = { ...data };
 
@@ -171,12 +182,14 @@ export const courseService = {
 
   // Soft-deletes a course (sets status to ARCHIVED)
   async deleteCourse(courseId: string) {
-    const existing = await prisma.course.findUnique({ where: { id: courseId } });
-    if (!existing) throw new Error('Course not found');
+    const existing = await prisma.course.findUnique({
+      where: { id: courseId },
+    });
+    if (!existing) throw new Error("Course not found");
 
     return prisma.course.update({
       where: { id: courseId },
-      data: { status: 'ARCHIVED' },
+      data: { status: "ARCHIVED" },
     });
   },
 
@@ -191,32 +204,41 @@ export const courseService = {
       },
     });
 
-    if (!course) throw new Error('Course not found');
+    if (!course) throw new Error("Course not found");
 
-    const allLessons = course.modules.flatMap(m => m.lessons);
+    const allLessons = course.modules.flatMap((m) => m.lessons);
 
     // Pre-publish checklist
     const checklist = [
-      { item: 'Course has a title', passed: !!course.title },
-      { item: 'Course has a description', passed: !!course.description && course.description.length > 0 },
-      { item: 'At least one module exists', passed: course.modules.length > 0 },
-      { item: 'At least one lesson has a video', passed: allLessons.some(l => !!l.videoUrl || !!l.videoEmbedId) },
-      { item: 'Thumbnail image is uploaded', passed: !!course.thumbnailUrl },
+      { item: "Course has a title", passed: !!course.title },
+      {
+        item: "Course has a description",
+        passed: !!course.description && course.description.length > 0,
+      },
+      { item: "At least one module exists", passed: course.modules.length > 0 },
+      {
+        item: "At least one lesson has a video",
+        passed: allLessons.some((l) => !!l.videoUrl || !!l.videoEmbedId),
+      },
+      { item: "Thumbnail image is uploaded", passed: !!course.thumbnailUrl },
     ];
 
-    const allPassed = checklist.every(c => c.passed);
+    const allPassed = checklist.every((c) => c.passed);
 
     if (!allPassed) {
       return { published: false, checklist };
     }
 
     // Compute total duration from lessons
-    const totalSeconds = allLessons.reduce((sum, l) => sum + (l.durationSeconds || 0), 0);
+    const totalSeconds = allLessons.reduce(
+      (sum, l) => sum + (l.durationSeconds || 0),
+      0,
+    );
 
     await prisma.course.update({
       where: { id: courseId },
       data: {
-        status: 'PUBLISHED',
+        status: "PUBLISHED",
         publishedAt: new Date(),
         durationMinutes: Math.ceil(totalSeconds / 60) || null,
       },
@@ -227,81 +249,150 @@ export const courseService = {
 
   // Unpublishes a course (reverts to DRAFT)
   async unpublishCourse(courseId: string) {
-    const existing = await prisma.course.findUnique({ where: { id: courseId } });
-    if (!existing) throw new Error('Course not found');
-    if (existing.status !== 'PUBLISHED') throw new Error('Course is not published');
+    const existing = await prisma.course.findUnique({
+      where: { id: courseId },
+    });
+    if (!existing) throw new Error("Course not found");
+    if (existing.status !== "PUBLISHED")
+      throw new Error("Course is not published");
 
     return prisma.course.update({
       where: { id: courseId },
-      data: { status: 'DRAFT', publishedAt: null },
+      data: { status: "DRAFT", publishedAt: null },
     });
   },
 
   async recoverCourse(courseId: string) {
-    const existing = await prisma.course.findUnique({ where: { id: courseId } });
-    if (!existing) throw new Error('Course not found');
-    if (existing.status !== 'ARCHIVED') throw new Error('Only archived courses can be recovered');
+    const existing = await prisma.course.findUnique({
+      where: { id: courseId },
+    });
+    if (!existing) throw new Error("Course not found");
+    if (existing.status !== "ARCHIVED")
+      throw new Error("Only archived courses can be recovered");
 
     return prisma.course.update({
       where: { id: courseId },
-      data: { status: 'DRAFT' },
+      data: { status: "DRAFT" },
     });
   },
 
   // Permanently deletes a course and all related records (irreversible)
   async permanentDeleteCourse(courseId: string) {
-    const existing = await prisma.course.findUnique({ where: { id: courseId } });
-    if (!existing) throw new Error('Course not found');
+    const existing = await prisma.course.findUnique({
+      where: { id: courseId },
+    });
+    if (!existing) throw new Error("Course not found");
 
     await prisma.$transaction(async (tx) => {
       // Gather batch & module IDs for cascading cleanups
-      const batchIds = (await tx.batch.findMany({ where: { courseId }, select: { id: true } })).map((b: { id: string }) => b.id);
-      const moduleIds = (await tx.module.findMany({ where: { courseId }, select: { id: true } })).map((m: { id: string }) => m.id);
+      const batchIds = (
+        await tx.batch.findMany({ where: { courseId }, select: { id: true } })
+      ).map((b: { id: string }) => b.id);
+      const moduleIds = (
+        await tx.module.findMany({ where: { courseId }, select: { id: true } })
+      ).map((m: { id: string }) => m.id);
 
       // Collect session IDs from batches and modules
       const orConditions: Record<string, unknown>[] = [];
       if (batchIds.length) orConditions.push({ batchId: { in: batchIds } });
       if (moduleIds.length) orConditions.push({ moduleId: { in: moduleIds } });
       const sessionIds = orConditions.length
-        ? (await tx.liveSession.findMany({ where: { OR: orConditions }, select: { id: true } })).map((s: { id: string }) => s.id)
+        ? (
+            await tx.liveSession.findMany({
+              where: { OR: orConditions },
+              select: { id: true },
+            })
+          ).map((s: { id: string }) => s.id)
         : [];
 
       // Recording → Progress chain
       if (sessionIds.length) {
-        const recordingIds = (await tx.recording.findMany({ where: { sessionId: { in: sessionIds } }, select: { id: true } })).map((r: { id: string }) => r.id);
-        await tx.progress.deleteMany({ where: { recordingId: { in: recordingIds } } });
-        await tx.recording.deleteMany({ where: { sessionId: { in: sessionIds } } });
-        await tx.attendance.deleteMany({ where: { sessionId: { in: sessionIds } } });
-        await tx.calendarEvent.deleteMany({ where: { sessionId: { in: sessionIds } } });
+        const recordingIds = (
+          await tx.recording.findMany({
+            where: { sessionId: { in: sessionIds } },
+            select: { id: true },
+          })
+        ).map((r: { id: string }) => r.id);
+        await tx.progress.deleteMany({
+          where: { recordingId: { in: recordingIds } },
+        });
+        await tx.recording.deleteMany({
+          where: { sessionId: { in: sessionIds } },
+        });
+        await tx.attendance.deleteMany({
+          where: { sessionId: { in: sessionIds } },
+        });
+        await tx.calendarEvent.deleteMany({
+          where: { sessionId: { in: sessionIds } },
+        });
         await tx.liveSession.deleteMany({ where: { id: { in: sessionIds } } });
       }
 
       // Assignment chain (assignments may link to course or its batches)
       const assignmentWhere: Record<string, unknown>[] = [{ courseId }];
       if (batchIds.length) assignmentWhere.push({ batchId: { in: batchIds } });
-      const assignmentIds = (await tx.assignment.findMany({ where: { OR: assignmentWhere }, select: { id: true } })).map((a: { id: string }) => a.id);
+      const assignmentIds = (
+        await tx.assignment.findMany({
+          where: { OR: assignmentWhere },
+          select: { id: true },
+        })
+      ).map((a: { id: string }) => a.id);
 
       if (assignmentIds.length) {
-        const questionIds = (await tx.assignmentQuestion.findMany({ where: { assignmentId: { in: assignmentIds } }, select: { id: true } })).map((q: { id: string }) => q.id);
-        await tx.assignmentMcqOption.deleteMany({ where: { questionId: { in: questionIds } } });
-        await tx.studentQuestionResponse.deleteMany({ where: { questionId: { in: questionIds } } });
-        await tx.assignmentQuestion.deleteMany({ where: { assignmentId: { in: assignmentIds } } });
+        const questionIds = (
+          await tx.assignmentQuestion.findMany({
+            where: { assignmentId: { in: assignmentIds } },
+            select: { id: true },
+          })
+        ).map((q: { id: string }) => q.id);
+        await tx.assignmentMcqOption.deleteMany({
+          where: { questionId: { in: questionIds } },
+        });
+        await tx.studentQuestionResponse.deleteMany({
+          where: { questionId: { in: questionIds } },
+        });
+        await tx.assignmentQuestion.deleteMany({
+          where: { assignmentId: { in: assignmentIds } },
+        });
 
-        const submissionIds = (await tx.assignmentSubmission.findMany({ where: { assignmentId: { in: assignmentIds } }, select: { id: true } })).map((s: { id: string }) => s.id);
-        await tx.studentQuestionResponse.deleteMany({ where: { submissionId: { in: submissionIds } } });
-        await tx.assignmentSubmission.deleteMany({ where: { assignmentId: { in: assignmentIds } } });
+        const submissionIds = (
+          await tx.assignmentSubmission.findMany({
+            where: { assignmentId: { in: assignmentIds } },
+            select: { id: true },
+          })
+        ).map((s: { id: string }) => s.id);
+        await tx.studentQuestionResponse.deleteMany({
+          where: { submissionId: { in: submissionIds } },
+        });
+        await tx.assignmentSubmission.deleteMany({
+          where: { assignmentId: { in: assignmentIds } },
+        });
 
-        await tx.assignment.deleteMany({ where: { id: { in: assignmentIds } } });
+        await tx.assignment.deleteMany({
+          where: { id: { in: assignmentIds } },
+        });
       }
 
       // Enrollment → Payment
-      const enrollmentIds = (await tx.enrollmentRequest.findMany({ where: { courseId }, select: { id: true } })).map((e: { id: string }) => e.id);
-      await tx.payment.deleteMany({ where: { enrollmentId: { in: enrollmentIds } } });
+      const enrollmentIds = (
+        await tx.enrollmentRequest.findMany({
+          where: { courseId },
+          select: { id: true },
+        })
+      ).map((e: { id: string }) => e.id);
+      await tx.payment.deleteMany({
+        where: { enrollmentId: { in: enrollmentIds } },
+      });
       await tx.enrollmentRequest.deleteMany({ where: { courseId } });
 
       // Quiz → Question (via module)
       if (moduleIds.length) {
-        const quizIds = (await tx.quiz.findMany({ where: { moduleId: { in: moduleIds } }, select: { id: true } })).map((q: { id: string }) => q.id);
+        const quizIds = (
+          await tx.quiz.findMany({
+            where: { moduleId: { in: moduleIds } },
+            select: { id: true },
+          })
+        ).map((q: { id: string }) => q.id);
         await tx.question.deleteMany({ where: { quizId: { in: quizIds } } });
         await tx.quiz.deleteMany({ where: { moduleId: { in: moduleIds } } });
       }

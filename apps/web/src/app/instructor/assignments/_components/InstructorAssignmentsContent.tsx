@@ -94,8 +94,10 @@ export default function InstructorAssignmentsContent() {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [submissions, setSubmissions] = useState<StudentSubmission[]>([]);
-  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
-  const [selectedSubmission, setSelectedSubmission] = useState<SubmissionDetail | null>(null);
+  const [selectedAssignment, setSelectedAssignment] =
+    useState<Assignment | null>(null);
+  const [selectedSubmission, setSelectedSubmission] =
+    useState<SubmissionDetail | null>(null);
 
   // Loading flags
   const [loading, setLoading] = useState(true);
@@ -142,7 +144,11 @@ export default function InstructorAssignmentsContent() {
         setAssignments(assignmentsRes.assignments || []);
       } catch (err: unknown) {
         console.error("Error loading instructor assignment data:", err);
-        if (err instanceof Error && (err.message?.includes("Authentication") || err.message?.includes("401"))) {
+        if (
+          err instanceof Error &&
+          (err.message?.includes("Authentication") ||
+            err.message?.includes("401"))
+        ) {
           window.location.href = "/login";
         }
       } finally {
@@ -173,25 +179,32 @@ export default function InstructorAssignmentsContent() {
 
     Promise.resolve().then(() => setSelectedSubmission(null));
 
-    api.get<{ submissions: StudentSubmission[] }>(
-      `/api/assignments/${assignmentId}/submissions`
-    ).then((res) => {
-      setSubmissions(res.submissions || []);
-    }).catch((err) => {
-      console.error("Error loading submissions:", err);
-    }).finally(() => {
-      setLoadingSubmissions(false);
-    });
+    api
+      .get<{ submissions: StudentSubmission[] }>(
+        `/api/assignments/${assignmentId}/submissions`,
+      )
+      .then((res) => {
+        setSubmissions(res.submissions || []);
+      })
+      .catch((err) => {
+        console.error("Error loading submissions:", err);
+      })
+      .finally(() => {
+        setLoadingSubmissions(false);
+      });
   }, [selectedAssignment]);
 
   // Fetches detailed response answers and scores for a specific student submission.
   async function handleSelectSubmission(sub: StudentSubmission) {
     try {
       const res = await api.get<{ result: SubmissionDetail }>(
-        `/api/assignments/submissions/${sub.id}/result`
+        `/api/assignments/submissions/${sub.id}/result`,
       );
       setSelectedSubmission(res.result);
-      setGradeInput(res.result.grade || `${res.result.totalScore || 0}/${res.result.assignment.maxPoints}`);
+      setGradeInput(
+        res.result.grade ||
+          `${res.result.totalScore || 0}/${res.result.assignment.maxPoints}`,
+      );
       setFeedbackInput(res.result.feedback || "");
       setGradingSuccess(false);
     } catch (err) {
@@ -206,15 +219,18 @@ export default function InstructorAssignmentsContent() {
 
     try {
       setSubmitting(true);
-      await api.post(`/api/assignments/submissions/${selectedSubmission.id}/grade`, {
-        grade: gradeInput,
-        feedback: feedbackInput,
-      });
+      await api.post(
+        `/api/assignments/submissions/${selectedSubmission.id}/grade`,
+        {
+          grade: gradeInput,
+          feedback: feedbackInput,
+        },
+      );
       setGradingSuccess(true);
 
       // Refresh submissions list
       const res = await api.get<{ submissions: StudentSubmission[] }>(
-        `/api/assignments/${selectedAssignment!.id}/submissions`
+        `/api/assignments/${selectedAssignment!.id}/submissions`,
       );
       setSubmissions(res.submissions || []);
 
@@ -222,12 +238,12 @@ export default function InstructorAssignmentsContent() {
       setSelectedSubmission((prev) =>
         prev
           ? {
-            ...prev,
-            status: "GRADED",
-            grade: gradeInput,
-            feedback: feedbackInput,
-          }
-          : null
+              ...prev,
+              status: "GRADED",
+              grade: gradeInput,
+              feedback: feedbackInput,
+            }
+          : null,
       );
     } catch (err: unknown) {
       toast.error("Error saving grade: " + getErrorMessage(err));
@@ -274,7 +290,11 @@ export default function InstructorAssignmentsContent() {
   };
 
   // Updates the text of a specific multiple-choice answer option.
-  const handleOptionChange = (qIndex: number, optIndex: number, text: string) => {
+  const handleOptionChange = (
+    qIndex: number,
+    optIndex: number,
+    text: string,
+  ) => {
     const updated = [...formQuestions];
     updated[qIndex].options[optIndex].optionText = text;
     setFormQuestions(updated);
@@ -303,7 +323,10 @@ export default function InstructorAssignmentsContent() {
       const formData = new FormData();
       formData.append("pdf", file);
 
-      const res = await api.post<{ fileUrl: string }>("/api/assignments/upload-pdf", formData);
+      const res = await api.post<{ fileUrl: string }>(
+        "/api/assignments/upload-pdf",
+        formData,
+      );
       setFormQuestionPdfUrl(res.fileUrl);
       toast.success("Question PDF uploaded successfully!");
     } catch (err: unknown) {
@@ -365,7 +388,8 @@ export default function InstructorAssignmentsContent() {
         dueDate: new Date(formDueDate).toISOString(),
         maxPoints: computedMaxPoints,
         questions: formType === "QUIZ" ? formQuestions : undefined,
-        questionPdfUrl: formType === "ASSIGNMENT" ? formQuestionPdfUrl : undefined,
+        questionPdfUrl:
+          formType === "ASSIGNMENT" ? formQuestionPdfUrl : undefined,
       });
 
       // Reset Form
@@ -390,7 +414,9 @@ export default function InstructorAssignmentsContent() {
       ]);
 
       // Refresh list & tab
-      const assignmentsRes = await api.get<{ assignments: Assignment[] }>("/api/assignments");
+      const assignmentsRes = await api.get<{ assignments: Assignment[] }>(
+        "/api/assignments",
+      );
       setAssignments(assignmentsRes.assignments || []);
       setActiveTab("list");
       toast.success("Assignment created successfully!");
@@ -406,10 +432,15 @@ export default function InstructorAssignmentsContent() {
       {/* Title Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-400">Instructor</p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">Assessments Dashboard</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-400">
+            Instructor
+          </p>
+          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">
+            Assessments Dashboard
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Create quizzes (auto-graded MCQ) or assignments (PDF-based, manually graded).
+            Create quizzes (auto-graded MCQ) or assignments (PDF-based, manually
+            graded).
           </p>
         </div>
 
@@ -419,15 +450,19 @@ export default function InstructorAssignmentsContent() {
               setActiveTab("list");
               setSelectedAssignment(null);
             }}
-            className={`btn-secondary text-xs py-2 px-4 ${activeTab === "list" && !selectedAssignment ? "border-violet-500/30 bg-violet-500/10 text-violet-400" : ""
-              }`}
+            className={`btn-secondary text-xs py-2 px-4 ${
+              activeTab === "list" && !selectedAssignment
+                ? "border-violet-500/30 bg-violet-500/10 text-violet-400"
+                : ""
+            }`}
           >
             <IconClipboardList size={16} /> All Assignments
           </button>
           <button
             onClick={() => setActiveTab("create")}
-            className={`btn-primary text-xs py-2 px-4 ${activeTab === "create" ? "shadow-lg" : ""
-              }`}
+            className={`btn-primary text-xs py-2 px-4 ${
+              activeTab === "create" ? "shadow-lg" : ""
+            }`}
           >
             <IconPlus size={16} /> Create Assignment
           </button>
@@ -455,26 +490,36 @@ export default function InstructorAssignmentsContent() {
                 <button
                   type="button"
                   onClick={() => setFormType("QUIZ")}
-                  className={`flex-1 rounded-xl border-2 p-4 text-left transition-all ${formType === "QUIZ"
-                    ? "border-violet-500 bg-violet-500/10 shadow-md"
-                    : "border-border/60 hover:border-border"
-                    }`}
+                  className={`flex-1 rounded-xl border-2 p-4 text-left transition-all ${
+                    formType === "QUIZ"
+                      ? "border-violet-500 bg-violet-500/10 shadow-md"
+                      : "border-border/60 hover:border-border"
+                  }`}
                 >
                   <span className="text-lg">📝</span>
-                  <p className="mt-1 text-sm font-bold text-foreground">Quiz (MCQ)</p>
-                  <p className="text-[11px] text-muted-foreground">Auto-graded multiple choice questions</p>
+                  <p className="mt-1 text-sm font-bold text-foreground">
+                    Quiz (MCQ)
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Auto-graded multiple choice questions
+                  </p>
                 </button>
                 <button
                   type="button"
                   onClick={() => setFormType("ASSIGNMENT")}
-                  className={`flex-1 rounded-xl border-2 p-4 text-left transition-all ${formType === "ASSIGNMENT"
-                    ? "border-violet-500 bg-violet-500/10 shadow-md"
-                    : "border-border/60 hover:border-border"
-                    }`}
+                  className={`flex-1 rounded-xl border-2 p-4 text-left transition-all ${
+                    formType === "ASSIGNMENT"
+                      ? "border-violet-500 bg-violet-500/10 shadow-md"
+                      : "border-border/60 hover:border-border"
+                  }`}
                 >
                   <span className="text-lg">📄</span>
-                  <p className="mt-1 text-sm font-bold text-foreground">Assignment (File)</p>
-                  <p className="text-[11px] text-muted-foreground">Upload question PDF, students submit answer files</p>
+                  <p className="mt-1 text-sm font-bold text-foreground">
+                    Assignment (File)
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Upload question PDF, students submit answer files
+                  </p>
                 </button>
               </div>
             </div>
@@ -584,7 +629,9 @@ export default function InstructorAssignmentsContent() {
                             required
                             placeholder="e.g. Which of the following is correct about 'let' vs 'var'?"
                             value={q.questionText}
-                            onChange={(e) => handleQuestionChange(qIndex, e.target.value)}
+                            onChange={(e) =>
+                              handleQuestionChange(qIndex, e.target.value)
+                            }
                             className="field py-2 text-sm"
                           />
                         </div>
@@ -599,7 +646,12 @@ export default function InstructorAssignmentsContent() {
                             min={1}
                             max={50}
                             value={q.marks}
-                            onChange={(e) => handleQuestionMarksChange(qIndex, Number(e.target.value))}
+                            onChange={(e) =>
+                              handleQuestionMarksChange(
+                                qIndex,
+                                Number(e.target.value),
+                              )
+                            }
                             className="field py-2 text-sm"
                           />
                         </div>
@@ -614,16 +666,19 @@ export default function InstructorAssignmentsContent() {
                           {q.options.map((opt, optIndex) => (
                             <div
                               key={optIndex}
-                              className={`flex items-center gap-2 p-2 rounded-lg border transition-all ${opt.isCorrect
-                                ? "border-emerald-500/40 bg-emerald-500/10"
-                                : "border-border/60"
-                                }`}
+                              className={`flex items-center gap-2 p-2 rounded-lg border transition-all ${
+                                opt.isCorrect
+                                  ? "border-emerald-500/40 bg-emerald-500/10"
+                                  : "border-border/60"
+                              }`}
                             >
                               <input
                                 type="radio"
                                 name={`correct-opt-${qIndex}`}
                                 checked={opt.isCorrect}
-                                onChange={() => handleSelectCorrectOption(qIndex, optIndex)}
+                                onChange={() =>
+                                  handleSelectCorrectOption(qIndex, optIndex)
+                                }
                                 className="accent-emerald-500 h-4 w-4 shrink-0"
                               />
                               <input
@@ -631,7 +686,13 @@ export default function InstructorAssignmentsContent() {
                                 required
                                 placeholder={`Option ${String.fromCharCode(65 + optIndex)}`}
                                 value={opt.optionText}
-                                onChange={(e) => handleOptionChange(qIndex, optIndex, e.target.value)}
+                                onChange={(e) =>
+                                  handleOptionChange(
+                                    qIndex,
+                                    optIndex,
+                                    e.target.value,
+                                  )
+                                }
                                 className="bg-transparent border-none w-full p-0 text-xs focus:ring-0 text-foreground"
                               />
                             </div>
@@ -657,7 +718,8 @@ export default function InstructorAssignmentsContent() {
                       Upload Question PDF
                     </label>
                     <p className="text-[11px] text-muted-foreground mb-2">
-                      Upload a PDF containing the assignment questions. Students will download this and submit their answers as a file.
+                      Upload a PDF containing the assignment questions. Students
+                      will download this and submit their answers as a file.
                     </p>
                     <input
                       type="file"
@@ -667,12 +729,16 @@ export default function InstructorAssignmentsContent() {
                       className="field py-2 text-sm"
                     />
                     {uploadingPdf && (
-                      <p className="text-xs text-accent animate-pulse">Uploading PDF…</p>
+                      <p className="text-xs text-accent animate-pulse">
+                        Uploading PDF…
+                      </p>
                     )}
                     {formQuestionPdfUrl && (
                       <div className="flex items-center gap-2 mt-2 p-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10">
                         <span className="text-emerald-400 text-sm">✅</span>
-                        <span className="text-xs text-emerald-300 font-medium truncate flex-1">PDF uploaded successfully</span>
+                        <span className="text-xs text-emerald-300 font-medium truncate flex-1">
+                          PDF uploaded successfully
+                        </span>
                         <a
                           href={formQuestionPdfUrl}
                           target="_blank"
@@ -699,7 +765,8 @@ export default function InstructorAssignmentsContent() {
                       placeholder="100"
                     />
                     <p className="text-[11px] text-muted-foreground">
-                      The total points this assignment is worth. Instructors will manually grade submissions.
+                      The total points this assignment is worth. Instructors
+                      will manually grade submissions.
                     </p>
                   </div>
                 </div>
@@ -735,8 +802,12 @@ export default function InstructorAssignmentsContent() {
                   <span className="text-[10px] uppercase font-bold tracking-wider text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded">
                     Batch: {selectedAssignment.batch.name}
                   </span>
-                  <h2 className="text-lg font-bold text-foreground mt-1">{selectedAssignment.title}</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">{selectedAssignment.course.title}</p>
+                  <h2 className="text-lg font-bold text-foreground mt-1">
+                    {selectedAssignment.title}
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {selectedAssignment.course.title}
+                  </p>
                 </div>
                 <button
                   onClick={() => setSelectedAssignment(null)}
@@ -750,7 +821,8 @@ export default function InstructorAssignmentsContent() {
               </p>
               <div className="flex flex-wrap gap-4 text-xs text-muted-foreground mt-2">
                 <span className="flex items-center gap-1">
-                  📅 Due: {new Date(selectedAssignment.dueDate).toLocaleString()}
+                  📅 Due:{" "}
+                  {new Date(selectedAssignment.dueDate).toLocaleString()}
                 </span>
                 <span className="flex items-center gap-1">
                   💯 Max Points: {selectedAssignment.maxPoints}
@@ -778,7 +850,11 @@ export default function InstructorAssignmentsContent() {
                       <tr className="border-b border-border/60 text-muted uppercase font-bold tracking-wider">
                         <th className="py-2.5">Student</th>
                         <th className="py-2.5">Submitted</th>
-                        <th className="py-2.5">{selectedAssignment.type === "QUIZ" ? "Auto Score" : "File"}</th>
+                        <th className="py-2.5">
+                          {selectedAssignment.type === "QUIZ"
+                            ? "Auto Score"
+                            : "File"}
+                        </th>
                         <th className="py-2.5">Grade</th>
                         <th className="py-2.5 text-right">Action</th>
                       </tr>
@@ -787,32 +863,54 @@ export default function InstructorAssignmentsContent() {
                       {submissions.map((sub) => (
                         <tr
                           key={sub.id}
-                          className={`hover:bg-card-hover transition-colors ${selectedSubmission?.id === sub.id ? "bg-violet-500/5" : ""
-                            }`}
+                          className={`hover:bg-card-hover transition-colors ${
+                            selectedSubmission?.id === sub.id
+                              ? "bg-violet-500/5"
+                              : ""
+                          }`}
                         >
                           <td className="py-3 pr-2">
-                            <p className="font-semibold text-foreground">{sub.student.name}</p>
-                            <p className="text-[10px] text-muted">{sub.student.email}</p>
+                            <p className="font-semibold text-foreground">
+                              {sub.student.name}
+                            </p>
+                            <p className="text-[10px] text-muted">
+                              {sub.student.email}
+                            </p>
                           </td>
                           <td className="py-3 pr-2 text-muted">
                             {new Date(sub.submittedAt).toLocaleDateString()}
                           </td>
                           <td className="py-3 pr-2 font-bold text-foreground">
-                            {selectedAssignment.type === "QUIZ"
-                              ? (sub.totalScore !== null ? `${sub.totalScore}/${selectedAssignment.maxPoints}` : "-")
-                              : sub.answerFileUrl
-                                ? <a href={sub.answerFileUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline text-[10px]">📎 Download</a>
-                                : <span className="text-muted">—</span>
-                            }
+                            {selectedAssignment.type === "QUIZ" ? (
+                              sub.totalScore !== null ? (
+                                `${sub.totalScore}/${selectedAssignment.maxPoints}`
+                              ) : (
+                                "-"
+                              )
+                            ) : sub.answerFileUrl ? (
+                              <a
+                                href={sub.answerFileUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-primary hover:underline text-[10px]"
+                              >
+                                📎 Download
+                              </a>
+                            ) : (
+                              <span className="text-muted">—</span>
+                            )}
                           </td>
                           <td className="py-3 pr-2">
                             <span
-                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${sub.status === "GRADED"
-                                ? "bg-emerald-500/10 text-emerald-400"
-                                : "bg-amber-500/10 text-amber-400"
-                                }`}
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                sub.status === "GRADED"
+                                  ? "bg-emerald-500/10 text-emerald-400"
+                                  : "bg-amber-500/10 text-amber-400"
+                              }`}
                             >
-                              {sub.status === "GRADED" ? sub.grade || "Graded" : "Pending Evaluation"}
+                              {sub.status === "GRADED"
+                                ? sub.grade || "Graded"
+                                : "Pending Evaluation"}
                             </span>
                           </td>
                           <td className="py-3 text-right">
@@ -820,7 +918,9 @@ export default function InstructorAssignmentsContent() {
                               onClick={() => handleSelectSubmission(sub)}
                               className="btn-secondary text-[10px] py-1 px-2.5"
                             >
-                              {selectedAssignment.type === "QUIZ" ? "Review Answers" : "Review & Grade"}
+                              {selectedAssignment.type === "QUIZ"
+                                ? "Review Answers"
+                                : "Review & Grade"}
                             </button>
                           </td>
                         </tr>
@@ -841,27 +941,46 @@ export default function InstructorAssignmentsContent() {
 
               {!selectedSubmission ? (
                 <div className="text-center py-12 text-xs text-muted-foreground">
-                  Select a student from the list to review their answers, see the auto-graded score, and add custom feedback notes.
+                  Select a student from the list to review their answers, see
+                  the auto-graded score, and add custom feedback notes.
                 </div>
               ) : (
                 <div className="space-y-5">
                   <div className="p-3.5 rounded-xl border border-border/80 bg-background/50">
-                    <p className="text-[10px] font-bold text-muted uppercase tracking-wider">Student Profile</p>
-                    <p className="text-sm font-bold text-foreground mt-1">{selectedSubmission.student.name}</p>
-                    <p className="text-xs text-muted-foreground">{selectedSubmission.student.email}</p>
+                    <p className="text-[10px] font-bold text-muted uppercase tracking-wider">
+                      Student Profile
+                    </p>
+                    <p className="text-sm font-bold text-foreground mt-1">
+                      {selectedSubmission.student.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedSubmission.student.email}
+                    </p>
 
                     <div className="grid grid-cols-2 gap-4 mt-3 pt-3 border-t border-border/40">
                       <div>
-                        <p className="text-[9px] font-bold text-muted uppercase">{selectedSubmission.assignment.type === "QUIZ" ? "Auto Grade" : "Score"}</p>
+                        <p className="text-[9px] font-bold text-muted uppercase">
+                          {selectedSubmission.assignment.type === "QUIZ"
+                            ? "Auto Grade"
+                            : "Score"}
+                        </p>
                         <p className="text-base font-bold text-foreground">
-                          {selectedSubmission.totalScore !== null ? selectedSubmission.totalScore : "—"} / {selectedSubmission.assignment.maxPoints}
+                          {selectedSubmission.totalScore !== null
+                            ? selectedSubmission.totalScore
+                            : "—"}{" "}
+                          / {selectedSubmission.assignment.maxPoints}
                         </p>
                       </div>
                       <div>
-                        <p className="text-[9px] font-bold text-muted uppercase">Status</p>
+                        <p className="text-[9px] font-bold text-muted uppercase">
+                          Status
+                        </p>
                         <p
-                          className={`text-xs font-bold ${selectedSubmission.status === "GRADED" ? "text-emerald-400" : "text-amber-400"
-                            }`}
+                          className={`text-xs font-bold ${
+                            selectedSubmission.status === "GRADED"
+                              ? "text-emerald-400"
+                              : "text-amber-400"
+                          }`}
                         >
                           {selectedSubmission.status}
                         </p>
@@ -872,41 +991,63 @@ export default function InstructorAssignmentsContent() {
                   {/* === QUIZ: Question Answers Details === */}
                   {selectedSubmission.assignment.type === "QUIZ" && (
                     <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-                      <p className="text-[10px] font-bold text-muted uppercase tracking-wider">Student Responses</p>
+                      <p className="text-[10px] font-bold text-muted uppercase tracking-wider">
+                        Student Responses
+                      </p>
                       {selectedSubmission.assignment.questions.map((q, idx) => {
-                        const response = selectedSubmission.questionResponses.find(
-                          (r) => r.questionId === q.id
-                        );
+                        const response =
+                          selectedSubmission.questionResponses.find(
+                            (r) => r.questionId === q.id,
+                          );
                         return (
-                          <div key={q.id} className="p-3 rounded-lg border border-border/50 bg-background/30 text-xs">
+                          <div
+                            key={q.id}
+                            className="p-3 rounded-lg border border-border/50 bg-background/30 text-xs"
+                          >
                             <p className="font-semibold text-foreground">
                               {idx + 1}. {q.questionText}
                             </p>
                             <div className="mt-2 space-y-1.5 pl-1.5">
                               {q.options.map((o) => {
-                                const isSelected = o.id === response?.selectedOptionId;
+                                const isSelected =
+                                  o.id === response?.selectedOptionId;
                                 return (
                                   <div
                                     key={o.id}
-                                    className={`flex items-start gap-1.5 p-1 rounded ${o.isCorrect
-                                      ? "bg-emerald-500/10 text-emerald-400 font-semibold"
-                                      : isSelected
-                                        ? "bg-danger/10 text-danger"
-                                        : "text-muted-foreground"
-                                      }`}
+                                    className={`flex items-start gap-1.5 p-1 rounded ${
+                                      o.isCorrect
+                                        ? "bg-emerald-500/10 text-emerald-400 font-semibold"
+                                        : isSelected
+                                          ? "bg-danger/10 text-danger"
+                                          : "text-muted-foreground"
+                                    }`}
                                   >
                                     <span className="mt-0.5 shrink-0">
-                                      {o.isCorrect ? "✅" : isSelected ? "❌" : "○"}
+                                      {o.isCorrect
+                                        ? "✅"
+                                        : isSelected
+                                          ? "❌"
+                                          : "○"}
                                     </span>
-                                    <span className="leading-tight">{o.optionText}</span>
+                                    <span className="leading-tight">
+                                      {o.optionText}
+                                    </span>
                                   </div>
                                 );
                               })}
                             </div>
                             <div className="mt-2 pt-2 border-t border-border/30 flex items-center justify-between text-[10px] text-muted">
                               <span>Marks weight: {q.marks}</span>
-                              <span className={response?.isCorrect ? "text-emerald-400 font-bold" : "text-danger font-bold"}>
-                                {response?.isCorrect ? `+${q.marks} marks` : "0 marks"}
+                              <span
+                                className={
+                                  response?.isCorrect
+                                    ? "text-emerald-400 font-bold"
+                                    : "text-danger font-bold"
+                                }
+                              >
+                                {response?.isCorrect
+                                  ? `+${q.marks} marks`
+                                  : "0 marks"}
                               </span>
                             </div>
                           </div>
@@ -918,7 +1059,9 @@ export default function InstructorAssignmentsContent() {
                   {/* === ASSIGNMENT: File Review === */}
                   {selectedSubmission.assignment.type === "ASSIGNMENT" && (
                     <div className="space-y-3">
-                      <p className="text-[10px] font-bold text-muted uppercase tracking-wider">Submitted Files</p>
+                      <p className="text-[10px] font-bold text-muted uppercase tracking-wider">
+                        Submitted Files
+                      </p>
                       {selectedSubmission.assignment.questionPdfUrl && (
                         <a
                           href={selectedSubmission.assignment.questionPdfUrl}
@@ -927,8 +1070,12 @@ export default function InstructorAssignmentsContent() {
                           className="flex items-center gap-2 p-3 rounded-lg border border-border/50 bg-background/30 text-xs hover:border-primary/40 transition-colors"
                         >
                           <span>📄</span>
-                          <span className="font-medium text-foreground">Question PDF</span>
-                          <span className="ml-auto text-primary text-[10px]">Open →</span>
+                          <span className="font-medium text-foreground">
+                            Question PDF
+                          </span>
+                          <span className="ml-auto text-primary text-[10px]">
+                            Open →
+                          </span>
                         </a>
                       )}
                       {selectedSubmission.answerFileUrl ? (
@@ -939,8 +1086,12 @@ export default function InstructorAssignmentsContent() {
                           className="flex items-center gap-2 p-3 rounded-lg border border-border/50 bg-background/30 text-xs hover:border-primary/40 transition-colors"
                         >
                           <span>📎</span>
-                          <span className="font-medium text-foreground">Student Answer File</span>
-                          <span className="ml-auto text-primary text-[10px]">Download →</span>
+                          <span className="font-medium text-foreground">
+                            Student Answer File
+                          </span>
+                          <span className="ml-auto text-primary text-[10px]">
+                            Download →
+                          </span>
                         </a>
                       ) : (
                         <div className="p-3 rounded-lg border border-border/50 bg-background/30 text-xs text-muted-foreground">
@@ -951,7 +1102,10 @@ export default function InstructorAssignmentsContent() {
                   )}
 
                   {/* Manual Grading Form */}
-                  <form onSubmit={handleGradeSubmission} className="space-y-3 pt-3 border-t border-border/60">
+                  <form
+                    onSubmit={handleGradeSubmission}
+                    className="space-y-3 pt-3 border-t border-border/60"
+                  >
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
                         Final Score / Grade
@@ -1008,7 +1162,8 @@ export default function InstructorAssignmentsContent() {
 
             {filteredAssignments.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground text-sm">
-                📚 No assignments posted yet. Click &ldquo;+ Create Assignment&rdquo; to post one!
+                📚 No assignments posted yet. Click &ldquo;+ Create
+                Assignment&rdquo; to post one!
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -1023,10 +1178,13 @@ export default function InstructorAssignmentsContent() {
                           <span className="text-[9px] uppercase font-bold text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded">
                             {assignment.batch.name}
                           </span>
-                          <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded ${assignment.type === "QUIZ"
-                            ? "text-accent bg-accent/10"
-                            : "text-warning bg-warning/10"
-                            }`}>
+                          <span
+                            className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded ${
+                              assignment.type === "QUIZ"
+                                ? "text-accent bg-accent/10"
+                                : "text-warning bg-warning/10"
+                            }`}
+                          >
                             {assignment.type === "QUIZ" ? "Quiz" : "Assignment"}
                           </span>
                         </div>
@@ -1044,7 +1202,11 @@ export default function InstructorAssignmentsContent() {
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-muted pt-3 border-t border-border/50">
-                      <span>{assignment.type === "QUIZ" ? `${assignment._count?.questions || 0} Questions` : `${assignment.maxPoints} pts`}</span>
+                      <span>
+                        {assignment.type === "QUIZ"
+                          ? `${assignment._count?.questions || 0} Questions`
+                          : `${assignment.maxPoints} pts`}
+                      </span>
                       <span className="font-semibold text-foreground">
                         {assignment._count?.submissions || 0} Submissions
                       </span>

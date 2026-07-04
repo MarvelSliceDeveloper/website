@@ -12,9 +12,7 @@ export default function CustomNotification({
   message,
 }: CustomNotificationProps) {
   return (
-    <BaseLayout
-      previewText={title}
-    >
+    <BaseLayout previewText={title}>
       <Heading style={headingStyle}>{title}</Heading>
       <Text style={textStyle}>{message}</Text>
     </BaseLayout>

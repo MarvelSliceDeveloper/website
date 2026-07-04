@@ -60,7 +60,9 @@ export async function loginViaUi(page: Page, role: Role) {
   await page.fill('input[type="password"]', creds.password);
   await page.click('button[type="submit"]');
   // Wait for navigation after login (slow dev compile needs extended timeout)
-  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15000 });
+  await page.waitForURL((url) => !url.pathname.includes("/login"), {
+    timeout: 15000,
+  });
 }
 
 export { CREDENTIALS };

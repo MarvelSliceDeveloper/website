@@ -22,7 +22,18 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { IconEdit, IconUsersGroup, IconCalendar, IconTicket, IconBook, IconVideo, IconSchool, IconTrendingUp, IconChartPie, IconCurrencyDollar } from "@tabler/icons-react";
+import {
+  IconEdit,
+  IconUsersGroup,
+  IconCalendar,
+  IconTicket,
+  IconBook,
+  IconVideo,
+  IconSchool,
+  IconTrendingUp,
+  IconChartPie,
+  IconCurrencyDollar,
+} from "@tabler/icons-react";
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -36,7 +47,11 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
       <div className="glass-card !p-3 text-sm">
         <p className="font-semibold text-foreground">{label}</p>
         {payload.map((entry, i) => (
-          <p key={i} style={{ color: entry.color }} className="text-muted-foreground">
+          <p
+            key={i}
+            style={{ color: entry.color }}
+            className="text-muted-foreground"
+          >
             {entry.name}: {entry.value}
           </p>
         ))}
@@ -47,10 +62,30 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 };
 
 const quickActions = [
-  { label: "Create Course", href: "/admin/courses/new", icon: IconEdit, gradient: "from-primary to-violet-500" },
-  { label: "Manage Batches", href: "/admin/batches", icon: IconUsersGroup, gradient: "from-accent to-cyan-400" },
-  { label: "View Sessions", href: "/admin/sessions", icon: IconCalendar, gradient: "from-success to-emerald-400" },
-  { label: "Mentorship Tickets", href: "/admin/mentorship", icon: IconTicket, gradient: "from-warning to-amber-400" },
+  {
+    label: "Create Course",
+    href: "/admin/courses/new",
+    icon: IconEdit,
+    gradient: "from-primary to-violet-500",
+  },
+  {
+    label: "Manage Batches",
+    href: "/admin/batches",
+    icon: IconUsersGroup,
+    gradient: "from-accent to-cyan-400",
+  },
+  {
+    label: "View Sessions",
+    href: "/admin/sessions",
+    icon: IconCalendar,
+    gradient: "from-success to-emerald-400",
+  },
+  {
+    label: "Mentorship Tickets",
+    href: "/admin/mentorship",
+    icon: IconTicket,
+    gradient: "from-warning to-amber-400",
+  },
 ];
 
 const COLORS = {
@@ -62,7 +97,13 @@ const COLORS = {
   muted: "#8b93ae",
 };
 
-const PIE_COLORS = [COLORS.primary, COLORS.accent, COLORS.success, COLORS.warning, COLORS.danger];
+const PIE_COLORS = [
+  COLORS.primary,
+  COLORS.accent,
+  COLORS.success,
+  COLORS.warning,
+  COLORS.danger,
+];
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState({
@@ -78,8 +119,14 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     async function loadStats() {
       if (MOCK_ENABLED) {
-        const activeBatches = MOCK_DASHBOARD_CHARTS.batchDistribution.find((batch) => batch.status === "ACTIVE")?.count ?? 0;
-        const totalStudents = MOCK_DASHBOARD_CHARTS.studentsPerCourse.reduce((sum, course) => sum + course.count, 0);
+        const activeBatches =
+          MOCK_DASHBOARD_CHARTS.batchDistribution.find(
+            (batch) => batch.status === "ACTIVE",
+          )?.count ?? 0;
+        const totalStudents = MOCK_DASHBOARD_CHARTS.studentsPerCourse.reduce(
+          (sum, course) => sum + course.count,
+          0,
+        );
 
         setChartData(MOCK_DASHBOARD_CHARTS);
         setStats({
@@ -93,19 +140,31 @@ export default function AdminDashboardPage() {
       }
 
       try {
-        const [coursesRes, activeBatchesRes, sessionsRes, usersRes, dashboardRes] =
-          await Promise.allSettled([
-            api.get<{ total: number }>("/api/admin/courses", { limit: "1" }),
-            api.get<unknown[]>("/api/admin/batches", { status: "ACTIVE" }),
-            api.get<{ sessions: unknown[] }>("/api/sessions", { status: "live" }),
-            api.get<Array<{ role: string }>>("/api/users"),
-            api.get<DashboardChartData>("/api/admin/dashboard/stats"),
-          ]);
+        const [
+          coursesRes,
+          activeBatchesRes,
+          sessionsRes,
+          usersRes,
+          dashboardRes,
+        ] = await Promise.allSettled([
+          api.get<{ total: number }>("/api/admin/courses", { limit: "1" }),
+          api.get<unknown[]>("/api/admin/batches", { status: "ACTIVE" }),
+          api.get<{ sessions: unknown[] }>("/api/sessions", { status: "live" }),
+          api.get<Array<{ role: string }>>("/api/users"),
+          api.get<DashboardChartData>("/api/admin/dashboard/stats"),
+        ]);
 
         setStats({
-          totalCourses: coursesRes.status === "fulfilled" ? coursesRes.value.total : 0,
-          activeBatches: activeBatchesRes.status === "fulfilled" ? activeBatchesRes.value.length : 0,
-          liveSessions: sessionsRes.status === "fulfilled" ? sessionsRes.value.sessions.length : 0,
+          totalCourses:
+            coursesRes.status === "fulfilled" ? coursesRes.value.total : 0,
+          activeBatches:
+            activeBatchesRes.status === "fulfilled"
+              ? activeBatchesRes.value.length
+              : 0,
+          liveSessions:
+            sessionsRes.status === "fulfilled"
+              ? sessionsRes.value.sessions.length
+              : 0,
           totalStudents:
             usersRes.status === "fulfilled"
               ? usersRes.value.filter((user) => user.role === "STUDENT").length
@@ -117,7 +176,12 @@ export default function AdminDashboardPage() {
         }
       } catch (error) {
         console.error("Failed to load dashboard stats:", error);
-        setStats({ totalCourses: 0, activeBatches: 0, liveSessions: 0, totalStudents: 0 });
+        setStats({
+          totalCourses: 0,
+          activeBatches: 0,
+          liveSessions: 0,
+          totalStudents: 0,
+        });
       } finally {
         setLoading(false);
       }
@@ -127,19 +191,49 @@ export default function AdminDashboardPage() {
   }, []);
 
   const statsCards = [
-    { label: "Total Courses", value: stats.totalCourses, icon: IconBook, gradient: "from-primary to-violet-500", href: "/admin/courses" },
-    { label: "Active Batches", value: stats.activeBatches, icon: IconUsersGroup, gradient: "from-accent to-cyan-400", href: "/admin/batches" },
-    { label: "Live Sessions", value: stats.liveSessions, icon: IconVideo, gradient: "from-success to-emerald-400", href: "/admin/sessions" },
-    { label: "Total Students", value: stats.totalStudents, icon: IconSchool, gradient: "from-warning to-amber-400", href: "/admin/users" },
+    {
+      label: "Total Courses",
+      value: stats.totalCourses,
+      icon: IconBook,
+      gradient: "from-primary to-violet-500",
+      href: "/admin/courses",
+    },
+    {
+      label: "Active Batches",
+      value: stats.activeBatches,
+      icon: IconUsersGroup,
+      gradient: "from-accent to-cyan-400",
+      href: "/admin/batches",
+    },
+    {
+      label: "Live Sessions",
+      value: stats.liveSessions,
+      icon: IconVideo,
+      gradient: "from-success to-emerald-400",
+      href: "/admin/sessions",
+    },
+    {
+      label: "Total Students",
+      value: stats.totalStudents,
+      icon: IconSchool,
+      gradient: "from-warning to-amber-400",
+      href: "/admin/users",
+    },
   ];
 
   return (
     <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
       {/* Header */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Admin</p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">Dashboard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Platform overview and quick actions.</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
+          Admin
+        </p>
+        <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">
+          Dashboard
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Platform overview and quick actions.
+        </p>
       </div>
 
       {/* Stats */}
@@ -155,13 +249,18 @@ export default function AdminDashboardPage() {
         <div className="glass-card p-6">
           <div className="flex items-center gap-2 mb-4">
             <IconBook size={18} stroke={1.5} className="text-primary" />
-            <h3 className="text-base font-semibold text-foreground">Students per Course</h3>
+            <h3 className="text-base font-semibold text-foreground">
+              Students per Course
+            </h3>
           </div>
           {loading ? (
             <ChartSkeleton height={280} />
           ) : chartData?.studentsPerCourse?.length ? (
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={chartData.studentsPerCourse} margin={{ top: 5, right: 20, left: 0, bottom: 60 }}>
+              <BarChart
+                data={chartData.studentsPerCourse}
+                margin={{ top: 5, right: 20, left: 0, bottom: 60 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis
                   dataKey="courseTitle"
@@ -172,11 +271,18 @@ export default function AdminDashboardPage() {
                 />
                 <YAxis tick={{ fill: "var(--muted)", fontSize: 11 }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" name="Students" fill={COLORS.primary} radius={[4, 4, 0, 0]} />
+                <Bar
+                  dataKey="count"
+                  name="Students"
+                  fill={COLORS.primary}
+                  radius={[4, 4, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-64 flex items-center justify-center text-muted-foreground">No data</div>
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
+              No data
+            </div>
           )}
         </div>
 
@@ -184,21 +290,37 @@ export default function AdminDashboardPage() {
         <div className="glass-card p-6">
           <div className="flex items-center gap-2 mb-4">
             <IconTrendingUp size={18} stroke={1.5} className="text-primary" />
-            <h3 className="text-base font-semibold text-foreground">Enrollment Growth</h3>
+            <h3 className="text-base font-semibold text-foreground">
+              Enrollment Growth
+            </h3>
           </div>
           {loading ? (
             <ChartSkeleton height={280} />
           ) : chartData?.enrollmentTrend?.length ? (
             <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={chartData.enrollmentTrend} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <AreaChart
+                data={chartData.enrollmentTrend}
+                margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+              >
                 <defs>
                   <linearGradient id="enrollGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0} />
+                    <stop
+                      offset="5%"
+                      stopColor={COLORS.primary}
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor={COLORS.primary}
+                      stopOpacity={0}
+                    />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="month" tick={{ fill: "var(--muted)", fontSize: 11 }} />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fill: "var(--muted)", fontSize: 11 }}
+                />
                 <YAxis tick={{ fill: "var(--muted)", fontSize: 11 }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Area
@@ -212,7 +334,9 @@ export default function AdminDashboardPage() {
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-64 flex items-center justify-center text-muted-foreground">No data</div>
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
+              No data
+            </div>
           )}
         </div>
 
@@ -220,7 +344,9 @@ export default function AdminDashboardPage() {
         <div className="glass-card p-6">
           <div className="flex items-center gap-2 mb-4">
             <IconChartPie size={18} stroke={1.5} className="text-primary" />
-            <h3 className="text-base font-semibold text-foreground">Batch Distribution</h3>
+            <h3 className="text-base font-semibold text-foreground">
+              Batch Distribution
+            </h3>
           </div>
           {loading ? (
             <ChartSkeleton height={280} />
@@ -228,7 +354,10 @@ export default function AdminDashboardPage() {
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
-                  data={chartData.batchDistribution.map((b) => ({ name: b.status, value: b.count }))}
+                  data={chartData.batchDistribution.map((b) => ({
+                    name: b.status,
+                    value: b.count,
+                  }))}
                   cx="50%"
                   cy="50%"
                   innerRadius={65}
@@ -242,45 +371,73 @@ export default function AdminDashboardPage() {
                 </Pie>
                 <Tooltip content={<CustomTooltip />} />
                 <Legend
-                  wrapperStyle={{ fontSize: 12, color: "var(--muted-foreground)" }}
+                  wrapperStyle={{
+                    fontSize: 12,
+                    color: "var(--muted-foreground)",
+                  }}
                   formatter={(value: string) => (
-                    <span style={{ color: "var(--muted-foreground)" }}>{value}</span>
+                    <span style={{ color: "var(--muted-foreground)" }}>
+                      {value}
+                    </span>
                   )}
                 />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-64 flex items-center justify-center text-muted-foreground">No data</div>
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
+              No data
+            </div>
           )}
         </div>
 
         {/* Monthly Revenue */}
         <div className="glass-card p-6">
           <div className="flex items-center gap-2 mb-4">
-            <IconCurrencyDollar size={18} stroke={1.5} className="text-primary" />
-            <h3 className="text-base font-semibold text-foreground">Monthly Revenue</h3>
+            <IconCurrencyDollar
+              size={18}
+              stroke={1.5}
+              className="text-primary"
+            />
+            <h3 className="text-base font-semibold text-foreground">
+              Monthly Revenue
+            </h3>
           </div>
           {loading ? (
             <ChartSkeleton height={280} />
           ) : chartData?.revenueTrend?.length ? (
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={chartData.revenueTrend} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <BarChart
+                data={chartData.revenueTrend}
+                margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="month" tick={{ fill: "var(--muted)", fontSize: 11 }} />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fill: "var(--muted)", fontSize: 11 }}
+                />
                 <YAxis tick={{ fill: "var(--muted)", fontSize: 11 }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="total" name="Revenue" fill={COLORS.success} radius={[4, 4, 0, 0]} />
+                <Bar
+                  dataKey="total"
+                  name="Revenue"
+                  fill={COLORS.success}
+                  radius={[4, 4, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-64 flex items-center justify-center text-muted-foreground">No data</div>
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
+              No data
+            </div>
           )}
         </div>
       </div>
 
       {/* Quick Actions */}
       <div className="glass-card p-6">
-        <h2 className="text-base font-semibold text-foreground mb-4">Quick Actions</h2>
+        <h2 className="text-base font-semibold text-foreground mb-4">
+          Quick Actions
+        </h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {quickActions.map((action) => (
             <Link
@@ -293,7 +450,9 @@ export default function AdminDashboardPage() {
               >
                 <action.icon size={20} stroke={1.8} />
               </div>
-              <p className="text-sm font-medium text-foreground">{action.label}</p>
+              <p className="text-sm font-medium text-foreground">
+                {action.label}
+              </p>
             </Link>
           ))}
         </div>

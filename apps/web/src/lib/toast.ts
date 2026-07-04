@@ -55,15 +55,21 @@ export function dismissToast(toastId: string | number) {
 
 export function showPromise<Data>(
   promise: Promise<Data> | (() => Promise<Data>),
-  messages: PromiseMessages<Data>
+  messages: PromiseMessages<Data>,
 ) {
   return sonnerToast.promise(promise, messages);
 }
 
 export function getErrorMessage(error: unknown): string {
   if (error && typeof error === "object" && "response" in error) {
-    const err = error as { response?: { data?: { error?: string; message?: string } } };
-    return err.response?.data?.error ?? err.response?.data?.message ?? "Request failed";
+    const err = error as {
+      response?: { data?: { error?: string; message?: string } };
+    };
+    return (
+      err.response?.data?.error ??
+      err.response?.data?.message ??
+      "Request failed"
+    );
   }
   if (error instanceof Error) {
     return error.message;

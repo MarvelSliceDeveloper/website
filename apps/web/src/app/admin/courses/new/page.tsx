@@ -41,7 +41,9 @@ export default function CreateCoursePage() {
     return () => URL.revokeObjectURL(objectUrl);
   }, [thumbnailFile]);
 
-  const handleThumbnailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0] || null;
 
     if (!file) {
@@ -82,18 +84,25 @@ export default function CreateCoursePage() {
         const uploadData = new FormData();
         uploadData.append("thumbnail", thumbnailFile);
         try {
-          await api.post(`/api/admin/courses/${course.id}/thumbnail`, uploadData);
+          await api.post(
+            `/api/admin/courses/${course.id}/thumbnail`,
+            uploadData,
+          );
         } catch (uploadError: unknown) {
           toast.error(
-            (uploadError instanceof Error ? uploadError.message : String(uploadError)) ||
-            "Course created, but thumbnail upload failed. You can upload it in the editor."
+            (uploadError instanceof Error
+              ? uploadError.message
+              : String(uploadError)) ||
+              "Course created, but thumbnail upload failed. You can upload it in the editor.",
           );
         }
       }
 
       router.push(`/admin/courses/${course.id}`);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to create course");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create course",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -227,8 +236,8 @@ export default function CreateCoursePage() {
         <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-muted-foreground">
           <p className="font-medium text-foreground mb-1">What happens next?</p>
           <p>
-            The course will be created as a <strong>Draft</strong>. You&apos;ll then
-            be taken to the course editor where you can add modules, upload
+            The course will be created as a <strong>Draft</strong>. You&apos;ll
+            then be taken to the course editor where you can add modules, upload
             videos, design the landing page, and publish when ready.
           </p>
         </div>
@@ -242,11 +251,7 @@ export default function CreateCoursePage() {
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={submitting}
-          >
+          <button type="submit" className="btn-primary" disabled={submitting}>
             {submitting ? "Creating..." : "Create Course"}
           </button>
         </div>

@@ -9,6 +9,7 @@
 ## Context
 
 The LMS currently supports:
+
 - ✅ Admin can create/edit courses and manage modules with video URLs
 - ✅ Instructors can view/grade student assignment submissions
 - ✗ Admins cannot upload study materials (PDFs, docs, etc.) to modules
@@ -24,6 +25,7 @@ The LMS currently supports:
 ### New Prisma Models
 
 #### 1. **Assignment Model**
+
 ```prisma
 model Assignment {
   id           String    @id @default(cuid())
@@ -33,11 +35,11 @@ model Assignment {
   description  String
   instructions String?
   dueDate      DateTime
-  
+
   createdBy    String    // Instructor ID
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
-  
+
   batch        Batch     @relation(fields: [batchId], references: [id], onDelete: Cascade)
   course       Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
   creator      User      @relation("AssignmentCreator", fields: [createdBy], references: [id])
@@ -48,6 +50,7 @@ model Assignment {
 **Why:** Track all assignments per batch with course reference, instructor creator, and cascade deletes.
 
 #### 2. **AssignmentSubmission Model**
+
 ```prisma
 model AssignmentSubmission {
   id             String    @id @default(cuid())
@@ -60,10 +63,10 @@ model AssignmentSubmission {
   status         String    @default("PENDING")  // PENDING | GRADED | LATE
   submittedAt    DateTime?
   gradedAt       DateTime?
-  
+
   assignment     Assignment        @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   student        User              @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  
+
   @@unique([assignmentId, studentId])
 }
 ```
@@ -71,6 +74,7 @@ model AssignmentSubmission {
 **Why:** Track each student's submission, grade, and feedback with unique constraint per student per assignment.
 
 #### 3. **Update Course Model - Add Assignment Relation**
+
 ```prisma
 model Course {
   // ... existing fields ...
@@ -79,6 +83,7 @@ model Course {
 ```
 
 #### 4. **Update User Model - Add Assignment Relations**
+
 ```prisma
 model User {
   // ... existing fields ...
@@ -100,6 +105,7 @@ Create new module at `apps/api/src/modules/assignments/`
 #### Files to Create:
 
 **`assignments.routes.ts`**
+
 ```typescript
 // POST /api/assignments                    - Create assignment (instructor only)
 // GET /api/assignments                     - List assignments by batch (instructor)
@@ -112,6 +118,7 @@ Create new module at `apps/api/src/modules/assignments/`
 ```
 
 **`assignments.controller.ts`**
+
 - `createAssignment()` - Validate via Zod, call service
 - `listAssignments()` - Support filtering by batch, course, status
 - `getAssignmentById()` - Include submissions count
@@ -122,6 +129,7 @@ Create new module at `apps/api/src/modules/assignments/`
 - `gradeSubmission()` - Add grade and feedback
 
 **`assignments.service.ts`**
+
 - Zod schemas for validation:
   - `CreateAssignmentSchema` - title, description, instructions, courseId, batchId, dueDate
   - `UpdateAssignmentSchema` - same fields as above but all optional
@@ -131,6 +139,7 @@ Create new module at `apps/api/src/modules/assignments/`
 - Follow existing service patterns from `courses.service.ts`
 
 **Key Validation Rules:**
+
 - Instructor must be assigned to the batch
 - Due date must be in future
 - Student can only submit once per assignment (upsert logic)
@@ -140,6 +149,7 @@ Create new module at `apps/api/src/modules/assignments/`
 #### API Response Examples:
 
 **Create Assignment (201)**
+
 ```json
 {
   "id": "cuid123",
@@ -154,6 +164,7 @@ Create new module at `apps/api/src/modules/assignments/`
 ```
 
 **Submit Assignment (200)**
+
 ```json
 {
   "id": "submission123",
@@ -166,6 +177,7 @@ Create new module at `apps/api/src/modules/assignments/`
 ```
 
 **Grade Submission (200)**
+
 ```json
 {
   "id": "submission123",
@@ -183,6 +195,7 @@ Create new module at `apps/api/src/modules/assignments/`
 Extend existing course module structure to support file uploads.
 
 **`modules.upload.ts`** (create new file)
+
 - Multer config for module resources
 - Support file types: PDF, DOCX, PPTX, XLSX, images (JPG, PNG, WebP)
 - Max file size: 50MB per file
@@ -190,6 +203,7 @@ Extend existing course module structure to support file uploads.
 - Naming: UUID + original extension
 
 **`modules.routes.ts`** (extend existing)
+
 ```typescript
 // POST /api/admin/courses/modules/:id/resources    - Upload resource file
 // DELETE /api/admin/courses/modules/:id/resources/:resourceId - Delete resource
@@ -197,10 +211,12 @@ Extend existing course module structure to support file uploads.
 ```
 
 **`modules.controller.ts`** (extend existing)
+
 - `uploadResource()` - Handle file upload, update module.resources JSON array
 - `deleteResource()` - Remove file and update resources array
 
 **Module Resources JSON Structure:**
+
 ```json
 [
   {
@@ -224,6 +240,7 @@ Extend existing course module structure to support file uploads.
 **File:** `apps/web/src/app/admin/courses/[id]/page.tsx` (extend existing)
 
 #### Changes:
+
 1. Add tab navigation:
    - "Course Details" (existing)
    - "Modules" (existing)
@@ -240,6 +257,7 @@ Extend existing course module structure to support file uploads.
 3. Update module GET response type to include resources
 
 #### UI Layout:
+
 ```
 ┌─ Course Details | Modules | Study Materials ─┐
 │                                                │
@@ -261,6 +279,7 @@ Extend existing course module structure to support file uploads.
 ```
 
 **State Management:**
+
 ```typescript
 const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
 const [resources, setResources] = useState<Resource[]>([]);
@@ -270,6 +289,7 @@ const [uploadSuccess, setUploadSuccess] = useState("");
 ```
 
 **File Upload Handler:**
+
 - Validate file type and size client-side
 - Upload via FormData POST
 - Show progress (optional: use fetch with progress event)
@@ -283,11 +303,13 @@ const [uploadSuccess, setUploadSuccess] = useState("");
 **File:** `apps/web/src/app/instructor/assignments/page.tsx` (extend existing)
 
 #### Changes:
+
 1. Add "Create Assignment" button at top
 2. Add new modal/form for creating assignments
 3. Update assignment list to show created assignments + grades for submitted assignments
 
 #### New Component: `CreateAssignmentModal.tsx`
+
 - Form fields:
   - Select Batch (dropdown - load instructor's batches from API)
   - Assignment Title (text input)
@@ -297,17 +319,19 @@ const [uploadSuccess, setUploadSuccess] = useState("");
   - Submit button
 
 #### Form Validation:
+
 ```typescript
 const CreateAssignmentSchema = z.object({
   batchId: z.string().min(1, "Batch is required"),
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   instructions: z.string().optional(),
-  dueDate: z.date().refine(d => d > new Date(), "Due date must be in future"),
+  dueDate: z.date().refine((d) => d > new Date(), "Due date must be in future"),
 });
 ```
 
 **UI Layout:**
+
 ```
 Assignments & Grading
 
@@ -332,6 +356,7 @@ Student Submissions - Awaiting Review:
 ```
 
 #### Create Assignment Form State:
+
 ```typescript
 const [showCreateForm, setShowCreateForm] = useState(false);
 const [batches, setBatches] = useState<Batch[]>([]);
@@ -352,6 +377,7 @@ const [creating, setCreating] = useState(false);
 **Modify:** `apps/web/src/app/instructor/assignments/page.tsx`
 
 1. Fetch assignments created by instructor:
+
    ```typescript
    useEffect(() => {
      async function loadData() {
@@ -372,6 +398,7 @@ const [creating, setCreating] = useState(false);
 ## Phase 4: New File Structure
 
 ### Backend Files to Create:
+
 ```
 apps/api/src/modules/assignments/
 ├── assignments.routes.ts      (NEW)
@@ -388,6 +415,7 @@ apps/api/prisma/
 ```
 
 ### Frontend Files to Create/Modify:
+
 ```
 apps/web/src/app/
 ├── admin/courses/[id]/
@@ -407,12 +435,14 @@ apps/web/src/app/
 ## Phase 5: Implementation Steps (In Order)
 
 ### Step 1: Database Migration
+
 1. Write Prisma schema changes for Assignment and AssignmentSubmission
 2. Create migration file
 3. Run: `pnpm prisma migrate dev`
 4. Update: `pnpm prisma generate`
 
 ### Step 2: Backend - Assignments Module
+
 1. Create `assignments.routes.ts` with all endpoints (starting with stubs)
 2. Create `assignments.service.ts` with Zod schemas and database queries
 3. Create `assignments.controller.ts` with handlers
@@ -420,6 +450,7 @@ apps/web/src/app/
 5. Test endpoints with Postman/curl (or add to test suite)
 
 ### Step 3: Backend - Module Resources Upload
+
 1. Create `modules.upload.ts` with Multer config for resources
 2. Extend `modules.controller.ts` to add resource upload/delete handlers
 3. Extend `modules.routes.ts` to add resource endpoints
@@ -427,12 +458,14 @@ apps/web/src/app/
 5. Test file uploads
 
 ### Step 4: Frontend - Admin Study Materials
+
 1. Create `ModuleStudyMaterialsSection.tsx` component
 2. Modify `admin/courses/[id]/page.tsx` to add tab navigation
 3. Integrate Study Materials tab with file upload UI
 4. Test upload, delete, and real-time updates
 
 ### Step 5: Frontend - Instructor Assignments
+
 1. Create `CreateAssignmentModal.tsx` component
 2. Create `AssignmentList.tsx` component to show created assignments
 3. Modify `instructor/assignments/page.tsx` to:
@@ -447,6 +480,7 @@ apps/web/src/app/
 ## Phase 6: Critical Files Reference
 
 ### Key Existing Files (as patterns):
+
 - `apps/api/src/modules/courses/course.service.ts` - Zod schema pattern, service structure
 - `apps/api/src/modules/courses/course.controller.ts` - Error handling, response format
 - `apps/api/src/modules/courses/course.upload.ts` - Multer configuration
@@ -456,6 +490,7 @@ apps/web/src/app/
 - `apps/api/prisma/schema.prisma` - Prisma patterns, relationships
 
 ### New Critical Files to Create:
+
 - `apps/api/src/modules/assignments/assignments.service.ts`
 - `apps/api/src/modules/assignments/assignments.controller.ts`
 - `apps/api/src/modules/assignments/assignments.routes.ts`
@@ -467,29 +502,33 @@ apps/web/src/app/
 ## Phase 7: API Endpoints Summary
 
 ### Assignment Endpoints
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/assignments` | INSTRUCTOR | Create assignment |
-| GET | `/api/assignments` | INSTRUCTOR | List instructor's assignments |
-| GET | `/api/assignments/:id` | INSTRUCTOR/STUDENT | Get assignment details |
-| PUT | `/api/assignments/:id` | INSTRUCTOR | Update assignment (creator only) |
-| DELETE | `/api/assignments/:id` | INSTRUCTOR | Delete assignment (creator only) |
-| POST | `/api/assignments/:id/submit` | STUDENT | Submit assignment |
-| GET | `/api/assignments/:id/submissions` | INSTRUCTOR | List submissions for assignment |
-| PUT | `/api/assignments/:id/grade/:studentId` | INSTRUCTOR | Grade submission |
+
+| Method | Endpoint                                | Auth               | Description                      |
+| ------ | --------------------------------------- | ------------------ | -------------------------------- |
+| POST   | `/api/assignments`                      | INSTRUCTOR         | Create assignment                |
+| GET    | `/api/assignments`                      | INSTRUCTOR         | List instructor's assignments    |
+| GET    | `/api/assignments/:id`                  | INSTRUCTOR/STUDENT | Get assignment details           |
+| PUT    | `/api/assignments/:id`                  | INSTRUCTOR         | Update assignment (creator only) |
+| DELETE | `/api/assignments/:id`                  | INSTRUCTOR         | Delete assignment (creator only) |
+| POST   | `/api/assignments/:id/submit`           | STUDENT            | Submit assignment                |
+| GET    | `/api/assignments/:id/submissions`      | INSTRUCTOR         | List submissions for assignment  |
+| PUT    | `/api/assignments/:id/grade/:studentId` | INSTRUCTOR         | Grade submission                 |
 
 ### Module Resources Endpoints
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/admin/courses/modules/:id/resources` | ADMIN | Upload resource file |
-| DELETE | `/api/admin/courses/modules/:id/resources/:resourceId` | ADMIN | Delete resource |
+
+| Method | Endpoint                                               | Auth  | Description          |
+| ------ | ------------------------------------------------------ | ----- | -------------------- |
+| POST   | `/api/admin/courses/modules/:id/resources`             | ADMIN | Upload resource file |
+| DELETE | `/api/admin/courses/modules/:id/resources/:resourceId` | ADMIN | Delete resource      |
 
 ---
 
 ## Phase 8: Testing & Verification
 
 ### Backend Testing:
+
 1. Create assignment as instructor:
+
    ```bash
    curl -X POST http://localhost:4000/api/assignments \
      -H "Authorization: Bearer <token>" \
@@ -503,6 +542,7 @@ apps/web/src/app/
    ```
 
 2. Submit assignment as student:
+
    ```bash
    curl -X POST http://localhost:4000/api/assignments/asgn123/submit \
      -H "Authorization: Bearer <student-token>" \
@@ -513,6 +553,7 @@ apps/web/src/app/
    ```
 
 3. Grade submission:
+
    ```bash
    curl -X PUT http://localhost:4000/api/assignments/asgn123/grade/student456 \
      -H "Authorization: Bearer <instructor-token>" \
@@ -527,6 +568,7 @@ apps/web/src/app/
    ```
 
 ### Frontend Testing:
+
 1. Admin can upload study materials:
    - Login as admin
    - Go to admin course detail
@@ -557,11 +599,13 @@ apps/web/src/app/
 ## Phase 9: Environment & Dependencies
 
 ### No new npm packages needed
+
 - Multer already in use for course thumbnails
 - Zod already in use for validation
 - Next.js form handling already established
 
 ### Environment Variables (if needed)
+
 - `MAX_MODULE_RESOURCE_SIZE` - Default 50MB
 - `ALLOWED_RESOURCE_TYPES` - MIME types whitelist
 
@@ -590,7 +634,7 @@ apps/web/src/app/
 ✅ Instructor can grade submission with feedback  
 ✅ All API endpoints return proper error codes and messages  
 ✅ File uploads validate type and size  
-✅ Permissions enforced (only assigned instructors can grade, etc.)  
+✅ Permissions enforced (only assigned instructors can grade, etc.)
 
 ---
 

@@ -7,7 +7,11 @@ import { toast } from "@/lib/toast";
 
 type TargetType = "ALL_USERS" | "BATCH" | "COURSE";
 type CourseOption = { id: string; title: string };
-type BatchOption = { id: string; name: string; course: { id: string; title: string } };
+type BatchOption = {
+  id: string;
+  name: string;
+  course: { id: string; title: string };
+};
 
 export default function AdminSendNotificationPage() {
   const router = useRouter();
@@ -15,21 +19,32 @@ export default function AdminSendNotificationPage() {
   const [targetType, setTargetType] = useState<TargetType>("ALL_USERS");
   const [courses, setCourses] = useState<CourseOption[]>([]);
   const [batches, setBatches] = useState<BatchOption[]>([]);
-  const [selectedCourseIds, setSelectedCourseIds] = useState<Set<string>>(new Set());
-  const [selectedBatchIds, setSelectedBatchIds] = useState<Set<string>>(new Set());
+  const [selectedCourseIds, setSelectedCourseIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [selectedBatchIds, setSelectedBatchIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [confirmShow, setConfirmShow] = useState(false);
 
   useEffect(() => {
-    api.get<CourseOption[]>("/api/admin/batches/courses").then(setCourses).catch(() => {});
-    api.get<BatchOption[]>("/api/admin/batches").then(setBatches).catch(() => {});
+    api
+      .get<CourseOption[]>("/api/admin/batches/courses")
+      .then(setCourses)
+      .catch(() => {});
+    api
+      .get<BatchOption[]>("/api/admin/batches")
+      .then(setBatches)
+      .catch(() => {});
   }, []);
 
-  const filteredBatches = targetType === "COURSE" && selectedCourseIds.size > 0
-    ? batches.filter((b) => selectedCourseIds.has(b.course.id))
-    : batches;
+  const filteredBatches =
+    targetType === "COURSE" && selectedCourseIds.size > 0
+      ? batches.filter((b) => selectedCourseIds.has(b.course.id))
+      : batches;
 
   async function handleSend() {
     if (!title.trim() || !message.trim()) {
@@ -37,11 +52,12 @@ export default function AdminSendNotificationPage() {
       return;
     }
 
-    const targetIds = targetType === "ALL_USERS"
-      ? []
-      : targetType === "BATCH"
-        ? Array.from(selectedBatchIds)
-        : Array.from(selectedCourseIds);
+    const targetIds =
+      targetType === "ALL_USERS"
+        ? []
+        : targetType === "BATCH"
+          ? Array.from(selectedBatchIds)
+          : Array.from(selectedCourseIds);
 
     if (targetType !== "ALL_USERS" && targetIds.length === 0) {
       toast.error("Select at least one target");
@@ -50,12 +66,15 @@ export default function AdminSendNotificationPage() {
 
     setSending(true);
     try {
-      const res = await api.post<{ message: string; count: number }>("/api/notifications/send", {
-        targetType,
-        targetIds,
-        title: title.trim(),
-        message: message.trim(),
-      });
+      const res = await api.post<{ message: string; count: number }>(
+        "/api/notifications/send",
+        {
+          targetType,
+          targetIds,
+          title: title.trim(),
+          message: message.trim(),
+        },
+      );
       toast.success(res.message || `Sent to ${res.count} users`);
       setTitle("");
       setMessage("");
@@ -96,10 +115,15 @@ export default function AdminSendNotificationPage() {
         >
           ← Back
         </button>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Admin</p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground">Send Notification</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
+          Admin
+        </p>
+        <h1 className="mt-1 text-2xl font-bold text-foreground">
+          Send Notification
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Send a custom message to all users, specific batches, or entire courses.
+          Send a custom message to all users, specific batches, or entire
+          courses.
         </p>
       </div>
 
@@ -132,7 +156,9 @@ export default function AdminSendNotificationPage() {
             </label>
             <div className="max-h-48 space-y-1 overflow-y-auto rounded-xl border border-border/60 p-2">
               {courses.length === 0 && (
-                <p className="py-4 text-center text-sm text-muted">No published courses</p>
+                <p className="py-4 text-center text-sm text-muted">
+                  No published courses
+                </p>
               )}
               {courses.map((c) => (
                 <label
@@ -164,7 +190,9 @@ export default function AdminSendNotificationPage() {
             </label>
             <div className="max-h-48 space-y-1 overflow-y-auto rounded-xl border border-border/60 p-2">
               {filteredBatches.length === 0 && (
-                <p className="py-4 text-center text-sm text-muted">No batches found</p>
+                <p className="py-4 text-center text-sm text-muted">
+                  No batches found
+                </p>
               )}
               {filteredBatches.map((b) => (
                 <label
@@ -183,7 +211,9 @@ export default function AdminSendNotificationPage() {
                   />
                   <span className="flex-1">
                     {b.name}
-                    <span className="ml-2 text-xs text-muted">{b.course.title}</span>
+                    <span className="ml-2 text-xs text-muted">
+                      {b.course.title}
+                    </span>
                   </span>
                 </label>
               ))}
@@ -223,7 +253,11 @@ export default function AdminSendNotificationPage() {
 
         {/* Send button */}
         <div className="flex items-center justify-end gap-3 pt-2">
-          <button type="button" onClick={() => router.back()} className="btn-secondary">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="btn-secondary"
+          >
             Cancel
           </button>
           <button
@@ -259,7 +293,11 @@ export default function AdminSendNotificationPage() {
               >
                 Cancel
               </button>
-              <button onClick={handleSend} className="btn-primary" disabled={sending}>
+              <button
+                onClick={handleSend}
+                className="btn-primary"
+                disabled={sending}
+              >
                 {sending ? "Sending..." : "Yes, Send"}
               </button>
             </div>

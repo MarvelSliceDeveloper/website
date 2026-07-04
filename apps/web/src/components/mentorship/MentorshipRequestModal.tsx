@@ -45,7 +45,12 @@ export function MentorshipRequestModal({
     setIsSubmitting(true);
     try {
       await onSubmit(formData);
-      setFormData({ title: "", description: "", preferredDate: "", preferredTime: "" });
+      setFormData({
+        title: "",
+        description: "",
+        preferredDate: "",
+        preferredTime: "",
+      });
       onClose();
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
@@ -70,7 +75,8 @@ export function MentorshipRequestModal({
             Request 1-on-1 Mentorship
           </h2>
           <p className="text-sm text-muted mt-1">
-            Fill in the details below. An admin will review and assign a mentor to you.
+            Fill in the details below. An admin will review and assign a mentor
+            to you.
           </p>
         </div>
 

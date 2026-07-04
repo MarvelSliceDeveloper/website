@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { prisma } from '../../utils/prisma';
+import { z } from "zod";
+import { prisma } from "../../utils/prisma";
 
 // --- Zod Schemas ---
 
@@ -25,17 +25,17 @@ export const ReorderModulesSchema = z.object({
 function parseVideoUrl(url: string): { type: string; embedId: string } | null {
   // YouTube
   const ytMatch = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
   );
-  if (ytMatch) return { type: 'youtube', embedId: ytMatch[1] };
+  if (ytMatch) return { type: "youtube", embedId: ytMatch[1] };
 
   // Vimeo
   const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeoMatch) return { type: 'vimeo', embedId: vimeoMatch[1] };
+  if (vimeoMatch) return { type: "vimeo", embedId: vimeoMatch[1] };
 
   // Loom
   const loomMatch = url.match(/loom\.com\/(?:share|embed)\/([a-zA-Z0-9]+)/);
-  if (loomMatch) return { type: 'loom', embedId: loomMatch[1] };
+  if (loomMatch) return { type: "loom", embedId: loomMatch[1] };
 
   return null;
 }
@@ -46,11 +46,11 @@ export const moduleService = {
   // Adds a module (container) to a course with auto-assigned order
   async addModule(courseId: string, data: z.infer<typeof CreateModuleSchema>) {
     const course = await prisma.course.findUnique({ where: { id: courseId } });
-    if (!course) throw new Error('Course not found');
+    if (!course) throw new Error("Course not found");
 
     const lastModule = await prisma.module.findFirst({
       where: { courseId },
-      orderBy: { order: 'desc' },
+      orderBy: { order: "desc" },
     });
     const nextOrder = (lastModule?.order ?? -1) + 1;
 
@@ -66,9 +66,14 @@ export const moduleService = {
   },
 
   // Updates a module's title/description
-  async updateModule(moduleId: string, data: z.infer<typeof UpdateModuleSchema>) {
-    const existing = await prisma.module.findUnique({ where: { id: moduleId } });
-    if (!existing) throw new Error('Module not found');
+  async updateModule(
+    moduleId: string,
+    data: z.infer<typeof UpdateModuleSchema>,
+  ) {
+    const existing = await prisma.module.findUnique({
+      where: { id: moduleId },
+    });
+    if (!existing) throw new Error("Module not found");
 
     return prisma.module.update({
       where: { id: moduleId },
@@ -79,14 +84,14 @@ export const moduleService = {
   // Deletes a module and re-orders remaining ones
   async deleteModule(moduleId: string) {
     const module = await prisma.module.findUnique({ where: { id: moduleId } });
-    if (!module) throw new Error('Module not found');
+    if (!module) throw new Error("Module not found");
 
     await prisma.module.delete({ where: { id: moduleId } });
 
     // Re-order remaining modules
     const remaining = await prisma.module.findMany({
       where: { courseId: module.courseId },
-      orderBy: { order: 'asc' },
+      orderBy: { order: "asc" },
     });
 
     await Promise.all(
@@ -94,8 +99,8 @@ export const moduleService = {
         prisma.module.update({
           where: { id: m.id },
           data: { order: index },
-        })
-      )
+        }),
+      ),
     );
 
     return { deleted: true };
@@ -104,7 +109,7 @@ export const moduleService = {
   // Reorders modules by an ordered array of IDs
   async reorderModules(courseId: string, moduleIds: string[]) {
     const course = await prisma.course.findUnique({ where: { id: courseId } });
-    if (!course) throw new Error('Course not found');
+    if (!course) throw new Error("Course not found");
 
     // Verify all moduleIds belong to this course
     const modules = await prisma.module.findMany({
@@ -114,7 +119,8 @@ export const moduleService = {
 
     const existingIds = new Set(modules.map((m) => m.id));
     const allBelong = moduleIds.every((id) => existingIds.has(id));
-    if (!allBelong) throw new Error('Some module IDs do not belong to this course');
+    if (!allBelong)
+      throw new Error("Some module IDs do not belong to this course");
 
     // Update order for each module
     await Promise.all(
@@ -122,11 +128,10 @@ export const moduleService = {
         prisma.module.update({
           where: { id },
           data: { order: index },
-        })
-      )
+        }),
+      ),
     );
 
     return { reordered: true };
   },
-
 };

@@ -95,15 +95,15 @@ export default function AdminMentorshipPage() {
   }, []);
 
   const filteredTickets =
-    filter === "all"
-      ? tickets
-      : tickets.filter((t) => t.status === filter);
+    filter === "all" ? tickets : tickets.filter((t) => t.status === filter);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Admin</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
+            Admin
+          </p>
           <h1 className="text-2xl font-bold text-foreground">
             Mentorship Management
           </h1>
@@ -111,10 +111,7 @@ export default function AdminMentorshipPage() {
             Manage 1-on-1 mentorship requests and assign mentors to students
           </p>
         </div>
-        <button
-          onClick={fetchData}
-          className="btn-secondary"
-        >
+        <button onClick={fetchData} className="btn-secondary">
           <svg
             className="h-4 w-4"
             fill="none"
@@ -133,11 +130,31 @@ export default function AdminMentorshipPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-5">
-        <StatCard label="Total" value={stats.total} color="from-primary to-violet-500" />
-        <StatCard label="Pending" value={stats.open} color="from-warning to-amber-400" />
-        <StatCard label="Assigned" value={stats.assigned} color="from-accent to-cyan-400" />
-        <StatCard label="Scheduled" value={stats.scheduled} color="from-success to-emerald-400" />
-        <StatCard label="Completed" value={stats.completed} color="from-muted to-slate-400" />
+        <StatCard
+          label="Total"
+          value={stats.total}
+          color="from-primary to-violet-500"
+        />
+        <StatCard
+          label="Pending"
+          value={stats.open}
+          color="from-warning to-amber-400"
+        />
+        <StatCard
+          label="Assigned"
+          value={stats.assigned}
+          color="from-accent to-cyan-400"
+        />
+        <StatCard
+          label="Scheduled"
+          value={stats.scheduled}
+          color="from-success to-emerald-400"
+        />
+        <StatCard
+          label="Completed"
+          value={stats.completed}
+          color="from-muted to-slate-400"
+        />
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -151,10 +168,11 @@ export default function AdminMentorshipPage() {
           <button
             key={tab.key}
             onClick={() => setFilter(tab.key)}
-            className={`rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${filter === tab.key
-              ? "border-primary/30 bg-primary/20 text-primary-hover"
-              : "border-border bg-card text-muted hover:bg-card-hover hover:text-foreground"
-              }`}
+            className={`rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
+              filter === tab.key
+                ? "border-primary/30 bg-primary/20 text-primary-hover"
+                : "border-border bg-card text-muted hover:bg-card-hover hover:text-foreground"
+            }`}
           >
             {tab.label}
           </button>
@@ -171,7 +189,10 @@ export default function AdminMentorshipPage() {
         {isLoading ? (
           <div className="p-8 space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-16 rounded-lg bg-border animate-pulse" />
+              <div
+                key={i}
+                className="h-16 rounded-lg bg-border animate-pulse"
+              />
             ))}
           </div>
         ) : filteredTickets.length === 0 ? (
@@ -234,8 +255,9 @@ export default function AdminMentorshipPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusColors[ticket.status]
-                          }`}
+                        className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+                          statusColors[ticket.status]
+                        }`}
                       >
                         {statusLabels[ticket.status]}
                       </span>
@@ -297,7 +319,9 @@ function StatCard({
 }) {
   return (
     <div className="glass-card p-4">
-      <div className={`mb-3 h-1 w-full rounded-full bg-gradient-to-r ${color}`} />
+      <div
+        className={`mb-3 h-1 w-full rounded-full bg-gradient-to-r ${color}`}
+      />
       <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted">
         {label}
       </p>
@@ -319,7 +343,9 @@ function TicketManageModal({
 }) {
   const [selectedMentor, setSelectedMentor] = useState(ticket.mentor?.id || "");
   const [scheduledDate, setScheduledDate] = useState(
-    ticket.scheduledAt ? new Date(ticket.scheduledAt).toISOString().slice(0, 16) : ""
+    ticket.scheduledAt
+      ? new Date(ticket.scheduledAt).toISOString().slice(0, 16)
+      : "",
   );
   const [joinUrl, setJoinUrl] = useState(ticket.joinUrl || "");
   const [completionNotes, setCompletionNotes] = useState("");
@@ -335,11 +361,15 @@ function TicketManageModal({
     setIsSubmitting(true);
 
     try {
-      await api.patch(`/api/mentorship/tickets/${ticket.id}/assign`, { mentorId: selectedMentor });
+      await api.patch(`/api/mentorship/tickets/${ticket.id}/assign`, {
+        mentorId: selectedMentor,
+      });
       toast.success("Mentor assigned successfully");
       onUpdate();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to assign mentor");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to assign mentor",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -361,7 +391,9 @@ function TicketManageModal({
       toast.success("Session scheduled successfully");
       onUpdate();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to schedule session");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to schedule session",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -370,7 +402,9 @@ function TicketManageModal({
   const handleComplete = async () => {
     setIsSubmitting(true);
     try {
-      await api.patch(`/api/mentorship/tickets/${ticket.id}/complete`, { notes: completionNotes || undefined });
+      await api.patch(`/api/mentorship/tickets/${ticket.id}/complete`, {
+        notes: completionNotes || undefined,
+      });
       toast.success("Mentorship marked as completed");
       onUpdate();
       onClose();
@@ -460,14 +494,16 @@ function TicketManageModal({
           )}
 
           {/* Step 2: Schedule / Edit Session */}
-          {(ticket.status === "OPEN" || ticket.status === "ASSIGNED" || ticket.status === "SCHEDULED") && (
+          {(ticket.status === "OPEN" ||
+            ticket.status === "ASSIGNED" ||
+            ticket.status === "SCHEDULED") && (
             <div className="border border-border rounded-lg p-4">
               <h3 className="text-sm font-semibold text-foreground mb-3">
                 {ticket.status === "SCHEDULED"
                   ? "Edit Session"
                   : ticket.status === "ASSIGNED"
-                  ? "Schedule Session"
-                  : "Step 2: Schedule Session (Optional)"}
+                    ? "Schedule Session"
+                    : "Step 2: Schedule Session (Optional)"}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div>
@@ -530,7 +566,9 @@ function TicketManageModal({
           {ticket.status !== "COMPLETED" && ticket.status !== "CANCELLED" && (
             <div className="border border-border rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold text-foreground">Session Notes</h3>
+                <h3 className="text-sm font-semibold text-foreground">
+                  Session Notes
+                </h3>
                 <button
                   onClick={() => setShowNotesInput((v) => !v)}
                   className="text-xs text-primary hover:underline"

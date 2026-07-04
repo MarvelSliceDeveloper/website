@@ -30,7 +30,7 @@ export const viewport: Viewport = {
   ],
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5,       // allow pinch-zoom for accessibility
+  maximumScale: 5, // allow pinch-zoom for accessibility
 };
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 
   title: {
     default: "LMS Portal — Learn, Teach, Grow",
-    template: "%s · LMS Portal",          // child pages get "Page · LMS Portal"
+    template: "%s · LMS Portal", // child pages get "Page · LMS Portal"
   },
   description:
     "A modern learning management system with live sessions, a course marketplace, and Microsoft Teams integration.",
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     url: BASE_URL,
     images: [
       {
-        url: "/og-image.png",   // 1200 × 630 recommended
+        url: "/og-image.png", // 1200 × 630 recommended
         width: 1200,
         height: 630,
         alt: "LMS Portal preview",

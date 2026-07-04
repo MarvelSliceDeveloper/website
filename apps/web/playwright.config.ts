@@ -10,10 +10,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
   workers: process.env.CI ? 1 : 2,
-  reporter: [
-    ["html", { outputFolder: "playwright-report" }],
-    ["list"],
-  ],
+  reporter: [["html", { outputFolder: "playwright-report" }], ["list"]],
 
   use: {
     baseURL: process.env.BASE_URL || "http://localhost:3000",

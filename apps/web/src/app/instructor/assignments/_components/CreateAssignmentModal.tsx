@@ -91,7 +91,9 @@ export default function CreateAssignmentModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="glass-card p-6 rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground">Create Assignment</h2>
+          <h2 className="text-lg font-semibold text-foreground">
+            Create Assignment
+          </h2>
           <button
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground text-xl"
@@ -127,7 +129,9 @@ export default function CreateAssignmentModal({
             <input
               type="text"
               value={form.title}
-              onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, title: e.target.value }))
+              }
               placeholder="e.g. Project 1: REST API"
               required
               minLength={3}
@@ -141,7 +145,9 @@ export default function CreateAssignmentModal({
             </label>
             <textarea
               value={form.description}
-              onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, description: e.target.value }))
+              }
               placeholder="Describe what the assignment is about..."
               required
               minLength={10}
@@ -155,7 +161,9 @@ export default function CreateAssignmentModal({
             </label>
             <textarea
               value={form.instructions}
-              onChange={(e) => setForm((p) => ({ ...p, instructions: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, instructions: e.target.value }))
+              }
               placeholder="Additional instructions (optional)"
               className="field min-h-[80px] resize-none"
             />
@@ -168,7 +176,9 @@ export default function CreateAssignmentModal({
             <input
               type="datetime-local"
               value={form.dueDate}
-              onChange={(e) => setForm((p) => ({ ...p, dueDate: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, dueDate: e.target.value }))
+              }
               required
               className="field"
             />

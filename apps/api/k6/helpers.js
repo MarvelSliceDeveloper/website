@@ -4,7 +4,11 @@ export const BASE_URL = "http://localhost:4000";
 
 export const SEED_USERS = [
   { email: "admin@lms.local", password: "admin123", role: "admin" },
-  { email: "instructor@lms.local", password: "instructor123", role: "instructor" },
+  {
+    email: "instructor@lms.local",
+    password: "instructor123",
+    role: "instructor",
+  },
   { email: "student@lms.local", password: "student123", role: "student" },
 ];
 
@@ -13,7 +17,10 @@ export function login(http, baseUrl, email, password) {
   return http.post(
     `${baseUrl}/api/auth/login`,
     JSON.stringify({ email, password }),
-    { headers: { "Content-Type": "application/json" }, tags: { name: "login" } }
+    {
+      headers: { "Content-Type": "application/json" },
+      tags: { name: "login" },
+    },
   );
 }
 

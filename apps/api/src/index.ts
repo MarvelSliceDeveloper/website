@@ -1,95 +1,105 @@
-import * as dotenv from 'dotenv';
-import * as path from 'path';
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+import * as dotenv from "dotenv";
+import * as path from "path";
+dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 // Show which DATABASE_URL the server loaded (credentials masked)
 // eslint-disable-next-line no-console
 if (process.env.DATABASE_URL) {
   try {
     const url = new URL(process.env.DATABASE_URL);
-    const maskedAuth = url.username ? `${url.username}:*****@` : '';
+    const maskedAuth = url.username ? `${url.username}:*****@` : "";
     // eslint-disable-next-line no-console
-    console.debug('[config] Using DATABASE_URL:', `${url.protocol}//${maskedAuth}${url.host}${url.pathname}`);
+    console.debug(
+      "[config] Using DATABASE_URL:",
+      `${url.protocol}//${maskedAuth}${url.host}${url.pathname}`,
+    );
   } catch (e) {
     // eslint-disable-next-line no-console
-    console.debug('[config] DATABASE_URL (raw):', process.env.DATABASE_URL?.slice(0, 80));
+    console.debug(
+      "[config] DATABASE_URL (raw):",
+      process.env.DATABASE_URL?.slice(0, 80),
+    );
   }
 } else {
   // eslint-disable-next-line no-console
-  console.debug('[config] DATABASE_URL not set');
+  console.debug("[config] DATABASE_URL not set");
 }
-import express, { Request, Response, NextFunction } from 'express';
-import cors from 'cors';
-import pino from 'pino';
+import express, { Request, Response, NextFunction } from "express";
+import cors from "cors";
+import pino from "pino";
 
-import rateLimit from 'express-rate-limit';
-import fs from 'fs';
+import rateLimit from "express-rate-limit";
+import fs from "fs";
 
 const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL || "info",
 });
 
-import cookieParser from 'cookie-parser';
-import { doubleCsrf } from 'csrf-csrf';
-import { authRouter } from './modules/auth/auth.routes';
-import { calendarRouter } from './modules/calendar/calendar.routes';
-import { webhookRouter } from './modules/calendar/webhook.routes';
-import { sessionRouter } from './modules/sessions/session.routes';
-import { recordingRouter } from './modules/recordings/recording.routes';
-import { courseRouter } from './modules/courses/course.routes';
-import { batchRouter } from './modules/batches/batch.routes';
-import { studentBatchRouter } from './modules/batches/student-batch.routes';
-import { userRouter } from './modules/users/user.routes';
-import { certificateRouter } from './modules/certificates/certificate.routes';
-import { studentRouter } from './modules/student/student.routes';
-import { studentCourseRouter } from './modules/courses/student-course.routes';
-import { eventsWebhookController } from './modules/sessions/events-webhook.controller';
-import { notificationRouter } from './modules/notifications/notification.routes';
-import { attendanceRouter } from './modules/attendance/attendance.routes';
-import { recordingSyncJob } from './jobs/recording-sync.job';
-import { enrollmentRouter } from './modules/enrollments/enrollment.routes';
-import { assignmentRouter } from './modules/assignments/assignment.routes';
-import { dashboardRouter } from './modules/dashboard/dashboard.routes';
-import { messageRouter } from './modules/messages/message.routes';
-import { mentorshipRouter } from './modules/mentorship/mentorship.routes';
-import { supportRouter } from './modules/support/support.routes';
-import ticketRouter from './modules/tickets/ticket.routes';
-import { noteRouter } from './modules/notes/notes.routes';
-import { prisma } from './utils/prisma';
+import cookieParser from "cookie-parser";
+import { doubleCsrf } from "csrf-csrf";
+import { authRouter } from "./modules/auth/auth.routes";
+import { calendarRouter } from "./modules/calendar/calendar.routes";
+import { webhookRouter } from "./modules/calendar/webhook.routes";
+import { sessionRouter } from "./modules/sessions/session.routes";
+import { recordingRouter } from "./modules/recordings/recording.routes";
+import { courseRouter } from "./modules/courses/course.routes";
+import { batchRouter } from "./modules/batches/batch.routes";
+import { studentBatchRouter } from "./modules/batches/student-batch.routes";
+import { userRouter } from "./modules/users/user.routes";
+import { certificateRouter } from "./modules/certificates/certificate.routes";
+import { studentRouter } from "./modules/student/student.routes";
+import { studentCourseRouter } from "./modules/courses/student-course.routes";
+import { eventsWebhookController } from "./modules/sessions/events-webhook.controller";
+import { notificationRouter } from "./modules/notifications/notification.routes";
+import { attendanceRouter } from "./modules/attendance/attendance.routes";
+import { recordingSyncJob } from "./jobs/recording-sync.job";
+import { enrollmentRouter } from "./modules/enrollments/enrollment.routes";
+import { assignmentRouter } from "./modules/assignments/assignment.routes";
+import { dashboardRouter } from "./modules/dashboard/dashboard.routes";
+import { messageRouter } from "./modules/messages/message.routes";
+import { mentorshipRouter } from "./modules/mentorship/mentorship.routes";
+import { supportRouter } from "./modules/support/support.routes";
+import ticketRouter from "./modules/tickets/ticket.routes";
+import { noteRouter } from "./modules/notes/notes.routes";
+import { prisma } from "./utils/prisma";
 
 const app = express();
 
-const uploadsRoot = path.resolve(__dirname, '..', 'uploads');
+const uploadsRoot = path.resolve(__dirname, "..", "uploads");
 fs.mkdirSync(uploadsRoot, { recursive: true });
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({
-  origin: process.env.WEB_URL || 'http://localhost:3000',
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: process.env.WEB_URL || "http://localhost:3000",
+    credentials: true,
+  }),
+);
 
 // CSRF protection setup
-const {
-  doubleCsrfProtection,
-  generateToken,
-} = doubleCsrf({
-  getSecret: () => process.env.CSRF_SECRET || 'csrf-secret-change-in-production-32chars',
-  cookieName: 'x-csrf-token',
+const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
+  getSecret: () =>
+    process.env.CSRF_SECRET || "csrf-secret-change-in-production-32chars",
+  getSessionIdentifier: (req) =>
+    (req.headers["x-forwarded-for"] as string) || req.ip || "unknown",
+  cookieName: "x-csrf-token",
   cookieOptions: {
     httpOnly: true,
-    sameSite: 'strict',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
   },
   size: 64,
-  getTokenFromRequest: (req) => req.headers['x-csrf-token'] as string,
+  getCsrfTokenFromRequest: (req) => req.headers["x-csrf-token"] as string,
+  ignoredMethods: ["GET", "HEAD", "OPTIONS"],
+  skipCsrfProtection: (req) => req.path.startsWith("/api/webhooks/"),
 });
 
-app.use('/uploads', express.static(uploadsRoot));
+app.use("/uploads", express.static(uploadsRoot));
 
-const publicRoot = path.resolve(__dirname, '..', '..', '..', 'public');
-app.use('/images', express.static(path.join(publicRoot, 'images')));
+const publicRoot = path.resolve(__dirname, "..", "..", "..", "public");
+app.use("/images", express.static(path.join(publicRoot, "images")));
 
 // Rate Limiting
 const limiter = rateLimit({
@@ -99,53 +109,49 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Mount Modular Routes
-app.use('/api/auth', authRouter);
-app.use('/api/calendar', calendarRouter);
-app.use('/api/sessions', sessionRouter);
-app.use('/api/recordings', recordingRouter);
-app.use('/api/mentorship', mentorshipRouter);
-app.use('/api/admin/courses', courseRouter);
-app.use('/api/admin/batches', batchRouter);
-app.use('/api/batches', studentBatchRouter);
-app.use('/api/users', userRouter);
-app.use('/api/certificates', certificateRouter);
-app.use('/api/student', studentRouter);
-app.use('/api/courses', studentCourseRouter);
-app.use('/api/notifications', notificationRouter);
-app.use('/api/attendance', attendanceRouter);
-app.use('/api/admin/enrollments', enrollmentRouter);
-app.use('/api/assignments', assignmentRouter);
-app.use('/api/webhooks', webhookRouter);
-app.use('/api/admin/dashboard', dashboardRouter);
-app.use('/api/messages', messageRouter);
-app.use('/api/support', supportRouter);
-app.use('/api/tickets', ticketRouter);
-app.use('/api/notes', noteRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/calendar", calendarRouter);
+app.use("/api/sessions", sessionRouter);
+app.use("/api/recordings", recordingRouter);
+app.use("/api/mentorship", mentorshipRouter);
+app.use("/api/admin/courses", courseRouter);
+app.use("/api/admin/batches", batchRouter);
+app.use("/api/batches", studentBatchRouter);
+app.use("/api/users", userRouter);
+app.use("/api/certificates", certificateRouter);
+app.use("/api/student", studentRouter);
+app.use("/api/courses", studentCourseRouter);
+app.use("/api/notifications", notificationRouter);
+app.use("/api/attendance", attendanceRouter);
+app.use("/api/admin/enrollments", enrollmentRouter);
+app.use("/api/assignments", assignmentRouter);
+app.use("/api/webhooks", webhookRouter);
+app.use("/api/admin/dashboard", dashboardRouter);
+app.use("/api/messages", messageRouter);
+app.use("/api/support", supportRouter);
+app.use("/api/tickets", ticketRouter);
+app.use("/api/notes", noteRouter);
 
 // Events webhook — for Teams-created meetings (no auth required)
-app.post('/api/webhooks/events', eventsWebhookController.handleEventsWebhook);
+app.post("/api/webhooks/events", eventsWebhookController.handleEventsWebhook);
 
 // CSRF token endpoint (frontend fetches this to get a token for state-changing requests)
-app.get('/api/csrf-token', (req: Request, res: Response) => {
-  res.json({ csrfToken: generateToken(req, res) });
+app.get("/api/csrf-token", (req: Request, res: Response) => {
+  res.json({ csrfToken: generateCsrfToken(req, res) });
 });
 
 // Health Check
-app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get("/health", (req: Request, res: Response) => {
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// CSRF protection for all state-changing requests (exempt webhooks — called by Microsoft, not the frontend)
-app.use((req: Request, res: Response, next: NextFunction) => {
-  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
-  if (req.path.startsWith('/api/webhooks/')) return next();
-  doubleCsrfProtection(req, res, next);
-});
+// CSRF protection for state-changing requests (webhooks exempt — called by Microsoft, not the frontend)
+app.use(doubleCsrfProtection);
 
 // Global Error Handler
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   logger.error(err);
-  res.status(500).json({ error: 'Internal Server Error' });
+  res.status(500).json({ error: "Internal Server Error" });
 });
 
 const PORT = process.env.PORT || 4000;
@@ -161,12 +167,11 @@ const shutdown = async (signal: string) => {
   recordingSyncJob.stop();
   server.close(async () => {
     await prisma.$disconnect();
-    logger.info('Prisma disconnected, server closed.');
+    logger.info("Prisma disconnected, server closed.");
     process.exit(0);
   });
   setTimeout(() => process.exit(1), 10_000);
 };
 
-process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));

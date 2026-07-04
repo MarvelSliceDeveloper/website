@@ -61,7 +61,8 @@ export default function BatchDetailPage() {
   };
 
   useEffect(() => {
-    api.get<Batch>(`/api/admin/batches/${id}`)
+    api
+      .get<Batch>(`/api/admin/batches/${id}`)
       .then(setBatch)
       .catch(() => setBatch(null))
       .finally(() => setLoading(false));
@@ -90,7 +91,9 @@ export default function BatchDetailPage() {
     return (
       <div className="glass-card p-12 text-center">
         <p className="text-lg font-semibold text-foreground">Batch not found</p>
-        <Link href="/admin/batches" className="btn-primary mt-4 inline-flex">← Back</Link>
+        <Link href="/admin/batches" className="btn-primary mt-4 inline-flex">
+          ← Back
+        </Link>
       </div>
     );
   }
@@ -100,35 +103,50 @@ export default function BatchDetailPage() {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link href="/admin/batches" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors mb-2 inline-flex items-center gap-1">
+          <Link
+            href="/admin/batches"
+            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors mb-2 inline-flex items-center gap-1"
+          >
             ← Back to Batches
           </Link>
           <div className="flex items-center gap-3 mt-1">
             <h1 className="text-2xl font-bold text-foreground">{batch.name}</h1>
-            <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[batch.status] || ""}`}>
+            <span
+              className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[batch.status] || ""}`}
+            >
               {batch.status}
             </span>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">{batch.course.title}</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {batch.course.title}
+          </p>
         </div>
       </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="glass-card p-4 text-center">
-          <p className="text-2xl font-bold text-foreground">{batch._count.enrollments}</p>
+          <p className="text-2xl font-bold text-foreground">
+            {batch._count.enrollments}
+          </p>
           <p className="text-xs text-muted">Students</p>
         </div>
         <div className="glass-card p-4 text-center">
-          <p className="text-2xl font-bold text-foreground">{batch._count.sessions}</p>
+          <p className="text-2xl font-bold text-foreground">
+            {batch._count.sessions}
+          </p>
           <p className="text-xs text-muted">Sessions</p>
         </div>
         <div className="glass-card p-4 text-center">
-          <p className="text-2xl font-bold text-foreground">{batch.maxStudents ?? "∞"}</p>
+          <p className="text-2xl font-bold text-foreground">
+            {batch.maxStudents ?? "∞"}
+          </p>
           <p className="text-xs text-muted">Capacity</p>
         </div>
         <div className="glass-card p-4 text-center">
-          <p className="text-sm font-medium text-foreground">{batch.instructor.name}</p>
+          <p className="text-sm font-medium text-foreground">
+            {batch.instructor.name}
+          </p>
           <p className="text-xs text-muted">Instructor</p>
         </div>
       </div>
@@ -145,7 +163,9 @@ export default function BatchDetailPage() {
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            {t === "students" ? `Students (${batch.enrollments.length})` : `Sessions (${batch.sessions.length})`}
+            {t === "students"
+              ? `Students (${batch.enrollments.length})`
+              : `Sessions (${batch.sessions.length})`}
           </button>
         ))}
       </div>
@@ -155,37 +175,62 @@ export default function BatchDetailPage() {
         <div className="space-y-4">
           {batch.enrollments.length === 0 ? (
             <div className="glass-card p-8 text-center">
-              <p className="text-muted-foreground text-sm">No students enrolled yet.</p>
+              <p className="text-muted-foreground text-sm">
+                No students enrolled yet.
+              </p>
             </div>
           ) : (
             <div className="glass-card overflow-hidden">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border text-left">
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Student</th>
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Email</th>
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Enrolled</th>
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Actions</th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                      Student
+                    </th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                      Email
+                    </th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                      Enrolled
+                    </th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
                   {batch.enrollments.map((enrollment) => (
-                    <tr key={enrollment.id} className="hover:bg-card-hover/50 transition-colors">
+                    <tr
+                      key={enrollment.id}
+                      className="hover:bg-card-hover/50 transition-colors"
+                    >
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-2.5">
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary-hover">
                             {enrollment.user.name.charAt(0).toUpperCase()}
                           </div>
-                          <span className="text-sm font-medium text-foreground">{enrollment.user.name}</span>
+                          <span className="text-sm font-medium text-foreground">
+                            {enrollment.user.name}
+                          </span>
                         </div>
                       </td>
-                      <td className="px-5 py-3 text-sm text-muted-foreground">{enrollment.user.email}</td>
+                      <td className="px-5 py-3 text-sm text-muted-foreground">
+                        {enrollment.user.email}
+                      </td>
                       <td className="px-5 py-3 text-xs text-muted">
-                        {new Date(enrollment.appliedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                        {new Date(enrollment.appliedAt).toLocaleDateString(
+                          "en-IN",
+                          { day: "numeric", month: "short", year: "numeric" },
+                        )}
                       </td>
                       <td className="px-5 py-3">
                         <button
-                          onClick={() => handleRemoveStudent(enrollment.user.id, enrollment.user.name)}
+                          onClick={() =>
+                            handleRemoveStudent(
+                              enrollment.user.id,
+                              enrollment.user.name,
+                            )
+                          }
                           className="text-xs font-medium text-danger hover:text-danger/80 transition-colors"
                         >
                           Remove
@@ -204,17 +249,27 @@ export default function BatchDetailPage() {
         <div className="space-y-3">
           {batch.sessions.length === 0 ? (
             <div className="glass-card p-8 text-center">
-              <p className="text-muted-foreground text-sm">No sessions scheduled yet.</p>
+              <p className="text-muted-foreground text-sm">
+                No sessions scheduled yet.
+              </p>
             </div>
           ) : (
             batch.sessions.map((session) => {
-              const isPast = session.endedAt || new Date(session.scheduledAt) < new Date();
+              const isPast =
+                session.endedAt || new Date(session.scheduledAt) < new Date();
               return (
-                <div key={session.id} className="glass-card p-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div
+                  key={session.id}
+                  className="glass-card p-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+                >
                   <div>
                     <p className="text-sm font-medium text-foreground">
                       {new Date(session.scheduledAt).toLocaleString("en-IN", {
-                        weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+                        weekday: "short",
+                        day: "numeric",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
                       })}
                     </p>
                     <div className="flex items-center gap-2 mt-1">

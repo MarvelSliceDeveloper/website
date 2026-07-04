@@ -31,12 +31,14 @@ export default function AssignmentOverdueView({
   const [locallySubmittedIds, setLocallySubmittedIds] = useState<string[]>([]);
 
   const overdueItems = assignments.filter(
-    (a) => a.status === "PENDING" && !locallySubmittedIds.includes(a.id)
+    (a) => a.status === "PENDING" && !locallySubmittedIds.includes(a.id),
   );
   const completedItems = [
     ...assignments.filter((a) => a.status === "SUBMITTED"),
     ...assignments
-      .filter((a) => a.status === "PENDING" && locallySubmittedIds.includes(a.id))
+      .filter(
+        (a) => a.status === "PENDING" && locallySubmittedIds.includes(a.id),
+      )
       .map((a) => ({ ...a, status: "SUBMITTED" as const })),
   ];
 
@@ -112,8 +114,9 @@ export default function AssignmentOverdueView({
           <div className="space-y-3">
             {overdueItems.map((assignment) => {
               const daysOverdue = Math.floor(
-                (new Date().getTime() - new Date(assignment.dueDate).getTime()) /
-                  (1000 * 60 * 60 * 24)
+                (new Date().getTime() -
+                  new Date(assignment.dueDate).getTime()) /
+                  (1000 * 60 * 60 * 24),
               );
               const isOverdue = daysOverdue > 0;
               const isActive = activeUploadId === assignment.id;
@@ -146,7 +149,9 @@ export default function AssignmentOverdueView({
                         <div className="mt-2 flex items-center gap-2">
                           <IconClock
                             size={14}
-                            className={isOverdue ? "text-danger" : "text-amber-400"}
+                            className={
+                              isOverdue ? "text-danger" : "text-amber-400"
+                            }
                           />
                           <span
                             className={`text-xs font-medium ${
@@ -191,7 +196,10 @@ export default function AssignmentOverdueView({
 
                       {selectedFile ? (
                         <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-card p-3">
-                          <IconFile size={20} className="text-primary shrink-0" />
+                          <IconFile
+                            size={20}
+                            className="text-primary shrink-0"
+                          />
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-medium text-foreground">
                               {selectedFile.name}
@@ -212,7 +220,10 @@ export default function AssignmentOverdueView({
                           onClick={() => fileInputRef.current?.click()}
                           className="w-full rounded-lg border border-dashed border-primary/30 bg-primary/5 p-6 text-center transition-colors hover:bg-primary/10"
                         >
-                          <IconUpload size={24} className="mx-auto text-primary mb-2" />
+                          <IconUpload
+                            size={24}
+                            className="mx-auto text-primary mb-2"
+                          />
                           <p className="text-sm font-medium text-foreground">
                             Click to select a file
                           </p>
@@ -225,10 +236,14 @@ export default function AssignmentOverdueView({
                       <div className="flex justify-end">
                         <button
                           onClick={() => handleSubmitFile(assignment.id)}
-                          disabled={!selectedFile || uploading === assignment.id}
+                          disabled={
+                            !selectedFile || uploading === assignment.id
+                          }
                           className="btn-primary text-sm px-5 py-2"
                         >
-                          {uploading === assignment.id ? "Uploading..." : "Submit Assignment"}
+                          {uploading === assignment.id
+                            ? "Uploading..."
+                            : "Submit Assignment"}
                         </button>
                       </div>
                     </div>
@@ -281,7 +296,9 @@ export default function AssignmentOverdueView({
       {overdueItems.length === 0 && completedItems.length === 0 && (
         <div className="glass-card flex flex-col items-center justify-center py-12 text-center">
           <span className="text-4xl">🎉</span>
-          <p className="mt-3 font-semibold text-foreground">No assignments yet</p>
+          <p className="mt-3 font-semibold text-foreground">
+            No assignments yet
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">
             You&apos;re all caught up! Keep up the great work.
           </p>

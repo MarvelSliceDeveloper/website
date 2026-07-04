@@ -1,6 +1,11 @@
 "use client";
 
-import { IconTrophy, IconDownload, IconShare2, IconStar } from "@tabler/icons-react";
+import {
+  IconTrophy,
+  IconDownload,
+  IconShare2,
+  IconStar,
+} from "@tabler/icons-react";
 import type { EnrolledCourse } from "@/lib/student-mock-data";
 
 interface CourseCompletedViewProps {
@@ -17,7 +22,9 @@ export default function CourseCompletedView({
       {/* Header */}
       <div>
         <p className="sp-eyebrow">Achievements</p>
-        <h1 className="text-2xl font-bold text-foreground">Courses Completed</h1>
+        <h1 className="text-2xl font-bold text-foreground">
+          Courses Completed
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Celebrate your learning milestones and progress.
         </p>
@@ -27,21 +34,36 @@ export default function CourseCompletedView({
       {completedCourses.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           <div className="glass-card p-4 text-center">
-            <p className="text-2xl font-bold text-primary">{completedCourses.length}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Courses Completed</p>
+            <p className="text-2xl font-bold text-primary">
+              {completedCourses.length}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Courses Completed
+            </p>
           </div>
           <div className="glass-card p-4 text-center">
             <p className="text-2xl font-bold text-success">
-              {Math.round((completedCourses.length / Math.max(1, courses.length)) * 100)}%
+              {Math.round(
+                (completedCourses.length / Math.max(1, courses.length)) * 100,
+              )}
+              %
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">Completion Rate</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Completion Rate
+            </p>
           </div>
           <div className="glass-card p-4 text-center">
-            <p className="text-2xl font-bold text-accent">{completedCourses.length * 20}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Certificates Earned</p>
+            <p className="text-2xl font-bold text-accent">
+              {completedCourses.length * 20}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Certificates Earned
+            </p>
           </div>
           <div className="glass-card p-4 text-center">
-            <p className="text-2xl font-bold text-warning">{completedCourses.length * 5}</p>
+            <p className="text-2xl font-bold text-warning">
+              {completedCourses.length * 5}
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">Skills Gained</p>
           </div>
         </div>
@@ -71,8 +93,12 @@ export default function CourseCompletedView({
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <p className="text-2xl">🏆</p>
-                      <p className="mt-2 font-semibold text-foreground">{course.title}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{course.instructor}</p>
+                      <p className="mt-2 font-semibold text-foreground">
+                        {course.title}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {course.instructor}
+                      </p>
                     </div>
                     <div className="flex items-center gap-1 text-warning">
                       {[...Array(5)].map((_, i) => (
@@ -118,7 +144,9 @@ export default function CourseCompletedView({
       {completedCourses.length === 0 && (
         <div className="glass-card flex flex-col items-center justify-center py-12 text-center">
           <span className="text-4xl">📚</span>
-          <p className="mt-3 font-semibold text-foreground">No courses completed yet</p>
+          <p className="mt-3 font-semibold text-foreground">
+            No courses completed yet
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">
             Keep learning and complete your first course to see it here!
           </p>
@@ -131,10 +159,14 @@ export default function CourseCompletedView({
           <div className="flex items-start gap-4">
             <span className="text-3xl">🎯</span>
             <div>
-              <h3 className="font-semibold text-foreground">Keep up the momentum!</h3>
+              <h3 className="font-semibold text-foreground">
+                Keep up the momentum!
+              </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                You&apos;re doing great! Complete {5 - completedCourses.length} more course
-                {5 - completedCourses.length !== 1 ? "s" : ""} to reach your goal.
+                You&apos;re doing great! Complete {5 - completedCourses.length}{" "}
+                more course
+                {5 - completedCourses.length !== 1 ? "s" : ""} to reach your
+                goal.
               </p>
             </div>
           </div>
@@ -146,9 +178,12 @@ export default function CourseCompletedView({
           <div className="flex items-start gap-4">
             <span className="text-3xl">⭐</span>
             <div>
-              <h3 className="font-semibold text-foreground">You&apos;re a learning champion!</h3>
+              <h3 className="font-semibold text-foreground">
+                You&apos;re a learning champion!
+              </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Excellent progress on your learning journey. Your dedication is inspiring.
+                Excellent progress on your learning journey. Your dedication is
+                inspiring.
               </p>
             </div>
           </div>

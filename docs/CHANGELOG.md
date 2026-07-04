@@ -7,6 +7,7 @@
 ## 2026-07-04 — Brevo Email Integration & Bugfixes ✅
 
 ### Added: Brevo Email Provider with React Email Templates
+
 - **New package** `packages/email-templates/` with 13 React Email templates + `BaseLayout`
 - **Email service** (`apps/api/src/services/email.service.ts`): `sendEmail`, `sendWelcomeEmail`, `sendNotificationEmail` via Brevo v6 API
 - **Template mapping**: All notification types mapped to React Email components with subject/text generators
@@ -15,31 +16,38 @@
 - **Documentation**: `docs/EMAIL_INTEGRATION.md` — setup guide, testing, troubleshooting, API reference
 
 ### Fixed: Enrollment Email Not Dispatching
+
 - Exported `dispatchEmailsForNotification` from `notification.service.ts` (was module-private)
 - Added `dispatchEmailsForNotification()` call in enrollment approval and rejection handlers with course/batch data
 
 ### Fixed: Seed Email Preferences Blocking All Emails
+
 - Seed set `email: false` for all users (only 6 of 15 types) — no notification emails ever sent
 - Changed to `email: true` for all users across all 15 notification types
 - Fixed `ts-node` → `tsx` in Prisma seed command (package.json)
 
 ### Fixed: Missing Preference = No Email
+
 - `dispatchEmailsForNotification` filtered out users with no `NotificationPreference` record
 - Changed logic: no preference record → default email-enabled (matches schema `enabled: true` default)
 
 ### Fixed: Lucide Icon Type Mismatches (Web Build)
+
 - `StatCard.tsx`, `AdminSidebar.tsx`, `InstructorSidebar.tsx`, `Sidebar.tsx`, `EmptyState.tsx`, `ConfirmModal.tsx`, `admin/enrollments/page.tsx`
 - Widened `ComponentType<{ size?: number; ... }>` to accept `size?: number | string` matching Lucide's `IconProps`
 
 ### Fixed: User Delete Foreign Key Violation
+
 - Added `notificationPreference.deleteMany` to user deletion cleanup in `user.routes.ts`
 
 ### Changed: Brevo → Resend (Deferred)
+
 - User chose to keep Brevo for now. Docs and changelog updated.
 
 ---
 
 ### Changed: Module-Lesson Hierarchy with Student Dropdown Navigation
+
 - **Prisma schema**: Added `Lesson` model (`id`, `moduleId`, `title`, `order`, `videoType`, `videoUrl`, `videoEmbedId`, `durationSeconds`, `isFreePreview`, `resources`); removed video/resources fields from `Module`
 - **Seed script**: `upsertLessons` creates lessons per module with YouTube video data
 - **Lesson service/controller/routes**: Full CRUD + reorder + resource add/delete under `/api/admin/courses/modules/:moduleId/lessons`
@@ -55,6 +63,7 @@
 ## 2026-07-03 — White-Label YouTube Player ✅
 
 ### Changed: YouTube Embed → Custom Player with Zero Branding
+
 - **Rewrote** `apps/web/src/app/student/_views/_comps/VideoPlayer.tsx` to use **YouTube IFrame Player API** with `controls=0`, `modestbranding=1`, `rel=0`, `iv_load_policy=3`, `fs=0` — no visible YouTube controls or logo
 - **Added** transparent click overlay that intercepts all interactions on the video area — prevents right-click "Copy video URL" and clicking through to YouTube
 - **Added** custom play button overlay with gradient background (matches app theme) — shown on idle/paused, hidden during playback
@@ -65,6 +74,7 @@
 ## 2026-07-03 — k6 Load Testing Harness ✅
 
 ### Added: k6 Test Suite
+
 - **Installed** k6 v2.1.0 locally (standalone binary in repo root)
 - **Created** `apps/api/k6/` with 4 files:
   - `helpers.js` — shared base URL, seed user credentials, login function with cookie jar, threshold builder
@@ -74,6 +84,7 @@
 - **Added** `pnpm` scripts: `test:load`, `test:load:smoke`, `test:load:scenarios` in root `package.json`
 
 ### Added: Heavy Load Profile (100 VUs)
+
 - **Created** `apps/api/k6/heavy.js` — ramp 0→50→100 VUs over 2 min, hold 100 for 2 min, ramp down. Thresholds: p95 < 2s, error rate < 10%
 - **Added** `pnpm test:load:heavy` script
 
@@ -82,6 +93,7 @@
 ## 2026-07-03 — Permanent Course Deletion for Archived Courses ✅
 
 ### Added: Permanent Delete Endpoint + UI
+
 - **API**: Added `DELETE /api/admin/courses/:id/permanent` (admin-only) that hard-deletes a course and all related data in a transaction
 - **Service**: Added `permanentDeleteCourse()` in `course.service.ts` — cascading cleanup of modules, batches, sessions, recordings, assignments, enrollments, payments, notes, certificates, and mentorship tickets before deleting the course record
 - **Controller**: Added `permanentDelete` handler in `course.controller.ts`
@@ -92,12 +104,14 @@
 ## 2026-07-03 — Playwright E2E Test Suite ✅
 
 ### Added: Playwright E2E Tests (Chromium-only)
+
 - Installed `@playwright/test` — Chromium-only via `playwright install chromium`
 - Created `apps/web/playwright.config.ts` — single Chromium project, HTML + list reporters
 - Created `apps/web/e2e/auth.setup.ts` — shared API login helper for admin/instructor/student
 - Updated root `package.json`, `apps/web/package.json`, `turbo.json` with `test:e2e` scripts
 
 ### Upgraded: Smoke → Deep Workflow Tests
+
 - **auth.spec.ts** — 10 tests: UI login for all 3 roles with redirect verification, API auth cookie, invalid credentials, empty email validation, user registration via API + UI verify, password visibility toggle, logout, unauthenticated redirect
 - **student.spec.ts** — 12 tests: 9 page smoke (Dashboard through Settings) + 3 deep workflows (sidebar nav items, support ticket creation, settings notification toggles)
 - **instructor.spec.ts** — 12 tests: 9 page smoke (Dashboard through Settings) + 3 deep workflows (dashboard stat cards, batches list with cards/empty state, assignments list)
@@ -106,6 +120,7 @@
 - All deep tests use API-driven data setup + UI verification for robust, repeatable E2E coverage
 
 ### Plan
+
 - `.omo/plans/playwright-e2e.md` → `docs/plan-completed/playwright-e2e.md`
 
 ---

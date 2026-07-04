@@ -62,7 +62,7 @@ test.describe("Instructor Portal — Workflows", () => {
 
     // Look for stat/metric cards on the dashboard
     const statCards = page.locator(
-      '[class*="card"], [class*="stat"], [class*="metric"], [class*="grid"] > div'
+      '[class*="card"], [class*="stat"], [class*="metric"], [class*="grid"] > div',
     );
 
     // Wait for dashboard content to render fully
@@ -86,7 +86,7 @@ test.describe("Instructor Portal — Workflows", () => {
 
     // Check if batch cards or empty state is rendered
     const batchCards = page.locator('[class*="card"], [class*="batch"]');
-    const emptyState = page.locator('text=No cohorts, text=No batches');
+    const emptyState = page.locator("text=No cohorts, text=No batches");
 
     if (await emptyState.isVisible()) {
       // Empty state is fine — instructor has no batches assigned
@@ -107,7 +107,7 @@ test.describe("Instructor Portal — Workflows", () => {
 
     // Check if assignment items or table is visible
     const assignmentList = page.locator(
-      'table, [class*="assignment"], [class*="list"]'
+      'table, [class*="assignment"], [class*="list"]',
     );
     const hasContent = (await assignmentList.count()) > 0;
     expect(hasContent).toBe(true);

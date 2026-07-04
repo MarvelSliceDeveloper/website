@@ -1,4 +1,4 @@
-import { GraphClient } from './graph.client';
+import { GraphClient } from "./graph.client";
 
 export interface MsUserProfile {
   id: string;
@@ -13,5 +13,5 @@ export interface MsUserProfile {
 
 export async function getMsUserProfile(userId: string): Promise<MsUserProfile> {
   const client = new GraphClient({ userId });
-  return client.get('/me') as Promise<MsUserProfile>;
+  return client.get("/me") as Promise<MsUserProfile>;
 }

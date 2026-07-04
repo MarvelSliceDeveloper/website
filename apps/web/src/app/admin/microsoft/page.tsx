@@ -84,7 +84,9 @@ export default function MicrosoftIntegrationPage() {
       ) : !status ? (
         <div className="glass-card p-12 text-center">
           <span className="text-4xl">⚠️</span>
-          <p className="mt-2 font-semibold text-foreground">Failed to load status</p>
+          <p className="mt-2 font-semibold text-foreground">
+            Failed to load status
+          </p>
           <button onClick={loadStatus} className="btn-primary mt-4 text-xs">
             Retry
           </button>
@@ -94,7 +96,9 @@ export default function MicrosoftIntegrationPage() {
           {/* Status Cards */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {/* Account Status */}
-            <div className={`glass-card p-5 border ${status.linked ? "border-emerald-500/30" : "border-amber-500/30"}`}>
+            <div
+              className={`glass-card p-5 border ${status.linked ? "border-emerald-500/30" : "border-amber-500/30"}`}
+            >
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -109,14 +113,22 @@ export default function MicrosoftIntegrationPage() {
                     </p>
                   )}
                 </div>
-                <div className={`p-2 rounded-full ${status.linked ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"}`}>
-                  {status.linked ? <IconCheck size={20} /> : <IconX size={20} />}
+                <div
+                  className={`p-2 rounded-full ${status.linked ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"}`}
+                >
+                  {status.linked ? (
+                    <IconCheck size={20} />
+                  ) : (
+                    <IconX size={20} />
+                  )}
                 </div>
               </div>
               <div className="mt-4">
                 {status.linked ? (
                   <button
-                    onClick={() => window.location.href = "/api/auth/azure-ad/login"}
+                    onClick={() =>
+                      (window.location.href = "/api/auth/azure-ad/login")
+                    }
                     className="btn-secondary w-full justify-center text-xs py-2 flex items-center gap-1.5"
                   >
                     <IconRefresh size={14} /> Re-link Account
@@ -129,7 +141,8 @@ export default function MicrosoftIntegrationPage() {
                   >
                     {linking ? (
                       <>
-                        <IconRefresh size={14} className="animate-spin" /> Redirecting...
+                        <IconRefresh size={14} className="animate-spin" />{" "}
+                        Redirecting...
                       </>
                     ) : (
                       <>
@@ -142,7 +155,9 @@ export default function MicrosoftIntegrationPage() {
             </div>
 
             {/* Env Configuration */}
-            <div className={`glass-card p-5 border ${status.envConfigured ? "border-emerald-500/30" : "border-danger/30"}`}>
+            <div
+              className={`glass-card p-5 border ${status.envConfigured ? "border-emerald-500/30" : "border-danger/30"}`}
+            >
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -152,15 +167,34 @@ export default function MicrosoftIntegrationPage() {
                     {status.envConfigured ? "Configured" : "Missing Vars"}
                   </p>
                 </div>
-                <div className={`p-2 rounded-full ${status.envConfigured ? "bg-emerald-500/10 text-emerald-400" : "bg-danger/10 text-danger"}`}>
-                  {status.envConfigured ? <IconCheck size={20} /> : <IconX size={20} />}
+                <div
+                  className={`p-2 rounded-full ${status.envConfigured ? "bg-emerald-500/10 text-emerald-400" : "bg-danger/10 text-danger"}`}
+                >
+                  {status.envConfigured ? (
+                    <IconCheck size={20} />
+                  ) : (
+                    <IconX size={20} />
+                  )}
                 </div>
               </div>
               <div className="mt-4 space-y-1.5">
-                {(["MS_CLIENT_ID", "MS_CLIENT_SECRET", "MS_REDIRECT_URI"] as const).map((key) => (
-                  <div key={key} className="flex items-center justify-between text-xs">
-                    <span className="font-mono text-muted-foreground">{key}</span>
-                    <span className={`font-medium ${status.env[key] ? "text-emerald-400" : "text-danger"}`}>
+                {(
+                  [
+                    "MS_CLIENT_ID",
+                    "MS_CLIENT_SECRET",
+                    "MS_REDIRECT_URI",
+                  ] as const
+                ).map((key) => (
+                  <div
+                    key={key}
+                    className="flex items-center justify-between text-xs"
+                  >
+                    <span className="font-mono text-muted-foreground">
+                      {key}
+                    </span>
+                    <span
+                      className={`font-medium ${status.env[key] ? "text-emerald-400" : "text-danger"}`}
+                    >
                       {status.env[key] ? "Set" : "Missing"}
                     </span>
                   </div>
@@ -208,14 +242,18 @@ export default function MicrosoftIntegrationPage() {
               <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                 <IconClock size={15} /> Recent Graph API Activity
               </h2>
-              <button onClick={loadStatus} className="text-xs text-violet-400 hover:text-violet-300 font-medium flex items-center gap-1">
+              <button
+                onClick={loadStatus}
+                className="text-xs text-violet-400 hover:text-violet-300 font-medium flex items-center gap-1"
+              >
                 <IconRefresh size={13} /> Refresh
               </button>
             </div>
 
             {status.logs.length === 0 ? (
               <div className="py-8 text-center text-sm text-muted-foreground">
-                No Graph API calls recorded yet. Activity will appear here once Microsoft integration is used.
+                No Graph API calls recorded yet. Activity will appear here once
+                Microsoft integration is used.
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -232,10 +270,16 @@ export default function MicrosoftIntegrationPage() {
                   </thead>
                   <tbody className="divide-y divide-border/40">
                     {status.logs.map((log) => (
-                      <tr key={log.id} className="hover:bg-card-hover transition-colors">
+                      <tr
+                        key={log.id}
+                        className="hover:bg-card-hover transition-colors"
+                      >
                         <td className="py-2.5 pr-3 text-muted whitespace-nowrap font-mono text-[10px]">
                           {new Date(log.createdAt).toLocaleString("en-IN", {
-                            day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+                            day: "2-digit",
+                            month: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
                           })}
                         </td>
                         <td className="py-2.5 pr-3 font-medium text-foreground whitespace-nowrap">
@@ -245,15 +289,21 @@ export default function MicrosoftIntegrationPage() {
                           {log.endpoint}
                         </td>
                         <td className="py-2.5 pr-3">
-                          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                            log.success
-                              ? "bg-emerald-500/10 text-emerald-400"
-                              : "bg-danger/10 text-danger"
-                          }`}>
+                          <span
+                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                              log.success
+                                ? "bg-emerald-500/10 text-emerald-400"
+                                : "bg-danger/10 text-danger"
+                            }`}
+                          >
                             {log.success ? (
-                              <><IconCheck size={10} /> {log.statusCode}</>
+                              <>
+                                <IconCheck size={10} /> {log.statusCode}
+                              </>
                             ) : (
-                              <><IconX size={10} /> {log.statusCode || "—"}</>
+                              <>
+                                <IconX size={10} /> {log.statusCode || "—"}
+                              </>
                             )}
                           </span>
                         </td>

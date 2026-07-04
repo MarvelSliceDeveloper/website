@@ -16,7 +16,9 @@ import {
   CustomNotification,
 } from "@lms/email-templates";
 
-type EmailTemplateComponent = (props: Record<string, unknown>) => React.ReactElement;
+type EmailTemplateComponent = (
+  props: Record<string, unknown>,
+) => React.ReactElement;
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const NOTIFICATION_EMAIL_TEMPLATES: Record<string, EmailTemplateComponent> = {
@@ -27,13 +29,20 @@ const NOTIFICATION_EMAIL_TEMPLATES: Record<string, EmailTemplateComponent> = {
   ENROLLMENT_REJECTED: EnrollmentRejected as unknown as EmailTemplateComponent,
   ASSIGNMENT_GRADED: AssignmentGraded as unknown as EmailTemplateComponent,
   MENTORSHIP_CREATED: MentorshipCreated as unknown as EmailTemplateComponent,
-  MENTORSHIP_ASSIGNED: MentorshipStatusChanged as unknown as EmailTemplateComponent,
-  MENTORSHIP_SCHEDULED: MentorshipStatusChanged as unknown as EmailTemplateComponent,
-  MENTORSHIP_COMPLETED: MentorshipStatusChanged as unknown as EmailTemplateComponent,
-  MENTORSHIP_CANCELLED: MentorshipStatusChanged as unknown as EmailTemplateComponent,
-  SUPPORT_TICKET_CREATED: SupportTicketCreated as unknown as EmailTemplateComponent,
-  SUPPORT_TICKET_RESPONDED: SupportTicketReply as unknown as EmailTemplateComponent,
-  SUPPORT_TICKET_STATUS_CHANGED: SupportTicketStatusChanged as unknown as EmailTemplateComponent,
+  MENTORSHIP_ASSIGNED:
+    MentorshipStatusChanged as unknown as EmailTemplateComponent,
+  MENTORSHIP_SCHEDULED:
+    MentorshipStatusChanged as unknown as EmailTemplateComponent,
+  MENTORSHIP_COMPLETED:
+    MentorshipStatusChanged as unknown as EmailTemplateComponent,
+  MENTORSHIP_CANCELLED:
+    MentorshipStatusChanged as unknown as EmailTemplateComponent,
+  SUPPORT_TICKET_CREATED:
+    SupportTicketCreated as unknown as EmailTemplateComponent,
+  SUPPORT_TICKET_RESPONDED:
+    SupportTicketReply as unknown as EmailTemplateComponent,
+  SUPPORT_TICKET_STATUS_CHANGED:
+    SupportTicketStatusChanged as unknown as EmailTemplateComponent,
   CUSTOM_NOTIFICATION: CustomNotification as unknown as EmailTemplateComponent,
 };
 /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -97,21 +106,25 @@ export const emailService = {
       return true;
     } catch (error: unknown) {
       const err = error as { body?: { message?: string }; message?: string };
-      console.error("[email] Failed to send:", err.body?.message || err.message || error);
+      console.error(
+        "[email] Failed to send:",
+        err.body?.message || err.message || error,
+      );
       return false;
     }
   },
 
-  async sendWelcomeEmail(user: { name: string; email: string }): Promise<boolean> {
+  async sendWelcomeEmail(user: {
+    name: string;
+    email: string;
+  }): Promise<boolean> {
     if (!isConfigured()) {
       console.warn("[email] BREVO_API_KEY not set — skipping welcome email");
       return false;
     }
 
     try {
-      const html = await render(
-        WelcomeEmail({ userName: user.name })
-      );
+      const html = await render(WelcomeEmail({ userName: user.name }));
 
       return this.sendEmail({
         to: [{ email: user.email, name: user.name }],
@@ -129,26 +142,31 @@ export const emailService = {
   async sendNotificationEmail(
     user: { name: string; email: string },
     type: string,
-    data: Record<string, unknown>
+    data: Record<string, unknown>,
   ): Promise<boolean> {
     if (!isConfigured()) {
-      console.warn("[email] BREVO_API_KEY not set — skipping notification email");
+      console.warn(
+        "[email] BREVO_API_KEY not set — skipping notification email",
+      );
       return false;
     }
 
     try {
-      const TemplateComponent = NOTIFICATION_EMAIL_TEMPLATES[type] || CustomNotification;
+      const TemplateComponent =
+        NOTIFICATION_EMAIL_TEMPLATES[type] || CustomNotification;
 
       const templateData = { ...data };
 
-      if (type === "CUSTOM_NOTIFICATION" || !NOTIFICATION_EMAIL_TEMPLATES[type]) {
+      if (
+        type === "CUSTOM_NOTIFICATION" ||
+        !NOTIFICATION_EMAIL_TEMPLATES[type]
+      ) {
         templateData.title = (data.title as string) || "Notification";
-        templateData.message = (data.message as string) || "You have a new notification.";
+        templateData.message =
+          (data.message as string) || "You have a new notification.";
       }
 
-      const html = await render(
-        TemplateComponent(templateData)
-      );
+      const html = await render(TemplateComponent(templateData));
 
       const subject = this.getSubjectForType(type, data);
 
@@ -160,7 +178,10 @@ export const emailService = {
         tags: ["notification", type.toLowerCase()],
       });
     } catch (error: unknown) {
-      console.error(`[email] Failed to send notification email (type: ${String(type)}):`, error);
+      console.error(
+        `[email] Failed to send notification email (type: ${String(type)}):`,
+        error,
+      );
       return false;
     }
   },

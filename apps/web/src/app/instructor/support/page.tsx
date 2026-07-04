@@ -11,7 +11,12 @@ export default function InstructorSupportPage() {
   const [showCreate, setShowCreate] = useState(false);
 
   if (selectedTicketId) {
-    return <SupportTicketDetail ticketId={selectedTicketId} onBack={() => setSelectedTicketId(null)} />;
+    return (
+      <SupportTicketDetail
+        ticketId={selectedTicketId}
+        onBack={() => setSelectedTicketId(null)}
+      />
+    );
   }
 
   return (
@@ -21,7 +26,10 @@ export default function InstructorSupportPage() {
         title="Support"
         description="Report issues or ask questions. Admin will review and respond."
         action={
-          <button onClick={() => setShowCreate((v) => !v)} className="btn-primary">
+          <button
+            onClick={() => setShowCreate((v) => !v)}
+            className="btn-primary"
+          >
             {showCreate ? "Cancel" : "New Ticket"}
           </button>
         }
@@ -29,7 +37,9 @@ export default function InstructorSupportPage() {
 
       {showCreate && (
         <CreateTicketForm
-          onSuccess={() => { setShowCreate(false); }}
+          onSuccess={() => {
+            setShowCreate(false);
+          }}
           onCancel={() => setShowCreate(false)}
         />
       )}

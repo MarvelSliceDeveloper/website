@@ -1,6 +1,7 @@
 # Plan: Calendar ↔ Sessions Sync Fixes
 
 ## Status
+
 ✅ Plan Completed — all fixes A–E implemented.
 
 ---
@@ -22,6 +23,7 @@
 **Problem:** `updateSession` only syncs `startAt`/`endAt` to CalendarEvent. Title changes and LiveSession's own `endedAt` are missed.
 
 **Changes:**
+
 1. Add `data.title` to `updateData` (LiveSession title update)
 2. Add `data.endDateTime` → `endedAt` to `updateData` (LiveSession end sync)
 3. Sync title + dates to CalendarEvent whenever they change

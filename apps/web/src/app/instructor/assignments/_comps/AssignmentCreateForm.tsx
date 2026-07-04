@@ -5,7 +5,11 @@ import { emptyFormQuestions } from "./types";
 
 interface Props {
   selectedBatchId: string;
-  batches: Array<{ id: string; name: string; course: { id: string; title: string } }>;
+  batches: Array<{
+    id: string;
+    name: string;
+    course: { id: string; title: string };
+  }>;
   onCancel: () => void;
   onSubmit: (data: {
     title: string;
@@ -19,14 +23,22 @@ interface Props {
   }) => Promise<void>;
 }
 
-export function AssignmentCreateForm({ selectedBatchId, batches, onCancel, onSubmit }: Props) {
+export function AssignmentCreateForm({
+  selectedBatchId,
+  batches,
+  onCancel,
+  onSubmit,
+}: Props) {
   const [formTitle, setFormTitle] = useState("");
   const [formDescription, setFormDescription] = useState("");
   const [formDueDate, setFormDueDate] = useState("");
   const [formType, setFormType] = useState<"QUIZ" | "ASSIGNMENT">("QUIZ");
-  const [formQuestions, setFormQuestions] = useState<FormQuestion[]>(emptyFormQuestions());
+  const [formQuestions, setFormQuestions] =
+    useState<FormQuestion[]>(emptyFormQuestions());
   const [uploadingPdf, setUploadingPdf] = useState(false);
-  const [formQuestionPdfUrl, setFormQuestionPdfUrl] = useState<string | null>(null);
+  const [formQuestionPdfUrl, setFormQuestionPdfUrl] = useState<string | null>(
+    null,
+  );
   const [formMaxPoints, setFormMaxPoints] = useState(100);
   const [submitting, setSubmitting] = useState(false);
 
@@ -53,20 +65,33 @@ export function AssignmentCreateForm({ selectedBatchId, batches, onCancel, onSub
   };
 
   const handleQuestionChange = (index: number, text: string) => {
-    setFormQuestions((prev) => prev.map((q, i) => (i === index ? { ...q, questionText: text } : q)));
+    setFormQuestions((prev) =>
+      prev.map((q, i) => (i === index ? { ...q, questionText: text } : q)),
+    );
   };
 
   const handleMarksChange = (index: number, marks: number) => {
-    setFormQuestions((prev) => prev.map((q, i) => (i === index ? { ...q, marks } : q)));
+    setFormQuestions((prev) =>
+      prev.map((q, i) => (i === index ? { ...q, marks } : q)),
+    );
   };
 
-  const handleOptionChange = (index: number, optIndex: number, text: string) => {
+  const handleOptionChange = (
+    index: number,
+    optIndex: number,
+    text: string,
+  ) => {
     setFormQuestions((prev) =>
       prev.map((q, i) =>
         i === index
-          ? { ...q, options: q.options.map((o, oi) => (oi === optIndex ? { ...o, optionText: text } : o)) }
-          : q
-      )
+          ? {
+              ...q,
+              options: q.options.map((o, oi) =>
+                oi === optIndex ? { ...o, optionText: text } : o,
+              ),
+            }
+          : q,
+      ),
     );
   };
 
@@ -74,9 +99,15 @@ export function AssignmentCreateForm({ selectedBatchId, batches, onCancel, onSub
     setFormQuestions((prev) =>
       prev.map((q, i) =>
         i === index
-          ? { ...q, options: q.options.map((o, oi) => ({ ...o, isCorrect: oi === optIndex })) }
-          : q
-      )
+          ? {
+              ...q,
+              options: q.options.map((o, oi) => ({
+                ...o,
+                isCorrect: oi === optIndex,
+              })),
+            }
+          : q,
+      ),
     );
   };
 
@@ -87,7 +118,10 @@ export function AssignmentCreateForm({ selectedBatchId, batches, onCancel, onSub
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Upload failed");
       setFormQuestionPdfUrl(data.url);
@@ -129,11 +163,15 @@ export function AssignmentCreateForm({ selectedBatchId, batches, onCancel, onSub
       <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
         <span>📝</span> Create New Assessment
       </h2>
-      <p className="text-xs text-muted-foreground mt-0.5">Build a quiz with auto-grading or post a PDF-based assignment.</p>
+      <p className="text-xs text-muted-foreground mt-0.5">
+        Build a quiz with auto-grading or post a PDF-based assignment.
+      </p>
 
       <form onSubmit={handleSubmit} className="space-y-6 mt-6">
         <div className="space-y-1">
-          <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Batch</label>
+          <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
+            Batch
+          </label>
           <select
             required
             disabled
@@ -143,13 +181,17 @@ export function AssignmentCreateForm({ selectedBatchId, batches, onCancel, onSub
             {batches
               .filter((b) => b.id === selectedBatchId)
               .map((b) => (
-                <option key={b.id} value={b.id}>{b.name} — {b.course.title}</option>
+                <option key={b.id} value={b.id}>
+                  {b.name} — {b.course.title}
+                </option>
               ))}
           </select>
         </div>
 
         <div className="space-y-1">
-          <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Assessment Title</label>
+          <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
+            Assessment Title
+          </label>
           <input
             type="text"
             required
@@ -161,7 +203,9 @@ export function AssignmentCreateForm({ selectedBatchId, batches, onCancel, onSub
         </div>
 
         <div className="space-y-1">
-          <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Description</label>
+          <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
+            Description
+          </label>
           <textarea
             required
             rows={2}
@@ -174,7 +218,9 @@ export function AssignmentCreateForm({ selectedBatchId, batches, onCancel, onSub
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Due Date & Time</label>
+            <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
+              Due Date & Time
+            </label>
             <input
               type="datetime-local"
               required
@@ -184,7 +230,9 @@ export function AssignmentCreateForm({ selectedBatchId, batches, onCancel, onSub
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Assessment Type</label>
+            <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
+              Assessment Type
+            </label>
             <div className="flex gap-2 h-full items-end pb-1">
               <button
                 type="button"
@@ -226,12 +274,17 @@ export function AssignmentCreateForm({ selectedBatchId, batches, onCancel, onSub
 
         {formType === "ASSIGNMENT" && (
           <div className="space-y-4 pt-4 border-t border-border/60">
-            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Question PDF & Grading</h3>
+            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
+              Question PDF & Grading
+            </h3>
             <div className="p-4 rounded-xl border border-border/80 bg-background/50 space-y-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Upload Question PDF</label>
+                <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
+                  Upload Question PDF
+                </label>
                 <p className="text-[11px] text-muted-foreground mb-2">
-                  Upload a PDF containing the assignment questions. Students will download this and submit their answers as a file.
+                  Upload a PDF containing the assignment questions. Students
+                  will download this and submit their answers as a file.
                 </p>
                 <input
                   type="file"
@@ -241,18 +294,31 @@ export function AssignmentCreateForm({ selectedBatchId, batches, onCancel, onSub
                   className="field py-2 text-sm"
                 />
                 {uploadingPdf && (
-                  <p className="text-xs text-accent animate-pulse">Uploading PDF…</p>
+                  <p className="text-xs text-accent animate-pulse">
+                    Uploading PDF…
+                  </p>
                 )}
                 {formQuestionPdfUrl && (
                   <div className="flex items-center gap-2 mt-2 p-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10">
                     <span className="text-emerald-400 text-sm">✅</span>
-                    <span className="text-xs text-emerald-300 font-medium truncate flex-1">PDF uploaded successfully</span>
-                    <a href={formQuestionPdfUrl} target="_blank" rel="noreferrer" className="text-[11px] text-primary hover:underline shrink-0">Preview →</a>
+                    <span className="text-xs text-emerald-300 font-medium truncate flex-1">
+                      PDF uploaded successfully
+                    </span>
+                    <a
+                      href={formQuestionPdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[11px] text-primary hover:underline shrink-0"
+                    >
+                      Preview →
+                    </a>
                   </div>
                 )}
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Maximum Points</label>
+                <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
+                  Maximum Points
+                </label>
                 <input
                   type="number"
                   required
@@ -263,7 +329,8 @@ export function AssignmentCreateForm({ selectedBatchId, batches, onCancel, onSub
                   placeholder="100"
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  The total points this assignment is worth. Instructors will manually grade submissions.
+                  The total points this assignment is worth. Instructors will
+                  manually grade submissions.
                 </p>
               </div>
             </div>
@@ -271,8 +338,18 @@ export function AssignmentCreateForm({ selectedBatchId, batches, onCancel, onSub
         )}
 
         <div className="flex justify-end gap-3 pt-4 border-t border-border/60">
-          <button type="button" onClick={onCancel} className="btn-secondary text-xs">Cancel</button>
-          <button type="submit" disabled={submitting} className="btn-primary text-xs px-6">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="btn-secondary text-xs"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="btn-primary text-xs px-6"
+          >
             {submitting ? "Creating..." : "Publish Assignment"}
           </button>
         </div>

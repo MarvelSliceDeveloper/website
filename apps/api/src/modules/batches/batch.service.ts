@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { prisma } from '../../utils/prisma';
+import { z } from "zod";
+import { prisma } from "../../utils/prisma";
 
 // --- Zod Schemas ---
 
@@ -19,7 +19,7 @@ export const UpdateBatchSchema = z.object({
   endDate: z.string().datetime().optional(),
   maxStudents: z.number().int().min(1).nullable().optional(),
   description: z.string().nullable().optional(),
-  status: z.enum(['UPCOMING', 'ACTIVE', 'COMPLETED']).optional(),
+  status: z.enum(["UPCOMING", "ACTIVE", "COMPLETED"]).optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -33,14 +33,18 @@ export const batchService = {
   // Creates a new batch linked to a course
   async createBatch(data: z.infer<typeof CreateBatchSchema>) {
     // Verify the course exists
-    const course = await prisma.course.findUnique({ where: { id: data.courseId } });
-    if (!course) throw new Error('Course not found');
+    const course = await prisma.course.findUnique({
+      where: { id: data.courseId },
+    });
+    if (!course) throw new Error("Course not found");
 
     // Verify the instructor exists and has INSTRUCTOR role
-    const instructor = await prisma.user.findUnique({ where: { id: data.instructorId } });
-    if (!instructor) throw new Error('Instructor not found');
-    if (instructor.role !== 'INSTRUCTOR' && instructor.role !== 'ADMIN') {
-      throw new Error('User is not an instructor');
+    const instructor = await prisma.user.findUnique({
+      where: { id: data.instructorId },
+    });
+    if (!instructor) throw new Error("Instructor not found");
+    if (instructor.role !== "INSTRUCTOR" && instructor.role !== "ADMIN") {
+      throw new Error("User is not an instructor");
     }
 
     return prisma.batch.create({
@@ -52,7 +56,7 @@ export const batchService = {
         endDate: new Date(data.endDate),
         maxStudents: data.maxStudents,
         description: data.description,
-        status: 'UPCOMING',
+        status: "UPCOMING",
       },
       include: {
         course: { select: { id: true, title: true } },
@@ -74,7 +78,7 @@ export const batchService = {
     if (filters.status) where.status = filters.status;
     if (filters.instructorId) where.instructorId = filters.instructorId;
     if (filters.search) {
-      where.name = { contains: filters.search, mode: 'insensitive' };
+      where.name = { contains: filters.search, mode: "insensitive" };
     }
 
     return prisma.batch.findMany({
@@ -84,12 +88,12 @@ export const batchService = {
         instructor: { select: { id: true, name: true, email: true } },
         _count: {
           select: {
-            enrollments: { where: { status: 'APPROVED' } },
+            enrollments: { where: { status: "APPROVED" } },
             sessions: true,
           },
         },
       },
-      orderBy: { startDate: 'desc' },
+      orderBy: { startDate: "desc" },
     });
   },
 
@@ -106,28 +110,28 @@ export const batchService = {
           },
         },
         sessions: {
-          orderBy: { scheduledAt: 'asc' },
+          orderBy: { scheduledAt: "asc" },
           include: {
             recording: { select: { id: true, syncedAt: true } },
           },
         },
         _count: {
           select: {
-            enrollments: { where: { status: 'APPROVED' } },
+            enrollments: { where: { status: "APPROVED" } },
             sessions: true,
           },
         },
       },
     });
 
-    if (!batch) throw new Error('Batch not found');
+    if (!batch) throw new Error("Batch not found");
     return batch;
   },
 
   // Updates batch details
   async updateBatch(batchId: string, data: z.infer<typeof UpdateBatchSchema>) {
     const existing = await prisma.batch.findUnique({ where: { id: batchId } });
-    if (!existing) throw new Error('Batch not found');
+    if (!existing) throw new Error("Batch not found");
 
     const updateData: any = { ...data };
     if (data.startDate) updateData.startDate = new Date(data.startDate);
@@ -150,9 +154,11 @@ export const batchService = {
       include: { _count: { select: { enrollments: true } } },
     });
 
-    if (!batch) throw new Error('Batch not found');
+    if (!batch) throw new Error("Batch not found");
     if (batch._count.enrollments > 0) {
-      throw new Error('Cannot delete batch with enrolled students. Remove students first.');
+      throw new Error(
+        "Cannot delete batch with enrolled students. Remove students first.",
+      );
     }
 
     await prisma.batch.delete({ where: { id: batchId } });
@@ -162,14 +168,14 @@ export const batchService = {
   // Lists enrolled students in a batch
   async listStudents(batchId: string) {
     const batch = await prisma.batch.findUnique({ where: { id: batchId } });
-    if (!batch) throw new Error('Batch not found');
+    if (!batch) throw new Error("Batch not found");
 
     return prisma.enrollmentRequest.findMany({
-      where: { batchId, status: 'APPROVED' },
+      where: { batchId, status: "APPROVED" },
       include: {
         user: { select: { id: true, name: true, email: true, role: true } },
       },
-      orderBy: { appliedAt: 'desc' },
+      orderBy: { appliedAt: "desc" },
     });
   },
 
@@ -179,11 +185,16 @@ export const batchService = {
       where: { id: batchId },
       include: { _count: { select: { enrollments: true } } },
     });
-    if (!batch) throw new Error('Batch not found');
+    if (!batch) throw new Error("Batch not found");
 
     // Check capacity
-    if (batch.maxStudents && batch._count.enrollments + userIds.length > batch.maxStudents) {
-      throw new Error(`Batch capacity exceeded. Max: ${batch.maxStudents}, current: ${batch._count.enrollments}`);
+    if (
+      batch.maxStudents &&
+      batch._count.enrollments + userIds.length > batch.maxStudents
+    ) {
+      throw new Error(
+        `Batch capacity exceeded. Max: ${batch.maxStudents}, current: ${batch._count.enrollments}`,
+      );
     }
 
     // Create enrollment requests for each student
@@ -191,7 +202,7 @@ export const batchService = {
       userIds.map(async (userId) => {
         // Check if student already enrolled
         const existing = await prisma.enrollmentRequest.findFirst({
-          where: { userId, batchId, status: 'APPROVED' },
+          where: { userId, batchId, status: "APPROVED" },
         });
         if (existing) return { userId, skipped: true };
 
@@ -200,24 +211,24 @@ export const batchService = {
             userId,
             courseId: batch.courseId,
             batchId,
-            status: 'APPROVED',
+            status: "APPROVED",
             reviewedAt: new Date(),
           },
         });
-      })
+      }),
     );
 
-    const added = results.filter((r) => r.status === 'fulfilled').length;
+    const added = results.filter((r) => r.status === "fulfilled").length;
     return { added, total: userIds.length };
   },
 
   // Removes a student from a batch
   async removeStudent(batchId: string, userId: string) {
     const enrollment = await prisma.enrollmentRequest.findFirst({
-      where: { batchId, userId, status: 'APPROVED' },
+      where: { batchId, userId, status: "APPROVED" },
     });
 
-    if (!enrollment) throw new Error('Student not found in this batch');
+    if (!enrollment) throw new Error("Student not found in this batch");
 
     await prisma.enrollmentRequest.delete({ where: { id: enrollment.id } });
     return { removed: true };
@@ -226,18 +237,18 @@ export const batchService = {
   // Gets all instructors for dropdown selection
   async getInstructors() {
     return prisma.user.findMany({
-      where: { role: { in: ['INSTRUCTOR', 'ADMIN'] } },
+      where: { role: { in: ["INSTRUCTOR", "ADMIN"] } },
       select: { id: true, name: true, email: true, role: true },
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     });
   },
 
   // Gets all published courses for dropdown selection
   async getCoursesForBatch() {
     return prisma.course.findMany({
-      where: { status: 'PUBLISHED' },
+      where: { status: "PUBLISHED" },
       select: { id: true, title: true },
-      orderBy: { title: 'asc' },
+      orderBy: { title: "asc" },
     });
   },
 };

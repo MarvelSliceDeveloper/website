@@ -33,8 +33,16 @@ type CalendarEvent = {
 };
 
 const COURSE_COLORS = [
-  "#6d7dff", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6",
-  "#ec4899", "#14b8a6", "#f97316", "#06b6d4", "#a855f7",
+  "#6d7dff",
+  "#22c55e",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+  "#ec4899",
+  "#14b8a6",
+  "#f97316",
+  "#06b6d4",
+  "#a855f7",
 ];
 
 export default function AdminCalendarPage() {
@@ -42,10 +50,13 @@ export default function AdminCalendarPage() {
   const [instructors, setInstructors] = useState<Instructor[]>([]);
   const [selectedInstructor, setSelectedInstructor] = useState("");
   const [loading, setLoading] = useState(true);
-  const [courseColorMap, setCourseColorMap] = useState<Record<string, string>>({});
+  const [courseColorMap, setCourseColorMap] = useState<Record<string, string>>(
+    {},
+  );
 
   useEffect(() => {
-    api.get<Instructor[]>("/api/admin/batches/instructors")
+    api
+      .get<Instructor[]>("/api/admin/batches/instructors")
       .then((data) => setInstructors(data || []))
       .catch(() => {});
   }, []);
@@ -54,7 +65,8 @@ export default function AdminCalendarPage() {
     setLoading(true);
     const params: Record<string, string> = {};
     if (selectedInstructor) params.instructorId = selectedInstructor;
-    api.get<{ sessions: SessionData[] }>("/api/sessions", params)
+    api
+      .get<{ sessions: SessionData[] }>("/api/sessions", params)
       .then((data) => {
         const sessions = Array.isArray(data.sessions) ? data.sessions : [];
         const colorMap: Record<string, string> = {};
@@ -62,7 +74,8 @@ export default function AdminCalendarPage() {
         const mapped = sessions.map((s: SessionData) => {
           const courseTitle = s.batch?.course?.title || "Unknown";
           if (!colorMap[courseTitle]) {
-            colorMap[courseTitle] = COURSE_COLORS[colorIdx % COURSE_COLORS.length];
+            colorMap[courseTitle] =
+              COURSE_COLORS[colorIdx % COURSE_COLORS.length];
             colorIdx++;
           }
           const color = colorMap[courseTitle];
@@ -98,14 +111,18 @@ export default function AdminCalendarPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground md:text-3xl">Calendar</h1>
+          <h1 className="text-2xl font-bold text-foreground md:text-3xl">
+            Calendar
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {events.length} session{events.length !== 1 ? "s" : ""} scheduled
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <label className="text-xs font-medium text-muted-foreground">Filter by Instructor:</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            Filter by Instructor:
+          </label>
           <select
             value={selectedInstructor}
             onChange={(e) => setSelectedInstructor(e.target.value)}
@@ -113,7 +130,9 @@ export default function AdminCalendarPage() {
           >
             <option value="">All Instructors</option>
             {instructors.map((inst) => (
-              <option key={inst.id} value={inst.id}>{inst.name}</option>
+              <option key={inst.id} value={inst.id}>
+                {inst.name}
+              </option>
             ))}
           </select>
         </div>
@@ -125,7 +144,10 @@ export default function AdminCalendarPage() {
           <span className="font-medium">Courses:</span>
           {Object.entries(courseColorMap).map(([course, color]) => (
             <span key={course} className="flex items-center gap-1">
-              <span className="h-2.5 w-2.5 rounded-full inline-block" style={{ backgroundColor: color }} />
+              <span
+                className="h-2.5 w-2.5 rounded-full inline-block"
+                style={{ backgroundColor: color }}
+              />
               {course}
             </span>
           ))}
@@ -175,7 +197,12 @@ export default function AdminCalendarPage() {
               .fc-sp .fc-list-event-dot { display: none !important; }
             `}</style>
             <FullCalendar
-              plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
+              plugins={[
+                dayGridPlugin,
+                timeGridPlugin,
+                listPlugin,
+                interactionPlugin,
+              ]}
               initialView="dayGridMonth"
               headerToolbar={{
                 left: "prev,next today",

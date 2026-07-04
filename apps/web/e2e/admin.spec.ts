@@ -152,7 +152,7 @@ test.describe("Admin Portal — Workflows", () => {
           videoEmbedId: "dummy-test-video",
           durationSeconds: 600,
         },
-      }
+      },
     );
     expect(moduleRes.status()).toBe(201);
 
@@ -163,13 +163,13 @@ test.describe("Admin Portal — Workflows", () => {
         data: {
           thumbnailUrl: "https://via.placeholder.com/400x225.png",
         },
-      }
+      },
     );
     expect(updateRes.status()).toBe(200);
 
     // Step 3: Publish the course via API
     const publishRes = await page.request.post(
-      `${API_BASE}/api/admin/courses/${courseId}/publish`
+      `${API_BASE}/api/admin/courses/${courseId}/publish`,
     );
     expect(publishRes.status()).toBe(200);
     const publishBody = await publishRes.json();
@@ -180,9 +180,9 @@ test.describe("Admin Portal — Workflows", () => {
     await expect(page.locator("h1").first()).toBeVisible({ timeout: 15000 });
 
     // Check for a published/active status badge near the course title
-    const publishedBadge = page.locator(
-      'text=PUBLISHED, text=Active, text=Published, [class*="status"]'
-    ).first();
+    const publishedBadge = page
+      .locator('text=PUBLISHED, text=Active, text=Published, [class*="status"]')
+      .first();
     const badgeVisible = await publishedBadge.isVisible();
     // Graceful: badge UI may vary — just verify page loaded if no badge pattern
     if (badgeVisible) {
@@ -197,7 +197,7 @@ test.describe("Admin Portal — Workflows", () => {
 
     // Get available courses for the batch
     const coursesRes = await page.request.get(
-      `${API_BASE}/api/admin/batches/courses`
+      `${API_BASE}/api/admin/batches/courses`,
     );
     expect(coursesRes.status()).toBe(200);
     const coursesData = await coursesRes.json();
@@ -207,7 +207,7 @@ test.describe("Admin Portal — Workflows", () => {
 
     // Get available instructors
     const instructorsRes = await page.request.get(
-      `${API_BASE}/api/admin/batches/instructors`
+      `${API_BASE}/api/admin/batches/instructors`,
     );
     expect(instructorsRes.status()).toBe(200);
     const instructorsData = await instructorsRes.json();
@@ -245,14 +245,14 @@ test.describe("Admin Portal — Workflows", () => {
 
     // Get courses and instructors
     const coursesRes = await page.request.get(
-      `${API_BASE}/api/admin/batches/courses`
+      `${API_BASE}/api/admin/batches/courses`,
     );
     const coursesData = await coursesRes.json();
     const courses = coursesData.courses || coursesData;
     expect(courses.length).toBeGreaterThan(0);
 
     const instructorsRes = await page.request.get(
-      `${API_BASE}/api/admin/batches/instructors`
+      `${API_BASE}/api/admin/batches/instructors`,
     );
     const instructorsData = await instructorsRes.json();
     const instructors = instructorsData.instructors || instructorsData;

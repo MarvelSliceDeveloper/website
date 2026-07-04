@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { prisma } from '../../utils/prisma';
-import { notificationService } from '../notifications/notification.service';
+import { z } from "zod";
+import { prisma } from "../../utils/prisma";
+import { notificationService } from "../notifications/notification.service";
 
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
 
@@ -12,18 +12,23 @@ export const CreateQuizSchema = z.object({
   description: z.string().min(3),
   dueDate: z.string().datetime(),
   maxPoints: z.number().int().min(1).default(100),
-  questions: z.array(
-    z.object({
-      questionText: z.string().min(1),
-      marks: z.number().int().min(1).default(1),
-      options: z.array(
-        z.object({
-          optionText: z.string().min(1),
-          isCorrect: z.boolean().default(false),
-        })
-      ).min(2).max(10),
-    })
-  ).min(1),
+  questions: z
+    .array(
+      z.object({
+        questionText: z.string().min(1),
+        marks: z.number().int().min(1).default(1),
+        options: z
+          .array(
+            z.object({
+              optionText: z.string().min(1),
+              isCorrect: z.boolean().default(false),
+            }),
+          )
+          .min(2)
+          .max(10),
+      }),
+    )
+    .min(1),
 });
 
 // Schema for creating an ASSIGNMENT (PDF questions, file-upload answers)
@@ -38,12 +43,14 @@ export const CreateFileAssignmentSchema = z.object({
 });
 
 export const SubmitMcqAnswersSchema = z.object({
-  answers: z.array(
-    z.object({
-      questionId: z.string().cuid(),
-      selectedOptionId: z.string().cuid(),
-    })
-  ).min(1),
+  answers: z
+    .array(
+      z.object({
+        questionId: z.string().cuid(),
+        selectedOptionId: z.string().cuid(),
+      }),
+    )
+    .min(1),
 });
 
 export const GradeSubmissionSchema = z.object({
@@ -57,21 +64,32 @@ export const CreateAssignmentSchema = CreateQuizSchema;
 export const assignmentService = {
   // ── Helper: verify instructor owns the batch ─────────────────────────────
   // Verifies the instructor owns the given batch
-  async _verifyBatchInstructor(instructorId: string, batchId: string, courseId: string) {
+  async _verifyBatchInstructor(
+    instructorId: string,
+    batchId: string,
+    courseId: string,
+  ) {
     const batch = await prisma.batch.findUnique({ where: { id: batchId } });
-    if (!batch) throw new Error('Batch not found');
+    if (!batch) throw new Error("Batch not found");
     if (batch.instructorId !== instructorId) {
-      throw new Error('You are not the instructor of this batch');
+      throw new Error("You are not the instructor of this batch");
     }
     if (batch.courseId !== courseId) {
-      throw new Error('Batch does not belong to the selected course');
+      throw new Error("Batch does not belong to the selected course");
     }
     return batch;
   },
 
   // Creates a new MCQ quiz with nested questions and options
-  async createQuiz(instructorId: string, data: z.infer<typeof CreateQuizSchema>) {
-    await this._verifyBatchInstructor(instructorId, data.batchId, data.courseId);
+  async createQuiz(
+    instructorId: string,
+    data: z.infer<typeof CreateQuizSchema>,
+  ) {
+    await this._verifyBatchInstructor(
+      instructorId,
+      data.batchId,
+      data.courseId,
+    );
 
     return prisma.assignment.create({
       data: {
@@ -79,7 +97,7 @@ export const assignmentService = {
         batchId: data.batchId,
         title: data.title,
         description: data.description,
-        type: 'QUIZ',
+        type: "QUIZ",
         dueDate: new Date(data.dueDate),
         maxPoints: data.maxPoints,
         questions: {
@@ -110,9 +128,13 @@ export const assignmentService = {
   async createFileAssignment(
     instructorId: string,
     data: z.infer<typeof CreateFileAssignmentSchema>,
-    questionPdfUrl: string
+    questionPdfUrl: string,
   ) {
-    await this._verifyBatchInstructor(instructorId, data.batchId, data.courseId);
+    await this._verifyBatchInstructor(
+      instructorId,
+      data.batchId,
+      data.courseId,
+    );
 
     return prisma.assignment.create({
       data: {
@@ -120,7 +142,7 @@ export const assignmentService = {
         batchId: data.batchId,
         title: data.title,
         description: data.description,
-        type: 'ASSIGNMENT',
+        type: "ASSIGNMENT",
         questionPdfUrl,
         dueDate: new Date(data.dueDate),
         maxPoints: data.maxPoints,
@@ -130,7 +152,10 @@ export const assignmentService = {
 
   // Backward-compatible alias that delegates to createQuiz
   // Creates an assignment (alias for createQuiz)
-  async createAssignment(instructorId: string, data: z.infer<typeof CreateQuizSchema>) {
+  async createAssignment(
+    instructorId: string,
+    data: z.infer<typeof CreateQuizSchema>,
+  ) {
     return this.createQuiz(instructorId, data);
   },
 
@@ -152,7 +177,7 @@ export const assignmentService = {
         enrollments: {
           some: {
             userId: filters.studentId,
-            status: 'APPROVED',
+            status: "APPROVED",
           },
         },
       };
@@ -165,18 +190,18 @@ export const assignmentService = {
         batch: { select: { id: true, name: true } },
         submissions: filters.studentId
           ? {
-            where: { studentId: filters.studentId },
-            select: {
-              id: true,
-              status: true,
-              totalScore: true,
-              submittedAt: true,
-            },
-          }
+              where: { studentId: filters.studentId },
+              select: {
+                id: true,
+                status: true,
+                totalScore: true,
+                submittedAt: true,
+              },
+            }
           : undefined,
         _count: { select: { submissions: true, questions: true } },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     return assignments.map((a) => {
@@ -190,19 +215,23 @@ export const assignmentService = {
   },
 
   // Fetches assignment questions; hides correct answers from students
-  async getAssignmentQuestions(assignmentId: string, userId: string, isInstructor: boolean) {
+  async getAssignmentQuestions(
+    assignmentId: string,
+    userId: string,
+    isInstructor: boolean,
+  ) {
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId },
       include: {
         batch: {
           include: {
             enrollments: {
-              where: { userId, status: 'APPROVED' },
+              where: { userId, status: "APPROVED" },
             },
           },
         },
         questions: {
-          orderBy: { orderIndex: 'asc' },
+          orderBy: { orderIndex: "asc" },
           include: {
             options: true,
           },
@@ -210,11 +239,11 @@ export const assignmentService = {
       },
     });
 
-    if (!assignment) throw new Error('Assignment not found');
+    if (!assignment) throw new Error("Assignment not found");
 
     if (!isInstructor) {
       const isEnrolled = assignment.batch.enrollments.length > 0;
-      if (!isEnrolled) throw new Error('You are not enrolled in this batch');
+      if (!isEnrolled) throw new Error("You are not enrolled in this batch");
     }
 
     const questions = assignment.questions.map((q) => ({
@@ -245,7 +274,7 @@ export const assignmentService = {
   async submitMcqAnswers(
     studentId: string,
     assignmentId: string,
-    answers: { questionId: string; selectedOptionId: string }[]
+    answers: { questionId: string; selectedOptionId: string }[],
   ) {
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId },
@@ -253,7 +282,7 @@ export const assignmentService = {
         batch: {
           include: {
             enrollments: {
-              where: { userId: studentId, status: 'APPROVED' },
+              where: { userId: studentId, status: "APPROVED" },
             },
           },
         },
@@ -265,14 +294,14 @@ export const assignmentService = {
       },
     });
 
-    if (!assignment) throw new Error('Assignment not found');
+    if (!assignment) throw new Error("Assignment not found");
 
     if (new Date() > assignment.dueDate) {
-      throw new Error('Assignment due date has passed');
+      throw new Error("Assignment due date has passed");
     }
 
     if (assignment.batch.enrollments.length === 0) {
-      throw new Error('You are not enrolled in the batch for this assignment');
+      throw new Error("You are not enrolled in the batch for this assignment");
     }
 
     const existing = await prisma.assignmentSubmission.findUnique({
@@ -283,7 +312,7 @@ export const assignmentService = {
         },
       },
     });
-    if (existing) throw new Error('You have already submitted this assignment');
+    if (existing) throw new Error("You have already submitted this assignment");
 
     return prisma.$transaction(async (tx) => {
       const submission = await tx.assignmentSubmission.create({
@@ -291,7 +320,7 @@ export const assignmentService = {
           assignmentId,
           studentId,
 
-          status: 'PENDING',
+          status: "PENDING",
         },
       });
 
@@ -304,11 +333,16 @@ export const assignmentService = {
       }> = [];
 
       for (const ans of answers) {
-        const question = assignment.questions.find((q) => q.id === ans.questionId);
+        const question = assignment.questions.find(
+          (q) => q.id === ans.questionId,
+        );
         if (!question) throw new Error(`Question ${ans.questionId} not found`);
 
-        const option = question.options.find((o) => o.id === ans.selectedOptionId);
-        if (!option) throw new Error(`Option ${ans.selectedOptionId} not found`);
+        const option = question.options.find(
+          (o) => o.id === ans.selectedOptionId,
+        );
+        if (!option)
+          throw new Error(`Option ${ans.selectedOptionId} not found`);
 
         const isCorrect = option.isCorrect;
         if (isCorrect) {
@@ -332,10 +366,10 @@ export const assignmentService = {
       const updated = await tx.assignmentSubmission.update({
         where: { id: submission.id },
         data: {
-          status: 'GRADED',
+          status: "GRADED",
           totalScore,
           grade,
-          feedback: 'Auto-graded by System.',
+          feedback: "Auto-graded by System.",
           gradedAt: new Date(),
         },
         include: {
@@ -348,7 +382,11 @@ export const assignmentService = {
   },
 
   // Gets a submission result with score breakdown
-  async getSubmissionResult(submissionId: string, userId: string, role: string) {
+  async getSubmissionResult(
+    submissionId: string,
+    userId: string,
+    role: string,
+  ) {
     const submission = await prisma.assignmentSubmission.findUnique({
       where: { id: submissionId },
       include: {
@@ -356,7 +394,7 @@ export const assignmentService = {
           include: {
             batch: true,
             questions: {
-              orderBy: { orderIndex: 'asc' },
+              orderBy: { orderIndex: "asc" },
               include: {
                 options: true,
               },
@@ -370,27 +408,33 @@ export const assignmentService = {
       },
     });
 
-    if (!submission) throw new Error('Submission not found');
+    if (!submission) throw new Error("Submission not found");
 
-    if (role === 'STUDENT' && submission.studentId !== userId) {
-      throw new Error('Access denied');
+    if (role === "STUDENT" && submission.studentId !== userId) {
+      throw new Error("Access denied");
     }
-    if (role === 'INSTRUCTOR' && submission.assignment.batch.instructorId !== userId) {
-      throw new Error('Access denied');
+    if (
+      role === "INSTRUCTOR" &&
+      submission.assignment.batch.instructorId !== userId
+    ) {
+      throw new Error("Access denied");
     }
 
     return submission;
   },
 
   // Lists all student submissions for an assignment
-  async listSubmissionsForAssignment(assignmentId: string, instructorId: string) {
+  async listSubmissionsForAssignment(
+    assignmentId: string,
+    instructorId: string,
+  ) {
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId },
       include: { batch: true },
     });
-    if (!assignment) throw new Error('Assignment not found');
+    if (!assignment) throw new Error("Assignment not found");
     if (assignment.batch.instructorId !== instructorId) {
-      throw new Error('You are not the instructor of this batch');
+      throw new Error("You are not the instructor of this batch");
     }
 
     return prisma.assignmentSubmission.findMany({
@@ -400,7 +444,7 @@ export const assignmentService = {
           select: { id: true, name: true, email: true },
         },
       },
-      orderBy: { submittedAt: 'desc' },
+      orderBy: { submittedAt: "desc" },
     });
   },
 
@@ -409,7 +453,7 @@ export const assignmentService = {
     instructorId: string,
     submissionId: string,
     grade: string,
-    feedback?: string
+    feedback?: string,
   ) {
     const submission = await prisma.assignmentSubmission.findUnique({
       where: { id: submissionId },
@@ -422,9 +466,9 @@ export const assignmentService = {
       },
     });
 
-    if (!submission) throw new Error('Submission not found');
+    if (!submission) throw new Error("Submission not found");
     if (submission.assignment.batch.instructorId !== instructorId) {
-      throw new Error('You are not the instructor of this batch');
+      throw new Error("You are not the instructor of this batch");
     }
 
     const updated = await prisma.assignmentSubmission.update({
@@ -432,7 +476,7 @@ export const assignmentService = {
       data: {
         grade,
         feedback: feedback || null,
-        status: 'GRADED',
+        status: "GRADED",
         gradedAt: new Date(),
       },
     });
@@ -441,25 +485,31 @@ export const assignmentService = {
   },
 
   // Submits a file answer for a file-based assignment
-  async submitFileAnswer(studentId: string, assignmentId: string, answerFileUrl: string) {
+  async submitFileAnswer(
+    studentId: string,
+    assignmentId: string,
+    answerFileUrl: string,
+  ) {
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId },
       include: {
         batch: {
           include: {
             enrollments: {
-              where: { userId: studentId, status: 'APPROVED' },
+              where: { userId: studentId, status: "APPROVED" },
             },
           },
         },
       },
     });
 
-    if (!assignment) throw new Error('Assignment not found');
-    if (assignment.type !== 'ASSIGNMENT') throw new Error('This is a quiz, not a file-upload assignment');
-    if (new Date() > assignment.dueDate) throw new Error('Assignment due date has passed');
+    if (!assignment) throw new Error("Assignment not found");
+    if (assignment.type !== "ASSIGNMENT")
+      throw new Error("This is a quiz, not a file-upload assignment");
+    if (new Date() > assignment.dueDate)
+      throw new Error("Assignment due date has passed");
     if (assignment.batch.enrollments.length === 0) {
-      throw new Error('You are not enrolled in the batch for this assignment');
+      throw new Error("You are not enrolled in the batch for this assignment");
     }
 
     // Upsert — allow re-submission before grading
@@ -474,7 +524,7 @@ export const assignmentService = {
         assignmentId,
         studentId,
         answerFileUrl,
-        status: 'PENDING',
+        status: "PENDING",
       },
       update: {
         answerFileUrl,

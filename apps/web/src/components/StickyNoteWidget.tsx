@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { IconX, IconDeviceFloppy, IconCheck, IconPin } from "@tabler/icons-react";
+import {
+  IconX,
+  IconDeviceFloppy,
+  IconCheck,
+  IconPin,
+} from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import RichEditor from "@/components/editor/RichEditor";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -24,10 +29,17 @@ interface StickyNote {
 
 const STORAGE_PREFIX = "sticky-note-";
 
-export default function StickyNoteWidget({ courseId, moduleId, moduleTitle, onClose }: StickyNoteWidgetProps) {
+export default function StickyNoteWidget({
+  courseId,
+  moduleId,
+  moduleTitle,
+  onClose,
+}: StickyNoteWidgetProps) {
   const [noteId, setNoteId] = useState<string | null>(null);
   const [body, setBody] = useState("");
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">(
+    "idle",
+  );
   const noteIdRef = useRef<string | null>(null);
   const bodyRef = useRef(body);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -77,18 +89,22 @@ export default function StickyNoteWidget({ courseId, moduleId, moduleTitle, onCl
       try {
         // 1. Try to find a note flagged as sticky
         let res = await api.get<{ notes: StickyNote[] }>(
-          `/api/notes?courseId=${courseId}&moduleId=${moduleId}&isSticky=true`
+          `/api/notes?courseId=${courseId}&moduleId=${moduleId}&isSticky=true`,
         );
         let existingNote = res.notes?.[0];
 
         // 2. Fallback: no sticky note yet — take the first note and migrate it
         if (!existingNote) {
-          res = await api.get<{ notes: StickyNote[] }>(`/api/notes?courseId=${courseId}&moduleId=${moduleId}`);
+          res = await api.get<{ notes: StickyNote[] }>(
+            `/api/notes?courseId=${courseId}&moduleId=${moduleId}`,
+          );
           existingNote = res.notes?.[0];
 
           if (existingNote && isMountedRef.current) {
             // Migrate existing note to sticky
-            await api.patch(`/api/notes/${existingNote.id}`, { isSticky: true }).catch(() => {});
+            await api
+              .patch(`/api/notes/${existingNote.id}`, { isSticky: true })
+              .catch(() => {});
           }
         }
 
@@ -105,7 +121,9 @@ export default function StickyNoteWidget({ courseId, moduleId, moduleTitle, onCl
             loadedBody = parsed.body || "";
             loadedId = parsed.id;
           }
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       }
 
       if (!isMountedRef.current) return;
@@ -129,20 +147,32 @@ export default function StickyNoteWidget({ courseId, moduleId, moduleTitle, onCl
   }, [courseId, moduleId, storageKey]);
 
   // Sync refs with state for use in callbacks
-  useEffect(() => { noteIdRef.current = noteId; }, [noteId]);
-  useEffect(() => { bodyRef.current = body; }, [body]);
+  useEffect(() => {
+    noteIdRef.current = noteId;
+  }, [noteId]);
+  useEffect(() => {
+    bodyRef.current = body;
+  }, [body]);
 
   // Save to localStorage as backup
-  const saveToLocal = useCallback((noteBody: string, noteIdToSave: string | null) => {
-    if (!moduleId) return;
-    try {
-      localStorage.setItem(storageKey, JSON.stringify({
-        id: noteIdToSave,
-        body: noteBody,
-        updatedAt: new Date().toISOString(),
-      }));
-    } catch { /* ignore */ }
-  }, [moduleId, storageKey]);
+  const saveToLocal = useCallback(
+    (noteBody: string, noteIdToSave: string | null) => {
+      if (!moduleId) return;
+      try {
+        localStorage.setItem(
+          storageKey,
+          JSON.stringify({
+            id: noteIdToSave,
+            body: noteBody,
+            updatedAt: new Date().toISOString(),
+          }),
+        );
+      } catch {
+        /* ignore */
+      }
+    },
+    [moduleId, storageKey],
+  );
 
   // Auto-save with debounce
   const save = useCallback(async () => {
@@ -194,11 +224,14 @@ export default function StickyNoteWidget({ courseId, moduleId, moduleTitle, onCl
     }, 1500);
   }, [save]);
 
-  const handleContentChange = useCallback((html: string) => {
-    bodyRef.current = html;
-    setBody(html);
-    debouncedSave();
-  }, [debouncedSave]);
+  const handleContentChange = useCallback(
+    (html: string) => {
+      bodyRef.current = html;
+      setBody(html);
+      debouncedSave();
+    },
+    [debouncedSave],
+  );
 
   const handleManualSave = useCallback(async () => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -212,9 +245,17 @@ export default function StickyNoteWidget({ courseId, moduleId, moduleTitle, onCl
   }, [save, onClose]);
 
   // Start drag from header area only (not editor toolbar or resize handle)
-  const handleDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+  const handleDragStart = (
+    e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
+  ) => {
     const target = e.target as HTMLElement;
-    if (target.closest(".resize-handle") || target.closest(".tiptap-toolbar") || target.closest("button") || target.closest("a")) return;
+    if (
+      target.closest(".resize-handle") ||
+      target.closest(".tiptap-toolbar") ||
+      target.closest("button") ||
+      target.closest("a")
+    )
+      return;
     if ("touches" in e) {
       handleTouchStart(e as React.TouchEvent<HTMLDivElement>);
     } else {
@@ -252,7 +293,9 @@ export default function StickyNoteWidget({ courseId, moduleId, moduleTitle, onCl
           {/* Status */}
           <div className="flex items-center gap-1">
             {status === "saving" && (
-              <span className="text-[10px] text-amber-700 animate-pulse">Saving...</span>
+              <span className="text-[10px] text-amber-700 animate-pulse">
+                Saving...
+              </span>
             )}
             {status === "saved" && (
               <span className="text-[10px] text-emerald-700 flex items-center gap-0.5">
@@ -286,7 +329,10 @@ export default function StickyNoteWidget({ courseId, moduleId, moduleTitle, onCl
       </div>
 
       {/* Editor Area */}
-      <div className="flex-1 overflow-y-auto p-2" style={{ height: `calc(100% - 40px)` }}>
+      <div
+        className="flex-1 overflow-y-auto p-2"
+        style={{ height: `calc(100% - 40px)` }}
+      >
         {contentLoaded ? (
           <RichEditor
             key={noteId || "new"}
@@ -310,9 +356,27 @@ export default function StickyNoteWidget({ courseId, moduleId, moduleTitle, onCl
         onTouchStart={handleResizeTouchStart}
       >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <path d="M2 12L12 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
-          <path d="M5 12L12 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
-          <path d="M8 12L12 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.2"/>
+          <path
+            d="M2 12L12 2"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            opacity="0.6"
+          />
+          <path
+            d="M5 12L12 5"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            opacity="0.4"
+          />
+          <path
+            d="M8 12L12 8"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            opacity="0.2"
+          />
         </svg>
       </div>
     </div>

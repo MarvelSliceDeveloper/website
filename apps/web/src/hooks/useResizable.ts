@@ -37,14 +37,14 @@ export function useResizable({
   const dragStartRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
   const mouseUpRef = useRef<(() => void) | null>(null);
-  const touchEndRef = useRef<((() => void) | null)>(null);
+  const touchEndRef = useRef<(() => void) | null>(null);
 
   const clampSize = useCallback(
     (w: number, h: number) => ({
       width: Math.max(minWidth, Math.min(w, maxWidth)),
       height: Math.max(minHeight, Math.min(h, maxHeight)),
     }),
-    [minWidth, minHeight, maxWidth, maxHeight]
+    [minWidth, minHeight, maxWidth, maxHeight],
   );
 
   const handleMouseMove = useCallback(
@@ -55,13 +55,13 @@ export function useResizable({
       const dy = e.clientY - dragStartRef.current.y;
       const newSize = clampSize(
         dragStartRef.current.width + dx,
-        dragStartRef.current.height + dy
+        dragStartRef.current.height + dy,
       );
       sizeRef.current = newSize;
       setWidth(newSize.width);
       setHeight(newSize.height);
     },
-    [clampSize]
+    [clampSize],
   );
 
   const handleMouseUp = useCallback(() => {
@@ -82,13 +82,13 @@ export function useResizable({
       const dy = touch.clientY - dragStartRef.current.y;
       const newSize = clampSize(
         dragStartRef.current.width + dx,
-        dragStartRef.current.height + dy
+        dragStartRef.current.height + dy,
       );
       sizeRef.current = newSize;
       setWidth(newSize.width);
       setHeight(newSize.height);
     },
-    [clampSize]
+    [clampSize],
   );
 
   const handleTouchEnd = useCallback(() => {
@@ -120,7 +120,7 @@ export function useResizable({
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
     },
-    [handleMouseMove, handleMouseUp]
+    [handleMouseMove, handleMouseUp],
   );
 
   const handleTouchStart = useCallback(
@@ -135,10 +135,12 @@ export function useResizable({
       };
       isResizingRef.current = true;
       setIsResizing(true);
-      document.addEventListener("touchmove", handleTouchMove, { passive: false });
+      document.addEventListener("touchmove", handleTouchMove, {
+        passive: false,
+      });
       document.addEventListener("touchend", handleTouchEnd);
     },
-    [handleTouchMove, handleTouchEnd]
+    [handleTouchMove, handleTouchEnd],
   );
 
   useEffect(() => {

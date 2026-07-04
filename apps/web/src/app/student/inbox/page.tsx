@@ -2,7 +2,14 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
-import { IconTrash, IconCheck, IconBell, IconEye, IconInbox, IconFilter } from "@tabler/icons-react";
+import {
+  IconTrash,
+  IconCheck,
+  IconBell,
+  IconEye,
+  IconInbox,
+  IconFilter,
+} from "@tabler/icons-react";
 import { timeAgo } from "@/lib/time-ago";
 import type { NotificationItem } from "@/lib/notifications";
 import { NotificationIcon } from "@/lib/notifications";
@@ -19,14 +26,20 @@ export default function StudentInboxPage() {
   const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await api.get<{ notifications: NotificationItem[] }>("/api/notifications");
+      const data = await api.get<{ notifications: NotificationItem[] }>(
+        "/api/notifications",
+      );
       setNotifications(data.notifications || []);
-    } catch { /* ignore */ }
-    finally { setLoading(false); }
+    } catch {
+      /* ignore */
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    api.get<{ notifications: NotificationItem[] }>("/api/notifications")
+    api
+      .get<{ notifications: NotificationItem[] }>("/api/notifications")
       .then((data) => {
         setNotifications(data.notifications || []);
       })
@@ -38,7 +51,8 @@ export default function StudentInboxPage() {
 
   // Load user profile for shell header
   useEffect(() => {
-    api.get<{ user: { name: string; email: string } }>("/api/auth/me")
+    api
+      .get<{ user: { name: string; email: string } }>("/api/auth/me")
       .then((res) => {
         if (res?.user) {
           setStudentName(res.user.name || "Student");
@@ -51,7 +65,9 @@ export default function StudentInboxPage() {
   async function markAsRead(id: string) {
     try {
       await api.patch(`/api/notifications/${id}/read`, {});
-      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+      );
     } catch {
       toast.error("Failed to mark as read");
     }
@@ -87,7 +103,8 @@ export default function StudentInboxPage() {
     }
   }
 
-  const filtered = filter === "unread" ? notifications.filter((n) => !n.read) : notifications;
+  const filtered =
+    filter === "unread" ? notifications.filter((n) => !n.read) : notifications;
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
@@ -111,11 +128,17 @@ export default function StudentInboxPage() {
           </div>
           <div className="flex gap-2 shrink-0">
             {unreadCount > 0 && (
-              <button onClick={markAllRead} className="btn-secondary text-xs flex items-center gap-1.5">
+              <button
+                onClick={markAllRead}
+                className="btn-secondary text-xs flex items-center gap-1.5"
+              >
                 <IconCheck size={14} /> Mark all read
               </button>
             )}
-            <button onClick={clearRead} className="btn-secondary text-xs flex items-center gap-1.5">
+            <button
+              onClick={clearRead}
+              className="btn-secondary text-xs flex items-center gap-1.5"
+            >
               <IconTrash size={14} /> Clear read
             </button>
           </div>
@@ -123,30 +146,40 @@ export default function StudentInboxPage() {
 
         {/* Two-column: filters left, notifications right (on large screens) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-
           {/* Left sidebar: stats + filters */}
           <div className="lg:col-span-3 xl:col-span-3 space-y-4">
             {/* Stats cards */}
             <div className="glass-card p-4 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted">Overview</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+                Overview
+              </p>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Total</span>
-                <span className="text-sm font-bold text-foreground">{notifications.length}</span>
+                <span className="text-sm font-bold text-foreground">
+                  {notifications.length}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Unread</span>
-                <span className={`text-sm font-bold ${unreadCount > 0 ? "text-primary" : "text-foreground"}`}>{unreadCount}</span>
+                <span
+                  className={`text-sm font-bold ${unreadCount > 0 ? "text-primary" : "text-foreground"}`}
+                >
+                  {unreadCount}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Read</span>
-                <span className="text-sm font-bold text-foreground">{notifications.length - unreadCount}</span>
+                <span className="text-sm font-bold text-foreground">
+                  {notifications.length - unreadCount}
+                </span>
               </div>
             </div>
 
             {/* Filter tabs (vertical on desktop) */}
             <div className="glass-card p-2 space-y-1">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted px-3 pt-2 pb-1">
-                <IconFilter size={12} className="inline mr-1 -mt-0.5" />Filter
+                <IconFilter size={12} className="inline mr-1 -mt-0.5" />
+                Filter
               </p>
               {(["all", "unread"] as const).map((tab) => (
                 <button
@@ -158,8 +191,12 @@ export default function StudentInboxPage() {
                       : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
                   }`}
                 >
-                  <span>{tab === "all" ? "All Notifications" : "Unread Only"}</span>
-                  <span className={`text-xs ${filter === tab ? "text-primary" : "text-muted"}`}>
+                  <span>
+                    {tab === "all" ? "All Notifications" : "Unread Only"}
+                  </span>
+                  <span
+                    className={`text-xs ${filter === tab ? "text-primary" : "text-muted"}`}
+                  >
                     {tab === "all" ? notifications.length : unreadCount}
                   </span>
                 </button>
@@ -172,16 +209,25 @@ export default function StudentInboxPage() {
             {loading ? (
               <div className="space-y-3">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-20 animate-pulse rounded-xl bg-card-hover/60 border border-border/40" />
+                  <div
+                    key={i}
+                    className="h-20 animate-pulse rounded-xl bg-card-hover/60 border border-border/40"
+                  />
                 ))}
               </div>
             ) : filtered.length === 0 ? (
               <div className="glass-card flex flex-col items-center justify-center py-20 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-5">
-                  {filter === "unread" ? <IconInbox size={32} /> : <IconBell size={32} />}
+                  {filter === "unread" ? (
+                    <IconInbox size={32} />
+                  ) : (
+                    <IconBell size={32} />
+                  )}
                 </div>
                 <p className="text-base font-semibold text-foreground">
-                  {filter === "unread" ? "You're all caught up!" : "No notifications yet"}
+                  {filter === "unread"
+                    ? "You're all caught up!"
+                    : "No notifications yet"}
                 </p>
                 <p className="mt-1.5 text-sm text-muted-foreground max-w-sm">
                   {filter === "unread"
@@ -203,13 +249,19 @@ export default function StudentInboxPage() {
                     <NotificationIcon type={n.type} />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-3">
-                        <p className={`text-sm leading-snug ${n.read ? "text-muted-foreground" : "text-foreground font-medium"}`}>
+                        <p
+                          className={`text-sm leading-snug ${n.read ? "text-muted-foreground" : "text-foreground font-medium"}`}
+                        >
                           {n.message}
                         </p>
-                        {!n.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary animate-pulse" />}
+                        {!n.read && (
+                          <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary animate-pulse" />
+                        )}
                       </div>
                       <div className="mt-2 flex items-center gap-3 flex-wrap">
-                        <span className="text-[11px] text-muted">{timeAgo(n.createdAt)}</span>
+                        <span className="text-[11px] text-muted">
+                          {timeAgo(n.createdAt)}
+                        </span>
                         <span className="inline-flex items-center rounded-full border border-border/50 bg-card-hover/50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted">
                           {n.type.replace(/_/g, " ")}
                         </span>

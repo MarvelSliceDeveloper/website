@@ -66,14 +66,18 @@ export function QuizBuilder({
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-muted uppercase tracking-wider">Marks</label>
+                <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
+                  Marks
+                </label>
                 <input
                   type="number"
                   required
                   min={1}
                   max={50}
                   value={q.marks}
-                  onChange={(e) => onMarksChange(qIndex, Number(e.target.value))}
+                  onChange={(e) =>
+                    onMarksChange(qIndex, Number(e.target.value))
+                  }
                   className="field py-2 text-sm"
                 />
               </div>
@@ -88,7 +92,9 @@ export function QuizBuilder({
                   <div
                     key={optIndex}
                     className={`flex items-center gap-2 p-2 rounded-lg border transition-all ${
-                      opt.isCorrect ? "border-emerald-500/40 bg-emerald-500/10" : "border-border/60"
+                      opt.isCorrect
+                        ? "border-emerald-500/40 bg-emerald-500/10"
+                        : "border-border/60"
                     }`}
                   >
                     <input
@@ -103,7 +109,9 @@ export function QuizBuilder({
                       required
                       placeholder={`Option ${String.fromCharCode(65 + optIndex)}`}
                       value={opt.optionText}
-                      onChange={(e) => onOptionChange(qIndex, optIndex, e.target.value)}
+                      onChange={(e) =>
+                        onOptionChange(qIndex, optIndex, e.target.value)
+                      }
                       className="bg-transparent border-none w-full p-0 text-xs focus:ring-0 text-foreground"
                     />
                   </div>

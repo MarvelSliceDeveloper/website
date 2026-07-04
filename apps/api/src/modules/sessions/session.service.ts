@@ -1,22 +1,28 @@
-import { z } from 'zod';
-import { prisma } from '../../utils/prisma';
-import { createOnlineMeeting } from '../graph';
-import { notificationService } from '../notifications/notification.service';
+import { z } from "zod";
+import { prisma } from "../../utils/prisma";
+import { createOnlineMeeting } from "../graph";
+import { notificationService } from "../notifications/notification.service";
 
 // --- Zod Schemas ---
 
-export const CreateSessionSchema = z.object({
-  batchId: z.string().cuid(),
-  moduleId: z.string().cuid().optional(),
-  title: z.string().min(3).max(200),
-  startDateTime: z.string().datetime({ message: 'Must be a valid ISO 8601 datetime' }),
-  endDateTime: z.string().datetime({ message: 'Must be a valid ISO 8601 datetime' }),
-  customJoinUrl: z.string().optional().nullable(),
-  instructorOverride: z.string().optional().nullable(),
-}).refine(data => new Date(data.startDateTime) < new Date(data.endDateTime), {
-  message: 'startDateTime must be before endDateTime',
-  path: ['endDateTime'],
-});
+export const CreateSessionSchema = z
+  .object({
+    batchId: z.string().cuid(),
+    moduleId: z.string().cuid().optional(),
+    title: z.string().min(3).max(200),
+    startDateTime: z
+      .string()
+      .datetime({ message: "Must be a valid ISO 8601 datetime" }),
+    endDateTime: z
+      .string()
+      .datetime({ message: "Must be a valid ISO 8601 datetime" }),
+    customJoinUrl: z.string().optional().nullable(),
+    instructorOverride: z.string().optional().nullable(),
+  })
+  .refine((data) => new Date(data.startDateTime) < new Date(data.endDateTime), {
+    message: "startDateTime must be before endDateTime",
+    path: ["endDateTime"],
+  });
 
 export const UpdateSessionSchema = z.object({
   title: z.string().min(3).max(200).optional(),
@@ -28,8 +34,19 @@ export const UpdateSessionSchema = z.object({
 
 export const sessionService = {
   // Creates a new live session with optional Teams meeting
-  async createSession(userId: string, data: z.infer<typeof CreateSessionSchema>) {
-    const { batchId, moduleId, title, startDateTime, endDateTime, customJoinUrl, instructorOverride } = data;
+  async createSession(
+    userId: string,
+    data: z.infer<typeof CreateSessionSchema>,
+  ) {
+    const {
+      batchId,
+      moduleId,
+      title,
+      startDateTime,
+      endDateTime,
+      customJoinUrl,
+      instructorOverride,
+    } = data;
 
     // Verify the batch exists
     const batch = await prisma.batch.findUnique({
@@ -37,14 +54,14 @@ export const sessionService = {
       include: { course: true },
     });
 
-    if (!batch) throw new Error('Batch not found');
+    if (!batch) throw new Error("Batch not found");
 
     if (moduleId) {
       // Verify the module belongs to this batch's course
       const module = await prisma.module.findFirst({
         where: { id: moduleId, courseId: batch.courseId },
       });
-      if (!module) throw new Error('Module not found in this course');
+      if (!module) throw new Error("Module not found in this course");
     }
 
     // Prevent duplicate scheduling: check for overlapping sessions in the same batch
@@ -58,11 +75,13 @@ export const sessionService = {
     });
 
     if (overlapping) {
-      throw new Error('A session is already scheduled during this time for this batch');
+      throw new Error(
+        "A session is already scheduled during this time for this batch",
+      );
     }
 
-    let teamsMeetingId = '';
-    let joinUrl = '';
+    let teamsMeetingId = "";
+    let joinUrl = "";
 
     if (customJoinUrl && customJoinUrl.trim()) {
       // If admin pasted a custom meeting URL, use it directly
@@ -79,18 +98,22 @@ export const sessionService = {
         teamsMeetingId = meeting.id;
         joinUrl = meeting.joinWebUrl;
       } catch (err: any) {
-        console.warn('[Teams] Failed to create Teams meeting via Graph API:', err.message);
+        console.warn(
+          "[Teams] Failed to create Teams meeting via Graph API:",
+          err.message,
+        );
         // Session is still created but without a Teams meeting link.
         // Admin can add a custom join URL by editing the session later.
         teamsMeetingId = `teams-error`;
-        joinUrl = '';
+        joinUrl = "";
       }
     }
 
     // Determine instructor (use override or default to batch instructor)
-    const finalInstructorId = instructorOverride && instructorOverride.trim()
-      ? instructorOverride.trim()
-      : batch.instructorId;
+    const finalInstructorId =
+      instructorOverride && instructorOverride.trim()
+        ? instructorOverride.trim()
+        : batch.instructorId;
 
     // Store in LiveSession table
     const session = await prisma.liveSession.create({
@@ -103,7 +126,8 @@ export const sessionService = {
         scheduledAt: new Date(startDateTime),
         scheduledEndAt: new Date(endDateTime),
         endedAt: null, // session hasn't ended yet — set when explicitly ended/cancelled
-        createdFrom: customJoinUrl && customJoinUrl.trim() ? 'LMS_CUSTOM' : 'LMS',
+        createdFrom:
+          customJoinUrl && customJoinUrl.trim() ? "LMS_CUSTOM" : "LMS",
         createdBy: userId,
         instructorId: finalInstructorId,
       },
@@ -122,9 +146,11 @@ export const sessionService = {
     });
 
     // Trigger notification to students and instructor
-    await notificationService.notifySessionScheduled(session.id).catch(err => {
-      console.error('Failed to send session notifications:', err.message);
-    });
+    await notificationService
+      .notifySessionScheduled(session.id)
+      .catch((err) => {
+        console.error("Failed to send session notifications:", err.message);
+      });
 
     return session;
   },
@@ -133,7 +159,7 @@ export const sessionService = {
   async listSessions(filters: {
     batchId?: string;
     courseId?: string;
-    status?: 'scheduled' | 'live' | 'completed' | 'cancelled';
+    status?: "scheduled" | "live" | "completed" | "cancelled";
     instructorId?: string;
     studentId?: string;
     page?: number;
@@ -144,10 +170,12 @@ export const sessionService = {
     if (filters.studentId) {
       // Find batches where student is enrolled
       const enrollments = await prisma.enrollmentRequest.findMany({
-        where: { userId: filters.studentId, status: 'APPROVED' },
-        select: { batchId: true }
+        where: { userId: filters.studentId, status: "APPROVED" },
+        select: { batchId: true },
       });
-      const batchIds = enrollments.map((e: typeof enrollments[number]) => e.batchId).filter(Boolean) as string[];
+      const batchIds = enrollments
+        .map((e: (typeof enrollments)[number]) => e.batchId)
+        .filter(Boolean) as string[];
 
       // If student is not in any approved batch, they shouldn't see anything
       if (batchIds.length === 0) {
@@ -174,7 +202,12 @@ export const sessionService = {
     if (filters.instructorId) {
       // Include batch sessions where the instructor teaches AND mentorship sessions where they are the mentor
       where.OR = [
-        { batch: { instructorId: filters.instructorId, ...(filters.courseId ? { courseId: filters.courseId } : {}) } },
+        {
+          batch: {
+            instructorId: filters.instructorId,
+            ...(filters.courseId ? { courseId: filters.courseId } : {}),
+          },
+        },
         { instructorId: filters.instructorId, batchId: null },
       ];
     } else if (filters.courseId) {
@@ -184,13 +217,13 @@ export const sessionService = {
     // Status filter
     const now = new Date();
     const bufferMs = 15 * 60 * 1000;
-    if (filters.status === 'scheduled') {
+    if (filters.status === "scheduled") {
       where.scheduledAt = { gt: now };
-    } else if (filters.status === 'live') {
+    } else if (filters.status === "live") {
       where.scheduledAt = { lte: now };
       where.endedAt = null;
       where.scheduledEndAt = { gte: new Date(now.getTime() - bufferMs) };
-    } else if (filters.status === 'completed') {
+    } else if (filters.status === "completed") {
       where.OR = [
         { endedAt: { not: null } },
         { scheduledEndAt: { lt: new Date(now.getTime() - bufferMs) } },
@@ -208,7 +241,9 @@ export const sessionService = {
       include: {
         batch: {
           select: {
-            id: true, name: true, courseId: true,
+            id: true,
+            name: true,
+            courseId: true,
             course: { select: { id: true, title: true } },
             instructor: { select: { id: true, name: true } },
           },
@@ -216,7 +251,7 @@ export const sessionService = {
         module: { select: { id: true, title: true } },
         recording: { select: { id: true, syncedAt: true } },
       },
-      orderBy: { scheduledAt: 'asc' },
+      orderBy: { scheduledAt: "asc" },
     });
   },
 
@@ -232,28 +267,36 @@ export const sessionService = {
       },
     });
 
-    if (!session) throw new Error('Session not found');
+    if (!session) throw new Error("Session not found");
     return session;
   },
 
   // Updates a session's title and/or time
-  async updateSession(sessionId: string, userId: string, data: z.infer<typeof UpdateSessionSchema>) {
+  async updateSession(
+    sessionId: string,
+    userId: string,
+    data: z.infer<typeof UpdateSessionSchema>,
+  ) {
     const session = await prisma.liveSession.findUnique({
       where: { id: sessionId },
       include: { batch: { select: { instructorId: true } } },
     });
 
-    if (!session) throw new Error('Session not found');
+    if (!session) throw new Error("Session not found");
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    const sessionInstructorId = session.batch?.instructorId || session.instructorId;
-    if (user?.role === 'INSTRUCTOR' && sessionInstructorId !== userId) {
-      throw new Error('Only the assigned instructor or an admin can update this session');
+    const sessionInstructorId =
+      session.batch?.instructorId || session.instructorId;
+    if (user?.role === "INSTRUCTOR" && sessionInstructorId !== userId) {
+      throw new Error(
+        "Only the assigned instructor or an admin can update this session",
+      );
     }
 
     const updateData: any = {};
     if (data.title) updateData.title = data.title;
-    if (data.startDateTime) updateData.scheduledAt = new Date(data.startDateTime);
+    if (data.startDateTime)
+      updateData.scheduledAt = new Date(data.startDateTime);
     if (data.endDateTime) {
       updateData.scheduledEndAt = new Date(data.endDateTime);
       // Do NOT set endedAt — that represents actual end, not scheduled end
@@ -267,7 +310,8 @@ export const sessionService = {
     // Sync changes to the associated CalendarEvent
     const calendarUpdate: any = {};
     if (data.title) calendarUpdate.title = data.title;
-    if (data.startDateTime) calendarUpdate.startAt = new Date(data.startDateTime);
+    if (data.startDateTime)
+      calendarUpdate.startAt = new Date(data.startDateTime);
     if (data.endDateTime) calendarUpdate.endAt = new Date(data.endDateTime);
 
     if (Object.keys(calendarUpdate).length > 0) {
@@ -290,28 +334,33 @@ export const sessionService = {
       },
     });
 
-    if (!session) throw new Error('Session not found');
+    if (!session) throw new Error("Session not found");
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new Error('User not found');
+    if (!user) throw new Error("User not found");
 
     // Non-admin must be the assigned instructor (check batch instructor for regular sessions, instructorId for mentorship)
-    const sessionInstructorId = session.batch?.instructorId || session.instructorId;
-    if (user.role !== 'ADMIN' && sessionInstructorId !== userId) {
-      throw new Error('Only the assigned instructor or an admin can cancel this session');
+    const sessionInstructorId =
+      session.batch?.instructorId || session.instructorId;
+    if (user.role !== "ADMIN" && sessionInstructorId !== userId) {
+      throw new Error(
+        "Only the assigned instructor or an admin can cancel this session",
+      );
     }
 
     // Fire notification after authorization check
-    await notificationService.notifySessionCancelled(sessionId).catch(err => {
-      console.error('Failed to send cancellation notification:', err.message);
+    await notificationService.notifySessionCancelled(sessionId).catch((err) => {
+      console.error("Failed to send cancellation notification:", err.message);
     });
 
-    if (user.role === 'ADMIN') {
+    if (user.role === "ADMIN") {
       return prisma.$transaction(async (tx) => {
         await tx.calendarEvent.deleteMany({ where: { sessionId } });
         await tx.attendance.deleteMany({ where: { sessionId } });
         if (session.recording) {
-          await tx.progress.deleteMany({ where: { recordingId: session.recording.id } });
+          await tx.progress.deleteMany({
+            where: { recordingId: session.recording.id },
+          });
           await tx.recording.delete({ where: { sessionId } });
         }
         return tx.liveSession.delete({ where: { id: sessionId } });
@@ -355,8 +404,8 @@ export const sessionService = {
         joinUrl: data.joinUrl,
         scheduledAt: data.scheduledAt,
         scheduledEndAt: data.scheduledEndAt ?? data.scheduledAt,
-        createdFrom: 'TEAMS',
-        createdBy: 'SYSTEM', // System webhook created this
+        createdFrom: "TEAMS",
+        createdBy: "SYSTEM", // System webhook created this
       },
     });
 

@@ -73,24 +73,30 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
   const [subView, setSubView] = useState<SubView>({ type: "LIST" });
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
+  const [selectedAnswers, setSelectedAnswers] = useState<
+    Record<string, string>
+  >({});
   const [locallySubmittedIds, setLocallySubmittedIds] = useState<string[]>([]);
 
   const overdueItems = quizzes.filter(
-    (q) => q.status === "PENDING" && !locallySubmittedIds.includes(q.id)
+    (q) => q.status === "PENDING" && !locallySubmittedIds.includes(q.id),
   );
 
   const completedItems = [
     ...quizzes.filter((q) => q.status === "SUBMITTED"),
     ...quizzes
-      .filter((q) => q.status === "PENDING" && locallySubmittedIds.includes(q.id))
+      .filter(
+        (q) => q.status === "PENDING" && locallySubmittedIds.includes(q.id),
+      )
       .map((q) => ({ ...q, status: "SUBMITTED" as const })),
   ];
 
   async function handleStartQuiz(assignmentId: string) {
     try {
       setLoading(true);
-      const data = await api.get<AssignmentQuestions>(`/api/assignments/${assignmentId}/questions`);
+      const data = await api.get<AssignmentQuestions>(
+        `/api/assignments/${assignmentId}/questions`,
+      );
       setSelectedAnswers({});
       setSubView({ type: "QUIZ", assignmentId, data });
     } catch (err: unknown) {
@@ -104,7 +110,7 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
     try {
       setLoading(true);
       const resultRes = await api.get<{ result: SubmissionResult }>(
-        `/api/assignments/submissions/${submissionId}/result`
+        `/api/assignments/submissions/${submissionId}/result`,
       );
       setSubView({ type: "RESULT", data: resultRes.result });
     } catch (err: unknown) {
@@ -120,24 +126,28 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
     const { assignmentId, data } = subView;
     const unanswered = data.questions.filter((q) => !selectedAnswers[q.id]);
     if (unanswered.length > 0) {
-      toast.error(`Please answer all questions. ${unanswered.length} unanswered.`);
+      toast.error(
+        `Please answer all questions. ${unanswered.length} unanswered.`,
+      );
       return;
     }
 
-    const answers = Object.entries(selectedAnswers).map(([questionId, selectedOptionId]) => ({
-      questionId,
-      selectedOptionId,
-    }));
+    const answers = Object.entries(selectedAnswers).map(
+      ([questionId, selectedOptionId]) => ({
+        questionId,
+        selectedOptionId,
+      }),
+    );
 
     try {
       setSubmitting(true);
       const res = await api.post<{ submission: { id: string } }>(
         `/api/assignments/${assignmentId}/submit/mcq`,
-        { answers }
+        { answers },
       );
 
       const resultRes = await api.get<{ result: SubmissionResult }>(
-        `/api/assignments/submissions/${res.submission.id}/result`
+        `/api/assignments/submissions/${res.submission.id}/result`,
       );
       setLocallySubmittedIds((prev) => [...prev, assignmentId]);
       setSubView({ type: "RESULT", data: resultRes.result });
@@ -165,7 +175,9 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
           </button>
           <p className="sp-eyebrow">MCQ Assessment</p>
           <h1 className="text-2xl font-bold text-foreground">{data.title}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{data.description}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {data.description}
+          </p>
 
           <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
             <span>📅 Due: {new Date(data.dueDate).toLocaleDateString()}</span>
@@ -176,7 +188,9 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
           <div className="mt-4">
             <div className="flex items-center justify-between text-[10px] font-bold text-muted uppercase tracking-wider mb-1">
               <span>Progress</span>
-              <span>{answeredCount} / {totalCount} answered</span>
+              <span>
+                {answeredCount} / {totalCount} answered
+              </span>
             </div>
             <div className="h-2 rounded-full bg-border/60 overflow-hidden">
               <div
@@ -214,7 +228,12 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
                       <button
                         key={opt.id}
                         type="button"
-                        onClick={() => setSelectedAnswers((prev) => ({ ...prev, [q.id]: opt.id }))}
+                        onClick={() =>
+                          setSelectedAnswers((prev) => ({
+                            ...prev,
+                            [q.id]: opt.id,
+                          }))
+                        }
                         className={`flex items-center gap-3 p-3 rounded-xl border text-left text-sm transition-all duration-150 ${
                           isSelected
                             ? "border-violet-500/50 bg-violet-500/15 text-foreground font-semibold shadow-sm"
@@ -241,7 +260,10 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-border/60">
-          <button onClick={() => setSubView({ type: "LIST" })} className="btn-secondary text-xs">
+          <button
+            onClick={() => setSubView({ type: "LIST" })}
+            className="btn-secondary text-xs"
+          >
             Cancel
           </button>
           <button
@@ -249,7 +271,13 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
             disabled={submitting || answeredCount < totalCount}
             className="btn-primary text-sm px-6 py-2.5"
           >
-            {submitting ? "Submitting..." : <><IconSend size={16} /> Submit Quiz</>}
+            {submitting ? (
+              "Submitting..."
+            ) : (
+              <>
+                <IconSend size={16} /> Submit Quiz
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -259,11 +287,14 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
   // ── RESULT SCREEN ──
   if (subView.type === "RESULT") {
     const { data } = subView;
-    const correctCount = data.questionResponses.filter((r) => r.isCorrect).length;
+    const correctCount = data.questionResponses.filter(
+      (r) => r.isCorrect,
+    ).length;
     const totalQuestions = data.assignment.questions.length;
-    const pct = data.assignment.maxPoints > 0
-      ? Math.round(((data.totalScore ?? 0) / data.assignment.maxPoints) * 100)
-      : 0;
+    const pct =
+      data.assignment.maxPoints > 0
+        ? Math.round(((data.totalScore ?? 0) / data.assignment.maxPoints) * 100)
+        : 0;
 
     return (
       <div className="sp-view-enter space-y-6 max-w-3xl mx-auto">
@@ -274,8 +305,8 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
                 pct >= 70
                   ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-400"
                   : pct >= 40
-                  ? "border-amber-500/50 bg-amber-500/15 text-amber-400"
-                  : "border-danger/50 bg-danger/15 text-danger"
+                    ? "border-amber-500/50 bg-amber-500/15 text-amber-400"
+                    : "border-danger/50 bg-danger/15 text-danger"
               }`}
             >
               <IconAward size={36} />
@@ -283,10 +314,15 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
           </div>
 
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Score</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Score
+            </p>
             <p className="text-4xl font-bold text-foreground mt-1">
               {data.totalScore ?? 0}
-              <span className="text-lg text-muted font-normal"> / {data.assignment.maxPoints}</span>
+              <span className="text-lg text-muted font-normal">
+                {" "}
+                / {data.assignment.maxPoints}
+              </span>
             </p>
             <p className="text-sm text-muted-foreground mt-1">
               {correctCount} of {totalQuestions} correct · {pct}%
@@ -306,12 +342,16 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
           </h2>
 
           {data.assignment.questions.map((q, idx) => {
-            const response = data.questionResponses.find((r) => r.questionId === q.id);
+            const response = data.questionResponses.find(
+              (r) => r.questionId === q.id,
+            );
             return (
               <div
                 key={q.id}
                 className={`glass-card p-4 border space-y-3 ${
-                  response?.isCorrect ? "border-emerald-500/20" : "border-danger/20"
+                  response?.isCorrect
+                    ? "border-emerald-500/20"
+                    : "border-danger/20"
                 }`}
               >
                 <div className="flex items-start justify-between">
@@ -320,9 +360,15 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
                     {q.questionText}
                   </p>
                   {response?.isCorrect ? (
-                    <IconCircleCheck size={20} className="text-emerald-400 shrink-0 ml-2" />
+                    <IconCircleCheck
+                      size={20}
+                      className="text-emerald-400 shrink-0 ml-2"
+                    />
                   ) : (
-                    <IconCircleX size={20} className="text-danger shrink-0 ml-2" />
+                    <IconCircleX
+                      size={20}
+                      className="text-danger shrink-0 ml-2"
+                    />
                   )}
                 </div>
 
@@ -338,8 +384,8 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
                           isCorrectOption
                             ? "bg-emerald-500/10 text-emerald-400 font-semibold"
                             : isSelected
-                            ? "bg-danger/10 text-danger"
-                            : "text-muted-foreground"
+                              ? "bg-danger/10 text-danger"
+                              : "text-muted-foreground"
                         }`}
                       >
                         <span className="shrink-0">
@@ -352,8 +398,16 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
                 </div>
 
                 <div className="flex justify-between text-[10px] text-muted pt-2 border-t border-border/30">
-                  <span>Weight: {q.marks} mark{q.marks !== 1 ? "s" : ""}</span>
-                  <span className={response?.isCorrect ? "text-emerald-400 font-bold" : "text-danger font-bold"}>
+                  <span>
+                    Weight: {q.marks} mark{q.marks !== 1 ? "s" : ""}
+                  </span>
+                  <span
+                    className={
+                      response?.isCorrect
+                        ? "text-emerald-400 font-bold"
+                        : "text-danger font-bold"
+                    }
+                  >
                     {response?.isCorrect ? `+${q.marks}` : "0"} marks
                   </span>
                 </div>
@@ -363,7 +417,10 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
         </div>
 
         <div className="flex justify-center pt-4 border-t border-border/60">
-          <button onClick={() => setSubView({ type: "LIST" })} className="btn-secondary text-sm px-6">
+          <button
+            onClick={() => setSubView({ type: "LIST" })}
+            className="btn-secondary text-sm px-6"
+          >
             ← Back to Quizzes
           </button>
         </div>
@@ -399,7 +456,8 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
           <div className="space-y-3">
             {overdueItems.map((quiz) => {
               const daysOverdue = Math.floor(
-                (new Date().getTime() - new Date(quiz.dueDate).getTime()) / (1000 * 60 * 60 * 24)
+                (new Date().getTime() - new Date(quiz.dueDate).getTime()) /
+                  (1000 * 60 * 60 * 24),
               );
               const isOverdue = daysOverdue > 0;
               return (
@@ -420,11 +478,22 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
                       <span className="text-lg">❓</span>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-foreground">{quiz.assignmentName}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{quiz.courseName}</p>
+                      <p className="truncate font-semibold text-foreground">
+                        {quiz.assignmentName}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {quiz.courseName}
+                      </p>
                       <div className="mt-2 flex items-center gap-2">
-                        <IconClock size={14} className={isOverdue ? "text-danger" : "text-amber-400"} />
-                        <span className={`text-xs font-medium ${isOverdue ? "text-danger" : "text-amber-400"}`}>
+                        <IconClock
+                          size={14}
+                          className={
+                            isOverdue ? "text-danger" : "text-amber-400"
+                          }
+                        />
+                        <span
+                          className={`text-xs font-medium ${isOverdue ? "text-danger" : "text-amber-400"}`}
+                        >
                           {isOverdue
                             ? `${daysOverdue} day${daysOverdue !== 1 ? "s" : ""} overdue`
                             : `Due ${new Date(quiz.dueDate).toLocaleDateString()}`}
@@ -465,8 +534,12 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
                     <IconCheck size={18} className="text-success" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-foreground">{quiz.assignmentName}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{quiz.courseName}</p>
+                    <p className="truncate font-semibold text-foreground">
+                      {quiz.assignmentName}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {quiz.courseName}
+                    </p>
                   </div>
                 </div>
                 {quiz.submissionId ? (
@@ -490,7 +563,9 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
       {overdueItems.length === 0 && completedItems.length === 0 && (
         <div className="glass-card flex flex-col items-center justify-center py-12 text-center">
           <span className="text-4xl">✅</span>
-          <p className="mt-3 font-semibold text-foreground">All quizzes completed</p>
+          <p className="mt-3 font-semibold text-foreground">
+            All quizzes completed
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">
             Great work! You&apos;re up to date with all assessments.
           </p>

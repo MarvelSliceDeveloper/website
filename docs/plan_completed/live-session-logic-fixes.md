@@ -1,6 +1,7 @@
 # Plan: Live Session Logic Fixes
 
 ## Status
+
 ✅ Plan Completed — all 15 issues identified and fixed.
 
 ---
@@ -28,6 +29,7 @@
 ## Fix #3 — LiveSession model missing `title` field (CRITICAL)
 
 **Files:**
+
 - `apps/api/prisma/schema.prisma:155`
 - `apps/web/src/app/student/page.tsx:153`
 - `apps/web/src/app/admin/sessions/page.tsx:13`
@@ -35,6 +37,7 @@
 **Problem:** The `LiveSession` Prisma model had no `title` column. The `CreateSessionSchema` required a `title`, and it was used in CalendarEvent + Teams meeting subject, but never stored on the session itself. The frontend had to reconstruct titles from module/batch names. Also, the frontend used `endDateTime` in API response mappings but Prisma returns `scheduledEndAt`.
 
 **Changes:**
+
 1. Added `title String` to the `LiveSession` Prisma model
 2. Store `title` in `sessionService.createSession()` and `createSessionFromTeams()`
 3. Frontend `student/page.tsx`: use `s.scheduledEndAt` instead of `s.endDateTime` in API mapping
@@ -49,6 +52,7 @@
 **Problem:** The old query only found sessions whose `scheduledAt` fell within the new session's window, missing overlaps where the existing session starts before the new one but ends after it starts.
 
 **Change:** Replaced with proper standard overlap formula:
+
 ```
 existing scheduledAt < new end AND existing scheduledEndAt > new start
 ```
@@ -58,12 +62,14 @@ existing scheduledAt < new end AND existing scheduledEndAt > new start
 ## Fix #5 — Teams webhook sessions had zero duration (HIGH)
 
 **Files:**
+
 - `apps/api/src/modules/sessions/session.service.ts:330-341`
 - `apps/api/src/modules/sessions/events-webhook.controller.ts:106`
 
 **Problem:** `createSessionFromTeams` set `scheduledEndAt` equal to `scheduledAt` (zero duration). The events webhook had the end time available from Graph API but wasn't passing it through.
 
 **Changes:**
+
 1. Added `scheduledEndAt?: Date` parameter to `createSessionFromTeams`
 2. Events webhook now extracts and passes `event.end.dateTime + 'Z'` as `scheduledEndAt`
 
@@ -96,6 +102,7 @@ existing scheduledAt < new end AND existing scheduledEndAt > new start
 **Problem:** Queried CalendarEvent with start/end filters and re-filtered with `isSessionLive`. This could return events without actual LiveSessions and missed cancellation state.
 
 **Change:** Rewrote to query `LiveSession` directly with:
+
 - `scheduledAt <= now`
 - `endedAt = null`
 - `scheduledEndAt + buffer >= now`
@@ -153,6 +160,7 @@ Includes batch, module, and calendarEvent in the response.
 ## Fix #13 — `listSessions` has no pagination (LOW)
 
 **Files:**
+
 - `apps/api/src/modules/sessions/session.service.ts:129-207`
 - `apps/api/src/modules/sessions/session.controller.ts:43-48`
 

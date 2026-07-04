@@ -27,31 +27,53 @@ interface SupportMessageItem {
   sender: { id: string; name: string; role: string };
 }
 
-const SUPPORT_STATUS_CONFIG: Record<string, { label: string; classes: string }> = {
-  OPEN: { label: "Open", classes: "border-warning/30 bg-warning/10 text-warning" },
-  IN_PROGRESS: { label: "In Progress", classes: "border-accent/30 bg-accent/10 text-accent" },
-  RESOLVED: { label: "Resolved", classes: "border-success/30 bg-success/10 text-success" },
-  CLOSED: { label: "Closed", classes: "border-muted/30 bg-muted/10 text-muted" },
+const SUPPORT_STATUS_CONFIG: Record<
+  string,
+  { label: string; classes: string }
+> = {
+  OPEN: {
+    label: "Open",
+    classes: "border-warning/30 bg-warning/10 text-warning",
+  },
+  IN_PROGRESS: {
+    label: "In Progress",
+    classes: "border-accent/30 bg-accent/10 text-accent",
+  },
+  RESOLVED: {
+    label: "Resolved",
+    classes: "border-success/30 bg-success/10 text-success",
+  },
+  CLOSED: {
+    label: "Closed",
+    classes: "border-muted/30 bg-muted/10 text-muted",
+  },
 };
 
 export default function AdminInboxSupportPage() {
   const [tickets, setTickets] = useState<SupportTicketItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTicket, setSelectedTicket] = useState<SupportTicketItem | null>(null);
+  const [selectedTicket, setSelectedTicket] =
+    useState<SupportTicketItem | null>(null);
   const [replyText, setReplyText] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const fetchTickets = useCallback(async () => {
     try {
-      const data = await api.get<{ tickets: SupportTicketItem[] }>("/api/support/tickets");
+      const data = await api.get<{ tickets: SupportTicketItem[] }>(
+        "/api/support/tickets",
+      );
       setTickets(data.tickets || []);
-    } catch { /* ignore */ }
-    finally { setLoading(false); }
+    } catch {
+      /* ignore */
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    api.get<{ tickets: SupportTicketItem[] }>("/api/support/tickets")
+    api
+      .get<{ tickets: SupportTicketItem[] }>("/api/support/tickets")
       .then((data) => setTickets(data.tickets || []))
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -59,7 +81,9 @@ export default function AdminInboxSupportPage() {
 
   async function openTicket(ticketId: string) {
     try {
-      const data = await api.get<{ ticket: SupportTicketItem }>(`/api/support/tickets/${ticketId}`);
+      const data = await api.get<{ ticket: SupportTicketItem }>(
+        `/api/support/tickets/${ticketId}`,
+      );
       setSelectedTicket(data.ticket);
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -70,7 +94,9 @@ export default function AdminInboxSupportPage() {
     if (!selectedTicket || !replyText.trim()) return;
     setSendingReply(true);
     try {
-      await api.post(`/api/support/tickets/${selectedTicket.id}/messages`, { message: replyText });
+      await api.post(`/api/support/tickets/${selectedTicket.id}/messages`, {
+        message: replyText,
+      });
       setReplyText("");
       openTicket(selectedTicket.id);
     } catch (err) {
@@ -84,7 +110,9 @@ export default function AdminInboxSupportPage() {
     if (!selectedTicket) return;
     setUpdatingStatus(true);
     try {
-      await api.patch(`/api/support/tickets/${selectedTicket.id}/status`, { status });
+      await api.patch(`/api/support/tickets/${selectedTicket.id}/status`, {
+        status,
+      });
       toast.success("Status updated");
       openTicket(selectedTicket.id);
       fetchTickets();
@@ -95,13 +123,18 @@ export default function AdminInboxSupportPage() {
     }
   }
 
-  if (loading) return <div className="h-40 animate-pulse rounded-xl bg-card-hover border border-border" />;
+  if (loading)
+    return (
+      <div className="h-40 animate-pulse rounded-xl bg-card-hover border border-border" />
+    );
 
   if (selectedTicket) {
     return (
       <div className="space-y-6">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Inbox</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
+            Inbox
+          </p>
           <h1 className="mt-1 text-2xl font-bold text-foreground">Support</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Manage support tickets from users.
@@ -112,39 +145,80 @@ export default function AdminInboxSupportPage() {
           <div className="lg:col-span-1">
             <div className="rounded-xl border border-border/60 bg-card">
               <div className="border-b border-border px-4 py-3 flex items-center gap-2">
-                <button onClick={() => setSelectedTicket(null)} className="text-muted hover:text-foreground">
+                <button
+                  onClick={() => setSelectedTicket(null)}
+                  className="text-muted hover:text-foreground"
+                >
                   <IconArrowLeft size={16} />
                 </button>
-                <p className="text-sm font-semibold text-foreground">Ticket Details</p>
+                <p className="text-sm font-semibold text-foreground">
+                  Ticket Details
+                </p>
               </div>
               <div className="p-4 space-y-3">
-                <p className="font-medium text-foreground">{selectedTicket.title}</p>
-                <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${SUPPORT_STATUS_CONFIG[selectedTicket.status]?.classes || ""}`}>
-                  {SUPPORT_STATUS_CONFIG[selectedTicket.status]?.label || selectedTicket.status}
+                <p className="font-medium text-foreground">
+                  {selectedTicket.title}
+                </p>
+                <span
+                  className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${SUPPORT_STATUS_CONFIG[selectedTicket.status]?.classes || ""}`}
+                >
+                  {SUPPORT_STATUS_CONFIG[selectedTicket.status]?.label ||
+                    selectedTicket.status}
                 </span>
                 <div className="text-xs text-muted space-y-1">
-                  <p>From: <span className="text-foreground font-medium">{selectedTicket.user.name}</span></p>
-                  <p>Role: <span className="text-foreground">{selectedTicket.user.role}</span></p>
-                  <p>Email: <span className="text-foreground">{selectedTicket.user.email}</span></p>
+                  <p>
+                    From:{" "}
+                    <span className="text-foreground font-medium">
+                      {selectedTicket.user.name}
+                    </span>
+                  </p>
+                  <p>
+                    Role:{" "}
+                    <span className="text-foreground">
+                      {selectedTicket.user.role}
+                    </span>
+                  </p>
+                  <p>
+                    Email:{" "}
+                    <span className="text-foreground">
+                      {selectedTicket.user.email}
+                    </span>
+                  </p>
                   <p>Created: {timeAgo(selectedTicket.createdAt)}</p>
                 </div>
-                <p className="text-sm text-muted-foreground border-t border-border pt-3">{selectedTicket.description}</p>
+                <p className="text-sm text-muted-foreground border-t border-border pt-3">
+                  {selectedTicket.description}
+                </p>
 
                 {selectedTicket.status !== "CLOSED" && (
                   <div className="border-t border-border pt-3 space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Update Status</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Update Status
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {selectedTicket.status !== "IN_PROGRESS" && (
-                        <button onClick={() => updateStatus("IN_PROGRESS")} disabled={updatingStatus} className="btn-secondary text-xs">
+                        <button
+                          onClick={() => updateStatus("IN_PROGRESS")}
+                          disabled={updatingStatus}
+                          className="btn-secondary text-xs"
+                        >
                           Mark In Progress
                         </button>
                       )}
                       {selectedTicket.status !== "RESOLVED" && (
-                        <button onClick={() => updateStatus("RESOLVED")} disabled={updatingStatus} className="btn-secondary text-xs">
+                        <button
+                          onClick={() => updateStatus("RESOLVED")}
+                          disabled={updatingStatus}
+                          className="btn-secondary text-xs"
+                        >
                           Mark Resolved
                         </button>
                       )}
-                      <button onClick={() => updateStatus("CLOSED")} disabled={updatingStatus} className="btn-secondary text-xs">
+                      <button
+                        onClick={() => updateStatus("CLOSED")}
+                        disabled={updatingStatus}
+                        className="btn-secondary text-xs"
+                      >
                         Close
                       </button>
                     </div>
@@ -156,24 +230,36 @@ export default function AdminInboxSupportPage() {
 
           <div className="lg:col-span-2 rounded-xl border border-border/60 bg-card flex flex-col">
             <div className="border-b border-border px-4 py-3">
-              <p className="text-sm font-semibold text-foreground">Conversation ({selectedTicket.messages?.length || 0})</p>
+              <p className="text-sm font-semibold text-foreground">
+                Conversation ({selectedTicket.messages?.length || 0})
+              </p>
             </div>
             <div className="max-h-96 overflow-y-auto p-4 space-y-3">
-              {(!selectedTicket.messages || selectedTicket.messages.length === 0) ? (
-                <p className="text-center text-sm text-muted py-8">No messages yet.</p>
+              {!selectedTicket.messages ||
+              selectedTicket.messages.length === 0 ? (
+                <p className="text-center text-sm text-muted py-8">
+                  No messages yet.
+                </p>
               ) : (
                 selectedTicket.messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.sender.role === "ADMIN" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-xs rounded-xl px-4 py-2 text-sm ${
-                      msg.sender.role === "ADMIN"
-                        ? "bg-primary text-white"
-                        : "bg-card-hover text-foreground border border-border"
-                    }`}>
+                  <div
+                    key={msg.id}
+                    className={`flex ${msg.sender.role === "ADMIN" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-xs rounded-xl px-4 py-2 text-sm ${
+                        msg.sender.role === "ADMIN"
+                          ? "bg-primary text-white"
+                          : "bg-card-hover text-foreground border border-border"
+                      }`}
+                    >
                       <p className="text-[10px] font-medium mb-1 opacity-70">
                         {msg.sender.role === "ADMIN" ? "You" : msg.sender.name}
                       </p>
                       <p>{msg.message}</p>
-                      <p className="text-[10px] mt-1 opacity-60">{timeAgo(msg.createdAt)}</p>
+                      <p className="text-[10px] mt-1 opacity-60">
+                        {timeAgo(msg.createdAt)}
+                      </p>
                     </div>
                   </div>
                 ))
@@ -190,7 +276,11 @@ export default function AdminInboxSupportPage() {
                     placeholder="Type your reply..."
                     className="field flex-1"
                   />
-                  <button onClick={sendReply} disabled={!replyText.trim() || sendingReply} className="btn-primary text-sm flex items-center gap-1.5">
+                  <button
+                    onClick={sendReply}
+                    disabled={!replyText.trim() || sendingReply}
+                    className="btn-primary text-sm flex items-center gap-1.5"
+                  >
                     <IconSend size={14} /> Send
                   </button>
                 </div>
@@ -205,7 +295,9 @@ export default function AdminInboxSupportPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Inbox</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
+          Inbox
+        </p>
         <h1 className="mt-1 text-2xl font-bold text-foreground">Support</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Manage support tickets from users.
@@ -229,16 +321,24 @@ export default function AdminInboxSupportPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-foreground">{t.title}</p>
-                  <span className={`shrink-0 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium ${SUPPORT_STATUS_CONFIG[t.status]?.classes || ""}`}>
+                  <p className="text-sm font-medium text-foreground">
+                    {t.title}
+                  </p>
+                  <span
+                    className={`shrink-0 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium ${SUPPORT_STATUS_CONFIG[t.status]?.classes || ""}`}
+                  >
                     {SUPPORT_STATUS_CONFIG[t.status]?.label || t.status}
                   </span>
                 </div>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  From: {t.user.name} ({t.user.role}) &middot; {timeAgo(t.createdAt)}
+                  From: {t.user.name} ({t.user.role}) &middot;{" "}
+                  {timeAgo(t.createdAt)}
                 </p>
                 {t._count && t._count.messages > 0 && (
-                  <p className="text-xs text-muted mt-0.5">{t._count.messages} message{t._count.messages > 1 ? "s" : ""}</p>
+                  <p className="text-xs text-muted mt-0.5">
+                    {t._count.messages} message
+                    {t._count.messages > 1 ? "s" : ""}
+                  </p>
                 )}
               </div>
             </button>

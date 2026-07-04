@@ -1,11 +1,13 @@
 # LMS Portal - Agent Instructions
 
 ## Project Overview
+
 Monorepo with Express API (`apps/api`) + Next.js Web (`apps/web`) + shared packages (`packages/*`). Uses pnpm + Turborepo.
 
 ## Commands (run from repo root)
 
 ### Development
+
 ```bash
 pnpm install                    # Install deps
 docker-compose up -d            # Start Postgres (5433) + Redis (6379)
@@ -14,6 +16,7 @@ pnpm dev                        # Start API (4000) + Web (3000) via Turbo
 ```
 
 ### Testing
+
 ```bash
 pnpm test                       # Unit tests (vitest) via Turbo
 pnpm test:integration           # Integration tests
@@ -22,6 +25,7 @@ pnpm test:all                   # All test suites
 ```
 
 ### Code Quality
+
 ```bash
 pnpm lint                       # Lint all packages
 pnpm lint:fix                   # Auto-fix lint
@@ -31,6 +35,7 @@ pnpm format:check               # Check formatting
 ```
 
 ### Build & Prisma
+
 ```bash
 pnpm build                      # Build all packages
 pnpm prisma:migrate             # Run migrations (dev)
@@ -41,6 +46,7 @@ pnpm clean                      # Clean build outputs
 ```
 
 ## Key Configuration
+
 - **Node**: >=20, **pnpm**: >=8 (uses corepack)
 - **Postgres**: `localhost:5433` (docker maps 5433->5432)
 - **Redis**: `localhost:6379`
@@ -50,6 +56,7 @@ pnpm clean                      # Clean build outputs
 - **Env**: Copy `.env.example` → `.env`, set `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET` (32+ chars), `TOKEN_ENCRYPTION_KEY` (32 chars), `API_URL`, `WEB_URL`
 
 ## Monorepo Structure
+
 ```
 apps/api      # Express + Prisma + Zod
   src/index.ts         # Entry point
@@ -64,6 +71,7 @@ packages/utils  # Shared utilities
 ```
 
 ## Key Dependencies
+
 - **API**: Express, Prisma, Zod, bcryptjs, jsonwebtoken, pino, multer, express-rate-limit
 - **Web**: Next.js 16, React 19, Tailwind 4, Tiptap, FullCalendar, Recharts, Sonner
 - **Auth**: JWT + cookies, Microsoft OAuth (Teams/Graph), bcrypt
@@ -71,18 +79,21 @@ packages/utils  # Shared utilities
 - **Testing**: Vitest (unit/integration), Playwright (E2E)
 
 ## Seed Users (after `pnpm prisma:reset`)
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@lms.local | admin123 |
+
+| Role       | Email                | Password      |
+| ---------- | -------------------- | ------------- |
+| Admin      | admin@lms.local      | admin123      |
 | Instructor | instructor@lms.local | instructor123 |
-| Student | student@lms.local | student123 |
+| Student    | student@lms.local    | student123    |
 
 ## Testing Notes
+
 - Unit/integration: `vitest` in `apps/api` (configured in package.json)
 - E2E: Playwright (config not in repo root)
 - Run `pnpm test:all` in CI
 
 ## Git Workflow (from CONTRIBUTING.md)
+
 - `main` = production, `develop` = integration branch
 - Branch prefixes: `feature/`, `fix/`, `hotfix/`
 - PR requirements: `pnpm test:all`, `pnpm lint`, `pnpm typecheck` pass
@@ -90,6 +101,7 @@ packages/utils  # Shared utilities
 - Format with `pnpm format` before commit
 
 ## Common Gotchas
+
 - **Postgres port**: Use `5433` in `DATABASE_URL` (docker-compose maps 5433→5432)
 - **Prisma env**: If Prisma can't find `DATABASE_URL`, ensure `.env` is in repo root (copy to `apps/api/` if needed)
 - **Prisma migrations**: Repo uses `db push --force-reset` + seed instead of `migrate dev`; migration files may be stale

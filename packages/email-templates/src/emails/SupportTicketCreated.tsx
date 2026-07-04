@@ -10,9 +10,7 @@ export default function SupportTicketCreated({
   ticketTitle,
 }: SupportTicketCreatedProps) {
   return (
-    <BaseLayout
-      previewText={`Support ticket created: ${ticketTitle}`}
-    >
+    <BaseLayout previewText={`Support ticket created: ${ticketTitle}`}>
       <Heading style={headingStyle}>Support Ticket Submitted</Heading>
       <Text style={textStyle}>
         Your support ticket has been submitted successfully.
@@ -24,7 +22,8 @@ export default function SupportTicketCreated({
         <Text style={valueStyle}>Open</Text>
       </Section>
       <Text style={textStyle}>
-        Our team will review your ticket and respond shortly. You'll receive an email when there's a reply.
+        Our team will review your ticket and respond shortly. You'll receive an
+        email when there's a reply.
       </Text>
       <Section style={buttonContainerStyle}>
         <Button

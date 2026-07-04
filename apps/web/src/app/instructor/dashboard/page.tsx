@@ -71,14 +71,16 @@ export default function InstructorDashboardPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [sessionsRes, batchesRes, assignmentsRes] = await Promise.allSettled([
-          api.get<{ sessions?: Session[] }>("/api/sessions"),
-          api.get<Batch[]>("/api/admin/batches"),
-          api.get<{ assignments: Assignment[] }>("/api/assignments"),
-        ]);
+        const [sessionsRes, batchesRes, assignmentsRes] =
+          await Promise.allSettled([
+            api.get<{ sessions?: Session[] }>("/api/sessions"),
+            api.get<Batch[]>("/api/admin/batches"),
+            api.get<{ assignments: Assignment[] }>("/api/assignments"),
+          ]);
 
         const allSessions =
-          sessionsRes.status === "fulfilled" && Array.isArray(sessionsRes.value.sessions)
+          sessionsRes.status === "fulfilled" &&
+          Array.isArray(sessionsRes.value.sessions)
             ? sessionsRes.value.sessions
             : [];
         const batches =
@@ -86,29 +88,32 @@ export default function InstructorDashboardPage() {
             ? batchesRes.value
             : [];
         const assignments =
-          assignmentsRes.status === "fulfilled" && Array.isArray(assignmentsRes.value.assignments)
+          assignmentsRes.status === "fulfilled" &&
+          Array.isArray(assignmentsRes.value.assignments)
             ? assignmentsRes.value.assignments
             : [];
 
         const now = new Date();
-        const upcoming = allSessions.filter((s) => !s.endedAt && new Date(s.scheduledAt) >= now);
+        const upcoming = allSessions.filter(
+          (s) => !s.endedAt && new Date(s.scheduledAt) >= now,
+        );
         setUpcomingSessions(upcoming.slice(0, 3));
 
         const totalStudents = batches.reduce(
           (sum, batch) => sum + (batch._count?.enrollments ?? 0),
-          0
+          0,
         );
 
         const assignmentsWithSubmissions = assignments.filter(
-          (assignment) => (assignment._count?.submissions ?? 0) > 0
+          (assignment) => (assignment._count?.submissions ?? 0) > 0,
         );
 
         const submissionResults = await Promise.allSettled(
           assignmentsWithSubmissions.map((assignment) =>
             api
-              .get<{ submissions: SubmissionRecord[] }>(
-                `/api/assignments/${assignment.id}/submissions`
-              )
+              .get<{
+                submissions: SubmissionRecord[];
+              }>(`/api/assignments/${assignment.id}/submissions`)
               .then((res) =>
                 (res.submissions || [])
                   .filter((sub) => sub.status === "PENDING")
@@ -120,15 +125,24 @@ export default function InstructorDashboardPage() {
                     assignmentTitle: assignment.title,
                     submittedAt: sub.submittedAt,
                     status: sub.status as "PENDING" | "GRADED",
-                  }))
-              )
-          )
+                  })),
+              ),
+          ),
         );
 
         const allPendingSubmissions = submissionResults
-          .filter((result): result is PromiseFulfilledResult<AssignmentSubmission[]> => result.status === "fulfilled")
+          .filter(
+            (
+              result,
+            ): result is PromiseFulfilledResult<AssignmentSubmission[]> =>
+              result.status === "fulfilled",
+          )
           .flatMap((result) => result.value)
-          .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+          .sort(
+            (a, b) =>
+              new Date(b.submittedAt).getTime() -
+              new Date(a.submittedAt).getTime(),
+          );
 
         setSubmissions(allPendingSubmissions.slice(0, 5));
         setStats({
@@ -139,7 +153,11 @@ export default function InstructorDashboardPage() {
         });
       } catch (err: unknown) {
         console.error("Failed to load dashboard data:", err);
-        if (err instanceof Error && (err.message?.includes("Authentication") || err.message?.includes("401"))) {
+        if (
+          err instanceof Error &&
+          (err.message?.includes("Authentication") ||
+            err.message?.includes("401"))
+        ) {
           window.location.href = "/login";
         }
       } finally {
@@ -153,27 +171,60 @@ export default function InstructorDashboardPage() {
     <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
       {/* Welcome Banner */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Instructor</p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">Dashboard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Welcome back! Here is a summary of your workspace.</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
+          Instructor
+        </p>
+        <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">
+          Dashboard
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Welcome back! Here is a summary of your workspace.
+        </p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 [&>*]:animate-in [&>*]:fade-in [&>*]:slide-in-from-bottom-2 [&>*]:duration-400">
         {[
-          { label: "Assigned Batches", value: stats?.totalBatches, icon: IconUsers, gradient: "from-violet-500 to-purple-600" },
-          { label: "Total Sessions", value: stats?.totalSessions, icon: IconVideo, gradient: "from-emerald-500 to-teal-600" },
-          { label: "Active Students", value: stats?.totalStudents, icon: IconBook, gradient: "from-sky-500 to-blue-600" },
-          { label: "Pending Submissions", value: stats?.pendingAssignments, icon: IconClipboardList, gradient: "from-amber-500 to-orange-600" },
+          {
+            label: "Assigned Batches",
+            value: stats?.totalBatches,
+            icon: IconUsers,
+            gradient: "from-violet-500 to-purple-600",
+          },
+          {
+            label: "Total Sessions",
+            value: stats?.totalSessions,
+            icon: IconVideo,
+            gradient: "from-emerald-500 to-teal-600",
+          },
+          {
+            label: "Active Students",
+            value: stats?.totalStudents,
+            icon: IconBook,
+            gradient: "from-sky-500 to-blue-600",
+          },
+          {
+            label: "Pending Submissions",
+            value: stats?.pendingAssignments,
+            icon: IconClipboardList,
+            gradient: "from-amber-500 to-orange-600",
+          },
         ].map((stat, idx) => (
-          <div key={idx} className="glass-card p-5 flex items-center justify-between">
+          <div
+            key={idx}
+            className="glass-card p-5 flex items-center justify-between"
+          >
             <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-[0.1em] text-muted">{stat.label}</p>
+              <p className="text-xs font-medium uppercase tracking-[0.1em] text-muted">
+                {stat.label}
+              </p>
               <p className="text-3xl font-bold text-foreground">
                 {loading || stat.value === undefined ? "\u2014" : stat.value}
               </p>
             </div>
-            <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${stat.gradient} text-white`}>
+            <div
+              className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${stat.gradient} text-white`}
+            >
               <stat.icon size={20} stroke={1.8} />
             </div>
           </div>
@@ -187,7 +238,10 @@ export default function InstructorDashboardPage() {
             <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground flex items-center gap-2">
               <IconCalendar size={15} stroke={1.8} /> Upcoming Schedule
             </h2>
-            <Link href="/instructor/sessions" className="text-xs text-primary hover:text-primary-hover font-medium transition-colors">
+            <Link
+              href="/instructor/sessions"
+              className="text-xs text-primary hover:text-primary-hover font-medium transition-colors"
+            >
               View all sessions
               <IconExternalLink size={12} className="inline ml-1" />
             </Link>
@@ -199,14 +253,25 @@ export default function InstructorDashboardPage() {
             </div>
           ) : upcomingSessions.length === 0 ? (
             <div className="glass-card p-10 text-center">
-              <IconCalendar size={36} stroke={1.2} className="mx-auto text-muted/40 mb-3" />
-              <p className="text-sm font-medium text-foreground">No upcoming sessions</p>
-              <p className="text-xs text-muted-foreground mt-1">Your scheduled classes will appear here.</p>
+              <IconCalendar
+                size={36}
+                stroke={1.2}
+                className="mx-auto text-muted/40 mb-3"
+              />
+              <p className="text-sm font-medium text-foreground">
+                No upcoming sessions
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Your scheduled classes will appear here.
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
               {upcomingSessions.map((session) => (
-                <div key={session.id} className="glass-card p-4 flex items-center justify-between hover:border-primary/20 transition-all duration-200">
+                <div
+                  key={session.id}
+                  className="glass-card p-4 flex items-center justify-between hover:border-primary/20 transition-all duration-200"
+                >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white">
                       <IconVideo size={18} stroke={1.8} />
@@ -214,11 +279,17 @@ export default function InstructorDashboardPage() {
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-foreground truncate">
                         {new Date(session.scheduledAt).toLocaleString("en-IN", {
-                          weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
+                          weekday: "short",
+                          day: "numeric",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                        {session.batch ? `${session.batch.course.title} · Batch: ${session.batch.name}` : session.title}
+                        {session.batch
+                          ? `${session.batch.course.title} · Batch: ${session.batch.name}`
+                          : session.title}
                       </p>
                     </div>
                   </div>
@@ -250,13 +321,24 @@ export default function InstructorDashboardPage() {
               </div>
             ) : submissions.length === 0 ? (
               <div className="glass-card p-10 text-center">
-                <IconClipboardList size={36} stroke={1.2} className="mx-auto text-muted/40 mb-3" />
-                <p className="text-sm font-medium text-foreground">All caught up</p>
-                <p className="text-xs text-muted-foreground mt-1">No submissions waiting for grading.</p>
+                <IconClipboardList
+                  size={36}
+                  stroke={1.2}
+                  className="mx-auto text-muted/40 mb-3"
+                />
+                <p className="text-sm font-medium text-foreground">
+                  All caught up
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  No submissions waiting for grading.
+                </p>
               </div>
             ) : null}
             {submissions.map((sub) => (
-              <div key={sub.id} className="glass-card p-4 space-y-3 hover:border-amber-500/20 transition-all duration-200">
+              <div
+                key={sub.id}
+                className="glass-card p-4 space-y-3 hover:border-amber-500/20 transition-all duration-200"
+              >
                 <div>
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] uppercase font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
@@ -264,7 +346,10 @@ export default function InstructorDashboardPage() {
                     </span>
                     <span className="text-[10px] text-muted flex items-center gap-1">
                       <IconClock size={10} />
-                      {new Date(sub.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                      {new Date(sub.submittedAt).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                      })}
                     </span>
                   </div>
                   <p className="text-sm font-semibold text-foreground mt-1.5 truncate">
@@ -275,7 +360,9 @@ export default function InstructorDashboardPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => window.location.href = "/instructor/assignments"}
+                  onClick={() =>
+                    (window.location.href = "/instructor/assignments")
+                  }
                   className="btn-secondary w-full justify-center text-xs py-1.5"
                 >
                   Review & Grade

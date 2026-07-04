@@ -1,5 +1,5 @@
-import { prisma } from '../utils/prisma';
-import { recordingService } from '../modules/recordings/recording.service';
+import { prisma } from "../utils/prisma";
+import { recordingService } from "../modules/recordings/recording.service";
 
 let intervalId: NodeJS.Timeout | null = null;
 
@@ -10,7 +10,7 @@ export const recordingSyncJob = {
    * then attempts to sync recordings from Microsoft Teams Graph API.
    */
   async runSync() {
-    console.log('[RecordingSyncJob] Starting automated recordings sync...');
+    console.log("[RecordingSyncJob] Starting automated recordings sync...");
     try {
       const now = new Date();
       // A session is eligible for recording sync if it was explicitly ended
@@ -41,25 +41,39 @@ export const recordingSyncJob = {
         },
       })) as any[];
 
-      console.log(`[RecordingSyncJob] Found ${pastSessionsWithoutRecordings.length} completed sessions pending recording sync.`);
+      console.log(
+        `[RecordingSyncJob] Found ${pastSessionsWithoutRecordings.length} completed sessions pending recording sync.`,
+      );
 
       for (const session of pastSessionsWithoutRecordings) {
         console.log(
-          `[RecordingSyncJob] Auto-fetching recording for session ${session.id} (${session.batch.course.title} — ${session.batch.name})`
+          `[RecordingSyncJob] Auto-fetching recording for session ${session.id} (${session.batch.course.title} — ${session.batch.name})`,
         );
         try {
-          const recording = await recordingService.syncRecordingsForSession(session.id);
+          const recording = await recordingService.syncRecordingsForSession(
+            session.id,
+          );
           if (recording) {
-            console.log(`[RecordingSyncJob] Sync successful for session ${session.id}.`);
+            console.log(
+              `[RecordingSyncJob] Sync successful for session ${session.id}.`,
+            );
           } else {
-            console.log(`[RecordingSyncJob] Recording not ready/available yet for session ${session.id}. Will retry in the next poll.`);
+            console.log(
+              `[RecordingSyncJob] Recording not ready/available yet for session ${session.id}. Will retry in the next poll.`,
+            );
           }
         } catch (syncError: any) {
-          console.error(`[RecordingSyncJob] Sync failed for session ${session.id}:`, syncError.message);
+          console.error(
+            `[RecordingSyncJob] Sync failed for session ${session.id}:`,
+            syncError.message,
+          );
         }
       }
     } catch (error: any) {
-      console.error('[RecordingSyncJob] Fatal error during automated sync execution:', error.message);
+      console.error(
+        "[RecordingSyncJob] Fatal error during automated sync execution:",
+        error.message,
+      );
     }
   },
 
@@ -69,12 +83,14 @@ export const recordingSyncJob = {
    */
   start(intervalMs = 5 * 60 * 1000) {
     if (intervalId) {
-      console.log('[RecordingSyncJob] Poller is already running.');
+      console.log("[RecordingSyncJob] Poller is already running.");
       return;
     }
 
-    console.log(`[RecordingSyncJob] Starting background polling sync every ${intervalMs / 1000 / 60} minutes.`);
-    
+    console.log(
+      `[RecordingSyncJob] Starting background polling sync every ${intervalMs / 1000 / 60} minutes.`,
+    );
+
     // Run once immediately on start
     this.runSync();
 
@@ -90,7 +106,7 @@ export const recordingSyncJob = {
     if (intervalId) {
       clearInterval(intervalId);
       intervalId = null;
-      console.log('[RecordingSyncJob] Background polling sync stopped.');
+      console.log("[RecordingSyncJob] Background polling sync stopped.");
     }
   },
 };

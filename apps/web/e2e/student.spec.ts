@@ -57,29 +57,31 @@ test.describe("Student Portal — Workflows", () => {
     await loginAs(page, "student");
   });
 
-  test("TC-STU-D1: Student portal home shows greeting and section cards", async ({ page }) => {
+  test("TC-STU-D1: Student portal home shows greeting and section cards", async ({
+    page,
+  }) => {
     await page.goto("/student");
     // Wait for the portal to render (data loads asynchronously)
     await expect(page.locator("h1").first()).toBeVisible({ timeout: 15000 });
 
     // The student portal is a SPA — no sidebar. Verify the header branding exists.
-    await expect(page.locator('text=LMS Portal').first()).toBeVisible();
+    await expect(page.locator("text=LMS Portal").first()).toBeVisible();
 
     // Verify section cards that are always present
-    await expect(page.locator('text=My Courses').first()).toBeVisible();
-    await expect(page.locator('text=Live Sessions').first()).toBeVisible();
+    await expect(page.locator("text=My Courses").first()).toBeVisible();
+    await expect(page.locator("text=Live Sessions").first()).toBeVisible();
   });
 
-  test("TC-STU-D2: Support page has ticket creation form", async ({
-    page,
-  }) => {
+  test("TC-STU-D2: Support page has ticket creation form", async ({ page }) => {
     await page.goto("/student/support");
 
     // Look for a create ticket button or form inputs
     const createBtn = page.locator(
-      'button:has-text("Create"), button:has-text("New Ticket"), a:has-text("Create")'
+      'button:has-text("Create"), button:has-text("New Ticket"), a:has-text("Create")',
     );
-    const titleInput = page.locator('input[placeholder*="title" i], input[name="title"]');
+    const titleInput = page.locator(
+      'input[placeholder*="title" i], input[name="title"]',
+    );
 
     // If there's a create button, click it and fill the form
     if (await createBtn.isVisible()) {
@@ -90,13 +92,17 @@ test.describe("Student Portal — Workflows", () => {
     // Try to fill a support ticket form if visible
     if (await titleInput.isVisible()) {
       await titleInput.fill("E2E Test Support Ticket");
-      const descInput = page.locator('textarea[placeholder*="description" i], textarea').first();
+      const descInput = page
+        .locator('textarea[placeholder*="description" i], textarea')
+        .first();
       if (await descInput.isVisible()) {
         await descInput.fill("This is a test ticket created by Playwright.");
       }
 
       // Submit the form
-      const submitBtn = page.locator('button[type="submit"]:has-text("Submit"), button:has-text("Send")');
+      const submitBtn = page.locator(
+        'button[type="submit"]:has-text("Submit"), button:has-text("Send")',
+      );
       if (await submitBtn.isVisible()) {
         await submitBtn.click();
       }
@@ -113,7 +119,7 @@ test.describe("Student Portal — Workflows", () => {
 
     // Look for toggle/checkbox elements (notification preferences)
     const toggles = page.locator(
-      'input[type="checkbox"], button[role="switch"], [role="toggle"]'
+      'input[type="checkbox"], button[role="switch"], [role="toggle"]',
     );
     const toggleCount = await toggles.count();
 

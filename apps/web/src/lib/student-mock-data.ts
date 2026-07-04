@@ -9,7 +9,12 @@ export const MOCK_ENABLED = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";
 
 export type CourseStatus = "ACTIVE" | "COMPLETED" | "PENDING";
 export type SessionStatus = "LIVE" | "UPCOMING" | "PAST";
-export type TicketStatus = "OPEN" | "ASSIGNED" | "SCHEDULED" | "COMPLETED" | "CANCELLED";
+export type TicketStatus =
+  | "OPEN"
+  | "ASSIGNED"
+  | "SCHEDULED"
+  | "COMPLETED"
+  | "CANCELLED";
 
 export interface EnrolledCourse {
   id: string;
@@ -161,21 +166,49 @@ export interface OverdueAssignment {
 const now = new Date();
 const inOneHour = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
 const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
-const tomorrowPlusTwoHours = new Date(now.getTime() + 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
-const inTwoDays = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString();
-const inTwoDaysPlusTwoHours = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
-const inThreeDays = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString();
-const inThreeDaysPlusTwoHours = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
-const inFourDays = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000).toISOString();
-const inFourDaysPlusTwoHours = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
-const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
-const inTwoWeeks = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString();
+const tomorrowPlusTwoHours = new Date(
+  now.getTime() + 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000,
+).toISOString();
+const inTwoDays = new Date(
+  now.getTime() + 2 * 24 * 60 * 60 * 1000,
+).toISOString();
+const inTwoDaysPlusTwoHours = new Date(
+  now.getTime() + 2 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000,
+).toISOString();
+const inThreeDays = new Date(
+  now.getTime() + 3 * 24 * 60 * 60 * 1000,
+).toISOString();
+const inThreeDaysPlusTwoHours = new Date(
+  now.getTime() + 3 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000,
+).toISOString();
+const inFourDays = new Date(
+  now.getTime() + 4 * 24 * 60 * 60 * 1000,
+).toISOString();
+const inFourDaysPlusTwoHours = new Date(
+  now.getTime() + 4 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000,
+).toISOString();
+const oneWeekFromNow = new Date(
+  now.getTime() + 7 * 24 * 60 * 60 * 1000,
+).toISOString();
+const inTwoWeeks = new Date(
+  now.getTime() + 14 * 24 * 60 * 60 * 1000,
+).toISOString();
 const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-const yesterdayPlusTwoHours = new Date(now.getTime() - 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
-const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString();
-const threeDaysAgoPlusTwoHours = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
-const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-const lastWeekPlusTwoHours = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
+const yesterdayPlusTwoHours = new Date(
+  now.getTime() - 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000,
+).toISOString();
+const threeDaysAgo = new Date(
+  now.getTime() - 3 * 24 * 60 * 60 * 1000,
+).toISOString();
+const threeDaysAgoPlusTwoHours = new Date(
+  now.getTime() - 3 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000,
+).toISOString();
+const lastWeek = new Date(
+  now.getTime() - 7 * 24 * 60 * 60 * 1000,
+).toISOString();
+const lastWeekPlusTwoHours = new Date(
+  now.getTime() - 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000,
+).toISOString();
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
@@ -344,9 +377,36 @@ export const MOCK_BATCHES: Record<string, Batch> = {
       },
     ],
     recordings: [
-      { id: "r1", sessionId: "s3", moduleId: "m4", dayLabel: "Day 11", title: "NumPy Arrays", duration: "2h 15m", watchedPercent: 100, videoUrl: "" },
-      { id: "r2", sessionId: "s2", moduleId: "m4", dayLabel: "Day 10", title: "Pandas Introduction", duration: "1h 50m", watchedPercent: 62, videoUrl: "" },
-      { id: "r3", sessionId: "s1", moduleId: "m3", dayLabel: "Day 9", title: "File Handling", duration: "2h 00m", watchedPercent: 0, videoUrl: "" },
+      {
+        id: "r1",
+        sessionId: "s3",
+        moduleId: "m4",
+        dayLabel: "Day 11",
+        title: "NumPy Arrays",
+        duration: "2h 15m",
+        watchedPercent: 100,
+        videoUrl: "",
+      },
+      {
+        id: "r2",
+        sessionId: "s2",
+        moduleId: "m4",
+        dayLabel: "Day 10",
+        title: "Pandas Introduction",
+        duration: "1h 50m",
+        watchedPercent: 62,
+        videoUrl: "",
+      },
+      {
+        id: "r3",
+        sessionId: "s1",
+        moduleId: "m3",
+        dayLabel: "Day 9",
+        title: "File Handling",
+        duration: "2h 00m",
+        watchedPercent: 0,
+        videoUrl: "",
+      },
     ],
   },
   b2: {
@@ -374,8 +434,26 @@ export const MOCK_BATCHES: Record<string, Batch> = {
       },
     ],
     recordings: [
-      { id: "r4", sessionId: "s4", moduleId: "m2", dayLabel: "Day 2", title: "React Hooks", duration: "1h 30m", watchedPercent: 10, videoUrl: "" },
-      { id: "r5", sessionId: "s4", moduleId: "m1", dayLabel: "Day 1", title: "React Basics", duration: "1h 45m", watchedPercent: 100, videoUrl: "" },
+      {
+        id: "r4",
+        sessionId: "s4",
+        moduleId: "m2",
+        dayLabel: "Day 2",
+        title: "React Hooks",
+        duration: "1h 30m",
+        watchedPercent: 10,
+        videoUrl: "",
+      },
+      {
+        id: "r5",
+        sessionId: "s4",
+        moduleId: "m1",
+        dayLabel: "Day 1",
+        title: "React Basics",
+        duration: "1h 45m",
+        watchedPercent: 100,
+        videoUrl: "",
+      },
     ],
   },
   b3: {
@@ -422,8 +500,26 @@ export const MOCK_BATCHES: Record<string, Batch> = {
       },
     ],
     recordings: [
-      { id: "r6", sessionId: "s6", moduleId: "m2", dayLabel: "Day 7", title: "EC2 & Auto Scaling", duration: "2h 10m", watchedPercent: 40, videoUrl: "" },
-      { id: "r7", sessionId: "s7", moduleId: "m1", dayLabel: "Day 6", title: "S3 & CloudFront", duration: "1h 55m", watchedPercent: 100, videoUrl: "" },
+      {
+        id: "r6",
+        sessionId: "s6",
+        moduleId: "m2",
+        dayLabel: "Day 7",
+        title: "EC2 & Auto Scaling",
+        duration: "2h 10m",
+        watchedPercent: 40,
+        videoUrl: "",
+      },
+      {
+        id: "r7",
+        sessionId: "s7",
+        moduleId: "m1",
+        dayLabel: "Day 6",
+        title: "S3 & CloudFront",
+        duration: "1h 55m",
+        watchedPercent: 100,
+        videoUrl: "",
+      },
     ],
   },
 };
@@ -558,7 +654,8 @@ export const MOCK_MENTORSHIP_TICKETS: MentorshipTicket[] = [
     status: "COMPLETED",
     createdAt: "2025-01-20T10:00:00Z",
     instructor: "Ravi Kumar",
-    notes: "Discussed list comprehensions with examples. Practice problems shared.",
+    notes:
+      "Discussed list comprehensions with examples. Practice problems shared.",
   },
   {
     id: "t2",
@@ -657,7 +754,12 @@ export const MOCK_CATALOGUE: CatalogueCourse[] = [
     nextBatch: "Feb 2025",
     isEnrolled: true,
     tags: ["Data", "Python"],
-    whatYouLearn: ["Pandas & NumPy", "Data Visualisation", "Machine Learning basics", "Jupyter Notebooks"],
+    whatYouLearn: [
+      "Pandas & NumPy",
+      "Data Visualisation",
+      "Machine Learning basics",
+      "Jupyter Notebooks",
+    ],
     curriculum: [
       { title: "Python Basics", sessions: 4 },
       { title: "Data Structures", sessions: 3 },
@@ -675,7 +777,12 @@ export const MOCK_CATALOGUE: CatalogueCourse[] = [
     nextBatch: "Mar 2025",
     isEnrolled: true,
     tags: ["Frontend", "React"],
-    whatYouLearn: ["React Hooks", "Server Components", "Next.js", "API integration"],
+    whatYouLearn: [
+      "React Hooks",
+      "Server Components",
+      "Next.js",
+      "API integration",
+    ],
     curriculum: [
       { title: "React Basics", sessions: 4 },
       { title: "Hooks & State", sessions: 3 },
@@ -692,7 +799,12 @@ export const MOCK_CATALOGUE: CatalogueCourse[] = [
     nextBatch: "1 Mar 2025",
     isEnrolled: false,
     tags: ["Backend", "Node"],
-    whatYouLearn: ["REST API design with Express", "PostgreSQL with Prisma ORM", "Authentication (JWT, OAuth)", "Deployment on AWS EC2"],
+    whatYouLearn: [
+      "REST API design with Express",
+      "PostgreSQL with Prisma ORM",
+      "Authentication (JWT, OAuth)",
+      "Deployment on AWS EC2",
+    ],
     curriculum: [
       { title: "Node.js Foundations", sessions: 4 },
       { title: "Express & Routing", sessions: 3 },
@@ -711,7 +823,12 @@ export const MOCK_CATALOGUE: CatalogueCourse[] = [
     nextBatch: "Apr 2025",
     isEnrolled: false,
     tags: ["DevOps", "Cloud"],
-    whatYouLearn: ["Docker & Kubernetes", "CI/CD pipelines", "AWS fundamentals", "Infrastructure as Code"],
+    whatYouLearn: [
+      "Docker & Kubernetes",
+      "CI/CD pipelines",
+      "AWS fundamentals",
+      "Infrastructure as Code",
+    ],
     curriculum: [
       { title: "Docker & Containers", sessions: 3 },
       { title: "Kubernetes", sessions: 4 },
@@ -729,7 +846,12 @@ export const MOCK_CATALOGUE: CatalogueCourse[] = [
     nextBatch: "May 2025",
     isEnrolled: false,
     tags: ["Frontend", "TypeScript"],
-    whatYouLearn: ["Advanced types", "Generics & utilities", "TypeScript with React", "Declaration files"],
+    whatYouLearn: [
+      "Advanced types",
+      "Generics & utilities",
+      "TypeScript with React",
+      "Declaration files",
+    ],
     curriculum: [
       { title: "TypeScript Foundations", sessions: 3 },
       { title: "Advanced Types", sessions: 4 },
@@ -747,7 +869,12 @@ export const MOCK_CATALOGUE: CatalogueCourse[] = [
     nextBatch: "Jun 2025",
     isEnrolled: false,
     tags: ["Backend", "Architecture"],
-    whatYouLearn: ["Microservices patterns", "Database design", "Caching & CDN", "Scalability & resilience"],
+    whatYouLearn: [
+      "Microservices patterns",
+      "Database design",
+      "Caching & CDN",
+      "Scalability & resilience",
+    ],
     curriculum: [
       { title: "Foundations", sessions: 2 },
       { title: "Microservices", sessions: 4 },

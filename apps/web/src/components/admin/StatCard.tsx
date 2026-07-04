@@ -7,7 +7,10 @@ import { IconTrendingUp, IconTrendingDown } from "@tabler/icons-react";
 interface StatCardProps {
   label: string;
   value: string | number | null;
-  icon: React.ComponentType<{ size?: number | string; stroke?: number | string }>;
+  icon: React.ComponentType<{
+    size?: number | string;
+    stroke?: number | string;
+  }>;
   href?: string;
   trend?: {
     direction: "up" | "down";
@@ -56,9 +59,15 @@ export default function StatCard({
           {trend && (
             <div className="mt-1 flex items-center gap-1">
               {trend.direction === "up" ? (
-                <IconTrendingUp size={16} className={trend.positive ? "text-success" : "text-danger"} />
+                <IconTrendingUp
+                  size={16}
+                  className={trend.positive ? "text-success" : "text-danger"}
+                />
               ) : (
-                <IconTrendingDown size={16} className={trend.positive ? "text-success" : "text-danger"} />
+                <IconTrendingDown
+                  size={16}
+                  className={trend.positive ? "text-success" : "text-danger"}
+                />
               )}
               <span
                 className={`text-xs font-medium ${trend.positive ? "text-success" : "text-danger"}`}

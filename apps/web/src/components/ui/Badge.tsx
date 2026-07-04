@@ -4,7 +4,9 @@ export function LiveBadge({ size = "sm" }: { size?: "sm" | "lg" }) {
   const textSize = size === "lg" ? "text-sm" : "text-xs";
 
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full bg-success/15 px-2.5 py-0.5 ${textSize} font-semibold text-success`}>
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full bg-success/15 px-2.5 py-0.5 ${textSize} font-semibold text-success`}
+    >
       <span className={`${dotSize} rounded-full bg-success live-pulse`} />
       Live Now
     </span>
@@ -21,8 +23,12 @@ export function StatusBadge({ status }: { status: string }) {
   };
 
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${styles[status] || styles.scheduled}`}>
-      {status === "live" && <span className="mr-1.5 h-2 w-2 rounded-full bg-success live-pulse" />}
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${styles[status] || styles.scheduled}`}
+    >
+      {status === "live" && (
+        <span className="mr-1.5 h-2 w-2 rounded-full bg-success live-pulse" />
+      )}
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );

@@ -12,9 +12,7 @@ export default function SupportTicketReply({
   senderName,
 }: SupportTicketReplyProps) {
   return (
-    <BaseLayout
-      previewText={`New reply on: ${ticketTitle}`}
-    >
+    <BaseLayout previewText={`New reply on: ${ticketTitle}`}>
       <Heading style={headingStyle}>New Reply on Support Ticket</Heading>
       <Text style={textStyle}>
         {senderName} has replied to your support ticket.

@@ -12,9 +12,7 @@ export default function MentorshipCreated({
   courseName,
 }: MentorshipCreatedProps) {
   return (
-    <BaseLayout
-      previewText={`Mentorship request submitted: ${ticketTitle}`}
-    >
+    <BaseLayout previewText={`Mentorship request submitted: ${ticketTitle}`}>
       <Heading style={headingStyle}>Mentorship Request Submitted</Heading>
       <Text style={textStyle}>
         Your mentorship request has been submitted successfully.
@@ -32,7 +30,8 @@ export default function MentorshipCreated({
         <Text style={valueStyle}>Pending Review</Text>
       </Section>
       <Text style={textStyle}>
-        An admin will review your request and assign a mentor shortly. You'll be notified when a mentor is assigned.
+        An admin will review your request and assign a mentor shortly. You'll be
+        notified when a mentor is assigned.
       </Text>
       <Section style={buttonContainerStyle}>
         <Button

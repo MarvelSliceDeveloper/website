@@ -1,4 +1,4 @@
-import { prisma } from '../../utils/prisma';
+import { prisma } from "../../utils/prisma";
 
 export const messageService = {
   // Sends a direct message between users
@@ -10,30 +10,32 @@ export const messageService = {
     entityType?: string;
     entityId?: string;
   }) {
-    if (!prisma || !('message' in prisma)) {
-      console.warn('Prisma message model not available');
+    if (!prisma || !("message" in prisma)) {
+      console.warn("Prisma message model not available");
       return null;
     }
     try {
       return await prisma.message.create({ data });
     } catch (err: unknown) {
-      console.error('Error sending message:', (err as Error)?.message ?? err);
+      console.error("Error sending message:", (err as Error)?.message ?? err);
       return null;
     }
   },
 
   // Lists conversations with the latest message per user
   async listConversations(userId: string) {
-    if (!prisma || !('message' in prisma)) return [];
+    if (!prisma || !("message" in prisma)) return [];
     try {
       const messages = await prisma.message.findMany({
         where: {
           OR: [{ senderId: userId }, { receiverId: userId }],
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         include: {
           sender: { select: { id: true, name: true, email: true, role: true } },
-          receiver: { select: { id: true, name: true, email: true, role: true } },
+          receiver: {
+            select: { id: true, name: true, email: true, role: true },
+          },
         },
       });
 
@@ -48,14 +50,17 @@ export const messageService = {
       }
       return conversations;
     } catch (err: unknown) {
-      console.error('Error listing conversations:', (err as Error)?.message ?? err);
+      console.error(
+        "Error listing conversations:",
+        (err as Error)?.message ?? err,
+      );
       return [];
     }
   },
 
   // Gets the full message thread between two users
   async getThread(userId: string, otherUserId: string) {
-    if (!prisma || !('message' in prisma)) return [];
+    if (!prisma || !("message" in prisma)) return [];
     try {
       return await prisma.message.findMany({
         where: {
@@ -64,20 +69,23 @@ export const messageService = {
             { senderId: otherUserId, receiverId: userId },
           ],
         },
-        orderBy: { createdAt: 'asc' },
+        orderBy: { createdAt: "asc" },
         include: {
           sender: { select: { id: true, name: true } },
         },
       });
     } catch (err: unknown) {
-      console.error('Error getting message thread:', (err as Error)?.message ?? err);
+      console.error(
+        "Error getting message thread:",
+        (err as Error)?.message ?? err,
+      );
       return [];
     }
   },
 
   // Marks a message as read by the receiver
   async markAsRead(messageId: string, userId: string) {
-    if (!prisma || !('message' in prisma)) return 0;
+    if (!prisma || !("message" in prisma)) return 0;
     try {
       const res = await prisma.message.updateMany({
         where: { id: messageId, receiverId: userId, read: false },
@@ -85,16 +93,21 @@ export const messageService = {
       });
       return res.count;
     } catch (err: unknown) {
-      console.error('Error marking message as read:', (err as Error)?.message ?? err);
+      console.error(
+        "Error marking message as read:",
+        (err as Error)?.message ?? err,
+      );
       return 0;
     }
   },
 
   // Counts unread messages for a user
   async unreadCount(userId: string) {
-    if (!prisma || !('message' in prisma)) return 0;
+    if (!prisma || !("message" in prisma)) return 0;
     try {
-      return await prisma.message.count({ where: { receiverId: userId, read: false } });
+      return await prisma.message.count({
+        where: { receiverId: userId, read: false },
+      });
     } catch {
       return 0;
     }

@@ -14,9 +14,7 @@ export default function AssignmentGraded({
   feedback,
 }: AssignmentGradedProps) {
   return (
-    <BaseLayout
-      previewText={`Assignment graded: ${assignmentTitle}`}
-    >
+    <BaseLayout previewText={`Assignment graded: ${assignmentTitle}`}>
       <Heading style={headingStyle}>Assignment Graded</Heading>
       <Text style={textStyle}>
         Your assignment has been reviewed and graded.
@@ -27,7 +25,9 @@ export default function AssignmentGraded({
         {grade && (
           <>
             <Text style={labelStyle}>Grade</Text>
-            <Text style={{ ...valueStyle, color: "#059669", fontSize: "20px" }}>{grade}</Text>
+            <Text style={{ ...valueStyle, color: "#059669", fontSize: "20px" }}>
+              {grade}
+            </Text>
           </>
         )}
       </Section>

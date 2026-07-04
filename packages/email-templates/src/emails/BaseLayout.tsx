@@ -1,5 +1,15 @@
 import React from "react";
-import { Html, Head, Body, Container, Text, Hr, Link, Section, Img } from "@react-email/components";
+import {
+  Html,
+  Head,
+  Body,
+  Container,
+  Text,
+  Hr,
+  Link,
+  Section,
+  Img,
+} from "@react-email/components";
 
 interface BaseLayoutProps {
   children: React.ReactNode;

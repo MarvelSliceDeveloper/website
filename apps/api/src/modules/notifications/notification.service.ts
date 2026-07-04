@@ -1,7 +1,7 @@
-import { Prisma } from '@prisma/client';
-import { prisma } from '../../utils/prisma';
-import { UserRole } from '@lms/types';
-import { emailService } from '../../services/email.service';
+import { Prisma } from "@prisma/client";
+import { prisma } from "../../utils/prisma";
+import { UserRole } from "@lms/types";
+import { emailService } from "../../services/email.service";
 
 interface NotificationCreateData {
   userId: string;
@@ -26,7 +26,7 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
 export async function dispatchEmailsForNotification(
   userIds: string[],
   type: string,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
 ): Promise<void> {
   if (!userIds || userIds.length === 0) return;
 
@@ -50,22 +50,29 @@ export async function dispatchEmailsForNotification(
     const optedInUsers = users.filter((user) => {
       const emailEnabled = prefMap.get(user.id);
       // No preference record = default to email-enabled (schema default: enabled=true)
-      return (emailEnabled === undefined || emailEnabled === true) && user.email;
+      return (
+        (emailEnabled === undefined || emailEnabled === true) && user.email
+      );
     });
 
     if (optedInUsers.length === 0) return;
 
     for (const user of optedInUsers) {
-      emailService.sendNotificationEmail(
-        { name: user.name, email: user.email },
-        type,
-        data
-      ).catch((err) => {
-        console.error(`[notification] Failed to send email to ${user.email}:`, err);
-      });
+      emailService
+        .sendNotificationEmail(
+          { name: user.name, email: user.email },
+          type,
+          data,
+        )
+        .catch((err) => {
+          console.error(
+            `[notification] Failed to send email to ${user.email}:`,
+            err,
+          );
+        });
     }
   } catch (err) {
-    console.error('[notification] Error dispatching emails:', err);
+    console.error("[notification] Error dispatching emails:", err);
   }
 }
 
@@ -74,8 +81,8 @@ export const notificationService = {
    * Create a notification for a specific user.
    */
   async create(data: NotificationCreateData) {
-    if (!prisma || !('notification' in prisma)) {
-      console.warn('Prisma notification model not available — skipping create');
+    if (!prisma || !("notification" in prisma)) {
+      console.warn("Prisma notification model not available — skipping create");
       return null;
     }
 
@@ -90,7 +97,10 @@ export const notificationService = {
         },
       });
     } catch (err: unknown) {
-      console.error('Error creating notification:', (err as Error)?.message ?? err);
+      console.error(
+        "Error creating notification:",
+        (err as Error)?.message ?? err,
+      );
       return null;
     }
   },
@@ -99,8 +109,10 @@ export const notificationService = {
    * Bulk-create notifications for multiple users (e.g., all students in a batch).
    */
   async createMany(notifications: NotificationCreateData[]): Promise<number> {
-    if (!prisma || !('notification' in prisma)) {
-      console.warn('Prisma notification model not available — skipping createMany');
+    if (!prisma || !("notification" in prisma)) {
+      console.warn(
+        "Prisma notification model not available — skipping createMany",
+      );
       return 0;
     }
 
@@ -118,12 +130,18 @@ export const notificationService = {
           type: n.type,
           metadata: n.metadata ?? undefined,
         }));
-        const result = await prisma.notification.createMany({ data: payload, skipDuplicates: true });
+        const result = await prisma.notification.createMany({
+          data: payload,
+          skipDuplicates: true,
+        });
         totalInserted += result.count ?? 0;
       }
       return totalInserted;
     } catch (err: unknown) {
-      console.error('Error creating many notifications:', (err as Error)?.message ?? err);
+      console.error(
+        "Error creating many notifications:",
+        (err as Error)?.message ?? err,
+      );
       return 0;
     }
   },
@@ -132,19 +150,24 @@ export const notificationService = {
    * List notifications for a user, newest first.
    */
   async listForUser(userId: string, limit = 50) {
-    if (!prisma || !('notification' in prisma)) {
-      console.warn('Prisma notification model not available — returning empty notifications');
+    if (!prisma || !("notification" in prisma)) {
+      console.warn(
+        "Prisma notification model not available — returning empty notifications",
+      );
       return [];
     }
 
     try {
       return await prisma.notification.findMany({
         where: { userId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: limit,
       });
     } catch (err: unknown) {
-      console.error('Error fetching notifications from DB:', (err as Error)?.message ?? err);
+      console.error(
+        "Error fetching notifications from DB:",
+        (err as Error)?.message ?? err,
+      );
       return [];
     }
   },
@@ -153,12 +176,17 @@ export const notificationService = {
    * Count unread notifications for a user.
    */
   async unreadCount(userId: string): Promise<number> {
-    if (!prisma || !('notification' in prisma)) return 0;
+    if (!prisma || !("notification" in prisma)) return 0;
 
     try {
-      return await prisma.notification.count({ where: { userId, read: false } });
+      return await prisma.notification.count({
+        where: { userId, read: false },
+      });
     } catch (err: unknown) {
-      console.error('Error counting unread notifications:', (err as Error)?.message ?? err);
+      console.error(
+        "Error counting unread notifications:",
+        (err as Error)?.message ?? err,
+      );
       return 0;
     }
   },
@@ -167,8 +195,10 @@ export const notificationService = {
    * Mark a single notification as read.
    */
   async markAsRead(notificationId: string, userId: string): Promise<number> {
-    if (!prisma || !('notification' in prisma)) {
-      console.warn('Prisma notification model not available — cannot mark as read');
+    if (!prisma || !("notification" in prisma)) {
+      console.warn(
+        "Prisma notification model not available — cannot mark as read",
+      );
       return 0;
     }
 
@@ -179,7 +209,10 @@ export const notificationService = {
       });
       return res.count ?? 0;
     } catch (err: unknown) {
-      console.error('Error marking notification as read:', (err as Error)?.message ?? err);
+      console.error(
+        "Error marking notification as read:",
+        (err as Error)?.message ?? err,
+      );
       return 0;
     }
   },
@@ -188,8 +221,10 @@ export const notificationService = {
    * Mark all notifications as read for a user.
    */
   async markAllAsRead(userId: string): Promise<number> {
-    if (!prisma || !('notification' in prisma)) {
-      console.warn('Prisma notification model not available — cannot markAllAsRead');
+    if (!prisma || !("notification" in prisma)) {
+      console.warn(
+        "Prisma notification model not available — cannot markAllAsRead",
+      );
       return 0;
     }
 
@@ -200,7 +235,10 @@ export const notificationService = {
       });
       return res.count ?? 0;
     } catch (err: unknown) {
-      console.error('Error marking all notifications as read:', (err as Error)?.message ?? err);
+      console.error(
+        "Error marking all notifications as read:",
+        (err as Error)?.message ?? err,
+      );
       return 0;
     }
   },
@@ -209,14 +247,17 @@ export const notificationService = {
    * Delete a single notification (scoped to user).
    */
   async delete(notificationId: string, userId: string): Promise<number> {
-    if (!prisma || !('notification' in prisma)) return 0;
+    if (!prisma || !("notification" in prisma)) return 0;
     try {
       const res = await prisma.notification.deleteMany({
         where: { id: notificationId, userId },
       });
       return res.count;
     } catch (err: unknown) {
-      console.error('Error deleting notification:', (err as Error)?.message ?? err);
+      console.error(
+        "Error deleting notification:",
+        (err as Error)?.message ?? err,
+      );
       return 0;
     }
   },
@@ -225,14 +266,17 @@ export const notificationService = {
    * Delete all read notifications for a user.
    */
   async deleteAllRead(userId: string): Promise<number> {
-    if (!prisma || !('notification' in prisma)) return 0;
+    if (!prisma || !("notification" in prisma)) return 0;
     try {
       const res = await prisma.notification.deleteMany({
         where: { userId, read: true },
       });
       return res.count;
     } catch (err: unknown) {
-      console.error('Error deleting read notifications:', (err as Error)?.message ?? err);
+      console.error(
+        "Error deleting read notifications:",
+        (err as Error)?.message ?? err,
+      );
       return 0;
     }
   },
@@ -241,7 +285,7 @@ export const notificationService = {
    * Get notification preferences for a user.
    */
   async getPreferences(userId: string) {
-    if (!prisma || !('notificationPreference' in prisma)) return [];
+    if (!prisma || !("notificationPreference" in prisma)) return [];
     try {
       return await prisma.notificationPreference.findMany({
         where: { userId },
@@ -254,16 +298,28 @@ export const notificationService = {
   /**
    * Upsert a notification preference.
    */
-  async updatePreference(userId: string, type: string, data: { enabled?: boolean; email?: boolean }) {
-    if (!prisma || !('notificationPreference' in prisma)) return null;
+  async updatePreference(
+    userId: string,
+    type: string,
+    data: { enabled?: boolean; email?: boolean },
+  ) {
+    if (!prisma || !("notificationPreference" in prisma)) return null;
     try {
       return await prisma.notificationPreference.upsert({
         where: { userId_type: { userId, type } },
-        create: { userId, type, enabled: data.enabled ?? true, email: data.email ?? false },
+        create: {
+          userId,
+          type,
+          enabled: data.enabled ?? true,
+          email: data.email ?? false,
+        },
         update: { ...data },
       });
     } catch (err: unknown) {
-      console.error('Error updating notification preference:', (err as Error)?.message ?? err);
+      console.error(
+        "Error updating notification preference:",
+        (err as Error)?.message ?? err,
+      );
       return null;
     }
   },
@@ -279,7 +335,7 @@ export const notificationService = {
           include: {
             course: { select: { title: true } },
             enrollments: {
-              where: { status: 'APPROVED' },
+              where: { status: "APPROVED" },
               select: { userId: true },
             },
           },
@@ -292,11 +348,14 @@ export const notificationService = {
 
     const title = session.calendarEvent?.title ?? `Live Session Scheduled`;
     const startStr = session.scheduledAt
-      ? new Date(session.scheduledAt).toLocaleString('en-IN', {
-        weekday: 'short', day: 'numeric', month: 'short',
-        hour: '2-digit', minute: '2-digit',
-      })
-      : 'unspecified time';
+      ? new Date(session.scheduledAt).toLocaleString("en-IN", {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "unspecified time";
 
     if (!session.batch) return;
     const message = `${session.batch.course.title} — ${session.batch.name}: A live session is scheduled for ${startStr}`;
@@ -312,7 +371,7 @@ export const notificationService = {
       userId,
       title,
       message,
-      type: 'SESSION_SCHEDULED',
+      type: "SESSION_SCHEDULED",
       metadata: {
         sessionId: session.id,
         batchId: session.batchId,
@@ -331,7 +390,11 @@ export const notificationService = {
       courseName: session.batch.course.title,
       batchName: session.batch.name,
     };
-    dispatchEmailsForNotification(Array.from(userIds), 'SESSION_SCHEDULED', emailData);
+    dispatchEmailsForNotification(
+      Array.from(userIds),
+      "SESSION_SCHEDULED",
+      emailData,
+    );
   },
 
   /**
@@ -345,7 +408,7 @@ export const notificationService = {
           include: {
             course: { select: { title: true } },
             enrollments: {
-              where: { status: 'APPROVED' },
+              where: { status: "APPROVED" },
               select: { userId: true },
             },
           },
@@ -366,9 +429,9 @@ export const notificationService = {
 
     const notifications = Array.from(userIds).map((userId) => ({
       userId,
-      title: 'Recording Available',
+      title: "Recording Available",
       message,
-      type: 'RECORDING_AVAILABLE',
+      type: "RECORDING_AVAILABLE",
       metadata: {
         sessionId: session.id,
         batchId: session.batchId,
@@ -384,7 +447,11 @@ export const notificationService = {
       courseName: session.batch.course.title,
       batchName: session.batch.name,
     };
-    dispatchEmailsForNotification(Array.from(userIds), 'RECORDING_AVAILABLE', emailData);
+    dispatchEmailsForNotification(
+      Array.from(userIds),
+      "RECORDING_AVAILABLE",
+      emailData,
+    );
   },
 
   /**
@@ -398,7 +465,7 @@ export const notificationService = {
           include: {
             course: { select: { title: true } },
             enrollments: {
-              where: { status: 'APPROVED' },
+              where: { status: "APPROVED" },
               select: { userId: true },
             },
           },
@@ -417,9 +484,9 @@ export const notificationService = {
 
     const notifications = Array.from(userIds).map((userId) => ({
       userId,
-      title: 'Session Cancelled',
+      title: "Session Cancelled",
       message,
-      type: 'SESSION_CANCELLED',
+      type: "SESSION_CANCELLED",
       metadata: { sessionId: session.id, batchId: session.batchId },
     }));
     if (notifications.length > 0) await this.createMany(notifications);
@@ -429,7 +496,11 @@ export const notificationService = {
       courseName: session.batch.course.title,
       batchName: session.batch.name,
     };
-    dispatchEmailsForNotification(Array.from(userIds), 'SESSION_CANCELLED', emailData);
+    dispatchEmailsForNotification(
+      Array.from(userIds),
+      "SESSION_CANCELLED",
+      emailData,
+    );
   },
 
   /**
@@ -448,27 +519,29 @@ export const notificationService = {
     // Notify student
     await this.create({
       userId: ticket.studentId,
-      title: 'Mentorship Request Submitted',
+      title: "Mentorship Request Submitted",
       message: `Your mentorship request "${ticket.title}" has been submitted. Admin will review and assign a mentor.`,
-      type: 'MENTORSHIP_CREATED',
+      type: "MENTORSHIP_CREATED",
       metadata: { ticketId: ticket.id },
     });
 
     // Notify all admins
     const admins = await prisma.user.findMany({
-      where: { role: 'ADMIN' },
+      where: { role: "ADMIN" },
       select: { id: true },
     });
     if (admins.length > 0) {
-      const courseLabel = ticket.course?.title ? ` for ${ticket.course.title}` : '';
+      const courseLabel = ticket.course?.title
+        ? ` for ${ticket.course.title}`
+        : "";
       await this.createMany(
         admins.map((admin) => ({
           userId: admin.id,
-          title: 'New Mentorship Request',
+          title: "New Mentorship Request",
           message: `${ticket.student.name} requested mentorship${courseLabel}: "${ticket.title}"`,
-          type: 'MENTORSHIP_CREATED',
+          type: "MENTORSHIP_CREATED",
           metadata: { ticketId: ticket.id, studentId: ticket.studentId },
-        }))
+        })),
       );
     }
 
@@ -476,7 +549,11 @@ export const notificationService = {
       ticketTitle: ticket.title,
       courseName: ticket.course?.title,
     };
-    dispatchEmailsForNotification([ticket.studentId], 'MENTORSHIP_CREATED', emailData);
+    dispatchEmailsForNotification(
+      [ticket.studentId],
+      "MENTORSHIP_CREATED",
+      emailData,
+    );
   },
 
   /**
@@ -485,15 +562,18 @@ export const notificationService = {
   async notifyMentorshipStatusChange(ticketId: string, status: string) {
     const ticket = await prisma.mentorshipTicket.findUnique({
       where: { id: ticketId },
-      include: { student: { select: { id: true, name: true } }, mentor: { select: { id: true, name: true } } },
+      include: {
+        student: { select: { id: true, name: true } },
+        mentor: { select: { id: true, name: true } },
+      },
     });
     if (!ticket) return;
 
     const labels: Record<string, string> = {
-      ASSIGNED: 'Mentor Assigned',
-      SCHEDULED: 'Session Scheduled',
-      COMPLETED: 'Mentorship Completed',
-      CANCELLED: 'Mentorship Cancelled',
+      ASSIGNED: "Mentor Assigned",
+      SCHEDULED: "Session Scheduled",
+      COMPLETED: "Mentorship Completed",
+      CANCELLED: "Mentorship Cancelled",
     };
     const label = labels[status] ?? status;
     const message = `Your mentorship request "${ticket.title}" — ${label}`;
@@ -533,31 +613,35 @@ export const notificationService = {
     // Notify the creator (student/instructor)
     await this.create({
       userId: ticket.userId,
-      title: 'Support Ticket Submitted',
+      title: "Support Ticket Submitted",
       message: `Your support ticket "${ticket.title}" has been submitted. Admin will review it shortly.`,
-      type: 'SUPPORT_TICKET_CREATED',
+      type: "SUPPORT_TICKET_CREATED",
       metadata: { ticketId: ticket.id },
     });
 
     // Notify all admins
     const admins = await prisma.user.findMany({
-      where: { role: 'ADMIN' },
+      where: { role: "ADMIN" },
       select: { id: true },
     });
     if (admins.length > 0) {
       await this.createMany(
         admins.map((admin) => ({
           userId: admin.id,
-          title: 'New Support Ticket',
+          title: "New Support Ticket",
           message: `${ticket.user.name} opened a support ticket: "${ticket.title}"`,
-          type: 'SUPPORT_TICKET_CREATED',
+          type: "SUPPORT_TICKET_CREATED",
           metadata: { ticketId: ticket.id, userId: ticket.userId },
-        }))
+        })),
       );
     }
 
     const emailData = { ticketTitle: ticket.title };
-    dispatchEmailsForNotification([ticket.userId], 'SUPPORT_TICKET_CREATED', emailData);
+    dispatchEmailsForNotification(
+      [ticket.userId],
+      "SUPPORT_TICKET_CREATED",
+      emailData,
+    );
   },
 
   /**
@@ -574,7 +658,7 @@ export const notificationService = {
 
     // Notify all admins (if user sent) OR notify the user (if admin sent)
     const admins = await prisma.user.findMany({
-      where: { role: 'ADMIN' },
+      where: { role: "ADMIN" },
       select: { id: true, name: true },
     });
     const adminIds = admins.map((a) => a.id);
@@ -583,24 +667,28 @@ export const notificationService = {
     if (isAdminSender) {
       await this.create({
         userId: ticket.userId,
-        title: 'New Reply on Support Ticket',
+        title: "New Reply on Support Ticket",
         message: `Admin replied to your support ticket "${ticket.title}".`,
-        type: 'SUPPORT_TICKET_RESPONDED',
+        type: "SUPPORT_TICKET_RESPONDED",
         metadata: { ticketId: ticket.id },
       });
 
-      const emailData = { ticketTitle: ticket.title, senderName: 'Admin' };
-      dispatchEmailsForNotification([ticket.userId], 'SUPPORT_TICKET_RESPONDED', emailData);
+      const emailData = { ticketTitle: ticket.title, senderName: "Admin" };
+      dispatchEmailsForNotification(
+        [ticket.userId],
+        "SUPPORT_TICKET_RESPONDED",
+        emailData,
+      );
     } else {
       if (adminIds.length > 0) {
         await this.createMany(
           admins.map((admin) => ({
             userId: admin.id,
-            title: 'New Reply on Support Ticket',
+            title: "New Reply on Support Ticket",
             message: `${ticket.user.name} replied to support ticket "${ticket.title}".`,
-            type: 'SUPPORT_TICKET_RESPONDED',
+            type: "SUPPORT_TICKET_RESPONDED",
             metadata: { ticketId: ticket.id, userId: ticket.userId },
-          }))
+          })),
         );
       }
     }
@@ -619,23 +707,27 @@ export const notificationService = {
     if (!ticket) return;
 
     const labels: Record<string, string> = {
-      OPEN: 'Reopened',
-      IN_PROGRESS: 'In Progress',
-      RESOLVED: 'Resolved',
-      CLOSED: 'Closed',
+      OPEN: "Reopened",
+      IN_PROGRESS: "In Progress",
+      RESOLVED: "Resolved",
+      CLOSED: "Closed",
     };
     const label = labels[status] ?? status;
 
     await this.create({
       userId: ticket.userId,
-      title: 'Support Ticket Status Updated',
+      title: "Support Ticket Status Updated",
       message: `Your support ticket "${ticket.title}" is now marked as "${label}".`,
-      type: 'SUPPORT_TICKET_STATUS_CHANGED',
+      type: "SUPPORT_TICKET_STATUS_CHANGED",
       metadata: { ticketId: ticket.id, status },
     });
 
     const emailData = { ticketTitle: ticket.title, status, label };
-    dispatchEmailsForNotification([ticket.userId], 'SUPPORT_TICKET_STATUS_CHANGED', emailData);
+    dispatchEmailsForNotification(
+      [ticket.userId],
+      "SUPPORT_TICKET_STATUS_CHANGED",
+      emailData,
+    );
   },
 
   /**
@@ -654,10 +746,13 @@ export const notificationService = {
     const message = `Your assignment "${submission.assignment.title}" has been graded.`;
     await this.create({
       userId: submission.studentId,
-      title: 'Assignment Graded',
+      title: "Assignment Graded",
       message,
-      type: 'ASSIGNMENT_GRADED',
-      metadata: { submissionId: submission.id, assignmentId: submission.assignmentId },
+      type: "ASSIGNMENT_GRADED",
+      metadata: {
+        submissionId: submission.id,
+        assignmentId: submission.assignmentId,
+      },
     });
 
     const emailData = {
@@ -665,7 +760,11 @@ export const notificationService = {
       grade: submission.grade,
       feedback: submission.feedback,
     };
-    dispatchEmailsForNotification([submission.studentId], 'ASSIGNMENT_GRADED', emailData);
+    dispatchEmailsForNotification(
+      [submission.studentId],
+      "ASSIGNMENT_GRADED",
+      emailData,
+    );
   },
 
   /**
@@ -677,7 +776,7 @@ export const notificationService = {
     senderId: string,
     senderRole: UserRole,
     options: {
-      targetType: 'ALL_USERS' | 'BATCH' | 'COURSE';
+      targetType: "ALL_USERS" | "BATCH" | "COURSE";
       targetIds: string[];
       title: string;
       message: string;
@@ -685,29 +784,31 @@ export const notificationService = {
     },
   ): Promise<{ count: number }> {
     const { targetType, targetIds, title, message } = options;
-    const type = options.type ?? 'CUSTOM_NOTIFICATION';
+    const type = options.type ?? "CUSTOM_NOTIFICATION";
 
     if (senderRole !== UserRole.ADMIN && senderRole !== UserRole.INSTRUCTOR) {
       return { count: 0 };
     }
 
-    if (senderRole === UserRole.INSTRUCTOR && targetType !== 'BATCH') {
-      console.warn(`Instructor ${senderId} attempted invalid targetType: ${targetType}`);
+    if (senderRole === UserRole.INSTRUCTOR && targetType !== "BATCH") {
+      console.warn(
+        `Instructor ${senderId} attempted invalid targetType: ${targetType}`,
+      );
       return { count: 0 };
     }
 
     if (!title || !message) {
-      console.warn('sendNotification called with empty title or message');
+      console.warn("sendNotification called with empty title or message");
       return { count: 0 };
     }
 
     let userIds: string[] = [];
 
-    if (targetType === 'ALL_USERS') {
+    if (targetType === "ALL_USERS") {
       if (senderRole !== UserRole.ADMIN) return { count: 0 };
       const users = await prisma.user.findMany({ select: { id: true } });
       userIds = users.map((u) => u.id);
-    } else if (targetType === 'BATCH') {
+    } else if (targetType === "BATCH") {
       if (!targetIds || targetIds.length === 0) return { count: 0 };
 
       if (senderRole === UserRole.INSTRUCTOR) {
@@ -717,14 +818,16 @@ export const notificationService = {
         });
         const unauthorized = batches.filter((b) => b.instructorId !== senderId);
         if (unauthorized.length > 0) {
-          console.warn(`Instructor ${senderId} not assigned to batches: ${unauthorized.map((b) => b.id).join(', ')}`);
+          console.warn(
+            `Instructor ${senderId} not assigned to batches: ${unauthorized.map((b) => b.id).join(", ")}`,
+          );
           return { count: 0 };
         }
       }
 
       const [enrollments, batches] = await Promise.all([
         prisma.enrollmentRequest.findMany({
-          where: { batchId: { in: targetIds }, status: 'APPROVED' },
+          where: { batchId: { in: targetIds }, status: "APPROVED" },
           select: { userId: true },
         }),
         prisma.batch.findMany({
@@ -737,7 +840,7 @@ export const notificationService = {
       for (const e of enrollments) if (e.userId) idSet.add(e.userId);
       for (const b of batches) if (b.instructorId) idSet.add(b.instructorId);
       userIds = Array.from(idSet);
-    } else if (targetType === 'COURSE') {
+    } else if (targetType === "COURSE") {
       if (senderRole !== UserRole.ADMIN) return { count: 0 };
       if (!targetIds || targetIds.length === 0) return { count: 0 };
 
@@ -750,7 +853,7 @@ export const notificationService = {
       if (batchIds.length === 0) return { count: 0 };
 
       const enrollments = await prisma.enrollmentRequest.findMany({
-        where: { batchId: { in: batchIds }, status: 'APPROVED' },
+        where: { batchId: { in: batchIds }, status: "APPROVED" },
         select: { userId: true },
       });
 
@@ -776,7 +879,14 @@ export const notificationService = {
     }));
 
     const count = await this.createMany(notifications);
-    dispatchEmailsForNotification(userIds, type, { title, message, sentBy: senderId, senderRole, targetType, targetIds });
+    dispatchEmailsForNotification(userIds, type, {
+      title,
+      message,
+      sentBy: senderId,
+      senderRole,
+      targetType,
+      targetIds,
+    });
     return { count };
   },
 };

@@ -7,7 +7,9 @@ interface FetchOptions extends RequestInit {
 let csrfTokenPromise: Promise<string> | null = null;
 
 async function fetchCsrfToken(): Promise<string> {
-  const res = await fetch(`${API_BASE}/api/csrf-token`, { credentials: "include" });
+  const res = await fetch(`${API_BASE}/api/csrf-token`, {
+    credentials: "include",
+  });
   const data = await res.json();
   return data.csrfToken;
 }
@@ -19,7 +21,10 @@ function getCsrfToken(): Promise<string> {
   return csrfTokenPromise;
 }
 
-async function request<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
+async function request<T>(
+  endpoint: string,
+  options: FetchOptions = {},
+): Promise<T> {
   const { params, ...fetchOptions } = options;
   const isFormData =
     typeof FormData !== "undefined" && fetchOptions.body instanceof FormData;
@@ -31,7 +36,7 @@ async function request<T>(endpoint: string, options: FetchOptions = {}): Promise
   }
 
   const isStateChanging = !["GET", "HEAD", "OPTIONS"].includes(
-    (fetchOptions.method || "GET").toUpperCase()
+    (fetchOptions.method || "GET").toUpperCase(),
   );
 
   const headers: Record<string, string> = {
@@ -76,6 +81,5 @@ export const api = {
   patch: <T>(endpoint: string, body?: unknown) =>
     request<T>(endpoint, { method: "PATCH", body: JSON.stringify(body) }),
   // DELETE request
-  delete: <T>(endpoint: string) =>
-    request<T>(endpoint, { method: "DELETE" }),
+  delete: <T>(endpoint: string) => request<T>(endpoint, { method: "DELETE" }),
 };

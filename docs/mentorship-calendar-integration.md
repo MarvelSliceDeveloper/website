@@ -1,6 +1,7 @@
 # Mentorship Calendar Integration — COMPLETED
 
 ## Problem
+
 Mentorship sessions scheduled via the mentorship ticket system do **not** appear in any calendar views (admin calendar, student calendar, instructor calendar). This is because:
 
 - Calendar views pull data from `/api/sessions` → `LiveSession` table
@@ -9,15 +10,16 @@ Mentorship sessions scheduled via the mentorship ticket system do **not** appear
 
 ## Current Mentorship Workflow (Working)
 
-| Step | Action | Endpoint | Status Change |
-|------|--------|----------|---------------|
-| 1 | Student creates request | `POST /api/mentorship/tickets` | OPEN |
-| 2 | Admin assigns mentor | `PATCH /api/mentorship/tickets/:id/assign` | ASSIGNED |
-| 3 | Instructor schedules session | `PATCH /api/mentorship/tickets/:id/schedule` | SCHEDULED |
-| 4 | Instructor completes | `PATCH /api/mentorship/tickets/:id/complete` | COMPLETED |
-| — | Cancel anytime | `PATCH /api/mentorship/tickets/:id/cancel` | CANCELLED |
+| Step | Action                       | Endpoint                                     | Status Change |
+| ---- | ---------------------------- | -------------------------------------------- | ------------- |
+| 1    | Student creates request      | `POST /api/mentorship/tickets`               | OPEN          |
+| 2    | Admin assigns mentor         | `PATCH /api/mentorship/tickets/:id/assign`   | ASSIGNED      |
+| 3    | Instructor schedules session | `PATCH /api/mentorship/tickets/:id/schedule` | SCHEDULED     |
+| 4    | Instructor completes         | `PATCH /api/mentorship/tickets/:id/complete` | COMPLETED     |
+| —    | Cancel anytime               | `PATCH /api/mentorship/tickets/:id/cancel`   | CANCELLED     |
 
 ## What Works
+
 - Student sees mentorship requests in `/student/mentorship`
 - Instructor sees assigned mentorships in `/instructor/mentorship`
 - Admin sees all mentorships in `/admin/mentorship`
@@ -26,16 +28,19 @@ Mentorship sessions scheduled via the mentorship ticket system do **not** appear
 - Notifications are sent on status changes
 
 ## What's Missing
+
 - Scheduled mentorship sessions **do not appear in calendar views**
 - No `LiveSession` record is created when mentorship is scheduled
 - No `CalendarEvent` record is synced for mentorship sessions
 
 ## Affected Views
+
 - `/admin/calendar/page.tsx` — fetches `/api/sessions`, no mentorship sessions shown
 - `/student/_views/CalendarView.tsx` — fetches `/api/sessions`, no mentorship sessions shown
 - Instructor calendar — likely the same pattern
 
 ## Data Model (`MentorshipTicket`)
+
 ```prisma
 model MentorshipTicket {
   id             String       @id @default(cuid())
@@ -56,6 +61,7 @@ model MentorshipTicket {
 ```
 
 ## `LiveSession` Model (for reference)
+
 ```prisma
 model LiveSession {
   id             String         @id @default(cuid())
@@ -79,12 +85,14 @@ model LiveSession {
 ### What Changed
 
 **1. Prisma Schema** (`apps/api/prisma/schema.prisma`)
+
 - `LiveSession.batchId` → made nullable (`String?`) — mentorship sessions have no batch
 - Added `LiveSession.mentorshipTicketId` (`String?` @unique) — bi-directional link to `MentorshipTicket`
 - Added `LiveSession.mentorshipTicket` relation + `MentorshipTicket.liveSession` back-link
 - New migration: `20260702115600_add_mentorship_calendar_integration`
 
 **2. `ticketService.scheduleSession()`** — now uses a Prisma transaction to atomically:
+
 1. Update mentorship ticket (status→SCHEDULED)
 2. Create `LiveSession` record with `batchId: null`, `createdFrom: 'MENTORSHIP'`, title `"Mentorship: {title} — {student}"`, default 1hr `scheduledEndAt`, synthetic `teamsMeetingId` if not provided
 3. Create `CalendarEvent` record linked to the LiveSession
@@ -99,14 +107,15 @@ model LiveSession {
 
 ### How It Works
 
-| Step | What Happens | Calendar Visibility |
-|------|-------------|-------------------|
+| Step                            | What Happens                                                | Calendar Visibility                                                                          |
+| ------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | Instructor schedules mentorship | `scheduleSession()` creates `LiveSession` + `CalendarEvent` | ✅ Appears in `/api/sessions` (admin calendar) and `/api/calendar/events` (student calendar) |
-| Student views calendar | Fetches `/api/calendar/events` → includes mentorship events | ✅ Shows with indigo (`#6366f1`) color (already supported in `CalendarView.tsx`) |
-| Admin views calendar | Fetches `/api/sessions` → includes mentorship LiveSessions | ✅ Shows up (title prefixed with "Mentorship:") |
-| Ticket cancelled | Linked session + event are cleaned up | ✅ Removed from all views |
+| Student views calendar          | Fetches `/api/calendar/events` → includes mentorship events | ✅ Shows with indigo (`#6366f1`) color (already supported in `CalendarView.tsx`)             |
+| Admin views calendar            | Fetches `/api/sessions` → includes mentorship LiveSessions  | ✅ Shows up (title prefixed with "Mentorship:")                                              |
+| Ticket cancelled                | Linked session + event are cleaned up                       | ✅ Removed from all views                                                                    |
 
 ### Files Modified
+
 - `apps/api/prisma/schema.prisma` — schema changes
 - `apps/api/prisma/migrations/20260702115600_add_mentorship_calendar_integration/migration.sql` — migration
 - `apps/api/src/modules/tickets/ticket.service.ts` — core schedule/cancel logic
@@ -116,10 +125,12 @@ model LiveSession {
 - `apps/api/src/modules/notifications/notification.service.ts` — early return for mentorship sessions + InputJsonValue fix
 
 ### Notes
+
 - Run `pnpm prisma:migrate` when database is available to apply the migration
 - The `LiveSession.batchId` is null for mentorship sessions; frontend components already use optional chaining (`s.batch?.course?.title`) and handle it gracefully
 - Calendar events from the real API don't carry a `type` field — the student calendar's `eventColor()` falls back to blue (`#25c0e8`) when type is unspecified. Title prefix "Mentorship:" serves as the visual differentiator.
 - The student portal's mock data (`MOCK_CALENDAR_EVENTS`) already includes a mentorship entry (`type: "mentorship"`, `#6366f1`) — keeps working independently
 
 ## Status
+
 **COMPLETED** — Implemented on 2026-07-02.

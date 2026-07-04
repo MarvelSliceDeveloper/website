@@ -5,19 +5,19 @@ export type ApiResponse<T> = {
 };
 
 export enum UserRole {
-  STUDENT = 'STUDENT',
-  INSTRUCTOR = 'INSTRUCTOR',
-  ADMIN = 'ADMIN',
+  STUDENT = "STUDENT",
+  INSTRUCTOR = "INSTRUCTOR",
+  ADMIN = "ADMIN",
 }
 
 export enum CourseStatus {
-  DRAFT = 'DRAFT',
-  PUBLISHED = 'PUBLISHED',
-  ARCHIVED = 'ARCHIVED',
+  DRAFT = "DRAFT",
+  PUBLISHED = "PUBLISHED",
+  ARCHIVED = "ARCHIVED",
 }
 
 export enum BatchStatus {
-  UPCOMING = 'UPCOMING',
-  ACTIVE = 'ACTIVE',
-  COMPLETED = 'COMPLETED',
+  UPCOMING = "UPCOMING",
+  ACTIVE = "ACTIVE",
+  COMPLETED = "COMPLETED",
 }

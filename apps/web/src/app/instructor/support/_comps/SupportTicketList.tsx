@@ -5,11 +5,7 @@ import { api } from "@/lib/api";
 import { timeAgo } from "@/lib/time-ago";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import {
-  IconHelp,
-  IconMessage,
-  IconSearch,
-} from "@tabler/icons-react";
+import { IconHelp, IconMessage, IconSearch } from "@tabler/icons-react";
 import type { SupportTicket, FilterTab } from "./constants";
 import { FILTER_TABS, STATUS_CONFIG } from "./constants";
 
@@ -18,7 +14,10 @@ interface SupportTicketListProps {
   onNewTicket: () => void;
 }
 
-export default function SupportTicketList({ onSelectTicket, onNewTicket }: SupportTicketListProps) {
+export default function SupportTicketList({
+  onSelectTicket,
+  onNewTicket,
+}: SupportTicketListProps) {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
@@ -26,7 +25,9 @@ export default function SupportTicketList({ onSelectTicket, onNewTicket }: Suppo
 
   const fetchTickets = useCallback(async () => {
     try {
-      const data = await api.get<{ tickets: SupportTicket[] }>("/api/tickets?type=SUPPORT");
+      const data = await api.get<{ tickets: SupportTicket[] }>(
+        "/api/tickets?type=SUPPORT",
+      );
       setTickets(data.tickets || []);
     } catch {
       /* ignore */
@@ -36,7 +37,8 @@ export default function SupportTicketList({ onSelectTicket, onNewTicket }: Suppo
   }, []);
 
   useEffect(() => {
-    api.get<{ tickets: SupportTicket[] }>("/api/tickets?type=SUPPORT")
+    api
+      .get<{ tickets: SupportTicket[] }>("/api/tickets?type=SUPPORT")
       .then((data) => {
         setTickets(data.tickets || []);
       })
@@ -47,7 +49,13 @@ export default function SupportTicketList({ onSelectTicket, onNewTicket }: Suppo
   }, []);
 
   const countsByTab = useMemo(() => {
-    const counts: Record<FilterTab, number> = { all: tickets.length, open: 0, in_progress: 0, resolved: 0, closed: 0 };
+    const counts: Record<FilterTab, number> = {
+      all: tickets.length,
+      open: 0,
+      in_progress: 0,
+      resolved: 0,
+      closed: 0,
+    };
     tickets.forEach((t) => {
       const key = t.status.toLowerCase() as FilterTab;
       if (key in counts) counts[key]++;
@@ -64,14 +72,17 @@ export default function SupportTicketList({ onSelectTicket, onNewTicket }: Suppo
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
-        (t) => t.title.toLowerCase().includes(q) || t.description.toLowerCase().includes(q)
+        (t) =>
+          t.title.toLowerCase().includes(q) ||
+          t.description.toLowerCase().includes(q),
       );
     }
     return result;
   }, [tickets, activeTab, searchQuery]);
 
   const showEmpty = !loading && tickets.length === 0;
-  const showNoResults = !loading && tickets.length > 0 && filteredTickets.length === 0;
+  const showNoResults =
+    !loading && tickets.length > 0 && filteredTickets.length === 0;
 
   return (
     <div className="space-y-6">
@@ -88,7 +99,9 @@ export default function SupportTicketList({ onSelectTicket, onNewTicket }: Suppo
             }`}
           >
             {label}
-            <span className="text-xs text-muted-foreground/60">({countsByTab[key]})</span>
+            <span className="text-xs text-muted-foreground/60">
+              ({countsByTab[key]})
+            </span>
           </button>
         ))}
       </div>
@@ -112,7 +125,10 @@ export default function SupportTicketList({ onSelectTicket, onNewTicket }: Suppo
       {loading && (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse rounded-xl bg-card-hover h-24 border border-border/60" />
+            <div
+              key={i}
+              className="animate-pulse rounded-xl bg-card-hover h-24 border border-border/60"
+            />
           ))}
         </div>
       )}
@@ -137,8 +153,12 @@ export default function SupportTicketList({ onSelectTicket, onNewTicket }: Suppo
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary mb-3">
             <IconSearch size={22} />
           </div>
-          <p className="font-semibold text-foreground">No tickets match your search</p>
-          <p className="mt-1 text-sm text-muted-foreground">Try adjusting your filter or search query.</p>
+          <p className="font-semibold text-foreground">
+            No tickets match your search
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Try adjusting your filter or search query.
+          </p>
         </div>
       )}
 
@@ -156,15 +176,20 @@ export default function SupportTicketList({ onSelectTicket, onNewTicket }: Suppo
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2.5">
-                  <p className="text-sm font-medium text-foreground truncate">{t.title}</p>
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {t.title}
+                  </p>
                   <StatusBadge status={t.status} config={STATUS_CONFIG} />
                 </div>
-                <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">{t.description}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
+                  {t.description}
+                </p>
                 <div className="mt-1.5 flex items-center gap-4 text-[11px] text-muted">
                   <span>{timeAgo(t.createdAt)}</span>
                   {t._count && (
                     <span className="flex items-center gap-1">
-                      <IconMessage size={12} /> {t._count.messages} {t._count.messages === 1 ? "message" : "messages"}
+                      <IconMessage size={12} /> {t._count.messages}{" "}
+                      {t._count.messages === 1 ? "message" : "messages"}
                     </span>
                   )}
                 </div>

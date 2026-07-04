@@ -80,7 +80,10 @@ export default function DataTable<T>({
             <thead>
               <tr className="border-b border-border text-left">
                 {columns.map((col) => (
-                  <th key={col.key} className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                  <th
+                    key={col.key}
+                    className="px-5 py-3 text-xs font-medium uppercase text-muted"
+                  >
                     {col.label}
                   </th>
                 ))}
@@ -88,7 +91,10 @@ export default function DataTable<T>({
             </thead>
             <tbody className="divide-y divide-border/50">
               {Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className="hover:bg-card-hover/50 transition-colors">
+                <tr
+                  key={i}
+                  className="hover:bg-card-hover/50 transition-colors"
+                >
                   {columns.map((col) => (
                     <td key={col.key} className="px-5 py-3">
                       <div className="h-4 w-full max-w-32 animate-pulse rounded bg-card-hover" />
@@ -128,26 +134,31 @@ export default function DataTable<T>({
                 >
                   <span className="inline-flex items-center gap-1">
                     {col.label}
-                    {col.sortable && sortKey === col.key && (
-                      sortDir === "asc"
-                        ? <IconChevronUp size={14} className="text-muted" />
-                        : <IconChevronDown size={14} className="text-muted" />
-                    )}
+                    {col.sortable &&
+                      sortKey === col.key &&
+                      (sortDir === "asc" ? (
+                        <IconChevronUp size={14} className="text-muted" />
+                      ) : (
+                        <IconChevronDown size={14} className="text-muted" />
+                      ))}
                   </span>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-border/50">
-              {sorted.map((row, i) => (
-                  <tr key={i} className="hover:bg-card-hover/50 transition-colors">
-                    {columns.map((col) => (
-                      <td key={col.key} className="px-5 py-3 text-sm text-foreground">
-                        {renderCell(row, col, i)}
-                      </td>
-                    ))}
-                  </tr>
+            {sorted.map((row, i) => (
+              <tr key={i} className="hover:bg-card-hover/50 transition-colors">
+                {columns.map((col) => (
+                  <td
+                    key={col.key}
+                    className="px-5 py-3 text-sm text-foreground"
+                  >
+                    {renderCell(row, col, i)}
+                  </td>
                 ))}
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -155,9 +166,15 @@ export default function DataTable<T>({
       {/* Mobile Cards */}
       <div className="block md:hidden divide-y divide-border/50">
         {sorted.map((row, i) => (
-          <div key={i} className="p-4 space-y-2 hover:bg-card-hover/50 transition-colors">
+          <div
+            key={i}
+            className="p-4 space-y-2 hover:bg-card-hover/50 transition-colors"
+          >
             {columns.map((col) => (
-              <div key={col.key} className="flex items-start justify-between gap-2">
+              <div
+                key={col.key}
+                className="flex items-start justify-between gap-2"
+              >
                 <span className="text-xs font-medium uppercase text-muted shrink-0 min-w-[80px]">
                   {col.label}
                 </span>

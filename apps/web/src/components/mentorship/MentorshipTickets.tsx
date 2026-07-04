@@ -51,10 +51,7 @@ export function MentorshipTickets({
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="glass-card p-5 animate-pulse"
-          >
+          <div key={i} className="glass-card p-5 animate-pulse">
             <div className="h-4 w-1/3 rounded bg-border mb-3" />
             <div className="h-3 w-2/3 rounded bg-border" />
           </div>
@@ -66,13 +63,13 @@ export function MentorshipTickets({
   if (tickets.length === 0) {
     return (
       <div className="glass-card p-8 text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-3xl">
-        </div>
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-3xl"></div>
         <h3 className="text-lg font-semibold text-foreground">
           No mentorship requests yet
         </h3>
         <p className="mt-1 text-sm text-muted">
-          Click the button above to request your first 1-on-1 session with a mentor.
+          Click the button above to request your first 1-on-1 session with a
+          mentor.
         </p>
       </div>
     );
@@ -111,7 +108,8 @@ export function MentorshipTickets({
                   </span>
                   {ticket.preferredDate && (
                     <span>
-                      Preferred: {new Date(ticket.preferredDate).toLocaleDateString()}
+                      Preferred:{" "}
+                      {new Date(ticket.preferredDate).toLocaleDateString()}
                       {ticket.preferredTime && ` (${ticket.preferredTime})`}
                     </span>
                   )}
@@ -162,7 +160,8 @@ function TicketDetailModal({
   ticket: Ticket;
   onClose: () => void;
 }) {
-  const isScheduled = ticket.status === "SCHEDULED" || ticket.status === "COMPLETED";
+  const isScheduled =
+    ticket.status === "SCHEDULED" || ticket.status === "COMPLETED";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -175,7 +174,9 @@ function TicketDetailModal({
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
-            <h2 className="text-xl font-bold text-foreground">{ticket.title}</h2>
+            <h2 className="text-xl font-bold text-foreground">
+              {ticket.title}
+            </h2>
             <span
               className={`shrink-0 inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
                 statusColors[ticket.status]

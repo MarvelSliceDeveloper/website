@@ -59,7 +59,11 @@ function BatchesPageContent() {
   };
 
   useEffect(() => {
-    api.get<Batch[]>("/api/admin/batches", statusFilter ? { status: statusFilter } : {})
+    api
+      .get<Batch[]>(
+        "/api/admin/batches",
+        statusFilter ? { status: statusFilter } : {},
+      )
       .then(setBatches)
       .catch(() => setBatches([]))
       .finally(() => setLoading(false));
@@ -83,7 +87,9 @@ function BatchesPageContent() {
         title="Batch Management"
         description={`${batches.length} batch${batches.length !== 1 ? "es" : ""}`}
         action={
-          <Link href="/admin/batches/new" className="btn-primary">+ Create Batch</Link>
+          <Link href="/admin/batches/new" className="btn-primary">
+            + Create Batch
+          </Link>
         }
       />
 
@@ -92,7 +98,9 @@ function BatchesPageContent() {
         {["", "UPCOMING", "ACTIVE", "COMPLETED"].map((s) => (
           <button
             key={s}
-            onClick={() => router.push(s ? `/admin/batches?status=${s}` : "/admin/batches")}
+            onClick={() =>
+              router.push(s ? `/admin/batches?status=${s}` : "/admin/batches")
+            }
             className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
               statusFilter === s
                 ? "bg-primary/15 text-primary-hover border border-primary/25"
@@ -113,13 +121,18 @@ function BatchesPageContent() {
           title="No batches yet"
           description="Create your first batch to start enrolling students."
           action={
-            <Link href="/admin/batches/new" className="btn-primary inline-flex">+ Create Batch</Link>
+            <Link href="/admin/batches/new" className="btn-primary inline-flex">
+              + Create Batch
+            </Link>
           }
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {batches.map((batch) => (
-            <div key={batch.id} className="glass-card overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none">
+            <div
+              key={batch.id}
+              className="glass-card overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none"
+            >
               <div className="p-5 space-y-3">
                 <div className="flex items-start justify-between">
                   <div className="min-w-0">
@@ -129,24 +142,34 @@ function BatchesPageContent() {
                     >
                       {batch.name}
                     </Link>
-                    <p className="text-xs text-muted mt-0.5">{batch.course.title}</p>
+                    <p className="text-xs text-muted mt-0.5">
+                      {batch.course.title}
+                    </p>
                   </div>
-                  <span className={`shrink-0 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium ${statusStyles[batch.status]}`}>
+                  <span
+                    className={`shrink-0 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium ${statusStyles[batch.status]}`}
+                  >
                     {batch.status}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="panel p-2">
-                    <p className="text-lg font-bold text-foreground">{batch._count.enrollments}</p>
+                    <p className="text-lg font-bold text-foreground">
+                      {batch._count.enrollments}
+                    </p>
                     <p className="text-[10px] text-muted uppercase">Students</p>
                   </div>
                   <div className="panel p-2">
-                    <p className="text-lg font-bold text-foreground">{batch._count.sessions}</p>
+                    <p className="text-lg font-bold text-foreground">
+                      {batch._count.sessions}
+                    </p>
                     <p className="text-[10px] text-muted uppercase">Sessions</p>
                   </div>
                   <div className="panel p-2">
-                    <p className="text-lg font-bold text-foreground">{batch.maxStudents ?? "∞"}</p>
+                    <p className="text-lg font-bold text-foreground">
+                      {batch.maxStudents ?? "∞"}
+                    </p>
                     <p className="text-[10px] text-muted uppercase">Capacity</p>
                   </div>
                 </div>
@@ -154,18 +177,30 @@ function BatchesPageContent() {
                 <div className="text-xs text-muted-foreground space-y-1">
                   <p>
                     <span className="text-muted">Instructor:</span>{" "}
-                    <span className="text-foreground">{batch.instructor.name}</span>
+                    <span className="text-foreground">
+                      {batch.instructor.name}
+                    </span>
                   </p>
                   <p>
                     <span className="text-muted">Dates:</span>{" "}
-                    {new Date(batch.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                    {new Date(batch.startDate).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                    })}
                     {" → "}
-                    {new Date(batch.endDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    {new Date(batch.endDate).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
                   </p>
                 </div>
 
                 <div className="flex gap-2 pt-1">
-                  <Link href={`/admin/batches/${batch.id}`} className="btn-secondary text-xs flex-1 justify-center">
+                  <Link
+                    href={`/admin/batches/${batch.id}`}
+                    className="btn-secondary text-xs flex-1 justify-center"
+                  >
                     Manage
                   </Link>
                   <button

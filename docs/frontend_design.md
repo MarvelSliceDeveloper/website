@@ -12,36 +12,41 @@ The visual style is a premium, modern dark-themed interface (default) with an op
 
 The application maps variables using custom CSS tokens for smooth toggling between **Dark Mode** (default) and **Light Mode** (`data-theme="light"`).
 
-| Token Name | Dark Mode Value (Default) | Light Mode Value | Purpose |
-| :--- | :--- | :--- | :--- |
-| `--background` | `#0b1020` (Deep Blue-Black) | `#f4f7ff` (Ice Blue) | App background canvas |
-| `--foreground` | `#e6e9f5` (Cool Off-White) | `#1a2238` (Deep Blue-Gray) | Core text color |
-| `--card` | `#131a2c` (Navy-Gray Panel) | `#ffffff` (Pure White) | Containers and cards |
-| `--card-hover` | `#18213a` (Brighter Navy-Gray) | `#eef3ff` (Soft Blue-Gray) | Hover states for cards/buttons |
-| `--border` | `#27314f` (Muted Slate Border) | `#d7deef` (Light Gray-Blue) | Layout dividers and borders |
-| `--border-hover` | `#36436b` (Accent Slate Border) | `#bcc7e2` (Deeper Gray-Blue) | Focused borders on hover |
-| `--primary` | `#6d7dff` (Periwinkle Blue) | `#4459f3` (Vibrant Blue) | Primary actions and callouts |
-| `--accent` | `#25c0e8` (Electric Cyan) | `#0ca3cf` (Vibrant Cyan) | Highlighting specific badges/terms |
-| `--success` | `#2fbf71` (Emerald Green) | `#1f9c5b` (Deep Green) | Success status, approvals, completions |
-| `--warning` | `#f5ad42` (Amber Orange) | `#d68b1d` (Dark Gold) | Warnings and pending states |
-| `--danger` | `#f05d7d` (Vibrant Rose) | `#d54b70` (Deep Crimson) | Errors, delete/destructive actions |
-| `--muted` | `#8b93ae` (Slate Gray) | `#5a678a` (Muted Gray) | Subtitle text, inactive tabs |
-| `--radius` | `14px` | `14px` | Standardized border-radius |
+| Token Name       | Dark Mode Value (Default)       | Light Mode Value             | Purpose                                |
+| :--------------- | :------------------------------ | :--------------------------- | :------------------------------------- |
+| `--background`   | `#0b1020` (Deep Blue-Black)     | `#f4f7ff` (Ice Blue)         | App background canvas                  |
+| `--foreground`   | `#e6e9f5` (Cool Off-White)      | `#1a2238` (Deep Blue-Gray)   | Core text color                        |
+| `--card`         | `#131a2c` (Navy-Gray Panel)     | `#ffffff` (Pure White)       | Containers and cards                   |
+| `--card-hover`   | `#18213a` (Brighter Navy-Gray)  | `#eef3ff` (Soft Blue-Gray)   | Hover states for cards/buttons         |
+| `--border`       | `#27314f` (Muted Slate Border)  | `#d7deef` (Light Gray-Blue)  | Layout dividers and borders            |
+| `--border-hover` | `#36436b` (Accent Slate Border) | `#bcc7e2` (Deeper Gray-Blue) | Focused borders on hover               |
+| `--primary`      | `#6d7dff` (Periwinkle Blue)     | `#4459f3` (Vibrant Blue)     | Primary actions and callouts           |
+| `--accent`       | `#25c0e8` (Electric Cyan)       | `#0ca3cf` (Vibrant Cyan)     | Highlighting specific badges/terms     |
+| `--success`      | `#2fbf71` (Emerald Green)       | `#1f9c5b` (Deep Green)       | Success status, approvals, completions |
+| `--warning`      | `#f5ad42` (Amber Orange)        | `#d68b1d` (Dark Gold)        | Warnings and pending states            |
+| `--danger`       | `#f05d7d` (Vibrant Rose)        | `#d54b70` (Deep Crimson)     | Errors, delete/destructive actions     |
+| `--muted`        | `#8b93ae` (Slate Gray)          | `#5a678a` (Muted Gray)       | Subtitle text, inactive tabs           |
+| `--radius`       | `14px`                          | `14px`                       | Standardized border-radius             |
 
 ### B. Background Gradients & Aura
+
 The body background features a rich, multi-layered radial gradient aura overlaying the core background color:
-* **Top Right Glow**: `radial-gradient(80rem 40rem at 100% -10%, rgba(109, 125, 255, 0.14), transparent 60%)` — cast by the primary color.
-* **Bottom Left Glow**: `radial-gradient(70rem 36rem at -10% 100%, rgba(37, 192, 232, 0.1), transparent 60%)` — cast by the cyan accent.
+
+- **Top Right Glow**: `radial-gradient(80rem 40rem at 100% -10%, rgba(109, 125, 255, 0.14), transparent 60%)` — cast by the primary color.
+- **Bottom Left Glow**: `radial-gradient(70rem 36rem at -10% 100%, rgba(37, 192, 232, 0.1), transparent 60%)` — cast by the cyan accent.
 
 ### C. Glassmorphism Card Pattern (`.glass-card`)
+
 Cards are styled using semi-transparent gradients combined with hardware-accelerated background blur filters:
-* **Dark Mode**: `linear-gradient(180deg, rgba(19, 26, 44, 0.9), rgba(19, 26, 44, 0.72))` backdrop blurred via `backdrop-filter: blur(14px)`.
-* **Light Mode**: `linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(236, 242, 255, 0.9))` backdrop.
-* **Hover Interaction**: Cards smoothly lift (`translateY(-1px)`) and borders transitions to `--border-hover` with subtle back-lighting shadows.
+
+- **Dark Mode**: `linear-gradient(180deg, rgba(19, 26, 44, 0.9), rgba(19, 26, 44, 0.72))` backdrop blurred via `backdrop-filter: blur(14px)`.
+- **Light Mode**: `linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(236, 242, 255, 0.9))` backdrop.
+- **Hover Interaction**: Cards smoothly lift (`translateY(-1px)`) and borders transitions to `--border-hover` with subtle back-lighting shadows.
 
 ### D. Typography (`layout.tsx`)
-* **Display Fonts**: **Sora** (`--font-display`): A distinctive geometric sans-serif used on headings, statistics, and brand headers for a premium tech aesthetic. Headings utilize tight tracking (`letter-spacing: -0.01em`).
-* **Body Fonts**: **DM Sans** (`--font-body`): A highly readable, clean sans-serif optimized for body copy, descriptions, and forms.
+
+- **Display Fonts**: **Sora** (`--font-display`): A distinctive geometric sans-serif used on headings, statistics, and brand headers for a premium tech aesthetic. Headings utilize tight tracking (`letter-spacing: -0.01em`).
+- **Body Fonts**: **DM Sans** (`--font-body`): A highly readable, clean sans-serif optimized for body copy, descriptions, and forms.
 
 ---
 
@@ -50,6 +55,7 @@ Cards are styled using semi-transparent gradients combined with hardware-acceler
 The header section is designed to establish context, handle global interactions (theme, notifications, session control), and support accessible page navigation.
 
 ### A. Student Portal Header (`StudentPortalShell.tsx`)
+
 The student portal is a header-centric workspace that adapts dynamically to the current portal view stack:
 
 ```
@@ -69,17 +75,21 @@ The student portal is a header-centric workspace that adapts dynamically to the 
    - Expanding the dropdown reveals the user's full name, email, quick settings link (`IconSettings`), and a red-themed Sign Out option (`IconLogout`).
 
 ### B. Admin & Instructor Header (`Header.tsx`)
+
 Admins and instructors share a layout header linked with a sidebar:
-* **Context Display**: Features a header label ("LMS Workspace") and a responsive greeting block ("Welcome back").
-* **Notification Dropdown**: Follows the same visual layout as the Student bell.
-* **Global Accessors**: Inline Settings button, Light/Dark toggler, and collapsible sidebar trigger synchronization.
+
+- **Context Display**: Features a header label ("LMS Workspace") and a responsive greeting block ("Welcome back").
+- **Notification Dropdown**: Follows the same visual layout as the Student bell.
+- **Global Accessors**: Inline Settings button, Light/Dark toggler, and collapsible sidebar trigger synchronization.
 
 ### C. Collapsible Navigation Sidebars (`AdminSidebar.tsx`, `InstructorSidebar.tsx`)
+
 For multi-route dashboards, sidebars provide role-based route groupings:
-* **Flexible Sizing**: Collapses from `w-64` (fully expanded showing text and submenus) to `w-16` (icon-only bar) using CSS transition interpolation.
-* **Collapsible Nav Groups (`NavGroup`)**: High-level groups (Overview, Growth) contain expandable accordions for route parameters (e.g. Courses, Batches, Sessions). If a sub-route matches the current path, the group auto-expands using dynamic hooks.
-* **Visual States**: Active states use an subtle periwinkle outline (`border-primary/15`), a translucent background tint (`bg-primary/10`), and a highlight color (`text-primary-hover`). A tiny colored dot (`h-1.5 w-1.5 rounded-full`) emphasizes the active child node.
-* **Footer Metadata**: Renders a card listing the profile initials and email. Below it, a high-contrast sign-out button is positioned to serve as the bottom anchor.
+
+- **Flexible Sizing**: Collapses from `w-64` (fully expanded showing text and submenus) to `w-16` (icon-only bar) using CSS transition interpolation.
+- **Collapsible Nav Groups (`NavGroup`)**: High-level groups (Overview, Growth) contain expandable accordions for route parameters (e.g. Courses, Batches, Sessions). If a sub-route matches the current path, the group auto-expands using dynamic hooks.
+- **Visual States**: Active states use an subtle periwinkle outline (`border-primary/15`), a translucent background tint (`bg-primary/10`), and a highlight color (`text-primary-hover`). A tiny colored dot (`h-1.5 w-1.5 rounded-full`) emphasizes the active child node.
+- **Footer Metadata**: Renders a card listing the profile initials and email. Below it, a high-contrast sign-out button is positioned to serve as the bottom anchor.
 
 ---
 
@@ -88,58 +98,71 @@ For multi-route dashboards, sidebars provide role-based route groupings:
 Since the portal behaves like a dashboard application, traditional page footers are replaced with floating pagination elements and structured data tables.
 
 ### A. Pagination Controller (`PaginationBar.tsx`)
+
 A bottom bar that aligns page-filtering operations across the user interface.
 
 ```
 Showing 1 to 10 of 42 entries                              [ Previous ] [ 1 ] [ Next ]
 ```
 
-* **Index Counts**: Placed on the left, displaying entries (e.g. "Showing 1 to 10 of 42 entries") using soft text (`text-muted-foreground`).
-* **Navigation Controls**: Positioned on the right:
+- **Index Counts**: Placed on the left, displaying entries (e.g. "Showing 1 to 10 of 42 entries") using soft text (`text-muted-foreground`).
+- **Navigation Controls**: Positioned on the right:
   - **Previous / Next buttons**: Interactive secondary buttons that apply `opacity-50` and disable cursor pointer triggers when reaching terminal pages.
   - **Page Number Display**: Placed centrally inside a clean card indicator.
 
 ### B. Data Grid Tables (`StudentTable.tsx`)
+
 A clean table structure for batches, sessions, certificates, and grades:
-* **Header Style**: Uses a slightly darker backdrop (`bg-card-hover`) with bold, uppercase columns (`text-xs font-semibold uppercase tracking-[0.12em] text-muted`).
-* **Row Interactions**: Features border split lines (`divide-y divide-border/60`) and highlights rows on hover with a smooth ease-in transition (`hover:bg-card-hover/50`).
-* **Custom cell rendering**: Cells take custom React component injectors, facilitating badges, avatars, or progress loaders inside row fields.
+
+- **Header Style**: Uses a slightly darker backdrop (`bg-card-hover`) with bold, uppercase columns (`text-xs font-semibold uppercase tracking-[0.12em] text-muted`).
+- **Row Interactions**: Features border split lines (`divide-y divide-border/60`) and highlights rows on hover with a smooth ease-in transition (`hover:bg-card-hover/50`).
+- **Custom cell rendering**: Cells take custom React component injectors, facilitating badges, avatars, or progress loaders inside row fields.
 
 ---
 
 ## 4. Key Page & View Design Patterns
 
 ### A. Two-Column Split Login Screen (`login/page.tsx`)
+
 The sign-in interface is split into two panels for desktop viewports:
-* **Left Panel (Aesthetic Illustration)**: Displays the application name and a welcome message, highlighted by a dark gradient overlay. Seed credentials are shown in clean panels to simplify development testing.
-* **Right Panel (Form Input)**:
+
+- **Left Panel (Aesthetic Illustration)**: Displays the application name and a welcome message, highlighted by a dark gradient overlay. Seed credentials are shown in clean panels to simplify development testing.
+- **Right Panel (Form Input)**:
   - Form layout with fields (`.field`) using dark inputs with border hover states.
   - Floating password toggle button (`IconEye`/`IconEyeOff`) positioned inside the input wrapper to show/hide plaintext passwords.
   - Large primary action button (`btn-primary`) that updates to a loading indicator during authorization.
 
 ### B. Single-Page View Stack (`student/page.tsx`)
+
 Rather than relying on server-side redirects, the Student portal uses a view stack (`ViewState[]`).
-* **Animated Transition Wrapper**: Views are wrapped with animators (`key={viewStack.map(v => v.view).join("-")}`) so that shifting pages triggers a CSS slide-in from the right (`sp-view-enter`).
-* **Parallel Loading Skeletons**: Lazy fetches load data panels asynchronously. Standard skeleton boxes fade in and out (`animate-pulse`) to prevent layout shift during loading.
+
+- **Animated Transition Wrapper**: Views are wrapped with animators (`key={viewStack.map(v => v.view).join("-")}`) so that shifting pages triggers a CSS slide-in from the right (`sp-view-enter`).
+- **Parallel Loading Skeletons**: Lazy fetches load data panels asynchronously. Standard skeleton boxes fade in and out (`animate-pulse`) to prevent layout shift during loading.
 
 ### C. Count-Up Stat Tiles (`StudentStatTiles.tsx`)
+
 Visual key indicators (enrolled count, live sessions today, completed courses) are presented in grid tiles:
-* **Count-Up Animation (`useCountUp`)**: Numbers animate from `0` to their final value over an 800ms duration with cubic easing (`1 - Math.pow(1 - progress, 3)`), making the dashboard feel dynamic.
-* **Interactive Hover Effect**: Hovering lifts the tile (`translateY(-4px)`) and fades in a custom gradient backdrop (`opacity-100`).
-* **Action Indicator**: An arrow icon (`IconArrowRight`) glides into view from the top right on hover, guiding the user's eye to clickable tiles.
+
+- **Count-Up Animation (`useCountUp`)**: Numbers animate from `0` to their final value over an 800ms duration with cubic easing (`1 - Math.pow(1 - progress, 3)`), making the dashboard feel dynamic.
+- **Interactive Hover Effect**: Hovering lifts the tile (`translateY(-4px)`) and fades in a custom gradient backdrop (`opacity-100`).
+- **Action Indicator**: An arrow icon (`IconArrowRight`) glides into view from the top right on hover, guiding the user's eye to clickable tiles.
 
 ### B. Announcement Notice Bar (`StudentTopNoticeBar.tsx`)
+
 A top-bar announcement banner used to draw attention to live events:
-* **Vibrant Styling**: Uses a bright gradient banner (`from-blue-600 to-blue-500`) with high-contrast text.
-* **Action Callouts**: Prominently displays a white call-to-action button (e.g., "Join Now").
-* **State Persistence**: The close button hides the banner and saves the state to `localStorage` so the user is not prompted with the same notice on subsequent visits.
+
+- **Vibrant Styling**: Uses a bright gradient banner (`from-blue-600 to-blue-500`) with high-contrast text.
+- **Action Callouts**: Prominently displays a white call-to-action button (e.g., "Join Now").
+- **State Persistence**: The close button hides the banner and saves the state to `localStorage` so the user is not prompted with the same notice on subsequent visits.
 
 ### E. Status Badges (`StatusBadge.tsx`)
+
 Badges use soft, pastel background tints with high-contrast border and text highlights:
-* **PENDING**: Translucent amber background with amber text (`bg-warning/10 text-warning border-warning/20`).
-* **APPROVED / COMPLETED**: Soft green styling.
-* **REJECTED / CLOSED**: Soft crimson styling.
-* **LIVE**: Pulsing danger red badge styling.
+
+- **PENDING**: Translucent amber background with amber text (`bg-warning/10 text-warning border-warning/20`).
+- **APPROVED / COMPLETED**: Soft green styling.
+- **REJECTED / CLOSED**: Soft crimson styling.
+- **LIVE**: Pulsing danger red badge styling.
 
 ---
 

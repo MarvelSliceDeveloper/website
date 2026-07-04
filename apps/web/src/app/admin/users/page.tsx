@@ -58,7 +58,11 @@ export default function AdminUsersPage() {
 
   // Edit user modal
   const [editUser, setEditUser] = useState<User | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", email: "", role: "STUDENT" as string });
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    role: "STUDENT" as string,
+  });
   const [editing, setEditing] = useState(false);
 
   // Delete confirmation
@@ -67,7 +71,8 @@ export default function AdminUsersPage() {
 
   const fetchUsers = () => {
     setLoading(true);
-    api.get<User[]>("/api/users")
+    api
+      .get<User[]>("/api/users")
       .then(setUsers)
       .catch((err) => {
         toast.error(getErrorMessage(err));
@@ -167,7 +172,9 @@ export default function AdminUsersPage() {
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary/30 to-accent/20 text-xs font-bold text-foreground">
             {user.name.charAt(0).toUpperCase()}
           </div>
-          <span className="text-sm font-medium text-foreground">{user.name}</span>
+          <span className="text-sm font-medium text-foreground">
+            {user.name}
+          </span>
         </div>
       ),
     },
@@ -179,7 +186,9 @@ export default function AdminUsersPage() {
       key: "role",
       label: "Role",
       render: (_, user) => (
-        <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${roleStyles[user.role]}`}>
+        <span
+          className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${roleStyles[user.role]}`}
+        >
           {roleIcons[user.role]} {user.role}
         </span>
       ),
@@ -228,9 +237,17 @@ export default function AdminUsersPage() {
         {(["STUDENT", "INSTRUCTOR", "ADMIN"] as const).map((role) => (
           <button
             key={role}
-            onClick={() => router.replace(roleFilter === role ? "/admin/users" : `/admin/users?role=${role}`)}
+            onClick={() =>
+              router.replace(
+                roleFilter === role
+                  ? "/admin/users"
+                  : `/admin/users?role=${role}`,
+              )
+            }
             className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-              roleFilter === role ? roleStyles[role] : "border-border text-muted-foreground hover:bg-card-hover"
+              roleFilter === role
+                ? roleStyles[role]
+                : "border-border text-muted-foreground hover:bg-card-hover"
             }`}
           >
             <span>{roleIcons[role]}</span>
@@ -295,9 +312,15 @@ export default function AdminUsersPage() {
           </>
         }
       >
-        <form id="create-user-form" onSubmit={handleCreateUser} className="space-y-4">
+        <form
+          id="create-user-form"
+          onSubmit={handleCreateUser}
+          className="space-y-4"
+        >
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Full Name</label>
+            <label className="mb-1 block text-xs font-medium text-muted">
+              Full Name
+            </label>
             <input
               type="text"
               required
@@ -309,7 +332,9 @@ export default function AdminUsersPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Email Address</label>
+            <label className="mb-1 block text-xs font-medium text-muted">
+              Email Address
+            </label>
             <input
               type="email"
               required
@@ -321,7 +346,9 @@ export default function AdminUsersPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Password</label>
+            <label className="mb-1 block text-xs font-medium text-muted">
+              Password
+            </label>
             <input
               type="password"
               required
@@ -334,7 +361,9 @@ export default function AdminUsersPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Role</label>
+            <label className="mb-1 block text-xs font-medium text-muted">
+              Role
+            </label>
             <select
               value={form.role}
               onChange={(e) => setForm({ ...form, role: e.target.value })}
@@ -381,34 +410,50 @@ export default function AdminUsersPage() {
           </>
         }
       >
-        <form id="edit-user-form" onSubmit={handleEditUser} className="space-y-4">
+        <form
+          id="edit-user-form"
+          onSubmit={handleEditUser}
+          className="space-y-4"
+        >
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Full Name</label>
+            <label className="mb-1 block text-xs font-medium text-muted">
+              Full Name
+            </label>
             <input
               type="text"
               value={editForm.name}
-              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+              onChange={(e) =>
+                setEditForm({ ...editForm, name: e.target.value })
+              }
               placeholder="e.g. John Doe"
               className="field"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Email Address</label>
+            <label className="mb-1 block text-xs font-medium text-muted">
+              Email Address
+            </label>
             <input
               type="email"
               value={editForm.email}
-              onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+              onChange={(e) =>
+                setEditForm({ ...editForm, email: e.target.value })
+              }
               placeholder="e.g. johndoe@lms.local"
               className="field"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted">Role</label>
+            <label className="mb-1 block text-xs font-medium text-muted">
+              Role
+            </label>
             <select
               value={editForm.role}
-              onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+              onChange={(e) =>
+                setEditForm({ ...editForm, role: e.target.value })
+              }
               className="field w-full"
             >
               <option value="STUDENT">Student</option>

@@ -23,13 +23,9 @@ export default function SupportTicketStatusChanged({
   const color = STATUS_COLORS[status] || "#6b7280";
 
   return (
-    <BaseLayout
-      previewText={`Support ticket update: ${label}`}
-    >
+    <BaseLayout previewText={`Support ticket update: ${label}`}>
       <Heading style={headingStyle}>Support Ticket Status Updated</Heading>
-      <Text style={textStyle}>
-        There's an update on your support ticket.
-      </Text>
+      <Text style={textStyle}>There's an update on your support ticket.</Text>
       <Section style={detailsContainerStyle}>
         <Text style={labelStyle}>Ticket</Text>
         <Text style={valueStyle}>{ticketTitle}</Text>

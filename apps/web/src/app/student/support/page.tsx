@@ -42,16 +42,30 @@ interface SupportTicket {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; classes: string }> = {
-  OPEN: { label: "Open", classes: "border-warning/30 bg-warning/10 text-warning" },
-  IN_PROGRESS: { label: "In Progress", classes: "border-accent/30 bg-accent/10 text-accent" },
-  RESOLVED: { label: "Resolved", classes: "border-success/30 bg-success/10 text-success" },
-  CLOSED: { label: "Closed", classes: "border-muted/30 bg-muted/10 text-muted" },
+  OPEN: {
+    label: "Open",
+    classes: "border-warning/30 bg-warning/10 text-warning",
+  },
+  IN_PROGRESS: {
+    label: "In Progress",
+    classes: "border-accent/30 bg-accent/10 text-accent",
+  },
+  RESOLVED: {
+    label: "Resolved",
+    classes: "border-success/30 bg-success/10 text-success",
+  },
+  CLOSED: {
+    label: "Closed",
+    classes: "border-muted/30 bg-muted/10 text-muted",
+  },
 };
 
 export default function StudentSupportPage() {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(
+    null,
+  );
   const [showForm, setShowForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
@@ -63,14 +77,20 @@ export default function StudentSupportPage() {
 
   const fetchTickets = useCallback(async () => {
     try {
-      const data = await api.get<{ tickets: SupportTicket[] }>("/api/tickets?type=SUPPORT");
+      const data = await api.get<{ tickets: SupportTicket[] }>(
+        "/api/tickets?type=SUPPORT",
+      );
       setTickets(data.tickets || []);
-    } catch { /* ignore */ }
-    finally { setLoading(false); }
+    } catch {
+      /* ignore */
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    api.get<{ tickets: SupportTicket[] }>("/api/tickets?type=SUPPORT")
+    api
+      .get<{ tickets: SupportTicket[] }>("/api/tickets?type=SUPPORT")
       .then((data) => {
         setTickets(data.tickets || []);
       })
@@ -82,7 +102,8 @@ export default function StudentSupportPage() {
 
   // Load user profile for shell header
   useEffect(() => {
-    api.get<{ user: { name: string; email: string } }>("/api/auth/me")
+    api
+      .get<{ user: { name: string; email: string } }>("/api/auth/me")
       .then((res) => {
         if (res?.user) {
           setStudentName(res.user.name || "Student");
@@ -93,7 +114,9 @@ export default function StudentSupportPage() {
   }, []);
 
   async function openTicket(ticketId: string) {
-    const promise = api.get<{ ticket: SupportTicket }>(`/api/tickets/${ticketId}`);
+    const promise = api.get<{ ticket: SupportTicket }>(
+      `/api/tickets/${ticketId}`,
+    );
     toast.promise(promise, {
       loading: "Opening ticket...",
       success: undefined,
@@ -102,14 +125,20 @@ export default function StudentSupportPage() {
     try {
       const data = await promise;
       setSelectedTicket(data.ticket);
-    } catch { /* handled by toast */ }
+    } catch {
+      /* handled by toast */
+    }
   }
 
   async function createTicket(e: React.FormEvent) {
     e.preventDefault();
     if (!newTitle.trim() || !newDescription.trim()) return;
     setSubmitting(true);
-    const promise = api.post("/api/tickets", { type: "SUPPORT", title: newTitle, description: newDescription });
+    const promise = api.post("/api/tickets", {
+      type: "SUPPORT",
+      title: newTitle,
+      description: newDescription,
+    });
     toast.promise(promise, {
       loading: "Creating ticket...",
       success: "Support ticket created",
@@ -121,14 +150,19 @@ export default function StudentSupportPage() {
       setNewTitle("");
       setNewDescription("");
       fetchTickets();
-    } catch { /* handled by toast */ }
-    finally { setSubmitting(false); }
+    } catch {
+      /* handled by toast */
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   async function sendReply() {
     if (!selectedTicket || !replyText.trim()) return;
     setSendingReply(true);
-    const promise = api.post(`/api/tickets/${selectedTicket.id}/messages`, { message: replyText });
+    const promise = api.post(`/api/tickets/${selectedTicket.id}/messages`, {
+      message: replyText,
+    });
     toast.promise(promise, {
       loading: "Sending reply...",
       success: "Reply sent",
@@ -138,8 +172,11 @@ export default function StudentSupportPage() {
       await promise;
       setReplyText("");
       openTicket(selectedTicket.id);
-    } catch { /* handled by toast */ }
-    finally { setSendingReply(false); }
+    } catch {
+      /* handled by toast */
+    } finally {
+      setSendingReply(false);
+    }
   }
 
   // ── Ticket detail panel (right side on desktop) ──────────────────────
@@ -153,10 +190,17 @@ export default function StudentSupportPage() {
         <div className="flex items-start justify-between gap-4 p-5 border-b border-border/60">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2.5 mb-1.5">
-              <StatusBadge status={selectedTicket.status} config={STATUS_CONFIG} />
-              <span className="text-[11px] text-muted">{timeAgo(selectedTicket.createdAt)}</span>
+              <StatusBadge
+                status={selectedTicket.status}
+                config={STATUS_CONFIG}
+              />
+              <span className="text-[11px] text-muted">
+                {timeAgo(selectedTicket.createdAt)}
+              </span>
             </div>
-            <h2 className="text-lg font-semibold text-foreground leading-snug">{selectedTicket.title}</h2>
+            <h2 className="text-lg font-semibold text-foreground leading-snug">
+              {selectedTicket.title}
+            </h2>
           </div>
           <button
             onClick={() => setSelectedTicket(null)}
@@ -168,13 +212,17 @@ export default function StudentSupportPage() {
 
         {/* Original description */}
         <div className="px-5 py-4 border-b border-border/40">
-          <p className="text-xs font-medium text-muted uppercase tracking-wider mb-1.5">Description</p>
-          <p className="text-sm text-muted-foreground leading-relaxed">{selectedTicket.description}</p>
+          <p className="text-xs font-medium text-muted uppercase tracking-wider mb-1.5">
+            Description
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {selectedTicket.description}
+          </p>
         </div>
 
         {/* Conversation */}
         <div className="flex-1 overflow-y-auto p-5 space-y-3">
-          {(!selectedTicket.messages || selectedTicket.messages.length === 0) ? (
+          {!selectedTicket.messages || selectedTicket.messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/10">
                 <IconMessageCircle size={24} className="text-muted" />
@@ -188,16 +236,20 @@ export default function StudentSupportPage() {
                 key={msg.id}
                 className={`flex ${msg.sender.role === "ADMIN" ? "justify-start" : "justify-end"}`}
               >
-                <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
-                  msg.sender.role === "ADMIN"
-                    ? "bg-card-hover text-foreground border border-border/60 rounded-tl-md"
-                    : "bg-primary text-white rounded-tr-md"
-                }`}>
+                <div
+                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
+                    msg.sender.role === "ADMIN"
+                      ? "bg-card-hover text-foreground border border-border/60 rounded-tl-md"
+                      : "bg-primary text-white rounded-tr-md"
+                  }`}
+                >
                   <p className="text-[10px] font-semibold mb-1 opacity-60 uppercase tracking-wider">
                     {msg.sender.role === "ADMIN" ? "Admin" : "You"}
                   </p>
                   <p className="leading-relaxed">{msg.message}</p>
-                  <p className="text-[10px] mt-1.5 opacity-50">{timeAgo(msg.createdAt)}</p>
+                  <p className="text-[10px] mt-1.5 opacity-50">
+                    {timeAgo(msg.createdAt)}
+                  </p>
                 </div>
               </div>
             ))
@@ -212,7 +264,11 @@ export default function StudentSupportPage() {
                 type="text"
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), sendReply())}
+                onKeyDown={(e) =>
+                  e.key === "Enter" &&
+                  !e.shiftKey &&
+                  (e.preventDefault(), sendReply())
+                }
                 placeholder="Type your reply..."
                 className="field flex-1"
               />
@@ -236,12 +292,18 @@ export default function StudentSupportPage() {
     return (
       <div className="p-6 space-y-5">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Create Support Ticket</h2>
-          <p className="text-sm text-muted-foreground mt-1">Describe your issue and we&#39;ll get back to you.</p>
+          <h2 className="text-lg font-semibold text-foreground">
+            Create Support Ticket
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Describe your issue and we&#39;ll get back to you.
+          </p>
         </div>
         <form onSubmit={createTicket} className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">Title</label>
+            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">
+              Title
+            </label>
             <input
               type="text"
               value={newTitle}
@@ -253,7 +315,9 @@ export default function StudentSupportPage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">Description</label>
+            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">
+              Description
+            </label>
             <textarea
               value={newDescription}
               onChange={(e) => setNewDescription(e.target.value)}
@@ -265,8 +329,18 @@ export default function StudentSupportPage() {
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={() => setShowForm(false)} className="btn-secondary text-sm">Cancel</button>
-            <button type="submit" disabled={submitting} className="btn-primary text-sm">
+            <button
+              type="button"
+              onClick={() => setShowForm(false)}
+              className="btn-secondary text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-primary text-sm"
+            >
               {submitting ? "Submitting..." : "Submit Ticket"}
             </button>
           </div>
@@ -284,9 +358,12 @@ export default function StudentSupportPage() {
           <IconLifebuoy size={32} className="text-primary" />
         </div>
         <div>
-          <p className="text-base font-semibold text-foreground">Select a ticket</p>
+          <p className="text-base font-semibold text-foreground">
+            Select a ticket
+          </p>
           <p className="text-sm text-muted-foreground mt-1">
-            Choose a ticket from the list to view the conversation, or create a new one.
+            Choose a ticket from the list to view the conversation, or create a
+            new one.
           </p>
         </div>
       </div>
@@ -301,23 +378,34 @@ export default function StudentSupportPage() {
     return (
       <button
         key={t.id}
-        onClick={() => { openTicket(t.id); setShowForm(false); }}
+        onClick={() => {
+          openTicket(t.id);
+          setShowForm(false);
+        }}
         className={`w-full flex items-start gap-3.5 rounded-xl border p-4 text-left transition-all ${
           isActive
             ? "border-primary/40 bg-primary/5 shadow-sm shadow-primary/5"
             : "border-border/60 bg-card hover:bg-card-hover hover:border-border"
         }`}
       >
-        <div className={`flex h-9 w-9 items-center justify-center rounded-full shrink-0 mt-0.5 ${
-          isActive ? "bg-primary/20 text-primary" : "bg-primary/10 text-primary"
-        }`}>
+        <div
+          className={`flex h-9 w-9 items-center justify-center rounded-full shrink-0 mt-0.5 ${
+            isActive
+              ? "bg-primary/20 text-primary"
+              : "bg-primary/10 text-primary"
+          }`}
+        >
           <IconHelp size={16} />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-0.5">
-            <p className="text-sm font-medium text-foreground truncate">{t.title}</p>
+            <p className="text-sm font-medium text-foreground truncate">
+              {t.title}
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground line-clamp-1">{t.description}</p>
+          <p className="text-xs text-muted-foreground line-clamp-1">
+            {t.description}
+          </p>
           <div className="mt-2 flex items-center gap-3 flex-wrap">
             <StatusBadge status={t.status} config={STATUS_CONFIG} />
             <span className="flex items-center gap-1 text-[11px] text-muted">
@@ -349,18 +437,26 @@ export default function StudentSupportPage() {
           <p className="sp-eyebrow">Student</p>
           <h1 className="mt-1.5 text-2xl font-bold text-foreground">Support</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Report issues or ask questions about login, courses, or anything else.
+            Report issues or ask questions about login, courses, or anything
+            else.
           </p>
         </div>
 
         {/* Desktop two-column layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start" style={{ minHeight: "calc(100vh - 260px)" }}>
-
+        <div
+          className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start"
+          style={{ minHeight: "calc(100vh - 260px)" }}
+        >
           {/* Left: ticket list */}
-          <div className={`lg:col-span-5 xl:col-span-4 flex flex-col gap-3 ${selectedTicket && !showForm ? "hidden lg:flex" : "flex"}`}>
+          <div
+            className={`lg:col-span-5 xl:col-span-4 flex flex-col gap-3 ${selectedTicket && !showForm ? "hidden lg:flex" : "flex"}`}
+          >
             {/* New ticket button */}
             <button
-              onClick={() => { setShowForm((v) => !v); setSelectedTicket(null); }}
+              onClick={() => {
+                setShowForm((v) => !v);
+                setSelectedTicket(null);
+              }}
               className="btn-primary w-full flex items-center justify-center gap-2 py-2.5"
             >
               <IconPlus size={16} />
@@ -388,7 +484,8 @@ export default function StudentSupportPage() {
           </div>
 
           {/* Right: detail / form / empty */}
-          <div className={`lg:col-span-7 xl:col-span-8 glass-card overflow-hidden lg:sticky lg:top-24 ${selectedTicket || showForm ? "flex" : "hidden lg:flex"}`}
+          <div
+            className={`lg:col-span-7 xl:col-span-8 glass-card overflow-hidden lg:sticky lg:top-24 ${selectedTicket || showForm ? "flex" : "hidden lg:flex"}`}
             style={{ minHeight: "520px", maxHeight: "calc(100vh - 180px)" }}
           >
             <div className="flex flex-col w-full h-full">
@@ -396,7 +493,10 @@ export default function StudentSupportPage() {
               {(selectedTicket || showForm) && (
                 <div className="lg:hidden border-b border-border/60 px-4 py-2.5">
                   <button
-                    onClick={() => { setSelectedTicket(null); setShowForm(false); }}
+                    onClick={() => {
+                      setSelectedTicket(null);
+                      setShowForm(false);
+                    }}
                     className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
                   >
                     ← Back to tickets
@@ -408,8 +508,7 @@ export default function StudentSupportPage() {
                 ? renderNewTicketForm()
                 : selectedTicket
                   ? renderTicketDetail()
-                  : renderEmptyDetail()
-              }
+                  : renderEmptyDetail()}
             </div>
           </div>
         </div>

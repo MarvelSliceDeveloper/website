@@ -8,11 +8,11 @@ import { BASE_URL, SEED_USERS, login } from "./helpers.js";
 
 export const options = {
   stages: [
-    { duration: "30s", target: 20 },   // ramp-up to 20 users
-    { duration: "1m", target: 20 },     // stay at 20
-    { duration: "30s", target: 50 },    // ramp-up to 50
-    { duration: "1m", target: 50 },     // stay at 50
-    { duration: "30s", target: 0 },     // ramp-down
+    { duration: "30s", target: 20 }, // ramp-up to 20 users
+    { duration: "1m", target: 20 }, // stay at 20
+    { duration: "30s", target: 50 }, // ramp-up to 50
+    { duration: "1m", target: 50 }, // stay at 50
+    { duration: "30s", target: 0 }, // ramp-down
   ],
   thresholds: {
     http_req_duration: ["p(95)<1000"],

@@ -1,12 +1,12 @@
-import { z } from 'zod';
-import { TicketStatus, SupportTicketStatus } from '@prisma/client';
-import { prisma } from '../../utils/prisma';
+import { z } from "zod";
+import { TicketStatus, SupportTicketStatus } from "@prisma/client";
+import { prisma } from "../../utils/prisma";
 
 // Shared schemas
 export const CreateTicketSchema = z.object({
-  type: z.enum(['MENTORSHIP', 'SUPPORT']),
-  title: z.string().min(3, 'Title must be at least 3 characters'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
+  type: z.enum(["MENTORSHIP", "SUPPORT"]),
+  title: z.string().min(3, "Title must be at least 3 characters"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
   // Mentorship-only fields
   preferredDate: z.string().optional(),
   preferredTime: z.string().optional(),
@@ -14,11 +14,11 @@ export const CreateTicketSchema = z.object({
 });
 
 export const AddMessageSchema = z.object({
-  message: z.string().min(1, 'Message is required'),
+  message: z.string().min(1, "Message is required"),
 });
 
 export const AssignMentorSchema = z.object({
-  mentorId: z.string().min(1, 'Mentor ID is required'),
+  mentorId: z.string().min(1, "Mentor ID is required"),
 });
 
 export const ScheduleSessionSchema = z.object({
@@ -43,14 +43,19 @@ export type CompleteTicketInput = z.infer<typeof CompleteTicketSchema>;
 export type UpdateStatusInput = z.infer<typeof UpdateStatusSchema>;
 
 const userSelect = { id: true, name: true, email: true } as const;
-const userWithRoleSelect = { id: true, name: true, email: true, role: true } as const;
+const userWithRoleSelect = {
+  id: true,
+  name: true,
+  email: true,
+  role: true,
+} as const;
 
 export const ticketService = {
   // ─── CREATE ───
 
   // Creates a new support or mentorship ticket
   async createTicket(userId: string, data: CreateTicketInput) {
-    if (data.type === 'SUPPORT') {
+    if (data.type === "SUPPORT") {
       const ticket = await prisma.supportTicket.create({
         data: {
           userId,
@@ -60,7 +65,7 @@ export const ticketService = {
         },
         include: { user: { select: userSelect } },
       });
-      return { ...ticket, type: 'SUPPORT' as const };
+      return { ...ticket, type: "SUPPORT" as const };
     }
 
     const ticket = await prisma.mentorshipTicket.create({
@@ -79,7 +84,7 @@ export const ticketService = {
         course: { select: { id: true, title: true } },
       },
     });
-    return { ...ticket, type: 'MENTORSHIP' as const };
+    return { ...ticket, type: "MENTORSHIP" as const };
   },
 
   // ─── LIST ───
@@ -88,11 +93,14 @@ export const ticketService = {
   async listTickets(params: {
     userId?: string;
     role?: string;
-    type?: 'MENTORSHIP' | 'SUPPORT';
+    type?: "MENTORSHIP" | "SUPPORT";
     status?: string;
     mentorId?: string;
   }) {
-    if (params.type === 'SUPPORT' || (!params.type && params.role === 'ADMIN' && !params.mentorId)) {
+    if (
+      params.type === "SUPPORT" ||
+      (!params.type && params.role === "ADMIN" && !params.mentorId)
+    ) {
       const where: Record<string, unknown> = {};
       if (params.userId) where.userId = params.userId;
       if (params.status) where.status = params.status;
@@ -103,9 +111,9 @@ export const ticketService = {
           user: { select: userWithRoleSelect },
           _count: { select: { messages: true } },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
       });
-      return tickets.map(t => ({ ...t, type: 'SUPPORT' as const }));
+      return tickets.map((t) => ({ ...t, type: "SUPPORT" as const }));
     }
 
     const where: Record<string, unknown> = {};
@@ -120,30 +128,32 @@ export const ticketService = {
         mentor: { select: userSelect },
         course: { select: { id: true, title: true } },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
-    return tickets.map(t => ({ ...t, type: 'MENTORSHIP' as const }));
+    return tickets.map((t) => ({ ...t, type: "MENTORSHIP" as const }));
   },
 
   // ─── GET ───
 
   // Gets a single ticket by ID and optional type
-  async getTicket(id: string, type?: 'MENTORSHIP' | 'SUPPORT') {
-    if (type === 'SUPPORT') {
+  async getTicket(id: string, type?: "MENTORSHIP" | "SUPPORT") {
+    if (type === "SUPPORT") {
       const ticket = await prisma.supportTicket.findUnique({
         where: { id },
         include: {
           user: { select: userWithRoleSelect },
           messages: {
-            include: { sender: { select: { id: true, name: true, role: true } } },
-            orderBy: { createdAt: 'asc' },
+            include: {
+              sender: { select: { id: true, name: true, role: true } },
+            },
+            orderBy: { createdAt: "asc" },
           },
         },
       });
-      return ticket ? { ...ticket, type: 'SUPPORT' as const } : null;
+      return ticket ? { ...ticket, type: "SUPPORT" as const } : null;
     }
 
-    if (type === 'MENTORSHIP') {
+    if (type === "MENTORSHIP") {
       const ticket = await prisma.mentorshipTicket.findUnique({
         where: { id },
         include: {
@@ -152,36 +162,42 @@ export const ticketService = {
           course: { select: { id: true, title: true } },
         },
       });
-      return ticket ? { ...ticket, type: 'MENTORSHIP' as const } : null;
+      return ticket ? { ...ticket, type: "MENTORSHIP" as const } : null;
     }
 
     // Try both if type is not specified
     const [supportTicket, mentorshipTicket] = await Promise.all([
-      prisma.supportTicket.findUnique({
-        where: { id },
-        include: {
-          user: { select: userWithRoleSelect },
-          messages: {
-            include: { sender: { select: { id: true, name: true, role: true } } },
-            orderBy: { createdAt: 'asc' },
+      prisma.supportTicket
+        .findUnique({
+          where: { id },
+          include: {
+            user: { select: userWithRoleSelect },
+            messages: {
+              include: {
+                sender: { select: { id: true, name: true, role: true } },
+              },
+              orderBy: { createdAt: "asc" },
+            },
           },
-        },
-      }).catch(() => null),
-      prisma.mentorshipTicket.findUnique({
-        where: { id },
-        include: {
-          student: { select: userSelect },
-          mentor: { select: userSelect },
-          course: { select: { id: true, title: true } },
-        },
-      }).catch(() => null),
+        })
+        .catch(() => null),
+      prisma.mentorshipTicket
+        .findUnique({
+          where: { id },
+          include: {
+            student: { select: userSelect },
+            mentor: { select: userSelect },
+            course: { select: { id: true, title: true } },
+          },
+        })
+        .catch(() => null),
     ]);
 
     if (supportTicket) {
-      return { ...supportTicket, type: 'SUPPORT' as const };
+      return { ...supportTicket, type: "SUPPORT" as const };
     }
     if (mentorshipTicket) {
-      return { ...mentorshipTicket, type: 'MENTORSHIP' as const };
+      return { ...mentorshipTicket, type: "MENTORSHIP" as const };
     }
     return null;
   },
@@ -189,10 +205,17 @@ export const ticketService = {
   // ─── MENTORSHIP-SPECIFIC ───
 
   // Assigns a mentor to a mentorship ticket
-  async assignMentor(ticketId: string, adminId: string, data: AssignMentorInput) {
-    const mentor = await prisma.user.findUnique({ where: { id: data.mentorId } });
-    if (!mentor) throw new Error('Mentor not found');
-    if (mentor.role === 'STUDENT') throw new Error('Cannot assign a student as mentor');
+  async assignMentor(
+    ticketId: string,
+    adminId: string,
+    data: AssignMentorInput,
+  ) {
+    const mentor = await prisma.user.findUnique({
+      where: { id: data.mentorId },
+    });
+    if (!mentor) throw new Error("Mentor not found");
+    if (mentor.role === "STUDENT")
+      throw new Error("Cannot assign a student as mentor");
 
     return prisma.mentorshipTicket.update({
       where: { id: ticketId },
@@ -205,7 +228,11 @@ export const ticketService = {
     });
   },
 
-  async scheduleSession(ticketId: string, adminId: string, data: ScheduleSessionInput) {
+  async scheduleSession(
+    ticketId: string,
+    adminId: string,
+    data: ScheduleSessionInput,
+  ) {
     const ticket = await prisma.mentorshipTicket.findUnique({
       where: { id: ticketId },
       include: {
@@ -214,15 +241,18 @@ export const ticketService = {
       },
     });
 
-    if (!ticket) throw new Error('Ticket not found');
-    if (ticket.status !== TicketStatus.ASSIGNED && ticket.status !== TicketStatus.OPEN) {
-      throw new Error('Ticket must be in ASSIGNED or OPEN status to schedule');
+    if (!ticket) throw new Error("Ticket not found");
+    if (
+      ticket.status !== TicketStatus.ASSIGNED &&
+      ticket.status !== TicketStatus.OPEN
+    ) {
+      throw new Error("Ticket must be in ASSIGNED or OPEN status to schedule");
     }
 
     const scheduledAt = new Date(data.scheduledAt);
     const scheduledEndAt = new Date(scheduledAt.getTime() + 60 * 60 * 1000);
     const teamsMeetingId = data.teamsMeetingId || `mentorship-${ticketId}`;
-    const joinUrl = data.joinUrl || '';
+    const joinUrl = data.joinUrl || "";
     const mentorId = ticket.mentorId || adminId;
 
     const [updatedTicket] = await prisma.$transaction(async (tx) => {
@@ -249,7 +279,7 @@ export const ticketService = {
           joinUrl,
           scheduledAt,
           scheduledEndAt,
-          createdFrom: 'MENTORSHIP',
+          createdFrom: "MENTORSHIP",
           createdBy: adminId,
           instructorId: mentorId,
           mentorshipTicketId: ticketId,
@@ -289,7 +319,11 @@ export const ticketService = {
 
       const ticket = await tx.mentorshipTicket.update({
         where: { id: ticketId },
-        data: { status: TicketStatus.COMPLETED, resolvedAt: new Date(), notes: data?.notes || null },
+        data: {
+          status: TicketStatus.COMPLETED,
+          resolvedAt: new Date(),
+          notes: data?.notes || null,
+        },
         include: {
           student: { select: userSelect },
           mentor: { select: userSelect },
@@ -311,7 +345,9 @@ export const ticketService = {
       });
 
       if (linkedSession) {
-        await tx.calendarEvent.deleteMany({ where: { sessionId: linkedSession.id } });
+        await tx.calendarEvent.deleteMany({
+          where: { sessionId: linkedSession.id },
+        });
         await tx.liveSession.delete({ where: { id: linkedSession.id } });
       }
 
@@ -334,9 +370,9 @@ export const ticketService = {
   // Gets all users eligible to be mentors
   async getAvailableMentors() {
     return prisma.user.findMany({
-      where: { role: { in: ['INSTRUCTOR', 'ADMIN'] } },
+      where: { role: { in: ["INSTRUCTOR", "ADMIN"] } },
       select: { id: true, name: true, email: true, role: true },
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     });
   },
 
@@ -344,8 +380,10 @@ export const ticketService = {
 
   // Adds a message to a support ticket
   async addMessage(ticketId: string, senderId: string, data: AddMessageInput) {
-    const ticket = await prisma.supportTicket.findUnique({ where: { id: ticketId } });
-    if (!ticket) throw new Error('Ticket not found');
+    const ticket = await prisma.supportTicket.findUnique({
+      where: { id: ticketId },
+    });
+    if (!ticket) throw new Error("Ticket not found");
 
     return prisma.supportMessage.create({
       data: { ticketId, senderId, message: data.message },
@@ -355,8 +393,11 @@ export const ticketService = {
 
   // Updates the status of a support ticket
   async updateStatus(ticketId: string, data: UpdateStatusInput) {
-    const now = data.status === SupportTicketStatus.RESOLVED || data.status === SupportTicketStatus.CLOSED
-      ? new Date() : undefined;
+    const now =
+      data.status === SupportTicketStatus.RESOLVED ||
+      data.status === SupportTicketStatus.CLOSED
+        ? new Date()
+        : undefined;
 
     return prisma.supportTicket.update({
       where: { id: ticketId },
@@ -368,14 +409,22 @@ export const ticketService = {
   // ─── STATS ───
 
   // Gets ticket statistics by type
-  async getStats(type: 'MENTORSHIP' | 'SUPPORT') {
-    if (type === 'SUPPORT') {
+  async getStats(type: "MENTORSHIP" | "SUPPORT") {
+    if (type === "SUPPORT") {
       const [total, open, inProgress, resolved, closed] = await Promise.all([
         prisma.supportTicket.count(),
-        prisma.supportTicket.count({ where: { status: SupportTicketStatus.OPEN } }),
-        prisma.supportTicket.count({ where: { status: SupportTicketStatus.IN_PROGRESS } }),
-        prisma.supportTicket.count({ where: { status: SupportTicketStatus.RESOLVED } }),
-        prisma.supportTicket.count({ where: { status: SupportTicketStatus.CLOSED } }),
+        prisma.supportTicket.count({
+          where: { status: SupportTicketStatus.OPEN },
+        }),
+        prisma.supportTicket.count({
+          where: { status: SupportTicketStatus.IN_PROGRESS },
+        }),
+        prisma.supportTicket.count({
+          where: { status: SupportTicketStatus.RESOLVED },
+        }),
+        prisma.supportTicket.count({
+          where: { status: SupportTicketStatus.CLOSED },
+        }),
       ]);
       return { total, open, inProgress, resolved, closed };
     }
@@ -383,9 +432,15 @@ export const ticketService = {
     const [total, open, assigned, scheduled, completed] = await Promise.all([
       prisma.mentorshipTicket.count(),
       prisma.mentorshipTicket.count({ where: { status: TicketStatus.OPEN } }),
-      prisma.mentorshipTicket.count({ where: { status: TicketStatus.ASSIGNED } }),
-      prisma.mentorshipTicket.count({ where: { status: TicketStatus.SCHEDULED } }),
-      prisma.mentorshipTicket.count({ where: { status: TicketStatus.COMPLETED } }),
+      prisma.mentorshipTicket.count({
+        where: { status: TicketStatus.ASSIGNED },
+      }),
+      prisma.mentorshipTicket.count({
+        where: { status: TicketStatus.SCHEDULED },
+      }),
+      prisma.mentorshipTicket.count({
+        where: { status: TicketStatus.COMPLETED },
+      }),
     ]);
     return { total, open, assigned, scheduled, completed };
   },

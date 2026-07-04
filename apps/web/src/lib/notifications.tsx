@@ -1,4 +1,12 @@
-import { IconBell, IconEye, IconCheck, IconX, IconHelp, IconMessage, IconSend } from "@tabler/icons-react";
+import {
+  IconBell,
+  IconEye,
+  IconCheck,
+  IconX,
+  IconHelp,
+  IconMessage,
+  IconSend,
+} from "@tabler/icons-react";
 
 export interface NotificationItem {
   id: string;
@@ -42,7 +50,11 @@ interface Props {
 }
 
 // Notification icon with type-specific color and icon
-export function NotificationIcon({ type, className = "", withContainer = true }: Props) {
+export function NotificationIcon({
+  type,
+  className = "",
+  withContainer = true,
+}: Props) {
   const icon = ICON_MAP[type] ?? <IconBell size={16} />;
   const colors = COLOR_MAP[type] ?? "bg-muted/20 text-muted-foreground";
 
@@ -51,7 +63,9 @@ export function NotificationIcon({ type, className = "", withContainer = true }:
   }
 
   return (
-    <div className={`flex h-8 w-8 items-center justify-center rounded-full ${colors} ${className}`}>
+    <div
+      className={`flex h-8 w-8 items-center justify-center rounded-full ${colors} ${className}`}
+    >
       {icon}
     </div>
   );

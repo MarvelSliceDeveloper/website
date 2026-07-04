@@ -1,12 +1,12 @@
-import { Response } from 'express';
-import { ZodError } from 'zod';
-import { AuthRequest } from '../../middleware/auth.middleware';
+import { Response } from "express";
+import { ZodError } from "zod";
+import { AuthRequest } from "../../middleware/auth.middleware";
 import {
   moduleService,
   CreateModuleSchema,
   UpdateModuleSchema,
   ReorderModulesSchema,
-} from './module.service';
+} from "./module.service";
 
 export const moduleController = {
   // Creates a new module in a course
@@ -19,7 +19,7 @@ export const moduleController = {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });
       }
-      if (error.message === 'Course not found') {
+      if (error.message === "Course not found") {
         return res.status(404).json({ error: error.message });
       }
       return res.status(400).json({ error: error.message });
@@ -36,7 +36,7 @@ export const moduleController = {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });
       }
-      if (error.message === 'Module not found') {
+      if (error.message === "Module not found") {
         return res.status(404).json({ error: error.message });
       }
       return res.status(400).json({ error: error.message });
@@ -47,9 +47,9 @@ export const moduleController = {
   async deleteModule(req: AuthRequest, res: Response) {
     try {
       await moduleService.deleteModule(req.params.id);
-      return res.json({ message: 'Module deleted' });
+      return res.json({ message: "Module deleted" });
     } catch (error: any) {
-      if (error.message === 'Module not found') {
+      if (error.message === "Module not found") {
         return res.status(404).json({ error: error.message });
       }
       return res.status(500).json({ error: error.message });
@@ -61,16 +61,15 @@ export const moduleController = {
     try {
       const { moduleIds } = ReorderModulesSchema.parse(req.body);
       await moduleService.reorderModules(req.params.id, moduleIds);
-      return res.json({ message: 'Modules reordered' });
+      return res.json({ message: "Modules reordered" });
     } catch (error: any) {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });
       }
-      if (error.message === 'Course not found') {
+      if (error.message === "Course not found") {
         return res.status(404).json({ error: error.message });
       }
       return res.status(400).json({ error: error.message });
     }
   },
-
 };

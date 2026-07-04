@@ -1,5 +1,13 @@
 import React from "react";
-import { Heading, Text, Button, Section, Row, Column, Hr } from "@react-email/components";
+import {
+  Heading,
+  Text,
+  Button,
+  Section,
+  Row,
+  Column,
+  Hr,
+} from "@react-email/components";
 import BaseLayout from "./BaseLayout";
 
 interface WelcomeEmailProps {
@@ -25,12 +33,16 @@ export default function WelcomeEmail({ userName }: WelcomeEmailProps) {
         <Hr style={dividerStyle} />
         <Row style={listRowStyle}>
           <Column style={iconColStyle}>🎥</Column>
-          <Column style={listTextColStyle}>Watch live sessions and recordings</Column>
+          <Column style={listTextColStyle}>
+            Watch live sessions and recordings
+          </Column>
         </Row>
         <Hr style={dividerStyle} />
         <Row style={listRowStyle}>
           <Column style={iconColStyle}>📝</Column>
-          <Column style={listTextColStyle}>Complete assignments and quizzes</Column>
+          <Column style={listTextColStyle}>
+            Complete assignments and quizzes
+          </Column>
         </Row>
         <Hr style={dividerStyle} />
         <Row style={listRowStyle}>

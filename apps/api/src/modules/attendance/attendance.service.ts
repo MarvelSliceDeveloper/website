@@ -1,4 +1,4 @@
-import { prisma } from '../../utils/prisma';
+import { prisma } from "../../utils/prisma";
 
 export const attendanceService = {
   // Records a student joining a live session
@@ -11,20 +11,20 @@ export const attendanceService = {
           select: {
             id: true,
             enrollments: {
-              where: { userId, status: 'APPROVED' }
-            }
-          }
-        }
-      }
+              where: { userId, status: "APPROVED" },
+            },
+          },
+        },
+      },
     });
 
     if (!session) {
-      throw new Error('Session not found');
+      throw new Error("Session not found");
     }
 
     // 2. Verify student enrollment in the batch of this session
     if (!session.batch || session.batch.enrollments.length === 0) {
-      throw new Error('You are not enrolled in the batch for this session');
+      throw new Error("You are not enrolled in the batch for this session");
     }
 
     // 3. Upsert attendance record
@@ -68,7 +68,7 @@ export const attendanceService = {
           },
         },
       },
-      orderBy: { joinedAt: 'asc' },
+      orderBy: { joinedAt: "asc" },
     });
   },
 };

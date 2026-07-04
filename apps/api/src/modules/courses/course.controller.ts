@@ -1,13 +1,13 @@
-import { Request, Response } from 'express';
-import { ZodError } from 'zod';
-import { AuthRequest } from '../../middleware/auth.middleware';
+import { Request, Response } from "express";
+import { ZodError } from "zod";
+import { AuthRequest } from "../../middleware/auth.middleware";
 import {
   courseService,
   CreateCourseSchema,
   UpdateCourseSchema,
-} from './course.service';
-import { buildCourseThumbnailUrl } from './course.upload';
-import { prisma } from '../../utils/prisma';
+} from "./course.service";
+import { buildCourseThumbnailUrl } from "./course.upload";
+import { prisma } from "../../utils/prisma";
 
 export const courseController = {
   // Creates a new course
@@ -47,7 +47,7 @@ export const courseController = {
       const course = await courseService.getCourseById(req.params.id);
       return res.json(course);
     } catch (error: any) {
-      if (error.message === 'Course not found') {
+      if (error.message === "Course not found") {
         return res.status(404).json({ error: error.message });
       }
       return res.status(500).json({ error: error.message });
@@ -64,7 +64,7 @@ export const courseController = {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });
       }
-      if (error.message === 'Course not found') {
+      if (error.message === "Course not found") {
         return res.status(404).json({ error: error.message });
       }
       return res.status(400).json({ error: error.message });
@@ -75,7 +75,7 @@ export const courseController = {
   async uploadThumbnail(req: AuthRequest, res: Response) {
     try {
       if (!req.file) {
-        return res.status(400).json({ error: 'Thumbnail file is required' });
+        return res.status(400).json({ error: "Thumbnail file is required" });
       }
 
       const thumbnailUrl = buildCourseThumbnailUrl(req, req.file.filename);
@@ -86,7 +86,7 @@ export const courseController = {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });
       }
-      if (error.message === 'Course not found') {
+      if (error.message === "Course not found") {
         return res.status(404).json({ error: error.message });
       }
       return res.status(400).json({ error: error.message });
@@ -97,9 +97,9 @@ export const courseController = {
   async delete(req: AuthRequest, res: Response) {
     try {
       await courseService.deleteCourse(req.params.id);
-      return res.status(200).json({ message: 'Course archived successfully' });
+      return res.status(200).json({ message: "Course archived successfully" });
     } catch (error: any) {
-      if (error.message === 'Course not found') {
+      if (error.message === "Course not found") {
         return res.status(404).json({ error: error.message });
       }
       return res.status(500).json({ error: error.message });
@@ -110,9 +110,9 @@ export const courseController = {
   async permanentDelete(req: AuthRequest, res: Response) {
     try {
       await courseService.permanentDeleteCourse(req.params.id);
-      return res.status(200).json({ message: 'Course permanently deleted' });
+      return res.status(200).json({ message: "Course permanently deleted" });
     } catch (error: any) {
-      if (error.message === 'Course not found') {
+      if (error.message === "Course not found") {
         return res.status(404).json({ error: error.message });
       }
       return res.status(500).json({ error: error.message });
@@ -125,17 +125,17 @@ export const courseController = {
       const result = await courseService.publishCourse(req.params.id);
       if (!result.published) {
         return res.status(422).json({
-          error: 'Course does not meet publish requirements',
+          error: "Course does not meet publish requirements",
           checklist: result.checklist,
         });
       }
       return res.json({
-        message: 'Course published',
+        message: "Course published",
         published: true,
         checklist: result.checklist,
       });
     } catch (error: any) {
-      if (error.message === 'Course not found') {
+      if (error.message === "Course not found") {
         return res.status(404).json({ error: error.message });
       }
       return res.status(500).json({ error: error.message });
@@ -146,9 +146,9 @@ export const courseController = {
   async recover(req: AuthRequest, res: Response) {
     try {
       const course = await courseService.recoverCourse(req.params.id);
-      return res.json({ message: 'Course recovered', course });
+      return res.json({ message: "Course recovered", course });
     } catch (error: any) {
-      if (error.message === 'Course not found') {
+      if (error.message === "Course not found") {
         return res.status(404).json({ error: error.message });
       }
       return res.status(400).json({ error: error.message });
@@ -159,9 +159,9 @@ export const courseController = {
   async unpublish(req: AuthRequest, res: Response) {
     try {
       const course = await courseService.unpublishCourse(req.params.id);
-      return res.json({ message: 'Course unpublished', course });
+      return res.json({ message: "Course unpublished", course });
     } catch (error: any) {
-      if (error.message === 'Course not found') {
+      if (error.message === "Course not found") {
         return res.status(404).json({ error: error.message });
       }
       return res.status(400).json({ error: error.message });
@@ -180,7 +180,7 @@ export const courseController = {
           module: { select: { id: true, title: true } },
           recording: { select: { id: true, syncedAt: true } },
         },
-        orderBy: { scheduledAt: 'desc' },
+        orderBy: { scheduledAt: "desc" },
       });
       return res.json({ sessions });
     } catch (error: any) {
@@ -206,7 +206,7 @@ export const courseController = {
             },
           },
         },
-        orderBy: { syncedAt: 'desc' },
+        orderBy: { syncedAt: "desc" },
       });
       return res.json({ recordings });
     } catch (error: any) {

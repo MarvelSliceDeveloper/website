@@ -32,14 +32,20 @@ export default function AdminInboxMessagesPage() {
 
   const fetchConversations = useCallback(async () => {
     try {
-      const data = await api.get<{ conversations: Conversation[] }>("/api/messages/conversations");
+      const data = await api.get<{ conversations: Conversation[] }>(
+        "/api/messages/conversations",
+      );
       setConversations(data.conversations || []);
-    } catch { /* ignore */ }
-    finally { setLoading(false); }
+    } catch {
+      /* ignore */
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    api.get<{ conversations: Conversation[] }>("/api/messages/conversations")
+    api
+      .get<{ conversations: Conversation[] }>("/api/messages/conversations")
       .then((data) => setConversations(data.conversations || []))
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -48,27 +54,41 @@ export default function AdminInboxMessagesPage() {
   const openThread = async (userId: string) => {
     setSelectedUserId(userId);
     try {
-      const data = await api.get<{ messages: Message[] }>(`/api/messages/${userId}`);
+      const data = await api.get<{ messages: Message[] }>(
+        `/api/messages/${userId}`,
+      );
       setThread(data.messages || []);
-    } catch { setThread([]); }
+    } catch {
+      setThread([]);
+    }
   };
 
   const sendMessage = async () => {
     if (!selectedUserId || !newMessage.trim()) return;
     try {
-      await api.post("/api/messages", { receiverId: selectedUserId, body: newMessage });
+      await api.post("/api/messages", {
+        receiverId: selectedUserId,
+        body: newMessage,
+      });
       toast.success("Message sent");
       setNewMessage("");
       openThread(selectedUserId);
-    } catch (err) { toast.error(getErrorMessage(err)); }
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
   };
 
-  if (loading) return <div className="h-40 animate-pulse rounded-xl bg-card-hover border border-border" />;
+  if (loading)
+    return (
+      <div className="h-40 animate-pulse rounded-xl bg-card-hover border border-border" />
+    );
 
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Inbox</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
+          Inbox
+        </p>
         <h1 className="mt-1 text-2xl font-bold text-foreground">Messages</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Direct messages with users.
@@ -79,14 +99,21 @@ export default function AdminInboxMessagesPage() {
         {/* Conversation List */}
         <div className="rounded-xl border border-border/60 bg-card">
           <div className="border-b border-border px-4 py-3">
-            <p className="text-sm font-semibold text-foreground">Conversations</p>
+            <p className="text-sm font-semibold text-foreground">
+              Conversations
+            </p>
           </div>
           <div className="max-h-96 overflow-y-auto">
             {conversations.length === 0 ? (
-              <p className="px-4 py-6 text-center text-sm text-muted">No conversations yet</p>
+              <p className="px-4 py-6 text-center text-sm text-muted">
+                No conversations yet
+              </p>
             ) : (
               conversations.map((conv) => {
-                const other = conv.sender.id === selectedUserId ? conv.receiver : conv.sender;
+                const other =
+                  conv.sender.id === selectedUserId
+                    ? conv.receiver
+                    : conv.sender;
                 return (
                   <button
                     key={conv.id}
@@ -99,7 +126,9 @@ export default function AdminInboxMessagesPage() {
                       {other.name.charAt(0)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground truncate">{other.name}</p>
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {other.name}
+                      </p>
                       <p className="text-xs text-muted truncate">{conv.body}</p>
                     </div>
                   </button>
@@ -119,13 +148,17 @@ export default function AdminInboxMessagesPage() {
                     key={msg.id}
                     className={`flex ${msg.senderId === selectedUserId ? "justify-start" : "justify-end"}`}
                   >
-                    <div className={`max-w-xs rounded-xl px-4 py-2 text-sm ${
-                      msg.senderId === selectedUserId
-                        ? "bg-card-hover text-foreground border border-border"
-                        : "bg-primary text-white"
-                    }`}>
+                    <div
+                      className={`max-w-xs rounded-xl px-4 py-2 text-sm ${
+                        msg.senderId === selectedUserId
+                          ? "bg-card-hover text-foreground border border-border"
+                          : "bg-primary text-white"
+                      }`}
+                    >
                       <p>{msg.body}</p>
-                      <p className="text-[10px] mt-1 opacity-60">{timeAgo(msg.createdAt)}</p>
+                      <p className="text-[10px] mt-1 opacity-60">
+                        {timeAgo(msg.createdAt)}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -140,7 +173,11 @@ export default function AdminInboxMessagesPage() {
                     placeholder="Type a message..."
                     className="field flex-1"
                   />
-                  <button onClick={sendMessage} disabled={!newMessage.trim()} className="btn-primary text-sm">
+                  <button
+                    onClick={sendMessage}
+                    disabled={!newMessage.trim()}
+                    className="btn-primary text-sm"
+                  >
                     Send
                   </button>
                 </div>
@@ -151,8 +188,12 @@ export default function AdminInboxMessagesPage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary mb-3">
                 <IconMessage size={24} />
               </div>
-              <p className="font-semibold text-foreground">Select a conversation</p>
-              <p className="mt-1 text-sm text-muted-foreground">Choose a conversation from the left to start messaging.</p>
+              <p className="font-semibold text-foreground">
+                Select a conversation
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Choose a conversation from the left to start messaging.
+              </p>
             </div>
           )}
         </div>

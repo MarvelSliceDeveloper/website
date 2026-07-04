@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { IconEdit, IconTrash, IconRefresh, IconCalendar, IconMovie, IconVideo } from "@tabler/icons-react";
+import {
+  IconEdit,
+  IconTrash,
+  IconRefresh,
+  IconCalendar,
+  IconMovie,
+  IconVideo,
+} from "@tabler/icons-react";
 import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FormModal } from "@/components/admin/FormModal";
@@ -43,7 +50,8 @@ export default function AdminSessionsPage() {
 
   const fetchSessions = () => {
     setLoading(true);
-    api.get<SessionsResponse>("/api/sessions")
+    api
+      .get<SessionsResponse>("/api/sessions")
       .then((response) => {
         setSessions(Array.isArray(response.sessions) ? response.sessions : []);
       })
@@ -69,9 +77,17 @@ export default function AdminSessionsPage() {
 
   const openEdit = (session: Session) => {
     setEditingSession(session);
-    setEditTitle(session.batch ? `${session.batch.course.title} — ${session.batch.name}` : "Mentorship Session");
+    setEditTitle(
+      session.batch
+        ? `${session.batch.course.title} — ${session.batch.name}`
+        : "Mentorship Session",
+    );
     setEditStart(new Date(session.scheduledAt).toISOString().slice(0, 16));
-    setEditEnd(new Date(new Date(session.scheduledAt).getTime() + 3600000).toISOString().slice(0, 16));
+    setEditEnd(
+      new Date(new Date(session.scheduledAt).getTime() + 3600000)
+        .toISOString()
+        .slice(0, 16),
+    );
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -88,19 +104,28 @@ export default function AdminSessionsPage() {
       setEditingSession(null);
       fetchSessions();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to update session");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to update session",
+      );
     } finally {
       setEditSubmitting(false);
     }
   };
 
   const handleDelete = async (sessionId: string) => {
-    if (!confirm("Are you sure you want to permanently delete this session? This will remove all associated data (attendance, calendar events, recordings).")) return;
+    if (
+      !confirm(
+        "Are you sure you want to permanently delete this session? This will remove all associated data (attendance, calendar events, recordings).",
+      )
+    )
+      return;
     try {
       await api.delete(`/api/sessions/${sessionId}`);
       fetchSessions();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to cancel session");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to cancel session",
+      );
     }
   };
 
@@ -111,7 +136,11 @@ export default function AdminSessionsPage() {
       toast.success("Recording synced successfully!");
       fetchSessions();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "No recording found yet. Teams recordings may take a few minutes to become available.");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "No recording found yet. Teams recordings may take a few minutes to become available.",
+      );
     } finally {
       setSyncingId(null);
     }
@@ -122,7 +151,11 @@ export default function AdminSessionsPage() {
       <AdminPageHeader
         title="Sessions"
         description={`${sessions.length} total sessions`}
-        action={<Link href="/admin/sessions/new" className="btn-primary">+ Schedule Session</Link>}
+        action={
+          <Link href="/admin/sessions/new" className="btn-primary">
+            + Schedule Session
+          </Link>
+        }
       />
 
       {loading ? (
@@ -132,7 +165,14 @@ export default function AdminSessionsPage() {
           icon={IconVideo}
           title="No sessions yet"
           description="Schedule a live session for a batch."
-          action={<Link href="/admin/sessions/new" className="btn-primary inline-flex">+ Schedule Session</Link>}
+          action={
+            <Link
+              href="/admin/sessions/new"
+              className="btn-primary inline-flex"
+            >
+              + Schedule Session
+            </Link>
+          }
         />
       ) : (
         <div className="space-y-6">
@@ -188,27 +228,66 @@ export default function AdminSessionsPage() {
         size="lg"
         footer={
           <>
-            <button type="button" onClick={() => setEditingSession(null)} className="btn-secondary text-xs px-4">Cancel</button>
-            <button type="submit" form="edit-session-form" disabled={editSubmitting} className="btn-primary text-xs px-4">
+            <button
+              type="button"
+              onClick={() => setEditingSession(null)}
+              className="btn-secondary text-xs px-4"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="edit-session-form"
+              disabled={editSubmitting}
+              className="btn-primary text-xs px-4"
+            >
               {editSubmitting ? "Saving..." : "Save Changes"}
             </button>
           </>
         }
       >
-        <form id="edit-session-form" onSubmit={handleEditSubmit} className="space-y-4">
+        <form
+          id="edit-session-form"
+          onSubmit={handleEditSubmit}
+          className="space-y-4"
+        >
           <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Session Title</label>
-            <input type="text" className="field" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} required />
+            <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
+              Session Title
+            </label>
+            <input
+              type="text"
+              className="field"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              required
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">Start</label>
-              <input type="datetime-local" className="field" value={editStart} onChange={(e) => setEditStart(e.target.value)} required />
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
+                Start
+              </label>
+              <input
+                type="datetime-local"
+                className="field"
+                value={editStart}
+                onChange={(e) => setEditStart(e.target.value)}
+                required
+              />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">End</label>
-              <input type="datetime-local" className="field" value={editEnd} onChange={(e) => setEditEnd(e.target.value)} required />
+              <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
+                End
+              </label>
+              <input
+                type="datetime-local"
+                className="field"
+                value={editEnd}
+                onChange={(e) => setEditEnd(e.target.value)}
+                required
+              />
             </div>
           </div>
         </form>
@@ -235,19 +314,28 @@ function SessionCard({
   return (
     <div className="glass-card p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none">
       <div className="flex items-start gap-3">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${upcoming ? "bg-primary/20" : "bg-muted/10"
-          }`}>
+        <div
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${
+            upcoming ? "bg-primary/20" : "bg-muted/10"
+          }`}
+        >
           {upcoming ? <IconCalendar size={20} /> : <IconMovie size={20} />}
         </div>
         <div>
           <p className="text-sm font-semibold text-foreground">
             {new Date(session.scheduledAt).toLocaleString("en-IN", {
-              weekday: "short", day: "numeric", month: "short",
-              year: "numeric", hour: "2-digit", minute: "2-digit",
+              weekday: "short",
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
             })}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {session.batch ? `${session.batch.course.title} · ${session.batch.name}` : "Standalone Session"}
+            {session.batch
+              ? `${session.batch.course.title} · ${session.batch.name}`
+              : "Standalone Session"}
           </p>
           <div className="flex items-center gap-2 mt-1.5">
             <span className="text-[10px] uppercase font-medium bg-accent/15 text-accent px-1.5 py-0.5 rounded">

@@ -3,7 +3,9 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { IconAlertCircle, IconSearch } from "@tabler/icons-react";
-import StudentPortalShell, { type Breadcrumb } from "@/components/StudentPortalShell";
+import StudentPortalShell, {
+  type Breadcrumb,
+} from "@/components/StudentPortalShell";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 
@@ -133,10 +135,15 @@ interface ApiRecordingResponse {
   }>;
 }
 
-function computeSessionStatus(scheduledAt: string, endDateTime?: string): "LIVE" | "UPCOMING" | "PAST" {
+function computeSessionStatus(
+  scheduledAt: string,
+  endDateTime?: string,
+): "LIVE" | "UPCOMING" | "PAST" {
   const now = Date.now();
   const start = new Date(scheduledAt).getTime();
-  const end = endDateTime ? new Date(endDateTime).getTime() : start + 60 * 60 * 1000; // fallback to 1hr
+  const end = endDateTime
+    ? new Date(endDateTime).getTime()
+    : start + 60 * 60 * 1000; // fallback to 1hr
 
   if (now >= start && now < end) return "LIVE";
   if (now >= end) return "PAST";
@@ -160,58 +167,89 @@ async function fetchPortalData(): Promise<PortalData> {
   }
 
   // Real API calls — run in parallel
-  const [enrolled, sessionsData, calEvents, tickets, certs, catalogue, overdueAssignments] = await Promise.all([
-    api.get<{ courses: EnrolledCourse[] }>("/api/courses/enrolled").catch(() => ({ courses: [] })),
-    api.get<{ sessions: ApiSessionRecord[] }>("/api/sessions").catch(() => ({ sessions: [] })),
-    api.get<{ events: CalendarEvent[] }>("/api/calendar/events").catch(() => ({ events: [] })),
-    api.get<{ tickets: ApiMentorshipTicket[] }>("/api/mentorship/tickets/my").catch(() => ({ tickets: [] })),
-    api.get<{ certificates: Certificate[] }>("/api/certificates/my").catch(() => ({ certificates: [] })),
-    api.get<{ courses: CatalogueCourse[] }>("/api/courses/catalogue").catch(() => ({ courses: [] })),
+  const [
+    enrolled,
+    sessionsData,
+    calEvents,
+    tickets,
+    certs,
+    catalogue,
+    overdueAssignments,
+  ] = await Promise.all([
+    api
+      .get<{ courses: EnrolledCourse[] }>("/api/courses/enrolled")
+      .catch(() => ({ courses: [] })),
+    api
+      .get<{ sessions: ApiSessionRecord[] }>("/api/sessions")
+      .catch(() => ({ sessions: [] })),
+    api
+      .get<{ events: CalendarEvent[] }>("/api/calendar/events")
+      .catch(() => ({ events: [] })),
+    api
+      .get<{ tickets: ApiMentorshipTicket[] }>("/api/mentorship/tickets/my")
+      .catch(() => ({ tickets: [] })),
+    api
+      .get<{ certificates: Certificate[] }>("/api/certificates/my")
+      .catch(() => ({ certificates: [] })),
+    api
+      .get<{ courses: CatalogueCourse[] }>("/api/courses/catalogue")
+      .catch(() => ({ courses: [] })),
     api
       .get<{ items: OverdueAssignment[] }>("/api/student/assignments/overdue")
       .catch(() => ({ items: [] })),
   ]);
 
   // AFTER ✅ — endDateTime passed through, status computed dynamically
-  const mappedSessions: LiveSession[] = (sessionsData.sessions || []).map((s: ApiSessionRecord) => ({
-    id: s.id,
-    title: s.title || (s.module
-      ? `Module ${s.module.title} — ${s.batch?.course?.title}`
-      : `Live Session — ${s.batch?.course?.title}`),
-    courseTitle: s.batch?.course?.title || "Unknown Course",
-    instructor: s.batch?.instructor?.name || "TBD",
-    batchLabel: s.batch?.name || "—",
-    status: computeSessionStatus(s.scheduledAt, s.scheduledEndAt),
-    scheduledAt: s.scheduledAt,
-    endDateTime: s.scheduledEndAt,
-    joinUrl: s.joinUrl,
-    recordingSyncingIn: s.scheduledEndAt && new Date(s.scheduledEndAt) <= new Date() && !s.recording
-      ? "~20 min"
-      : undefined,
-  }));
+  const mappedSessions: LiveSession[] = (sessionsData.sessions || []).map(
+    (s: ApiSessionRecord) => ({
+      id: s.id,
+      title:
+        s.title ||
+        (s.module
+          ? `Module ${s.module.title} — ${s.batch?.course?.title}`
+          : `Live Session — ${s.batch?.course?.title}`),
+      courseTitle: s.batch?.course?.title || "Unknown Course",
+      instructor: s.batch?.instructor?.name || "TBD",
+      batchLabel: s.batch?.name || "—",
+      status: computeSessionStatus(s.scheduledAt, s.scheduledEndAt),
+      scheduledAt: s.scheduledAt,
+      endDateTime: s.scheduledEndAt,
+      joinUrl: s.joinUrl,
+      recordingSyncingIn:
+        s.scheduledEndAt &&
+        new Date(s.scheduledEndAt) <= new Date() &&
+        !s.recording
+          ? "~20 min"
+          : undefined,
+    }),
+  );
 
   return {
     stats: {
       enrolledCount: enrolled.courses.length,
-      completedCount: enrolled.courses.filter((c) => c.status === "COMPLETED").length,
+      completedCount: enrolled.courses.filter((c) => c.status === "COMPLETED")
+        .length,
       liveTodayCount: mappedSessions.filter((s) => s.status === "LIVE").length,
-      certificatesCount: (certs.certificates ?? []).filter((c) => c.earned).length,
+      certificatesCount: (certs.certificates ?? []).filter((c) => c.earned)
+        .length,
     },
     overdueAssignments: overdueAssignments.items,
     enrolledCourses: enrolled.courses,
     batches: {}, // batches loaded on demand via API
     liveSessions: mappedSessions,
     calendarEvents: calEvents.events,
-    mentorshipTickets: (tickets.tickets || []).map((t: ApiMentorshipTicket) => ({
-      id: t.id,
-      courseTitle: t.course?.title || "General",
-      topic: t.title,
-      status: t.status as MentorshipTicket["status"],
-      createdAt: t.createdAt,
-      notes: t.notes || undefined,
-      instructor: t.mentor?.name || undefined,
-      joinUrl: t.joinUrl || undefined,
-    })),
+    mentorshipTickets: (tickets.tickets || []).map(
+      (t: ApiMentorshipTicket) => ({
+        id: t.id,
+        courseTitle: t.course?.title || "General",
+        topic: t.title,
+        status: t.status as MentorshipTicket["status"],
+        createdAt: t.createdAt,
+        notes: t.notes || undefined,
+        instructor: t.mentor?.name || undefined,
+        joinUrl: t.joinUrl || undefined,
+      }),
+    ),
     certificates: certs.certificates,
     catalogue: catalogue.courses,
     continueLearning: [], // loaded from /api/student/continue-learning
@@ -219,7 +257,6 @@ async function fetchPortalData(): Promise<PortalData> {
 }
 
 async function fetchBatch(batchId: string): Promise<Batch | null> {
-
   try {
     const [batchRes, recordingsRes] = await Promise.all([
       api.get<ApiBatchDetailResponse>(`/api/batches/${batchId}`),
@@ -227,37 +264,56 @@ async function fetchBatch(batchId: string): Promise<Batch | null> {
     ]);
 
     const batch = batchRes.batch;
-    const recordingsBySession = new Map(recordingsRes.recordings.map((recording) => [recording.sessionId, recording]));
+    const recordingsBySession = new Map(
+      recordingsRes.recordings.map((recording) => [
+        recording.sessionId,
+        recording,
+      ]),
+    );
 
-    const recordings: Batch["recordings"] = batch.sessions.map((session, index) => {
-      const matchedRecording = recordingsBySession.get(session.id);
-      const watchedPercent = matchedRecording
-        ? matchedRecording.progress.reduce((max, progress) => {
-          const durationSeconds = 100;
-          const percent = Math.min(100, Math.round((progress.watchedSeconds / durationSeconds) * 100));
-          return Math.max(max, percent);
-        }, 0)
-        : 0;
+    const recordings: Batch["recordings"] = batch.sessions.map(
+      (session, index) => {
+        const matchedRecording = recordingsBySession.get(session.id);
+        const watchedPercent = matchedRecording
+          ? matchedRecording.progress.reduce((max, progress) => {
+              const durationSeconds = 100;
+              const percent = Math.min(
+                100,
+                Math.round((progress.watchedSeconds / durationSeconds) * 100),
+              );
+              return Math.max(max, percent);
+            }, 0)
+          : 0;
 
-      return {
-        id: matchedRecording?.id ?? session.id,
-        sessionId: session.id,
-        moduleId: matchedRecording?.moduleId ?? session.module?.id ?? undefined,
-        dayLabel: `Day ${index + 1}`,
-        title: session.module?.title ?? matchedRecording?.moduleTitle ?? "Recording",
-        duration: matchedRecording ? "Recorded session" : "Pending",
-        watchedPercent,
-        videoUrl: "",
-      };
-    });
+        return {
+          id: matchedRecording?.id ?? session.id,
+          sessionId: session.id,
+          moduleId:
+            matchedRecording?.moduleId ?? session.module?.id ?? undefined,
+          dayLabel: `Day ${index + 1}`,
+          title:
+            session.module?.title ??
+            matchedRecording?.moduleTitle ??
+            "Recording",
+          duration: matchedRecording ? "Recorded session" : "Pending",
+          watchedPercent,
+          videoUrl: "",
+        };
+      },
+    );
 
     const modules = Array.from(
       new Map(
         batch.sessions
           .map((session) => session.module)
-          .filter((module): module is NonNullable<typeof module> => Boolean(module))
-          .map((module) => [module.id, { id: module.id, title: module.title, completionPercent: 0 }])
-      ).values()
+          .filter((module): module is NonNullable<typeof module> =>
+            Boolean(module),
+          )
+          .map((module) => [
+            module.id,
+            { id: module.id, title: module.title, completionPercent: 0 },
+          ]),
+      ).values(),
     );
 
     return {
@@ -267,12 +323,21 @@ async function fetchBatch(batchId: string): Promise<Batch | null> {
       instructor: batch.instructor.name,
       startDate: batch.startDate,
       endDate: batch.endDate,
-      overallProgress: recordings.length > 0 ? Math.round(recordings.reduce((sum, item) => sum + item.watchedPercent, 0) / recordings.length) : 0,
+      overallProgress:
+        recordings.length > 0
+          ? Math.round(
+              recordings.reduce((sum, item) => sum + item.watchedPercent, 0) /
+                recordings.length,
+            )
+          : 0,
       sessions: batch.sessions.map((session, index) => ({
         id: session.id,
         dayLabel: `Day ${index + 1}`,
         title: session.module?.title ?? "Session",
-        status: computeSessionStatus(session.scheduledAt, session.scheduledEndAt),
+        status: computeSessionStatus(
+          session.scheduledAt,
+          session.scheduledEndAt,
+        ),
         scheduledAt: session.scheduledAt,
         endDateTime: session.scheduledEndAt,
         instructor: batch.instructor.name,
@@ -290,27 +355,50 @@ async function fetchBatch(batchId: string): Promise<Batch | null> {
 function buildBreadcrumbs(
   viewStack: ViewState[],
   data: PortalData | null,
-  jumpTo: (index: number) => void
+  jumpTo: (index: number) => void,
 ): Breadcrumb[] {
   return viewStack.map((entry, index) => {
     const isLast = index === viewStack.length - 1;
     const label = (() => {
       switch (entry.view) {
-        case "HOME": return "Home";
-        case "COURSES": return "Courses";
-        case "BATCH_DETAIL": return data?.batches[entry.params?.batchId ?? ""]?.courseTitle ?? "Batch";
-        case "RECORDING_PLAYER": return "Recording";
-        case "LIVE_SESSIONS": return "Live Sessions";
-        case "CALENDAR": return "Calendar";
-        case "MENTORSHIP": return "Mentorship";
-        case "CERTIFICATES": return "Certificates";
-        case "BROWSE_CATALOGUE": return "Browse Courses";
-        case "COURSE_DETAIL": return data?.catalogue.find((c) => c.id === entry.params?.courseId)?.title ?? "Course";
-        case "COURSE_CONTENT": return data?.enrolledCourses.find((c) => c.id === entry.params?.courseId)?.title ?? "Course";
-        case "ASSIGNMENT_OVERDUE": return "Assignment Overdue";
-        case "QUIZ_OVERDUE": return "Quiz Overdue";
-        case "COURSE_COMPLETED": return "Courses Completed";
-        default: return "—";
+        case "HOME":
+          return "Home";
+        case "COURSES":
+          return "Courses";
+        case "BATCH_DETAIL":
+          return (
+            data?.batches[entry.params?.batchId ?? ""]?.courseTitle ?? "Batch"
+          );
+        case "RECORDING_PLAYER":
+          return "Recording";
+        case "LIVE_SESSIONS":
+          return "Live Sessions";
+        case "CALENDAR":
+          return "Calendar";
+        case "MENTORSHIP":
+          return "Mentorship";
+        case "CERTIFICATES":
+          return "Certificates";
+        case "BROWSE_CATALOGUE":
+          return "Browse Courses";
+        case "COURSE_DETAIL":
+          return (
+            data?.catalogue.find((c) => c.id === entry.params?.courseId)
+              ?.title ?? "Course"
+          );
+        case "COURSE_CONTENT":
+          return (
+            data?.enrolledCourses.find((c) => c.id === entry.params?.courseId)
+              ?.title ?? "Course"
+          );
+        case "ASSIGNMENT_OVERDUE":
+          return "Assignment Overdue";
+        case "QUIZ_OVERDUE":
+          return "Quiz Overdue";
+        case "COURSE_COMPLETED":
+          return "Courses Completed";
+        default:
+          return "—";
       }
     })();
     return {
@@ -324,14 +412,18 @@ function buildBreadcrumbs(
 
 export default function StudentPortalPage() {
   return (
-    <Suspense fallback={
-      <StudentPortalShell>
-        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-border border-t-primary" />
-          <p className="text-sm text-muted-foreground">Loading your portal…</p>
-        </div>
-      </StudentPortalShell>
-    }>
+    <Suspense
+      fallback={
+        <StudentPortalShell>
+          <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-border border-t-primary" />
+            <p className="text-sm text-muted-foreground">
+              Loading your portal…
+            </p>
+          </div>
+        </StudentPortalShell>
+      }
+    >
       <StudentPortalContent />
     </Suspense>
   );
@@ -399,18 +491,26 @@ function StudentPortalContent() {
         setBatchCache(d.batches);
       })
       .catch((e) => {
-        if (active) setError(e instanceof Error ? e.message : "Failed to load portal data");
+        if (active)
+          setError(
+            e instanceof Error ? e.message : "Failed to load portal data",
+          );
       })
       .finally(() => {
         if (active) setIsLoading(false);
       });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   // Load current user profile for greeting
   useEffect(() => {
     let active = true;
-    api.get<{ user: { id: string; name: string; email: string; role: string } }>("/api/auth/me")
+    api
+      .get<{ user: { id: string; name: string; email: string; role: string } }>(
+        "/api/auth/me",
+      )
       .then((res) => {
         if (!active || !res || !res.user) return;
         setStudentName(res.user.name || "");
@@ -419,7 +519,9 @@ function StudentPortalContent() {
       .catch(() => {
         // ignore — keep demo values if unauthenticated
       });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   // Load batch on-demand when navigating to BATCH_DETAIL or RECORDING_PLAYER
@@ -432,16 +534,26 @@ function StudentPortalContent() {
         setBatchCache((prev) => ({ ...prev, [batchId]: b }));
       }
     });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [currentView, batchCache]);
 
   // ── Breadcrumbs ───────────────────────────────────────────────────────────
 
-  const breadcrumbs = buildBreadcrumbs(viewStack, data ? { ...data, batches: batchCache } : null, jumpTo);
+  const breadcrumbs = buildBreadcrumbs(
+    viewStack,
+    data ? { ...data, batches: batchCache } : null,
+    jumpTo,
+  );
 
   // ── Mentorship submit handler ─────────────────────────────────────────────
 
-  async function handleMentorshipSubmit(courseId: string, topic: string, preferredDate: string) {
+  async function handleMentorshipSubmit(
+    courseId: string,
+    topic: string,
+    preferredDate: string,
+  ) {
     setIsLoading(true);
     try {
       await api.post("/api/mentorship/tickets", {
@@ -466,7 +578,11 @@ function StudentPortalContent() {
       toast.success("Enrollment request submitted! Wait for admin approval.");
       await loadData();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to submit enrollment request");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to submit enrollment request",
+      );
       throw err;
     }
   }
@@ -478,7 +594,9 @@ function StudentPortalContent() {
       <StudentPortalShell>
         <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 animate-in fade-in duration-500">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-border border-t-primary" />
-          <p className="text-sm text-muted-foreground">Loading your portal...</p>
+          <p className="text-sm text-muted-foreground">
+            Loading your portal...
+          </p>
         </div>
       </StudentPortalShell>
     );
@@ -491,7 +609,10 @@ function StudentPortalContent() {
           <IconAlertCircle size={40} stroke={1.2} className="text-danger" />
           <p className="font-semibold text-foreground">Failed to load portal</p>
           <p className="text-sm text-muted-foreground">{error}</p>
-          <button onClick={() => window.location.reload()} className="btn-primary text-sm">
+          <button
+            onClick={() => window.location.reload()}
+            className="btn-primary text-sm"
+          >
             Retry
           </button>
         </div>
@@ -508,7 +629,7 @@ function StudentPortalContent() {
     switch (currentView.view) {
       case "HOME": {
         const firstBatchId = portalData.enrolledCourses.find(
-          (c) => c.status === "ACTIVE" && !!c.batchId
+          (c) => c.status === "ACTIVE" && !!c.batchId,
         )?.batchId;
         return (
           <HomeView
@@ -559,7 +680,10 @@ function StudentPortalContent() {
             onSelectRecording={(nextRecordingId) =>
               setViewStack((prev) => [
                 ...prev.slice(0, -1),
-                { view: "RECORDING_PLAYER", params: { batchId, sessionId: nextRecordingId } },
+                {
+                  view: "RECORDING_PLAYER",
+                  params: { batchId, sessionId: nextRecordingId },
+                },
               ])
             }
           />
@@ -585,7 +709,12 @@ function StudentPortalContent() {
         return <CertificatesView certificates={portalData.certificates} />;
 
       case "BROWSE_CATALOGUE":
-        return <BrowseCatalogueView courses={portalData.catalogue} navigate={navigate} />;
+        return (
+          <BrowseCatalogueView
+            courses={portalData.catalogue}
+            navigate={navigate}
+          />
+        );
 
       case "COURSE_DETAIL": {
         const courseId = currentView.params?.courseId ?? "";
@@ -597,29 +726,35 @@ function StudentPortalContent() {
       case "COURSE_CONTENT": {
         const courseId = currentView.params?.courseId ?? "";
         if (!courseId) return <NotFoundView />;
-        return <CourseContentView courseId={courseId} navigate={navigate} goBack={goBack} />;
+        return (
+          <CourseContentView
+            courseId={courseId}
+            navigate={navigate}
+            goBack={goBack}
+          />
+        );
       }
 
       case "ASSIGNMENT_OVERDUE":
         return (
           <AssignmentOverdueView
-            assignments={portalData.overdueAssignments.filter((a) => a.type === "ASSIGNMENT")}
+            assignments={portalData.overdueAssignments.filter(
+              (a) => a.type === "ASSIGNMENT",
+            )}
           />
         );
 
       case "QUIZ_OVERDUE":
         return (
           <QuizOverdueView
-            quizzes={portalData.overdueAssignments.filter((a) => a.type === "QUIZ")}
+            quizzes={portalData.overdueAssignments.filter(
+              (a) => a.type === "QUIZ",
+            )}
           />
         );
 
       case "COURSE_COMPLETED":
-        return (
-          <CourseCompletedView
-            courses={portalData.enrolledCourses}
-          />
-        );
+        return <CourseCompletedView courses={portalData.enrolledCourses} />;
 
       default:
         return <NotFoundView />;
@@ -639,11 +774,8 @@ function StudentPortalContent() {
       hideLogo={isCourseContent}
       hideHeader={isCourseContent}
     >
-
       {/* View transition wrapper */}
-      <div key={viewStack.map((v) => v.view).join("-")}>
-        {renderView()}
-      </div>
+      <div key={viewStack.map((v) => v.view).join("-")}>{renderView()}</div>
     </StudentPortalShell>
   );
 }
@@ -664,7 +796,9 @@ function NotFoundView() {
     <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center">
       <IconSearch size={40} stroke={1.2} className="text-muted" />
       <p className="font-semibold text-foreground">Page not found</p>
-      <p className="text-sm text-muted-foreground">This view doesn&apos;t exist in the portal.</p>
+      <p className="text-sm text-muted-foreground">
+        This view doesn&apos;t exist in the portal.
+      </p>
     </div>
   );
 }

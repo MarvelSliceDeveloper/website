@@ -1,17 +1,19 @@
-import { z } from 'zod';
-import { prisma } from '../../utils/prisma';
-import * as fs from 'fs';
-import * as path from 'path';
+import { z } from "zod";
+import { prisma } from "../../utils/prisma";
+import * as fs from "fs";
+import * as path from "path";
 
 export const CreateLessonSchema = z.object({
   title: z.string().min(2).max(200),
   description: z.string().optional(),
-  videoType: z.enum(['upload', 'youtube', 'vimeo', 'loom', 'url']).optional(),
+  videoType: z.enum(["upload", "youtube", "vimeo", "loom", "url"]).optional(),
   videoUrl: z.string().url().optional(),
   videoEmbedId: z.string().optional(),
   durationSeconds: z.number().int().min(0).optional(),
   isFreePreview: z.boolean().optional(),
-  resources: z.array(z.object({ name: z.string(), url: z.string().url() })).optional(),
+  resources: z
+    .array(z.object({ name: z.string(), url: z.string().url() }))
+    .optional(),
 });
 
 export const UpdateLessonSchema = CreateLessonSchema.partial();
@@ -21,12 +23,14 @@ export const ReorderLessonsSchema = z.object({
 });
 
 function parseVideoUrl(url: string): { type: string; embedId: string } | null {
-  const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  if (ytMatch) return { type: 'youtube', embedId: ytMatch[1] };
+  const ytMatch = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+  );
+  if (ytMatch) return { type: "youtube", embedId: ytMatch[1] };
   const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeoMatch) return { type: 'vimeo', embedId: vimeoMatch[1] };
+  if (vimeoMatch) return { type: "vimeo", embedId: vimeoMatch[1] };
   const loomMatch = url.match(/loom\.com\/(?:share|embed)\/([a-zA-Z0-9]+)/);
-  if (loomMatch) return { type: 'loom', embedId: loomMatch[1] };
+  if (loomMatch) return { type: "loom", embedId: loomMatch[1] };
   return null;
 }
 
@@ -34,16 +38,16 @@ export const lessonService = {
   async getLessonsByModule(moduleId: string) {
     return prisma.lesson.findMany({
       where: { moduleId },
-      orderBy: { order: 'asc' },
+      orderBy: { order: "asc" },
     });
   },
   async addLesson(moduleId: string, data: z.infer<typeof CreateLessonSchema>) {
     const module = await prisma.module.findUnique({ where: { id: moduleId } });
-    if (!module) throw new Error('Module not found');
+    if (!module) throw new Error("Module not found");
 
     const lastLesson = await prisma.lesson.findFirst({
       where: { moduleId },
-      orderBy: { order: 'desc' },
+      orderBy: { order: "desc" },
     });
     const nextOrder = (lastLesson?.order ?? -1) + 1;
 
@@ -51,8 +55,12 @@ export const lessonService = {
     let videoEmbedId = data.videoEmbedId;
     if (data.videoUrl && !videoType) {
       const parsed = parseVideoUrl(data.videoUrl);
-      if (parsed) { videoType = parsed.type; videoEmbedId = parsed.embedId; }
-      else { videoType = 'url'; }
+      if (parsed) {
+        videoType = parsed.type;
+        videoEmbedId = parsed.embedId;
+      } else {
+        videoType = "url";
+      }
     }
 
     return prisma.lesson.create({
@@ -71,15 +79,24 @@ export const lessonService = {
     });
   },
 
-  async updateLesson(lessonId: string, data: z.infer<typeof UpdateLessonSchema>) {
-    const existing = await prisma.lesson.findUnique({ where: { id: lessonId } });
-    if (!existing) throw new Error('Lesson not found');
+  async updateLesson(
+    lessonId: string,
+    data: z.infer<typeof UpdateLessonSchema>,
+  ) {
+    const existing = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+    });
+    if (!existing) throw new Error("Lesson not found");
 
     const updateData: any = { ...data };
     if (data.videoUrl && data.videoUrl !== existing.videoUrl) {
       const parsed = parseVideoUrl(data.videoUrl);
-      if (parsed) { updateData.videoType = parsed.type; updateData.videoEmbedId = parsed.embedId; }
-      else if (!data.videoType) { updateData.videoType = 'url'; }
+      if (parsed) {
+        updateData.videoType = parsed.type;
+        updateData.videoEmbedId = parsed.embedId;
+      } else if (!data.videoType) {
+        updateData.videoType = "url";
+      }
     }
 
     return prisma.lesson.update({ where: { id: lessonId }, data: updateData });
@@ -87,25 +104,25 @@ export const lessonService = {
 
   async deleteLesson(lessonId: string) {
     const lesson = await prisma.lesson.findUnique({ where: { id: lessonId } });
-    if (!lesson) throw new Error('Lesson not found');
+    if (!lesson) throw new Error("Lesson not found");
 
     await prisma.lesson.delete({ where: { id: lessonId } });
 
     const remaining = await prisma.lesson.findMany({
       where: { moduleId: lesson.moduleId },
-      orderBy: { order: 'asc' },
+      orderBy: { order: "asc" },
     });
     await Promise.all(
       remaining.map((l, index) =>
-        prisma.lesson.update({ where: { id: l.id }, data: { order: index } })
-      )
+        prisma.lesson.update({ where: { id: l.id }, data: { order: index } }),
+      ),
     );
     return { deleted: true };
   },
 
   async reorderLessons(moduleId: string, lessonIds: string[]) {
     const module = await prisma.module.findUnique({ where: { id: moduleId } });
-    if (!module) throw new Error('Module not found');
+    if (!module) throw new Error("Module not found");
 
     const lessons = await prisma.lesson.findMany({
       where: { moduleId },
@@ -113,46 +130,72 @@ export const lessonService = {
     });
     const existingIds = new Set(lessons.map((l) => l.id));
     if (!lessonIds.every((id) => existingIds.has(id)))
-      throw new Error('Some lesson IDs do not belong to this module');
+      throw new Error("Some lesson IDs do not belong to this module");
 
     await Promise.all(
       lessonIds.map((id, index) =>
-        prisma.lesson.update({ where: { id }, data: { order: index } })
-      )
+        prisma.lesson.update({ where: { id }, data: { order: index } }),
+      ),
     );
     return { reordered: true };
   },
 
-  async addResource(lessonId: string, filename: string, originalName: string, fileType: string, fileSize: number, url: string) {
+  async addResource(
+    lessonId: string,
+    filename: string,
+    originalName: string,
+    fileType: string,
+    fileSize: number,
+    url: string,
+  ) {
     const lesson = await prisma.lesson.findUnique({ where: { id: lessonId } });
-    if (!lesson) throw new Error('Lesson not found');
+    if (!lesson) throw new Error("Lesson not found");
 
-    const resourceId = require('crypto').randomUUID();
+    const resourceId = require("crypto").randomUUID();
     const resources = Array.isArray(lesson.resources) ? lesson.resources : [];
 
-    const newResource = { id: resourceId, name: filename, originalName, url, fileType, size: fileSize, uploadedAt: new Date().toISOString() };
+    const newResource = {
+      id: resourceId,
+      name: filename,
+      originalName,
+      url,
+      fileType,
+      size: fileSize,
+      uploadedAt: new Date().toISOString(),
+    };
     resources.push(newResource);
 
-    await prisma.lesson.update({ where: { id: lessonId }, data: { resources } });
+    await prisma.lesson.update({
+      where: { id: lessonId },
+      data: { resources },
+    });
     return newResource;
   },
 
   async deleteResource(lessonId: string, resourceId: string) {
     const lesson = await prisma.lesson.findUnique({ where: { id: lessonId } });
-    if (!lesson) throw new Error('Lesson not found');
+    if (!lesson) throw new Error("Lesson not found");
 
     const resources = Array.isArray(lesson.resources) ? lesson.resources : [];
     const resource = resources.find((r: any) => r.id === resourceId);
-    if (!resource) throw new Error('Resource not found');
+    if (!resource) throw new Error("Resource not found");
 
     try {
-      const uploadsRoot = path.resolve(__dirname, '..', '..', '..', 'uploads');
-      const filePath = path.join(uploadsRoot, (resource as any).url.replace(/^.*\/uploads/, ''));
+      const uploadsRoot = path.resolve(__dirname, "..", "..", "..", "uploads");
+      const filePath = path.join(
+        uploadsRoot,
+        (resource as any).url.replace(/^.*\/uploads/, ""),
+      );
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    } catch (err) { console.error('Error deleting resource file:', err); }
+    } catch (err) {
+      console.error("Error deleting resource file:", err);
+    }
 
     const updatedResources = resources.filter((r: any) => r.id !== resourceId);
-    await prisma.lesson.update({ where: { id: lessonId }, data: { resources: updatedResources } });
+    await prisma.lesson.update({
+      where: { id: lessonId },
+      data: { resources: updatedResources },
+    });
     return { deleted: true };
   },
 };

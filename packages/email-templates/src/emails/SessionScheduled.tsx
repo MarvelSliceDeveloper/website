@@ -18,9 +18,7 @@ export default function SessionScheduled({
   batchName,
 }: SessionScheduledProps) {
   return (
-    <BaseLayout
-      previewText={`Live session scheduled: ${sessionTitle}`}
-    >
+    <BaseLayout previewText={`Live session scheduled: ${sessionTitle}`}>
       <Heading style={headingStyle}>Live Session Scheduled</Heading>
       <Text style={textStyle}>
         A new live session has been scheduled for your course.
@@ -41,7 +39,8 @@ export default function SessionScheduled({
         </Button>
       </Section>
       <Text style={textStyle}>
-        Please make sure to join on time. The session link will be available in your dashboard as well.
+        Please make sure to join on time. The session link will be available in
+        your dashboard as well.
       </Text>
     </BaseLayout>
   );

@@ -1,122 +1,167 @@
-import { Response } from 'express';
-import { AuthRequest } from '../../middleware/auth.middleware';
-import { notificationService } from './notification.service';
+import { Response } from "express";
+import { AuthRequest } from "../../middleware/auth.middleware";
+import { notificationService } from "./notification.service";
 
 export const notificationController = {
   async list(req: AuthRequest, res: Response) {
     try {
-      if (!req.user) return res.status(401).json({ error: 'Authentication required' });
-      const notifications = await notificationService.listForUser(req.user.userId);
-      const unreadCount = await notificationService.unreadCount(req.user.userId);
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
+      const notifications = await notificationService.listForUser(
+        req.user.userId,
+      );
+      const unreadCount = await notificationService.unreadCount(
+        req.user.userId,
+      );
       return res.status(200).json({ notifications, unreadCount });
     } catch (error: any) {
-      console.error('Error listing notifications:', error.message);
-      return res.status(500).json({ error: 'Failed to list notifications' });
+      console.error("Error listing notifications:", error.message);
+      return res.status(500).json({ error: "Failed to list notifications" });
     }
   },
 
   async markAsRead(req: AuthRequest, res: Response) {
     try {
-      if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
       await notificationService.markAsRead(req.params.id, req.user.userId);
-      return res.status(200).json({ message: 'Notification marked as read' });
+      return res.status(200).json({ message: "Notification marked as read" });
     } catch (error: any) {
-      console.error('Error marking notification as read:', error.message);
-      return res.status(500).json({ error: 'Failed to mark notification as read' });
+      console.error("Error marking notification as read:", error.message);
+      return res
+        .status(500)
+        .json({ error: "Failed to mark notification as read" });
     }
   },
 
   async markAllAsRead(req: AuthRequest, res: Response) {
     try {
-      if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
       await notificationService.markAllAsRead(req.user.userId);
-      return res.status(200).json({ message: 'All notifications marked as read' });
+      return res
+        .status(200)
+        .json({ message: "All notifications marked as read" });
     } catch (error: any) {
-      console.error('Error marking all notifications as read:', error.message);
-      return res.status(500).json({ error: 'Failed to mark all notifications as read' });
+      console.error("Error marking all notifications as read:", error.message);
+      return res
+        .status(500)
+        .json({ error: "Failed to mark all notifications as read" });
     }
   },
 
   async delete(req: AuthRequest, res: Response) {
     try {
-      if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
       await notificationService.delete(req.params.id, req.user.userId);
-      return res.status(200).json({ message: 'Notification deleted' });
+      return res.status(200).json({ message: "Notification deleted" });
     } catch (error: any) {
-      console.error('Error deleting notification:', error.message);
-      return res.status(500).json({ error: 'Failed to delete notification' });
+      console.error("Error deleting notification:", error.message);
+      return res.status(500).json({ error: "Failed to delete notification" });
     }
   },
 
   async clearRead(req: AuthRequest, res: Response) {
     try {
-      if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
       const count = await notificationService.deleteAllRead(req.user.userId);
-      return res.status(200).json({ message: `Cleared ${count} read notifications` });
+      return res
+        .status(200)
+        .json({ message: `Cleared ${count} read notifications` });
     } catch (error: any) {
-      console.error('Error clearing read notifications:', error.message);
-      return res.status(500).json({ error: 'Failed to clear read notifications' });
+      console.error("Error clearing read notifications:", error.message);
+      return res
+        .status(500)
+        .json({ error: "Failed to clear read notifications" });
     }
   },
 
   async getPreferences(req: AuthRequest, res: Response) {
     try {
-      if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
       const prefs = await notificationService.getPreferences(req.user.userId);
       return res.status(200).json({ preferences: prefs });
     } catch (error: any) {
-      console.error('Error getting preferences:', error.message);
-      return res.status(500).json({ error: 'Failed to get preferences' });
+      console.error("Error getting preferences:", error.message);
+      return res.status(500).json({ error: "Failed to get preferences" });
     }
   },
 
   async updatePreference(req: AuthRequest, res: Response) {
     try {
-      if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
       const { type, enabled, email } = req.body;
-      if (!type) return res.status(400).json({ error: 'type is required' });
-      const pref = await notificationService.updatePreference(req.user.userId, type, { enabled, email });
+      if (!type) return res.status(400).json({ error: "type is required" });
+      const pref = await notificationService.updatePreference(
+        req.user.userId,
+        type,
+        { enabled, email },
+      );
       return res.status(200).json({ preference: pref });
     } catch (error: any) {
-      console.error('Error updating preference:', error.message);
-      return res.status(500).json({ error: 'Failed to update preference' });
+      console.error("Error updating preference:", error.message);
+      return res.status(500).json({ error: "Failed to update preference" });
     }
   },
 
   async sendNotification(req: AuthRequest, res: Response) {
     try {
-      if (!req.user) return res.status(401).json({ error: 'Authentication required' });
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
 
       const { targetType, targetIds, title, message, type } = req.body;
 
-      if (!targetType || !['ALL_USERS', 'BATCH', 'COURSE'].includes(targetType)) {
-        return res.status(400).json({ error: 'targetType must be ALL_USERS, BATCH, or COURSE' });
+      if (
+        !targetType ||
+        !["ALL_USERS", "BATCH", "COURSE"].includes(targetType)
+      ) {
+        return res
+          .status(400)
+          .json({ error: "targetType must be ALL_USERS, BATCH, or COURSE" });
       }
-      if (targetType !== 'ALL_USERS' && (!targetIds || !Array.isArray(targetIds) || targetIds.length === 0)) {
-        return res.status(400).json({ error: 'targetIds must be a non-empty array for BATCH or COURSE targets' });
+      if (
+        targetType !== "ALL_USERS" &&
+        (!targetIds || !Array.isArray(targetIds) || targetIds.length === 0)
+      ) {
+        return res.status(400).json({
+          error:
+            "targetIds must be a non-empty array for BATCH or COURSE targets",
+        });
       }
-      if (!title || typeof title !== 'string' || title.trim().length === 0) {
-        return res.status(400).json({ error: 'title is required' });
+      if (!title || typeof title !== "string" || title.trim().length === 0) {
+        return res.status(400).json({ error: "title is required" });
       }
-      if (!message || typeof message !== 'string' || message.trim().length === 0) {
-        return res.status(400).json({ error: 'message is required' });
+      if (
+        !message ||
+        typeof message !== "string" ||
+        message.trim().length === 0
+      ) {
+        return res.status(400).json({ error: "message is required" });
       }
 
-      const result = await notificationService.sendNotification(req.user.userId, req.user.role, {
-        targetType,
-        targetIds: targetIds ?? [],
-        title: title.trim(),
-        message: message.trim(),
-        type,
-      });
+      const result = await notificationService.sendNotification(
+        req.user.userId,
+        req.user.role,
+        {
+          targetType,
+          targetIds: targetIds ?? [],
+          title: title.trim(),
+          message: message.trim(),
+          type,
+        },
+      );
 
       return res.status(200).json({
         message: `Notification sent to ${result.count} users`,
         count: result.count,
       });
     } catch (error: any) {
-      console.error('Error sending notification:', error.message);
-      return res.status(500).json({ error: 'Failed to send notification' });
+      console.error("Error sending notification:", error.message);
+      return res.status(500).json({ error: "Failed to send notification" });
     }
   },
 };

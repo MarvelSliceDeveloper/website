@@ -6,8 +6,10 @@ interface CertificatesViewProps {
   certificates: Certificate[];
 }
 
-export default function CertificatesView({ certificates }: CertificatesViewProps) {
-  const earned    = certificates.filter((c) => c.earned);
+export default function CertificatesView({
+  certificates,
+}: CertificatesViewProps) {
+  const earned = certificates.filter((c) => c.earned);
   const inProgress = certificates.filter((c) => !c.earned);
 
   return (
@@ -24,7 +26,9 @@ export default function CertificatesView({ certificates }: CertificatesViewProps
         {earned.length === 0 ? (
           <div className="glass-card flex flex-col items-center gap-3 py-12 text-center">
             <span className="text-4xl">🎓</span>
-            <p className="text-sm text-muted-foreground">Complete a course to earn your first certificate.</p>
+            <p className="text-sm text-muted-foreground">
+              Complete a course to earn your first certificate.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -38,10 +42,16 @@ export default function CertificatesView({ certificates }: CertificatesViewProps
                     🎓
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-foreground">{cert.courseTitle}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{cert.batchLabel}</p>
+                    <p className="font-semibold text-foreground">
+                      {cert.courseTitle}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {cert.batchLabel}
+                    </p>
                     {cert.issuedAt && (
-                      <p className="mt-0.5 text-xs text-muted">Issued: {cert.issuedAt}</p>
+                      <p className="mt-0.5 text-xs text-muted">
+                        Issued: {cert.issuedAt}
+                      </p>
                     )}
                     {cert.verifyUrl && (
                       <p className="mt-0.5 truncate text-[11px] text-muted">
@@ -59,8 +69,12 @@ export default function CertificatesView({ certificates }: CertificatesViewProps
                   </div>
                 </div>
                 <div className="mt-4 flex gap-2">
-                  <button className="btn-primary flex-1 text-xs">Download PDF</button>
-                  <button className="btn-secondary flex-1 text-xs">Share</button>
+                  <button className="btn-primary flex-1 text-xs">
+                    Download PDF
+                  </button>
+                  <button className="btn-secondary flex-1 text-xs">
+                    Share
+                  </button>
                 </div>
               </div>
             ))}
@@ -72,7 +86,9 @@ export default function CertificatesView({ certificates }: CertificatesViewProps
       <div>
         <p className="sp-eyebrow mb-3">In Progress</p>
         {inProgress.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No courses in progress.</p>
+          <p className="text-sm text-muted-foreground">
+            No courses in progress.
+          </p>
         ) : (
           <div className="space-y-3">
             {inProgress.map((cert) => (
@@ -82,8 +98,12 @@ export default function CertificatesView({ certificates }: CertificatesViewProps
                     📖
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-foreground">{cert.courseTitle}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{cert.batchLabel}</p>
+                    <p className="font-semibold text-foreground">
+                      {cert.courseTitle}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {cert.batchLabel}
+                    </p>
                     <div className="mt-3">
                       <div className="mb-1.5 flex items-center justify-between text-xs text-muted">
                         <span>Completion</span>
@@ -95,7 +115,9 @@ export default function CertificatesView({ certificates }: CertificatesViewProps
                           style={{ width: `${cert.completionPercent}%` }}
                         />
                       </div>
-                      <p className="mt-1.5 text-xs text-muted">Certificate unlocks at 100%</p>
+                      <p className="mt-1.5 text-xs text-muted">
+                        Certificate unlocks at 100%
+                      </p>
                     </div>
                   </div>
                 </div>

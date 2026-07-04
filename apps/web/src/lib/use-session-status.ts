@@ -9,7 +9,9 @@ export function useComputedStatus(session: LiveSession): ComputedStatus {
     const now = Date.now();
     const start = new Date(session.scheduledAt).getTime();
 
-    const rawEnd = session.endDateTime ?? (session as LiveSession & { endAt?: string }).endAt;
+    const rawEnd =
+      session.endDateTime ??
+      (session as LiveSession & { endAt?: string }).endAt;
     let end = new Date(rawEnd).getTime();
 
     // Fallback: if no valid end time, assume session lasts 1 hour

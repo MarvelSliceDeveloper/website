@@ -11,9 +11,20 @@ interface BrowseCatalogueViewProps {
   navigate: (v: ViewState) => void;
 }
 
-const ALL_TAGS = ["All", "Programming", "Data", "Frontend", "Backend", "DevOps", "Design"];
+const ALL_TAGS = [
+  "All",
+  "Programming",
+  "Data",
+  "Frontend",
+  "Backend",
+  "DevOps",
+  "Design",
+];
 
-export default function BrowseCatalogueView({ courses, navigate }: BrowseCatalogueViewProps) {
+export default function BrowseCatalogueView({
+  courses,
+  navigate,
+}: BrowseCatalogueViewProps) {
   const [search, setSearch] = useState("");
   const [tag, setTag] = useState("All");
 
@@ -22,7 +33,9 @@ export default function BrowseCatalogueView({ courses, navigate }: BrowseCatalog
       search.trim() === "" ||
       c.title.toLowerCase().includes(search.toLowerCase()) ||
       c.instructor.toLowerCase().includes(search.toLowerCase());
-    const matchesTag = tag === "All" || c.tags.some((t) => t.toLowerCase() === tag.toLowerCase());
+    const matchesTag =
+      tag === "All" ||
+      c.tags.some((t) => t.toLowerCase() === tag.toLowerCase());
     return matchesSearch && matchesTag;
   });
 
@@ -40,7 +53,10 @@ export default function BrowseCatalogueView({ courses, navigate }: BrowseCatalog
       {/* Search + Tag filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <IconSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+          <IconSearch
+            size={15}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+          />
           <input
             type="text"
             placeholder="Search courses…"
@@ -54,10 +70,11 @@ export default function BrowseCatalogueView({ courses, navigate }: BrowseCatalog
             <button
               key={t}
               onClick={() => setTag(t)}
-              className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-sm font-medium transition-all ${tag === t
+              className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-sm font-medium transition-all ${
+                tag === t
                   ? "border-primary bg-primary/15 text-primary"
                   : "border-border bg-card text-muted-foreground hover:border-border-hover hover:text-foreground"
-                }`}
+              }`}
             >
               {t}
             </button>
@@ -70,18 +87,27 @@ export default function BrowseCatalogueView({ courses, navigate }: BrowseCatalog
         <div className="glass-card flex flex-col items-center gap-3 py-16 text-center">
           <span className="text-4xl">🔍</span>
           <p className="font-semibold text-foreground">No courses found</p>
-          <p className="text-sm text-muted-foreground">Try different search terms or filters.</p>
+          <p className="text-sm text-muted-foreground">
+            Try different search terms or filters.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
           {filtered.map((course) => (
-            <div key={course.id} className="glass-card group overflow-hidden transition-all hover:-translate-y-0.5 hover:border-primary/30">
+            <div
+              key={course.id}
+              className="glass-card group overflow-hidden transition-all hover:-translate-y-0.5 hover:border-primary/30"
+            >
               <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
                 {/* Thumbnail */}
                 <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-card text-3xl overflow-hidden">
                   {(() => {
-                    const thumb = (course as CatalogueCourse & { thumbnailUrl?: string }).thumbnailUrl || course.thumbnail;
-                    const isValidUrl = thumb && (thumb.startsWith("/") || thumb.startsWith("http"));
+                    const thumb =
+                      (course as CatalogueCourse & { thumbnailUrl?: string })
+                        .thumbnailUrl || course.thumbnail;
+                    const isValidUrl =
+                      thumb &&
+                      (thumb.startsWith("/") || thumb.startsWith("http"));
                     return isValidUrl ? (
                       <Image
                         src={thumb}
@@ -107,10 +133,15 @@ export default function BrowseCatalogueView({ courses, navigate }: BrowseCatalog
                 {/* Info */}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-start justify-between gap-2">
-                    <p className="font-semibold text-foreground">{course.title}</p>
+                    <p className="font-semibold text-foreground">
+                      {course.title}
+                    </p>
                     <div className="flex flex-wrap gap-1.5">
                       {course.tags.map((t) => (
-                        <span key={t} className="rounded-full border border-border bg-card px-2 py-0.5 text-[11px] text-muted">
+                        <span
+                          key={t}
+                          className="rounded-full border border-border bg-card px-2 py-0.5 text-[11px] text-muted"
+                        >
                           {t}
                         </span>
                       ))}
@@ -118,9 +149,13 @@ export default function BrowseCatalogueView({ courses, navigate }: BrowseCatalog
                   </div>
                   <p className="mt-0.5 text-sm text-muted-foreground">
                     {course.duration} · Instructor: {course.instructor} ·{" "}
-                    <span className="font-semibold text-foreground">₹{course.price.toLocaleString("en-IN")}</span>
+                    <span className="font-semibold text-foreground">
+                      ₹{course.price.toLocaleString("en-IN")}
+                    </span>
                   </p>
-                  <p className="mt-0.5 text-xs text-muted">Next Batch: {course.nextBatch}</p>
+                  <p className="mt-0.5 text-xs text-muted">
+                    Next Batch: {course.nextBatch}
+                  </p>
                 </div>
 
                 {/* CTA */}
@@ -131,7 +166,12 @@ export default function BrowseCatalogueView({ courses, navigate }: BrowseCatalog
                     </span>
                   ) : (
                     <button
-                      onClick={() => navigate({ view: "COURSE_DETAIL", params: { courseId: course.id } })}
+                      onClick={() =>
+                        navigate({
+                          view: "COURSE_DETAIL",
+                          params: { courseId: course.id },
+                        })
+                      }
                       className="btn-primary text-sm"
                     >
                       Enroll Now →

@@ -14,9 +14,7 @@ export default function SessionCancelled({
   batchName,
 }: SessionCancelledProps) {
   return (
-    <BaseLayout
-      previewText={`Session cancelled: ${sessionTitle}`}
-    >
+    <BaseLayout previewText={`Session cancelled: ${sessionTitle}`}>
       <Heading style={headingStyle}>Session Cancelled</Heading>
       <Text style={textStyle}>
         The following live session has been cancelled.
@@ -30,7 +28,8 @@ export default function SessionCancelled({
         <Text style={valueStyle}>{sessionTitle}</Text>
       </Section>
       <Text style={textStyle}>
-        You'll be notified when a new session is scheduled. Check your dashboard for updates.
+        You'll be notified when a new session is scheduled. Check your dashboard
+        for updates.
       </Text>
     </BaseLayout>
   );

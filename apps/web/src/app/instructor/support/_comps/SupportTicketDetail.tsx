@@ -5,11 +5,7 @@ import { api } from "@/lib/api";
 import { timeAgo } from "@/lib/time-ago";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { toast } from "@/lib/toast";
-import {
-  IconArrowLeft,
-  IconSend,
-  IconX,
-} from "@tabler/icons-react";
+import { IconArrowLeft, IconSend, IconX } from "@tabler/icons-react";
 import type { SupportTicket } from "./constants";
 import { STATUS_CONFIG } from "./constants";
 
@@ -18,7 +14,10 @@ interface SupportTicketDetailProps {
   onBack: () => void;
 }
 
-export default function SupportTicketDetail({ ticketId, onBack }: SupportTicketDetailProps) {
+export default function SupportTicketDetail({
+  ticketId,
+  onBack,
+}: SupportTicketDetailProps) {
   const [ticket, setTicket] = useState<SupportTicket | null>(null);
   const [loading, setLoading] = useState(true);
   const [replyText, setReplyText] = useState("");
@@ -29,7 +28,9 @@ export default function SupportTicketDetail({ ticketId, onBack }: SupportTicketD
     async function load() {
       try {
         setLoading(true);
-        const data = await api.get<{ ticket: SupportTicket }>(`/api/tickets/${ticketId}`);
+        const data = await api.get<{ ticket: SupportTicket }>(
+          `/api/tickets/${ticketId}`,
+        );
         if (!cancelled) setTicket(data.ticket);
       } catch {
         if (!cancelled) toast.error("Failed to load ticket");
@@ -38,16 +39,22 @@ export default function SupportTicketDetail({ ticketId, onBack }: SupportTicketD
       }
     }
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [ticketId]);
 
   async function sendReply() {
     if (!ticket || !replyText.trim()) return;
     setSendingReply(true);
     try {
-      await api.post(`/api/tickets/${ticket.id}/messages`, { message: replyText });
+      await api.post(`/api/tickets/${ticket.id}/messages`, {
+        message: replyText,
+      });
       setReplyText("");
-      const data = await api.get<{ ticket: SupportTicket }>(`/api/tickets/${ticketId}`);
+      const data = await api.get<{ ticket: SupportTicket }>(
+        `/api/tickets/${ticketId}`,
+      );
       setTicket(data.ticket);
     } catch {
       toast.error("Failed to send reply");
@@ -71,7 +78,9 @@ export default function SupportTicketDetail({ ticketId, onBack }: SupportTicketD
     return (
       <div className="mx-auto max-w-3xl py-20 text-center">
         <p className="text-muted-foreground">Ticket not found.</p>
-        <button onClick={onBack} className="btn-secondary mt-4 text-sm">Go Back</button>
+        <button onClick={onBack} className="btn-secondary mt-4 text-sm">
+          Go Back
+        </button>
       </div>
     );
   }
@@ -87,11 +96,17 @@ export default function SupportTicketDetail({ ticketId, onBack }: SupportTicketD
 
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Instructor</p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground">{ticket.title}</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
+            Instructor
+          </p>
+          <h1 className="mt-1 text-2xl font-bold text-foreground">
+            {ticket.title}
+          </h1>
           <div className="mt-2 flex items-center gap-3">
             <StatusBadge status={ticket.status} config={STATUS_CONFIG} />
-            <span className="text-xs text-muted">{timeAgo(ticket.createdAt)}</span>
+            <span className="text-xs text-muted">
+              {timeAgo(ticket.createdAt)}
+            </span>
           </div>
         </div>
         <button
@@ -102,33 +117,42 @@ export default function SupportTicketDetail({ ticketId, onBack }: SupportTicketD
         </button>
       </div>
 
-      <p className="text-sm text-muted-foreground border-l-2 border-border pl-4">{ticket.description}</p>
+      <p className="text-sm text-muted-foreground border-l-2 border-border pl-4">
+        {ticket.description}
+      </p>
 
       <div className="rounded-xl border border-border/60 bg-card">
         <div className="border-b border-border px-5 py-3.5">
           <p className="text-sm font-semibold text-foreground">
-            Conversation {ticket.messages?.length ? `(${ticket.messages.length})` : ""}
+            Conversation{" "}
+            {ticket.messages?.length ? `(${ticket.messages.length})` : ""}
           </p>
         </div>
         <div className="max-h-96 overflow-y-auto space-y-3 p-5">
-          {(!ticket.messages || ticket.messages.length === 0) ? (
-            <p className="text-center text-sm text-muted py-10">No messages yet. Admin will respond shortly.</p>
+          {!ticket.messages || ticket.messages.length === 0 ? (
+            <p className="text-center text-sm text-muted py-10">
+              No messages yet. Admin will respond shortly.
+            </p>
           ) : (
             ticket.messages.map((msg) => (
               <div
                 key={msg.id}
                 className={`flex ${msg.sender.role === "ADMIN" ? "justify-start" : "justify-end"}`}
               >
-                <div className={`max-w-lg rounded-xl px-4 py-2.5 text-sm ${
-                  msg.sender.role === "ADMIN"
-                    ? "bg-card-hover text-foreground border border-border"
-                    : "bg-primary text-white"
-                }`}>
+                <div
+                  className={`max-w-lg rounded-xl px-4 py-2.5 text-sm ${
+                    msg.sender.role === "ADMIN"
+                      ? "bg-card-hover text-foreground border border-border"
+                      : "bg-primary text-white"
+                  }`}
+                >
                   <p className="text-[10px] font-semibold mb-1 opacity-70 uppercase tracking-wider">
                     {msg.sender.role === "ADMIN" ? "Admin" : "You"}
                   </p>
                   <p className="leading-relaxed">{msg.message}</p>
-                  <p className="text-[10px] mt-1.5 opacity-60">{timeAgo(msg.createdAt)}</p>
+                  <p className="text-[10px] mt-1.5 opacity-60">
+                    {timeAgo(msg.createdAt)}
+                  </p>
                 </div>
               </div>
             ))
@@ -141,7 +165,11 @@ export default function SupportTicketDetail({ ticketId, onBack }: SupportTicketD
                 type="text"
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), sendReply())}
+                onKeyDown={(e) =>
+                  e.key === "Enter" &&
+                  !e.shiftKey &&
+                  (e.preventDefault(), sendReply())
+                }
                 placeholder="Type your reply..."
                 className="field flex-1"
               />
