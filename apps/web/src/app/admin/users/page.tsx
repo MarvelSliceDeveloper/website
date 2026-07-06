@@ -9,7 +9,7 @@ import DataTable from "@/components/admin/DataTable";
 import type { DataTableColumn } from "@/components/admin/DataTable";
 import { FormModal } from "@/components/admin/FormModal";
 import { ConfirmModal } from "@/components/admin/ConfirmModal";
-import { EmptyState } from "@/components/admin/EmptyState";
+import { EmptyState } from "@/components/shared/EmptyState";
 import {
   IconShield,
   IconChalkboardTeacher,
@@ -272,6 +272,7 @@ export default function AdminUsersPage() {
         loading={loading}
         emptyState={
           <EmptyState
+            variant="glass"
             icon={IconUsers}
             title="No users found"
             description="Try adjusting your filters."

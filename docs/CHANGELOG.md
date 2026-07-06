@@ -4,6 +4,32 @@
 
 ---
 
+## 2026-07-05 — Student Dashboard Bugfixes + UI Consolidation ✅
+
+### Fixed: Critical Bugs in Student Dashboard
+
+- **`loadingBatch` dead state** (`apps/web/src/app/student/page.tsx:528-540`): `loadingBatch` is now set to `true` before fetching batches. Previously the state was declared but never used, making the loading indicator always depend on the cache miss check.
+- **`handleMentorshipSubmit` full-page loading** (`apps/web/src/app/student/page.tsx:557`): Removed `setIsLoading(true)` which triggered the entire portal loading spinner. Submission loading state is now scoped to the mentorship view.
+- **`fetchBatch` silent failure** (`apps/web/src/app/student/page.tsx:532-536`): Added error handling — batch fetch failures now surface an error message instead of leaving the user on a perpetual LoadingView.
+- **`supportTimeAgo` impure render** (`apps/web/src/app/student/_views/HomeView.tsx:207-216`): Replaced inline `supportTimeAgo` (which called `Date.now()` during render) with the shared `timeAgo` utility from `@/lib/time-ago`.
+
+### Fixed: Component Consolidation
+
+- **Duplicate EmptyState**: Merged `components/admin/EmptyState.tsx` (ComponentType icon, glass-card style) into `components/shared/EmptyState.tsx` (ReactNode icon, default style) using a discriminated union with `variant: "glass" | "default"`. Deleted `admin/EmptyState.tsx`. All 5 admin page imports updated to `@/components/shared/EmptyState` with `variant="glass"`.
+
+### Fixed: Modal Accessibility
+
+- **FormModal** (`components/admin/FormModal.tsx`): Added Escape key handler, focus trapping (Tab/Shift+Tab cycle), `role="dialog"`, `aria-modal="true"`, `aria-label`, and `aria-label="Close dialog"` on close button.
+- **ConfirmModal** (`components/admin/ConfirmModal.tsx`): Same a11y improvements — Escape key, focus trap, dialog ARIA attributes.
+
+### Changed: Navigation & Shared Components
+
+- **`window.location.href` → `useRouter`** (`apps/web/src/app/instructor/dashboard/page.tsx:355`): Replaced `window.location.href = "/instructor/assignments"` with `router.push("/instructor/assignments")` for client-side navigation.
+- **Shared Spinner** (`components/shared/Spinner.tsx`): Created reusable `Spinner` component with configurable `size`, `label`, and `className`.
+- **Student portal loading states**: Refactored Suspense fallback, main loading view, and `LoadingView` to use the shared `Spinner` component instead of inline spinner markup.
+
+---
+
 ## 2026-07-04 — Security Hardening & Critical Bugfixes 🔒
 
 ### Fixed: Security Hardening (P0)

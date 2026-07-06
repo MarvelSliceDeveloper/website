@@ -83,9 +83,11 @@ export default function CourseContentView({
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editNoteTitle, setEditNoteTitle] = useState("");
   const [editNoteBody, setEditNoteBody] = useState("");
-
   const [newNoteTitle, setNewNoteTitle] = useState("");
+
   const [newNoteBody, setNewNoteBody] = useState("");
+
+  const [showNewNote, setShowNewNote] = useState(false);
 
   // Sticky-note widget state (replaces old inline sticky)
   const [showStickyWidget, setShowStickyWidget] = useState(false);

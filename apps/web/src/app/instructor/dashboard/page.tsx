@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import {
   IconVideo,
@@ -61,6 +62,7 @@ type SubmissionRecord = {
 };
 
 export default function InstructorDashboardPage() {
+  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [submissions, setSubmissions] = useState<AssignmentSubmission[]>([
     // No demo submissions — rely on real API data
@@ -352,7 +354,7 @@ export default function InstructorDashboardPage() {
                 </div>
                 <button
                   onClick={() =>
-                    (window.location.href = "/instructor/assignments")
+                    router.push("/instructor/assignments")
                   }
                   className="btn-secondary w-full justify-center text-xs py-1.5"
                 >

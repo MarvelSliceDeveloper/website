@@ -6,7 +6,7 @@ import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FormModal } from "@/components/admin/FormModal";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
-import { EmptyState } from "@/components/admin/EmptyState";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { IconClock, IconCircleCheck, IconCircleX } from "@tabler/icons-react";
 
 type EnrollmentRequest = {
@@ -156,18 +156,21 @@ export default function AdminEnrollmentsPage() {
       ) : enrollments.length === 0 ? (
         statusFilter === "PENDING" ? (
           <EmptyState
+            variant="glass"
             icon={IconClock}
             title="No pending requests"
             description="All enrollment requests have been reviewed."
           />
         ) : statusFilter === "APPROVED" ? (
           <EmptyState
+            variant="glass"
             icon={IconCircleCheck}
             title="No approved enrollments"
             description="Check the other filters to find what you're looking for."
           />
         ) : (
           <EmptyState
+            variant="glass"
             icon={IconCircleX}
             title="No rejected enrollments"
             description="Check the other filters to find what you're looking for."

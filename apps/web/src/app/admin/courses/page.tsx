@@ -11,7 +11,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import DataTable from "@/components/admin/DataTable";
 import type { DataTableColumn } from "@/components/admin/DataTable";
 import { TableSkeleton } from "@/components/admin/LoadingSkeleton";
-import { EmptyState } from "@/components/admin/EmptyState";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 type Course = {
   id: string;
@@ -369,6 +369,7 @@ function CoursesPageContent() {
         <TableSkeleton rows={5} columns={7} />
       ) : courses.length === 0 ? (
         <EmptyState
+          variant="glass"
           icon={IconBook}
           title="No courses yet"
           description="Create your first course to get started."
