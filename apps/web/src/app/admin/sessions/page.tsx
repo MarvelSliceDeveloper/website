@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FormModal } from "@/components/admin/FormModal";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
-import { EmptyState } from "@/components/admin/EmptyState";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 type Session = {
   id: string;
@@ -162,6 +162,7 @@ export default function AdminSessionsPage() {
         <CardSkeleton count={4} />
       ) : sessions.length === 0 ? (
         <EmptyState
+          variant="glass"
           icon={IconVideo}
           title="No sessions yet"
           description="Schedule a live session for a batch."

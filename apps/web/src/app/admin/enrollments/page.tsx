@@ -6,8 +6,15 @@ import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FormModal } from "@/components/admin/FormModal";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
-import { EmptyState } from "@/components/admin/EmptyState";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { IconClock, IconCircleCheck, IconCircleX } from "@tabler/icons-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type EnrollmentRequest = {
   id: string;
@@ -156,18 +163,21 @@ export default function AdminEnrollmentsPage() {
       ) : enrollments.length === 0 ? (
         statusFilter === "PENDING" ? (
           <EmptyState
+            variant="glass"
             icon={IconClock}
             title="No pending requests"
             description="All enrollment requests have been reviewed."
           />
         ) : statusFilter === "APPROVED" ? (
           <EmptyState
+            variant="glass"
             icon={IconCircleCheck}
             title="No approved enrollments"
             description="Check the other filters to find what you're looking for."
           />
         ) : (
           <EmptyState
+            variant="glass"
             icon={IconCircleX}
             title="No rejected enrollments"
             description="Check the other filters to find what you're looking for."
@@ -181,7 +191,7 @@ export default function AdminEnrollmentsPage() {
               className="glass-card p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary/30 to-accent/20 text-sm font-bold text-foreground">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
                   {enrollment.user.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -306,19 +316,23 @@ export default function AdminEnrollmentsPage() {
                 approving.
               </div>
             ) : (
-              <select
+              <Select
                 value={selectedBatchId}
-                onChange={(e) => setSelectedBatchId(e.target.value)}
-                className="field w-full"
+                onValueChange={setSelectedBatchId}
               >
-                <option value="">-- Select Batch --</option>
-                {batches.map((batch) => (
-                  <option key={batch.id} value={batch.id}>
-                    {batch.name} — {batch._count?.enrollments || 0}
-                    {batch.maxStudents ? `/${batch.maxStudents}` : ""} students
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="field w-full">
+                  <SelectValue placeholder="-- Select Batch --" />
+                </SelectTrigger>
+                <SelectContent>
+                  {batches.map((batch) => (
+                    <SelectItem key={batch.id} value={batch.id}>
+                      {batch.name} — {batch._count?.enrollments || 0}
+                      {batch.maxStudents ? `/${batch.maxStudents}` : ""}{" "}
+                      students
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
           </div>
         </FormModal>

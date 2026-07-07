@@ -6,6 +6,7 @@ import { IconAlertCircle, IconSearch } from "@tabler/icons-react";
 import StudentPortalShell, {
   type Breadcrumb,
 } from "@/components/StudentPortalShell";
+import { Spinner } from "@/components/shared/Spinner";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 
@@ -415,12 +416,7 @@ export default function StudentPortalPage() {
     <Suspense
       fallback={
         <StudentPortalShell>
-          <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-            <div className="h-10 w-10 animate-spin rounded-full border-2 border-border border-t-primary" />
-            <p className="text-sm text-muted-foreground">
-              Loading your portal…
-            </p>
-          </div>
+          <Spinner size={40} label="Loading your portal…" className="min-h-[60vh]" />
         </StudentPortalShell>
       }
     >
@@ -528,12 +524,23 @@ function StudentPortalContent() {
   useEffect(() => {
     const batchId = currentView.params?.batchId;
     if (!batchId || batchCache[batchId]) return;
+    setLoadingBatch(true);
     let active = true;
-    fetchBatch(batchId).then((b) => {
-      if (active && b) {
-        setBatchCache((prev) => ({ ...prev, [batchId]: b }));
-      }
-    });
+    fetchBatch(batchId)
+      .then((b) => {
+        if (!active) return;
+        if (b) {
+          setBatchCache((prev) => ({ ...prev, [batchId]: b }));
+        } else {
+          setError("Failed to load batch details");
+        }
+      })
+      .catch(() => {
+        if (active) setError("Failed to load batch details");
+      })
+      .finally(() => {
+        if (active) setLoadingBatch(false);
+      });
     return () => {
       active = false;
     };
@@ -554,7 +561,6 @@ function StudentPortalContent() {
     topic: string,
     preferredDate: string,
   ) {
-    setIsLoading(true);
     try {
       await api.post("/api/mentorship/tickets", {
         title: topic.length > 50 ? topic.slice(0, 50) + "..." : topic,
@@ -565,8 +571,6 @@ function StudentPortalContent() {
       await loadData();
     } catch {
       setError("Failed to submit mentorship request");
-    } finally {
-      setIsLoading(false);
     }
   }
 
@@ -592,12 +596,7 @@ function StudentPortalContent() {
   if (isLoading) {
     return (
       <StudentPortalShell>
-        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 animate-in fade-in duration-500">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-border border-t-primary" />
-          <p className="text-sm text-muted-foreground">
-            Loading your portal...
-          </p>
-        </div>
+        <Spinner size={40} label="Loading your portal..." className="min-h-[60vh]" />
       </StudentPortalShell>
     );
   }
@@ -783,12 +782,7 @@ function StudentPortalContent() {
 // ─── Helper views ─────────────────────────────────────────────────────────────
 
 function LoadingView({ message }: { message: string }) {
-  return (
-    <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 animate-in fade-in duration-500">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
-      <p className="text-sm text-muted-foreground">{message}</p>
-    </div>
-  );
+  return <Spinner size={32} label={message} className="min-h-[40vh]" />;
 }
 
 function NotFoundView() {

@@ -123,40 +123,35 @@ export default function Header({
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border/80 bg-background/80 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 md:flex-nowrap md:px-6">
+    <header className="sticky top-0 z-30 border-b border-border bg-card">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 h-12 md:px-6">
         <div className="flex items-center gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-muted">
-              LMS Workspace
-            </p>
-            <h2 className="text-sm font-semibold text-foreground md:text-base">
-              Welcome back
-            </h2>
-          </div>
+          <h2 className="text-sm font-semibold text-foreground">
+            Welcome back
+          </h2>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <div ref={notifRef} className="relative">
             <button
               onClick={() => {
                 setNotifOpen((open) => !open);
                 if (!notifOpen) loadNotifications();
               }}
-              className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
+              className="relative flex h-8 w-8 items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-colors"
               aria-label="Notifications"
             >
-              <IconBell size={18} stroke={1.8} />
+              <IconBell size={17} stroke={1.8} />
               {unreadCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[9px] font-semibold text-white">
+                <span className="absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-danger text-[8px] font-semibold text-white">
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
             </button>
 
             {notifOpen && (
-              <div className="absolute right-0 top-11 z-50 w-80 rounded-2xl border border-border bg-card shadow-2xl">
-                <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <div className="absolute right-0 top-9 z-50 w-72 border border-border bg-card shadow-lg">
+                <div className="flex items-center justify-between border-b border-border px-3 py-2">
                   <p className="text-sm font-semibold text-foreground">
                     Notifications
                   </p>
@@ -180,20 +175,20 @@ export default function Header({
                 </div>
                 <div className="max-h-72 overflow-y-auto">
                   {notifications.length === 0 ? (
-                    <p className="px-4 py-6 text-center text-sm text-muted">
+                    <p className="px-3 py-5 text-center text-sm text-muted">
                       No notifications
                     </p>
                   ) : (
                     notifications.slice(0, 5).map((item) => (
                       <div
                         key={item.id}
-                        className={`group flex items-start gap-2 border-b border-border/50 px-4 py-3 last:border-0 ${!item.read ? "bg-primary/5" : ""}`}
+                        className={`group flex items-start gap-2 border-b border-border/50 px-3 py-2.5 last:border-0 ${!item.read ? "bg-primary/[0.03]" : ""}`}
                       >
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-foreground">
                             {item.title}
                           </p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
+                          <p className="mt-0.5 text-xs text-muted">
                             {item.message}
                           </p>
                           <p className="mt-0.5 text-[11px] text-muted">
@@ -203,7 +198,7 @@ export default function Header({
                         {!item.read && (
                           <button
                             onClick={() => markOneRead(item.id)}
-                            className="mt-0.5 shrink-0 rounded-lg p-1 text-muted opacity-0 group-hover:opacity-100 hover:text-primary hover:bg-primary/10 transition-all"
+                            className="mt-0.5 shrink-0 p-1 text-muted opacity-0 group-hover:opacity-100 hover:text-primary transition-colors"
                             title="Mark as read"
                           >
                             <IconEye size={14} />
@@ -214,7 +209,7 @@ export default function Header({
                   )}
                 </div>
                 {notifications.length > 0 && (
-                  <div className="border-t border-border px-4 py-2.5">
+                  <div className="border-t border-border px-3 py-2">
                     <button
                       onClick={() => {
                         router.push(inboxHref);
@@ -223,7 +218,7 @@ export default function Header({
                       className="flex w-full items-center justify-center gap-1.5 text-xs font-medium text-primary hover:text-primary-hover transition-colors"
                     >
                       View all notifications
-                      <IconArrowLeft size={13} className="rotate-180" />
+                      <IconArrowLeft size={12} className="rotate-180" />
                     </button>
                   </div>
                 )}
@@ -235,22 +230,22 @@ export default function Header({
             onClick={() =>
               router.push(inboxHref.replace("/inbox", "/settings"))
             }
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
+            className="flex h-8 w-8 items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-colors"
             aria-label="Settings"
           >
-            <IconSettings size={18} stroke={1.8} />
+            <IconSettings size={17} stroke={1.8} />
           </button>
           <button
             onClick={toggleTheme}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
+            className="flex h-8 w-8 items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-colors"
             aria-label={
               theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
             }
           >
             {theme === "light" ? (
-              <IconSun size={17} stroke={1.8} />
+              <IconSun size={16} stroke={1.8} />
             ) : (
-              <IconMoon size={17} stroke={1.8} />
+              <IconMoon size={16} stroke={1.8} />
             )}
           </button>
         </div>

@@ -19,6 +19,7 @@ import {
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
+import { timeAgo } from "@/lib/time-ago";
 import type { ViewState } from "../_types/student-portal";
 import type {
   DashboardStats,
@@ -204,16 +205,7 @@ export default function HomeView({
     }
   }
 
-  function supportTimeAgo(dateStr: string) {
-    // eslint-disable-next-line react-hooks/purity
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "Just now";
-    if (mins < 60) return `${mins}m ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return new Date(dateStr).toLocaleDateString();
-  }
+
   const now = new Date();
   const hour = now.getHours();
   const greeting =
@@ -361,12 +353,12 @@ export default function HomeView({
       {/* ── Two-Column: Stats + Schedule ─────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
         {/* ═══ LEFT COLUMN ════════════════════════════════════════════════ */}
-        <div className="min-w-0 space-y-6">
+        <div className="min-w-0">
           <StudentStatTiles tiles={statTiles} />
         </div>
 
       {/* ═══ RIGHT COLUMN ═══════════════════════════════════════════════ */}
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
           {/* ── Today's Schedule ───────────────────────────────────────── */}
           <div className="glass-card p-5">
             <div className="mb-3 flex items-center justify-between">
@@ -435,7 +427,7 @@ export default function HomeView({
           </div>
 
           {/* ── Overdue Summary ─────────────────────────────────────────── */}
-          <div className="glass-card p-5">
+          <div className="glass-card p-5 flex-1">
             <div className="mb-3 flex items-center justify-between">
               <p className="sp-eyebrow">Overdue</p>
               {overdueTotal > 0 && (
@@ -782,7 +774,7 @@ export default function HomeView({
                         </span>
                       </div>
                       <div className="mt-0.5 flex items-center gap-3 text-[11px] text-muted">
-                        <span>{supportTimeAgo(t.createdAt)}</span>
+                        <span>{timeAgo(t.createdAt)}</span>
                         {t._count && (
                           <span className="flex items-center gap-1">
                             <IconMessage size={11} /> {t._count.messages}

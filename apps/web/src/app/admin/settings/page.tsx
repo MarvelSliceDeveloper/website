@@ -529,7 +529,7 @@ export default function AdminSettingsPage() {
           {/* Profile card */}
           <div className="glass-card p-5 space-y-4">
             <div className="flex items-center gap-3.5">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-primary to-violet-600 text-lg font-bold text-white shrink-0">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-lg font-bold text-white shrink-0">
                 {profileName.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">

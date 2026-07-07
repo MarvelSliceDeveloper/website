@@ -10,11 +10,13 @@ export default function AdminShell({
   children: React.ReactNode;
 }) {
   return (
-    <AppShell
-      sidebar={(props) => <AdminSidebar {...props} />}
-      inboxHref="/admin/inbox"
-    >
-      {children}
-    </AppShell>
+    <div data-section="admin">
+      <AppShell
+        sidebar={(props) => <AdminSidebar {...props} />}
+        inboxHref="/admin/inbox"
+      >
+        {children}
+      </AppShell>
+    </div>
   );
 }

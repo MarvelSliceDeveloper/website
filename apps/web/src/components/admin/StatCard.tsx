@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { IconTrendingUp, IconTrendingDown } from "@tabler/icons-react";
 
 interface StatCardProps {
@@ -18,8 +17,16 @@ interface StatCardProps {
     positive?: boolean;
   };
   loading?: boolean;
-  gradient?: string;
+  variant?: "blue" | "green" | "orange" | "red" | "purple";
 }
+
+const iconBg: Record<string, string> = {
+  blue: "bg-blue-100 text-blue-600",
+  green: "bg-green-100 text-green-600",
+  orange: "bg-orange-100 text-orange-600",
+  red: "bg-red-100 text-red-600",
+  purple: "bg-purple-100 text-purple-600",
+};
 
 export default function StatCard({
   label,
@@ -28,16 +35,16 @@ export default function StatCard({
   href,
   trend,
   loading = false,
-  gradient = "from-primary to-violet-500",
+  variant = "blue",
 }: StatCardProps) {
   if (loading) {
     return (
-      <div className="glass-card p-5">
+      <div className="border border-border bg-card p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className="h-11 w-11 rounded-xl animate-pulse bg-card-hover" />
-            <div className="h-3 w-24 animate-pulse bg-card-hover rounded mt-2" />
-            <div className="h-8 w-16 animate-pulse bg-card-hover rounded mt-2" />
+            <div className="h-10 w-10 animate-pulse bg-border" />
+            <div className="h-3 w-24 animate-pulse bg-border mt-2" />
+            <div className="h-7 w-16 animate-pulse bg-border mt-2" />
           </div>
         </div>
       </div>
@@ -47,25 +54,25 @@ export default function StatCard({
   const displayValue = value === null ? "\u2014" : String(value);
 
   const cardContent = (
-    <div className="glass-card p-5">
+    <div className="border border-border bg-card p-4">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted">
+          <p className="text-xs font-medium uppercase tracking-[0.1em] text-muted">
             {label}
           </p>
-          <p className="mt-2 text-3xl font-bold text-foreground">
+          <p className="mt-1.5 text-2xl font-bold text-foreground">
             {displayValue}
           </p>
           {trend && (
             <div className="mt-1 flex items-center gap-1">
               {trend.direction === "up" ? (
                 <IconTrendingUp
-                  size={16}
+                  size={14}
                   className={trend.positive ? "text-success" : "text-danger"}
                 />
               ) : (
                 <IconTrendingDown
-                  size={16}
+                  size={14}
                   className={trend.positive ? "text-success" : "text-danger"}
                 />
               )}
@@ -78,9 +85,9 @@ export default function StatCard({
           )}
         </div>
         <div
-          className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-lg group-hover:scale-110 transition-transform`}
+          className={`flex h-10 w-10 items-center justify-center ${iconBg[variant]}`}
         >
-          <Icon size={22} stroke={1.5} />
+          <Icon size={20} stroke={1.5} />
         </div>
       </div>
     </div>

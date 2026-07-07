@@ -11,7 +11,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import DataTable from "@/components/admin/DataTable";
 import type { DataTableColumn } from "@/components/admin/DataTable";
 import { TableSkeleton } from "@/components/admin/LoadingSkeleton";
-import { EmptyState } from "@/components/admin/EmptyState";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 type Course = {
   id: string;
@@ -183,7 +183,7 @@ function CoursesPageContent() {
       label: "Course",
       render: (_, course) => (
         <div className="flex items-center gap-3">
-          <div className="h-10 w-14 shrink-0 rounded-lg bg-gradient-to-br from-primary/30 to-accent/20 flex items-center justify-center overflow-hidden">
+          <div className="h-10 w-14 shrink-0 rounded-lg bg-primary/15 flex items-center justify-center overflow-hidden">
             {course.thumbnailUrl ? (
               <Image
                 src={course.thumbnailUrl}
@@ -369,6 +369,7 @@ function CoursesPageContent() {
         <TableSkeleton rows={5} columns={7} />
       ) : courses.length === 0 ? (
         <EmptyState
+          variant="glass"
           icon={IconBook}
           title="No courses yet"
           description="Create your first course to get started."

@@ -10,6 +10,13 @@ import {
   IconClipboardList,
 } from "@tabler/icons-react";
 import { toast } from "@/lib/toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AssignmentCreateForm } from "./AssignmentCreateForm";
 import { SubmissionReviewPanel } from "./SubmissionReviewPanel";
 import type {
@@ -195,21 +202,25 @@ export function AssignmentsPageContent() {
         </div>
         <div className="flex items-center gap-2">
           {batches.length > 0 && (
-            <select
+            <Select
               value={selectedBatchId}
-              onChange={(e) => {
-                setSelectedBatchId(e.target.value);
+              onValueChange={(v) => {
+                setSelectedBatchId(v);
                 setSelectedAssignment(null);
                 setActiveTab("list");
               }}
-              className="field py-1.5 text-xs max-w-[200px]"
             >
-              {batches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name} — {b.course.title}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="field py-1.5 text-xs max-w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {batches.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name} — {b.course.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
           {!selectedAssignment && (
             <button
