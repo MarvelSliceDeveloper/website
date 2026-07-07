@@ -16,6 +16,8 @@ import {
   IconChevronDown,
   IconHelp,
   IconSettings,
+  IconMenu2,
+  IconX,
 } from "@tabler/icons-react";
 
 type NavItemChild = {
@@ -126,10 +128,10 @@ function ChildNavLink({
     <li>
       <Link
         href={child.href}
-        className={`group flex items-center gap-2 rounded-lg py-1.5 px-3 text-[13px] font-medium transition-all duration-150 ${
+        className={`group flex items-center gap-2 py-1.5 px-3 text-[13px] font-medium rounded-lg border transition-all duration-150 ${
           isChildActive
-            ? "text-primary bg-primary/5 font-semibold"
-            : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
+            ? "border-primary/40 bg-primary/10 text-primary font-semibold shadow-sm"
+            : "border-border/60 bg-card text-muted-foreground shadow-sm hover:border-border-hover hover:shadow-md hover:text-foreground"
         }`}
       >
         <span
@@ -162,11 +164,8 @@ function NavGroup({
     null,
   );
 
-  // Auto-expand the group whose child matches the current pathname,
-  // but only if the user hasn't manually collapsed that group.
   useEffect(() => {
     if (collapsed) return;
-
     const activeGroup = items.find((item) => {
       if (!item.children) return false;
       return item.children.some((child) => {
@@ -174,7 +173,6 @@ function NavGroup({
         return pathname === childPath;
       });
     });
-
     if (activeGroup && manuallyCollapsed !== activeGroup.label) {
       Promise.resolve().then(() => setExpandedGroup(activeGroup.label));
     }
@@ -218,13 +216,13 @@ function NavGroup({
             <li key={item.label} className="space-y-0.5">
               {hasChildren && !collapsed ? (
                 <div className="space-y-0.5">
-                  <button
+                    <button
                     onClick={() => toggleGroup(item.label)}
                     title={item.label}
-                    className={`w-full flex items-center rounded-xl py-2 text-sm font-medium transition-all duration-150 gap-2.5 px-3 select-none text-left cursor-pointer ${
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium rounded-lg border-2 transition-all duration-150 select-none text-left cursor-pointer ${
                       isActive
-                        ? "border border-primary/15 bg-primary/10 text-primary-hover"
-                        : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
+                        ? "border-primary bg-primary/[0.08] text-primary shadow-sm"
+                        : "border-border/60 bg-card text-muted-foreground shadow-sm hover:border-border-hover hover:shadow-md hover:text-foreground"
                     }`}
                   >
                     <item.icon size={18} stroke={1.8} className="shrink-0" />
@@ -265,12 +263,12 @@ function NavGroup({
                 <Link
                   href={item.href}
                   title={item.label}
-                  className={`flex items-center rounded-xl py-2 text-sm font-medium transition-all duration-150 ${
-                    collapsed ? "justify-center px-2" : "gap-2.5 px-3"
+                  className={`flex items-center text-sm font-medium rounded-lg border-2 transition-all duration-150 ${
+                    collapsed ? "justify-center px-2 py-2.5" : "gap-2.5 px-3 py-2.5"
                   } ${
                     isActive
-                      ? "border border-primary/25 bg-primary/15 text-primary-hover"
-                      : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
+                      ? "border-primary bg-primary/[0.08] text-primary shadow-sm"
+                      : "border-border/60 bg-card text-muted-foreground shadow-sm hover:border-border-hover hover:shadow-md hover:text-foreground"
                   }`}
                 >
                   <item.icon size={18} stroke={1.8} className="shrink-0" />
@@ -303,8 +301,10 @@ function NavGroup({
 // Instructor sidebar with nav groups and sign-out
 export default function InstructorSidebar({
   collapsed = false,
+  onToggleCollapse,
 }: {
   collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -338,6 +338,13 @@ export default function InstructorSidebar({
             Marvel Slice
           </span>
         </div>
+        <button
+          onClick={onToggleCollapse}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <IconMenu2 size={18} /> : <IconX size={16} />}
+        </button>
       </div>
 
       <nav
@@ -357,7 +364,7 @@ export default function InstructorSidebar({
         <div
           className={`panel flex items-center ${collapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2.5"}`}
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-500/20 text-xs font-semibold text-violet-400">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
             IN
           </div>
           <div className={`min-w-0 ${collapsed ? "hidden" : "block"}`}>

@@ -6,18 +6,18 @@ const SALT_LENGTH = 64;
 const TAG_LENGTH = 16;
 const KEY_LENGTH = 32;
 
-function getKey(): Buffer {
+function getKey(salt: Buffer): Buffer {
   const secret = process.env.TOKEN_ENCRYPTION_KEY;
   if (!secret || secret.length < 32) {
     throw new Error("TOKEN_ENCRYPTION_KEY must be at least 32 characters long");
   }
-  // Ensure it's exactly 32 bytes
-  return crypto.scryptSync(secret, "salt", KEY_LENGTH);
+  return crypto.scryptSync(secret, salt, KEY_LENGTH);
 }
 
 export function encryptToken(text: string): string {
+  const salt = crypto.randomBytes(SALT_LENGTH);
   const iv = crypto.randomBytes(IV_LENGTH);
-  const key = getKey();
+  const key = getKey(salt);
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
 
   let encrypted = cipher.update(text, "utf8", "hex");
@@ -25,21 +25,22 @@ export function encryptToken(text: string): string {
 
   const authTag = cipher.getAuthTag().toString("hex");
 
-  // Format: iv:authTag:encryptedData
-  return `${iv.toString("hex")}:${authTag}:${encrypted}`;
+  // Format: salt:iv:authTag:encryptedData
+  return `${salt.toString("hex")}:${iv.toString("hex")}:${authTag}:${encrypted}`;
 }
 
 export function decryptToken(encryptedData: string): string {
   const parts = encryptedData.split(":");
-  if (parts.length !== 3) {
+  if (parts.length !== 4) {
     throw new Error("Invalid encrypted data format");
   }
 
-  const iv = Buffer.from(parts[0], "hex");
-  const authTag = Buffer.from(parts[1], "hex");
-  const encryptedText = parts[2];
+  const salt = Buffer.from(parts[0], "hex");
+  const iv = Buffer.from(parts[1], "hex");
+  const authTag = Buffer.from(parts[2], "hex");
+  const encryptedText = parts[3];
 
-  const key = getKey();
+  const key = getKey(salt);
   const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
   decipher.setAuthTag(authTag);
 

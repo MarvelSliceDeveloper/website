@@ -172,20 +172,15 @@ export function AssignmentCreateForm({
           <label className="text-[10px] font-bold text-muted uppercase tracking-wider">
             Batch
           </label>
-          <select
-            required
-            disabled
-            value={selectedBatchId}
-            className="field py-2 text-sm cursor-not-allowed opacity-70"
-          >
+          <div className="field py-2 text-sm text-foreground bg-card-hover/50 cursor-not-allowed opacity-70">
             {batches
               .filter((b) => b.id === selectedBatchId)
               .map((b) => (
-                <option key={b.id} value={b.id}>
+                <span key={b.id}>
                   {b.name} — {b.course.title}
-                </option>
+                </span>
               ))}
-          </select>
+          </div>
         </div>
 
         <div className="space-y-1">

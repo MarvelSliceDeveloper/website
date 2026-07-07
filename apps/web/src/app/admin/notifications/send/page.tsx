@@ -4,6 +4,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type TargetType = "ALL_USERS" | "BATCH" | "COURSE";
 type CourseOption = { id: string; title: string };
@@ -133,19 +140,23 @@ export default function AdminSendNotificationPage() {
           <label className="mb-1.5 block text-sm font-medium text-foreground">
             Target Audience <span className="text-danger">*</span>
           </label>
-          <select
+          <Select
             value={targetType}
-            onChange={(e) => {
-              setTargetType(e.target.value as TargetType);
+            onValueChange={(v) => {
+              setTargetType(v as TargetType);
               setSelectedBatchIds(new Set());
               setSelectedCourseIds(new Set());
             }}
-            className="field"
           >
-            <option value="ALL_USERS">All Users</option>
-            <option value="BATCH">Specific Batches</option>
-            <option value="COURSE">Specific Courses</option>
-          </select>
+            <SelectTrigger className="field">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL_USERS">All Users</SelectItem>
+              <SelectItem value="BATCH">Specific Batches</SelectItem>
+              <SelectItem value="COURSE">Specific Courses</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Course multi-select */}

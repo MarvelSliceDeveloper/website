@@ -9,7 +9,7 @@ import DataTable from "@/components/admin/DataTable";
 import type { DataTableColumn } from "@/components/admin/DataTable";
 import { FormModal } from "@/components/admin/FormModal";
 import { ConfirmModal } from "@/components/admin/ConfirmModal";
-import { EmptyState } from "@/components/admin/EmptyState";
+import { EmptyState } from "@/components/shared/EmptyState";
 import {
   IconShield,
   IconChalkboardTeacher,
@@ -18,6 +18,13 @@ import {
   IconEdit,
   IconTrash,
 } from "@tabler/icons-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type User = {
   id: string;
@@ -27,15 +34,15 @@ type User = {
 };
 
 const roleStyles: Record<string, string> = {
-  ADMIN: "bg-danger/15 text-danger border-danger/25",
-  INSTRUCTOR: "bg-accent/15 text-accent border-accent/25",
-  STUDENT: "bg-primary/15 text-primary-hover border-primary/25",
+  ADMIN: "bg-red-100 text-red-700",
+  INSTRUCTOR: "bg-sky-100 text-sky-700",
+  STUDENT: "bg-blue-100 text-blue-700",
 };
 
 const roleIcons: Record<string, React.ReactNode> = {
-  ADMIN: <IconShield size={25} />,
-  INSTRUCTOR: <IconChalkboardTeacher size={25} />,
-  STUDENT: <IconSchool size={25} />,
+  ADMIN: <IconShield size={14} />,
+  INSTRUCTOR: <IconChalkboardTeacher size={14} />,
+  STUDENT: <IconSchool size={14} />,
 };
 
 export default function AdminUsersPage() {
@@ -169,7 +176,7 @@ export default function AdminUsersPage() {
       label: "User",
       render: (_, user) => (
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary/30 to-accent/20 text-xs font-bold text-foreground">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-primary/15 text-xs font-bold text-primary">
             {user.name.charAt(0).toUpperCase()}
           </div>
           <span className="text-sm font-medium text-foreground">
@@ -187,7 +194,7 @@ export default function AdminUsersPage() {
       label: "Role",
       render: (_, user) => (
         <span
-          className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${roleStyles[user.role]}`}
+          className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium ${roleStyles[user.role]}`}
         >
           {roleIcons[user.role]} {user.role}
         </span>
@@ -272,6 +279,7 @@ export default function AdminUsersPage() {
         loading={loading}
         emptyState={
           <EmptyState
+            variant="glass"
             icon={IconUsers}
             title="No users found"
             description="Try adjusting your filters."
@@ -364,15 +372,19 @@ export default function AdminUsersPage() {
             <label className="mb-1 block text-xs font-medium text-muted">
               Role
             </label>
-            <select
+            <Select
               value={form.role}
-              onChange={(e) => setForm({ ...form, role: e.target.value })}
-              className="field w-full"
+              onValueChange={(value) => setForm({ ...form, role: value })}
             >
-              <option value="STUDENT">Student</option>
-              <option value="INSTRUCTOR">Instructor</option>
-              <option value="ADMIN">Administrator</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="STUDENT">Student</SelectItem>
+                <SelectItem value="INSTRUCTOR">Instructor</SelectItem>
+                <SelectItem value="ADMIN">Administrator</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </form>
       </FormModal>
@@ -449,17 +461,21 @@ export default function AdminUsersPage() {
             <label className="mb-1 block text-xs font-medium text-muted">
               Role
             </label>
-            <select
+            <Select
               value={editForm.role}
-              onChange={(e) =>
-                setEditForm({ ...editForm, role: e.target.value })
+              onValueChange={(value) =>
+                setEditForm({ ...editForm, role: value })
               }
-              className="field w-full"
             >
-              <option value="STUDENT">Student</option>
-              <option value="INSTRUCTOR">Instructor</option>
-              <option value="ADMIN">Administrator</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="STUDENT">Student</SelectItem>
+                <SelectItem value="INSTRUCTOR">Instructor</SelectItem>
+                <SelectItem value="ADMIN">Administrator</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </form>
       </FormModal>

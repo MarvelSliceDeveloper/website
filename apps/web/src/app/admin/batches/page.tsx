@@ -8,7 +8,7 @@ import { toast, getErrorMessage } from "@/lib/toast";
 import { IconUsersGroup } from "@tabler/icons-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
-import { EmptyState } from "@/components/admin/EmptyState";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 type Batch = {
   id: string;
@@ -117,6 +117,7 @@ function BatchesPageContent() {
         <CardSkeleton count={6} />
       ) : batches.length === 0 ? (
         <EmptyState
+          variant="glass"
           icon={IconUsersGroup}
           title="No batches yet"
           description="Create your first batch to start enrolling students."

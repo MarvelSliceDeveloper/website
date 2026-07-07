@@ -13,13 +13,14 @@ import {
   IconMail,
   IconLogout,
   IconMessages,
-  IconSend,
   IconUsers,
   IconUsersGroup,
   IconVideo,
   IconCalendar,
   IconChevronDown,
   IconSettings,
+  IconMenu2,
+  IconX,
 } from "@tabler/icons-react";
 
 type NavItemChild = {
@@ -178,10 +179,10 @@ function ChildNavLink({
     <li>
       <Link
         href={child.href}
-        className={`group flex items-center gap-2 rounded-lg py-1.5 px-3 text-[13px] font-medium transition-all duration-150 ${
+        className={`group flex items-center gap-2 py-1.5 px-3 text-[13px] font-medium rounded-lg border transition-all duration-150 ${
           isChildActive
-            ? "text-primary bg-primary/5 font-semibold"
-            : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
+            ? "border-primary/40 bg-primary/10 text-primary font-semibold shadow-sm"
+            : "border-border/60 bg-card text-muted shadow-sm hover:border-border-hover hover:shadow-md hover:text-foreground"
         }`}
       >
         <span
@@ -214,12 +215,8 @@ function NavGroup({
     null,
   );
 
-  // Auto-expand the group whose child matches the current pathname,
-  // but only if the user hasn't manually collapsed that group.
-  // If no child group matches, collapse any previously auto-expanded group.
   useEffect(() => {
     if (collapsed) return;
-
     const activeGroup = items.find((item) => {
       if (!item.children) return false;
       return item.children.some((child) => {
@@ -227,7 +224,6 @@ function NavGroup({
         return pathname === childPath;
       });
     });
-
     if (activeGroup && manuallyCollapsed !== activeGroup.label) {
       Promise.resolve().then(() => setExpandedGroup(activeGroup.label));
     } else if (!activeGroup && manuallyCollapsed === null) {
@@ -236,13 +232,9 @@ function NavGroup({
   }, [pathname, collapsed, items, manuallyCollapsed]);
 
   const toggleGroup = (groupLabel: string) => {
-    setExpandedGroup((prev) => {
-      const isOpening = prev !== groupLabel;
-      // If closing, remember that the user manually collapsed this group.
-      // If opening a different group, clear the manual collapse state.
-      setManuallyCollapsed(isOpening ? null : groupLabel);
-      return isOpening ? groupLabel : null;
-    });
+    const isOpening = expandedGroup !== groupLabel;
+    setManuallyCollapsed(isOpening ? null : groupLabel);
+    setExpandedGroup(isOpening ? groupLabel : null);
   };
 
   return (
@@ -258,7 +250,6 @@ function NavGroup({
         {items.map((item) => {
           const hasChildren = !!item.children?.length;
           const isExpanded = expandedGroup === item.label;
-
           const isParentActive =
             pathname === item.href || pathname?.startsWith(item.href + "/");
           const isAnyChildActive =
@@ -271,61 +262,79 @@ function NavGroup({
 
           return (
             <li key={item.label} className="space-y-0.5">
-              {hasChildren && !collapsed ? (
-                <div className="space-y-0.5">
+              {hasChildren ? (
+                collapsed ? (
+                  // Collapsed sidebar + group item: icon-only button, no dead link
                   <button
-                    onClick={() => toggleGroup(item.label)}
+                    type="button"
                     title={item.label}
-                    className={`w-full flex items-center rounded-xl py-2 text-sm font-medium transition-all duration-150 gap-2.5 px-3 select-none text-left cursor-pointer ${
+                    onClick={() => toggleGroup(item.label)}
+                    className={`w-full flex items-center justify-center px-2 py-2.5 text-sm font-medium rounded-lg border-2 transition-all duration-150 cursor-pointer ${
                       isActive
-                        ? "border border-primary/15 bg-primary/10 text-primary-hover"
-                        : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
+                        ? "border-primary bg-primary/[0.08] text-primary shadow-sm"
+                        : "border-border/60 bg-card text-muted shadow-sm hover:border-border-hover hover:shadow-md hover:text-foreground"
                     }`}
                   >
                     <item.icon size={18} stroke={1.8} className="shrink-0" />
-                    <span className="flex-1 truncate">{item.label}</span>
-                    {item.badge != null && (
-                      <span className="rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-medium text-white mr-1">
-                        {item.badge}
-                      </span>
-                    )}
-                    <IconChevronDown
-                      size={16}
-                      stroke={1.8}
-                      className={`shrink-0 text-muted transition-transform duration-200 ${
-                        isExpanded ? "rotate-180" : ""
-                      }`}
-                    />
                   </button>
-
-                  <div
-                    className={`overflow-hidden transition-all duration-300 ${
-                      isExpanded
-                        ? "max-h-64 opacity-100 mt-0.5"
-                        : "max-h-0 opacity-0 pointer-events-none"
-                    }`}
-                  >
-                    <ul className="pl-4 border-l border-border/60 ml-5 space-y-0.5">
-                      {item.children!.map((child) => (
-                        <ChildNavLink
-                          key={child.href}
-                          child={child}
-                          pathname={pathname}
-                        />
-                      ))}
-                    </ul>
+                ) : (
+                  <div className="space-y-0.5">
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(item.label)}
+                      title={item.label}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium rounded-lg border-2 transition-all duration-150 select-none text-left cursor-pointer ${
+                        isActive
+                          ? "border-primary bg-primary/[0.08] text-primary shadow-sm"
+                          : "border-border/60 bg-card text-muted shadow-sm hover:border-border-hover hover:shadow-md hover:text-foreground"
+                      }`}
+                    >
+                      <item.icon size={18} stroke={1.8} className="shrink-0" />
+                      <span className="flex-1 truncate">{item.label}</span>
+                      {item.badge != null && (
+                        <span className="rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-medium text-white mr-1">
+                          {item.badge}
+                        </span>
+                      )}
+                      <IconChevronDown
+                        size={16}
+                        stroke={1.8}
+                        className={`shrink-0 text-muted transition-transform duration-200 ${
+                          isExpanded ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                    <div
+                      className={`overflow-hidden transition-all duration-300 ${
+                        isExpanded
+                          ? "max-h-64 opacity-100 mt-0.5"
+                          : "max-h-0 opacity-0 pointer-events-none"
+                      }`}
+                    >
+                      <ul className="pl-4 ml-5 space-y-0.5">
+                        {item.children!.map((child) => (
+                          <ChildNavLink
+                            key={child.href}
+                            child={child}
+                            pathname={pathname}
+                          />
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                </div>
+                )
               ) : (
                 <Link
                   href={item.href}
                   title={item.label}
-                  className={`flex items-center rounded-xl py-2 text-sm font-medium transition-all duration-150 ${
-                    collapsed ? "justify-center px-2" : "gap-2.5 px-3"
+                  className={`flex items-center text-sm font-medium rounded-lg border-2 transition-all duration-150 ${
+                    collapsed
+                      ? "justify-center px-2 py-2.5"
+                      : "gap-2.5 px-3 py-2.5"
                   } ${
                     isActive
-                      ? "border border-primary/25 bg-primary/15 text-primary-hover"
-                      : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
+                      ? "border-primary bg-primary/[0.08] text-primary shadow-sm"
+                      : "border-border/60 bg-card text-muted shadow-sm hover:border-border-hover hover:shadow-md hover:text-foreground"
                   }`}
                 >
                   <item.icon size={18} stroke={1.8} className="shrink-0" />
@@ -358,8 +367,10 @@ function NavGroup({
 // Admin sidebar with collapsible multi-level navigation
 export default function AdminSidebar({
   collapsed = false,
+  onToggleCollapse,
 }: {
   collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -371,8 +382,8 @@ export default function AdminSidebar({
       }`}
     >
       <div
-        className={`flex h-16 items-center border-b border-border ${
-          collapsed ? "justify-center px-2" : "gap-2.5 px-4"
+        className={`flex h-14 items-center border-b border-border ${
+          collapsed ? "justify-center px-2" : "gap-2 px-4"
         }`}
       >
         <div
@@ -381,17 +392,24 @@ export default function AdminSidebar({
           <img
             src="/images/logo.svg"
             alt="LMS Logo"
-            className="h-14 w-auto object-contain"
+            className="h-9 w-auto object-contain"
           />
-          <span className="text-lg font-bold text-foreground">
+          <span className="text-base font-bold text-foreground">
             Marvel Slice
           </span>
         </div>
+        <button
+          onClick={onToggleCollapse}
+          className="flex h-7 w-7 shrink-0 items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-colors"
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <IconMenu2 size={16} /> : <IconX size={14} />}
+        </button>
       </div>
 
       <nav
-        className={`flex-1 overflow-y-auto py-4 ${
-          collapsed ? "space-y-4 px-2" : "space-y-5 px-3"
+        className={`flex-1 overflow-y-auto py-3 ${
+          collapsed ? "space-y-4 px-2" : "space-y-4 px-3"
         }`}
       >
         <NavGroup
@@ -402,22 +420,20 @@ export default function AdminSidebar({
         />
       </nav>
 
-      <div className="border-t border-border p-3 space-y-2">
+      <div className="border-t border-border p-3 space-y-1.5">
         <div
-          className={`panel flex items-center ${
-            collapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2.5"
+          className={`flex items-center ${
+            collapsed ? "justify-center" : "gap-2.5 px-2 py-2"
           }`}
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary-hover">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-primary/15 text-[11px] font-semibold text-primary">
             AD
           </div>
           <div className={`min-w-0 ${collapsed ? "hidden" : "block"}`}>
             <p className="truncate text-sm font-medium text-foreground">
               Admin Demo
             </p>
-            <p className="truncate text-xs text-muted-foreground">
-              admin@lms.local
-            </p>
+            <p className="truncate text-xs text-muted">admin@lms.local</p>
           </div>
         </div>
         <button
@@ -427,7 +443,7 @@ export default function AdminSidebar({
           }}
           className="btn-danger w-full justify-center"
         >
-          <IconLogout size={18} stroke={1.8} className="shrink-0" />
+          <IconLogout size={15} stroke={1.8} className="shrink-0" />
           <span className={collapsed ? "hidden" : "inline"}>Sign out</span>
         </button>
       </div>

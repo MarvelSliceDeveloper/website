@@ -109,8 +109,8 @@ export async function syncCalendarForUser(
 export async function getEventsForUser(startDate: string, endDate: string) {
   return prisma.calendarEvent.findMany({
     where: {
-      startAt: { gte: new Date(startDate) },
-      endAt: { lte: new Date(endDate) },
+      startAt: { lte: new Date(endDate) },
+      endAt: { gte: new Date(startDate) },
     },
     include: {
       session: {
@@ -146,8 +146,8 @@ export async function getTodayEvents() {
   const events: CalendarEventWithSession[] =
     await prisma.calendarEvent.findMany({
       where: {
-        startAt: { gte: startOfDay },
-        endAt: { lte: endOfDay },
+        startAt: { lte: endOfDay },
+        endAt: { gte: startOfDay },
       },
       include: {
         session: {

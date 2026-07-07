@@ -5,9 +5,15 @@ import { z } from "zod";
 import { UserRole } from "@lms/types";
 import { emailService } from "../../services/email.service";
 
-const JWT_SECRET =
-  process.env.JWT_SECRET || "fallback_secret_min_32_chars_long!";
-const JWT_EXPIRY = process.env.JWT_EXPIRY || "15m";
+const JWT_EXPIRY = process.env.JWT_EXPIRY || "7d";
+
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("Missing required environment variable: JWT_SECRET");
+  }
+  return secret;
+}
 
 export const RegisterSchema = z.object({
   name: z.string().min(2).max(100),
@@ -74,7 +80,7 @@ export const authService = {
     return this.generateTokens(user);
   },
 
-  // Generate JWT access + refresh tokens for a user
+  // Generate JWT access token for a user
   generateTokens(user: { id: string; role: string; email: string }) {
     const payload = {
       userId: user.id,
@@ -82,13 +88,10 @@ export const authService = {
       email: user.email,
     };
 
-    const accessToken = jwt.sign(payload, JWT_SECRET, {
+    const accessToken = jwt.sign(payload, getJwtSecret(), {
       expiresIn: JWT_EXPIRY as any,
     });
-    const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET, {
-      expiresIn: "7d" as any,
-    });
 
-    return { accessToken, refreshToken, user: payload };
+    return { accessToken, user: payload };
   },
 };

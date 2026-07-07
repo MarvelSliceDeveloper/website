@@ -193,6 +193,15 @@ export default function StudentNotesPage() {
     );
   });
 
+  const stickyCount = notes.filter((n) => n.isSticky).length;
+  const notesThisWeek = notes.filter((n) => {
+    const d = new Date(n.updatedAt);
+    const now = new Date();
+    const weekAgo = new Date(now);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return d >= weekAgo;
+  }).length;
+
   return (
     <StudentPortalShell
       studentName={studentName}
@@ -202,24 +211,41 @@ export default function StudentNotesPage() {
         router.push("/student");
       }}
     >
-      <div className="space-y-6">
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        {/* Stats bar */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            { label: "Total Notes", value: notes.length, icon: IconNotes, bg: "bg-primary/15", text: "text-primary" },
+            { label: "Sticky Notes", value: stickyCount, icon: IconStar, bg: "bg-warning/15", text: "text-warning" },
+            { label: "Edited This Week", value: notesThisWeek, icon: IconChevronRight, bg: "bg-accent/15", text: "text-accent" },
+            { label: "Courses", value: courses.length, icon: IconBook, bg: "bg-success/15", text: "text-success" },
+          ].map((stat) => (
+            <div key={stat.label} className="glass-card p-3.5 group hover:-translate-y-0.5 transition-all cursor-default">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted">{stat.label}</p>
+                  <p className={`text-xl font-black ${stat.text}`}>
+                    {loading ? "\u2014" : stat.value}
+                  </p>
+                </div>
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${stat.bg} ${stat.text} group-hover:scale-110 transition-transform`}>
+                  <stat.icon size={16} stroke={1.8} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
         <div>
-          <p className="sp-eyebrow">Student</p>
           <div className="flex items-center justify-between gap-3">
-            <h1 className="mt-1.5 text-2xl font-bold text-foreground">
-              My Notes
-            </h1>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="btn-primary flex items-center gap-1.5 text-sm"
-            >
+            <div>
+              <p className="sp-eyebrow">Student</p>
+              <h1 className="text-xl font-bold text-foreground sm:text-2xl">My Notes</h1>
+            </div>
+            <button onClick={() => setShowCreateModal(true)} className="btn-primary flex items-center gap-1.5 text-sm shrink-0">
               <IconPlus size={16} /> New Note
             </button>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {notes.length} note{notes.length !== 1 ? "s" : ""} across{" "}
-            {courses.length} course{courses.length !== 1 ? "s" : ""}
-          </p>
         </div>
 
         <div className="flex gap-2">
@@ -247,7 +273,7 @@ export default function StudentNotesPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-          <div className="lg:col-span-3 xl:col-span-3 space-y-4">
+            <div className="lg:col-span-3 xl:col-span-3 space-y-4">
             <div className="glass-card p-2 space-y-1">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted px-3 pt-2 pb-1">
                 <IconFilter size={12} className="inline mr-1 -mt-0.5" /> Courses
@@ -262,11 +288,13 @@ export default function StudentNotesPage() {
               >
                 <IconNotes size={15} />
                 All Notes
-                <span className="ml-auto text-xs text-muted">
+                <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
                   {notes.length}
                 </span>
               </button>
-              {courses.map((c) => (
+              {courses.map((c) => {
+                const count = notes.filter((n) => n.course.id === c.id).length;
+                return (
                 <button
                   key={c.id}
                   onClick={() => setCourseFilter(c.id)}
@@ -278,8 +306,10 @@ export default function StudentNotesPage() {
                 >
                   <IconBook size={15} />
                   <span className="truncate">{c.title}</span>
+                  <span className="ml-auto text-xs text-muted">{count}</span>
                 </button>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -294,22 +324,27 @@ export default function StudentNotesPage() {
                 ))}
               </div>
             ) : filteredNotes.length === 0 ? (
-              <div className="glass-card flex flex-col items-center justify-center py-20 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-5">
+              <div className="glass-card flex flex-col items-center gap-3 py-16 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <IconNotes size={32} />
                 </div>
                 <p className="text-base font-semibold text-foreground">
-                  No notes found
+                  {searchQuery || courseFilter ? "No notes found" : "No notes yet"}
                 </p>
-                <p className="mt-1.5 text-sm text-muted-foreground max-w-sm">
-                  Try adjusting your search or filter.
+                <p className="text-sm text-muted-foreground max-w-xs">
+                  {searchQuery || courseFilter
+                    ? "Try adjusting your search or filter."
+                    : "Create your first note to get started."}
                 </p>
               </div>
             ) : (
-              filteredNotes.map((note) => (
+              filteredNotes.map((note) => {
+                const borderClass = note.isSticky ? "border-l-warning/40" : note.moduleId ? "border-l-accent/30" : "border-l-primary/20";
+
+                return (
                 <div
                   key={note.id}
-                  className={`glass-card overflow-hidden transition-all ${
+                  className={`glass-card border-l-4 overflow-hidden transition-all ${borderClass} ${
                     editingNoteId === note.id ? "ring-2 ring-primary/30" : ""
                   }`}
                 >
@@ -329,17 +364,8 @@ export default function StudentNotesPage() {
                         minHeight="150px"
                       />
                       <div className="flex justify-end gap-2">
-                        <button
-                          onClick={cancelEdit}
-                          className="btn-secondary text-xs"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => saveEdit(note.id)}
-                          disabled={saving}
-                          className="btn-primary text-xs"
-                        >
+                        <button onClick={cancelEdit} className="btn-secondary text-xs">Cancel</button>
+                        <button onClick={() => saveEdit(note.id)} disabled={saving} className="btn-primary text-xs">
                           {saving ? "Saving..." : "Save"}
                         </button>
                       </div>
@@ -356,18 +382,18 @@ export default function StudentNotesPage() {
                               {note.course.title}
                             </span>
                             {note.moduleId && (
-                              <span className="text-[10px] text-muted-foreground">
-                                Module note
+                              <span className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/5 px-2 py-0.5 text-[10px] font-medium text-accent">
+                                Module
                               </span>
                             )}
                             {note.isSticky && (
-                              <IconStar
-                                size={12}
-                                className="text-warning fill-current"
-                              />
+                              <span className="inline-flex items-center gap-1 rounded-full border border-warning/20 bg-warning/5 px-2 py-0.5 text-[10px] font-medium text-warning">
+                                <IconStar size={10} className="fill-current" />
+                                Pinned
+                              </span>
                             )}
                           </div>
-                          <p className="text-sm font-medium text-foreground mt-1">
+                          <p className="text-sm font-semibold text-foreground mt-1">
                             {note.title || "Untitled Note"}
                           </p>
                           {note.body && (
@@ -376,38 +402,28 @@ export default function StudentNotesPage() {
                             </p>
                           )}
                           <p className="text-[11px] text-muted mt-1">
-                            {new Date(note.updatedAt).toLocaleDateString(
-                              "en-IN",
-                              {
-                                day: "numeric",
-                                month: "short",
-                                year: "numeric",
-                              },
-                            )}
+                            {new Date(note.updatedAt).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
                           </p>
                         </div>
-                        <IconChevronRight
-                          size={15}
-                          className="shrink-0 text-muted mt-1"
-                        />
+                        <IconChevronRight size={15} className="shrink-0 text-muted mt-1" />
                       </div>
                     </button>
                   )}
-                  <div
-                    className={`flex justify-end border-t border-border/40 px-4 py-1.5 ${editingNoteId === note.id ? "hidden" : ""}`}
-                  >
+                  <div className={`flex justify-end border-t border-border/40 px-4 py-1.5 ${editingNoteId === note.id ? "hidden" : ""}`}>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteNote(note.id);
-                      }}
+                      onClick={(e) => { e.stopPropagation(); deleteNote(note.id); }}
                       className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] text-muted-foreground hover:text-danger hover:bg-danger/10 transition-colors"
                     >
                       <IconTrash size={12} /> Delete
                     </button>
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>

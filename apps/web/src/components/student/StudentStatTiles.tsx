@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { IconArrowRight } from "@tabler/icons-react";
+import { IconArrowRight, IconTrendingUp, IconTrendingDown } from "@tabler/icons-react";
 
 export interface StudentStatTile {
   id: string;
@@ -11,6 +11,8 @@ export interface StudentStatTile {
   onClick: () => void;
   gradient: string;
   liveBadge?: string;
+  trend?: { value: number; label: string };
+  iconColor?: string;
 }
 
 interface StudentStatTilesProps {
@@ -43,21 +45,32 @@ function useCountUp(target: number, duration = 800) {
   return count;
 }
 
+const ICON_BG: Record<string, string> = {
+  primary: "bg-primary/15 text-primary border-primary/25",
+  danger: "bg-danger/15 text-danger border-danger/25",
+  accent: "bg-accent/15 text-accent border-accent/25",
+  success: "bg-success/15 text-success border-success/25",
+  warning: "bg-warning/15 text-warning border-warning/25",
+};
+
 // Single stat tile with count-up animation
 function StatTile({ tile }: { tile: StudentStatTile }) {
   const count = useCountUp(tile.value);
+  const iconStyle = tile.iconColor ? ICON_BG[tile.iconColor] || ICON_BG.primary : ICON_BG.primary;
 
   return (
     <button
       onClick={tile.onClick}
-      className="glass-card group relative flex flex-col gap-3 overflow-hidden p-5 text-left transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10"
+      className="glass-card group relative flex flex-col gap-3 overflow-hidden p-5 text-left transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10"
     >
       <div
         className={`absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100 ${tile.gradient}`}
       />
       <div className="relative flex items-center justify-between">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-card shadow-md">
-          {tile.icon}
+        <div className={`flex h-12 w-12 items-center justify-center rounded-xl border shadow-sm ${iconStyle}`}>
+          <div className="[&>svg]:size-[22px]">
+            {tile.icon}
+          </div>
         </div>
         {tile.liveBadge ? (
           <span className="rounded-full border border-danger/30 bg-danger/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-danger">
@@ -67,9 +80,20 @@ function StatTile({ tile }: { tile: StudentStatTile }) {
       </div>
       <div className="relative">
         <p className="sp-eyebrow">{tile.label}</p>
-        <p className="mt-1 text-3xl font-bold tracking-tight text-foreground">
+        <p className="mt-0.5 text-4xl font-black tracking-tight text-foreground">
           {count}
         </p>
+        {tile.trend && (
+          <span className={`mt-1 inline-flex items-center gap-1 text-xs font-medium ${
+            tile.trend.value >= 0 ? "text-success" : "text-danger"
+          }`}>
+            {tile.trend.value >= 0
+              ? <IconTrendingUp size={14} />
+              : <IconTrendingDown size={14} />
+            }
+            {tile.trend.value >= 0 ? "+" : ""}{tile.trend.value}% {tile.trend.label}
+          </span>
+        )}
       </div>
       <IconArrowRight
         size={14}

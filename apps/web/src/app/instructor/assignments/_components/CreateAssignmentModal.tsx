@@ -3,6 +3,13 @@
 import { useState } from "react";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { api } from "@/lib/api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Batch {
   id: string;
@@ -107,19 +114,21 @@ export default function CreateAssignmentModal({
             <label className="mb-1.5 block text-sm font-medium text-foreground">
               Batch *
             </label>
-            <select
+            <Select
               value={form.batchId}
-              onChange={(e) => handleBatchChange(e.target.value)}
-              required
-              className="field"
+              onValueChange={handleBatchChange}
             >
-              <option value="">-- Select a batch --</option>
-              {batches.map((batch) => (
-                <option key={batch.id} value={batch.id}>
-                  {batch.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="field">
+                <SelectValue placeholder="-- Select a batch --" />
+              </SelectTrigger>
+              <SelectContent>
+                {batches.map((batch) => (
+                  <SelectItem key={batch.id} value={batch.id}>
+                    {batch.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

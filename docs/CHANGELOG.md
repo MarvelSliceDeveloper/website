@@ -4,6 +4,65 @@
 
 ---
 
+## 2026-07-05 — Student Dashboard Bugfixes + UI Consolidation ✅
+
+### Fixed: Critical Bugs in Student Dashboard
+
+- **`loadingBatch` dead state** (`apps/web/src/app/student/page.tsx:528-540`): `loadingBatch` is now set to `true` before fetching batches. Previously the state was declared but never used, making the loading indicator always depend on the cache miss check.
+- **`handleMentorshipSubmit` full-page loading** (`apps/web/src/app/student/page.tsx:557`): Removed `setIsLoading(true)` which triggered the entire portal loading spinner. Submission loading state is now scoped to the mentorship view.
+- **`fetchBatch` silent failure** (`apps/web/src/app/student/page.tsx:532-536`): Added error handling — batch fetch failures now surface an error message instead of leaving the user on a perpetual LoadingView.
+- **`supportTimeAgo` impure render** (`apps/web/src/app/student/_views/HomeView.tsx:207-216`): Replaced inline `supportTimeAgo` (which called `Date.now()` during render) with the shared `timeAgo` utility from `@/lib/time-ago`.
+
+### Fixed: Component Consolidation
+
+- **Duplicate EmptyState**: Merged `components/admin/EmptyState.tsx` (ComponentType icon, glass-card style) into `components/shared/EmptyState.tsx` (ReactNode icon, default style) using a discriminated union with `variant: "glass" | "default"`. Deleted `admin/EmptyState.tsx`. All 5 admin page imports updated to `@/components/shared/EmptyState` with `variant="glass"`.
+
+### Fixed: Modal Accessibility
+
+- **FormModal** (`components/admin/FormModal.tsx`): Added Escape key handler, focus trapping (Tab/Shift+Tab cycle), `role="dialog"`, `aria-modal="true"`, `aria-label`, and `aria-label="Close dialog"` on close button.
+- **ConfirmModal** (`components/admin/ConfirmModal.tsx`): Same a11y improvements — Escape key, focus trap, dialog ARIA attributes.
+
+### Changed: Navigation & Shared Components
+
+- **`window.location.href` → `useRouter`** (`apps/web/src/app/instructor/dashboard/page.tsx:355`): Replaced `window.location.href = "/instructor/assignments"` with `router.push("/instructor/assignments")` for client-side navigation.
+- **Shared Spinner** (`components/shared/Spinner.tsx`): Created reusable `Spinner` component with configurable `size`, `label`, and `className`.
+- **Student portal loading states**: Refactored Suspense fallback, main loading view, and `LoadingView` to use the shared `Spinner` component instead of inline spinner markup.
+
+---
+
+## 2026-07-04 — Security Hardening & Critical Bugfixes 🔒
+
+### Fixed: Security Hardening (P0)
+
+- **JWT_SECRET**: No longer falls back to a hardcoded value — throws if `JWT_SECRET` env var is missing. (`auth.middleware.ts`, `auth.service.ts`)
+- **CSRF_SECRET**: App now throws at startup if `CSRF_SECRET` is not set. (`app.ts`)
+- **Webhook client state**: `MS_WEBHOOK_CLIENT_STATE` required; throws if missing. (`events-webhook.controller.ts`, `webhook.controller.ts`)
+- **Encryption salt**: Changed from static `"salt"` to `crypto.randomBytes(64)` per operation. Output format: `salt:iv:authTag:encrypted` (breaking change for previously encrypted data). (`encryption.ts`)
+- **CSRF middleware**: Moved to correct position — between exempt routes (auth, webhooks, health, csrf-token) and protected routes. Previously was a no-op. (`app.ts`)
+
+### Fixed: Business Logic Bugs (P1)
+
+- **`getOverdueAssignments`**: Now correctly filters by `dueDate < now` instead of returning all assignments. (`student.service.ts:44`)
+- **Batch capacity check**: `addStudents` now counts only `APPROVED` enrollments toward capacity, not all enrollment requests. (`batch.service.ts:183`)
+- **Calendar events range query**: `getEventsForUser` and `getTodayEvents` now use `startAt <= endDate AND endAt >= startDate` for proper multi-day event overlap. (`calendar.service.ts:111-113, 149-150`)
+- **Session overlap check**: Overlap check now excludes sessions whose `scheduledEndAt` has already passed. (`session.service.ts:68-82`)
+
+### Fixed: Code Quality (P2)
+
+- **`parseVideoUrl`**: Extracted from `lesson.service.ts` and `module.service.ts` into shared `src/utils/video.ts`; removed dead duplicate in `module.service.ts`.
+- **Dead code removal**: Removed `CreateAssignmentSchema` alias and `createAssignment()` wrapper from `assignment.service.ts` (unused backward-compat aliases).
+
+### Fixed: Access Control (P4)
+
+- **Batch removeStudent IDOR**: Instructors can no longer remove students from batches they don't own. (`batch.service.ts`)
+- **Admin demotion safeguard**: Prevents admins from demoting themselves and from demoting the last admin in the system. (`user.routes.ts`)
+
+### Chore
+
+- **Error handler**: Now returns `err.statusCode || err.status || 500` instead of hardcoded `500`. (`app.ts`)
+- **Test infrastructure**: Created `app.ts` (Express app), `__tests__/setup.ts`, `helpers.ts` (with `loginAs(role)`), and 24 tests (health, auth, notes, CSRF). Added `vitest/globals` types, bumped timeout to 15s for bcrypt.
+- **`.env` & `.env.example`**: Added `CSRF_SECRET` and `MS_WEBHOOK_CLIENT_STATE`.
+
 ## 2026-07-04 — Brevo Email Integration & Bugfixes ✅
 
 ### Added: Brevo Email Provider with React Email Templates

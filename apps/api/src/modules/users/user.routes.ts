@@ -1,6 +1,10 @@
 import { Router, type Request, type Response } from "express";
 import { prisma } from "../../utils/prisma";
-import { requireAuth, requireRole } from "../../middleware/auth.middleware";
+import {
+  requireAuth,
+  requireRole,
+  type AuthRequest,
+} from "../../middleware/auth.middleware";
 import { UserRole } from "@lms/types";
 import bcrypt from "bcryptjs";
 import { emailService } from "../../services/email.service";
@@ -96,6 +100,22 @@ router.patch("/:id", async (req: Request, res: Response) => {
     const existing = await prisma.user.findUnique({ where: { id } });
     if (!existing) {
       return res.status(404).json({ error: "User not found" });
+    }
+
+    if (role && existing.role === "ADMIN" && role !== "ADMIN") {
+      // Prevent self-demotion
+      if (id === (req as AuthRequest).user!.userId) {
+        return res.status(403).json({ error: "You cannot demote yourself" });
+      }
+      // Prevent demoting the last admin
+      const adminCount = await prisma.user.count({
+        where: { role: "ADMIN" },
+      });
+      if (adminCount <= 1) {
+        return res
+          .status(403)
+          .json({ error: "Cannot demote the last admin in the system" });
+      }
     }
 
     if (email && email !== existing.email) {

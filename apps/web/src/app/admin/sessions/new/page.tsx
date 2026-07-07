@@ -11,6 +11,13 @@ import {
   IconBook,
   IconLink,
 } from "@tabler/icons-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Course {
   id: string;
@@ -223,19 +230,18 @@ export default function ScheduleSessionPage() {
           {loadingCourses ? (
             <div className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border" />
           ) : (
-            <select
-              value={selectedCourseId}
-              onChange={(e) => setSelectedCourseId(e.target.value)}
-              className="field w-full"
-              required
-            >
-              <option value="">-- Choose a Course --</option>
-              {courses.map((course) => (
-                <option key={course.id} value={course.id}>
-                  {course.title} ({course.status})
-                </option>
-              ))}
-            </select>
+            <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
+              <SelectTrigger className="field w-full">
+                <SelectValue placeholder="-- Choose a Course --" />
+              </SelectTrigger>
+              <SelectContent>
+                {courses.map((course) => (
+                  <SelectItem key={course.id} value={course.id}>
+                    {course.title} ({course.status})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
         </div>
 
@@ -254,19 +260,22 @@ export default function ScheduleSessionPage() {
                 batch for this course first.
               </div>
             ) : (
-              <select
+              <Select
                 value={form.batchId}
-                onChange={(e) => update("batchId", e.target.value)}
-                className="field w-full"
-                required
+                onValueChange={(v) => update("batchId", v)}
               >
-                <option value="">-- Choose a Student Batch --</option>
-                {batches.map((batch) => (
-                  <option key={batch.id} value={batch.id}>
-                    {batch.name} — Instructor: {batch.instructor?.name || "TBD"}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="field w-full">
+                  <SelectValue placeholder="-- Choose a Student Batch --" />
+                </SelectTrigger>
+                <SelectContent>
+                  {batches.map((batch) => (
+                    <SelectItem key={batch.id} value={batch.id}>
+                      {batch.name} — Instructor:{" "}
+                      {batch.instructor?.name || "TBD"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
           </div>
         )}
@@ -281,20 +290,21 @@ export default function ScheduleSessionPage() {
             {loadingModules ? (
               <div className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border" />
             ) : (
-              <select
+              <Select
                 value={form.moduleId}
-                onChange={(e) => update("moduleId", e.target.value)}
-                className="field w-full"
+                onValueChange={(v) => update("moduleId", v)}
               >
-                <option value="">
-                  -- General / Introductory Session (No specific module) --
-                </option>
-                {modules.map((mod) => (
-                  <option key={mod.id} value={mod.id}>
-                    Module {mod.order}: {mod.title}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="field w-full">
+                  <SelectValue placeholder="-- General / Introductory Session (No specific module) --" />
+                </SelectTrigger>
+                <SelectContent>
+                  {modules.map((mod) => (
+                    <SelectItem key={mod.id} value={mod.id}>
+                      Module {mod.order}: {mod.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
             <p className="mt-1 text-xs text-muted">
               Optional. Linking to a module organizes the session under that
@@ -313,19 +323,22 @@ export default function ScheduleSessionPage() {
             {loadingInstructors ? (
               <div className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border" />
             ) : (
-              <select
+              <Select
                 value={form.instructorOverride || ""}
-                onChange={(e) => update("instructorOverride", e.target.value)}
-                className="field w-full"
+                onValueChange={(v) => update("instructorOverride", v)}
               >
-                <option value="">— Use batch instructor (default)</option>
-                {instructors.map((inst) => (
-                  <option key={inst.id} value={inst.id}>
-                    {inst.name} ({inst.email}){" "}
-                    {inst.role === "ADMIN" ? "🛡️ Admin" : "👨‍🏫 Instructor"}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="field w-full">
+                  <SelectValue placeholder="— Use batch instructor (default)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {instructors.map((inst) => (
+                    <SelectItem key={inst.id} value={inst.id}>
+                      {inst.name} ({inst.email}){" "}
+                      {inst.role === "ADMIN" ? "🛡️ Admin" : "👨‍🏫 Instructor"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
             <p className="mt-1 text-xs text-muted">
               Optional. Override the batch&apos;s default instructor — useful if

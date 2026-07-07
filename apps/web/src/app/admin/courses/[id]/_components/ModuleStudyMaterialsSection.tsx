@@ -2,6 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Resource {
   id: string;
@@ -177,18 +184,21 @@ export default function ModuleStudyMaterialsSection({
         <label className="mb-1.5 block text-sm font-medium text-foreground">
           Select Module
         </label>
-        <select
+        <Select
           value={selectedModuleId || ""}
-          onChange={(e) => setSelectedModuleId(e.target.value)}
-          className="field"
+          onValueChange={setSelectedModuleId}
         >
-          <option value="">-- Choose a module --</option>
-          {modules.map((module) => (
-            <option key={module.id} value={module.id}>
-              {module.title}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="field">
+            <SelectValue placeholder="-- Choose a module --" />
+          </SelectTrigger>
+          <SelectContent>
+            {modules.map((module) => (
+              <SelectItem key={module.id} value={module.id}>
+                {module.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {selectedModuleId ? (

@@ -13,6 +13,13 @@ import {
   IconPlus,
 } from "@tabler/icons-react";
 import { toast, getErrorMessage } from "@/lib/toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Course = {
   id: string;
@@ -331,7 +338,7 @@ function SessionsPageContent() {
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
             Instructor
           </p>
           <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">
@@ -435,26 +442,24 @@ function SessionsPageContent() {
                 <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
                   Select Course
                 </label>
-                <select
-                  className="field"
-                  value={form.courseId}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      courseId: e.target.value,
-                      batchId: "",
-                      moduleId: "",
-                    })
-                  }
-                  required
-                >
-                  <option value="">-- Select Course --</option>
-                  {courses.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.title}
-                    </option>
-                  ))}
-                </select>
+                  <Select
+                    value={form.courseId}
+                    onValueChange={(v) =>
+                      setForm({ ...form, courseId: v, batchId: "", moduleId: "" })
+                    }
+                  >
+
+                  <SelectTrigger className="field">
+                    <SelectValue placeholder="-- Select Course --" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courses.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -462,42 +467,45 @@ function SessionsPageContent() {
                   <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
                     Select Batch
                   </label>
-                  <select
-                    className="field"
+                  <Select
                     value={form.batchId}
-                    onChange={(e) =>
-                      setForm({ ...form, batchId: e.target.value })
+                    onValueChange={(v) =>
+                      setForm({ ...form, batchId: v })
                     }
-                    disabled={!form.courseId || loadingBatches}
-                    required
                   >
-                    <option value="">-- Batch --</option>
-                    {batches.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="field" disabled={!form.courseId || loadingBatches}>
+                      <SelectValue placeholder="-- Batch --" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {batches.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
                     Select Module
                   </label>
-                  <select
-                    className="field"
+                  <Select
                     value={form.moduleId}
-                    onChange={(e) =>
-                      setForm({ ...form, moduleId: e.target.value })
+                    onValueChange={(v) =>
+                      setForm({ ...form, moduleId: v })
                     }
-                    disabled={!form.courseId || loadingModules}
                   >
-                    <option value="">-- None / General --</option>
-                    {modules.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        Mod {m.order}: {m.title}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="field" disabled={!form.courseId || loadingModules}>
+                      <SelectValue placeholder="-- None / General --" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {modules.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          Mod {m.order}: {m.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -759,12 +767,12 @@ function SessionCard({
   onDelete: (id: string) => void;
 }) {
   return (
-    <div className="glass-card p-4 flex flex-col gap-4 border border-border/80 hover:border-violet-500/20 hover:shadow-lg transition-all duration-200 justify-between">
+    <div className="border border-border bg-card p-4 flex flex-col gap-4 justify-between">
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3">
           <div
             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${
-              upcoming ? "bg-violet-500/20 text-violet-400" : "bg-muted/10"
+              upcoming ? "bg-primary/15 text-primary" : "bg-muted/10"
             }`}
           >
             {upcoming ? "📅" : "🎬"}
@@ -843,7 +851,7 @@ function SessionCard({
           <button
             onClick={() => onSyncRecording(session.id)}
             disabled={syncing}
-            className="btn-secondary text-xs flex-1 justify-center py-1.5 px-3 flex items-center gap-1 border-violet-500/20 text-violet-400 hover:bg-violet-500/10 disabled:opacity-50"
+            className="btn-secondary text-xs flex-1 justify-center py-1.5 px-3 flex items-center gap-1"
           >
             <IconRefresh size={14} className={syncing ? "animate-spin" : ""} />
             {syncing ? "Syncing..." : "Sync Teams"}

@@ -3,6 +3,15 @@
 import { useEffect, useState } from "react";
 import { toast } from "@/lib/toast";
 import { api } from "@/lib/api";
+import {
+  IconCalendarEvent,
+  IconCalendarPlus,
+  IconCheck,
+  IconClock,
+  IconMessageCircle,
+  IconTicket,
+  IconX,
+} from "@tabler/icons-react";
 
 type MentorshipTicket = {
   id: string;
@@ -18,26 +27,36 @@ type MentorshipTicket = {
   course?: { id: string; title: string } | null;
 };
 
-const STATUS_CONFIG: Record<string, { label: string; classes: string }> = {
+const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; classes: string; border: string }> = {
   OPEN: {
     label: "Waiting review",
+    icon: <IconClock size={12} />,
     classes: "border-warning/30 bg-warning/10 text-warning",
+    border: "border-l-warning/50",
   },
   ASSIGNED: {
     label: "Mentor assigned",
+    icon: <IconMessageCircle size={12} />,
     classes: "border-accent/30 bg-accent/10 text-accent",
+    border: "border-l-accent/40",
   },
   SCHEDULED: {
     label: "Scheduled",
+    icon: <IconCalendarEvent size={12} />,
     classes: "border-success/30 bg-success/10 text-success",
+    border: "border-l-success/40",
   },
   COMPLETED: {
     label: "Resolved",
+    icon: <IconCheck size={12} />,
     classes: "border-primary/30 bg-primary/10 text-primary",
+    border: "border-l-primary/40",
   },
   CANCELLED: {
     label: "Cancelled",
+    icon: <IconX size={12} />,
     classes: "border-danger/30 bg-danger/10 text-danger",
+    border: "border-l-danger/40",
   },
 };
 
@@ -115,45 +134,78 @@ export default function StudentMentorshipPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-3xl space-y-6">
-        <div className="animate-pulse space-y-3">
-          <div className="h-6 w-48 rounded bg-card-hover" />
-          <div className="h-4 w-72 rounded bg-card-hover" />
-          <div className="h-24 rounded-xl bg-card-hover" />
+      <div className="mx-auto max-w-3xl space-y-4 p-6">
+        <div className="h-12 w-64 animate-pulse rounded-xl bg-card-hover" />
+        <div className="grid grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-24 animate-pulse rounded-xl bg-card-hover" />
+          ))}
         </div>
+        <div className="h-32 animate-pulse rounded-xl bg-card-hover" />
       </div>
     );
   }
 
+  const resolvedCount = tickets.filter((t) => t.status === "COMPLETED").length;
+
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-            Student
-          </p>
-          <h1 className="text-2xl font-bold text-foreground">
-            1-on-1 Mentorship
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Need focused help? Request a private session with your instructor.
-          </p>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      {/* Greeting banner */}
+      <div className="relative overflow-hidden rounded-2xl border border-accent/20 bg-linear-to-r from-accent/15 via-accent/5 to-primary/10 p-5 sm:p-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(37,192,232,0.12),transparent_60%)]" />
+        <div className="relative flex items-center gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-accent to-cyan-500 text-xl font-bold text-white shadow-lg shadow-accent/30">
+            <IconMessageCircle size={22} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Student</p>
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">1-on-1 Mentorship</h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">Need focused help? Request a private session with your instructor.</p>
+          </div>
+          <button onClick={() => setShowForm((v) => !v)} className="btn-primary shrink-0 text-sm">
+            {showForm ? "Cancel" : "Request Session"}
+          </button>
         </div>
-        <button onClick={() => setShowForm((v) => !v)} className="btn-primary">
-          {showForm ? "Cancel" : "Request New Session"}
-        </button>
       </div>
 
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: "Open Requests", value: openTickets.length, icon: IconTicket, bg: "bg-warning/15", text: "text-warning" },
+          { label: "Resolved", value: resolvedCount, icon: IconCheck, bg: "bg-success/15", text: "text-success" },
+          { label: "Total Sessions", value: tickets.length, icon: IconCalendarEvent, bg: "bg-primary/15", text: "text-primary" },
+          { label: "Courses", value: courses.length, icon: IconMessageCircle, bg: "bg-accent/15", text: "text-accent" },
+        ].map((stat) => (
+          <div key={stat.label} className="glass-card p-4 group hover:-translate-y-0.5 transition-all cursor-default">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted">{stat.label}</p>
+                <p className={`text-2xl font-black ${stat.text}`}>
+                  {loading ? "\u2014" : stat.value}
+                </p>
+              </div>
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${stat.bg} ${stat.text} group-hover:scale-110 transition-transform`}>
+                <stat.icon size={18} stroke={1.8} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* New session form */}
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="rounded-xl border border-border/60 bg-card p-6 space-y-4"
+          className="rounded-xl border border-accent/30 bg-accent/5 p-6 space-y-4"
         >
-          <p className="font-semibold text-foreground">New Session Request</p>
+          <div className="flex items-center gap-2.5 mb-1">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-accent">
+              <IconCalendarPlus size={16} />
+            </div>
+            <p className="font-semibold text-foreground">New Session Request</p>
+          </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">
-              Course
-            </label>
+            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">Course</label>
             <select
               value={courseId}
               onChange={(e) => setCourseId(e.target.value)}
@@ -161,16 +213,12 @@ export default function StudentMentorshipPage() {
               required
             >
               {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
+                <option key={c.id} value={c.id}>{c.title}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">
-              Topic / Blocker
-            </label>
+            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">Topic / Blocker</label>
             <textarea
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
@@ -181,9 +229,7 @@ export default function StudentMentorshipPage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">
-              Preferred Date (optional)
-            </label>
+            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">Preferred Date (optional)</label>
             <input
               type="date"
               value={preferredDate}
@@ -192,33 +238,36 @@ export default function StudentMentorshipPage() {
             />
           </div>
           <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setShowForm(false)}
-              className="btn-secondary text-sm"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="btn-primary text-sm"
-            >
+            <button type="button" onClick={() => setShowForm(false)} className="btn-secondary text-sm">Cancel</button>
+            <button type="submit" disabled={submitting} className="btn-primary text-sm">
               {submitting ? "Submitting..." : "Submit Request"}
             </button>
           </div>
         </form>
       )}
 
+      {/* Open Requests */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted mb-3">
-          Open Requests
-        </p>
+        <div className="flex items-center gap-2 mb-3">
+          <p className="sp-eyebrow">Open Requests</p>
+          {openTickets.length > 0 && (
+            <span className="rounded-full bg-warning/10 px-2 py-0.5 text-[11px] font-semibold text-warning border border-warning/20">
+              {openTickets.length}
+            </span>
+          )}
+        </div>
         {openTickets.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-border/60 bg-card/50 py-10 text-center">
-            <p className="text-sm text-muted-foreground">
-              No open or assigned tickets.
+          <div className="glass-card flex flex-col items-center gap-3 py-12 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+              <IconMessageCircle size={28} />
+            </div>
+            <p className="font-semibold text-foreground">No open requests</p>
+            <p className="text-sm text-muted-foreground max-w-xs">
+              All caught up! Create a new request if you need help with a topic.
             </p>
+            <button onClick={() => setShowForm(true)} className="btn-primary text-sm mt-1">
+              Request Session
+            </button>
           </div>
         ) : (
           <div className="space-y-3">
@@ -229,12 +278,18 @@ export default function StudentMentorshipPage() {
         )}
       </div>
 
+      {/* Past Sessions */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted mb-3">
-          Past Sessions
-        </p>
+        <div className="flex items-center gap-2 mb-3">
+          <p className="sp-eyebrow">Past Sessions</p>
+          {pastTickets.length > 0 && (
+            <span className="rounded-full bg-muted/10 px-2 py-0.5 text-[11px] font-semibold text-muted border border-muted/20">
+              {pastTickets.length}
+            </span>
+          )}
+        </div>
         {pastTickets.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No past sessions yet.</p>
+          <p className="text-sm text-muted-foreground py-4">No past sessions yet.</p>
         ) : (
           <div className="space-y-3">
             {pastTickets.map((t) => (
@@ -258,13 +313,19 @@ function TicketCard({
   const cfg = STATUS_CONFIG[ticket.status] || STATUS_CONFIG.OPEN;
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card p-5">
+    <div className={`glass-card border-l-4 p-5 transition-all hover:-translate-y-0.5 cursor-default ${cfg.border}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${cfg.classes}`}>
+              {cfg.icon}
+              {cfg.label}
+            </span>
+          </div>
           <p className="font-semibold text-foreground">{ticket.title}</p>
           <p className="mt-0.5 text-sm text-muted-foreground">
             {ticket.course?.title || "General"}
-            {ticket.mentor?.name && ` - Mentor: ${ticket.mentor.name}`}
+            {ticket.mentor?.name && <span> &middot; Mentor: {ticket.mentor.name}</span>}
           </p>
           <p className="mt-0.5 text-xs text-muted">
             {new Date(ticket.createdAt).toLocaleDateString("en-IN", {
@@ -274,11 +335,6 @@ function TicketCard({
             })}
           </p>
         </div>
-        <span
-          className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${cfg.classes}`}
-        >
-          {cfg.label}
-        </span>
       </div>
       {showNotes && ticket.notes && (
         <div className="mt-3">

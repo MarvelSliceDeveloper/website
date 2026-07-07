@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
-import { IconArrowRight, IconClock, IconSearch } from "@tabler/icons-react";
+import {
+  IconArrowRight,
+  IconClock,
+  IconSearch,
+} from "@tabler/icons-react";
 import type { ViewState } from "../_types/student-portal";
 import type { EnrolledCourse } from "@/lib/student-mock-data";
 
@@ -39,6 +43,13 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
   const [filter, setFilter] = useState<Filter>("ALL");
   const [search, setSearch] = useState("");
 
+  const counts = useMemo(() => ({
+    ALL: courses.length,
+    ACTIVE: courses.filter((c) => c.status === "ACTIVE").length,
+    COMPLETED: courses.filter((c) => c.status === "COMPLETED").length,
+    PENDING: courses.filter((c) => c.status === "PENDING").length,
+  }), [courses]);
+
   const filtered = courses.filter((c) => {
     const matchesFilter = filter === "ALL" || c.status === filter;
     const matchesSearch =
@@ -55,6 +66,9 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
         <div>
           <p className="sp-eyebrow">Learning</p>
           <h1 className="text-2xl font-bold text-foreground">My Courses</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            {courses.length} course{courses.length !== 1 ? "s" : ""} enrolled
+          </p>
         </div>
         <button
           onClick={() => navigate({ view: "BROWSE_CATALOGUE" })}
@@ -84,13 +98,20 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
-              className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-sm font-medium transition-all ${
+              className={`flex-shrink-0 rounded-xl border px-3 py-1.5 text-sm font-medium transition-all flex items-center gap-1.5 ${
                 filter === f.value
                   ? "border-primary bg-primary/15 text-primary"
                   : "border-border bg-card text-muted-foreground hover:border-border-hover hover:text-foreground"
               }`}
             >
               {f.label}
+              <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${
+                filter === f.value
+                  ? "bg-primary/20 text-primary"
+                  : "bg-muted/10 text-muted"
+              }`}>
+                {counts[f.value]}
+              </span>
             </button>
           ))}
         </div>
@@ -123,8 +144,8 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
                 key={course.id}
                 className="glass-card group flex flex-col overflow-hidden transition-all hover:-translate-y-1 hover:border-primary/40"
               >
-                {/* Large Thumbnail */}
-                <div className="relative h-40 w-full overflow-hidden bg-card">
+                {/* Thumbnail with gradient overlay */}
+                <div className="relative h-36 w-full overflow-hidden bg-card">
                   {(() => {
                     const thumb =
                       (course as EnrolledCourse & { thumbnailUrl?: string })
@@ -154,35 +175,49 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
                       </div>
                     );
                   })()}
+                  <div className="absolute inset-0 bg-gradient-to-t from-card/80 via-transparent to-transparent" />
                   {/* Status Badge */}
                   <span
                     className={`absolute right-3 top-3 rounded-full border px-2.5 py-1 text-xs font-semibold ${cfg.classes}`}
                   >
                     {cfg.label}
                   </span>
+                  {/* Progress ring in thumbnail corner */}
+                  {course.status !== "PENDING" && (
+                    <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                      <div className="relative flex h-10 w-10 items-center justify-center">
+                        <svg width={40} height={40} className="absolute">
+                          <circle cx={20} cy={20} r={16} fill="none" stroke="var(--border)" strokeWidth={3} />
+                          <circle cx={20} cy={20} r={16} fill="none" stroke="var(--primary)" strokeWidth={3}
+                            strokeDasharray={2 * Math.PI * 16}
+                            strokeDashoffset={2 * Math.PI * 16 - (course.progress / 100) * 2 * Math.PI * 16}
+                            strokeLinecap="round" transform="rotate(-90 20 20)"
+                            className="transition-all duration-700" />
+                        </svg>
+                        <span className="relative text-[10px] font-bold text-primary">{course.progress}%</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Content */}
-                <div className="flex flex-1 flex-col gap-3 p-4">
-                  {/* Title */}
+                <div className="flex flex-1 flex-col gap-2 p-4">
                   <div>
                     <p className="line-clamp-2 font-semibold text-foreground">
                       {course.title}
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                       {course.instructor}
                     </p>
                   </div>
 
-                  {/* Batch info */}
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted">
                     Batch: {course.batchLabel}
                   </p>
 
-                  {/* Progress bar */}
                   {course.status !== "PENDING" && (
-                    <div>
-                      <div className="mb-1.5 flex items-center justify-between text-xs text-muted">
+                    <div className="mt-1">
+                      <div className="mb-1 flex items-center justify-between text-xs text-muted">
                         <span>Progress</span>
                         <span className="font-medium">{course.progress}%</span>
                       </div>
@@ -195,7 +230,6 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
                     </div>
                   )}
 
-                  {/* Action Button */}
                   <div className="mt-auto pt-2">
                     {canOpen && (
                       <button
@@ -207,7 +241,7 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
                         }
                         className="btn-primary w-full text-sm"
                       >
-                        Open <IconArrowRight size={14} />
+                        Continue <IconArrowRight size={14} />
                       </button>
                     )}
                     {course.status === "PENDING" && (
