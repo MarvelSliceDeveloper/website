@@ -4,6 +4,94 @@
 
 ---
 
+## 2026-07-07 — Super Admin Role, Role Separation & Security Hardening 🛡️
+
+### Added: Super Admin Role (Full Stack)
+
+- **`SUPER_ADMIN`** role in Prisma schema (`UserRole` enum), inherits `ADMIN` via auth middleware
+- **12 new Prisma models**: `SystemSetting`, `ApiKey`, `LoginLog`, `PermissionOverride`, `Announcement`, `ConsentLog`, `QuizTemplate`/`QuizTemplateQuestion`/`QuizTemplateOption`, `AssignmentTemplate`, `CourseQuizTemplate`, `CourseAssignmentTemplate`
+- **Soft-delete columns** on `User`, `Course`, `Batch`, `LiveSession`, `Assignment`
+- **`getSuperAdminId()`** utility with 5-min cache for delegated Graph API calls; `requireSuperAdmin` middleware
+- **Seed user**: `superadmin@lms.local` / `superadmin123` + 7 default system settings
+- **OAuth/Microsoft account linking** restricted to `SUPER_ADMIN`
+
+### Added: Super Admin API Modules
+
+- **System settings** CRUD (`/api/admin/settings`)
+- **API keys** CRUD with hashed storage (`/api/admin/api-keys`)
+- **Permission overrides** toggle API (`/api/admin/permissions`)
+- **Quiz/Assignment template** libraries (`/api/admin/quiz-templates`, `/api/admin/assignment-templates`)
+- **Course ↔ template** attachment/detachment endpoints
+- **Super admin user management**: pending instructors list, approve, suspend/unsuspend, soft-delete/restore, create-admin
+- **Trash/restore** API for 5 entity types (user, course, batch, session, assignment)
+
+### Added: Logging & Audit
+
+- **Activity logs** (`/api/admin/logs`) with pagination/filters/10s polling + stats endpoint
+- **Login history** (`/api/admin/login-history`) per-user browser
+- **Consent logs** (`/api/admin/consent-logs`) for Microsoft account linking
+- **Login logging**: Successful logins recorded to `LoginLog` in auth controller
+- **Consent logging**: Microsoft account link events recorded to `ConsentLog`
+
+### Added: UI Pages (13 new pages)
+
+- `/admin/logs` — Activity log viewer with 10s auto-poll
+- `/admin/logs/stats` — Error rate charts (SUPER_ADMIN)
+- `/admin/settings/system` — Key-value system settings editor
+- `/admin/settings/api-keys` — API key list/create/revoke
+- `/admin/settings/permissions` — Permission toggle matrix with save button
+- `/admin/users/login-history` — Login history browser
+- `/admin/trash` — Tabbed entity browser with restore
+- `/admin/announcements` — Create + history
+- `/admin/consent-logs` — Consent history table
+- `/admin/quiz-templates` — Library grid + editor
+- `/admin/assignment-templates` — Library grid + editor
+
+### Changed: Role Separation (Admin vs Super Admin)
+
+- **Dashboard**: Admin sees platform KPIs (courses/batches/sessions/students); Super Admin sees system KPIs (health, API keys, logs, pending instructors, trash, user distribution)
+- **Sidebar**: Admin nav focuses on platform ops (Inbox, Courses, Batches, Sessions, Reports, Enrollments, Calendar, Users, Mentorship, Microsoft, Settings → General); Super Admin nav focuses on system ops (Activity Logs, Trash, Announcements, Users + Login History, Settings → all, Microsoft)
+- **Quiz/Assignment templates**: Removed from sidebar; to be integrated into course creation flow
+- **Instructor sidebar**: Replaced "Assignments" nav with "My Courses"
+
+### Changed: Instructor Workflow
+
+- **Instructor creation**: Admin-created instructors now start as `isSuspended: true` (pending approval); SUPER_ADMIN gets SYSTEM notification
+- **Login blocked**: Suspended accounts receive "Account is pending approval" on login attempt
+- **Approve UI**: SUPER_ADMIN sees "Approve" button + "Pending" badge on instructors in admin users page
+- **Session creation removed**: Instructors can no longer create live sessions (view only)
+- **Assignment/Quiz creation removed**: Instructors can only view existing quizzes/assignments
+- **My Courses page** (`/instructor/courses`): Shows instructor's assigned courses with batch info, quizzes list, and assignments list with due dates
+
+### Changed: Service Updates for Graph API Delegation
+
+- `session.service.ts` — Uses `superAdminId` for `createOnlineMeeting`
+- `recording.service.ts` — Uses `superAdminId` for `syncRecordingsForSession` + `getPlaybackUrl`
+- `calendar.service.ts` — Uses `superAdminId` for `syncCalendarForUser`
+- All fall back to original `userId` if no linked super admin exists
+
+### Changed: Inline Role Checks
+
+- `session.service.ts` — `cancelSession` allows SUPER_ADMIN
+- `ticket.controller.ts` — All ticket endpoints allow SUPER_ADMIN
+- `batch.service.ts` — SUPER_ADMIN valid as batch instructor
+- `session.controller.ts` — Cancel response shows "deleted" for SUPER_ADMIN
+
+### Fixed: Security Hardening
+
+- **Login page**: Removed hardcoded demo passwords from client-side code (`demoAccounts` object); demo section shows emails only
+- **Graph subscriptions**: Removed hardcoded `"secretClientValue"` fallback for `clientState`; now uses `process.env.MS_WEBHOOK_CLIENT_STATE`
+- **`.env.example`**: All secrets use `CHANGE_ME_*` prefix to fail validation if used in production
+- **`docker-compose.yml`**: Postgres/pgAdmin credentials use `${VAR:-default}` env var interpolation
+- **Admin user creation**: Only SUPER_ADMIN can create ADMIN/SUPER_ADMIN users (role dropdown conditional)
+
+### Added: Planning Docs
+
+- `docs/plan-to-work/super-admin-tracking.md` — 6-phase implementation tracker
+- `docs/plan-to-work/super-admin-architecture.md` — Architecture decisions
+
+---
+
 ## 2026-07-05 — Student Dashboard Bugfixes + UI Consolidation ✅
 
 ### Fixed: Critical Bugs in Student Dashboard
