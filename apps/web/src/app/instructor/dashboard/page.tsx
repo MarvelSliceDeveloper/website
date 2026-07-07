@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { PageHeader } from "@/components/shared/PageHeader";
 import {
   IconVideo,
   IconUsers,
@@ -167,7 +168,7 @@ export default function InstructorDashboardPage() {
           (err.message?.includes("Authentication") ||
             err.message?.includes("401"))
         ) {
-          window.location.href = "/login";
+          router.push("/login");
         }
       } finally {
         setLoading(false);
@@ -181,17 +182,11 @@ export default function InstructorDashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Greeting Banner */}
-      <div className="relative overflow-hidden rounded-lg border border-border bg-card p-5 sm:p-6">
-        <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-xl font-bold text-white">
-            I
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Instructor</p>
-            <h1 className="text-xl font-bold text-foreground sm:text-2xl">{greeting}!</h1>
-            <p className="mt-0.5 text-sm text-muted-foreground">Here is a summary of your workspace.</p>
-          </div>
+      <PageHeader
+        role="Instructor"
+        title={`${greeting}!`}
+        description="Here is a summary of your workspace."
+        action={
           <div className="hidden items-center gap-4 sm:flex">
             <div className="text-right">
               <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Batches</p>
@@ -203,8 +198,8 @@ export default function InstructorDashboardPage() {
               <p className="text-lg font-bold text-success">{loading ? "\u2014" : stats?.totalStudents ?? "\u2014"}</p>
             </div>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -23,22 +23,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 
-type NavItemChild = {
-  label: string;
-  href: string;
-};
-
-type NavItem = {
-  label: string;
-  href: string;
-  icon: React.ComponentType<{
-    size?: number | string;
-    stroke?: number | string;
-    className?: string;
-  }>;
-  badge?: number;
-  children?: NavItemChild[];
-};
+import type { NavItem, NavItemChild } from "@/components/shared/SidebarTypes";
 
 const overviewItems: NavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard", icon: IconLayoutDashboard },

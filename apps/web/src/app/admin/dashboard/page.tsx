@@ -1,18 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import StatCard from "@/components/admin/StatCard";
 import { ChartSkeleton } from "@/components/admin/LoadingSkeleton";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { MOCK_DASHBOARD_CHARTS, MOCK_ENABLED } from "@/lib/student-mock-data";
-import type { DashboardChartData } from "@/lib/student-mock-data";
+import { MOCK_DASHBOARD_CHARTS, MOCK_ENABLED } from "@/lib/admin-mock-data";
+import type { DashboardChartData } from "@/lib/admin-mock-data";
 import dynamic from "next/dynamic";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
-  IconEdit,
-  IconUsersGroup,
-  IconCalendar,
-  IconTicket,
   IconBook,
   IconVideo,
   IconSchool,
@@ -33,33 +29,6 @@ const COLORS = {
 };
 
 const PIE_COLORS = [COLORS.primary, COLORS.accent, COLORS.success, COLORS.warning, COLORS.danger];
-
-const quickActions = [
-  {
-    label: "Create Course",
-    href: "/admin/courses/new",
-    icon: IconEdit,
-    color: "bg-blue-100 text-blue-600",
-  },
-  {
-    label: "Manage Batches",
-    href: "/admin/batches",
-    icon: IconUsersGroup,
-    color: "bg-cyan-100 text-cyan-600",
-  },
-  {
-    label: "View Sessions",
-    href: "/admin/sessions",
-    icon: IconCalendar,
-    color: "bg-emerald-100 text-emerald-600",
-  },
-  {
-    label: "Mentorship Tickets",
-    href: "/admin/mentorship",
-    icon: IconTicket,
-    color: "bg-amber-100 text-amber-600",
-  },
-];
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState({
@@ -182,23 +151,10 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Greeting Banner */}
-      <div className="relative overflow-hidden rounded-lg border border-border bg-card p-5 sm:p-6">
-        <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-xl font-bold text-white">
-            A
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-              Admin
-            </p>
-            <h1 className="text-xl font-bold text-foreground sm:text-2xl">
-              Dashboard
-            </h1>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              Platform overview and quick actions.
-            </p>
-          </div>
+      <AdminPageHeader
+        title="Dashboard"
+        description="Platform overview and quick actions."
+        action={
           <div className="hidden items-center gap-4 sm:flex">
             <div className="text-right">
               <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -218,8 +174,8 @@ export default function AdminDashboardPage() {
               </p>
             </div>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -393,30 +349,7 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="border border-border bg-card p-5">
-        <h2 className="text-base font-semibold text-foreground mb-4">
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {quickActions.map((action) => (
-            <Link
-              key={action.label}
-              href={action.href}
-              className="border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
-            >
-              <div
-                className={`mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg ${action.color} group-hover:scale-110 transition-transform`}
-              >
-                <action.icon size={20} stroke={1.8} />
-              </div>
-              <p className="text-sm font-medium text-foreground">
-                {action.label}
-              </p>
-            </Link>
-          ))}
-        </div>
-      </div>
+
     </div>
   );
 }
