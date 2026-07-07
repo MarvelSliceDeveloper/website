@@ -452,7 +452,6 @@ export default function CourseContentView({
       setNotes((prev) => [res.note, ...prev]);
       setNewNoteTitle("");
       setNewNoteBody("");
-      setShowNewNote(false);
       setEditingNoteId(null);
       // If we created a note for the current module, switch to show it
       if (selectedModuleId && !existingModuleNote) {
@@ -1111,7 +1110,7 @@ export default function CourseContentView({
                 data.modules
                   .flatMap((m) => m.lessons)
                   .findIndex((l) => l.id === selectedLessonId) >=
-                  data.modules.reduce((s, m) => s + m.lessons.length, 0) - 1
+                data.modules.reduce((s, m) => s + m.lessons.length, 0) - 1
               }
               className="btn-primary text-xs gap-1.5"
             >
