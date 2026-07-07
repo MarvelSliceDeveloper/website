@@ -8,6 +8,7 @@ import {
 import { UserRole } from "@lms/types";
 import bcrypt from "bcryptjs";
 import { emailService } from "../../services/email.service";
+import { notificationService } from "../notifications/notification.service";
 
 const router = Router();
 
@@ -25,7 +26,7 @@ function handleError(res: Response, error: unknown) {
 router.get("/", async (_req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany({
-      select: { id: true, name: true, email: true, role: true },
+      select: { id: true, name: true, email: true, role: true, isSuspended: true },
       orderBy: [{ role: "asc" }, { name: "asc" }],
     });
     return res.json(users);
@@ -57,6 +58,8 @@ router.post("/", async (req: Request, res: Response) => {
         .json({ error: "User with this email already exists" });
     }
 
+    const isSuspended = role === "INSTRUCTOR";
+
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
       data: {
@@ -64,8 +67,9 @@ router.post("/", async (req: Request, res: Response) => {
         email,
         passwordHash,
         role: role as UserRole,
+        isSuspended,
       },
-      select: { id: true, name: true, email: true, role: true },
+      select: { id: true, name: true, email: true, role: true, isSuspended: true },
     });
 
     emailService
@@ -73,6 +77,23 @@ router.post("/", async (req: Request, res: Response) => {
       .catch((err) => {
         console.error("[users] Failed to send welcome email:", err);
       });
+
+    if (isSuspended) {
+      const superAdmins = await prisma.user.findMany({
+        where: { role: "SUPER_ADMIN" },
+        select: { id: true },
+      });
+      if (superAdmins.length > 0) {
+        notificationService.createMany(
+          superAdmins.map((sa) => ({
+            userId: sa.id,
+            title: "Instructor Pending Approval",
+            message: `${user.name} (${user.email}) has registered as an instructor and is awaiting your approval.`,
+            type: "SYSTEM",
+          })),
+        );
+      }
+    }
 
     return res.status(201).json(user);
   } catch (error) {

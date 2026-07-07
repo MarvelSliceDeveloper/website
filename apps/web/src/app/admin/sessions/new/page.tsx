@@ -334,7 +334,7 @@ export default function ScheduleSessionPage() {
                   {instructors.map((inst) => (
                     <SelectItem key={inst.id} value={inst.id}>
                       {inst.name} ({inst.email}){" "}
-                      {inst.role === "ADMIN" ? "🛡️ Admin" : "👨‍🏫 Instructor"}
+                      {inst.role === "SUPER_ADMIN" ? "🛡️ Super Admin" : inst.role === "ADMIN" ? "🛡️ Admin" : "👨‍🏫 Instructor"}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -25,7 +25,7 @@ export async function createSubscription(
     notificationUrl,
     resource,
     expirationDateTime,
-    clientState: clientState || "secretClientValue",
+    clientState: clientState || process.env.MS_WEBHOOK_CLIENT_STATE,
   }) as Promise<Subscription>;
 }
 

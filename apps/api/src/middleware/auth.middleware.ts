@@ -19,6 +19,7 @@ export interface AuthRequest extends Request {
     userId: string;
     role: UserRole;
     email: string;
+    sessionTimeoutMin?: number;
   };
 }
 
@@ -39,8 +40,18 @@ export const requireAuth = (
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    const decoded = jwt.verify(token, getJwtSecret()) as AuthRequest["user"];
-    req.user = decoded;
+    const payload = jwt.verify(token, getJwtSecret()) as jwt.JwtPayload & AuthRequest["user"];
+    req.user = payload;
+
+    // Enforce per-user session timeout
+    const iat = payload.iat;
+    if (payload.sessionTimeoutMin && iat) {
+      const timeoutMin = payload.sessionTimeoutMin;
+      const tokenAge = (Date.now() - iat * 1000) / 60000;
+      if (tokenAge > timeoutMin) {
+        return res.status(401).json({ error: "Session expired" });
+      }
+    }
 
     next();
   } catch {
@@ -49,10 +60,18 @@ export const requireAuth = (
 };
 
 // Check that the authenticated user has one of the allowed roles
+// SUPER_ADMIN automatically inherits ADMIN-level access
 export const requireRole = (roles: UserRole[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (
+      req.user.role === UserRole.SUPER_ADMIN &&
+      roles.includes(UserRole.ADMIN)
+    ) {
+      return next();
     }
 
     if (!roles.includes(req.user.role)) {
@@ -61,4 +80,16 @@ export const requireRole = (roles: UserRole[]) => {
 
     next();
   };
+};
+
+// Restrict endpoint to SUPER_ADMIN only
+export const requireSuperAdmin = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  if (!req.user || req.user.role !== UserRole.SUPER_ADMIN) {
+    return res.status(403).json({ error: "Super Admin only" });
+  }
+  next();
 };

@@ -44,23 +44,23 @@ STUDENT
 
 SUPER_ADMIN has a UI at `/admin/settings/permissions` listing all permission flags for ADMIN and INSTRUCTOR, each as a toggle switch:
 
-| Permission | Default ADMIN | Default INSTRUCTOR |
-|---|---|---|
-| `course.create` | ✅ | ❌ |
-| `course.edit` | ✅ | ❌ |
-| `course.delete` | ❌ | ❌ |
-| `course.view.all` | ✅ | ❌ |
-| `batch.create` | ✅ | ❌ |
-| `batch.edit` | ✅ | ❌ |
-| `batch.delete` | ❌ | ❌ |
-| `session.create` | ✅ | ❌ |
-| `session.edit` | ✅ | ❌ |
-| `session.delete` | ❌ | ❌ |
-| `student.create` | ✅ | ❌ |
-| `enrollment.manage` | ✅ | ❌ |
-| `assignment.create` | ❌ | ✅ |
-| `assignment.grade` | ❌ | ✅ |
-| `mentorship.answer` | ❌ | ✅ |
+| Permission          | Default ADMIN | Default INSTRUCTOR |
+| ------------------- | ------------- | ------------------ |
+| `course.create`     | ✅            | ❌                 |
+| `course.edit`       | ✅            | ❌                 |
+| `course.delete`     | ❌            | ❌                 |
+| `course.view.all`   | ✅            | ❌                 |
+| `batch.create`      | ✅            | ❌                 |
+| `batch.edit`        | ✅            | ❌                 |
+| `batch.delete`      | ❌            | ❌                 |
+| `session.create`    | ✅            | ❌                 |
+| `session.edit`      | ✅            | ❌                 |
+| `session.delete`    | ❌            | ❌                 |
+| `student.create`    | ✅            | ❌                 |
+| `enrollment.manage` | ✅            | ❌                 |
+| `assignment.create` | ❌            | ✅                 |
+| `assignment.grade`  | ❌            | ✅                 |
+| `mentorship.answer` | ❌            | ✅                 |
 
 Permission overrides stored in `PermissionOverride` model, checked by middleware.
 
@@ -71,17 +71,17 @@ Permission overrides stored in `PermissionOverride` model, checked by middleware
 Only SUPER_ADMIN can link a Microsoft/Teams account. All Graph API calls for Teams meetings, calendar sync, and recordings use the super admin's tokens via a `getSuperAdminId()` utility.
 
 - `azureAdLogin` and `azureAdCallback` check `user.role !== 'SUPER_ADMIN'` instead of `user.role !== 'ADMIN'`
-- Regular ADMIN users see a notice on the Microsoft page: *"Microsoft account is managed by the Super Admin"*
+- Regular ADMIN users see a notice on the Microsoft page: _"Microsoft account is managed by the Super Admin"_
 - Consent changes logged in `ConsentLog`
 
 ### Affected Services
 
-| Service | Current | Change |
-|---|---|---|
-| `session.service.ts` | `createOnlineMeeting(userId, ...)` | `createOnlineMeeting(superAdminId, ...)` |
-| `ticket.service.ts` | mentor session using admin's ID | Use `superAdminId` for Teams meeting |
-| `recording.service.ts` | `syncRecordingsForSession(userId)` | Use `superAdminId` |
-| `calendar.service.ts` | `syncCalendarForUser(userId)` | Use `superAdminId` |
+| Service                | Current                            | Change                                   |
+| ---------------------- | ---------------------------------- | ---------------------------------------- |
+| `session.service.ts`   | `createOnlineMeeting(userId, ...)` | `createOnlineMeeting(superAdminId, ...)` |
+| `ticket.service.ts`    | mentor session using admin's ID    | Use `superAdminId` for Teams meeting     |
+| `recording.service.ts` | `syncRecordingsForSession(userId)` | Use `superAdminId`                       |
+| `calendar.service.ts`  | `syncCalendarForUser(userId)`      | Use `superAdminId`                       |
 
 ---
 
@@ -252,12 +252,12 @@ model CourseAssignmentTemplate {
 
 Add to these models: `deletedAt DateTime?`, `deletedBy String?`, `restoredAt DateTime?`, `restoredBy String?`
 
-| Model | Description |
-|---|---|
-| `User` | Soft-delete users |
-| `Course` | Soft-delete courses |
-| `Batch` | Soft-delete batches |
-| `Session` | Soft-delete sessions |
+| Model        | Description             |
+| ------------ | ----------------------- |
+| `User`       | Soft-delete users       |
+| `Course`     | Soft-delete courses     |
+| `Batch`      | Soft-delete batches     |
+| `Session`    | Soft-delete sessions    |
 | `Assignment` | Soft-delete assignments |
 
 ### 4.5 User Model Additions
@@ -315,7 +315,11 @@ export const requireRole = (...roles: Role[]) => {
 New middleware for super-admin-only endpoints:
 
 ```typescript
-export const requireSuperAdmin = (req: Request, res: Response, next: NextFunction) => {
+export const requireSuperAdmin = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   if (!req.user || req.user.role !== Role.SUPER_ADMIN) {
     return res.status(403).json({ error: "Super Admin only" });
   }
@@ -339,9 +343,9 @@ await prisma.loginLog.create({
   data: {
     userId: user.id,
     ip: req.ip,
-    userAgent: req.headers['user-agent'],
-    deviceInfo: req.headers['sec-ch-ua-platform'] || null,
-  }
+    userAgent: req.headers["user-agent"],
+    deviceInfo: req.headers["sec-ch-ua-platform"] || null,
+  },
 });
 ```
 
@@ -351,7 +355,7 @@ After JWT verification, check token age against user's `sessionTimeoutMin`:
 
 ```typescript
 const timeoutMin = req.user.sessionTimeoutMin ?? 480;
-const tokenAge = (Date.now() - (decoded.iat! * 1000)) / 60000;
+const tokenAge = (Date.now() - decoded.iat! * 1000) / 60000;
 if (tokenAge > timeoutMin) {
   return res.status(401).json({ error: "Session expired" });
 }
@@ -363,17 +367,18 @@ if (tokenAge > timeoutMin) {
 
 ### 6.1 User Management (SUPER_ADMIN)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/admin/users/pending` | List instructors awaiting approval |
-| `PUT` | `/api/admin/users/:id/approve` | Approve pending instructor |
-| `PUT` | `/api/admin/users/:id/suspend` | Suspend user |
-| `PUT` | `/api/admin/users/:id/unsuspend` | Unsuspend user |
-| `POST` | `/api/admin/users/create-admin` | Create new admin |
-| `DELETE` | `/api/admin/users/:id` | Soft-delete user |
-| `PUT` | `/api/admin/users/:id/restore` | Restore soft-deleted user |
+| Method   | Endpoint                         | Description                        |
+| -------- | -------------------------------- | ---------------------------------- |
+| `GET`    | `/api/admin/users/pending`       | List instructors awaiting approval |
+| `PUT`    | `/api/admin/users/:id/approve`   | Approve pending instructor         |
+| `PUT`    | `/api/admin/users/:id/suspend`   | Suspend user                       |
+| `PUT`    | `/api/admin/users/:id/unsuspend` | Unsuspend user                     |
+| `POST`   | `/api/admin/users/create-admin`  | Create new admin                   |
+| `DELETE` | `/api/admin/users/:id`           | Soft-delete user                   |
+| `PUT`    | `/api/admin/users/:id/restore`   | Restore soft-deleted user          |
 
 **Instructor approval flow:**
+
 1. ADMIN creates an instructor account (role=INSTRUCTOR)
 2. Account created with `isSuspended: true` (pending)
 3. SUPER_ADMIN sees request at `/admin/users/pending`
@@ -382,99 +387,99 @@ if (tokenAge > timeoutMin) {
 
 ### 6.2 Permissions (SUPER_ADMIN)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/admin/permissions` | List all permission overrides |
-| `PUT` | `/api/admin/permissions` | Batch update overrides |
+| Method | Endpoint                 | Description                   |
+| ------ | ------------------------ | ----------------------------- |
+| `GET`  | `/api/admin/permissions` | List all permission overrides |
+| `PUT`  | `/api/admin/permissions` | Batch update overrides        |
 
 ### 6.3 Activity Logs (SUPER_ADMIN + ADMIN)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/admin/logs` | Query `GraphApiLog` (filters: page, limit, userId, action, status, from, to) |
-| `GET` | `/api/admin/logs/stats` | Aggregated stats (error rate, failure count, top errors) |
+| Method | Endpoint                | Description                                                                  |
+| ------ | ----------------------- | ---------------------------------------------------------------------------- |
+| `GET`  | `/api/admin/logs`       | Query `GraphApiLog` (filters: page, limit, userId, action, status, from, to) |
+| `GET`  | `/api/admin/logs/stats` | Aggregated stats (error rate, failure count, top errors)                     |
 
 Page polls `/api/admin/logs?since={timestamp}` every 10 seconds for live updates.
 
 ### 6.4 Login History (SUPER_ADMIN)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/admin/login-history` | All login logs with pagination + filters |
-| `GET` | `/api/admin/login-history/:userId` | Login history for specific user |
+| Method | Endpoint                           | Description                              |
+| ------ | ---------------------------------- | ---------------------------------------- |
+| `GET`  | `/api/admin/login-history`         | All login logs with pagination + filters |
+| `GET`  | `/api/admin/login-history/:userId` | Login history for specific user          |
 
 ### 6.5 System Settings (SUPER_ADMIN)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/admin/settings` | List all settings |
-| `PUT` | `/api/admin/settings/:key` | Update a setting |
+| Method | Endpoint                   | Description       |
+| ------ | -------------------------- | ----------------- |
+| `GET`  | `/api/admin/settings`      | List all settings |
+| `PUT`  | `/api/admin/settings/:key` | Update a setting  |
 
 ### 6.6 API Keys (SUPER_ADMIN)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/admin/api-keys` | List (masked: `sk_XXXX...XXXX`) |
-| `POST` | `/api/admin/api-keys` | Create (returns plaintext once) |
-| `DELETE` | `/api/admin/api-keys/:id` | Revoke |
+| Method   | Endpoint                  | Description                     |
+| -------- | ------------------------- | ------------------------------- |
+| `GET`    | `/api/admin/api-keys`     | List (masked: `sk_XXXX...XXXX`) |
+| `POST`   | `/api/admin/api-keys`     | Create (returns plaintext once) |
+| `DELETE` | `/api/admin/api-keys/:id` | Revoke                          |
 
 ### 6.7 Trash / Restore (SUPER_ADMIN)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/admin/trash` | List all soft-deleted entities |
-| `POST` | `/api/admin/trash/:type/:id/restore` | Restore entity |
+| Method | Endpoint                             | Description                    |
+| ------ | ------------------------------------ | ------------------------------ |
+| `GET`  | `/api/admin/trash`                   | List all soft-deleted entities |
+| `POST` | `/api/admin/trash/:type/:id/restore` | Restore entity                 |
 
 Supported types: `user`, `course`, `batch`, `session`, `assignment`
 
 ### 6.8 Announcements (SUPER_ADMIN)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/admin/announcements` | Send announcement to role |
-| `GET` | `/api/admin/announcements` | List announcements |
-| `PUT` | `/api/admin/announcements/:id/read` | Mark as read by current user |
+| Method | Endpoint                            | Description                  |
+| ------ | ----------------------------------- | ---------------------------- |
+| `POST` | `/api/admin/announcements`          | Send announcement to role    |
+| `GET`  | `/api/admin/announcements`          | List announcements           |
+| `PUT`  | `/api/admin/announcements/:id/read` | Mark as read by current user |
 
 ### 6.9 Consent Logs (SUPER_ADMIN)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/admin/consent-logs` | Query consent history |
+| Method | Endpoint                  | Description           |
+| ------ | ------------------------- | --------------------- |
+| `GET`  | `/api/admin/consent-logs` | Query consent history |
 
 ### 6.10 Dashboard Analytics (SUPER_ADMIN)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/admin/analytics/errors` | Error rate, failure count, top errors by endpoint |
+| Method | Endpoint                      | Description                                       |
+| ------ | ----------------------------- | ------------------------------------------------- |
+| `GET`  | `/api/admin/analytics/errors` | Error rate, failure count, top errors by endpoint |
 
 ### 6.11 Quiz Template Library (ADMIN + SUPER_ADMIN)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/admin/quiz-templates` | List all templates |
-| `POST` | `/api/admin/quiz-templates` | Create with questions + options |
-| `GET` | `/api/admin/quiz-templates/:id` | Get detail |
-| `PUT` | `/api/admin/quiz-templates/:id` | Update |
-| `DELETE` | `/api/admin/quiz-templates/:id` | Delete |
+| Method   | Endpoint                        | Description                     |
+| -------- | ------------------------------- | ------------------------------- |
+| `GET`    | `/api/admin/quiz-templates`     | List all templates              |
+| `POST`   | `/api/admin/quiz-templates`     | Create with questions + options |
+| `GET`    | `/api/admin/quiz-templates/:id` | Get detail                      |
+| `PUT`    | `/api/admin/quiz-templates/:id` | Update                          |
+| `DELETE` | `/api/admin/quiz-templates/:id` | Delete                          |
 
 ### 6.12 Assignment Template Library (ADMIN + SUPER_ADMIN)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/admin/assignment-templates` | List all |
-| `POST` | `/api/admin/assignment-templates` | Create (with optional PDF) |
-| `GET` | `/api/admin/assignment-templates/:id` | Get detail |
-| `PUT` | `/api/admin/assignment-templates/:id` | Update |
-| `DELETE` | `/api/admin/assignment-templates/:id` | Delete |
+| Method   | Endpoint                              | Description                |
+| -------- | ------------------------------------- | -------------------------- |
+| `GET`    | `/api/admin/assignment-templates`     | List all                   |
+| `POST`   | `/api/admin/assignment-templates`     | Create (with optional PDF) |
+| `GET`    | `/api/admin/assignment-templates/:id` | Get detail                 |
+| `PUT`    | `/api/admin/assignment-templates/:id` | Update                     |
+| `DELETE` | `/api/admin/assignment-templates/:id` | Delete                     |
 
 ### 6.13 Course — Attach Templates (ADMIN + SUPER_ADMIN)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/admin/courses/:id/quiz-templates` | Attach quiz template to course |
-| `DELETE` | `/api/admin/courses/:id/quiz-templates/:templateId` | Detach |
-| `POST` | `/api/admin/courses/:id/assignment-templates` | Attach assignment template |
-| `DELETE` | `/api/admin/courses/:id/assignment-templates/:templateId` | Detach |
+| Method   | Endpoint                                                  | Description                    |
+| -------- | --------------------------------------------------------- | ------------------------------ |
+| `POST`   | `/api/admin/courses/:id/quiz-templates`                   | Attach quiz template to course |
+| `DELETE` | `/api/admin/courses/:id/quiz-templates/:templateId`       | Detach                         |
+| `POST`   | `/api/admin/courses/:id/assignment-templates`             | Attach assignment template     |
+| `DELETE` | `/api/admin/courses/:id/assignment-templates/:templateId` | Detach                         |
 
 ---
 
@@ -509,30 +514,30 @@ Requires a `userRole` prop from `AdminShell` (which fetches user data on mount).
 
 ### 7.2 New Pages
 
-| Route | Feature | Access |
-|---|---|---|
-| `/admin/logs` | Activity log table with 10s polling | SUPER_ADMIN + ADMIN |
-| `/admin/logs/stats` | Error rate charts (ApexCharts) | SUPER_ADMIN |
-| `/admin/settings/system` | System settings key-value editor | SUPER_ADMIN |
-| `/admin/settings/api-keys` | API key list + create + revoke | SUPER_ADMIN |
-| `/admin/settings/permissions` | Permission toggle matrix | SUPER_ADMIN |
-| `/admin/users/login-history` | Login log browser with filters | SUPER_ADMIN |
-| `/admin/trash` | Tabbed trash by entity type, restore buttons | SUPER_ADMIN |
-| `/admin/announcements` | Create + history | SUPER_ADMIN |
-| `/admin/consent-logs` | Consent history table | SUPER_ADMIN |
-| `/admin/quiz-templates` | Quiz template library grid | ADMIN + SUPER_ADMIN |
-| `/admin/quiz-templates/[id]` | Quiz template editor | ADMIN + SUPER_ADMIN |
-| `/admin/assignment-templates` | Assignment template library grid | ADMIN + SUPER_ADMIN |
-| `/admin/assignment-templates/[id]` | Assignment template editor | ADMIN + SUPER_ADMIN |
+| Route                              | Feature                                      | Access              |
+| ---------------------------------- | -------------------------------------------- | ------------------- |
+| `/admin/logs`                      | Activity log table with 10s polling          | SUPER_ADMIN + ADMIN |
+| `/admin/logs/stats`                | Error rate charts (ApexCharts)               | SUPER_ADMIN         |
+| `/admin/settings/system`           | System settings key-value editor             | SUPER_ADMIN         |
+| `/admin/settings/api-keys`         | API key list + create + revoke               | SUPER_ADMIN         |
+| `/admin/settings/permissions`      | Permission toggle matrix                     | SUPER_ADMIN         |
+| `/admin/users/login-history`       | Login log browser with filters               | SUPER_ADMIN         |
+| `/admin/trash`                     | Tabbed trash by entity type, restore buttons | SUPER_ADMIN         |
+| `/admin/announcements`             | Create + history                             | SUPER_ADMIN         |
+| `/admin/consent-logs`              | Consent history table                        | SUPER_ADMIN         |
+| `/admin/quiz-templates`            | Quiz template library grid                   | ADMIN + SUPER_ADMIN |
+| `/admin/quiz-templates/[id]`       | Quiz template editor                         | ADMIN + SUPER_ADMIN |
+| `/admin/assignment-templates`      | Assignment template library grid             | ADMIN + SUPER_ADMIN |
+| `/admin/assignment-templates/[id]` | Assignment template editor                   | ADMIN + SUPER_ADMIN |
 
 ### 7.3 Modified Pages
 
-| Page | Change |
-|---|---|
-| `/admin/microsoft` | SUPER_ADMIN sees Link/Re-link UI; ADMIN sees "Managed by Super Admin" notice |
-| `/admin/settings` | SUPER_ADMIN sees sub-nav (system, api-keys, permissions); ADMIN sees only existing settings |
-| `/admin/courses/[id]` | Add quiz/assignment attachment section showing attached templates with due dates |
-| `AdminShell` | Fetch current user + role, pass `userRole` to `AdminSidebar` |
+| Page                  | Change                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------- |
+| `/admin/microsoft`    | SUPER_ADMIN sees Link/Re-link UI; ADMIN sees "Managed by Super Admin" notice                |
+| `/admin/settings`     | SUPER_ADMIN sees sub-nav (system, api-keys, permissions); ADMIN sees only existing settings |
+| `/admin/courses/[id]` | Add quiz/assignment attachment section showing attached templates with due dates            |
+| `AdminShell`          | Fetch current user + role, pass `userRole` to `AdminSidebar`                                |
 
 ---
 
@@ -569,6 +574,7 @@ await upsertUser({
 ```
 
 Default system settings:
+
 ```
 platform_name              → "Marvel Slice LMS"
 default_session_duration   → 60
@@ -582,14 +588,14 @@ session_timeout_student    → 480
 
 ## 11. Implementation Phases
 
-| Phase | Duration | Deliverables |
-|---|---|---|
-| **1: Foundation** | ~2 days | Prisma schema, shared types, auth middleware, seed, `getSuperAdminId()` |
-| **2: Core SA API** | ~5 days | User management, RBAC, system settings, API keys, quiz/assignment template APIs |
-| **3: Logging** | ~4 days | Activity logs + 10s polling, login history, analytics errors, consent logs |
-| **4: Operations** | ~4 days | Soft-delete + trash/restore, session timeout, Microsoft page rewrite, sidebar nav |
-| **5: UI Pages** | ~6 days | All 13 new pages, in-app notification bell, course attachment UI |
-| **6: Service Updates** | ~2 days | Update session/ticket/recording/calendar services to use `superAdminId` |
+| Phase                  | Duration | Deliverables                                                                      |
+| ---------------------- | -------- | --------------------------------------------------------------------------------- |
+| **1: Foundation**      | ~2 days  | Prisma schema, shared types, auth middleware, seed, `getSuperAdminId()`           |
+| **2: Core SA API**     | ~5 days  | User management, RBAC, system settings, API keys, quiz/assignment template APIs   |
+| **3: Logging**         | ~4 days  | Activity logs + 10s polling, login history, analytics errors, consent logs        |
+| **4: Operations**      | ~4 days  | Soft-delete + trash/restore, session timeout, Microsoft page rewrite, sidebar nav |
+| **5: UI Pages**        | ~6 days  | All 13 new pages, in-app notification bell, course attachment UI                  |
+| **6: Service Updates** | ~2 days  | Update session/ticket/recording/calendar services to use `superAdminId`           |
 
 **Total estimate:** ~23 days
 

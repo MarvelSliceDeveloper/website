@@ -21,6 +21,9 @@ import {
   IconSettings,
   IconMenu2,
   IconX,
+  IconFileDescription,
+  IconTrash,
+  IconBellRinging,
 } from "@tabler/icons-react";
 
 type NavItemChild = {
@@ -40,109 +43,7 @@ type NavItem = {
   children?: NavItemChild[];
 };
 
-const overviewItems: NavItem[] = [
-  { label: "Dashboard", href: "/admin/dashboard", icon: IconLayoutDashboard },
-  {
-    label: "Inbox",
-    href: "/admin/inbox",
-    icon: IconMail,
-    children: [
-      { label: "Notifications", href: "/admin/inbox" },
-      { label: "Send Notification", href: "/admin/notifications/send" },
-      { label: "Mentorship Tickets", href: "/admin/inbox/tickets" },
-      { label: "Support", href: "/admin/inbox/support" },
-      { label: "Messages", href: "/admin/inbox/messages" },
-    ],
-  },
-  {
-    label: "Courses",
-    href: "/admin/courses",
-    icon: IconBook,
-    children: [
-      { label: "All Courses", href: "/admin/courses" },
-      { label: "Create Course", href: "/admin/courses/new" },
-      { label: "Drafts", href: "/admin/courses?status=DRAFT" },
-      { label: "Published", href: "/admin/courses?status=PUBLISHED" },
-      { label: "Archived", href: "/admin/courses?status=ARCHIVED" },
-    ],
-  },
-  {
-    label: "Batches",
-    href: "/admin/batches",
-    icon: IconUsersGroup,
-    children: [
-      { label: "All Batches", href: "/admin/batches" },
-      { label: "Create Batch", href: "/admin/batches/new" },
-      { label: "Active", href: "/admin/batches?status=ACTIVE" },
-      { label: "Upcoming", href: "/admin/batches?status=UPCOMING" },
-      { label: "Completed", href: "/admin/batches?status=COMPLETED" },
-    ],
-  },
-  {
-    label: "Sessions",
-    href: "/admin/sessions",
-    icon: IconVideo,
-    children: [
-      { label: "All Sessions", href: "/admin/sessions" },
-      { label: "Schedule Session", href: "/admin/sessions/new" },
-      { label: "Upcoming", href: "/admin/sessions?status=UPCOMING" },
-      { label: "Past", href: "/admin/sessions?status=PAST" },
-    ],
-  },
-  {
-    label: "Reports",
-    href: "/admin/reports",
-    icon: IconChartBar,
-  },
-  {
-    label: "Enrollments",
-    href: "/admin/enrollments",
-    icon: IconClipboardCheck,
-    children: [
-      { label: "Pending Requests", href: "/admin/enrollments" },
-      { label: "Approved", href: "/admin/enrollments?status=APPROVED" },
-      { label: "Rejected", href: "/admin/enrollments?status=REJECTED" },
-    ],
-  },
-  {
-    label: "Calendar",
-    href: "/admin/calendar",
-    icon: IconCalendar,
-  },
-  {
-    label: "Users",
-    href: "/admin/users",
-    icon: IconUsers,
-    children: [
-      { label: "All Users", href: "/admin/users" },
-      { label: "Students", href: "/admin/users?role=STUDENT" },
-      { label: "Instructors", href: "/admin/users?role=INSTRUCTOR" },
-      { label: "Admins", href: "/admin/users?role=ADMIN" },
-    ],
-  },
-  {
-    label: "Mentorship",
-    href: "/admin/mentorship",
-    icon: IconMessages,
-    children: [
-      { label: "All Requests", href: "/admin/mentorship?status=all" },
-      { label: "Pending Review", href: "/admin/mentorship?status=OPEN" },
-      { label: "Assigned", href: "/admin/mentorship?status=ASSIGNED" },
-      { label: "Scheduled", href: "/admin/mentorship?status=SCHEDULED" },
-      { label: "Completed", href: "/admin/mentorship?status=COMPLETED" },
-    ],
-  },
-  {
-    label: "Microsoft",
-    href: "/admin/microsoft",
-    icon: IconBrandWindows,
-  },
-  {
-    label: "Settings",
-    href: "/admin/settings",
-    icon: IconSettings,
-  },
-];
+
 
 // Link for a child nav item under a parent group
 function ChildNavLink({
@@ -368,12 +269,151 @@ function NavGroup({
 export default function AdminSidebar({
   collapsed = false,
   onToggleCollapse,
+  userRole,
+  userName,
+  userEmail,
 }: {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  userRole?: string;
+  userName?: string;
+  userEmail?: string;
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const isSuperAdmin = userRole === "SUPER_ADMIN";
+
+  const sidebarItems: NavItem[] = [
+    { label: "Dashboard", href: "/admin/dashboard", icon: IconLayoutDashboard },
+    ...(isSuperAdmin
+      ? [
+          // Super Admin: system operations
+          ...[
+            { label: "Activity Logs", href: "/admin/logs", icon: IconFileDescription as React.ComponentType<{ size?: number | string; stroke?: number | string; className?: string }> },
+            { label: "Trash", href: "/admin/trash", icon: IconTrash as React.ComponentType<{ size?: number | string; stroke?: number | string; className?: string }> },
+            { label: "Announcements", href: "/admin/announcements", icon: IconBellRinging as React.ComponentType<{ size?: number | string; stroke?: number | string; className?: string }> },
+          ],
+          {
+            label: "Users",
+            href: "/admin/users",
+            icon: IconUsers,
+            children: [
+              { label: "All Users", href: "/admin/users" },
+              { label: "Students", href: "/admin/users?role=STUDENT" },
+              { label: "Instructors", href: "/admin/users?role=INSTRUCTOR" },
+              { label: "Admins", href: "/admin/users?role=ADMIN" },
+              { label: "Login History", href: "/admin/users/login-history" },
+            ],
+          },
+          {
+            label: "Settings",
+            href: "/admin/settings",
+            icon: IconSettings,
+            children: [
+              { label: "System Settings", href: "/admin/settings/system" },
+              { label: "API Keys", href: "/admin/settings/api-keys" },
+              { label: "Permissions", href: "/admin/settings/permissions" },
+              { label: "Consent Logs", href: "/admin/consent-logs" },
+              { label: "General", href: "/admin/settings" },
+            ],
+          },
+          { label: "Microsoft", href: "/admin/microsoft", icon: IconBrandWindows },
+        ]
+      : [
+          // Admin: platform operations
+          {
+            label: "Inbox",
+            href: "/admin/inbox",
+            icon: IconMail,
+            children: [
+              { label: "Notifications", href: "/admin/inbox" },
+              { label: "Send Notification", href: "/admin/notifications/send" },
+              { label: "Mentorship Tickets", href: "/admin/inbox/tickets" },
+              { label: "Support", href: "/admin/inbox/support" },
+              { label: "Messages", href: "/admin/inbox/messages" },
+            ],
+          },
+          {
+            label: "Courses",
+            href: "/admin/courses",
+            icon: IconBook,
+            children: [
+              { label: "All Courses", href: "/admin/courses" },
+              { label: "Create Course", href: "/admin/courses/new" },
+              { label: "Drafts", href: "/admin/courses?status=DRAFT" },
+              { label: "Published", href: "/admin/courses?status=PUBLISHED" },
+              { label: "Archived", href: "/admin/courses?status=ARCHIVED" },
+            ],
+          },
+          {
+            label: "Batches",
+            href: "/admin/batches",
+            icon: IconUsersGroup,
+            children: [
+              { label: "All Batches", href: "/admin/batches" },
+              { label: "Create Batch", href: "/admin/batches/new" },
+              { label: "Active", href: "/admin/batches?status=ACTIVE" },
+              { label: "Upcoming", href: "/admin/batches?status=UPCOMING" },
+              { label: "Completed", href: "/admin/batches?status=COMPLETED" },
+            ],
+          },
+          {
+            label: "Sessions",
+            href: "/admin/sessions",
+            icon: IconVideo,
+            children: [
+              { label: "All Sessions", href: "/admin/sessions" },
+              { label: "Schedule Session", href: "/admin/sessions/new" },
+              { label: "Upcoming", href: "/admin/sessions?status=UPCOMING" },
+              { label: "Past", href: "/admin/sessions?status=PAST" },
+            ],
+          },
+          { label: "Reports", href: "/admin/reports", icon: IconChartBar },
+          {
+            label: "Enrollments",
+            href: "/admin/enrollments",
+            icon: IconClipboardCheck,
+            children: [
+              { label: "Pending Requests", href: "/admin/enrollments" },
+              { label: "Approved", href: "/admin/enrollments?status=APPROVED" },
+              { label: "Rejected", href: "/admin/enrollments?status=REJECTED" },
+            ],
+          },
+          { label: "Calendar", href: "/admin/calendar", icon: IconCalendar },
+          {
+            label: "Users",
+            href: "/admin/users",
+            icon: IconUsers,
+            children: [
+              { label: "All Users", href: "/admin/users" },
+              { label: "Students", href: "/admin/users?role=STUDENT" },
+              { label: "Instructors", href: "/admin/users?role=INSTRUCTOR" },
+              { label: "Admins", href: "/admin/users?role=ADMIN" },
+            ],
+          },
+          {
+            label: "Mentorship",
+            href: "/admin/mentorship",
+            icon: IconMessages,
+            children: [
+              { label: "All Requests", href: "/admin/mentorship?status=all" },
+              { label: "Pending Review", href: "/admin/mentorship?status=OPEN" },
+              { label: "Assigned", href: "/admin/mentorship?status=ASSIGNED" },
+              { label: "Scheduled", href: "/admin/mentorship?status=SCHEDULED" },
+              { label: "Completed", href: "/admin/mentorship?status=COMPLETED" },
+            ],
+          },
+          { label: "Microsoft", href: "/admin/microsoft", icon: IconBrandWindows },
+          {
+            label: "Settings",
+            href: "/admin/settings",
+            icon: IconSettings,
+            children: [
+              { label: "General", href: "/admin/settings" },
+            ],
+          },
+        ]),
+  ];
 
   return (
     <aside
@@ -414,7 +454,7 @@ export default function AdminSidebar({
       >
         <NavGroup
           label="Overview"
-          items={overviewItems}
+          items={sidebarItems}
           pathname={pathname}
           collapsed={collapsed}
         />
@@ -431,9 +471,9 @@ export default function AdminSidebar({
           </div>
           <div className={`min-w-0 ${collapsed ? "hidden" : "block"}`}>
             <p className="truncate text-sm font-medium text-foreground">
-              Admin Demo
+              {userName || "Admin"}
             </p>
-            <p className="truncate text-xs text-muted">admin@lms.local</p>
+            <p className="truncate text-xs text-muted">{userEmail || ""}</p>
           </div>
         </div>
         <button

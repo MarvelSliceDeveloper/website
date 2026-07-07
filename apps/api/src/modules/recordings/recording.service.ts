@@ -2,6 +2,7 @@ import { prisma } from "../../utils/prisma";
 import { getMeetingRecordings } from "../graph/graph.recordings";
 import { GraphError } from "../graph/graph.client";
 import { notificationService } from "../notifications/notification.service";
+import { getSuperAdminId } from "../../utils/super-admin";
 
 export const recordingService = {
   // Syncs recordings from Microsoft Teams for a session
@@ -23,7 +24,8 @@ export const recordingService = {
       return session.recording;
     }
 
-    const creatorId = session.createdBy;
+    const superAdminId = await getSuperAdminId();
+    const creatorId = superAdminId || session.createdBy;
     const teamsMeetingId = session.teamsMeetingId;
 
     // Skip sessions without a real Teams meeting (custom URL, error, or fallback)
@@ -239,9 +241,8 @@ export const recordingService = {
 
     if (!recording) throw new Error("Recording not found");
 
-    // For recordings, we use the session creator's token as they are the "owner"
-    // of the meeting and recording.
-    const creatorId = recording.session.createdBy;
+    const superAdminId = await getSuperAdminId();
+    const creatorId = superAdminId || recording.session.createdBy;
 
     // Import dynamically to avoid circular dependencies if any
     const { getRecordingContent } = await import("../graph/graph.recordings");

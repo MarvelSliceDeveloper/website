@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../../utils/prisma";
 import { getCalendarView, CalendarEvent as MsCalendarEvent } from "../graph";
+import { getSuperAdminId } from "../../utils/super-admin";
 
 type CalendarEventWithSession = Prisma.CalendarEventGetPayload<{
   include: {
@@ -41,8 +42,10 @@ export async function syncCalendarForUser(
   startDate: string,
   endDate: string,
 ) {
+  const superAdminId = await getSuperAdminId();
+  const graphUserId = superAdminId || userId;
   const msEvents: MsCalendarEvent[] = await getCalendarView(
-    userId,
+    graphUserId,
     startDate,
     endDate,
   );

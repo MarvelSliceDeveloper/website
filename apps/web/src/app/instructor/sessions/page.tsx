@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -10,7 +10,6 @@ import {
   IconX,
   IconEdit,
   IconTrash,
-  IconPlus,
 } from "@tabler/icons-react";
 import { toast, getErrorMessage } from "@/lib/toast";
 import {
@@ -20,11 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-type Course = {
-  id: string;
-  title: string;
-};
 
 type Batch = {
   id: string;
@@ -88,14 +82,11 @@ function SessionsPageContent() {
   const [loadingAttendance, setLoadingAttendance] = useState(false);
 
   // CRUD states
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loadingCourses, setLoadingCourses] = useState(false);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
   const [loadingBatches, setLoadingBatches] = useState(false);
   const [loadingModules, setLoadingModules] = useState(false);
 
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
 
@@ -152,31 +143,6 @@ function SessionsPageContent() {
       });
   }, []);
 
-  // Fetch courses when create modal opens
-  const openCreateModal = async () => {
-    setShowCreateModal(true);
-    setForm({
-      courseId: "",
-      batchId: "",
-      moduleId: "",
-      title: "",
-      startDateTime: "",
-      endDateTime: "",
-      customJoinUrl: "",
-    });
-    setLoadingCourses(true);
-    try {
-      const data = await api.get<{ courses: Course[] }>(
-        "/api/admin/courses?limit=100",
-      );
-      setCourses(data.courses || []);
-    } catch (err) {
-      console.error("Failed to load courses:", err);
-    } finally {
-      setLoadingCourses(false);
-    }
-  };
-
   // Fetch batches & modules when course selection changes
   useEffect(() => {
     if (!form.courseId) return;
@@ -200,29 +166,6 @@ function SessionsPageContent() {
         setLoadingModules(false);
       });
   }, [form.courseId]);
-
-  const handleCreateSession = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-
-    try {
-      await api.post("/api/sessions", {
-        batchId: form.batchId,
-        moduleId: form.moduleId || undefined,
-        title: form.title,
-        startDateTime: new Date(form.startDateTime).toISOString(),
-        endDateTime: new Date(form.endDateTime).toISOString(),
-        customJoinUrl: form.customJoinUrl || undefined,
-      });
-
-      setShowCreateModal(false);
-      fetchSessions();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const openEditModal = (session: Session) => {
     setEditingSession(session);
@@ -345,15 +288,9 @@ function SessionsPageContent() {
             Live Sessions
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage, schedule, and configure your live classes.
-          </p>
-        </div>
-        <button
-          onClick={openCreateModal}
-          className="btn-primary flex items-center gap-1"
-        >
-          <IconPlus size={16} /> Schedule Session
-        </button>
+          Manage your live classes.
+        </p>
+      </div>
       </div>
 
       {loading ? (
@@ -418,175 +355,6 @@ function SessionsPageContent() {
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Create Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="glass-card w-full max-w-lg overflow-hidden border border-border shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between border-b border-border bg-card p-4">
-              <h3 className="font-bold text-foreground">
-                Schedule Live Session
-              </h3>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="rounded-lg p-1 hover:bg-card-hover text-muted-foreground"
-              >
-                <IconX size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateSession} className="p-4 space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
-                  Select Course
-                </label>
-                  <Select
-                    value={form.courseId}
-                    onValueChange={(v) =>
-                      setForm({ ...form, courseId: v, batchId: "", moduleId: "" })
-                    }
-                  >
-
-                  <SelectTrigger className="field">
-                    <SelectValue placeholder="-- Select Course --" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {courses.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
-                    Select Batch
-                  </label>
-                  <Select
-                    value={form.batchId}
-                    onValueChange={(v) =>
-                      setForm({ ...form, batchId: v })
-                    }
-                  >
-                    <SelectTrigger className="field" disabled={!form.courseId || loadingBatches}>
-                      <SelectValue placeholder="-- Batch --" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {batches.map((b) => (
-                        <SelectItem key={b.id} value={b.id}>
-                          {b.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
-                    Select Module
-                  </label>
-                  <Select
-                    value={form.moduleId}
-                    onValueChange={(v) =>
-                      setForm({ ...form, moduleId: v })
-                    }
-                  >
-                    <SelectTrigger className="field" disabled={!form.courseId || loadingModules}>
-                      <SelectValue placeholder="-- None / General --" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {modules.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>
-                          Mod {m.order}: {m.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
-                  Session Title
-                </label>
-                <input
-                  type="text"
-                  className="field"
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="e.g. Types and Interfaces Deep Dive"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
-                    Start Date & Time
-                  </label>
-                  <input
-                    type="datetime-local"
-                    className="field"
-                    value={form.startDateTime}
-                    onChange={(e) =>
-                      setForm({ ...form, startDateTime: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
-                    End Date & Time
-                  </label>
-                  <input
-                    type="datetime-local"
-                    className="field"
-                    value={form.endDateTime}
-                    onChange={(e) =>
-                      setForm({ ...form, endDateTime: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
-                  Custom Join URL (Optional)
-                </label>
-                <input
-                  type="url"
-                  className="field"
-                  value={form.customJoinUrl}
-                  onChange={(e) =>
-                    setForm({ ...form, customJoinUrl: e.target.value })
-                  }
-                  placeholder="e.g. Google Meet, Zoom or standard Teams URL"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="btn-secondary text-xs px-4"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="btn-primary text-xs px-4"
-                >
-                  {submitting ? "Scheduling..." : "Schedule Session"}
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       )}
 

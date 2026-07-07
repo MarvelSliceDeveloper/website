@@ -44,7 +44,7 @@ export const batchService = {
       where: { id: data.instructorId },
     });
     if (!instructor) throw new Error("Instructor not found");
-    if (instructor.role !== "INSTRUCTOR" && instructor.role !== "ADMIN") {
+    if (instructor.role !== "INSTRUCTOR" && instructor.role !== "ADMIN" && instructor.role !== "SUPER_ADMIN") {
       throw new Error("User is not an instructor");
     }
 

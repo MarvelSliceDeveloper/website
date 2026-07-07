@@ -6,6 +6,40 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Seeding database...");
 
+  // ─── Super Admin ────────────────────────────────────────────────────────────
+  const superAdminHash = await bcrypt.hash("superadmin123", 10);
+  const superAdmin = await prisma.user.upsert({
+    where: { email: "superadmin@lms.local" },
+    update: {},
+    create: {
+      name: "Super Admin",
+      email: "superadmin@lms.local",
+      passwordHash: superAdminHash,
+      role: "SUPER_ADMIN",
+    },
+  });
+  console.log("✅ Super Admin:", superAdmin.email);
+
+  // ─── System Settings ────────────────────────────────────────────────────────
+  const defaultSettings = [
+    { key: "super_admin_id", value: superAdmin.id, type: "string", description: "Auto-set when SUPER_ADMIN exists" },
+    { key: "platform_name", value: "Marvel Slice LMS", type: "string", description: "Display name for the LMS" },
+    { key: "default_session_duration", value: "60", type: "number", description: "Default meeting length in minutes" },
+    { key: "max_students_per_batch", value: "100", type: "number", description: "Global hard cap per batch" },
+    { key: "session_timeout_admin", value: "480", type: "number", description: "Admin session timeout in minutes" },
+    { key: "session_timeout_instructor", value: "480", type: "number", description: "Instructor session timeout in minutes" },
+    { key: "session_timeout_student", value: "480", type: "number", description: "Student session timeout in minutes" },
+  ];
+
+  for (const setting of defaultSettings) {
+    await prisma.systemSetting.upsert({
+      where: { key: setting.key },
+      update: { value: setting.value },
+      create: setting,
+    });
+  }
+  console.log("✅ System settings seeded");
+
   // ─── Admin ────────────────────────────────────────────────────────────────
   const adminHash = await bcrypt.hash("admin123", 10);
   const admin = await prisma.user.upsert({
@@ -522,6 +556,7 @@ async function main() {
   console.log("✅ Notification preferences seeded");
 
   console.log("\n🎉 Seed complete!");
+  console.log("   Super Admin (1): superadmin@lms.local / superadmin123");
   console.log("   Admin (1):       admin@lms.local / admin123");
   console.log(
     "   Instructors (6): instructor@lms.local / instructor123 (Ravi, Priya, Suresh, Vikram, Anita)",
@@ -537,7 +572,7 @@ async function upsertUser(
   email: string,
   name: string,
   password: string,
-  role: "ADMIN" | "INSTRUCTOR" | "STUDENT",
+  role: "SUPER_ADMIN" | "ADMIN" | "INSTRUCTOR" | "STUDENT",
 ) {
   const hash = await bcrypt.hash(password, 10);
   return prisma.user.upsert({

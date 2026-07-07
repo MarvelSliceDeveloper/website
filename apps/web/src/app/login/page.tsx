@@ -6,24 +6,6 @@ import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 
-const demoAccounts = {
-  student: {
-    email: "student@lms.local",
-    password: "student123",
-    redirectTo: "/student/",
-  },
-  instructor: {
-    email: "instructor@lms.local",
-    password: "instructor123",
-    redirectTo: "/instructor/dashboard",
-  },
-  admin: {
-    email: "admin@lms.local",
-    password: "admin123",
-    redirectTo: "/admin/dashboard",
-  },
-};
-
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -50,8 +32,8 @@ export default function LoginPage() {
 
       const role = result?.user?.role;
 
-      if (role === "ADMIN") {
-        router.push(demoAccounts.admin.redirectTo);
+      if (role === "ADMIN" || role === "SUPER_ADMIN") {
+        router.push("/admin/dashboard");
         return;
       }
 
@@ -60,7 +42,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push(demoAccounts.student.redirectTo);
+      router.push("/student/");
     } catch (submitError) {
       const message =
         submitError instanceof Error
@@ -87,24 +69,22 @@ export default function LoginPage() {
             workflows from a single workspace.
           </p>
           <div className="mt-8 space-y-3">
-            <div className="panel px-4 py-3">
-              <p className="text-xs text-muted">Student demo</p>
-              <p className="text-sm font-semibold text-foreground">
-                {demoAccounts.student.email}
-              </p>
-            </div>
-            <div className="panel px-4 py-3">
-              <p className="text-xs text-muted">Instructor demo</p>
-              <p className="text-sm font-semibold text-foreground">
-                {demoAccounts.instructor.email}
-              </p>
-            </div>
-            <div className="panel px-4 py-3">
-              <p className="text-xs text-muted">Admin demo</p>
-              <p className="text-sm font-semibold text-foreground">
-                {demoAccounts.admin.email}
-              </p>
-            </div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Demo accounts
+            </p>
+            {["student@lms.local", "instructor@lms.local", "admin@lms.local"].map((demoEmail) => (
+              <button
+                key={demoEmail}
+                type="button"
+                onClick={() => setEmail(demoEmail)}
+                className="block w-full text-left panel px-4 py-3 hover:border-primary/30 transition-colors cursor-pointer"
+              >
+                <p className="text-xs text-muted">Click to fill email</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {demoEmail}
+                </p>
+              </button>
+            ))}
           </div>
         </section>
 
@@ -172,18 +152,10 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-6 rounded-xl border border-border bg-background/40 p-4 text-xs text-muted-foreground lg:hidden">
-            <p className="font-semibold text-foreground">Demo Credentials</p>
-            <p className="mt-2">
-              Student: {demoAccounts.student.email} /{" "}
-              {demoAccounts.student.password}
-            </p>
-            <p className="mt-1">
-              Instructor: {demoAccounts.instructor.email} /{" "}
-              {demoAccounts.instructor.password}
-            </p>
-            <p className="mt-1">
-              Admin: {demoAccounts.admin.email} / {demoAccounts.admin.password}
-            </p>
+            <p className="font-semibold text-foreground">Demo Accounts</p>
+            <p className="mt-2">student@lms.local</p>
+            <p className="mt-1">instructor@lms.local</p>
+            <p className="mt-1">admin@lms.local</p>
           </div>
         </section>
       </div>

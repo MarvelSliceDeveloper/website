@@ -18,6 +18,7 @@ import {
   IconSettings,
   IconMenu2,
   IconX,
+  IconBook,
 } from "@tabler/icons-react";
 
 type NavItemChild = {
@@ -70,13 +71,11 @@ const overviewItems: NavItem[] = [
     ],
   },
   {
-    label: "Assignments",
-    href: "/instructor/assignments",
-    icon: IconClipboardList,
+    label: "My Courses",
+    href: "/instructor/courses",
+    icon: IconBook,
     children: [
-      { label: "All Assignments", href: "/instructor/assignments" },
-      { label: "Pending", href: "/instructor/assignments?status=PENDING" },
-      { label: "Graded", href: "/instructor/assignments?status=GRADED" },
+      { label: "All Courses", href: "/instructor/courses" },
     ],
   },
   {

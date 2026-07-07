@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "../../utils/prisma";
 import { createOnlineMeeting } from "../graph";
 import { notificationService } from "../notifications/notification.service";
+import { getSuperAdminId } from "../../utils/super-admin";
 
 // --- Zod Schemas ---
 
@@ -91,9 +92,11 @@ export const sessionService = {
       joinUrl = customJoinUrl.trim();
       teamsMeetingId = `custom-${Math.random().toString(36).substring(2, 10)}-${Date.now()}`;
     } else {
-      // Otherwise, auto-create Teams meeting via Graph API
+      // Otherwise, auto-create Teams meeting via Graph API (delegated to super admin)
       try {
-        const meeting = await createOnlineMeeting(userId, {
+        const superAdminId = await getSuperAdminId();
+        const graphUserId = superAdminId || userId;
+        const meeting = await createOnlineMeeting(graphUserId, {
           subject: `${batch.name} — ${title}`,
           startDateTime,
           endDateTime,
@@ -345,7 +348,7 @@ export const sessionService = {
     // Non-admin must be the assigned instructor (check batch instructor for regular sessions, instructorId for mentorship)
     const sessionInstructorId =
       session.batch?.instructorId || session.instructorId;
-    if (user.role !== "ADMIN" && sessionInstructorId !== userId) {
+    if (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN" && sessionInstructorId !== userId) {
       throw new Error(
         "Only the assigned instructor or an admin can cancel this session",
       );
@@ -356,7 +359,7 @@ export const sessionService = {
       console.error("Failed to send cancellation notification:", err.message);
     });
 
-    if (user.role === "ADMIN") {
+    if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") {
       return prisma.$transaction(async (tx) => {
         await tx.calendarEvent.deleteMany({ where: { sessionId } });
         await tx.attendance.deleteMany({ where: { sessionId } });

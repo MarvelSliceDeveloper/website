@@ -77,15 +77,20 @@ export const authService = {
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) throw new Error("Invalid credentials");
 
+    if (user.isSuspended) {
+      throw new Error("Account is pending approval. Please contact support.");
+    }
+
     return this.generateTokens(user);
   },
 
   // Generate JWT access token for a user
-  generateTokens(user: { id: string; role: string; email: string }) {
+  generateTokens(user: { id: string; role: string; email: string; sessionTimeoutMin?: number }) {
     const payload = {
       userId: user.id,
       role: user.role,
       email: user.email,
+      sessionTimeoutMin: user.sessionTimeoutMin ?? 480,
     };
 
     const accessToken = jwt.sign(payload, getJwtSecret(), {

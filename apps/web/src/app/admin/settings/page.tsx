@@ -131,7 +131,7 @@ export default function AdminSettingsPage() {
       )
       .then((res) => {
         if (res?.user) {
-          setProfileName(res.user.name || "Admin");
+          setProfileName(res.user.name || "User");
           setProfileEmail(res.user.email || "");
           setProfileRole(res.user.role || "ADMIN");
           setNameInput(res.user.name || "");
@@ -260,6 +260,11 @@ export default function AdminSettingsPage() {
       href: "/admin/inbox/support",
     },
   ];
+
+  function roleLabel(role: string) {
+    if (role === "SUPER_ADMIN") return "Super Admin";
+    return role.charAt(0) + role.slice(1).toLowerCase();
+  }
 
   function renderProfile() {
     return (
@@ -552,7 +557,7 @@ export default function AdminSettingsPage() {
               </div>
               <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
                 <IconShield size={14} className="shrink-0" />
-                <span className="capitalize">{profileRole.toLowerCase()}</span>
+                <span>{roleLabel(profileRole)}</span>
               </div>
             </div>
           </div>

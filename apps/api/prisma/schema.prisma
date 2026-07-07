@@ -11,6 +11,7 @@ enum Role {
   STUDENT
   INSTRUCTOR
   ADMIN
+  SUPER_ADMIN
 }
 
 enum EnrollmentStatus {
@@ -55,6 +56,15 @@ model User {
   msAccessToken  String? // AES-256 encrypted
   msRefreshToken String? // AES-256 encrypted
   role           Role                @default(STUDENT)
+  isSuspended    Boolean             @default(false)
+  suspendedAt    DateTime?
+  suspendedBy    String?
+  rateLimitPerMin Int                @default(60)
+  sessionTimeoutMin Int             @default(480)
+  deletedAt      DateTime?
+  deletedBy      String?
+  restoredAt     DateTime?
+  restoredBy     String?
   enrollments    EnrollmentRequest[]
   progress       Progress[]
   certificates   Certificate[]
@@ -88,11 +98,17 @@ model Course {
   durationMinutes    Int?
   createdBy          String?
   publishedAt        DateTime?
+  deletedAt          DateTime?
+  deletedBy          String?
+  restoredAt         DateTime?
+  restoredBy         String?
   modules            Module[]
   batches            Batch[]
   assignments        Assignment[]
   mentorshipTickets  MentorshipTicket[]
   notes              Note[]
+  quizTemplates      CourseQuizTemplate[]
+  assignmentTemplates CourseAssignmentTemplate[]
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 }
@@ -137,6 +153,10 @@ model Batch {
   maxStudents  Int?
   status       BatchStatus         @default(UPCOMING)
   description  String?
+  deletedAt    DateTime?
+  deletedBy    String?
+  restoredAt   DateTime?
+  restoredBy   String?
   course       Course              @relation(fields: [courseId], references: [id])
   instructor   User                @relation("BatchInstructor", fields: [instructorId], references: [id])
   enrollments  EnrollmentRequest[]
@@ -172,6 +192,10 @@ model LiveSession {
   createdFrom        String // LMS, LMS_CUSTOM, TEAMS, MENTORSHIP
   createdBy          String // Admin user ID
   mentorshipTicketId String?            @unique // link back to mentorship ticket
+  deletedAt          DateTime?
+  deletedBy          String?
+  restoredAt         DateTime?
+  restoredBy         String?
   batch              Batch?             @relation(fields: [batchId], references: [id])
   module             Module?            @relation(fields: [moduleId], references: [id])
   mentorshipTicket   MentorshipTicket?  @relation(fields: [mentorshipTicketId], references: [id])
@@ -376,6 +400,10 @@ model Assignment {
   updatedAt   DateTime               @updatedAt
   course      Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
   batch       Batch                  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  deletedAt   DateTime?
+  deletedBy   String?
+  restoredAt  DateTime?
+  restoredBy  String?
   questions   AssignmentQuestion[]
   submissions AssignmentSubmission[]
 }
@@ -462,4 +490,133 @@ model Note {
   @@index([userId])
   @@index([userId, courseId])
   @@index([isSticky])
+}
+
+// === SUPER ADMIN PLATFORM MODELS ===
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  type        String   @default("string") // string | boolean | number | json
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  key         String   @unique // hashed
+  name        String
+  description String?
+  permissions Json     @default("[]") // string[]
+  lastUsedAt  DateTime?
+  active      Boolean  @default(true)
+  createdBy   String
+  createdAt   DateTime @default(now())
+}
+
+model LoginLog {
+  id         String   @id @default(cuid())
+  userId     String
+  ip         String?
+  userAgent  String?
+  deviceInfo String?
+  loginAt    DateTime @default(now())
+  logoutAt   DateTime?
+}
+
+model PermissionOverride {
+  id         String @id @default(cuid())
+  role       Role
+  permission String
+  allowed    Boolean @default(true)
+
+  @@unique([role, permission])
+}
+
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String
+  body        String
+  createdBy   String
+  targetRole  Role     // ADMIN | INSTRUCTOR
+  createdAt   DateTime @default(now())
+  readBy      Json     @default("[]") // userId[]
+}
+
+model ConsentLog {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // MICROSOFT | DATA_PROCESSING
+  action    String   // GRANTED | REVOKED | UPDATED
+  details   Json?
+  createdAt DateTime @default(now())
+}
+
+// === QUIZ & ASSIGNMENT TEMPLATES ===
+
+model QuizTemplate {
+  id          String               @id @default(cuid())
+  title       String
+  description String?
+  category    String?
+  questions   QuizTemplateQuestion[]
+  courses     CourseQuizTemplate[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+model QuizTemplateQuestion {
+  id             String              @id @default(cuid())
+  quizTemplateId String
+  text           String
+  marks          Int                 @default(1)
+  orderIndex     Int                 @default(0)
+  options        QuizTemplateOption[]
+  quizTemplate   QuizTemplate        @relation(fields: [quizTemplateId], references: [id])
+}
+
+model QuizTemplateOption {
+  id         String               @id @default(cuid())
+  questionId String
+  optionText String
+  isCorrect  Boolean              @default(false)
+  question   QuizTemplateQuestion @relation(fields: [questionId], references: [id])
+}
+
+model AssignmentTemplate {
+  id             String                    @id @default(cuid())
+  title          String
+  description    String
+  type           String                    @default("QUIZ") // QUIZ | FILE_UPLOAD
+  questionPdfUrl String?
+  maxPoints      Int                       @default(100)
+  category       String?
+  courses        CourseAssignmentTemplate[]
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+}
+
+model CourseQuizTemplate {
+  id             String       @id @default(cuid())
+  courseId       String
+  quizTemplateId String
+  dueDate        DateTime?
+  maxPoints      Int          @default(100)
+  course         Course       @relation(fields: [courseId], references: [id])
+  quizTemplate   QuizTemplate @relation(fields: [quizTemplateId], references: [id])
+
+  @@unique([courseId, quizTemplateId])
+}
+
+model CourseAssignmentTemplate {
+  id                  String              @id @default(cuid())
+  courseId            String
+  assignmentTemplateId String
+  dueDate             DateTime?
+  maxPoints           Int                 @default(100)
+  course              Course              @relation(fields: [courseId], references: [id])
+  assignmentTemplate  AssignmentTemplate  @relation(fields: [assignmentTemplateId], references: [id])
+
+  @@unique([courseId, assignmentTemplateId])
 }

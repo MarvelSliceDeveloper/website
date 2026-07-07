@@ -244,17 +244,17 @@ export default function AdminInboxSupportPage() {
                 selectedTicket.messages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`flex ${msg.sender.role === "ADMIN" ? "justify-end" : "justify-start"}`}
+                    className={`flex ${msg.sender.role === "ADMIN" || msg.sender.role === "SUPER_ADMIN" ? "justify-end" : "justify-start"}`}
                   >
                     <div
                       className={`max-w-xs rounded-xl px-4 py-2 text-sm ${
-                        msg.sender.role === "ADMIN"
+                        msg.sender.role === "ADMIN" || msg.sender.role === "SUPER_ADMIN"
                           ? "bg-primary text-white"
                           : "bg-card-hover text-foreground border border-border"
                       }`}
                     >
                       <p className="text-[10px] font-medium mb-1 opacity-70">
-                        {msg.sender.role === "ADMIN" ? "You" : msg.sender.name}
+                        {msg.sender.role === "ADMIN" || msg.sender.role === "SUPER_ADMIN" ? "You" : msg.sender.name}
                       </p>
                       <p>{msg.message}</p>
                       <p className="text-[10px] mt-1 opacity-60">

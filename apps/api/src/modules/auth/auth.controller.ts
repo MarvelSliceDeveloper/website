@@ -53,6 +53,18 @@ export const authController = {
       const data = LoginSchema.parse(req.body);
       const result = await authService.login(data);
 
+      // Log successful login
+      prisma.loginLog
+        .create({
+          data: {
+            userId: result.user.userId,
+            ip: req.ip,
+            userAgent: req.headers["user-agent"],
+            deviceInfo: (req.headers["sec-ch-ua-platform"] as string) || null,
+          },
+        })
+        .catch((err) => console.error("[auth] Failed to log login:", err));
+
       res.cookie("accessToken", result.accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -138,9 +150,9 @@ export const authController = {
       const user = await prisma.user.findUnique({
         where: { id: req.user.userId },
       });
-      if (!user || user.role !== "ADMIN") {
+      if (!user || user.role !== "SUPER_ADMIN") {
         return res.status(403).json({
-          error: "Only administrators are allowed to link Microsoft accounts",
+          error: "Only Super Admin is allowed to link Microsoft accounts",
         });
       }
 
@@ -210,10 +222,10 @@ export const authController = {
 
       const user = await prisma.user.findUnique({ where: { id: userId } });
       if (!user) return res.status(404).json({ error: "User not found" });
-      if (user.role !== "ADMIN") {
+      if (user.role !== "SUPER_ADMIN") {
         return res.status(403).json({
           error:
-            "Access denied: Only admins are allowed to link Microsoft accounts",
+            "Access denied: Only Super Admin is allowed to link Microsoft accounts",
         });
       }
 
@@ -293,6 +305,18 @@ export const authController = {
           (err as Error).message,
         );
       }
+
+      // Log consent
+      prisma.consentLog
+        .create({
+          data: {
+            userId,
+            type: "MICROSOFT",
+            action: "GRANTED",
+            details: { scope: scopes },
+          },
+        })
+        .catch((err) => console.error("[auth] Failed to log consent:", err));
 
       const redirectDashboard = `${process.env.WEB_URL || "http://localhost:3000"}/admin/dashboard`;
       return res.redirect(redirectDashboard);

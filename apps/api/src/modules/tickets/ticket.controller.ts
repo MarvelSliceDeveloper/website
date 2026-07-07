@@ -54,7 +54,7 @@ export const ticketController = {
       const status = req.query.status as string | undefined;
 
       let tickets;
-      if (role === "ADMIN") {
+      if (role === "ADMIN" || role === "SUPER_ADMIN") {
         const mentorId = type === "MENTORSHIP" ? undefined : undefined;
         tickets = await ticketService.listTickets({
           role,
@@ -108,7 +108,7 @@ export const ticketController = {
       const isAssignedMentor =
         ticket.type === "MENTORSHIP" && (ticket as any).mentorId === userId;
 
-      if (role !== "ADMIN" && !isOwner && !isAssignedMentor) {
+      if (role !== "ADMIN" && role !== "SUPER_ADMIN" && !isOwner && !isAssignedMentor) {
         return res.status(403).json({ error: "Forbidden" });
       }
 
@@ -204,7 +204,7 @@ export const ticketController = {
           ? (ticket as any).userId === userId
           : (ticket as any).studentId === userId;
 
-      if (role !== "ADMIN" && !isOwner) {
+      if (role !== "ADMIN" && role !== "SUPER_ADMIN" && !isOwner) {
         return res.status(403).json({ error: "Forbidden" });
       }
 
@@ -228,7 +228,7 @@ export const ticketController = {
   // Handles support ticket status update
   async updateStatus(req: AuthRequest, res: Response) {
     try {
-      if (req.user!.role !== "ADMIN") {
+      if (req.user!.role !== "ADMIN" && req.user!.role !== "SUPER_ADMIN") {
         return res
           .status(403)
           .json({ error: "Only admins can update ticket status" });

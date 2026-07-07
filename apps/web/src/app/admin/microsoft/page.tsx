@@ -10,6 +10,7 @@ import {
   IconLink,
   IconClock,
   IconCode,
+  IconLock,
 } from "@tabler/icons-react";
 
 type LogEntry = {
@@ -39,6 +40,7 @@ export default function MicrosoftIntegrationPage() {
   const [status, setStatus] = useState<StatusData | null>(null);
   const [loading, setLoading] = useState(true);
   const [linking, setLinking] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   async function loadStatus() {
     setLoading(true);
@@ -54,7 +56,15 @@ export default function MicrosoftIntegrationPage() {
 
   useEffect(() => {
     Promise.resolve().then(() => loadStatus());
+    api
+      .get<{ user: { role: string } }>("/api/auth/me")
+      .then((res) => {
+        if (res?.user) setUserRole(res.user.role);
+      })
+      .catch(() => {});
   }, []);
+
+  const isSuperAdmin = userRole === "SUPER_ADMIN";
 
   function handleLinkAccount() {
     setLinking(true);
@@ -76,6 +86,24 @@ export default function MicrosoftIntegrationPage() {
           Manage your Microsoft Teams, Calendar, and Graph API connection.
         </p>
       </div>
+
+      {!isSuperAdmin && userRole && (
+        <div className="glass-card p-5 border border-amber-500/30 bg-amber-500/5">
+          <div className="flex items-start gap-3">
+            <IconLock size={20} className="text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                Microsoft account is managed by the Super Admin
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Only the Super Admin can link or modify the Microsoft/Teams
+                account. All Teams meetings across the platform are created
+                through that single delegated account.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="glass-card p-12 text-center">
@@ -124,32 +152,38 @@ export default function MicrosoftIntegrationPage() {
                 </div>
               </div>
               <div className="mt-4">
-                {status.linked ? (
-                  <button
-                    onClick={() =>
-                      (window.location.href = "/api/auth/azure-ad/login")
-                    }
-                    className="btn-secondary w-full justify-center text-xs py-2 flex items-center gap-1.5"
-                  >
-                    <IconRefresh size={14} /> Re-link Account
-                  </button>
+                {isSuperAdmin ? (
+                  status.linked ? (
+                    <button
+                      onClick={() =>
+                        (window.location.href = "/api/auth/azure-ad/login")
+                      }
+                      className="btn-secondary w-full justify-center text-xs py-2 flex items-center gap-1.5"
+                    >
+                      <IconRefresh size={14} /> Re-link Account
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleLinkAccount}
+                      disabled={linking}
+                      className="btn-primary w-full justify-center text-xs py-2 flex items-center gap-1.5"
+                    >
+                      {linking ? (
+                        <>
+                          <IconRefresh size={14} className="animate-spin" />{" "}
+                          Redirecting...
+                        </>
+                      ) : (
+                        <>
+                          <IconLink size={14} /> Link Microsoft Account
+                        </>
+                      )}
+                    </button>
+                  )
                 ) : (
-                  <button
-                    onClick={handleLinkAccount}
-                    disabled={linking}
-                    className="btn-primary w-full justify-center text-xs py-2 flex items-center gap-1.5"
-                  >
-                    {linking ? (
-                      <>
-                        <IconRefresh size={14} className="animate-spin" />{" "}
-                        Redirecting...
-                      </>
-                    ) : (
-                      <>
-                        <IconLink size={14} /> Link Microsoft Account
-                      </>
-                    )}
-                  </button>
+                  <div className="text-xs text-muted-foreground text-center py-2 border border-dashed border-border/60 rounded-lg">
+                    Contact Super Admin to manage
+                  </div>
                 )}
               </div>
             </div>

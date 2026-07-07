@@ -32,6 +32,17 @@ import { mentorshipRouter } from "./modules/mentorship/mentorship.routes";
 import { supportRouter } from "./modules/support/support.routes";
 import ticketRouter from "./modules/tickets/ticket.routes";
 import { noteRouter } from "./modules/notes/notes.routes";
+import { settingRouter } from "./modules/settings/setting.routes";
+import { apiKeyRouter } from "./modules/api-keys/api-key.routes";
+import { permissionRouter } from "./modules/permissions/permission.routes";
+import { quizTemplateRouter } from "./modules/quiz-templates/quiz-template.routes";
+import { assignmentTemplateRouter } from "./modules/assignment-templates/assignment-template.routes";
+import { superAdminRouter } from "./modules/super-admin/super-admin.routes";
+import { courseTemplateRouter } from "./modules/courses/course-template.routes";
+import { logRouter } from "./modules/logs/log.routes";
+import { loginHistoryRouter } from "./modules/logs/login-history.routes";
+import { consentLogRouter } from "./modules/logs/consent-log.routes";
+import { trashRouter } from "./modules/super-admin/trash.routes";
 
 const logger = pino({
   level: process.env.LOG_LEVEL || "info",
@@ -120,6 +131,19 @@ app.use("/api/messages", messageRouter);
 app.use("/api/support", supportRouter);
 app.use("/api/tickets", ticketRouter);
 app.use("/api/notes", noteRouter);
+
+// ── Super Admin routes ──
+app.use("/api/admin/users", superAdminRouter);
+app.use("/api/admin/settings", settingRouter);
+app.use("/api/admin/api-keys", apiKeyRouter);
+app.use("/api/admin/permissions", permissionRouter);
+app.use("/api/admin/quiz-templates", quizTemplateRouter);
+app.use("/api/admin/assignment-templates", assignmentTemplateRouter);
+app.use("/api/admin/courses", courseTemplateRouter);
+app.use("/api/admin/logs", logRouter);
+app.use("/api/admin/login-history", loginHistoryRouter);
+app.use("/api/admin/consent-logs", consentLogRouter);
+app.use("/api/admin/trash", trashRouter);
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   const status = err.statusCode || err.status || 500;

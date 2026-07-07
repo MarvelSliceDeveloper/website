@@ -17,6 +17,7 @@ import {
   IconUsers,
   IconEdit,
   IconTrash,
+  IconCheck,
 } from "@tabler/icons-react";
 import {
   Select,
@@ -30,16 +31,19 @@ type User = {
   id: string;
   name: string;
   email: string;
-  role: "STUDENT" | "INSTRUCTOR" | "ADMIN";
+  role: "STUDENT" | "INSTRUCTOR" | "ADMIN" | "SUPER_ADMIN";
+  isSuspended?: boolean;
 };
 
 const roleStyles: Record<string, string> = {
+  SUPER_ADMIN: "bg-purple-100 text-purple-700",
   ADMIN: "bg-red-100 text-red-700",
   INSTRUCTOR: "bg-sky-100 text-sky-700",
   STUDENT: "bg-blue-100 text-blue-700",
 };
 
 const roleIcons: Record<string, React.ReactNode> = {
+  SUPER_ADMIN: <IconShield size={14} />,
   ADMIN: <IconShield size={14} />,
   INSTRUCTOR: <IconChalkboardTeacher size={14} />,
   STUDENT: <IconSchool size={14} />,
@@ -50,6 +54,7 @@ export default function AdminUsersPage() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const roleFilter = searchParams.get("role") || "";
 
@@ -90,6 +95,9 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     Promise.resolve().then(() => fetchUsers());
+    api.get<{ user: { role: string } }>("/api/auth/me").then((res) => {
+      if (res?.user) setCurrentUserRole(res.user.role);
+    }).catch(() => {});
   }, []);
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -147,6 +155,16 @@ export default function AdminUsersPage() {
     setEditForm({ name: user.name, email: user.email, role: user.role });
   };
 
+  const handleApproveInstructor = async (userId: string) => {
+    try {
+      await api.put(`/api/admin/users/${userId}/approve`);
+      toast.success("Instructor approved successfully");
+      fetchUsers();
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
+    }
+  };
+
   const filtered = users.filter((u) => {
     const matchesSearch =
       !search ||
@@ -158,6 +176,7 @@ export default function AdminUsersPage() {
 
   const counts = {
     total: users.length,
+    SUPER_ADMIN: users.filter((u) => u.role === "SUPER_ADMIN").length,
     ADMIN: users.filter((u) => u.role === "ADMIN").length,
     INSTRUCTOR: users.filter((u) => u.role === "INSTRUCTOR").length,
     STUDENT: users.filter((u) => u.role === "STUDENT").length,
@@ -193,10 +212,17 @@ export default function AdminUsersPage() {
       key: "role",
       label: "Role",
       render: (_, user) => (
-        <span
-          className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium ${roleStyles[user.role]}`}
-        >
-          {roleIcons[user.role]} {user.role}
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium ${roleStyles[user.role]}`}
+          >
+            {roleIcons[user.role]} {user.role}
+          </span>
+          {user.role === "INSTRUCTOR" && user.isSuspended && (
+            <span className="text-[10px] font-medium text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">
+              Pending
+            </span>
+          )}
         </span>
       ),
     },
@@ -205,6 +231,15 @@ export default function AdminUsersPage() {
       label: "Actions",
       render: (_, user) => (
         <div className="flex items-center justify-end gap-2">
+          {currentUserRole === "SUPER_ADMIN" && user.role === "INSTRUCTOR" && user.isSuspended && (
+            <button
+              onClick={() => handleApproveInstructor(user.id)}
+              className="rounded-md border border-success/20 px-2.5 py-1 text-xs font-medium text-success hover:bg-success/10 transition-colors"
+              title="Approve instructor"
+            >
+              <IconCheck size={14} /> Approve
+            </button>
+          )}
           <button
             onClick={() => openEditModal(user)}
             className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
@@ -241,7 +276,7 @@ export default function AdminUsersPage() {
 
       {/* Stat chips */}
       <div className="flex flex-wrap gap-2">
-        {(["STUDENT", "INSTRUCTOR", "ADMIN"] as const).map((role) => (
+        {(["STUDENT", "INSTRUCTOR", "ADMIN", "SUPER_ADMIN"] as const).map((role) => (
           <button
             key={role}
             onClick={() =>
@@ -382,7 +417,12 @@ export default function AdminUsersPage() {
               <SelectContent>
                 <SelectItem value="STUDENT">Student</SelectItem>
                 <SelectItem value="INSTRUCTOR">Instructor</SelectItem>
-                <SelectItem value="ADMIN">Administrator</SelectItem>
+                {currentUserRole === "SUPER_ADMIN" && (
+                  <>
+                    <SelectItem value="ADMIN">Administrator</SelectItem>
+                    <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
+                  </>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -474,6 +514,7 @@ export default function AdminUsersPage() {
                 <SelectItem value="STUDENT">Student</SelectItem>
                 <SelectItem value="INSTRUCTOR">Instructor</SelectItem>
                 <SelectItem value="ADMIN">Administrator</SelectItem>
+                <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
               </SelectContent>
             </Select>
           </div>
