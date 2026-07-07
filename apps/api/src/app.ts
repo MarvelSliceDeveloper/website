@@ -53,8 +53,6 @@ const app = express();
 const uploadsRoot = path.resolve(__dirname, "..", "uploads");
 fs.mkdirSync(uploadsRoot, { recursive: true });
 
-app.use(express.json());
-app.use(cookieParser());
 app.use(
   cors({
     origin: process.env.WEB_URL || "http://localhost:3000",
@@ -62,11 +60,22 @@ app.use(
   }),
 );
 
+app.use(cookieParser());
+
+// ── CSRF protection — applied BEFORE body parser so invalid requests
+//     are rejected without parsing the request body ──
+const csrfExemptPaths = [
+  "/api/auth/",
+  "/api/webhooks/",
+  "/api/csrf-token",
+  "/health",
+];
+
 const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   getSecret: () => {
     const secret = process.env.CSRF_SECRET;
     if (!secret) {
-      throw new Error("Missing required environment variable: CSRF_SECRET");
+      throw new Error("Missing required environment variable: CSRFSECRET");
     }
     return secret;
   },
@@ -82,8 +91,14 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   size: 64,
   getCsrfTokenFromRequest: (req) => req.headers["x-csrf-token"] as string,
   ignoredMethods: ["GET", "HEAD", "OPTIONS"],
-  skipCsrfProtection: (req) => req.path.startsWith("/api/webhooks/"),
+  skipCsrfProtection: (req) =>
+    csrfExemptPaths.some((p) => req.path.startsWith(p)) ||
+    req.path.startsWith("/uploads/") ||
+    req.path.startsWith("/images/"),
 });
+
+app.use(doubleCsrfProtection);
+app.use(express.json());
 
 app.use("/uploads", express.static(uploadsRoot));
 
@@ -96,7 +111,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// ── Exempt routes (no CSRF required) ──
+// ── Routes ──
 app.use("/api/auth", authRouter);
 app.use("/api/webhooks", webhookRouter);
 app.post("/api/webhooks/events", eventsWebhookController.handleEventsWebhook);
@@ -106,9 +121,6 @@ app.get("/api/csrf-token", (req: Request, res: Response) => {
 app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
-
-// ── CSRF protection for all state-changing routes below ──
-app.use(doubleCsrfProtection);
 
 // ── Protected routes ──
 app.use("/api/calendar", calendarRouter);

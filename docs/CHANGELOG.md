@@ -4,6 +4,25 @@
 
 ---
 
+## 2026-07-07 — Security Fixes + Admin/Instructor UI Consistency ✅
+
+### Fixed: Security Vulnerabilities (CodeQL)
+
+- **SSRF** (`apps/api/src/modules/graph/graph.client.ts`): Added hostname validation to `getRaw()` method — previously only the `request()` method checked that endpoints resolve to `graph.microsoft.com`. Now `getRaw()` also rejects non-Graph hosts, preventing Server-Side Request Forgery.
+- **CSRF bypass** (`apps/api/src/app.ts`): Moved `doubleCsrfProtection` middleware before `express.json()` so CSRF validation happens before body parsing. Expanded `skipCsrfProtection` to cover all exempt routes (`/api/auth/`, `/api/webhooks/`, `/api/csrf-token`, `/health`, `/uploads/`, `/images/`).
+- **Format string injection** (`apps/api/src/services/email.service.ts`): Changed `console.error(msg, err)` calls to single-string concatenation to prevent Node.js format specifier interpretation (`%s`, `%d`) in log output.
+- **Format string injection** (`apps/api/src/modules/recordings/recording.service.ts`): Same fix — error messages now concatenated into the format string rather than passed as arguments.
+- **Insecure randomness** (`apps/api/k6/*.js`): Confirmed `Math.random()` usage is in load-test scripts only (k6 runtime, not production). No fix needed — intentional for stochastic simulation.
+
+### Changed: Admin & Instructor UI Consistency
+
+- **Admin dashboard** (`apps/web/src/app/admin/dashboard/page.tsx`): Replaced hand-rolled greeting banner with shared `AdminPageHeader` component. Removed deprecated Quick Actions section. Removed unused imports.
+- **Instructor dashboard** (`apps/web/src/app/instructor/dashboard/page.tsx`): Replaced hand-rolled greeting banner with shared `PageHeader` component. Fixed `window.location.href = "/login"` → `router.push("/login")` for client-side navigation.
+- **Sidebar types** (`apps/web/src/components/shared/SidebarTypes.ts`): Extracted shared `NavItem` and `NavItemChild` type definitions from both `AdminSidebar.tsx` and `InstructorSidebar.tsx` into a single source of truth (~20 lines DRY).
+- **Cross-role mock data** (`apps/web/src/app/admin/dashboard/page.tsx`): Created `apps/web/src/lib/admin-mock-data.ts` with admin-specific mock data, removing dependency on `student-mock-data.ts` from the admin dashboard.
+
+---
+
 ## 2026-07-07 — Super Admin Role, Role Separation & Security Hardening 🛡️
 
 ### Added: Super Admin Role (Full Stack)

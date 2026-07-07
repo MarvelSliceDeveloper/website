@@ -107,8 +107,7 @@ export const emailService = {
     } catch (error: unknown) {
       const err = error as { body?: { message?: string }; message?: string };
       console.error(
-        "[email] Failed to send:",
-        err.body?.message || err.message || error,
+        `[email] Failed to send: ${err.body?.message || err.message || error}`,
       );
       return false;
     }
@@ -179,8 +178,7 @@ export const emailService = {
       });
     } catch (error: unknown) {
       console.error(
-        `[email] Failed to send notification email (type: ${String(type)}):`,
-        error,
+        `[email] Failed to send notification email (type: ${String(type)}): ${String(error instanceof Error ? error.message : error)}`,
       );
       return false;
     }

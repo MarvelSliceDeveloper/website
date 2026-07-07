@@ -98,8 +98,7 @@ export const recordingService = {
         );
       } else {
         console.error(
-          `[RecordingSync] Failed to sync recordings for session ${sessionId}:`,
-          String(error.message),
+          `[RecordingSync] Failed to sync recordings for session ${sessionId}: ${String(error.message)}`,
         );
       }
       throw error;
@@ -259,7 +258,7 @@ export const recordingService = {
         expiresAt: new Date(Date.now() + 3600000), // ~1 hour
       };
     } catch (error: any) {
-      console.error(`[Recording] Failed to get playback URL:`, error.message);
+      console.error(`[Recording] Failed to get playback URL: ${String(error.message)}`);
       throw error;
     }
   },
