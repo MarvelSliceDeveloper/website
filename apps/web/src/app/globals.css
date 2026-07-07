@@ -346,3 +346,172 @@ a:focus-visible {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* ─── Admin Theme (flat — overrides dark glass for admin/instructor section) ── */
+
+[data-section="admin"] {
+  --background: #f4f6f9;
+  --foreground: #1a2238;
+  --card: #ffffff;
+  --card-hover: #f8f9fa;
+  --border: #e3e6ea;
+  --border-hover: #d1d5db;
+  --primary: #4f76e6;
+  --primary-hover: #3d62d0;
+  --accent: #0ca3cf;
+  --success: #2ecc71;
+  --warning: #f39c12;
+  --danger: #e74c3c;
+  --muted: #6b7280;
+  --muted-foreground: #9ca3af;
+  --radius: 6px;
+}
+
+/* Flat dark palette for admin when global theme is dark */
+[data-theme="dark"] [data-section="admin"] {
+  --background: #151b2b;
+  --foreground: #e2e6ef;
+  --card: #1e2538;
+  --card-hover: #262e45;
+  --border: #2d364f;
+  --border-hover: #3a4563;
+  --primary: #6d7dff;
+  --primary-hover: #8592ff;
+  --accent: #25c0e8;
+  --success: #2fbf71;
+  --warning: #f5ad42;
+  --danger: #f05d7d;
+  --muted: #7a83a8;
+  --muted-foreground: #a5adcc;
+  --radius: 6px;
+}
+
+[data-theme="dark"] [data-section="admin"] .field {
+  background: #1a2135;
+}
+
+[data-theme="dark"] [data-section="admin"] .btn-danger:hover {
+  background: rgba(240, 93, 125, 0.1);
+}
+
+[data-theme="dark"] [data-section="admin"] .panel {
+  background: #1a2135;
+}
+
+[data-section="admin"] .min-h-screen.bg-background {
+  background: var(--background);
+  background-image: none;
+}
+
+[data-section="admin"] .glass-card {
+  background: var(--card);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+[data-section="admin"] .glass-card:hover {
+  border-color: var(--border-hover);
+  background: var(--card);
+}
+
+[data-section="admin"] .btn-primary {
+  background: var(--primary);
+  color: #fff;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  font-size: 0.85rem;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  box-shadow: none;
+}
+
+[data-section="admin"] .btn-primary:hover {
+  background: var(--primary-hover);
+  transform: none;
+  box-shadow: none;
+}
+
+[data-section="admin"] .btn-secondary {
+  background: var(--card);
+  color: var(--foreground);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+[data-section="admin"] .btn-secondary:hover {
+  background: var(--card-hover);
+  border-color: var(--border-hover);
+}
+
+[data-section="admin"] .btn-danger {
+  background: var(--card);
+  color: var(--danger);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  font-size: 0.85rem;
+  border: 1px solid rgba(231, 76, 60, 0.25);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+[data-section="admin"] .btn-danger:hover {
+  background: #fdf2f3;
+  border-color: var(--danger);
+}
+
+[data-section="admin"] .field {
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--foreground);
+  padding: 0.45rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+[data-section="admin"] .field::placeholder {
+  color: var(--muted);
+}
+
+[data-section="admin"] .field:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(79, 118, 230, 0.1);
+}
+
+[data-section="admin"] header.sticky {
+  background: var(--card) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[data-section="admin"] .panel {
+  border: 1px solid var(--border);
+  background: #f9fafb;
+  border-radius: var(--radius);
+}
+
+[data-section="admin"] [role="dialog"] > div {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}

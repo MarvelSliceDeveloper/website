@@ -10,11 +10,13 @@ export default function InstructorShell({
   children: React.ReactNode;
 }) {
   return (
-    <AppShell
-      sidebar={(props) => <InstructorSidebar {...props} />}
-      inboxHref="/instructor/inbox"
-    >
-      {children}
-    </AppShell>
+    <div data-section="admin">
+      <AppShell
+        sidebar={(props) => <InstructorSidebar {...props} />}
+        inboxHref="/instructor/inbox"
+      >
+        {children}
+      </AppShell>
+    </div>
   );
 }

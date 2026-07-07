@@ -74,7 +74,7 @@ export default function DataTable<T>({
 
   if (loading) {
     return (
-      <div className="glass-card overflow-hidden">
+      <div className="border border-border bg-card overflow-hidden">
         <div className="overflow-x-auto min-w-[600px]">
           <table className="w-full">
             <thead>
@@ -82,22 +82,19 @@ export default function DataTable<T>({
                 {columns.map((col) => (
                   <th
                     key={col.key}
-                    className="px-5 py-3 text-xs font-medium uppercase text-muted"
+                    className="px-4 py-2.5 text-xs font-medium uppercase text-muted"
                   >
                     {col.label}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/50">
+            <tbody>
               {Array.from({ length: 5 }).map((_, i) => (
-                <tr
-                  key={i}
-                  className="hover:bg-card-hover/50 transition-colors"
-                >
+                <tr key={i}>
                   {columns.map((col) => (
-                    <td key={col.key} className="px-5 py-3">
-                      <div className="h-4 w-full max-w-32 animate-pulse rounded bg-card-hover" />
+                    <td key={col.key} className="px-4 py-2.5">
+                      <div className="h-4 w-full max-w-32 animate-pulse bg-border" />
                     </td>
                   ))}
                 </tr>
@@ -111,8 +108,8 @@ export default function DataTable<T>({
 
   if (data.length === 0) {
     return (
-      <div className="glass-card overflow-hidden">
-        <div className="px-5 py-12 text-center text-sm text-muted-foreground">
+      <div className="border border-border bg-card overflow-hidden">
+        <div className="px-4 py-10 text-center text-sm text-muted">
           {emptyState ?? "No data"}
         </div>
       </div>
@@ -120,7 +117,7 @@ export default function DataTable<T>({
   }
 
   return (
-    <div className="glass-card overflow-hidden">
+    <div className="border border-border bg-card overflow-hidden">
       {/* Desktop Table */}
       <div className="hidden md:block overflow-x-auto min-w-[600px]">
         <table className="w-full">
@@ -129,7 +126,7 @@ export default function DataTable<T>({
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className={`px-5 py-3 text-xs font-medium uppercase text-muted ${col.sortable ? "cursor-pointer select-none hover:text-foreground transition-colors" : ""}`}
+                  className={`px-4 py-2.5 text-xs font-medium uppercase text-muted ${col.sortable ? "cursor-pointer select-none hover:text-foreground transition-colors" : ""}`}
                   onClick={() => col.sortable && handleSort(col.key)}
                 >
                   <span className="inline-flex items-center gap-1">
@@ -146,13 +143,16 @@ export default function DataTable<T>({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-border/50">
+          <tbody>
             {sorted.map((row, i) => (
-              <tr key={i} className="hover:bg-card-hover/50 transition-colors">
+              <tr
+                key={i}
+                className={`${i % 2 === 1 ? "bg-[#f9fafb]" : ""} hover:bg-primary/[0.02] transition-colors`}
+              >
                 {columns.map((col) => (
                   <td
                     key={col.key}
-                    className="px-5 py-3 text-sm text-foreground"
+                    className="px-4 py-2.5 text-sm text-foreground"
                   >
                     {renderCell(row, col, i)}
                   </td>
@@ -166,10 +166,7 @@ export default function DataTable<T>({
       {/* Mobile Cards */}
       <div className="block md:hidden divide-y divide-border/50">
         {sorted.map((row, i) => (
-          <div
-            key={i}
-            className="p-4 space-y-2 hover:bg-card-hover/50 transition-colors"
-          >
+          <div key={i} className="p-3 space-y-1.5">
             {columns.map((col) => (
               <div
                 key={col.key}
@@ -189,7 +186,7 @@ export default function DataTable<T>({
 
       {/* Pagination */}
       {total > pageSize && (
-        <div className="flex items-center justify-between border-t border-border px-5 py-3">
+        <div className="flex items-center justify-between border-t border-border px-4 py-2.5">
           <p className="text-xs text-muted">
             Showing {startItem} to {endItem} of {total} entries
           </p>
@@ -197,14 +194,14 @@ export default function DataTable<T>({
             <button
               onClick={() => onPageChange?.(page - 1)}
               disabled={page <= 1}
-              className="btn-secondary px-3 py-1.5 text-xs disabled:opacity-50"
+              className="btn-secondary px-2.5 py-1.5 text-xs disabled:opacity-50"
             >
               Previous
             </button>
             <button
               onClick={() => onPageChange?.(page + 1)}
               disabled={page >= totalPages}
-              className="btn-secondary px-3 py-1.5 text-xs disabled:opacity-50"
+              className="btn-secondary px-2.5 py-1.5 text-xs disabled:opacity-50"
             >
               Next
             </button>

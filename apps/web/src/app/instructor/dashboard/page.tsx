@@ -61,6 +61,13 @@ type SubmissionRecord = {
   student: { name: string; email: string };
 };
 
+const iconBg: Record<string, string> = {
+  violet: "bg-blue-100 text-blue-600",
+  emerald: "bg-green-100 text-green-600",
+  sky: "bg-purple-100 text-purple-600",
+  amber: "bg-orange-100 text-orange-600",
+};
+
 export default function InstructorDashboardPage() {
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -173,12 +180,11 @@ export default function InstructorDashboardPage() {
     new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 17 ? "Good afternoon" : "Good evening";
 
   return (
-    <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-6">
       {/* Greeting Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-r from-primary/15 via-primary/5 to-accent/10 p-5 sm:p-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(109,125,255,0.15),transparent_60%)]" />
-        <div className="relative flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary to-accent text-xl font-bold text-white shadow-lg shadow-primary/30">
+      <div className="relative overflow-hidden rounded-lg border border-border bg-card p-5 sm:p-6">
+        <div className="flex items-center gap-4">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-xl font-bold text-white">
             I
           </div>
           <div className="min-w-0 flex-1">
@@ -203,12 +209,12 @@ export default function InstructorDashboardPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Assigned Batches", value: stats?.totalBatches, icon: IconUsers, gradient: "from-violet-500 to-purple-600", color: "violet" },
-          { label: "Total Sessions", value: stats?.totalSessions, icon: IconVideo, gradient: "from-emerald-500 to-teal-600", color: "emerald" },
-          { label: "Active Students", value: stats?.totalStudents, icon: IconBook, gradient: "from-sky-500 to-blue-600", color: "sky" },
-          { label: "Pending Submissions", value: stats?.pendingAssignments, icon: IconClipboardList, gradient: "from-amber-500 to-orange-600", color: "amber" },
+          { label: "Assigned Batches", value: stats?.totalBatches, icon: IconUsers, color: "violet" },
+          { label: "Total Sessions", value: stats?.totalSessions, icon: IconVideo, color: "emerald" },
+          { label: "Active Students", value: stats?.totalStudents, icon: IconBook, color: "sky" },
+          { label: "Pending Submissions", value: stats?.pendingAssignments, icon: IconClipboardList, color: "amber" },
         ].map((stat) => (
-          <div key={stat.label} className="glass-card p-5 group hover:-translate-y-0.5 transition-all cursor-default">
+          <div key={stat.label} className="border border-border bg-card p-5">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
                 <p className="text-xs font-medium uppercase tracking-[0.1em] text-muted">{stat.label}</p>
@@ -216,7 +222,7 @@ export default function InstructorDashboardPage() {
                   {loading || stat.value === undefined ? "\u2014" : stat.value}
                 </p>
               </div>
-              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${stat.gradient} text-white shadow-sm group-hover:scale-110 transition-transform`}>
+              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${iconBg[stat.color]} group-hover:scale-110 transition-transform`}>
                 <stat.icon size={20} stroke={1.8} />
               </div>
             </div>
@@ -241,11 +247,11 @@ export default function InstructorDashboardPage() {
           </div>
 
           {loading ? (
-            <div className="glass-card p-8 text-center text-sm text-muted animate-pulse">
+            <div className="border border-border bg-card p-8 text-center text-sm text-muted animate-pulse">
               Loading schedule...
             </div>
           ) : upcomingSessions.length === 0 ? (
-            <div className="glass-card p-10 text-center">
+            <div className="border border-border bg-card p-10 text-center">
               <IconCalendar
                 size={36}
                 stroke={1.2}
@@ -263,10 +269,10 @@ export default function InstructorDashboardPage() {
               {upcomingSessions.map((session) => (
                 <div
                   key={session.id}
-                  className="glass-card p-4 flex items-center justify-between hover:border-primary/20 transition-all duration-200"
+                  className="border border-border bg-card p-4 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
                       <IconVideo size={18} stroke={1.8} />
                     </div>
                     <div className="min-w-0">
@@ -309,11 +315,11 @@ export default function InstructorDashboardPage() {
 
           <div className="space-y-3">
             {loading ? (
-              <div className="glass-card p-8 text-center text-sm text-muted animate-pulse">
+              <div className="border border-border bg-card p-8 text-center text-sm text-muted animate-pulse">
                 Loading submissions...
               </div>
             ) : submissions.length === 0 ? (
-              <div className="glass-card p-10 text-center">
+              <div className="border border-border bg-card p-10 text-center">
                 <IconClipboardList
                   size={36}
                   stroke={1.2}
@@ -330,11 +336,11 @@ export default function InstructorDashboardPage() {
             {submissions.map((sub) => (
               <div
                 key={sub.id}
-                className="glass-card p-4 space-y-3 hover:border-amber-500/20 transition-all duration-200"
+                className="border border-border bg-card p-4 space-y-3"
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] uppercase font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">
                       Pending
                     </span>
                     <span className="text-[10px] text-muted flex items-center gap-1">

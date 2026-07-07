@@ -8,6 +8,13 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
 import interactionPlugin from "@fullcalendar/interaction";
 import type { EventClickArg } from "@fullcalendar/core";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Instructor = {
   id: string;
@@ -123,18 +130,22 @@ export default function AdminCalendarPage() {
           <label className="text-xs font-medium text-muted-foreground">
             Filter by Instructor:
           </label>
-          <select
+          <Select
             value={selectedInstructor}
-            onChange={(e) => setSelectedInstructor(e.target.value)}
-            className="field max-w-[220px]"
+            onValueChange={setSelectedInstructor}
           >
-            <option value="">All Instructors</option>
-            {instructors.map((inst) => (
-              <option key={inst.id} value={inst.id}>
-                {inst.name}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="field max-w-[220px]">
+              <SelectValue placeholder="All Instructors" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Instructors</SelectItem>
+              {instructors.map((inst) => (
+                <SelectItem key={inst.id} value={inst.id}>
+                  {inst.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

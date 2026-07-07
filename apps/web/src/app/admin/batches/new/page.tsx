@@ -4,6 +4,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { api } from "@/lib/api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type CourseOption = { id: string; title: string };
 type InstructorOption = {
@@ -109,19 +116,21 @@ export default function CreateBatchPage() {
             <label className="mb-1.5 block text-sm font-medium text-foreground">
               Course <span className="text-danger">*</span>
             </label>
-            <select
+            <Select
               value={form.courseId}
-              onChange={(e) => update("courseId", e.target.value)}
-              className="field"
-              required
+              onValueChange={(v) => update("courseId", v)}
             >
-              <option value="">Select a course</option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="field">
+                <SelectValue placeholder="Select a course" />
+              </SelectTrigger>
+              <SelectContent>
+                {courses.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {courses.length === 0 && (
               <p className="mt-1 text-xs text-warning">
                 No published courses found. Publish a course first.
@@ -133,19 +142,21 @@ export default function CreateBatchPage() {
             <label className="mb-1.5 block text-sm font-medium text-foreground">
               Instructor <span className="text-danger">*</span>
             </label>
-            <select
+            <Select
               value={form.instructorId}
-              onChange={(e) => update("instructorId", e.target.value)}
-              className="field"
-              required
+              onValueChange={(v) => update("instructorId", v)}
             >
-              <option value="">Select an instructor</option>
-              {instructors.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.name} ({i.role})
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="field">
+                <SelectValue placeholder="Select an instructor" />
+              </SelectTrigger>
+              <SelectContent>
+                {instructors.map((i) => (
+                  <SelectItem key={i.id} value={i.id}>
+                    {i.name} ({i.role})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

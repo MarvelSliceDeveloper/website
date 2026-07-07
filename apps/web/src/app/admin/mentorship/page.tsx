@@ -3,6 +3,13 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Ticket {
   id: string;
@@ -133,27 +140,27 @@ export default function AdminMentorshipPage() {
         <StatCard
           label="Total"
           value={stats.total}
-          color="from-primary to-violet-500"
+          color="bg-primary"
         />
         <StatCard
           label="Pending"
           value={stats.open}
-          color="from-warning to-amber-400"
+          color="bg-warning"
         />
         <StatCard
           label="Assigned"
           value={stats.assigned}
-          color="from-accent to-cyan-400"
+          color="bg-accent"
         />
         <StatCard
           label="Scheduled"
           value={stats.scheduled}
-          color="from-success to-emerald-400"
+          color="bg-success"
         />
         <StatCard
           label="Completed"
           value={stats.completed}
-          color="from-muted to-slate-400"
+          color="bg-muted"
         />
       </div>
 
@@ -318,10 +325,8 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div className="glass-card p-4">
-      <div
-        className={`mb-3 h-1 w-full rounded-full bg-gradient-to-r ${color}`}
-      />
+    <div className="border border-border bg-card p-4">
+      <div className={`mb-3 h-1 w-full rounded-full ${color}`} />
       <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted">
         {label}
       </p>
@@ -470,18 +475,21 @@ function TicketManageModal({
                 Step 1: Assign Mentor
               </h3>
               <div className="flex gap-3">
-                <select
+                <Select
                   value={selectedMentor}
-                  onChange={(e) => setSelectedMentor(e.target.value)}
-                  className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                  onValueChange={setSelectedMentor}
                 >
-                  <option value="">Select a mentor...</option>
-                  {mentors.map((mentor) => (
-                    <option key={mentor.id} value={mentor.id}>
-                      {mentor.name} ({mentor.role})
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none">
+                    <SelectValue placeholder="Select a mentor..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mentors.map((mentor) => (
+                      <SelectItem key={mentor.id} value={mentor.id}>
+                        {mentor.name} ({mentor.role})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <button
                   onClick={handleAssignMentor}
                   disabled={isSubmitting}

@@ -4,6 +4,13 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   IconClipboardList,
   IconPlus,
   IconTrash,
@@ -529,19 +536,21 @@ export default function InstructorAssignmentsContent() {
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Target Batch
                 </label>
-                <select
-                  required
+                <Select
                   value={formBatchId}
-                  onChange={(e) => setFormBatchId(e.target.value)}
-                  className="field py-2.5"
+                  onValueChange={setFormBatchId}
                 >
-                  <option value="">Select Batch (Course)</option>
-                  {batches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name} · {b.course.title}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="field py-2.5">
+                    <SelectValue placeholder="Select Batch (Course)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {batches.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>
+                        {b.name} · {b.course.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-1">

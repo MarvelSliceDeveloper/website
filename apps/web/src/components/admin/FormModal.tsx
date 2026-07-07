@@ -53,15 +53,22 @@ export function FormModal({
   useEffect(() => {
     if (!open) return;
     document.addEventListener("keydown", handleKeyDown);
-    dialogRef.current?.querySelector<HTMLElement>("button, input, select, textarea")?.focus();
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [open, handleKeyDown]);
+
+  useEffect(() => {
+    if (!open) return;
+    const timer = requestAnimationFrame(() => {
+      dialogRef.current?.querySelector<HTMLElement>("button, input, select, textarea")?.focus();
+    });
+    return () => cancelAnimationFrame(timer);
+  }, [open]);
 
   if (!open) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -69,24 +76,24 @@ export function FormModal({
     >
       <div
         ref={dialogRef}
-        className={`w-full ${sizeMap[size]} glass-card p-6 shadow-2xl space-y-4 animate-in scale-in duration-200`}
+        className={`w-full ${sizeMap[size]} border border-border bg-card p-5 space-y-4`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-border pb-3">
-          <h3 className="text-lg font-bold text-foreground">{title}</h3>
+          <h3 className="text-base font-bold text-foreground">{title}</h3>
           <button
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground text-xl leading-none"
+            className="text-muted hover:text-foreground"
             aria-label="Close dialog"
           >
-            <IconX size={20} stroke={1.5} />
+            <IconX size={18} stroke={1.5} />
           </button>
         </div>
 
         <div className="space-y-4">{children}</div>
 
         {footer && (
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-border/50">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/50">
             {footer}
           </div>
         )}

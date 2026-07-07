@@ -183,7 +183,7 @@ function CoursesPageContent() {
       label: "Course",
       render: (_, course) => (
         <div className="flex items-center gap-3">
-          <div className="h-10 w-14 shrink-0 rounded-lg bg-gradient-to-br from-primary/30 to-accent/20 flex items-center justify-center overflow-hidden">
+          <div className="h-10 w-14 shrink-0 rounded-lg bg-primary/15 flex items-center justify-center overflow-hidden">
             {course.thumbnailUrl ? (
               <Image
                 src={course.thumbnailUrl}
