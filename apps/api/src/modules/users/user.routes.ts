@@ -21,11 +21,12 @@ function handleError(res: Response, error: unknown) {
   return res.status(500).json({ error: message });
 }
 
-// GET /api/users — list all users (admin only)
-// Lists all users in the system
+// GET /api/users — list non-admin users (admin only)
+// Lists STUDENT and INSTRUCTOR users only
 router.get("/", async (_req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany({
+      where: { role: { in: ["STUDENT", "INSTRUCTOR"] } },
       select: { id: true, name: true, email: true, role: true, isSuspended: true },
       orderBy: [{ role: "asc" }, { name: "asc" }],
     });

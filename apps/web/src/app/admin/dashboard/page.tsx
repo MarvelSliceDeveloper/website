@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { MOCK_DASHBOARD_CHARTS, MOCK_ENABLED } from "@/lib/admin-mock-data";
 import type { DashboardChartData } from "@/lib/admin-mock-data";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   IconBook,
@@ -23,7 +24,11 @@ import {
   IconShield,
   IconLock,
   IconUsers,
+  IconUsersGroup,
   IconSettings,
+  IconEdit,
+  IconCalendar,
+  IconTicket,
 } from "@tabler/icons-react";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });

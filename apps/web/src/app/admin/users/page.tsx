@@ -176,8 +176,6 @@ export default function AdminUsersPage() {
 
   const counts = {
     total: users.length,
-    SUPER_ADMIN: users.filter((u) => u.role === "SUPER_ADMIN").length,
-    ADMIN: users.filter((u) => u.role === "ADMIN").length,
     INSTRUCTOR: users.filter((u) => u.role === "INSTRUCTOR").length,
     STUDENT: users.filter((u) => u.role === "STUDENT").length,
   };
@@ -276,7 +274,7 @@ export default function AdminUsersPage() {
 
       {/* Stat chips */}
       <div className="flex flex-wrap gap-2">
-        {(["STUDENT", "INSTRUCTOR", "ADMIN", "SUPER_ADMIN"] as const).map((role) => (
+        {(["STUDENT", "INSTRUCTOR"] as const).map((role) => (
           <button
             key={role}
             onClick={() =>

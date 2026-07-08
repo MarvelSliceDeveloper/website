@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ComponentType } from "react";
 import { api } from "@/lib/api";
 import {
   IconBook,
-  IconBrandWindows,
   IconChartBar,
   IconClipboardCheck,
   IconLayoutDashboard,
@@ -274,9 +273,9 @@ export default function AdminSidebar({
       ? [
           // Super Admin: system operations
           ...[
-            { label: "Activity Logs", href: "/admin/logs", icon: IconFileDescription as React.ComponentType<{ size?: number | string; stroke?: number | string; className?: string }> },
-            { label: "Trash", href: "/admin/trash", icon: IconTrash as React.ComponentType<{ size?: number | string; stroke?: number | string; className?: string }> },
-            { label: "Announcements", href: "/admin/announcements", icon: IconBellRinging as React.ComponentType<{ size?: number | string; stroke?: number | string; className?: string }> },
+            { label: "Activity Logs", href: "/admin/logs", icon: IconFileDescription as ComponentType<{ size?: number | string; stroke?: number | string; className?: string }> },
+            { label: "Trash", href: "/admin/trash", icon: IconTrash as ComponentType<{ size?: number | string; stroke?: number | string; className?: string }> },
+            { label: "Announcements", href: "/admin/announcements", icon: IconBellRinging as ComponentType<{ size?: number | string; stroke?: number | string; className?: string }> },
           ],
           {
             label: "Users",
@@ -286,7 +285,6 @@ export default function AdminSidebar({
               { label: "All Users", href: "/admin/users" },
               { label: "Students", href: "/admin/users?role=STUDENT" },
               { label: "Instructors", href: "/admin/users?role=INSTRUCTOR" },
-              { label: "Admins", href: "/admin/users?role=ADMIN" },
               { label: "Login History", href: "/admin/users/login-history" },
             ],
           },
@@ -302,7 +300,6 @@ export default function AdminSidebar({
               { label: "General", href: "/admin/settings" },
             ],
           },
-          { label: "Microsoft", href: "/admin/microsoft", icon: IconBrandWindows },
         ]
       : [
           // Admin: platform operations
@@ -373,7 +370,6 @@ export default function AdminSidebar({
               { label: "All Users", href: "/admin/users" },
               { label: "Students", href: "/admin/users?role=STUDENT" },
               { label: "Instructors", href: "/admin/users?role=INSTRUCTOR" },
-              { label: "Admins", href: "/admin/users?role=ADMIN" },
             ],
           },
           {
@@ -388,7 +384,6 @@ export default function AdminSidebar({
               { label: "Completed", href: "/admin/mentorship?status=COMPLETED" },
             ],
           },
-          { label: "Microsoft", href: "/admin/microsoft", icon: IconBrandWindows },
           {
             label: "Settings",
             href: "/admin/settings",

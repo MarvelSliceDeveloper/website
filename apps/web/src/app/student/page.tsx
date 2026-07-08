@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { IconAlertCircle, IconSearch } from "@tabler/icons-react";
 import StudentPortalShell, {
   type Breadcrumb,
@@ -176,6 +176,7 @@ async function fetchPortalData(): Promise<PortalData> {
     certs,
     catalogue,
     overdueAssignments,
+    continueLearningData,
   ] = await Promise.all([
     api
       .get<{ courses: EnrolledCourse[] }>("/api/courses/enrolled")
@@ -197,6 +198,9 @@ async function fetchPortalData(): Promise<PortalData> {
       .catch(() => ({ courses: [] })),
     api
       .get<{ items: OverdueAssignment[] }>("/api/student/assignments/overdue")
+      .catch(() => ({ items: [] })),
+    api
+      .get<{ items: ContinueLearningItem[] }>("/api/student/continue-learning")
       .catch(() => ({ items: [] })),
   ]);
 
@@ -253,7 +257,7 @@ async function fetchPortalData(): Promise<PortalData> {
     ),
     certificates: certs.certificates,
     catalogue: catalogue.courses,
-    continueLearning: [], // loaded from /api/student/continue-learning
+    continueLearning: continueLearningData.items,
   };
 }
 
@@ -354,59 +358,80 @@ async function fetchBatch(batchId: string): Promise<Batch | null> {
 // ─── Breadcrumb builder ───────────────────────────────────────────────────────
 
 function buildBreadcrumbs(
-  viewStack: ViewState[],
+  currentView: ViewState,
+  navigate: (v: ViewState) => void,
   data: PortalData | null,
-  jumpTo: (index: number) => void,
 ): Breadcrumb[] {
-  return viewStack.map((entry, index) => {
-    const isLast = index === viewStack.length - 1;
-    const label = (() => {
-      switch (entry.view) {
-        case "HOME":
-          return "Home";
-        case "COURSES":
-          return "Courses";
-        case "BATCH_DETAIL":
-          return (
-            data?.batches[entry.params?.batchId ?? ""]?.courseTitle ?? "Batch"
-          );
-        case "RECORDING_PLAYER":
-          return "Recording";
-        case "LIVE_SESSIONS":
-          return "Live Sessions";
-        case "CALENDAR":
-          return "Calendar";
-        case "MENTORSHIP":
-          return "Mentorship";
-        case "CERTIFICATES":
-          return "Certificates";
-        case "BROWSE_CATALOGUE":
-          return "Browse Courses";
-        case "COURSE_DETAIL":
-          return (
-            data?.catalogue.find((c) => c.id === entry.params?.courseId)
-              ?.title ?? "Course"
-          );
-        case "COURSE_CONTENT":
-          return (
-            data?.enrolledCourses.find((c) => c.id === entry.params?.courseId)
-              ?.title ?? "Course"
-          );
-        case "ASSIGNMENT_OVERDUE":
-          return "Assignment Overdue";
-        case "QUIZ_OVERDUE":
-          return "Quiz Overdue";
-        case "COURSE_COMPLETED":
-          return "Courses Completed";
-        default:
-          return "—";
-      }
-    })();
-    return {
-      label,
-      onClick: isLast ? undefined : () => jumpTo(index),
-    };
-  });
+  const home: Breadcrumb = {
+    label: "Home",
+    onClick: () => navigate({ view: "HOME" }),
+  };
+
+  switch (currentView.view) {
+    case "HOME":
+      return [home];
+    case "COURSES":
+      return [home, { label: "Courses" }];
+    case "BATCH_DETAIL":
+      return [
+        home,
+        { label: "Courses", onClick: () => navigate({ view: "COURSES" }) },
+        {
+          label:
+            data?.batches[currentView.params?.batchId ?? ""]?.courseTitle ??
+            "Batch",
+        },
+      ];
+    case "RECORDING_PLAYER":
+      return [
+        home,
+        { label: "Courses", onClick: () => navigate({ view: "COURSES" }) },
+        { label: "Recording" },
+      ];
+    case "LIVE_SESSIONS":
+      return [home, { label: "Live Sessions" }];
+    case "CALENDAR":
+      return [home, { label: "Calendar" }];
+    case "MENTORSHIP":
+      return [home, { label: "Mentorship" }];
+    case "CERTIFICATES":
+      return [home, { label: "Certificates" }];
+    case "BROWSE_CATALOGUE":
+      return [home, { label: "Browse Courses" }];
+    case "COURSE_DETAIL":
+      return [
+        home,
+        {
+          label: "Browse Courses",
+          onClick: () => navigate({ view: "BROWSE_CATALOGUE" }),
+        },
+        {
+          label:
+            data?.catalogue.find(
+              (c) => c.id === currentView.params?.courseId,
+            )?.title ?? "Course",
+        },
+      ];
+    case "COURSE_CONTENT":
+      return [
+        home,
+        { label: "Courses", onClick: () => navigate({ view: "COURSES" }) },
+        {
+          label:
+            data?.enrolledCourses.find(
+              (c) => c.id === currentView.params?.courseId,
+            )?.title ?? "Course",
+        },
+      ];
+    case "ASSIGNMENT_OVERDUE":
+      return [home, { label: "Assignment Overdue" }];
+    case "QUIZ_OVERDUE":
+      return [home, { label: "Quiz Overdue" }];
+    case "COURSE_COMPLETED":
+      return [home, { label: "Courses Completed" }];
+    default:
+      return [home];
+  }
 }
 
 // ─── Main Portal Page ─────────────────────────────────────────────────────────
@@ -427,11 +452,7 @@ export default function StudentPortalPage() {
 
 function StudentPortalContent() {
   const searchParams = useSearchParams();
-  const [viewStack, setViewStack] = useState<ViewState[]>(() => {
-    const viewParam = searchParams?.get("view");
-    if (viewParam === "calendar") return [{ view: "CALENDAR" }];
-    return [{ view: "HOME" }];
-  });
+  const router = useRouter();
   const [data, setData] = useState<PortalData | null>(null);
   const [batchCache, setBatchCache] = useState<Record<string, Batch>>({});
   const [loadingBatch, setLoadingBatch] = useState(false);
@@ -440,7 +461,55 @@ function StudentPortalContent() {
   const [studentName, setStudentName] = useState("Demo Student");
   const [studentEmail, setStudentEmail] = useState("demo@student.example.com");
 
-  const currentView = viewStack[viewStack.length - 1];
+  // Derive current view from URL search params
+  const currentView: ViewState = (() => {
+    const view = searchParams?.get("view");
+    switch (view) {
+      case "courses":
+        return { view: "COURSES" };
+      case "batch":
+        return {
+          view: "BATCH_DETAIL",
+          params: { batchId: searchParams.get("batchId") ?? undefined },
+        };
+      case "recording":
+        return {
+          view: "RECORDING_PLAYER",
+          params: {
+            batchId: searchParams.get("batchId") ?? undefined,
+            sessionId: searchParams.get("recordingId") ?? undefined,
+          },
+        };
+      case "sessions":
+        return { view: "LIVE_SESSIONS" };
+      case "calendar":
+        return { view: "CALENDAR" };
+      case "mentorship":
+        return { view: "MENTORSHIP" };
+      case "certificates":
+        return { view: "CERTIFICATES" };
+      case "catalogue":
+        return { view: "BROWSE_CATALOGUE" };
+      case "course-detail":
+        return {
+          view: "COURSE_DETAIL",
+          params: { courseId: searchParams.get("courseId") ?? undefined },
+        };
+      case "course-content":
+        return {
+          view: "COURSE_CONTENT",
+          params: { courseId: searchParams.get("courseId") ?? undefined },
+        };
+      case "assignments":
+        return { view: "ASSIGNMENT_OVERDUE" };
+      case "quizzes":
+        return { view: "QUIZ_OVERDUE" };
+      case "completed":
+        return { view: "COURSE_COMPLETED" };
+      default:
+        return { view: "HOME" };
+    }
+  })();
 
   const sectionApiAvailability = {
     courses: true,
@@ -453,22 +522,79 @@ function StudentPortalContent() {
     notes: true,
   };
 
-  // ── Navigation helpers ────────────────────────────────────────────────────
+  // ── URL helpers ───────────────────────────────────────────────────────────
 
-  const navigate = useCallback((next: ViewState) => {
-    setViewStack((prev) => [...prev, next]);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+  function viewStateToUrl(state: ViewState): string {
+    const params = new URLSearchParams();
+    switch (state.view) {
+      case "HOME":
+        return "/student";
+      case "COURSES":
+        params.set("view", "courses");
+        break;
+      case "BATCH_DETAIL":
+        params.set("view", "batch");
+        if (state.params?.batchId) params.set("batchId", state.params.batchId);
+        break;
+      case "RECORDING_PLAYER":
+        params.set("view", "recording");
+        if (state.params?.batchId) params.set("batchId", state.params.batchId);
+        if (state.params?.sessionId)
+          params.set("recordingId", state.params.sessionId);
+        break;
+      case "LIVE_SESSIONS":
+        params.set("view", "sessions");
+        break;
+      case "CALENDAR":
+        params.set("view", "calendar");
+        break;
+      case "MENTORSHIP":
+        params.set("view", "mentorship");
+        break;
+      case "CERTIFICATES":
+        params.set("view", "certificates");
+        break;
+      case "BROWSE_CATALOGUE":
+        params.set("view", "catalogue");
+        break;
+      case "COURSE_DETAIL":
+        params.set("view", "course-detail");
+        if (state.params?.courseId)
+          params.set("courseId", state.params.courseId);
+        break;
+      case "COURSE_CONTENT":
+        params.set("view", "course-content");
+        if (state.params?.courseId)
+          params.set("courseId", state.params.courseId);
+        break;
+      case "ASSIGNMENT_OVERDUE":
+        params.set("view", "assignments");
+        break;
+      case "QUIZ_OVERDUE":
+        params.set("view", "quizzes");
+        break;
+      case "COURSE_COMPLETED":
+        params.set("view", "completed");
+        break;
+    }
+    const qs = params.toString();
+    return qs ? `/student?${qs}` : "/student";
+  }
+
+  // ── Navigation ────────────────────────────────────────────────────────────
+
+  const navigate = useCallback(
+    (next: ViewState) => {
+      router.push(viewStateToUrl(next));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [router],
+  );
 
   const goBack = useCallback(() => {
-    setViewStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
+    router.back();
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
-
-  const jumpTo = useCallback((index: number) => {
-    setViewStack((prev) => prev.slice(0, index + 1));
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+  }, [router]);
 
   // ── Data loading ──────────────────────────────────────────────────────────
 
@@ -549,9 +675,9 @@ function StudentPortalContent() {
   // ── Breadcrumbs ───────────────────────────────────────────────────────────
 
   const breadcrumbs = buildBreadcrumbs(
-    viewStack,
+    currentView,
+    navigate,
     data ? { ...data, batches: batchCache } : null,
-    jumpTo,
   );
 
   // ── Mentorship submit handler ─────────────────────────────────────────────
@@ -568,9 +694,10 @@ function StudentPortalContent() {
         courseId,
         preferredDate: preferredDate || undefined,
       });
+      toast.success("Mentorship request submitted.");
       await loadData();
     } catch {
-      setError("Failed to submit mentorship request");
+      toast.error("Failed to submit mentorship request");
     }
   }
 
@@ -596,7 +723,7 @@ function StudentPortalContent() {
   if (isLoading) {
     return (
       <StudentPortalShell>
-        <Spinner size={40} label="Loading your portal..." className="min-h-[60vh]" />
+        <HomeSkeleton />
       </StudentPortalShell>
     );
   }
@@ -609,7 +736,7 @@ function StudentPortalContent() {
           <p className="font-semibold text-foreground">Failed to load portal</p>
           <p className="text-sm text-muted-foreground">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => { setError(""); setIsLoading(true); loadData().finally(() => setIsLoading(false)); }}
             className="btn-primary text-sm"
           >
             Retry
@@ -620,7 +747,7 @@ function StudentPortalContent() {
   }
 
   const portalData = data!;
-  const showBack = viewStack.length > 1;
+  const showBack = currentView.view !== "HOME";
 
   // ── View renderer ─────────────────────────────────────────────────────────
 
@@ -676,15 +803,11 @@ function StudentPortalContent() {
           <RecordingPlayerView
             batch={batch}
             recordingId={recordingId}
-            onSelectRecording={(nextRecordingId) =>
-              setViewStack((prev) => [
-                ...prev.slice(0, -1),
-                {
-                  view: "RECORDING_PLAYER",
-                  params: { batchId, sessionId: nextRecordingId },
-                },
-              ])
-            }
+            onSelectRecording={(nextRecordingId) => {
+              const params = new URLSearchParams(searchParams.toString());
+              params.set("recordingId", nextRecordingId);
+              router.replace(`/student?${params.toString()}`);
+            }}
           />
         );
       }
@@ -774,7 +897,7 @@ function StudentPortalContent() {
       hideHeader={isCourseContent}
     >
       {/* View transition wrapper */}
-      <div key={viewStack.map((v) => v.view).join("-")}>{renderView()}</div>
+      <div key={currentView.view} className="sp-view-enter">{renderView()}</div>
     </StudentPortalShell>
   );
 }
@@ -793,6 +916,72 @@ function NotFoundView() {
       <p className="text-sm text-muted-foreground">
         This view doesn&apos;t exist in the portal.
       </p>
+    </div>
+  );
+}
+
+// Skeleton that matches HOME layout — keeps perceived structure stable during load
+function HomeSkeleton() {
+  return (
+    <div className="sp-view-enter space-y-6 motion-reduce:animate-none">
+      {/* Greeting banner skeleton */}
+      <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-card-hover/50 p-5 sm:p-6">
+        <div className="flex animate-pulse items-center gap-4">
+          <div className="h-14 w-14 shrink-0 rounded-full bg-card-hover" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="h-5 w-48 rounded bg-card-hover" />
+            <div className="h-3 w-36 rounded bg-card-hover" />
+          </div>
+          <div className="hidden items-center gap-4 sm:flex">
+            <div className="space-y-1.5 text-right">
+              <div className="h-3 w-16 rounded bg-card-hover" />
+              <div className="h-5 w-12 rounded bg-card-hover" />
+            </div>
+            <div className="h-8 w-px bg-border/60" />
+            <div className="space-y-1.5 text-right">
+              <div className="h-3 w-16 rounded bg-card-hover" />
+              <div className="h-5 w-12 rounded bg-card-hover" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Two-column grid skeleton */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
+        {/* Left: stat tiles */}
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className="animate-pulse rounded-2xl border border-border/40 bg-card-hover/40 p-5">
+              <div className="mb-4 h-12 w-12 rounded-xl bg-card-hover" />
+              <div className="mb-2 h-3 w-20 rounded bg-card-hover" />
+              <div className="h-8 w-16 rounded bg-card-hover" />
+            </div>
+          ))}
+        </div>
+
+        {/* Right: schedule skeleton */}
+        <div className="animate-pulse space-y-4">
+          <div className="rounded-2xl border border-border/40 bg-card-hover/40 p-5">
+            <div className="mb-4 h-4 w-28 rounded bg-card-hover" />
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="flex items-center gap-3 py-3">
+                <div className="h-9 w-9 shrink-0 rounded-lg bg-card-hover" />
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <div className="h-3.5 w-36 rounded bg-card-hover" />
+                  <div className="h-3 w-24 rounded bg-card-hover" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Section tabs skeleton */}
+      <div className="animate-pulse flex gap-1 border-b border-border pb-0">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="h-9 w-20 rounded bg-card-hover px-4 py-2.5" />
+        ))}
+      </div>
     </div>
   );
 }
