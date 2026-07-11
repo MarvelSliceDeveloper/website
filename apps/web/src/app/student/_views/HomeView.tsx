@@ -205,7 +205,6 @@ export default function HomeView({
     }
   }
 
-
   const now = new Date();
   const hour = now.getHours();
   const greeting =
@@ -338,12 +337,16 @@ export default function HomeView({
           </div>
           <div className="hidden items-center gap-4 sm:flex">
             <div className="text-right">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Streak</p>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                Streak
+              </p>
               <p className="text-lg font-bold text-warning">5 days</p>
             </div>
             <div className="h-8 w-px bg-border/60" />
             <div className="text-right">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">This Week</p>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                This Week
+              </p>
               <p className="text-lg font-bold text-success">{liveCount} live</p>
             </div>
           </div>
@@ -357,7 +360,7 @@ export default function HomeView({
           <StudentStatTiles tiles={statTiles} />
         </div>
 
-      {/* ═══ RIGHT COLUMN ═══════════════════════════════════════════════ */}
+        {/* ═══ RIGHT COLUMN ═══════════════════════════════════════════════ */}
         <div className="flex flex-col gap-6">
           {/* ── Today's Schedule ───────────────────────────────────────── */}
           <div className="glass-card p-5">
@@ -371,8 +374,8 @@ export default function HomeView({
               </button>
             </div>
             <div className="divide-y divide-border/60">
-              {liveSessionsToday.filter((s) => s.status !== "PAST").length === 0
-              ? (
+              {liveSessionsToday.filter((s) => s.status !== "PAST").length ===
+              0 ? (
                 <p className="py-4 text-center text-sm text-muted">
                   No events scheduled today
                 </p>
@@ -386,17 +389,23 @@ export default function HomeView({
                       const end = new Date(s.endDateTime);
                       const timeStr = `${start.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false })} - ${end.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
                       return (
-                        <div key={s.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                        <div
+                          key={s.id}
+                          className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
+                        >
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                              s.status === "LIVE"
-                                ? "bg-danger/15 text-danger"
-                                : "bg-accent/10 text-accent"
-                            }`}>
-                              {s.status === "LIVE"
-                                ? <span className="live-pulse h-2.5 w-2.5 rounded-full bg-current" />
-                                : <IconClock size={16} />
-                              }
+                            <div
+                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                                s.status === "LIVE"
+                                  ? "bg-danger/15 text-danger"
+                                  : "bg-accent/10 text-accent"
+                              }`}
+                            >
+                              {s.status === "LIVE" ? (
+                                <span className="live-pulse h-2.5 w-2.5 rounded-full bg-current" />
+                              ) : (
+                                <IconClock size={16} />
+                              )}
                             </div>
                             <div className="min-w-0">
                               <p className="truncate text-sm font-medium text-foreground">
@@ -452,7 +461,8 @@ export default function HomeView({
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-foreground">
-                        {pendingAssignments} Assignment{pendingAssignments !== 1 ? "s" : ""} Overdue
+                        {pendingAssignments} Assignment
+                        {pendingAssignments !== 1 ? "s" : ""} Overdue
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Click to view & submit
@@ -469,7 +479,8 @@ export default function HomeView({
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-foreground">
-                        {pendingQuizzes} Quiz{pendingQuizzes !== 1 ? "zes" : ""} Overdue
+                        {pendingQuizzes} Quiz{pendingQuizzes !== 1 ? "zes" : ""}{" "}
+                        Overdue
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Click to attempt
@@ -823,7 +834,8 @@ export default function HomeView({
         <p className="sp-eyebrow mb-3">Quick Access</p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {SECTION_CARDS.map((card, i) => {
-            const iconStyle = CARD_ICON_STYLES[card.id] || CARD_ICON_STYLES.courses;
+            const iconStyle =
+              CARD_ICON_STYLES[card.id] || CARD_ICON_STYLES.courses;
             return (
               <button
                 key={card.id}
@@ -842,10 +854,10 @@ export default function HomeView({
                 <div
                   className={`absolute inset-0 bg-linear-to-br ${card.gradient} opacity-0 transition-opacity group-hover:opacity-100`}
                 />
-                <div className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border shadow-sm ${iconStyle}`}>
-                  <div className="[&>svg]:size-[22px]">
-                    {card.icon}
-                  </div>
+                <div
+                  className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border shadow-sm ${iconStyle}`}
+                >
+                  <div className="[&>svg]:size-[22px]">{card.icon}</div>
                 </div>
                 <div className="relative min-w-0 flex-1">
                   {card.isLive && liveCount > 0 && (
@@ -908,7 +920,11 @@ export default function HomeView({
                   className="glass-card group flex w-full items-center gap-4 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30"
                 >
                   <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card">
-                    <svg width={size} height={size} className="absolute inset-0">
+                    <svg
+                      width={size}
+                      height={size}
+                      className="absolute inset-0"
+                    >
                       <circle
                         cx={size / 2}
                         cy={size / 2}
@@ -939,9 +955,7 @@ export default function HomeView({
                     <p className="truncate text-sm font-medium text-foreground">
                       {item.courseTitle}
                     </p>
-                    <p className="mt-0.5 text-xs text-muted">
-                      {item.dayLabel}
-                    </p>
+                    <p className="mt-0.5 text-xs text-muted">{item.dayLabel}</p>
                   </div>
                   <span className="btn-primary shrink-0 px-3 py-1 text-xs opacity-0 transition-opacity group-hover:opacity-100">
                     Resume
@@ -964,7 +978,8 @@ export default function HomeView({
               Expand your skills
             </h2>
             <p className="mt-1 text-sm text-muted-foreground max-w-md">
-              New batches starting every month. Find the perfect course to accelerate your career.
+              New batches starting every month. Find the perfect course to
+              accelerate your career.
             </p>
           </div>
           <button

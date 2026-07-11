@@ -59,9 +59,7 @@ const overviewItems: NavItem[] = [
     label: "My Courses",
     href: "/instructor/courses",
     icon: IconBook,
-    children: [
-      { label: "All Courses", href: "/instructor/courses" },
-    ],
+    children: [{ label: "All Courses", href: "/instructor/courses" }],
   },
   {
     label: "Mentorship",
@@ -200,7 +198,7 @@ function NavGroup({
             <li key={item.label} className="space-y-0.5">
               {hasChildren && !collapsed ? (
                 <div className="space-y-0.5">
-                    <button
+                  <button
                     onClick={() => toggleGroup(item.label)}
                     title={item.label}
                     className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium rounded-lg border-2 transition-all duration-150 select-none text-left cursor-pointer ${
@@ -248,7 +246,9 @@ function NavGroup({
                   href={item.href}
                   title={item.label}
                   className={`flex items-center text-sm font-medium rounded-lg border-2 transition-all duration-150 ${
-                    collapsed ? "justify-center px-2 py-2.5" : "gap-2.5 px-3 py-2.5"
+                    collapsed
+                      ? "justify-center px-2 py-2.5"
+                      : "gap-2.5 px-3 py-2.5"
                   } ${
                     isActive
                       ? "border-primary bg-primary/[0.08] text-primary shadow-sm"

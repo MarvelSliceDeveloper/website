@@ -426,9 +426,14 @@ export default function StudentSupportPage() {
 
   // ── Main render ──────────────────────────────────────────────────────
 
-  const openCount = tickets.filter((t) => t.status === "OPEN" || t.status === "IN_PROGRESS").length;
+  const openCount = tickets.filter(
+    (t) => t.status === "OPEN" || t.status === "IN_PROGRESS",
+  ).length;
   const resolvedCount = tickets.filter((t) => t.status === "RESOLVED").length;
-  const totalMessages = tickets.reduce((s, t) => s + (t._count?.messages ?? 0), 0);
+  const totalMessages = tickets.reduce(
+    (s, t) => s + (t._count?.messages ?? 0),
+    0,
+  );
 
   const BORDER_CLASSES: Record<string, string> = {
     OPEN: "border-l-warning/40",
@@ -457,29 +462,57 @@ export default function StudentSupportPage() {
           <p className="sp-eyebrow">Student</p>
           <h1 className="mt-1.5 text-2xl font-bold text-foreground">Support</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Report issues or ask questions about login, courses, or anything else.
+            Report issues or ask questions about login, courses, or anything
+            else.
           </p>
         </div>
 
         {/* Stats bar */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
-            { label: "Open Tickets", value: openCount, icon: IconHelp, key: "open" },
-            { label: "Resolved", value: resolvedCount, icon: IconCheck, key: "resolved" },
-            { label: "Total Tickets", value: tickets.length, icon: IconTicket, key: "total" },
-            { label: "Messages", value: totalMessages, icon: IconMessage, key: "messages" },
+            {
+              label: "Open Tickets",
+              value: openCount,
+              icon: IconHelp,
+              key: "open",
+            },
+            {
+              label: "Resolved",
+              value: resolvedCount,
+              icon: IconCheck,
+              key: "resolved",
+            },
+            {
+              label: "Total Tickets",
+              value: tickets.length,
+              icon: IconTicket,
+              key: "total",
+            },
+            {
+              label: "Messages",
+              value: totalMessages,
+              icon: IconMessage,
+              key: "messages",
+            },
           ].map((stat) => {
             const s = STAT_ICONS[stat.key];
             return (
-              <div key={stat.key} className="glass-card p-3.5 group hover:-translate-y-0.5 transition-all cursor-default">
+              <div
+                key={stat.key}
+                className="glass-card p-3.5 group hover:-translate-y-0.5 transition-all cursor-default"
+              >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted">{stat.label}</p>
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+                      {stat.label}
+                    </p>
                     <p className={`text-xl font-black ${s.text}`}>
                       {loading ? "\u2014" : stat.value}
                     </p>
                   </div>
-                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${s.bg} ${s.text} group-hover:scale-110 transition-transform`}>
+                  <div
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${s.bg} ${s.text} group-hover:scale-110 transition-transform`}
+                  >
                     <stat.icon size={16} stroke={1.8} />
                   </div>
                 </div>
@@ -521,11 +554,19 @@ export default function StudentSupportPage() {
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <IconHelp size={28} />
                 </div>
-                <p className="font-semibold text-foreground">No support tickets</p>
+                <p className="font-semibold text-foreground">
+                  No support tickets
+                </p>
                 <p className="text-sm text-muted-foreground max-w-xs">
                   Create a ticket and admin will help you out.
                 </p>
-                <button onClick={() => { setShowForm(true); setSelectedTicket(null); }} className="btn-primary text-sm mt-1">
+                <button
+                  onClick={() => {
+                    setShowForm(true);
+                    setSelectedTicket(null);
+                  }}
+                  className="btn-primary text-sm mt-1"
+                >
                   Create Ticket
                 </button>
               </div>
@@ -534,7 +575,10 @@ export default function StudentSupportPage() {
                 {tickets.map((t) => (
                   <button
                     key={t.id}
-                    onClick={() => { openTicket(t.id); setShowForm(false); }}
+                    onClick={() => {
+                      openTicket(t.id);
+                      setShowForm(false);
+                    }}
                     className={`w-full text-left rounded-xl border-l-4 p-4 transition-all hover:-translate-y-0.5 ${
                       BORDER_CLASSES[t.status] || "border-l-muted/20"
                     } ${
@@ -544,18 +588,29 @@ export default function StudentSupportPage() {
                     }`}
                   >
                     <div className="flex items-start gap-3.5">
-                      <div className={`flex h-9 w-9 items-center justify-center rounded-full shrink-0 mt-0.5 ${
-                        selectedTicket?.id === t.id ? "bg-primary/20 text-primary" : "bg-primary/10 text-primary"
-                      }`}>
+                      <div
+                        className={`flex h-9 w-9 items-center justify-center rounded-full shrink-0 mt-0.5 ${
+                          selectedTicket?.id === t.id
+                            ? "bg-primary/20 text-primary"
+                            : "bg-primary/10 text-primary"
+                        }`}
+                      >
                         <IconHelp size={16} />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <p className="text-sm font-medium text-foreground truncate">{t.title}</p>
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {t.title}
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground line-clamp-1">{t.description}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-1">
+                          {t.description}
+                        </p>
                         <div className="mt-2 flex items-center gap-3 flex-wrap">
-                          <StatusBadge status={t.status} config={STATUS_CONFIG} />
+                          <StatusBadge
+                            status={t.status}
+                            config={STATUS_CONFIG}
+                          />
                           <span className="flex items-center gap-1 text-[11px] text-muted">
                             <IconClock size={11} /> {timeAgo(t.createdAt)}
                           </span>
@@ -583,7 +638,10 @@ export default function StudentSupportPage() {
               {(selectedTicket || showForm) && (
                 <div className="lg:hidden border-b border-border/60 px-4 py-2.5">
                   <button
-                    onClick={() => { setSelectedTicket(null); setShowForm(false); }}
+                    onClick={() => {
+                      setSelectedTicket(null);
+                      setShowForm(false);
+                    }}
                     className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
                   >
                     ← Back to tickets

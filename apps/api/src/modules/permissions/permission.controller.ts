@@ -22,7 +22,12 @@ export const permissionController = {
         return res.status(400).json({ error: "overrides must be an array" });
       }
 
-      const results: Array<{ id: string; role: string; permission: string; allowed: boolean }> = [];
+      const results: Array<{
+        id: string;
+        role: string;
+        permission: string;
+        allowed: boolean;
+      }> = [];
 
       for (const override of overrides) {
         const { role, permission, allowed } = override;

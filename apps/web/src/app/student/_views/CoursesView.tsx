@@ -2,11 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
-import {
-  IconArrowRight,
-  IconClock,
-  IconSearch,
-} from "@tabler/icons-react";
+import { IconArrowRight, IconClock, IconSearch } from "@tabler/icons-react";
 import type { ViewState } from "../_types/student-portal";
 import type { EnrolledCourse } from "@/lib/student-mock-data";
 
@@ -43,12 +39,15 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
   const [filter, setFilter] = useState<Filter>("ALL");
   const [search, setSearch] = useState("");
 
-  const counts = useMemo(() => ({
-    ALL: courses.length,
-    ACTIVE: courses.filter((c) => c.status === "ACTIVE").length,
-    COMPLETED: courses.filter((c) => c.status === "COMPLETED").length,
-    PENDING: courses.filter((c) => c.status === "PENDING").length,
-  }), [courses]);
+  const counts = useMemo(
+    () => ({
+      ALL: courses.length,
+      ACTIVE: courses.filter((c) => c.status === "ACTIVE").length,
+      COMPLETED: courses.filter((c) => c.status === "COMPLETED").length,
+      PENDING: courses.filter((c) => c.status === "PENDING").length,
+    }),
+    [courses],
+  );
 
   const filtered = courses.filter((c) => {
     const matchesFilter = filter === "ALL" || c.status === filter;
@@ -105,11 +104,13 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
               }`}
             >
               {f.label}
-              <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${
-                filter === f.value
-                  ? "bg-primary/20 text-primary"
-                  : "bg-muted/10 text-muted"
-              }`}>
+              <span
+                className={`rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${
+                  filter === f.value
+                    ? "bg-primary/20 text-primary"
+                    : "bg-muted/10 text-muted"
+                }`}
+              >
                 {counts[f.value]}
               </span>
             </button>
@@ -187,14 +188,34 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
                     <div className="absolute bottom-3 left-3 flex items-center gap-2">
                       <div className="relative flex h-10 w-10 items-center justify-center">
                         <svg width={40} height={40} className="absolute">
-                          <circle cx={20} cy={20} r={16} fill="none" stroke="var(--border)" strokeWidth={3} />
-                          <circle cx={20} cy={20} r={16} fill="none" stroke="var(--primary)" strokeWidth={3}
+                          <circle
+                            cx={20}
+                            cy={20}
+                            r={16}
+                            fill="none"
+                            stroke="var(--border)"
+                            strokeWidth={3}
+                          />
+                          <circle
+                            cx={20}
+                            cy={20}
+                            r={16}
+                            fill="none"
+                            stroke="var(--primary)"
+                            strokeWidth={3}
                             strokeDasharray={2 * Math.PI * 16}
-                            strokeDashoffset={2 * Math.PI * 16 - (course.progress / 100) * 2 * Math.PI * 16}
-                            strokeLinecap="round" transform="rotate(-90 20 20)"
-                            className="transition-all duration-700" />
+                            strokeDashoffset={
+                              2 * Math.PI * 16 -
+                              (course.progress / 100) * 2 * Math.PI * 16
+                            }
+                            strokeLinecap="round"
+                            transform="rotate(-90 20 20)"
+                            className="transition-all duration-700"
+                          />
                         </svg>
-                        <span className="relative text-[10px] font-bold text-primary">{course.progress}%</span>
+                        <span className="relative text-[10px] font-bold text-primary">
+                          {course.progress}%
+                        </span>
                       </div>
                     </div>
                   )}

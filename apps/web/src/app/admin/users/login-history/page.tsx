@@ -2,10 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import {
-  IconHistory,
-  IconRefresh,
-} from "@tabler/icons-react";
+import { IconHistory, IconRefresh } from "@tabler/icons-react";
 
 type LoginEntry = {
   id: string;
@@ -57,16 +54,22 @@ export default function LoginHistoryPage() {
         </p>
       </div>
 
-      <button onClick={fetchLogs}
-        className="btn-secondary text-xs py-2 flex items-center gap-1.5 w-fit">
+      <button
+        onClick={fetchLogs}
+        className="btn-secondary text-xs py-2 flex items-center gap-1.5 w-fit"
+      >
         <IconRefresh size={14} /> Refresh
       </button>
 
       <div className="glass-card p-5 border border-border/80">
         {loading ? (
-          <div className="py-12 text-center text-sm text-muted animate-pulse">Loading...</div>
+          <div className="py-12 text-center text-sm text-muted animate-pulse">
+            Loading...
+          </div>
         ) : logs.length === 0 ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">No login history found.</div>
+          <div className="py-12 text-center text-sm text-muted-foreground">
+            No login history found.
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
@@ -81,7 +84,10 @@ export default function LoginHistoryPage() {
               </thead>
               <tbody className="divide-y divide-border/40">
                 {logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-card-hover transition-colors">
+                  <tr
+                    key={log.id}
+                    className="hover:bg-card-hover transition-colors"
+                  >
                     <td className="py-3 pr-3 font-mono text-[10px] text-muted-foreground">
                       {log.userId.slice(0, 12)}...
                     </td>
@@ -95,7 +101,9 @@ export default function LoginHistoryPage() {
                       {new Date(log.loginAt).toLocaleString("en-IN")}
                     </td>
                     <td className="py-3 text-muted whitespace-nowrap">
-                      {log.logoutAt ? new Date(log.logoutAt).toLocaleString("en-IN") : "—"}
+                      {log.logoutAt
+                        ? new Date(log.logoutAt).toLocaleString("en-IN")
+                        : "—"}
                     </td>
                   </tr>
                 ))}
@@ -107,15 +115,19 @@ export default function LoginHistoryPage() {
 
       {total > 50 && (
         <div className="flex items-center justify-center gap-2 text-xs">
-          <button onClick={() => setPage((p) => Math.max(1, p - 1))}
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="btn-secondary py-1.5 px-3 disabled:opacity-40">
+            className="btn-secondary py-1.5 px-3 disabled:opacity-40"
+          >
             Previous
           </button>
           <span className="text-muted-foreground">Page {page}</span>
-          <button onClick={() => setPage((p) => p + 1)}
+          <button
+            onClick={() => setPage((p) => p + 1)}
             disabled={page * 50 >= total}
-            className="btn-secondary py-1.5 px-3 disabled:opacity-40">
+            className="btn-secondary py-1.5 px-3 disabled:opacity-40"
+          >
             Next
           </button>
         </div>

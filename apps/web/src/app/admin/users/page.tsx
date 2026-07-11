@@ -95,9 +95,12 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     Promise.resolve().then(() => fetchUsers());
-    api.get<{ user: { role: string } }>("/api/auth/me").then((res) => {
-      if (res?.user) setCurrentUserRole(res.user.role);
-    }).catch(() => {});
+    api
+      .get<{ user: { role: string } }>("/api/auth/me")
+      .then((res) => {
+        if (res?.user) setCurrentUserRole(res.user.role);
+      })
+      .catch(() => {});
   }, []);
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -231,15 +234,17 @@ export default function AdminUsersPage() {
       label: "Actions",
       render: (_, user) => (
         <div className="flex items-center justify-end gap-2">
-          {currentUserRole === "SUPER_ADMIN" && user.role === "INSTRUCTOR" && user.isSuspended && (
-            <button
-              onClick={() => handleApproveInstructor(user.id)}
-              className="rounded-md border border-success/20 px-2.5 py-1 text-xs font-medium text-success hover:bg-success/10 transition-colors"
-              title="Approve instructor"
-            >
-              <IconCheck size={14} /> Approve
-            </button>
-          )}
+          {currentUserRole === "SUPER_ADMIN" &&
+            user.role === "INSTRUCTOR" &&
+            user.isSuspended && (
+              <button
+                onClick={() => handleApproveInstructor(user.id)}
+                className="rounded-md border border-success/20 px-2.5 py-1 text-xs font-medium text-success hover:bg-success/10 transition-colors"
+                title="Approve instructor"
+              >
+                <IconCheck size={14} /> Approve
+              </button>
+            )}
           <button
             onClick={() => openEditModal(user)}
             className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
@@ -276,26 +281,28 @@ export default function AdminUsersPage() {
 
       {/* Stat chips */}
       <div className="flex flex-wrap gap-2">
-        {(["STUDENT", "INSTRUCTOR", "ADMIN", "SUPER_ADMIN"] as const).map((role) => (
-          <button
-            key={role}
-            onClick={() =>
-              router.replace(
+        {(["STUDENT", "INSTRUCTOR", "ADMIN", "SUPER_ADMIN"] as const).map(
+          (role) => (
+            <button
+              key={role}
+              onClick={() =>
+                router.replace(
+                  roleFilter === role
+                    ? "/admin/users"
+                    : `/admin/users?role=${role}`,
+                )
+              }
+              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
                 roleFilter === role
-                  ? "/admin/users"
-                  : `/admin/users?role=${role}`,
-              )
-            }
-            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-              roleFilter === role
-                ? roleStyles[role]
-                : "border-border text-muted-foreground hover:bg-card-hover"
-            }`}
-          >
-            <span>{roleIcons[role]}</span>
-            {role} · {counts[role]}
-          </button>
-        ))}
+                  ? roleStyles[role]
+                  : "border-border text-muted-foreground hover:bg-card-hover"
+              }`}
+            >
+              <span>{roleIcons[role]}</span>
+              {role} · {counts[role]}
+            </button>
+          ),
+        )}
       </div>
 
       {/* Search */}

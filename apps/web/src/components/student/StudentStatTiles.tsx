@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { IconArrowRight, IconTrendingUp, IconTrendingDown } from "@tabler/icons-react";
+import {
+  IconArrowRight,
+  IconTrendingUp,
+  IconTrendingDown,
+} from "@tabler/icons-react";
 
 export interface StudentStatTile {
   id: string;
@@ -56,7 +60,9 @@ const ICON_BG: Record<string, string> = {
 // Single stat tile with count-up animation
 function StatTile({ tile }: { tile: StudentStatTile }) {
   const count = useCountUp(tile.value);
-  const iconStyle = tile.iconColor ? ICON_BG[tile.iconColor] || ICON_BG.primary : ICON_BG.primary;
+  const iconStyle = tile.iconColor
+    ? ICON_BG[tile.iconColor] || ICON_BG.primary
+    : ICON_BG.primary;
 
   return (
     <button
@@ -67,10 +73,10 @@ function StatTile({ tile }: { tile: StudentStatTile }) {
         className={`absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100 ${tile.gradient}`}
       />
       <div className="relative flex items-center justify-between">
-        <div className={`flex h-12 w-12 items-center justify-center rounded-xl border shadow-sm ${iconStyle}`}>
-          <div className="[&>svg]:size-[22px]">
-            {tile.icon}
-          </div>
+        <div
+          className={`flex h-12 w-12 items-center justify-center rounded-xl border shadow-sm ${iconStyle}`}
+        >
+          <div className="[&>svg]:size-[22px]">{tile.icon}</div>
         </div>
         {tile.liveBadge ? (
           <span className="rounded-full border border-danger/30 bg-danger/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-danger">
@@ -84,14 +90,18 @@ function StatTile({ tile }: { tile: StudentStatTile }) {
           {count}
         </p>
         {tile.trend && (
-          <span className={`mt-1 inline-flex items-center gap-1 text-xs font-medium ${
-            tile.trend.value >= 0 ? "text-success" : "text-danger"
-          }`}>
-            {tile.trend.value >= 0
-              ? <IconTrendingUp size={14} />
-              : <IconTrendingDown size={14} />
-            }
-            {tile.trend.value >= 0 ? "+" : ""}{tile.trend.value}% {tile.trend.label}
+          <span
+            className={`mt-1 inline-flex items-center gap-1 text-xs font-medium ${
+              tile.trend.value >= 0 ? "text-success" : "text-danger"
+            }`}
+          >
+            {tile.trend.value >= 0 ? (
+              <IconTrendingUp size={14} />
+            ) : (
+              <IconTrendingDown size={14} />
+            )}
+            {tile.trend.value >= 0 ? "+" : ""}
+            {tile.trend.value}% {tile.trend.label}
           </span>
         )}
       </div>

@@ -28,8 +28,6 @@ import {
 
 import type { NavItem, NavItemChild } from "@/components/shared/SidebarTypes";
 
-
-
 // Link for a child nav item under a parent group
 function ChildNavLink({
   child,
@@ -274,9 +272,33 @@ export default function AdminSidebar({
       ? [
           // Super Admin: system operations
           ...[
-            { label: "Activity Logs", href: "/admin/logs", icon: IconFileDescription as React.ComponentType<{ size?: number | string; stroke?: number | string; className?: string }> },
-            { label: "Trash", href: "/admin/trash", icon: IconTrash as React.ComponentType<{ size?: number | string; stroke?: number | string; className?: string }> },
-            { label: "Announcements", href: "/admin/announcements", icon: IconBellRinging as React.ComponentType<{ size?: number | string; stroke?: number | string; className?: string }> },
+            {
+              label: "Activity Logs",
+              href: "/admin/logs",
+              icon: IconFileDescription as React.ComponentType<{
+                size?: number | string;
+                stroke?: number | string;
+                className?: string;
+              }>,
+            },
+            {
+              label: "Trash",
+              href: "/admin/trash",
+              icon: IconTrash as React.ComponentType<{
+                size?: number | string;
+                stroke?: number | string;
+                className?: string;
+              }>,
+            },
+            {
+              label: "Announcements",
+              href: "/admin/announcements",
+              icon: IconBellRinging as React.ComponentType<{
+                size?: number | string;
+                stroke?: number | string;
+                className?: string;
+              }>,
+            },
           ],
           {
             label: "Users",
@@ -302,7 +324,11 @@ export default function AdminSidebar({
               { label: "General", href: "/admin/settings" },
             ],
           },
-          { label: "Microsoft", href: "/admin/microsoft", icon: IconBrandWindows },
+          {
+            label: "Microsoft",
+            href: "/admin/microsoft",
+            icon: IconBrandWindows,
+          },
         ]
       : [
           // Admin: platform operations
@@ -382,20 +408,31 @@ export default function AdminSidebar({
             icon: IconMessages,
             children: [
               { label: "All Requests", href: "/admin/mentorship?status=all" },
-              { label: "Pending Review", href: "/admin/mentorship?status=OPEN" },
+              {
+                label: "Pending Review",
+                href: "/admin/mentorship?status=OPEN",
+              },
               { label: "Assigned", href: "/admin/mentorship?status=ASSIGNED" },
-              { label: "Scheduled", href: "/admin/mentorship?status=SCHEDULED" },
-              { label: "Completed", href: "/admin/mentorship?status=COMPLETED" },
+              {
+                label: "Scheduled",
+                href: "/admin/mentorship?status=SCHEDULED",
+              },
+              {
+                label: "Completed",
+                href: "/admin/mentorship?status=COMPLETED",
+              },
             ],
           },
-          { label: "Microsoft", href: "/admin/microsoft", icon: IconBrandWindows },
+          {
+            label: "Microsoft",
+            href: "/admin/microsoft",
+            icon: IconBrandWindows,
+          },
           {
             label: "Settings",
             href: "/admin/settings",
             icon: IconSettings,
-            children: [
-              { label: "General", href: "/admin/settings" },
-            ],
+            children: [{ label: "General", href: "/admin/settings" }],
           },
         ]),
   ];

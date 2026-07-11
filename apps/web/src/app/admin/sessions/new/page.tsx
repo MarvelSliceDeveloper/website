@@ -230,7 +230,10 @@ export default function ScheduleSessionPage() {
           {loadingCourses ? (
             <div className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border" />
           ) : (
-            <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
+            <Select
+              value={selectedCourseId}
+              onValueChange={setSelectedCourseId}
+            >
               <SelectTrigger className="field w-full">
                 <SelectValue placeholder="-- Choose a Course --" />
               </SelectTrigger>
@@ -334,7 +337,11 @@ export default function ScheduleSessionPage() {
                   {instructors.map((inst) => (
                     <SelectItem key={inst.id} value={inst.id}>
                       {inst.name} ({inst.email}){" "}
-                      {inst.role === "SUPER_ADMIN" ? "🛡️ Super Admin" : inst.role === "ADMIN" ? "🛡️ Admin" : "👨‍🏫 Instructor"}
+                      {inst.role === "SUPER_ADMIN"
+                        ? "🛡️ Super Admin"
+                        : inst.role === "ADMIN"
+                          ? "🛡️ Admin"
+                          : "👨‍🏫 Instructor"}
                     </SelectItem>
                   ))}
                 </SelectContent>

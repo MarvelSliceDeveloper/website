@@ -11,10 +11,7 @@ export function TableSkeleton({ rows = 5, columns = 4 }: TableSkeletonProps) {
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="flex py-3">
           {Array.from({ length: columns }).map((_, j) => (
-            <div
-              key={j}
-              className="h-4 flex-1 animate-pulse bg-border mx-1"
-            />
+            <div key={j} className="h-4 flex-1 animate-pulse bg-border mx-1" />
           ))}
         </div>
       ))}

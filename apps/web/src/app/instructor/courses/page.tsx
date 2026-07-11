@@ -26,7 +26,9 @@ export default function InstructorCoursesPage() {
 
   useEffect(() => {
     Promise.all([
-      api.get<{ courses: Course[] }>("/api/admin/courses").catch(() => ({ courses: [] })),
+      api
+        .get<{ courses: Course[] }>("/api/admin/courses")
+        .catch(() => ({ courses: [] })),
     ])
       .then(([coursesRes]) => {
         setCourses(coursesRes.courses ?? []);
@@ -41,7 +43,10 @@ export default function InstructorCoursesPage() {
         <div className="h-8 w-48 animate-pulse bg-card-hover/60 rounded" />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {[1, 2].map((i) => (
-            <div key={i} className="h-48 animate-pulse bg-card-hover/60 rounded-lg" />
+            <div
+              key={i}
+              className="h-48 animate-pulse bg-card-hover/60 rounded-lg"
+            />
           ))}
         </div>
       </div>

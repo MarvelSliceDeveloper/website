@@ -96,7 +96,10 @@ export default function SystemSettingsPage() {
               </thead>
               <tbody className="divide-y divide-border/40">
                 {settings.map((setting) => (
-                  <tr key={setting.id} className="hover:bg-card-hover transition-colors">
+                  <tr
+                    key={setting.id}
+                    className="hover:bg-card-hover transition-colors"
+                  >
                     <td className="py-3 pr-3 font-mono text-foreground font-medium">
                       {setting.key}
                     </td>

@@ -13,7 +13,11 @@ function hashApiKey(key: string): string {
 }
 
 export const apiKeyService = {
-  async create(name: string, description: string | undefined, createdBy: string) {
+  async create(
+    name: string,
+    description: string | undefined,
+    createdBy: string,
+  ) {
     const plaintext = generateApiKey();
     const hashed = hashApiKey(plaintext);
 

@@ -60,7 +60,15 @@ export const quizTemplateController = {
           category,
           questions: {
             create: questions.map(
-              (q: { text: string; marks?: number; orderIndex?: number; options: { optionText: string; isCorrect?: boolean }[] }, idx: number) => ({
+              (
+                q: {
+                  text: string;
+                  marks?: number;
+                  orderIndex?: number;
+                  options: { optionText: string; isCorrect?: boolean }[];
+                },
+                idx: number,
+              ) => ({
                 text: q.text,
                 marks: q.marks ?? 1,
                 orderIndex: q.orderIndex ?? idx,
@@ -114,7 +122,15 @@ export const quizTemplateController = {
             category,
             questions: {
               create: (questions ?? []).map(
-                (q: { text: string; marks?: number; orderIndex?: number; options: { optionText: string; isCorrect?: boolean }[] }, idx: number) => ({
+                (
+                  q: {
+                    text: string;
+                    marks?: number;
+                    orderIndex?: number;
+                    options: { optionText: string; isCorrect?: boolean }[];
+                  },
+                  idx: number,
+                ) => ({
                   text: q.text,
                   marks: q.marks ?? 1,
                   orderIndex: q.orderIndex ?? idx,

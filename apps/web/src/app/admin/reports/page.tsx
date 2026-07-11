@@ -17,7 +17,13 @@ const COLORS = {
   muted: "#8b93ae",
 };
 
-const PIE_COLORS = [COLORS.primary, COLORS.accent, COLORS.success, COLORS.warning, COLORS.danger];
+const PIE_COLORS = [
+  COLORS.primary,
+  COLORS.accent,
+  COLORS.success,
+  COLORS.warning,
+  COLORS.danger,
+];
 
 export default function ReportsPage() {
   const [data, setData] = useState<DashboardChartData | null>(null);
@@ -77,7 +83,11 @@ export default function ReportsPage() {
           {data?.studentsPerCourse?.length ? (
             <Chart
               options={{
-                chart: { type: "bar", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "bar",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: [COLORS.primary],
                 plotOptions: { bar: { borderRadius: 4, columnWidth: "60%" } },
                 xaxis: {
@@ -87,12 +97,21 @@ export default function ReportsPage() {
                     rotate: -20,
                   },
                 },
-                yaxis: { labels: { style: { colors: "var(--muted)", fontSize: "11px" } } },
+                yaxis: {
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
+                },
                 grid: { borderColor: "var(--border)" },
                 tooltip: { theme: "light" },
                 dataLabels: { enabled: false },
               }}
-              series={[{ name: "Students", data: data.studentsPerCourse.map((d) => d.count) }]}
+              series={[
+                {
+                  name: "Students",
+                  data: data.studentsPerCourse.map((d) => d.count),
+                },
+              ]}
               type="bar"
               height={320}
             />
@@ -127,15 +146,26 @@ export default function ReportsPage() {
                 },
                 xaxis: {
                   categories: data.enrollmentTrend.map((d) => d.month),
-                  labels: { style: { colors: "var(--muted)", fontSize: "11px" } },
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
                 },
-                yaxis: { labels: { style: { colors: "var(--muted)", fontSize: "11px" } } },
+                yaxis: {
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
+                },
                 grid: { borderColor: "var(--border)" },
                 tooltip: { theme: "light" },
                 dataLabels: { enabled: false },
                 stroke: { width: 2 },
               }}
-              series={[{ name: "Enrolled", data: data.enrollmentTrend.map((d) => d.count) }]}
+              series={[
+                {
+                  name: "Enrolled",
+                  data: data.enrollmentTrend.map((d) => d.count),
+                },
+              ]}
               type="area"
               height={320}
             />
@@ -157,7 +187,11 @@ export default function ReportsPage() {
           {data?.batchDistribution?.length ? (
             <Chart
               options={{
-                chart: { type: "donut", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "donut",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: PIE_COLORS,
                 labels: data.batchDistribution.map((b) => b.status),
                 plotOptions: {
@@ -192,7 +226,11 @@ export default function ReportsPage() {
           {data?.userRoleDistribution?.length ? (
             <Chart
               options={{
-                chart: { type: "donut", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "donut",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: PIE_COLORS,
                 labels: data.userRoleDistribution.map((u) => u.role),
                 plotOptions: {
@@ -227,7 +265,11 @@ export default function ReportsPage() {
           {data?.topCourses?.length ? (
             <Chart
               options={{
-                chart: { type: "bar", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "bar",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: [COLORS.accent],
                 plotOptions: {
                   bar: {
@@ -236,10 +278,14 @@ export default function ReportsPage() {
                   },
                 },
                 xaxis: {
-                  labels: { style: { colors: "var(--muted)", fontSize: "11px" } },
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
                 },
                 yaxis: {
-                  labels: { style: { colors: "var(--muted)", fontSize: "11px" } },
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
                 },
                 grid: { borderColor: "var(--border)" },
                 tooltip: { theme: "light" },
@@ -274,21 +320,34 @@ export default function ReportsPage() {
           {data?.revenueTrend?.length ? (
             <Chart
               options={{
-                chart: { type: "bar", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "bar",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: [COLORS.success],
                 plotOptions: { bar: { borderRadius: 4, columnWidth: "60%" } },
                 xaxis: {
                   categories: data.revenueTrend.map((d) => d.month),
-                  labels: { style: { colors: "var(--muted)", fontSize: "11px" } },
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
                 },
                 yaxis: {
-                  labels: { style: { colors: "var(--muted)", fontSize: "11px" } },
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
                 },
                 grid: { borderColor: "var(--border)" },
                 tooltip: { theme: "light" },
                 dataLabels: { enabled: false },
               }}
-              series={[{ name: "Revenue (₹)", data: data.revenueTrend.map((d) => d.total) }]}
+              series={[
+                {
+                  name: "Revenue (₹)",
+                  data: data.revenueTrend.map((d) => d.total),
+                },
+              ]}
               type="bar"
               height={320}
             />

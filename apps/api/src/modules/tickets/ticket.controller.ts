@@ -108,7 +108,12 @@ export const ticketController = {
       const isAssignedMentor =
         ticket.type === "MENTORSHIP" && (ticket as any).mentorId === userId;
 
-      if (role !== "ADMIN" && role !== "SUPER_ADMIN" && !isOwner && !isAssignedMentor) {
+      if (
+        role !== "ADMIN" &&
+        role !== "SUPER_ADMIN" &&
+        !isOwner &&
+        !isAssignedMentor
+      ) {
         return res.status(403).json({ error: "Forbidden" });
       }
 

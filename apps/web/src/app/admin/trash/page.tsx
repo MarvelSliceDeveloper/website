@@ -72,8 +72,10 @@ export default function TrashPage() {
             Soft-deleted entities. Restore or permanently remove.
           </p>
         </div>
-        <button onClick={fetchTrash}
-          className="btn-secondary text-xs py-2 flex items-center gap-1.5">
+        <button
+          onClick={fetchTrash}
+          className="btn-secondary text-xs py-2 flex items-center gap-1.5"
+        >
           <IconRefresh size={14} /> Refresh
         </button>
       </div>
@@ -97,7 +99,9 @@ export default function TrashPage() {
 
       <div className="glass-card p-5 border border-border/80">
         {loading ? (
-          <div className="py-12 text-center text-sm text-muted animate-pulse">Loading...</div>
+          <div className="py-12 text-center text-sm text-muted animate-pulse">
+            Loading...
+          </div>
         ) : currentItems.length === 0 ? (
           <div className="py-12 text-center text-sm text-muted-foreground">
             No deleted {activeTab} found.
@@ -114,9 +118,15 @@ export default function TrashPage() {
               </thead>
               <tbody className="divide-y divide-border/40">
                 {currentItems.map((item) => (
-                  <tr key={item.id} className="hover:bg-card-hover transition-colors">
+                  <tr
+                    key={item.id}
+                    className="hover:bg-card-hover transition-colors"
+                  >
                     <td className="py-3 pr-3 font-medium text-foreground">
-                      {item.name || item.title || item.email || item.id.slice(0, 12)}
+                      {item.name ||
+                        item.title ||
+                        item.email ||
+                        item.id.slice(0, 12)}
                     </td>
                     <td className="py-3 pr-3 text-muted whitespace-nowrap">
                       {new Date(item.deletedAt).toLocaleString("en-IN")}

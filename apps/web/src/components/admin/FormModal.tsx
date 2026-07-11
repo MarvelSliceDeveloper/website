@@ -59,7 +59,9 @@ export function FormModal({
   useEffect(() => {
     if (!open) return;
     const timer = requestAnimationFrame(() => {
-      dialogRef.current?.querySelector<HTMLElement>("button, input, select, textarea")?.focus();
+      dialogRef.current
+        ?.querySelector<HTMLElement>("button, input, select, textarea")
+        ?.focus();
     });
     return () => cancelAnimationFrame(timer);
   }, [open]);

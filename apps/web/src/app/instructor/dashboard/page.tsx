@@ -178,7 +178,11 @@ export default function InstructorDashboardPage() {
   }, []);
 
   const greeting =
-    new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 17 ? "Good afternoon" : "Good evening";
+    new Date().getHours() < 12
+      ? "Good morning"
+      : new Date().getHours() < 17
+        ? "Good afternoon"
+        : "Good evening";
 
   return (
     <div className="space-y-6">
@@ -189,13 +193,21 @@ export default function InstructorDashboardPage() {
         action={
           <div className="hidden items-center gap-4 sm:flex">
             <div className="text-right">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Batches</p>
-              <p className="text-lg font-bold text-primary">{loading ? "\u2014" : stats?.totalBatches ?? "\u2014"}</p>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                Batches
+              </p>
+              <p className="text-lg font-bold text-primary">
+                {loading ? "\u2014" : (stats?.totalBatches ?? "\u2014")}
+              </p>
             </div>
             <div className="h-8 w-px bg-border/60" />
             <div className="text-right">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Students</p>
-              <p className="text-lg font-bold text-success">{loading ? "\u2014" : stats?.totalStudents ?? "\u2014"}</p>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                Students
+              </p>
+              <p className="text-lg font-bold text-success">
+                {loading ? "\u2014" : (stats?.totalStudents ?? "\u2014")}
+              </p>
             </div>
           </div>
         }
@@ -204,20 +216,44 @@ export default function InstructorDashboardPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Assigned Batches", value: stats?.totalBatches, icon: IconUsers, color: "violet" },
-          { label: "Total Sessions", value: stats?.totalSessions, icon: IconVideo, color: "emerald" },
-          { label: "Active Students", value: stats?.totalStudents, icon: IconBook, color: "sky" },
-          { label: "Pending Submissions", value: stats?.pendingAssignments, icon: IconClipboardList, color: "amber" },
+          {
+            label: "Assigned Batches",
+            value: stats?.totalBatches,
+            icon: IconUsers,
+            color: "violet",
+          },
+          {
+            label: "Total Sessions",
+            value: stats?.totalSessions,
+            icon: IconVideo,
+            color: "emerald",
+          },
+          {
+            label: "Active Students",
+            value: stats?.totalStudents,
+            icon: IconBook,
+            color: "sky",
+          },
+          {
+            label: "Pending Submissions",
+            value: stats?.pendingAssignments,
+            icon: IconClipboardList,
+            color: "amber",
+          },
         ].map((stat) => (
           <div key={stat.label} className="border border-border bg-card p-5">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
-                <p className="text-xs font-medium uppercase tracking-[0.1em] text-muted">{stat.label}</p>
+                <p className="text-xs font-medium uppercase tracking-[0.1em] text-muted">
+                  {stat.label}
+                </p>
                 <p className="text-3xl font-bold text-foreground">
                   {loading || stat.value === undefined ? "\u2014" : stat.value}
                 </p>
               </div>
-              <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${iconBg[stat.color]} group-hover:scale-110 transition-transform`}>
+              <div
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${iconBg[stat.color]} group-hover:scale-110 transition-transform`}
+              >
                 <stat.icon size={20} stroke={1.8} />
               </div>
             </div>
@@ -354,9 +390,7 @@ export default function InstructorDashboardPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() =>
-                    router.push("/instructor/assignments")
-                  }
+                  onClick={() => router.push("/instructor/assignments")}
                   className="btn-secondary w-full justify-center text-xs py-1.5"
                 >
                   Review & Grade

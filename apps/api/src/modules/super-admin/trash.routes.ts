@@ -27,7 +27,14 @@ router.get("/", async (_req: AuthRequest, res: Response) => {
     const [users, courses, batches, sessions, assignments] = await Promise.all([
       prisma.user.findMany({
         where: { deletedAt: { not: null } },
-        select: { id: true, name: true, email: true, deletedAt: true, deletedBy: true, role: true },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          deletedAt: true,
+          deletedBy: true,
+          role: true,
+        },
       }),
       prisma.course.findMany({
         where: { deletedAt: { not: null } },

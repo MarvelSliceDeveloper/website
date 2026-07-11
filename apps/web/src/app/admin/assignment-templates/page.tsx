@@ -61,8 +61,10 @@ export default function AssignmentTemplatesPage() {
         </button>
       </div>
 
-      <button onClick={fetchTemplates}
-        className="btn-secondary text-xs py-2 flex items-center gap-1.5">
+      <button
+        onClick={fetchTemplates}
+        className="btn-secondary text-xs py-2 flex items-center gap-1.5"
+      >
         <IconRefresh size={14} /> Refresh
       </button>
 

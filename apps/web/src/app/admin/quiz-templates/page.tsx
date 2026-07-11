@@ -4,11 +4,28 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
-import { IconFileDescription, IconRefresh, IconPlus } from "@tabler/icons-react";
+import {
+  IconFileDescription,
+  IconRefresh,
+  IconPlus,
+} from "@tabler/icons-react";
 
 type QuizOption = { id: string; optionText: string; isCorrect: boolean };
-type QuizQuestion = { id: string; text: string; marks: number; orderIndex: number; options: QuizOption[] };
-type QuizTemplate = { id: string; title: string; description: string | null; category: string | null; questions: QuizQuestion[]; createdAt: string };
+type QuizQuestion = {
+  id: string;
+  text: string;
+  marks: number;
+  orderIndex: number;
+  options: QuizOption[];
+};
+type QuizTemplate = {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  questions: QuizQuestion[];
+  createdAt: string;
+};
 
 export default function QuizTemplatesPage() {
   const router = useRouter();
@@ -56,8 +73,10 @@ export default function QuizTemplatesPage() {
         </button>
       </div>
 
-      <button onClick={fetchTemplates}
-        className="btn-secondary text-xs py-2 flex items-center gap-1.5">
+      <button
+        onClick={fetchTemplates}
+        className="btn-secondary text-xs py-2 flex items-center gap-1.5"
+      >
         <IconRefresh size={14} /> Refresh
       </button>
 

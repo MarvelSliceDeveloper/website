@@ -348,7 +348,11 @@ export const sessionService = {
     // Non-admin must be the assigned instructor (check batch instructor for regular sessions, instructorId for mentorship)
     const sessionInstructorId =
       session.batch?.instructorId || session.instructorId;
-    if (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN" && sessionInstructorId !== userId) {
+    if (
+      user.role !== "ADMIN" &&
+      user.role !== "SUPER_ADMIN" &&
+      sessionInstructorId !== userId
+    ) {
       throw new Error(
         "Only the assigned instructor or an admin can cancel this session",
       );

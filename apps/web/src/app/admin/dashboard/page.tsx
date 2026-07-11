@@ -7,23 +7,28 @@ import { api } from "@/lib/api";
 import { MOCK_DASHBOARD_CHARTS, MOCK_ENABLED } from "@/lib/admin-mock-data";
 import type { DashboardChartData } from "@/lib/admin-mock-data";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   IconBook,
-  IconVideo,
-  IconSchool,
-  IconTrendingUp,
+  IconCalendar,
   IconChartPie,
   IconCurrencyDollar,
-  IconServer,
-  IconKey,
-  IconUserCheck,
-  IconTrash,
+  IconEdit,
   IconHistory,
-  IconShield,
+  IconKey,
   IconLock,
-  IconUsers,
+  IconSchool,
+  IconServer,
   IconSettings,
+  IconShield,
+  IconTicket,
+  IconTrash,
+  IconTrendingUp,
+  IconUserCheck,
+  IconUsers,
+  IconUsersGroup,
+  IconVideo,
 } from "@tabler/icons-react";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
@@ -37,7 +42,13 @@ const COLORS = {
   muted: "#8b93ae",
 };
 
-const PIE_COLORS = [COLORS.primary, COLORS.accent, COLORS.success, COLORS.warning, COLORS.danger];
+const PIE_COLORS = [
+  COLORS.primary,
+  COLORS.accent,
+  COLORS.success,
+  COLORS.warning,
+  COLORS.danger,
+];
 
 // --- Super Admin Dashboard ---
 function SuperAdminDashboard() {
@@ -59,17 +70,26 @@ function SuperAdminDashboard() {
   useEffect(() => {
     async function load() {
       try {
-        const [healthRes, apiKeysRes, pendingRes, trashRes, logStatsRes, statsRes] =
-          await Promise.allSettled([
-            api.get<{ status: string }>("/health"),
-            api.get<{ keys: { active: boolean }[] }>("/api/admin/api-keys"),
-            api.get<{ users: unknown[] }>("/api/admin/users/pending"),
-            api.get<{ trash: Record<string, unknown[]> }>("/api/admin/trash"),
-            api.get<{ stats: { totalLogs: number; failedLogs: number } }>("/api/admin/logs/stats"),
-            api.get<DashboardChartData>("/api/admin/dashboard/stats"),
-          ]);
+        const [
+          healthRes,
+          apiKeysRes,
+          pendingRes,
+          trashRes,
+          logStatsRes,
+          statsRes,
+        ] = await Promise.allSettled([
+          api.get<{ status: string }>("/health"),
+          api.get<{ keys: { active: boolean }[] }>("/api/admin/api-keys"),
+          api.get<{ users: unknown[] }>("/api/admin/users/pending"),
+          api.get<{ trash: Record<string, unknown[]> }>("/api/admin/trash"),
+          api.get<{ stats: { totalLogs: number; failedLogs: number } }>(
+            "/api/admin/logs/stats",
+          ),
+          api.get<DashboardChartData>("/api/admin/dashboard/stats"),
+        ]);
 
-        const healthOk = healthRes.status === "fulfilled" && healthRes.value.status === "ok";
+        const healthOk =
+          healthRes.status === "fulfilled" && healthRes.value.status === "ok";
         const keys =
           apiKeysRes.status === "fulfilled" ? apiKeysRes.value.keys : [];
         const pending =
@@ -121,9 +141,15 @@ function SuperAdminDashboard() {
   const saCards = [
     {
       label: "System Status",
-      value: loading ? "—" : saStats.healthStatus === "ok" ? "Healthy" : "Degraded",
+      value: loading
+        ? "—"
+        : saStats.healthStatus === "ok"
+          ? "Healthy"
+          : "Degraded",
       icon: IconServer,
-      variant: (saStats.healthStatus === "ok" ? "green" : "red") as "green" | "red",
+      variant: (saStats.healthStatus === "ok" ? "green" : "red") as
+        | "green"
+        | "red",
       href: "/health",
     },
     {
@@ -151,23 +177,47 @@ function SuperAdminDashboard() {
       label: "Pending Instructors",
       value: saStats.pendingInstructors,
       icon: IconUserCheck,
-      variant: (saStats.pendingInstructors > 0 ? "orange" : "green") as "orange" | "green",
+      variant: (saStats.pendingInstructors > 0 ? "orange" : "green") as
+        | "orange"
+        | "green",
       href: "/admin/users?role=INSTRUCTOR",
     },
     {
       label: "Trash Items",
       value: saStats.trashCount,
       icon: IconTrash,
-      variant: (saStats.trashCount > 0 ? "orange" : "green") as "orange" | "green",
+      variant: (saStats.trashCount > 0 ? "orange" : "green") as
+        | "orange"
+        | "green",
       href: "/admin/trash",
     },
   ];
 
   const userCards = [
-    { label: "Super Admins", value: saStats.totalSuperAdmins, icon: IconShield, variant: "red" as const },
-    { label: "Admins", value: saStats.totalAdmins, icon: IconShield, variant: "purple" as const },
-    { label: "Instructors", value: saStats.totalInstructors, icon: IconUsers, variant: "blue" as const },
-    { label: "Students", value: saStats.totalStudents, icon: IconSchool, variant: "green" as const },
+    {
+      label: "Super Admins",
+      value: saStats.totalSuperAdmins,
+      icon: IconShield,
+      variant: "red" as const,
+    },
+    {
+      label: "Admins",
+      value: saStats.totalAdmins,
+      icon: IconShield,
+      variant: "purple" as const,
+    },
+    {
+      label: "Instructors",
+      value: saStats.totalInstructors,
+      icon: IconUsers,
+      variant: "blue" as const,
+    },
+    {
+      label: "Students",
+      value: saStats.totalStudents,
+      icon: IconSchool,
+      variant: "green" as const,
+    },
   ];
 
   return (
@@ -195,7 +245,12 @@ function SuperAdminDashboard() {
                 Total Users
               </p>
               <p className="text-lg font-bold text-primary">
-                {loading ? "—" : saStats.totalSuperAdmins + saStats.totalAdmins + saStats.totalInstructors + saStats.totalStudents}
+                {loading
+                  ? "—"
+                  : saStats.totalSuperAdmins +
+                    saStats.totalAdmins +
+                    saStats.totalInstructors +
+                    saStats.totalStudents}
               </p>
             </div>
             <div className="h-8 w-px bg-border/60" />
@@ -203,8 +258,14 @@ function SuperAdminDashboard() {
               <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                 System
               </p>
-              <p className={`text-lg font-bold ${saStats.healthStatus === "ok" ? "text-success" : "text-danger"}`}>
-                {loading ? "—" : saStats.healthStatus === "ok" ? "Online" : "Issues"}
+              <p
+                className={`text-lg font-bold ${saStats.healthStatus === "ok" ? "text-success" : "text-danger"}`}
+              >
+                {loading
+                  ? "—"
+                  : saStats.healthStatus === "ok"
+                    ? "Online"
+                    : "Issues"}
               </p>
             </div>
           </div>
@@ -228,7 +289,10 @@ function SuperAdminDashboard() {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {userCards.map((card) => (
-            <div key={card.label} className="border border-border bg-card-hover/30 p-4 text-center">
+            <div
+              key={card.label}
+              className="border border-border bg-card-hover/30 p-4 text-center"
+            >
               <card.icon size={24} className="mx-auto mb-2 text-muted" />
               <p className="text-2xl font-bold text-foreground">
                 {loading ? "—" : card.value}
@@ -252,7 +316,9 @@ function SuperAdminDashboard() {
             <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-red-100 text-red-600 group-hover:scale-110 transition-transform">
               <IconSettings size={20} stroke={1.8} />
             </div>
-            <p className="text-sm font-medium text-foreground">System Settings</p>
+            <p className="text-sm font-medium text-foreground">
+              System Settings
+            </p>
           </Link>
           <Link
             href="/admin/settings/api-keys"
@@ -445,7 +511,9 @@ function AdminDashboard() {
                 Revenue
               </p>
               <p className="text-lg font-bold text-success">
-                {loading ? "\u2014" : `\u20B9${(totalRevenue / 1000).toFixed(0)}k`}
+                {loading
+                  ? "\u2014"
+                  : `\u20B9${(totalRevenue / 1000).toFixed(0)}k`}
               </p>
             </div>
             <div className="h-8 w-px bg-border/60" />
@@ -454,7 +522,7 @@ function AdminDashboard() {
                 Students
               </p>
               <p className="text-lg font-bold text-primary">
-                {loading ? "\u2014" : stats.totalStudents ?? "\u2014"}
+                {loading ? "\u2014" : (stats.totalStudents ?? "\u2014")}
               </p>
             </div>
           </div>
@@ -483,19 +551,36 @@ function AdminDashboard() {
           ) : chartData?.studentsPerCourse?.length ? (
             <Chart
               options={{
-                chart: { type: "bar", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "bar",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: [COLORS.primary],
                 plotOptions: { bar: { borderRadius: 4, columnWidth: "60%" } },
                 xaxis: {
-                  categories: chartData.studentsPerCourse.map((d) => d.courseTitle),
-                  labels: { style: { colors: "var(--muted)", fontSize: "11px" } },
+                  categories: chartData.studentsPerCourse.map(
+                    (d) => d.courseTitle,
+                  ),
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
                 },
-                yaxis: { labels: { style: { colors: "var(--muted)", fontSize: "11px" } } },
+                yaxis: {
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
+                },
                 grid: { borderColor: "var(--border)" },
                 tooltip: { theme: "light" },
                 dataLabels: { enabled: false },
               }}
-              series={[{ name: "Students", data: chartData.studentsPerCourse.map((d) => d.count) }]}
+              series={[
+                {
+                  name: "Students",
+                  data: chartData.studentsPerCourse.map((d) => d.count),
+                },
+              ]}
               type="bar"
               height={280}
             />
@@ -535,15 +620,26 @@ function AdminDashboard() {
                 },
                 xaxis: {
                   categories: chartData.enrollmentTrend.map((d) => d.month),
-                  labels: { style: { colors: "var(--muted)", fontSize: "11px" } },
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
                 },
-                yaxis: { labels: { style: { colors: "var(--muted)", fontSize: "11px" } } },
+                yaxis: {
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
+                },
                 grid: { borderColor: "var(--border)" },
                 tooltip: { theme: "light" },
                 dataLabels: { enabled: false },
                 stroke: { width: 2 },
               }}
-              series={[{ name: "Enrolled", data: chartData.enrollmentTrend.map((d) => d.count) }]}
+              series={[
+                {
+                  name: "Enrolled",
+                  data: chartData.enrollmentTrend.map((d) => d.count),
+                },
+              ]}
               type="area"
               height={280}
             />
@@ -567,7 +663,11 @@ function AdminDashboard() {
           ) : chartData?.batchDistribution?.length ? (
             <Chart
               options={{
-                chart: { type: "donut", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "donut",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: PIE_COLORS,
                 labels: chartData.batchDistribution.map((b) => b.status),
                 plotOptions: {
@@ -597,7 +697,11 @@ function AdminDashboard() {
         {/* Monthly Revenue */}
         <div className="border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <IconCurrencyDollar size={18} stroke={1.5} className="text-primary" />
+            <IconCurrencyDollar
+              size={18}
+              stroke={1.5}
+              className="text-primary"
+            />
             <h3 className="text-base font-semibold text-foreground">
               Monthly Revenue
             </h3>
@@ -607,21 +711,34 @@ function AdminDashboard() {
           ) : chartData?.revenueTrend?.length ? (
             <Chart
               options={{
-                chart: { type: "bar", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "bar",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: [COLORS.success],
                 plotOptions: { bar: { borderRadius: 4, columnWidth: "60%" } },
                 xaxis: {
                   categories: chartData.revenueTrend.map((d) => d.month),
-                  labels: { style: { colors: "var(--muted)", fontSize: "11px" } },
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
                 },
                 yaxis: {
-                  labels: { style: { colors: "var(--muted)", fontSize: "11px" } },
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
                 },
                 grid: { borderColor: "var(--border)" },
                 tooltip: { theme: "light" },
                 dataLabels: { enabled: false },
               }}
-              series={[{ name: "Revenue", data: chartData.revenueTrend.map((d) => d.total) }]}
+              series={[
+                {
+                  name: "Revenue",
+                  data: chartData.revenueTrend.map((d) => d.total),
+                },
+              ]}
               type="bar"
               height={280}
             />

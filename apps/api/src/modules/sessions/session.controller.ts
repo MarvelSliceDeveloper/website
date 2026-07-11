@@ -121,7 +121,8 @@ export const sessionController = {
         req.params.id,
         req.user.userId,
       );
-      const isDeleted = req.user.role === "ADMIN" || req.user.role === "SUPER_ADMIN";
+      const isDeleted =
+        req.user.role === "ADMIN" || req.user.role === "SUPER_ADMIN";
       return res.status(200).json({
         message: isDeleted ? "Session deleted" : "Session cancelled",
         session,

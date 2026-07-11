@@ -258,7 +258,9 @@ export const recordingService = {
         expiresAt: new Date(Date.now() + 3600000), // ~1 hour
       };
     } catch (error: any) {
-      console.error(`[Recording] Failed to get playback URL: ${String(error.message)}`);
+      console.error(
+        `[Recording] Failed to get playback URL: ${String(error.message)}`,
+      );
       throw error;
     }
   },

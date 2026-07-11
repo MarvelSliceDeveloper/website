@@ -117,7 +117,10 @@ export default function AnnouncementsPage() {
             >
               {sending ? "Sending..." : "Send"}
             </button>
-            <button onClick={() => setShowCreate(false)} className="btn-secondary text-xs py-2">
+            <button
+              onClick={() => setShowCreate(false)}
+              className="btn-secondary text-xs py-2"
+            >
               Cancel
             </button>
           </div>
@@ -125,12 +128,16 @@ export default function AnnouncementsPage() {
       )}
 
       <div className="glass-card p-5 border border-border/80">
-        <button onClick={fetchAnnouncements}
-          className="btn-secondary text-xs py-2 flex items-center gap-1.5 mb-4">
+        <button
+          onClick={fetchAnnouncements}
+          className="btn-secondary text-xs py-2 flex items-center gap-1.5 mb-4"
+        >
           <IconRefresh size={14} /> Refresh
         </button>
         {loading ? (
-          <div className="py-12 text-center text-sm text-muted animate-pulse">Loading...</div>
+          <div className="py-12 text-center text-sm text-muted animate-pulse">
+            Loading...
+          </div>
         ) : announcements.length === 0 ? (
           <div className="py-12 text-center text-sm text-muted-foreground">
             No announcements yet.
@@ -138,11 +145,18 @@ export default function AnnouncementsPage() {
         ) : (
           <div className="space-y-3">
             {announcements.map((a) => (
-              <div key={a.id} className="border border-border/60 rounded-lg p-4">
+              <div
+                key={a.id}
+                className="border border-border/60 rounded-lg p-4"
+              >
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-sm font-bold text-foreground">{a.title}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">{a.body}</p>
+                    <h3 className="text-sm font-bold text-foreground">
+                      {a.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {a.body}
+                    </p>
                   </div>
                   <span className="text-[10px] text-muted whitespace-nowrap ml-4">
                     {new Date(a.createdAt).toLocaleDateString("en-IN")}

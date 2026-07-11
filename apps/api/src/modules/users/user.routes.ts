@@ -26,7 +26,13 @@ function handleError(res: Response, error: unknown) {
 router.get("/", async (_req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany({
-      select: { id: true, name: true, email: true, role: true, isSuspended: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isSuspended: true,
+      },
       orderBy: [{ role: "asc" }, { name: "asc" }],
     });
     return res.json(users);
@@ -60,7 +66,7 @@ router.post("/", async (req: Request, res: Response) => {
 
     const isSuspended = role === "INSTRUCTOR";
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
       data: {
         name,
@@ -69,7 +75,13 @@ router.post("/", async (req: Request, res: Response) => {
         role: role as UserRole,
         isSuspended,
       },
-      select: { id: true, name: true, email: true, role: true, isSuspended: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isSuspended: true,
+      },
     });
 
     emailService

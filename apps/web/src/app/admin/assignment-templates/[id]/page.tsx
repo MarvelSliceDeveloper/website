@@ -23,9 +23,15 @@ export default function AssignmentTemplateEditorPage() {
   useEffect(() => {
     if (!isNew) {
       api
-        .get<{ template: { title: string; description: string; type: string; maxPoints: number; category: string | null } }>(
-          `/api/admin/assignment-templates/${id}`,
-        )
+        .get<{
+          template: {
+            title: string;
+            description: string;
+            type: string;
+            maxPoints: number;
+            category: string | null;
+          };
+        }>(`/api/admin/assignment-templates/${id}`)
         .then((data) => {
           const t = data.template;
           setTitle(t.title);
@@ -40,7 +46,8 @@ export default function AssignmentTemplateEditorPage() {
   }, [id, isNew]);
 
   async function handleSave() {
-    if (!title.trim() || !description.trim()) return toast.error("Title and description are required");
+    if (!title.trim() || !description.trim())
+      return toast.error("Title and description are required");
     setSaving(true);
     try {
       const payload = {
@@ -78,56 +85,96 @@ export default function AssignmentTemplateEditorPage() {
   }
 
   if (loading) {
-    return <div className="glass-card p-12 text-center text-muted animate-pulse">Loading...</div>;
+    return (
+      <div className="glass-card p-12 text-center text-muted animate-pulse">
+        Loading...
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push("/admin/assignment-templates")}
-            className="btn-secondary text-xs py-2">
+          <button
+            onClick={() => router.push("/admin/assignment-templates")}
+            className="btn-secondary text-xs py-2"
+          >
             <IconArrowLeft size={14} />
           </button>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Library</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
+              Library
+            </p>
             <h1 className="text-xl font-bold text-foreground">
-              {isNew ? "Create Assignment Template" : "Edit Assignment Template"}
+              {isNew
+                ? "Create Assignment Template"
+                : "Edit Assignment Template"}
             </h1>
           </div>
         </div>
         {!isNew && (
-          <button onClick={handleDelete}
-            className="text-danger hover:text-danger/80 text-xs flex items-center gap-1">
+          <button
+            onClick={handleDelete}
+            className="text-danger hover:text-danger/80 text-xs flex items-center gap-1"
+          >
             <IconTrash size={14} /> Delete
           </button>
         )}
       </div>
 
       <div className="glass-card p-5 border border-border/80 space-y-4">
-        <input type="text" placeholder="Template title" value={title}
-          onChange={(e) => setTitle(e.target.value)} className="input text-sm w-full" />
-        <textarea placeholder="Description" value={description}
-          onChange={(e) => setDescription(e.target.value)} className="input text-xs w-full min-h-[80px]" />
+        <input
+          type="text"
+          placeholder="Template title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="input text-sm w-full"
+        />
+        <textarea
+          placeholder="Description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="input text-xs w-full min-h-[80px]"
+        />
         <div className="flex items-center gap-3">
-          <select value={type} onChange={(e) => setType(e.target.value)} className="input text-xs">
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            className="input text-xs"
+          >
             <option value="QUIZ">QUIZ</option>
             <option value="FILE_UPLOAD">FILE_UPLOAD</option>
           </select>
-          <input type="number" placeholder="Max points" value={maxPoints}
-            onChange={(e) => setMaxPoints(parseInt(e.target.value) || 100)} className="input text-xs w-24" />
-          <input type="text" placeholder="Category (optional)" value={category}
-            onChange={(e) => setCategory(e.target.value)} className="input text-xs flex-1" />
+          <input
+            type="number"
+            placeholder="Max points"
+            value={maxPoints}
+            onChange={(e) => setMaxPoints(parseInt(e.target.value) || 100)}
+            className="input text-xs w-24"
+          />
+          <input
+            type="text"
+            placeholder="Category (optional)"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="input text-xs flex-1"
+          />
         </div>
       </div>
 
       <div className="flex items-center gap-2">
-        <button onClick={handleSave} disabled={saving}
-          className="btn-primary text-sm py-2.5 px-6 disabled:opacity-40">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="btn-primary text-sm py-2.5 px-6 disabled:opacity-40"
+        >
           {saving ? "Saving..." : isNew ? "Create Template" : "Save Changes"}
         </button>
-        <button onClick={() => router.push("/admin/assignment-templates")}
-          className="btn-secondary text-sm py-2.5 px-4">
+        <button
+          onClick={() => router.push("/admin/assignment-templates")}
+          className="btn-secondary text-sm py-2.5 px-4"
+        >
           Cancel
         </button>
       </div>

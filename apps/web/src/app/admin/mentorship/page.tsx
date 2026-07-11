@@ -137,31 +137,15 @@ export default function AdminMentorshipPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-5">
-        <StatCard
-          label="Total"
-          value={stats.total}
-          color="bg-primary"
-        />
-        <StatCard
-          label="Pending"
-          value={stats.open}
-          color="bg-warning"
-        />
-        <StatCard
-          label="Assigned"
-          value={stats.assigned}
-          color="bg-accent"
-        />
+        <StatCard label="Total" value={stats.total} color="bg-primary" />
+        <StatCard label="Pending" value={stats.open} color="bg-warning" />
+        <StatCard label="Assigned" value={stats.assigned} color="bg-accent" />
         <StatCard
           label="Scheduled"
           value={stats.scheduled}
           color="bg-success"
         />
-        <StatCard
-          label="Completed"
-          value={stats.completed}
-          color="bg-muted"
-        />
+        <StatCard label="Completed" value={stats.completed} color="bg-muted" />
       </div>
 
       <div className="flex flex-wrap gap-2">

@@ -17,7 +17,9 @@ export default function AdminShell({
 
   useEffect(() => {
     api
-      .get<{ user: { role: string; name: string; email: string } }>("/api/auth/me")
+      .get<{ user: { role: string; name: string; email: string } }>(
+        "/api/auth/me",
+      )
       .then((res) => {
         if (res?.user) {
           setUserRole(res.user.role);

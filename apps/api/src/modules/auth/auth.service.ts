@@ -85,7 +85,12 @@ export const authService = {
   },
 
   // Generate JWT access token for a user
-  generateTokens(user: { id: string; role: string; email: string; sessionTimeoutMin?: number }) {
+  generateTokens(user: {
+    id: string;
+    role: string;
+    email: string;
+    sessionTimeoutMin?: number;
+  }) {
     const payload = {
       userId: user.id,
       role: user.role,

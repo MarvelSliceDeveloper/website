@@ -117,7 +117,7 @@ router.post("/create-admin", async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: "Email already in use" });
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
       data: { name, email, passwordHash, role: "ADMIN" },
       select: { id: true, name: true, email: true, role: true },

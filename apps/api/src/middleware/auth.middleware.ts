@@ -40,7 +40,8 @@ export const requireAuth = (
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    const payload = jwt.verify(token, getJwtSecret()) as jwt.JwtPayload & AuthRequest["user"];
+    const payload = jwt.verify(token, getJwtSecret()) as jwt.JwtPayload &
+      AuthRequest["user"];
     req.user = payload;
 
     // Enforce per-user session timeout

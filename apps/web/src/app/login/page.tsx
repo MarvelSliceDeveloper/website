@@ -72,7 +72,11 @@ export default function LoginPage() {
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Demo accounts
             </p>
-            {["student@lms.local", "instructor@lms.local", "admin@lms.local"].map((demoEmail) => (
+            {[
+              "student@lms.local",
+              "instructor@lms.local",
+              "admin@lms.local",
+            ].map((demoEmail) => (
               <button
                 key={demoEmail}
                 type="button"

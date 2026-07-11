@@ -215,20 +215,51 @@ export default function StudentNotesPage() {
         {/* Stats bar */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
-            { label: "Total Notes", value: notes.length, icon: IconNotes, bg: "bg-primary/15", text: "text-primary" },
-            { label: "Sticky Notes", value: stickyCount, icon: IconStar, bg: "bg-warning/15", text: "text-warning" },
-            { label: "Edited This Week", value: notesThisWeek, icon: IconChevronRight, bg: "bg-accent/15", text: "text-accent" },
-            { label: "Courses", value: courses.length, icon: IconBook, bg: "bg-success/15", text: "text-success" },
+            {
+              label: "Total Notes",
+              value: notes.length,
+              icon: IconNotes,
+              bg: "bg-primary/15",
+              text: "text-primary",
+            },
+            {
+              label: "Sticky Notes",
+              value: stickyCount,
+              icon: IconStar,
+              bg: "bg-warning/15",
+              text: "text-warning",
+            },
+            {
+              label: "Edited This Week",
+              value: notesThisWeek,
+              icon: IconChevronRight,
+              bg: "bg-accent/15",
+              text: "text-accent",
+            },
+            {
+              label: "Courses",
+              value: courses.length,
+              icon: IconBook,
+              bg: "bg-success/15",
+              text: "text-success",
+            },
           ].map((stat) => (
-            <div key={stat.label} className="glass-card p-3.5 group hover:-translate-y-0.5 transition-all cursor-default">
+            <div
+              key={stat.label}
+              className="glass-card p-3.5 group hover:-translate-y-0.5 transition-all cursor-default"
+            >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted">{stat.label}</p>
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+                    {stat.label}
+                  </p>
                   <p className={`text-xl font-black ${stat.text}`}>
                     {loading ? "\u2014" : stat.value}
                   </p>
                 </div>
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${stat.bg} ${stat.text} group-hover:scale-110 transition-transform`}>
+                <div
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${stat.bg} ${stat.text} group-hover:scale-110 transition-transform`}
+                >
                   <stat.icon size={16} stroke={1.8} />
                 </div>
               </div>
@@ -240,9 +271,14 @@ export default function StudentNotesPage() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="sp-eyebrow">Student</p>
-              <h1 className="text-xl font-bold text-foreground sm:text-2xl">My Notes</h1>
+              <h1 className="text-xl font-bold text-foreground sm:text-2xl">
+                My Notes
+              </h1>
             </div>
-            <button onClick={() => setShowCreateModal(true)} className="btn-primary flex items-center gap-1.5 text-sm shrink-0">
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="btn-primary flex items-center gap-1.5 text-sm shrink-0"
+            >
               <IconPlus size={16} /> New Note
             </button>
           </div>
@@ -273,7 +309,7 @@ export default function StudentNotesPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-            <div className="lg:col-span-3 xl:col-span-3 space-y-4">
+          <div className="lg:col-span-3 xl:col-span-3 space-y-4">
             <div className="glass-card p-2 space-y-1">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted px-3 pt-2 pb-1">
                 <IconFilter size={12} className="inline mr-1 -mt-0.5" /> Courses
@@ -295,19 +331,19 @@ export default function StudentNotesPage() {
               {courses.map((c) => {
                 const count = notes.filter((n) => n.course.id === c.id).length;
                 return (
-                <button
-                  key={c.id}
-                  onClick={() => setCourseFilter(c.id)}
-                  className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                    courseFilter === c.id
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
-                  }`}
-                >
-                  <IconBook size={15} />
-                  <span className="truncate">{c.title}</span>
-                  <span className="ml-auto text-xs text-muted">{count}</span>
-                </button>
+                  <button
+                    key={c.id}
+                    onClick={() => setCourseFilter(c.id)}
+                    className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                      courseFilter === c.id
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-card-hover hover:text-foreground"
+                    }`}
+                  >
+                    <IconBook size={15} />
+                    <span className="truncate">{c.title}</span>
+                    <span className="ml-auto text-xs text-muted">{count}</span>
+                  </button>
                 );
               })}
             </div>
@@ -329,7 +365,9 @@ export default function StudentNotesPage() {
                   <IconNotes size={32} />
                 </div>
                 <p className="text-base font-semibold text-foreground">
-                  {searchQuery || courseFilter ? "No notes found" : "No notes yet"}
+                  {searchQuery || courseFilter
+                    ? "No notes found"
+                    : "No notes yet"}
                 </p>
                 <p className="text-sm text-muted-foreground max-w-xs">
                   {searchQuery || courseFilter
@@ -339,89 +377,116 @@ export default function StudentNotesPage() {
               </div>
             ) : (
               filteredNotes.map((note) => {
-                const borderClass = note.isSticky ? "border-l-warning/40" : note.moduleId ? "border-l-accent/30" : "border-l-primary/20";
+                const borderClass = note.isSticky
+                  ? "border-l-warning/40"
+                  : note.moduleId
+                    ? "border-l-accent/30"
+                    : "border-l-primary/20";
 
                 return (
-                <div
-                  key={note.id}
-                  className={`glass-card border-l-4 overflow-hidden transition-all ${borderClass} ${
-                    editingNoteId === note.id ? "ring-2 ring-primary/30" : ""
-                  }`}
-                >
-                  {editingNoteId === note.id ? (
-                    <div className="p-4 space-y-3">
-                      <input
-                        type="text"
-                        value={editTitle}
-                        onChange={(e) => setEditTitle(e.target.value)}
-                        placeholder="Note title..."
-                        className="field w-full text-sm font-semibold"
-                      />
-                      <RichEditor
-                        content={editBody}
-                        onChange={setEditBody}
-                        placeholder="Write your note..."
-                        minHeight="150px"
-                      />
-                      <div className="flex justify-end gap-2">
-                        <button onClick={cancelEdit} className="btn-secondary text-xs">Cancel</button>
-                        <button onClick={() => saveEdit(note.id)} disabled={saving} className="btn-primary text-xs">
-                          {saving ? "Saving..." : "Save"}
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => startEdit(note)}
-                      className="w-full text-left p-4 hover:bg-card-hover/50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span className="inline-flex items-center rounded-full border border-border/50 bg-card-hover/50 px-2 py-0.5 text-[10px] font-medium text-muted">
-                              {note.course.title}
-                            </span>
-                            {note.moduleId && (
-                              <span className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/5 px-2 py-0.5 text-[10px] font-medium text-accent">
-                                Module
-                              </span>
-                            )}
-                            {note.isSticky && (
-                              <span className="inline-flex items-center gap-1 rounded-full border border-warning/20 bg-warning/5 px-2 py-0.5 text-[10px] font-medium text-warning">
-                                <IconStar size={10} className="fill-current" />
-                                Pinned
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm font-semibold text-foreground mt-1">
-                            {note.title || "Untitled Note"}
-                          </p>
-                          {note.body && (
-                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                              {stripHtml(note.body)}
-                            </p>
-                          )}
-                          <p className="text-[11px] text-muted mt-1">
-                            {new Date(note.updatedAt).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                          </p>
+                  <div
+                    key={note.id}
+                    className={`glass-card border-l-4 overflow-hidden transition-all ${borderClass} ${
+                      editingNoteId === note.id ? "ring-2 ring-primary/30" : ""
+                    }`}
+                  >
+                    {editingNoteId === note.id ? (
+                      <div className="p-4 space-y-3">
+                        <input
+                          type="text"
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          placeholder="Note title..."
+                          className="field w-full text-sm font-semibold"
+                        />
+                        <RichEditor
+                          content={editBody}
+                          onChange={setEditBody}
+                          placeholder="Write your note..."
+                          minHeight="150px"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={cancelEdit}
+                            className="btn-secondary text-xs"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => saveEdit(note.id)}
+                            disabled={saving}
+                            className="btn-primary text-xs"
+                          >
+                            {saving ? "Saving..." : "Save"}
+                          </button>
                         </div>
-                        <IconChevronRight size={15} className="shrink-0 text-muted mt-1" />
                       </div>
-                    </button>
-                  )}
-                  <div className={`flex justify-end border-t border-border/40 px-4 py-1.5 ${editingNoteId === note.id ? "hidden" : ""}`}>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); deleteNote(note.id); }}
-                      className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] text-muted-foreground hover:text-danger hover:bg-danger/10 transition-colors"
+                    ) : (
+                      <button
+                        onClick={() => startEdit(note)}
+                        className="w-full text-left p-4 hover:bg-card-hover/50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="inline-flex items-center rounded-full border border-border/50 bg-card-hover/50 px-2 py-0.5 text-[10px] font-medium text-muted">
+                                {note.course.title}
+                              </span>
+                              {note.moduleId && (
+                                <span className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/5 px-2 py-0.5 text-[10px] font-medium text-accent">
+                                  Module
+                                </span>
+                              )}
+                              {note.isSticky && (
+                                <span className="inline-flex items-center gap-1 rounded-full border border-warning/20 bg-warning/5 px-2 py-0.5 text-[10px] font-medium text-warning">
+                                  <IconStar
+                                    size={10}
+                                    className="fill-current"
+                                  />
+                                  Pinned
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm font-semibold text-foreground mt-1">
+                              {note.title || "Untitled Note"}
+                            </p>
+                            {note.body && (
+                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                                {stripHtml(note.body)}
+                              </p>
+                            )}
+                            <p className="text-[11px] text-muted mt-1">
+                              {new Date(note.updatedAt).toLocaleDateString(
+                                "en-IN",
+                                {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                },
+                              )}
+                            </p>
+                          </div>
+                          <IconChevronRight
+                            size={15}
+                            className="shrink-0 text-muted mt-1"
+                          />
+                        </div>
+                      </button>
+                    )}
+                    <div
+                      className={`flex justify-end border-t border-border/40 px-4 py-1.5 ${editingNoteId === note.id ? "hidden" : ""}`}
                     >
-                      <IconTrash size={12} /> Delete
-                    </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteNote(note.id);
+                        }}
+                        className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] text-muted-foreground hover:text-danger hover:bg-danger/10 transition-colors"
+                      >
+                        <IconTrash size={12} /> Delete
+                      </button>
+                    </div>
                   </div>
-                </div>
                 );
               })
             )}

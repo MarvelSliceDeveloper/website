@@ -46,7 +46,10 @@ export default function ApiKeysPage() {
     try {
       const data = await api.post<{ id: string; name: string; key: string }>(
         "/api/admin/api-keys",
-        { name: newKeyName.trim(), description: newKeyDesc.trim() || undefined },
+        {
+          name: newKeyName.trim(),
+          description: newKeyDesc.trim() || undefined,
+        },
       );
       setCreatedKey(data.key);
       setNewKeyName("");
@@ -90,7 +93,10 @@ export default function ApiKeysPage() {
             <IconRefresh size={14} /> Refresh
           </button>
           <button
-            onClick={() => { setShowCreate(true); setCreatedKey(null); }}
+            onClick={() => {
+              setShowCreate(true);
+              setCreatedKey(null);
+            }}
             className="btn-primary text-xs py-2"
           >
             Create Key
@@ -126,7 +132,10 @@ export default function ApiKeysPage() {
                 </div>
               </div>
               <button
-                onClick={() => { setShowCreate(false); setCreatedKey(null); }}
+                onClick={() => {
+                  setShowCreate(false);
+                  setCreatedKey(null);
+                }}
                 className="btn-secondary text-xs py-2"
               >
                 Done
@@ -149,10 +158,16 @@ export default function ApiKeysPage() {
                 className="input text-xs w-full"
               />
               <div className="flex items-center gap-2">
-                <button onClick={handleCreate} className="btn-primary text-xs py-2">
+                <button
+                  onClick={handleCreate}
+                  className="btn-primary text-xs py-2"
+                >
                   Generate Key
                 </button>
-                <button onClick={() => setShowCreate(false)} className="btn-secondary text-xs py-2">
+                <button
+                  onClick={() => setShowCreate(false)}
+                  className="btn-secondary text-xs py-2"
+                >
                   Cancel
                 </button>
               </div>
@@ -186,7 +201,10 @@ export default function ApiKeysPage() {
               </thead>
               <tbody className="divide-y divide-border/40">
                 {keys.map((k) => (
-                  <tr key={k.id} className="hover:bg-card-hover transition-colors">
+                  <tr
+                    key={k.id}
+                    className="hover:bg-card-hover transition-colors"
+                  >
                     <td className="py-3 pr-3 font-medium text-foreground">
                       {k.name}
                     </td>

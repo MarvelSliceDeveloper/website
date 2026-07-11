@@ -114,10 +114,7 @@ export default function CreateAssignmentModal({
             <label className="mb-1.5 block text-sm font-medium text-foreground">
               Batch *
             </label>
-            <Select
-              value={form.batchId}
-              onValueChange={handleBatchChange}
-            >
+            <Select value={form.batchId} onValueChange={handleBatchChange}>
               <SelectTrigger className="field">
                 <SelectValue placeholder="-- Select a batch --" />
               </SelectTrigger>

@@ -1,9 +1,6 @@
 import { Router } from "express";
 import { assignmentTemplateController } from "./assignment-template.controller";
-import {
-  requireAuth,
-  requireRole,
-} from "../../middleware/auth.middleware";
+import { requireAuth, requireRole } from "../../middleware/auth.middleware";
 import { UserRole } from "@lms/types";
 
 const router = Router();

@@ -288,9 +288,9 @@ function SessionsPageContent() {
             Live Sessions
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-          Manage your live classes.
-        </p>
-      </div>
+            Manage your live classes.
+          </p>
+        </div>
       </div>
 
       {loading ? (

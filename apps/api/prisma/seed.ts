@@ -22,13 +22,48 @@ async function main() {
 
   // ─── System Settings ────────────────────────────────────────────────────────
   const defaultSettings = [
-    { key: "super_admin_id", value: superAdmin.id, type: "string", description: "Auto-set when SUPER_ADMIN exists" },
-    { key: "platform_name", value: "Marvel Slice LMS", type: "string", description: "Display name for the LMS" },
-    { key: "default_session_duration", value: "60", type: "number", description: "Default meeting length in minutes" },
-    { key: "max_students_per_batch", value: "100", type: "number", description: "Global hard cap per batch" },
-    { key: "session_timeout_admin", value: "480", type: "number", description: "Admin session timeout in minutes" },
-    { key: "session_timeout_instructor", value: "480", type: "number", description: "Instructor session timeout in minutes" },
-    { key: "session_timeout_student", value: "480", type: "number", description: "Student session timeout in minutes" },
+    {
+      key: "super_admin_id",
+      value: superAdmin.id,
+      type: "string",
+      description: "Auto-set when SUPER_ADMIN exists",
+    },
+    {
+      key: "platform_name",
+      value: "Marvel Slice LMS",
+      type: "string",
+      description: "Display name for the LMS",
+    },
+    {
+      key: "default_session_duration",
+      value: "60",
+      type: "number",
+      description: "Default meeting length in minutes",
+    },
+    {
+      key: "max_students_per_batch",
+      value: "100",
+      type: "number",
+      description: "Global hard cap per batch",
+    },
+    {
+      key: "session_timeout_admin",
+      value: "480",
+      type: "number",
+      description: "Admin session timeout in minutes",
+    },
+    {
+      key: "session_timeout_instructor",
+      value: "480",
+      type: "number",
+      description: "Instructor session timeout in minutes",
+    },
+    {
+      key: "session_timeout_student",
+      value: "480",
+      type: "number",
+      description: "Student session timeout in minutes",
+    },
   ];
 
   for (const setting of defaultSettings) {

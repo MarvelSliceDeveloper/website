@@ -81,7 +81,9 @@ export function ConfirmModal({
           </div>
         )}
 
-        <h3 className="text-base font-bold text-foreground text-center">{title}</h3>
+        <h3 className="text-base font-bold text-foreground text-center">
+          {title}
+        </h3>
         <p className="text-sm text-muted text-center">{description}</p>
 
         <div className="flex items-center justify-center gap-2 pt-1">

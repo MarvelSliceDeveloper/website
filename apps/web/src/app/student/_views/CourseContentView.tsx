@@ -1089,7 +1089,8 @@ export default function CourseContentView({
               onClick={() => setShowStickyWidget((v) => !v)}
               className={`btn-secondary text-xs gap-1.5 ${showStickyWidget ? "border-primary/40 bg-primary/10" : ""}`}
             >
-              <IconPencil size={13} /> {showStickyWidget ? "Close Notes" : "Take Note"}
+              <IconPencil size={13} />{" "}
+              {showStickyWidget ? "Close Notes" : "Take Note"}
             </button>
             <button
               onClick={() => {
@@ -1112,7 +1113,7 @@ export default function CourseContentView({
                 data.modules
                   .flatMap((m) => m.lessons)
                   .findIndex((l) => l.id === selectedLessonId) >=
-                data.modules.reduce((s, m) => s + m.lessons.length, 0) - 1
+                  data.modules.reduce((s, m) => s + m.lessons.length, 0) - 1
               }
               className="btn-primary text-xs gap-1.5"
             >
@@ -1150,7 +1151,9 @@ export default function CourseContentView({
         {activeRail === "resource" && renderResourceSidebar()}
       </div>
 
-      <div className={`flex-shrink-0 bg-background border-l border-border flex flex-col overflow-hidden transition-all duration-200 ${railCollapsed ? "w-0 border-l-0" : "w-[118px]"}`}>
+      <div
+        className={`flex-shrink-0 bg-background border-l border-border flex flex-col overflow-hidden transition-all duration-200 ${railCollapsed ? "w-0 border-l-0" : "w-[118px]"}`}
+      >
         <div className="flex flex-col items-center py-3 overflow-y-auto flex-1">
           <button
             onClick={() => setRailCollapsed((v) => !v)}
@@ -1159,21 +1162,21 @@ export default function CourseContentView({
           >
             {railCollapsed ? <IconArrowLeft size={16} /> : <IconX size={16} />}
           </button>
-          {(["lesson", "editor", "note", "session", "resource"] as RailTab[]).map(
-            (tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveRail(tab)}
-                className={`w-20 h-20 rounded-lg flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors mb-0.5 ${activeRail === tab ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/5 hover:text-foreground"}`}
-                title={railLabels[tab]}
-              >
-                {railIcons[tab]}
-                <span className="text-[15px] font-medium leading-none">
-                  {railLabels[tab]}
-                </span>
-              </button>
-            ),
-          )}
+          {(
+            ["lesson", "editor", "note", "session", "resource"] as RailTab[]
+          ).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveRail(tab)}
+              className={`w-20 h-20 rounded-lg flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors mb-0.5 ${activeRail === tab ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/5 hover:text-foreground"}`}
+              title={railLabels[tab]}
+            >
+              {railIcons[tab]}
+              <span className="text-[15px] font-medium leading-none">
+                {railLabels[tab]}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
       {/* Expand button when rail is collapsed */}

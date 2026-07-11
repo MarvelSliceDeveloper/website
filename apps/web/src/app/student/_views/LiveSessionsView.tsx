@@ -57,22 +57,43 @@ export default function LiveSessionsView({ sessions }: LiveSessionsViewProps) {
   const past = sessions.filter((s) => getComputedStatus(s) === "PAST");
 
   const timeGroups = useMemo(() => {
-    const upcomingToday = upcoming.filter((s) => getTimeGroup(s.scheduledAt) === "Today");
-    const upcomingWeek = upcoming.filter((s) => getTimeGroup(s.scheduledAt) === "This Week");
-    const upcomingLater = upcoming.filter((s) => getTimeGroup(s.scheduledAt) === "Later");
+    const upcomingToday = upcoming.filter(
+      (s) => getTimeGroup(s.scheduledAt) === "Today",
+    );
+    const upcomingWeek = upcoming.filter(
+      (s) => getTimeGroup(s.scheduledAt) === "This Week",
+    );
+    const upcomingLater = upcoming.filter(
+      (s) => getTimeGroup(s.scheduledAt) === "Later",
+    );
 
     if (filter === "ALL") {
       return [
-        ...(liveNow.length > 0 ? [{ label: "🔴 Live Now", items: liveNow }] : []),
-        ...(upcomingToday.length > 0 ? [{ label: "Today", items: upcomingToday }] : []),
-        ...(upcomingWeek.length > 0 ? [{ label: "This Week", items: upcomingWeek }] : []),
-        ...(upcomingLater.length > 0 ? [{ label: "Later", items: upcomingLater }] : []),
-        ...(past.length > 0 ? [{ label: "Past", items: past.slice(0, 5) }] : []),
+        ...(liveNow.length > 0
+          ? [{ label: "🔴 Live Now", items: liveNow }]
+          : []),
+        ...(upcomingToday.length > 0
+          ? [{ label: "Today", items: upcomingToday }]
+          : []),
+        ...(upcomingWeek.length > 0
+          ? [{ label: "This Week", items: upcomingWeek }]
+          : []),
+        ...(upcomingLater.length > 0
+          ? [{ label: "Later", items: upcomingLater }]
+          : []),
+        ...(past.length > 0
+          ? [{ label: "Past", items: past.slice(0, 5) }]
+          : []),
       ];
     }
     return [
       {
-        label: filter === "LIVE" ? "🔴 Live Now" : filter === "UPCOMING" ? "Upcoming" : "Past",
+        label:
+          filter === "LIVE"
+            ? "🔴 Live Now"
+            : filter === "UPCOMING"
+              ? "Upcoming"
+              : "Past",
         items: sessions.filter((s) => getComputedStatus(s) === filter),
       },
     ];
@@ -187,8 +208,12 @@ function SessionCard({
           {/* Date badge */}
           {!isLive && (
             <div className="hidden sm:flex flex-col items-center justify-center w-12 h-14 rounded-lg bg-card border border-border shrink-0">
-              <span className="text-[11px] font-bold uppercase text-primary">{dateMonth}</span>
-              <span className="text-lg font-black text-foreground">{dateNum}</span>
+              <span className="text-[11px] font-bold uppercase text-primary">
+                {dateMonth}
+              </span>
+              <span className="text-lg font-black text-foreground">
+                {dateNum}
+              </span>
             </div>
           )}
           <div>

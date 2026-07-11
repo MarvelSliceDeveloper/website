@@ -144,7 +144,8 @@ export default function PermissionsPage() {
             Permissions
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Toggle granular permissions for SUPER_ADMIN, ADMIN, and INSTRUCTOR roles. Changes are local until saved.
+            Toggle granular permissions for SUPER_ADMIN, ADMIN, and INSTRUCTOR
+            roles. Changes are local until saved.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -188,7 +189,10 @@ export default function PermissionsPage() {
             </thead>
             <tbody className="divide-y divide-border/40">
               {DEFAULT_PERMISSIONS.map((perm) => (
-                <tr key={perm.permission} className="hover:bg-card-hover transition-colors">
+                <tr
+                  key={perm.permission}
+                  className="hover:bg-card-hover transition-colors"
+                >
                   <td className="py-3 pr-4 font-medium text-foreground">
                     {perm.label}
                     <span className="block text-[10px] font-mono text-muted-foreground">

@@ -416,7 +416,11 @@ export default function StudentPortalPage() {
     <Suspense
       fallback={
         <StudentPortalShell>
-          <Spinner size={40} label="Loading your portal…" className="min-h-[60vh]" />
+          <Spinner
+            size={40}
+            label="Loading your portal…"
+            className="min-h-[60vh]"
+          />
         </StudentPortalShell>
       }
     >
@@ -596,7 +600,11 @@ function StudentPortalContent() {
   if (isLoading) {
     return (
       <StudentPortalShell>
-        <Spinner size={40} label="Loading your portal..." className="min-h-[60vh]" />
+        <Spinner
+          size={40}
+          label="Loading your portal..."
+          className="min-h-[60vh]"
+        />
       </StudentPortalShell>
     );
   }

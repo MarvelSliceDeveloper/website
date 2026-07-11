@@ -536,10 +536,7 @@ export default function InstructorAssignmentsContent() {
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Target Batch
                 </label>
-                <Select
-                  value={formBatchId}
-                  onValueChange={setFormBatchId}
-                >
+                <Select value={formBatchId} onValueChange={setFormBatchId}>
                   <SelectTrigger className="field py-2.5">
                     <SelectValue placeholder="Select Batch (Course)" />
                   </SelectTrigger>

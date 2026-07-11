@@ -49,7 +49,10 @@ export default function InstructorAssignmentsPage() {
       ) : (
         <div className="space-y-3">
           {assignments.map((a) => (
-            <div key={a.id} className="glass-card p-4 border border-border/80 flex items-center justify-between">
+            <div
+              key={a.id}
+              className="glass-card p-4 border border-border/80 flex items-center justify-between"
+            >
               <div>
                 <p className="font-semibold text-foreground">{a.title}</p>
                 <p className="text-xs text-muted-foreground">

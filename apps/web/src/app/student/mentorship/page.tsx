@@ -27,7 +27,10 @@ type MentorshipTicket = {
   course?: { id: string; title: string } | null;
 };
 
-const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; classes: string; border: string }> = {
+const STATUS_CONFIG: Record<
+  string,
+  { label: string; icon: React.ReactNode; classes: string; border: string }
+> = {
   OPEN: {
     label: "Waiting review",
     icon: <IconClock size={12} />,
@@ -138,7 +141,10 @@ export default function StudentMentorshipPage() {
         <div className="h-12 w-64 animate-pulse rounded-xl bg-card-hover" />
         <div className="grid grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-xl bg-card-hover" />
+            <div
+              key={i}
+              className="h-24 animate-pulse rounded-xl bg-card-hover"
+            />
           ))}
         </div>
         <div className="h-32 animate-pulse rounded-xl bg-card-hover" />
@@ -158,11 +164,20 @@ export default function StudentMentorshipPage() {
             <IconMessageCircle size={22} />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">Student</p>
-            <h1 className="text-xl font-bold text-foreground sm:text-2xl">1-on-1 Mentorship</h1>
-            <p className="mt-0.5 text-sm text-muted-foreground">Need focused help? Request a private session with your instructor.</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
+              Student
+            </p>
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">
+              1-on-1 Mentorship
+            </h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Need focused help? Request a private session with your instructor.
+            </p>
           </div>
-          <button onClick={() => setShowForm((v) => !v)} className="btn-primary shrink-0 text-sm">
+          <button
+            onClick={() => setShowForm((v) => !v)}
+            className="btn-primary shrink-0 text-sm"
+          >
             {showForm ? "Cancel" : "Request Session"}
           </button>
         </div>
@@ -171,20 +186,51 @@ export default function StudentMentorshipPage() {
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: "Open Requests", value: openTickets.length, icon: IconTicket, bg: "bg-warning/15", text: "text-warning" },
-          { label: "Resolved", value: resolvedCount, icon: IconCheck, bg: "bg-success/15", text: "text-success" },
-          { label: "Total Sessions", value: tickets.length, icon: IconCalendarEvent, bg: "bg-primary/15", text: "text-primary" },
-          { label: "Courses", value: courses.length, icon: IconMessageCircle, bg: "bg-accent/15", text: "text-accent" },
+          {
+            label: "Open Requests",
+            value: openTickets.length,
+            icon: IconTicket,
+            bg: "bg-warning/15",
+            text: "text-warning",
+          },
+          {
+            label: "Resolved",
+            value: resolvedCount,
+            icon: IconCheck,
+            bg: "bg-success/15",
+            text: "text-success",
+          },
+          {
+            label: "Total Sessions",
+            value: tickets.length,
+            icon: IconCalendarEvent,
+            bg: "bg-primary/15",
+            text: "text-primary",
+          },
+          {
+            label: "Courses",
+            value: courses.length,
+            icon: IconMessageCircle,
+            bg: "bg-accent/15",
+            text: "text-accent",
+          },
         ].map((stat) => (
-          <div key={stat.label} className="glass-card p-4 group hover:-translate-y-0.5 transition-all cursor-default">
+          <div
+            key={stat.label}
+            className="glass-card p-4 group hover:-translate-y-0.5 transition-all cursor-default"
+          >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[11px] font-medium uppercase tracking-wider text-muted">{stat.label}</p>
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+                  {stat.label}
+                </p>
                 <p className={`text-2xl font-black ${stat.text}`}>
                   {loading ? "\u2014" : stat.value}
                 </p>
               </div>
-              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${stat.bg} ${stat.text} group-hover:scale-110 transition-transform`}>
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${stat.bg} ${stat.text} group-hover:scale-110 transition-transform`}
+              >
                 <stat.icon size={18} stroke={1.8} />
               </div>
             </div>
@@ -205,7 +251,9 @@ export default function StudentMentorshipPage() {
             <p className="font-semibold text-foreground">New Session Request</p>
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">Course</label>
+            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">
+              Course
+            </label>
             <select
               value={courseId}
               onChange={(e) => setCourseId(e.target.value)}
@@ -213,12 +261,16 @@ export default function StudentMentorshipPage() {
               required
             >
               {courses.map((c) => (
-                <option key={c.id} value={c.id}>{c.title}</option>
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">Topic / Blocker</label>
+            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">
+              Topic / Blocker
+            </label>
             <textarea
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
@@ -229,7 +281,9 @@ export default function StudentMentorshipPage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">Preferred Date (optional)</label>
+            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">
+              Preferred Date (optional)
+            </label>
             <input
               type="date"
               value={preferredDate}
@@ -238,8 +292,18 @@ export default function StudentMentorshipPage() {
             />
           </div>
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setShowForm(false)} className="btn-secondary text-sm">Cancel</button>
-            <button type="submit" disabled={submitting} className="btn-primary text-sm">
+            <button
+              type="button"
+              onClick={() => setShowForm(false)}
+              className="btn-secondary text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-primary text-sm"
+            >
               {submitting ? "Submitting..." : "Submit Request"}
             </button>
           </div>
@@ -265,7 +329,10 @@ export default function StudentMentorshipPage() {
             <p className="text-sm text-muted-foreground max-w-xs">
               All caught up! Create a new request if you need help with a topic.
             </p>
-            <button onClick={() => setShowForm(true)} className="btn-primary text-sm mt-1">
+            <button
+              onClick={() => setShowForm(true)}
+              className="btn-primary text-sm mt-1"
+            >
               Request Session
             </button>
           </div>
@@ -289,7 +356,9 @@ export default function StudentMentorshipPage() {
           )}
         </div>
         {pastTickets.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4">No past sessions yet.</p>
+          <p className="text-sm text-muted-foreground py-4">
+            No past sessions yet.
+          </p>
         ) : (
           <div className="space-y-3">
             {pastTickets.map((t) => (
@@ -313,11 +382,15 @@ function TicketCard({
   const cfg = STATUS_CONFIG[ticket.status] || STATUS_CONFIG.OPEN;
 
   return (
-    <div className={`glass-card border-l-4 p-5 transition-all hover:-translate-y-0.5 cursor-default ${cfg.border}`}>
+    <div
+      className={`glass-card border-l-4 p-5 transition-all hover:-translate-y-0.5 cursor-default ${cfg.border}`}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${cfg.classes}`}>
+            <span
+              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${cfg.classes}`}
+            >
               {cfg.icon}
               {cfg.label}
             </span>
@@ -325,7 +398,9 @@ function TicketCard({
           <p className="font-semibold text-foreground">{ticket.title}</p>
           <p className="mt-0.5 text-sm text-muted-foreground">
             {ticket.course?.title || "General"}
-            {ticket.mentor?.name && <span> &middot; Mentor: {ticket.mentor.name}</span>}
+            {ticket.mentor?.name && (
+              <span> &middot; Mentor: {ticket.mentor.name}</span>
+            )}
           </p>
           <p className="mt-0.5 text-xs text-muted">
             {new Date(ticket.createdAt).toLocaleDateString("en-IN", {
