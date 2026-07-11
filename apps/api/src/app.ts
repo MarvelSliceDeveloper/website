@@ -65,7 +65,10 @@ app.use(cookieParser());
 // ── CSRF protection — applied BEFORE body parser so invalid requests
 //     are rejected without parsing the request body ──
 const csrfExemptPaths = [
-  "/api/auth/",
+  "/api/auth/login",
+  "/api/auth/register",
+  "/api/auth/logout",
+  "/api/auth/azure-ad/callback",
   "/api/webhooks/",
   "/api/csrf-token",
   "/health",

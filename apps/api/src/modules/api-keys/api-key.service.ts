@@ -9,7 +9,9 @@ function generateApiKey(): string {
 }
 
 function hashApiKey(key: string): string {
-  return crypto.createHash("sha256").update(key).digest("hex");
+  const salt = crypto.randomBytes(16);
+  const derivedKey = crypto.scryptSync(key, salt, 64);
+  return `${salt.toString("hex")}:${derivedKey.toString("hex")}`;
 }
 
 export const apiKeyService = {
@@ -58,6 +60,7 @@ export const apiKeyService = {
 };
 
 function maskKey(hashed: string): string {
-  if (hashed.length <= 8) return "sk_****";
-  return `sk_${hashed.slice(0, 4)}...${hashed.slice(-4)}`;
+  const [, derived = hashed] = hashed.split(":");
+  if (derived.length <= 8) return "sk_****";
+  return `sk_${derived.slice(0, 4)}...${derived.slice(-4)}`;
 }
