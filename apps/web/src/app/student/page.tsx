@@ -727,15 +727,7 @@ function StudentPortalContent() {
   if (isLoading) {
     return (
       <StudentPortalShell>
-<<<<<<< HEAD
-        <Spinner
-          size={40}
-          label="Loading your portal..."
-          className="min-h-[60vh]"
-        />
-=======
         <HomeSkeleton />
->>>>>>> 49c9d2685d29fee4ae1570bff3b89ae0cc0e138e
       </StudentPortalShell>
     );
   }

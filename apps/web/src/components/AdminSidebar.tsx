@@ -6,6 +6,7 @@ import { useState, useEffect, type ComponentType } from "react";
 import { api } from "@/lib/api";
 import {
   IconBook,
+  IconBrandWindows,
   IconChartBar,
   IconClipboardCheck,
   IconLayoutDashboard,
@@ -271,7 +272,6 @@ export default function AdminSidebar({
       ? [
           // Super Admin: system operations
           ...[
-<<<<<<< HEAD
             {
               label: "Activity Logs",
               href: "/admin/logs",
@@ -299,11 +299,6 @@ export default function AdminSidebar({
                 className?: string;
               }>,
             },
-=======
-            { label: "Activity Logs", href: "/admin/logs", icon: IconFileDescription as ComponentType<{ size?: number | string; stroke?: number | string; className?: string }> },
-            { label: "Trash", href: "/admin/trash", icon: IconTrash as ComponentType<{ size?: number | string; stroke?: number | string; className?: string }> },
-            { label: "Announcements", href: "/admin/announcements", icon: IconBellRinging as ComponentType<{ size?: number | string; stroke?: number | string; className?: string }> },
->>>>>>> 49c9d2685d29fee4ae1570bff3b89ae0cc0e138e
           ],
           {
             label: "Users",
@@ -328,14 +323,11 @@ export default function AdminSidebar({
               { label: "General", href: "/admin/settings" },
             ],
           },
-<<<<<<< HEAD
           {
             label: "Microsoft",
             href: "/admin/microsoft",
             icon: IconBrandWindows,
           },
-=======
->>>>>>> 49c9d2685d29fee4ae1570bff3b89ae0cc0e138e
         ]
       : [
           // Admin: platform operations
@@ -429,14 +421,11 @@ export default function AdminSidebar({
               },
             ],
           },
-<<<<<<< HEAD
           {
             label: "Microsoft",
             href: "/admin/microsoft",
             icon: IconBrandWindows,
           },
-=======
->>>>>>> 49c9d2685d29fee4ae1570bff3b89ae0cc0e138e
           {
             label: "Settings",
             href: "/admin/settings",

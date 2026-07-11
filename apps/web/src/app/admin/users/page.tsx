@@ -181,6 +181,8 @@ export default function AdminUsersPage() {
     total: users.length,
     INSTRUCTOR: users.filter((u) => u.role === "INSTRUCTOR").length,
     STUDENT: users.filter((u) => u.role === "STUDENT").length,
+    ADMIN: users.filter((u) => u.role === "ADMIN").length,
+    SUPER_ADMIN: users.filter((u) => u.role === "SUPER_ADMIN").length,
   };
 
   const columns: DataTableColumn<User>[] = [
@@ -279,7 +281,6 @@ export default function AdminUsersPage() {
 
       {/* Stat chips */}
       <div className="flex flex-wrap gap-2">
-<<<<<<< HEAD
         {(["STUDENT", "INSTRUCTOR", "ADMIN", "SUPER_ADMIN"] as const).map(
           (role) => (
             <button
@@ -292,13 +293,6 @@ export default function AdminUsersPage() {
                 )
               }
               className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-=======
-        {(["STUDENT", "INSTRUCTOR"] as const).map((role) => (
-          <button
-            key={role}
-            onClick={() =>
-              router.replace(
->>>>>>> 49c9d2685d29fee4ae1570bff3b89ae0cc0e138e
                 roleFilter === role
                   ? roleStyles[role]
                   : "border-border text-muted-foreground hover:bg-card-hover"
