@@ -125,7 +125,7 @@ const CARD_ICON_STYLES: Record<string, string> = {
 export default function HomeView({
   stats,
   overdueAssignments,
-  continueLearning,
+  continueLearning = [],
   liveSessionsToday,
   openTickets,
   enrolledCourses = [],
@@ -363,7 +363,7 @@ export default function HomeView({
         {/* ═══ RIGHT COLUMN ═══════════════════════════════════════════════ */}
         <div className="flex flex-col gap-6">
           {/* ── Today's Schedule ───────────────────────────────────────── */}
-          <div className="glass-card p-5">
+          <div className="glass-card p-5 flex-1">
             <div className="mb-3 flex items-center justify-between">
               <p className="sp-eyebrow">{`Today's Schedule`}</p>
               <button
@@ -386,7 +386,7 @@ export default function HomeView({
                     .slice(0, 4)
                     .map((s) => {
                       const start = new Date(s.scheduledAt);
-                      const end = new Date(s.endDateTime);
+                      const end = s.endDateTime ? new Date(s.endDateTime) : new Date(s.scheduledAt);
                       const timeStr = `${start.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false })} - ${end.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
                       return (
                         <div
@@ -519,10 +519,7 @@ export default function HomeView({
             ) : (
               <div className="space-y-2">
                 {enrolledCourses.slice(0, 5).map((course) => (
-                  <div
-                    key={course.id}
-                    className="flex items-center justify-between rounded-lg border border-border/40 bg-card/50 p-3 hover:border-border transition-colors"
-                  >
+                  <ListRow key={course.id}>
                     <div className="flex-1 min-w-0">
                       <p className="truncate font-medium text-foreground text-sm">
                         {course.title}
@@ -540,15 +537,16 @@ export default function HomeView({
                     >
                       {course.status === "ACTIVE" ? "Active" : "Completed"}
                     </span>
-                  </div>
+                  </ListRow>
                 ))}
               </div>
             )}
             <button
               onClick={() => navigate({ view: "COURSES" })}
-              className="mt-3 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
+              className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
             >
-              View All Courses →
+              View All Courses
+              <IconArrowRight size={13} />
             </button>
           </div>
         )}
@@ -567,16 +565,13 @@ export default function HomeView({
               </p>
             ) : (
               <div className="space-y-2">
-                {calendarEvents.slice(0, 5).map((event) => {
+                  {calendarEvents.slice(0, 5).map((event) => {
                   const nowTs = now.getTime();
                   const start = new Date(event.startAt).getTime();
                   const end = new Date(event.endAt).getTime();
                   const isLive = nowTs >= start && nowTs < end;
                   return (
-                    <div
-                      key={event.id}
-                      className="flex items-center justify-between rounded-lg border border-border/40 bg-card/50 p-3"
-                    >
+                    <ListRow key={event.id}>
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         {isLive ? (
                           <span className="live-pulse h-2.5 w-2.5 shrink-0 rounded-full bg-danger" />
@@ -611,16 +606,17 @@ export default function HomeView({
                           {isLive ? "Join" : "Link"}
                         </a>
                       )}
-                    </div>
+                    </ListRow>
                   );
                 })}
               </div>
             )}
             <button
               onClick={() => navigate({ view: "CALENDAR" })}
-              className="mt-3 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
+              className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
             >
-              View Full Calendar →
+              View Full Calendar
+              <IconArrowRight size={13} />
             </button>
           </div>
         )}
@@ -644,10 +640,7 @@ export default function HomeView({
                   .filter((s) => s.status !== "PAST")
                   .slice(0, 5)
                   .map((session) => (
-                    <div
-                      key={session.id}
-                      className="flex items-center justify-between rounded-lg border border-border/40 bg-card/50 p-3"
-                    >
+                    <ListRow key={session.id}>
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         {session.status === "LIVE" ? (
                           <span className="live-pulse h-2.5 w-2.5 shrink-0 rounded-full bg-danger" />
@@ -673,15 +666,16 @@ export default function HomeView({
                           Join
                         </a>
                       )}
-                    </div>
+                    </ListRow>
                   ))}
               </div>
             )}
             <button
               onClick={() => navigate({ view: "LIVE_SESSIONS" })}
-              className="mt-3 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
+              className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
             >
-              View All Sessions →
+              View All Sessions
+              <IconArrowRight size={13} />
             </button>
           </div>
         )}
@@ -765,10 +759,10 @@ export default function HomeView({
             ) : (
               <div className="space-y-2">
                 {supportTickets.slice(0, 5).map((t) => (
-                  <button
+                  <ListRow
                     key={t.id}
                     onClick={() => router.push(`/student/support`)}
-                    className="w-full flex items-start gap-3 rounded-xl border border-border/50 bg-card/50 p-3 text-left hover:bg-card-hover transition-colors"
+                    className="items-start rounded-xl border-border/50"
                   >
                     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary">
                       <IconHelp size={14} />
@@ -793,16 +787,17 @@ export default function HomeView({
                         )}
                       </div>
                     </div>
-                  </button>
+                  </ListRow>
                 ))}
               </div>
             )}
 
             <button
               onClick={() => router.push("/student/support")}
-              className="text-xs font-medium text-primary transition-colors hover:text-primary-hover"
+              className="inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
             >
-              View All Tickets →
+              View All Tickets
+              <IconArrowRight size={13} />
             </button>
           </div>
         )}
@@ -948,7 +943,7 @@ export default function HomeView({
                       />
                     </svg>
                     <span className="relative text-[11px] font-bold text-primary">
-                      {pct}%
+                      {Math.round(pct)}%
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">
@@ -987,10 +982,30 @@ export default function HomeView({
             className="btn-primary shrink-0 gap-2"
           >
             Browse Courses
-            <IconArrowRight size={16} />
+              <IconArrowRight size={16} />
           </button>
         </div>
       </div>
     </div>
+  );
+}
+
+function ListRow({
+  children,
+  onClick,
+  className,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+}) {
+  const Component = onClick ? "button" : "div";
+  return (
+    <Component
+      onClick={onClick}
+      className={`flex items-center justify-between rounded-lg border border-border/40 bg-card/50 p-3 text-left ${onClick ? "transition-colors hover:border-border hover:bg-card-hover" : ""} ${className || ""}`}
+    >
+      {children}
+    </Component>
   );
 }

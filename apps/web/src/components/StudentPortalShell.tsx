@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   IconArrowLeft,
+  IconArrowRight,
   IconBell,
   IconMoon,
   IconSun,
@@ -11,7 +12,6 @@ import {
   IconChevronDown,
   IconLogout,
   IconSettings,
-  IconSchool,
   IconEye,
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
@@ -49,7 +49,6 @@ export default function StudentPortalShell({
   hideHeader = false,
 }: StudentPortalShellProps) {
   const router = useRouter();
-  usePathname();
   const [notifOpen, setNotifOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -88,6 +87,7 @@ export default function StudentPortalShell({
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
+    window.localStorage.setItem("lms-theme", theme);
   }, [theme]);
 
   useEffect(() => {
@@ -158,8 +158,8 @@ export default function StudentPortalShell({
                 <div className="flex items-center gap-2">
                   <img
                     src="/images/logo.svg"
-                    alt="LMS Logo"
-                    className="h-12 w-auto object-contain"
+                    alt="Marvel Slice"
+                    className="h-9 w-auto object-contain"
                   />
                   <span className="text-base font-bold text-foreground">
                     Marvel Slice
@@ -175,7 +175,7 @@ export default function StudentPortalShell({
                       {crumb.onClick ? (
                         <button
                           onClick={crumb.onClick}
-                          className="max-w-30 truncate transition-colors hover:text-foreground"
+                          className="max-w-35 truncate transition-colors hover:text-foreground"
                         >
                           {crumb.label}
                         </button>
@@ -192,15 +192,9 @@ export default function StudentPortalShell({
 
             <div className="flex items-center gap-2">
               <button
-                onClick={() => {
-                  const nextTheme = theme === "dark" ? "light" : "dark";
-                  setTheme(nextTheme);
-                  document.documentElement.setAttribute(
-                    "data-theme",
-                    nextTheme,
-                  );
-                  window.localStorage.setItem("lms-theme", nextTheme);
-                }}
+                onClick={() =>
+                  setTheme(theme === "dark" ? "light" : "dark")
+                }
                 className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
                 aria-label={
                   theme === "dark"
@@ -224,6 +218,8 @@ export default function StudentPortalShell({
                   }}
                   className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
                   aria-label="Notifications"
+                  aria-haspopup="true"
+                  aria-expanded={notifOpen}
                 >
                   <IconBell size={17} stroke={1.8} />
                   {unreadCount > 0 && (
@@ -306,7 +302,7 @@ export default function StudentPortalShell({
                           className="flex w-full items-center justify-center gap-1.5 text-xs font-medium text-primary hover:text-primary-hover transition-colors"
                         >
                           View all notifications
-                          <IconArrowLeft size={13} className="rotate-180" />
+                          <IconArrowRight size={13} />
                         </button>
                       </div>
                     )}
@@ -324,6 +320,8 @@ export default function StudentPortalShell({
                     }}
                     className="flex h-9 items-center gap-2 rounded-xl border border-border bg-card px-2.5 text-sm font-medium text-foreground transition-colors hover:border-border-hover"
                     aria-label="User menu"
+                    aria-haspopup="true"
+                    aria-expanded={avatarOpen}
                   >
                     <div className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-primary to-violet-600 text-[11px] font-bold text-white">
                       {studentName.charAt(0).toUpperCase()}
