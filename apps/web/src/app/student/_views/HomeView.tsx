@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   IconArrowRight,
@@ -11,15 +11,18 @@ import {
   IconPlayerPlay,
   IconVideo,
   IconClock,
-  IconHelp,
-  IconMessage,
-  IconPlus,
-  IconNotebook,
   IconPencil,
+  IconSparkles,
+  IconSearch,
+  IconMail,
+  IconUser,
+  IconPhone,
+  IconBell,
+  IconTrendingUp,
+  IconNotes,
+  IconHelp,
+  IconMessageCircle,
 } from "@tabler/icons-react";
-import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
-import { timeAgo } from "@/lib/time-ago";
 import type { ViewState } from "../_types/student-portal";
 import type {
   DashboardStats,
@@ -30,9 +33,6 @@ import type {
   EnrolledCourse,
   CalendarEvent,
 } from "@/lib/student-mock-data";
-import StudentSectionTabs, {
-  type StudentSectionTab,
-} from "@/components/student/StudentSectionTabs";
 import StudentStatTiles from "@/components/student/StudentStatTiles";
 
 interface HomeViewProps {
@@ -54,73 +54,9 @@ interface HomeViewProps {
     support: boolean;
     notes: boolean;
   };
-  firstBatchId?: string; // for the Recordings shortcut
+  firstBatchId?: string;
   navigate: (v: ViewState) => void;
 }
-
-const SECTION_CARDS = [
-  {
-    id: "courses" as const,
-    icon: <IconBook size={22} className="text-primary" />,
-    title: "My Courses",
-    view: { view: "COURSES" as const },
-    gradient: "from-primary/20 to-violet-500/10",
-    border: "hover:border-primary/30",
-  },
-  {
-    id: "live" as const,
-    icon: <IconVideo size={22} className="text-danger" />,
-    title: "Live Sessions",
-    view: { view: "LIVE_SESSIONS" as const },
-    gradient: "from-danger/20 to-red-400/10",
-    border: "hover:border-danger/30",
-    isLive: true,
-  },
-  {
-    id: "calendar" as const,
-    icon: <IconCalendar size={22} className="text-accent" />,
-    title: "My Calendar",
-    view: { view: "CALENDAR" as const },
-    gradient: "from-accent/20 to-cyan-400/10",
-    border: "hover:border-accent/30",
-  },
-  {
-    id: "certificates" as const,
-    icon: <IconCertificate size={22} className="text-warning" />,
-    title: "My Certificates",
-    view: { view: "CERTIFICATES" as const },
-    gradient: "from-warning/20 to-amber-400/10",
-    border: "hover:border-warning/30",
-  },
-  {
-    id: "mentorship" as const,
-    icon: <IconHeart size={22} className="text-success" />,
-    title: "1-on-1 Mentorship",
-    view: { view: "MENTORSHIP" as const },
-    gradient: "from-success/20 to-emerald-400/10",
-    border: "hover:border-success/30",
-  },
-  {
-    id: "recordings" as const,
-    icon: <IconPlayerPlay size={22} className="text-violet-400" />,
-    title: "Recordings",
-    viewFn: (firstBatchId?: string) =>
-      firstBatchId
-        ? { view: "BATCH_DETAIL" as const, params: { batchId: firstBatchId } }
-        : { view: "COURSES" as const },
-    gradient: "from-violet-500/20 to-purple-400/10",
-    border: "hover:border-violet-400/30",
-  },
-];
-
-const CARD_ICON_STYLES: Record<string, string> = {
-  courses: "bg-primary/15 text-primary border-primary/25",
-  live: "bg-danger/15 text-danger border-danger/25",
-  calendar: "bg-accent/15 text-accent border-accent/25",
-  certificates: "bg-warning/15 text-warning border-warning/25",
-  mentorship: "bg-success/15 text-success border-success/25",
-  recordings: "bg-violet-500/15 text-violet-400 border-violet-500/25",
-};
 
 export default function HomeView({
   stats,
@@ -131,81 +67,11 @@ export default function HomeView({
   enrolledCourses = [],
   calendarEvents = [],
   studentName = "Student",
-  sectionApiAvailability,
   firstBatchId,
   navigate,
 }: HomeViewProps) {
-  const router = useRouter();
-  const [activeInlineTab, setActiveInlineTab] = useState<
-    "courses" | "calendar" | "sessions" | "support" | "notes"
-  >("courses");
-  const [supportTickets, setSupportTickets] = useState<
-    Array<{
-      id: string;
-      title: string;
-      description: string;
-      status: string;
-      createdAt: string;
-      _count?: { messages: number };
-    }>
-  >([]);
-  const [supportLoading, setSupportLoading] = useState(false);
-  const [showSupportForm, setShowSupportForm] = useState(false);
-  const [supportTitle, setSupportTitle] = useState("");
-  const [supportDesc, setSupportDesc] = useState("");
-  const [supportSubmitting, setSupportSubmitting] = useState(false);
-
-  const SUPPORT_STATUS_STYLES: Record<string, string> = {
-    OPEN: "border-warning/30 bg-warning/10 text-warning",
-    IN_PROGRESS: "border-accent/30 bg-accent/10 text-accent",
-    RESOLVED: "border-success/30 bg-success/10 text-success",
-    CLOSED: "border-muted/30 bg-muted/10 text-muted",
-  };
-
-  const fetchSupportTickets = useCallback(async () => {
-    setSupportLoading(true);
-    try {
-      const data = await api.get<{
-        tickets: Array<{
-          id: string;
-          title: string;
-          description: string;
-          status: string;
-          createdAt: string;
-          _count?: { messages: number };
-        }>;
-      }>("/api/tickets?type=SUPPORT");
-      setSupportTickets(data.tickets || []);
-    } catch {
-      /* ignore */
-    } finally {
-      setSupportLoading(false);
-    }
-  }, []);
-
-  async function createSupportTicket(e: React.FormEvent) {
-    e.preventDefault();
-    if (!supportTitle.trim() || !supportDesc.trim()) return;
-    setSupportSubmitting(true);
-    try {
-      await api.post("/api/tickets", {
-        type: "SUPPORT",
-        title: supportTitle,
-        description: supportDesc,
-      });
-      toast.success("Support ticket created");
-      setShowSupportForm(false);
-      setSupportTitle("");
-      setSupportDesc("");
-      fetchSupportTickets();
-    } catch {
-      toast.error("Failed to create ticket");
-    } finally {
-      setSupportSubmitting(false);
-    }
-  }
-
   const now = new Date();
+  const router = useRouter();
   const hour = now.getHours();
   const greeting =
     hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
@@ -215,6 +81,17 @@ export default function HomeView({
     month: "long",
     year: "numeric",
   });
+
+  const [activeTab, setActiveTab] = useState<
+    "courses" | "calendar" | "sessions" | "notifications" | "support"
+  >("courses");
+  const [innerTab, setInnerTab] = useState<"my_courses" | "results">(
+    "my_courses",
+  );
+  const [searchTerm, setSearchTerm] = useState("");
+  const [referralName, setReferralName] = useState("");
+  const [referralEmail, setReferralEmail] = useState("");
+  const [referralPhone, setReferralPhone] = useState("");
 
   const liveCount = liveSessionsToday.filter((s) => s.status === "LIVE").length;
   const openTicketCount = openTickets.filter(
@@ -227,14 +104,16 @@ export default function HomeView({
   const pendingQuizzes = overdueAssignments.filter(
     (item) => item.status === "PENDING" && item.type === "QUIZ",
   ).length;
+  const overdueTotal = pendingAssignments + pendingQuizzes;
 
+  // Stat tiles using solid color mapping
   const statTiles = [
     {
       id: "enrolled",
       label: "Courses To Do",
-      value: stats.enrolledCount,
+      value: enrolledCourses.filter((c) => c.status !== "COMPLETED").length || stats.enrolledCount,
       icon: <IconBook size={20} />,
-      gradient: "bg-gradient-to-br from-primary/20 to-violet-500/10",
+      gradient: "",
       onClick: () => navigate({ view: "COURSES" }),
       iconColor: "primary",
       trend: { value: 0, label: "this month" },
@@ -244,7 +123,7 @@ export default function HomeView({
       label: "Assignment Overdue",
       value: pendingAssignments,
       icon: <IconPencil size={20} />,
-      gradient: "bg-gradient-to-br from-danger/20 to-red-400/10",
+      gradient: "",
       onClick: () => navigate({ view: "ASSIGNMENT_OVERDUE" }),
       iconColor: "danger",
       liveBadge: pendingAssignments > 0 ? "Overdue" : undefined,
@@ -254,7 +133,7 @@ export default function HomeView({
       label: "Quiz Overdue",
       value: pendingQuizzes,
       icon: <IconClock size={20} />,
-      gradient: "bg-gradient-to-br from-accent/20 to-cyan-400/10",
+      gradient: "",
       onClick: () => navigate({ view: "QUIZ_OVERDUE" }),
       iconColor: "accent",
       liveBadge: pendingQuizzes > 0 ? "Overdue" : undefined,
@@ -262,750 +141,963 @@ export default function HomeView({
     {
       id: "completed",
       label: "Completed Course",
-      value: stats.completedCount,
+      value: enrolledCourses.filter((c) => c.status === "COMPLETED").length || stats.completedCount,
       icon: <IconCertificate size={20} />,
-      gradient: "bg-gradient-to-br from-success/20 to-emerald-400/10",
+      gradient: "",
       onClick: () => navigate({ view: "COURSE_COMPLETED" }),
       iconColor: "success",
       trend: { value: stats.completedCount > 0 ? 5 : 0, label: "this month" },
     },
   ];
 
-  const sectionTabs: StudentSectionTab[] = [
-    {
-      key: "courses",
-      label: "My Courses",
-      enabled: sectionApiAvailability.courses,
-    },
-    {
-      key: "calendar",
-      label: "Calendar",
-      enabled: sectionApiAvailability.calendar,
-    },
-    {
-      key: "sessions",
-      label: "My Sessions",
-      enabled: sectionApiAvailability.sessions,
-    },
-    {
-      key: "notifications",
-      label: "Notifications",
-      enabled: sectionApiAvailability.notifications,
-    },
-    {
-      key: "messages",
-      label: "Messages",
-      enabled: sectionApiAvailability.messages,
-    },
-    {
-      key: "support",
-      label: "Support",
-      enabled: sectionApiAvailability.support,
-    },
-    { key: "notes", label: "Notes", enabled: sectionApiAvailability.notes },
-  ];
+  // Filtering courses by search term
+  const filteredActiveCourses = enrolledCourses
+    .filter((c) => c.status !== "COMPLETED")
+    .filter((c) => c.title.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  function handleSectionTabChange(key: string) {
-    if (
-      key === "courses" ||
-      key === "calendar" ||
-      key === "sessions" ||
-      key === "support" ||
-      key === "notes"
-    ) {
-      setActiveInlineTab(key as typeof activeInlineTab);
-      if (key === "support") fetchSupportTickets();
-    }
+  const filteredCompletedCourses = enrolledCourses
+    .filter((c) => c.status === "COMPLETED")
+    .filter((c) => c.title.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  function handleReferralSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    alert(`Thank you! Referral for ${referralName} submitted successfully.`);
+    setReferralName("");
+    setReferralEmail("");
+    setReferralPhone("");
   }
-
-  const overdueTotal = pendingAssignments + pendingQuizzes;
 
   return (
     <div className="sp-view-enter space-y-6 motion-reduce:animate-none">
-      {/* ── Greeting Banner ──────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-r from-primary/15 via-primary/5 to-accent/10 p-5 sm:p-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(109,125,255,0.15),transparent_60%)]" />
-        <div className="relative flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary to-accent text-xl font-bold text-white shadow-lg shadow-primary/30">
+      {/* ── Hero Greeting ────────────────────────────────────────────────── */}
+      <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-accent/5 to-violet-500/10 p-6 sm:p-8 shadow-lg shadow-primary/5 hover:border-primary/35 transition-colors duration-300">
+        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -bottom-8 left-1/4 h-32 w-32 rounded-full bg-accent/8 blur-3xl" />
+
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-2xl font-bold text-white shadow-xl shadow-blue-500/25 ring-4 ring-blue-500/10 transition-transform duration-300 hover:scale-105">
             {studentName.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-bold text-foreground sm:text-2xl">
+            <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
               {greeting}, {studentName}
             </h1>
-            <p className="mt-0.5 text-sm text-muted-foreground">{dateStr}</p>
+            <p className="mt-1 text-sm font-medium text-muted-foreground">{dateStr}</p>
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-muted">
+              <IconSparkles size={13} className="text-warning animate-pulse" />
+              Ready to continue your learning journey?
+            </p>
           </div>
           <div className="hidden items-center gap-4 sm:flex">
-            <div className="text-right">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                Streak
-              </p>
-              <p className="text-lg font-bold text-warning">5 days</p>
-            </div>
-            <div className="h-8 w-px bg-border/60" />
-            <div className="text-right">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                This Week
-              </p>
-              <p className="text-lg font-bold text-success">{liveCount} live</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Two-Column: Stats + Schedule ─────────────────────────────────── */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
-        {/* ═══ LEFT COLUMN ════════════════════════════════════════════════ */}
-        <div className="min-w-0">
-          <StudentStatTiles tiles={statTiles} />
-        </div>
-
-        {/* ═══ RIGHT COLUMN ═══════════════════════════════════════════════ */}
-        <div className="flex flex-col gap-6">
-          {/* ── Today's Schedule ───────────────────────────────────────── */}
-          <div className="glass-card p-5 flex-1">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="sp-eyebrow">{`Today's Schedule`}</p>
-              <button
-                onClick={() => navigate({ view: "CALENDAR" })}
-                className="text-[11px] font-medium text-primary hover:text-primary-hover transition-colors"
-              >
-                View All
-              </button>
-            </div>
-            <div className="divide-y divide-border/60">
-              {liveSessionsToday.filter((s) => s.status !== "PAST").length ===
-              0 ? (
-                <p className="py-4 text-center text-sm text-muted">
-                  No events scheduled today
-                </p>
-              ) : (
-                <>
-                  {liveSessionsToday
-                    .filter((s) => s.status !== "PAST")
-                    .slice(0, 4)
-                    .map((s) => {
-                      const start = new Date(s.scheduledAt);
-                      const end = s.endDateTime ? new Date(s.endDateTime) : new Date(s.scheduledAt);
-                      const timeStr = `${start.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false })} - ${end.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
-                      return (
-                        <div
-                          key={s.id}
-                          className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div
-                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                                s.status === "LIVE"
-                                  ? "bg-danger/15 text-danger"
-                                  : "bg-accent/10 text-accent"
-                              }`}
-                            >
-                              {s.status === "LIVE" ? (
-                                <span className="live-pulse h-2.5 w-2.5 rounded-full bg-current" />
-                              ) : (
-                                <IconClock size={16} />
-                              )}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-medium text-foreground">
-                                {s.title}
-                              </p>
-                              <span className="inline-flex items-center gap-1 text-[11px] text-muted">
-                                <IconClock size={11} />
-                                {timeStr}
-                              </span>
-                            </div>
-                          </div>
-                          {s.status === "LIVE" && s.joinUrl && (
-                            <a
-                              href={s.joinUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="btn-primary shrink-0 ml-2 px-3 py-1 text-xs"
-                            >
-                              Join
-                            </a>
-                          )}
-                        </div>
-                      );
-                    })}
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* ── Overdue Summary ─────────────────────────────────────────── */}
-          <div className="glass-card p-5 flex-1">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="sp-eyebrow">Overdue</p>
-              {overdueTotal > 0 && (
-                <span className="rounded-full bg-danger/10 px-2 py-0.5 text-[10px] font-bold text-danger">
-                  {overdueTotal} items
+            {liveCount > 0 && (
+              <div className="flex items-center gap-2 rounded-xl border border-danger/25 bg-danger/10 px-3.5 py-2">
+                <span className="live-pulse h-2.5 w-2.5 rounded-full bg-danger" />
+                <span className="text-sm font-semibold text-danger">
+                  {liveCount} Live Now
                 </span>
-              )}
-            </div>
-            <div className="space-y-3">
-              {overdueTotal === 0 ? (
-                <p className="py-4 text-center text-sm text-muted">
-                  All caught up! No overdue items.
-                </p>
-              ) : (
-                <>
-                  <button
-                    onClick={() => navigate({ view: "ASSIGNMENT_OVERDUE" })}
-                    className="flex w-full items-center gap-3 rounded-xl border border-border/50 bg-card/50 p-3 text-left transition-all hover:bg-card-hover hover:border-danger/30"
-                  >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-danger/15 text-danger">
-                      <IconPencil size={18} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground">
-                        {pendingAssignments} Assignment
-                        {pendingAssignments !== 1 ? "s" : ""} Overdue
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Click to view & submit
-                      </p>
-                    </div>
-                    <IconArrowRight size={14} className="shrink-0 text-muted" />
-                  </button>
-                  <button
-                    onClick={() => navigate({ view: "QUIZ_OVERDUE" })}
-                    className="flex w-full items-center gap-3 rounded-xl border border-border/50 bg-card/50 p-3 text-left transition-all hover:bg-card-hover hover:border-accent/30"
-                  >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-accent">
-                      <IconClock size={18} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground">
-                        {pendingQuizzes} Quiz{pendingQuizzes !== 1 ? "zes" : ""}{" "}
-                        Overdue
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Click to attempt
-                      </p>
-                    </div>
-                    <IconArrowRight size={14} className="shrink-0 text-muted" />
-                  </button>
-                </>
-              )}
+              </div>
+            )}
+            <div className="text-right border-l border-border/60 pl-4">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Enrolled
+              </p>
+              <p className="text-lg font-bold text-foreground">
+                {enrolledCourses.length} courses
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Section Tabs ──────────────────────────────────────────────────── */}
-      <StudentSectionTabs
-        tabs={sectionTabs}
-        activeKey={activeInlineTab}
-        onChange={handleSectionTabChange}
-      />
+      {/* ── Stat Tiles (full width) ──────────────────────────────────────── */}
+      <StudentStatTiles tiles={statTiles} />
 
-      {/* ── Inline Content Display ────────────────────────────────────────── */}
-      <div className="glass-card p-5">
-        {activeInlineTab === "courses" && (
-          <div className="space-y-3">
-            <div className="mb-4">
-              <p className="sp-eyebrow">My Courses</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Your enrolled courses
-              </p>
-            </div>
-            {enrolledCourses.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted">
-                No courses enrolled yet
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {enrolledCourses.slice(0, 5).map((course) => (
-                  <ListRow key={course.id}>
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate font-medium text-foreground text-sm">
-                        {course.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {course.instructor}
-                      </p>
-                    </div>
-                    <span
-                      className={`text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap ml-2 ${
-                        course.status === "ACTIVE"
-                          ? "bg-success/20 text-success border border-success/30"
-                          : "bg-primary/20 text-primary border border-primary/30"
-                      }`}
-                    >
-                      {course.status === "ACTIVE" ? "Active" : "Completed"}
-                    </span>
-                  </ListRow>
-                ))}
-              </div>
-            )}
-            <button
-              onClick={() => navigate({ view: "COURSES" })}
-              className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
-            >
-              View All Courses
-              <IconArrowRight size={13} />
-            </button>
-          </div>
-        )}
+      {/* ── Quick Access Links ─────────────────────────────────────────── */}
+      <div className="space-y-3">
+        <p className="text-[11.5px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
+          Quick Access
+        </p>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          {[
+            {
+              label: "Browse Catalogue",
+              sub: "Explore new courses",
+              icon: <IconBook size={20} />,
+              color: "blue",
+              onClick: () => navigate({ view: "BROWSE_CATALOGUE" }),
+            },
+            {
+              label: "Study Notes",
+              sub: "Review saved notes",
+              icon: <IconNotes size={20} />,
+              color: "orange",
+              onClick: () => router.push("/student/notes"),
+            },
+            {
+              label: "Certificates",
+              sub: "View credentials",
+              icon: <IconCertificate size={20} />,
+              color: "green",
+              onClick: () => navigate({ view: "CERTIFICATES" }),
+            },
+            {
+              label: "Mentorship",
+              sub: "Book 1-on-1 sessions",
+              icon: <IconHeart size={20} />,
+              color: "blue",
+              onClick: () => navigate({ view: "MENTORSHIP" }),
+            },
+            {
+              label: "Inbox Messages",
+              sub: "Check alerts & mails",
+              icon: <IconMail size={20} />,
+              color: "orange",
+              onClick: () => router.push("/student/inbox"),
+            },
+            {
+              label: "Support Center",
+              sub: "Get help from staff",
+              icon: <IconHelp size={20} />,
+              color: "green",
+              onClick: () => router.push("/student/support"),
+            },
+          ].map((action, idx) => {
+            const colorClasses = {
+              blue: "border-blue-500/25 bg-blue-500/5 hover:bg-blue-500/10 hover:border-blue-500/50 text-blue-600 dark:text-blue-400 hover:shadow-blue-500/8",
+              orange: "border-orange-500/25 bg-orange-500/5 hover:bg-orange-500/10 hover:border-orange-500/50 text-orange-600 dark:text-orange-400 hover:shadow-orange-500/8",
+              green: "border-emerald-500/25 bg-emerald-500/5 hover:bg-emerald-500/10 hover:border-emerald-500/50 text-emerald-600 dark:text-emerald-400 hover:shadow-emerald-500/8",
+            }[action.color];
 
-        {activeInlineTab === "calendar" && (
-          <div className="space-y-3">
-            <div className="mb-4">
-              <p className="sp-eyebrow">Calendar</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Your upcoming events
-              </p>
-            </div>
-            {calendarEvents.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted">
-                No upcoming events
-              </p>
-            ) : (
-              <div className="space-y-2">
-                  {calendarEvents.slice(0, 5).map((event) => {
-                  const nowTs = now.getTime();
-                  const start = new Date(event.startAt).getTime();
-                  const end = new Date(event.endAt).getTime();
-                  const isLive = nowTs >= start && nowTs < end;
-                  return (
-                    <ListRow key={event.id}>
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        {isLive ? (
-                          <span className="live-pulse h-2.5 w-2.5 shrink-0 rounded-full bg-danger" />
-                        ) : (
-                          <IconClock
-                            size={16}
-                            className="text-accent shrink-0"
-                          />
-                        )}
-                        <div className="min-w-0">
-                          <p className="truncate font-medium text-foreground text-sm">
-                            {event.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {isLive
-                              ? "Live Now"
-                              : new Date(event.startAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      {event.joinUrl && (
-                        <a
-                          href={event.joinUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`shrink-0 ml-2 px-3 py-1 text-xs rounded-lg font-medium ${
-                            isLive
-                              ? "bg-danger text-white hover:bg-danger/90"
-                              : "border border-border bg-background text-foreground hover:bg-card-hover"
-                          }`}
-                        >
-                          {isLive ? "Join" : "Link"}
-                        </a>
-                      )}
-                    </ListRow>
-                  );
-                })}
-              </div>
-            )}
-            <button
-              onClick={() => navigate({ view: "CALENDAR" })}
-              className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
-            >
-              View Full Calendar
-              <IconArrowRight size={13} />
-            </button>
-          </div>
-        )}
+            const iconBg = {
+              blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20",
+              orange: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20",
+              green: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
+            }[action.color];
 
-        {activeInlineTab === "sessions" && (
-          <div className="space-y-3">
-            <div className="mb-4">
-              <p className="sp-eyebrow">My Sessions</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Live and upcoming sessions
-              </p>
-            </div>
-            {liveSessionsToday.filter((s) => s.status !== "PAST").length ===
-            0 ? (
-              <p className="py-6 text-center text-sm text-muted">
-                No live sessions today
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {liveSessionsToday
-                  .filter((s) => s.status !== "PAST")
-                  .slice(0, 5)
-                  .map((session) => (
-                    <ListRow key={session.id}>
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        {session.status === "LIVE" ? (
-                          <span className="live-pulse h-2.5 w-2.5 shrink-0 rounded-full bg-danger" />
-                        ) : (
-                          <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-accent/60" />
-                        )}
-                        <div className="min-w-0">
-                          <p className="truncate font-medium text-foreground text-sm">
-                            {session.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {session.courseTitle}
-                          </p>
-                        </div>
-                      </div>
-                      {session.status === "LIVE" && session.joinUrl && (
-                        <a
-                          href={session.joinUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn-primary px-3 py-1 text-xs shrink-0 ml-2"
-                        >
-                          Join
-                        </a>
-                      )}
-                    </ListRow>
-                  ))}
-              </div>
-            )}
-            <button
-              onClick={() => navigate({ view: "LIVE_SESSIONS" })}
-              className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
-            >
-              View All Sessions
-              <IconArrowRight size={13} />
-            </button>
-          </div>
-        )}
-
-        {activeInlineTab === "support" && (
-          <div className="space-y-3">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <p className="sp-eyebrow">Support</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Report issues or ask questions
-                </p>
-              </div>
-              <button
-                onClick={() => setShowSupportForm((v) => !v)}
-                className="btn-primary text-xs flex items-center gap-1.5"
-              >
-                <IconPlus size={14} />{" "}
-                {showSupportForm ? "Cancel" : "New Ticket"}
-              </button>
-            </div>
-
-            {showSupportForm && (
-              <form
-                onSubmit={createSupportTicket}
-                className="rounded-xl border border-border/60 bg-card p-4 space-y-3 mb-4"
-              >
-                <p className="font-semibold text-sm text-foreground">
-                  Create Support Ticket
-                </p>
-                <input
-                  type="text"
-                  value={supportTitle}
-                  onChange={(e) => setSupportTitle(e.target.value)}
-                  placeholder="Brief summary of your issue"
-                  className="field w-full text-sm"
-                  required
-                  minLength={3}
-                />
-                <textarea
-                  value={supportDesc}
-                  onChange={(e) => setSupportDesc(e.target.value)}
-                  placeholder="Describe your issue in detail..."
-                  rows={3}
-                  className="field w-full resize-none text-sm"
-                  required
-                  minLength={10}
-                />
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowSupportForm(false)}
-                    className="btn-secondary text-xs"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={supportSubmitting}
-                    className="btn-primary text-xs"
-                  >
-                    {supportSubmitting ? "Submitting..." : "Submit"}
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {supportLoading ? (
-              <div className="space-y-2">
-                {[1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="h-14 animate-pulse rounded-xl bg-card-hover border border-border"
-                  />
-                ))}
-              </div>
-            ) : supportTickets.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted">
-                No support tickets yet
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {supportTickets.slice(0, 5).map((t) => (
-                  <ListRow
-                    key={t.id}
-                    onClick={() => router.push(`/student/support`)}
-                    className="items-start rounded-xl border-border/50"
-                  >
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary">
-                      <IconHelp size={14} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {t.title}
-                        </p>
-                        <span
-                          className={`shrink-0 inline-flex rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${SUPPORT_STATUS_STYLES[t.status] || ""}`}
-                        >
-                          {t.status.replace("_", " ")}
-                        </span>
-                      </div>
-                      <div className="mt-0.5 flex items-center gap-3 text-[11px] text-muted">
-                        <span>{timeAgo(t.createdAt)}</span>
-                        {t._count && (
-                          <span className="flex items-center gap-1">
-                            <IconMessage size={11} /> {t._count.messages}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </ListRow>
-                ))}
-              </div>
-            )}
-
-            <button
-              onClick={() => router.push("/student/support")}
-              className="inline-flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-primary-hover"
-            >
-              View All Tickets
-              <IconArrowRight size={13} />
-            </button>
-          </div>
-        )}
-
-        {activeInlineTab === "notes" && (
-          <div className="space-y-3">
-            <div className="mb-4">
-              <p className="sp-eyebrow">Notes</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Your study notes
-              </p>
-            </div>
-            <a
-              href="/student/notes"
-              className="inline-flex w-full items-center gap-3 rounded-xl border border-border/50 bg-card/50 p-4 hover:bg-card-hover transition-colors"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/20 text-primary">
-                <IconNotebook size={20} />
-              </div>
-              <span className="text-sm font-medium text-foreground">
-                Go to Notes &rarr;
-              </span>
-            </a>
-          </div>
-        )}
-      </div>
-      {/* ── Quick Access Cards ───────────────────────────────────────────── */}
-      <div>
-        <p className="sp-eyebrow mb-3">Quick Access</p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {SECTION_CARDS.map((card, i) => {
-            const iconStyle =
-              CARD_ICON_STYLES[card.id] || CARD_ICON_STYLES.courses;
             return (
               <button
-                key={card.id}
-                onClick={() => {
-                  const view =
-                    "viewFn" in card
-                      ? (card as { viewFn: (id?: string) => ViewState }).viewFn(
-                          firstBatchId,
-                        )
-                      : (card as { view: ViewState }).view;
-                  navigate(view);
-                }}
-                className={`glass-card group relative flex items-center gap-4 overflow-hidden p-5 text-left transition-all hover:-translate-y-1 hover:shadow-lg ${card.border}`}
-                style={{ animationDelay: `${i * 50}ms` }}
+                key={idx}
+                onClick={action.onClick}
+                className={`flex flex-col items-start p-4 sm:p-5 rounded-2xl border text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer ${colorClasses}`}
               >
-                <div
-                  className={`absolute inset-0 bg-linear-to-br ${card.gradient} opacity-0 transition-opacity group-hover:opacity-100`}
-                />
-                <div
-                  className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border shadow-sm ${iconStyle}`}
-                >
-                  <div className="[&>svg]:size-[22px]">{card.icon}</div>
+                <div className={`p-2 rounded-xl mb-3 ${iconBg}`}>
+                  {action.icon}
                 </div>
-                <div className="relative min-w-0 flex-1">
-                  {card.isLive && liveCount > 0 && (
-                    <span className="mb-1 flex items-center gap-1.5">
-                      <span className="live-pulse h-2 w-2 rounded-full bg-danger" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-danger">
-                        {liveCount} Live
-                      </span>
-                    </span>
-                  )}
-                  <p className="truncate font-semibold text-foreground">
-                    {card.title}
-                  </p>
-                  {card.id === "mentorship" && openTicketCount > 0 && (
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {openTicketCount} open request
-                      {openTicketCount > 1 ? "s" : ""}
-                    </p>
-                  )}
-                </div>
-                <IconArrowRight
-                  size={15}
-                  className="relative ml-auto shrink-0 text-muted opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100"
-                />
+                <p className="text-[13.5px] font-bold text-foreground leading-snug">
+                  {action.label}
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-1 leading-normal">
+                  {action.sub}
+                </p>
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* ── Continue Learning ─────────────────────────────────────────────── */}
-      {continueLearning.length > 0 && (
-        <div>
-          <div className="mb-3 flex items-center justify-between">
-            <p className="sp-eyebrow">Continue Learning</p>
-            <span className="text-xs text-muted-foreground">
-              {continueLearning.length} in progress
-            </span>
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {continueLearning.map((item) => {
-              const pct = item.watchedPercent;
-              const size = 44;
-              const stroke = 3;
-              const r = (size - stroke) / 2;
-              const circumference = 2 * Math.PI * r;
-              const offset = circumference - (pct / 100) * circumference;
-              return (
+      {/* ── In-line Menu ────────────────────────────────────────────────── */}
+      <div className="border-b border-border/70">
+        <nav className="flex flex-wrap gap-6 text-sm font-semibold">
+          {[
+            { id: "courses", label: "My Courses" },
+            { id: "calendar", label: "Calendar" },
+            { id: "sessions", label: "My Sessions" },
+            {
+              id: "notifications",
+              label: `Notifications ${
+                overdueTotal > 0 ? `(${overdueTotal})` : ""
+              }`,
+            },
+            { id: "support", label: "Support" },
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`pb-3 relative transition-colors ${
+                  isActive
+                    ? "text-primary font-bold"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                {tab.label}
+                {isActive && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-primary rounded-full" />
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* ── Tab Content Area ────────────────────────────────────────────── */}
+      <div className="sp-view-enter">
+        {/* ═══ TAB: MY COURSES ═══ */}
+        {activeTab === "courses" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-card border border-border/50">
                 <button
-                  key={item.recordingId}
-                  onClick={() =>
-                    navigate({
-                      view: "RECORDING_PLAYER",
-                      params: {
-                        batchId: item.batchId,
-                        sessionId: item.recordingId,
-                      },
-                    })
-                  }
-                  className="glass-card group flex w-full items-center gap-4 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30"
+                  onClick={() => setInnerTab("my_courses")}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+                    innerTab === "my_courses"
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-muted hover:text-foreground"
+                  }`}
                 >
-                  <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card">
-                    <svg
-                      width={size}
-                      height={size}
-                      className="absolute inset-0"
+                  MY COURSES
+                </button>
+                <button
+                  onClick={() => setInnerTab("results")}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+                    innerTab === "results"
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  RESULTS
+                </button>
+              </div>
+              <div className="relative w-64">
+                <IconSearch
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                />
+                <input
+                  type="text"
+                  placeholder="Search courses..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full rounded-xl border border-border bg-card pl-9 pr-4 py-1.5 text-xs text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
+              {/* Left Column: Course Cards */}
+              <div className="space-y-4">
+                {innerTab === "results" ? (
+                  filteredCompletedCourses.length === 0 ? (
+                    <div className="glass-card flex flex-col items-center justify-center p-12 text-center border-dashed border-border/80 rounded-2xl">
+                      <IconCertificate
+                        size={40}
+                        className="text-muted/60 mb-2.5"
+                      />
+                      <p className="font-semibold text-foreground">
+                        No completed courses yet
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Completed courses will appear here with your final grades.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {filteredCompletedCourses.map((c) => (
+                        <div
+                          key={c.id}
+                          className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border border-border bg-card/50"
+                        >
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-success/10 text-xl border border-success/20">
+                            {c.thumbnail || "🎓"}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-sm text-foreground truncate">
+                              {c.title}
+                            </p>
+                            <p className="text-xs text-muted mt-0.5">
+                              Instructor: {c.instructor} | Completed
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => navigate({ view: "CERTIFICATES" })}
+                            className="btn-primary py-2 px-4 text-xs font-semibold shrink-0 w-full sm:w-auto"
+                          >
+                            View Certificate
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                ) : (
+                  <>
+                    {searchTerm === "" && continueLearning.length > 0 && (
+                      <div className="border border-border/70 rounded-2xl bg-card/30 p-4">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
+                          <IconSparkles
+                            size={12}
+                            className="text-warning animate-pulse"
+                          />
+                          Continue where you left..
+                        </p>
+                        {continueLearning.slice(0, 1).map((item) => (
+                          <div
+                            key={item.recordingId}
+                            className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border border-border bg-card shadow-sm hover:border-primary/40 transition-colors"
+                          >
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-xl font-bold text-white shadow-sm">
+                              {item.thumbnail || "📖"}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-bold text-sm text-foreground truncate">
+                                {item.courseTitle}
+                              </p>
+                              <p className="text-xs text-muted mt-0.5">
+                                {item.dayLabel}
+                              </p>
+                              <div className="mt-2.5 flex items-center gap-3">
+                                <div className="h-1.5 flex-1 rounded-full bg-border overflow-hidden">
+                                  <div
+                                    className="h-full bg-primary rounded-full transition-all"
+                                    style={{
+                                      width: `${item.watchedPercent}%`,
+                                    }}
+                                  />
+                                </div>
+                                <span className="text-[10px] font-bold text-primary shrink-0">
+                                  {item.watchedPercent}% watched
+                                </span>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() =>
+                                navigate({
+                                  view: "RECORDING_PLAYER",
+                                  params: {
+                                    batchId: item.batchId,
+                                    sessionId: item.recordingId,
+                                  },
+                                })
+                              }
+                              className="btn-primary py-2 px-4.5 text-xs font-semibold shrink-0 w-full sm:w-auto"
+                            >
+                              Continue →
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                        My Enrolled Courses
+                      </p>
+                      {filteredActiveCourses.length === 0 ? (
+                        <div className="glass-card flex flex-col items-center justify-center p-10 text-center border-dashed border-border/80 rounded-2xl">
+                          <IconBook size={36} className="text-muted/60 mb-2" />
+                          <p className="font-semibold text-foreground">
+                            No active courses found
+                          </p>
+                        </div>
+                      ) : (
+                        filteredActiveCourses.map((c) => (
+                          <div
+                            key={c.id}
+                            className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border border-border bg-card/50 hover:bg-card hover:border-primary/30 transition-all duration-200"
+                          >
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary/10 to-accent/10 border border-border/60 text-xl shadow-inner">
+                              {c.thumbnail || "📖"}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-bold text-sm text-foreground truncate">
+                                {c.title}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                Instructor: {c.instructor} | Batch:{" "}
+                                {c.batchLabel}
+                              </p>
+                              <div className="mt-2.5 flex items-center gap-3">
+                                <div className="h-1.5 flex-1 rounded-full bg-border overflow-hidden">
+                                  <div
+                                    className="h-full bg-success rounded-full transition-all"
+                                    style={{ width: `${c.progress}%` }}
+                                  />
+                                </div>
+                                <span className="text-[10px] font-bold text-success shrink-0">
+                                  {c.progress}% completed
+                                </span>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => {
+                                navigate({
+                                  view: "COURSE_CONTENT",
+                                  params: { courseId: c.id },
+                                });
+                              }}
+                              className="btn-primary border border-border bg-card text-foreground hover:bg-card-hover hover:border-primary/30 py-2 px-4 text-xs font-semibold shrink-0 w-full sm:w-auto transition-colors"
+                            >
+                              Launch Course
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Right Column: Referral Box */}
+              <div>
+                <div className="glass-card p-5 border border-border/80 rounded-2xl bg-card shadow-sm hover:border-primary/20 transition-all duration-300">
+                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 p-5 text-white shadow-md">
+                    <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-white/10 blur-xl" />
+                    <h3 className="text-base font-bold">Refer your friend</h3>
+                    <p className="mt-1 text-xs text-white/80">
+                      and earn rewards up to Rs. 5000/-
+                    </p>
+                  </div>
+                  <form
+                    onSubmit={handleReferralSubmit}
+                    className="mt-4 space-y-3"
+                  >
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Referral Name
+                      </label>
+                      <div className="relative mt-1">
+                        <IconUser
+                          size={14}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Enter full name"
+                          value={referralName}
+                          onChange={(e) => setReferralName(e.target.value)}
+                          className="w-full rounded-xl border border-border bg-background pl-9 pr-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Referral Email
+                      </label>
+                      <div className="relative mt-1">
+                        <IconMail
+                          size={14}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                        />
+                        <input
+                          type="email"
+                          placeholder="Enter email address"
+                          value={referralEmail}
+                          onChange={(e) => setReferralEmail(e.target.value)}
+                          className="w-full rounded-xl border border-border bg-background pl-9 pr-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Mobile Number
+                      </label>
+                      <div className="relative mt-1">
+                        <IconPhone
+                          size={14}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                        />
+                        <input
+                          type="tel"
+                          placeholder="Enter mobile number"
+                          value={referralPhone}
+                          onChange={(e) => setReferralPhone(e.target.value)}
+                          className="w-full rounded-xl border border-border bg-background pl-9 pr-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full btn-primary py-2.5 text-sm font-semibold shadow-md mt-1"
                     >
-                      <circle
-                        cx={size / 2}
-                        cy={size / 2}
-                        r={r}
-                        fill="none"
-                        stroke="var(--border)"
-                        strokeWidth={stroke}
-                      />
-                      <circle
-                        cx={size / 2}
-                        cy={size / 2}
-                        r={r}
-                        fill="none"
-                        stroke="var(--primary)"
-                        strokeWidth={stroke}
-                        strokeDasharray={circumference}
-                        strokeDashoffset={offset}
-                        strokeLinecap="round"
-                        transform={`rotate(-90 ${size / 2} ${size / 2})`}
-                        className="transition-all duration-700"
-                      />
-                    </svg>
-                    <span className="relative text-[11px] font-bold text-primary">
-                      {Math.round(pct)}%
-                    </span>
+                      Submit Referral
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ TAB: CALENDAR ═══ */}
+        {activeTab === "calendar" && (
+          <div className="glass-card p-5 border border-border/80 rounded-2xl bg-card space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="sp-eyebrow">Upcoming Schedule</p>
+              <button
+                onClick={() => navigate({ view: "CALENDAR" })}
+                className="text-xs font-semibold text-primary hover:underline"
+              >
+                View Interactive Calendar
+              </button>
+            </div>
+
+            <div className="divide-y divide-border/60">
+              {calendarEvents.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 text-center text-muted">
+                  <IconCalendar size={32} className="mb-2 text-muted/60" />
+                  <p className="text-sm font-semibold">No schedule events found</p>
+                </div>
+              ) : (
+                calendarEvents.map((evt) => {
+                  const start = new Date(evt.startAt);
+                  const end = new Date(evt.endAt);
+                  const day = start.toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                  });
+                  const weekday = start.toLocaleDateString("en-IN", {
+                    weekday: "short",
+                  });
+                  const time = `${start.toLocaleTimeString("en-IN", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                  })} – ${end.toLocaleTimeString("en-IN", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                  })}`;
+
+                  const typeColor =
+                    evt.type === "live"
+                      ? "bg-danger/10 text-danger border-danger/25"
+                      : evt.type === "mentorship"
+                        ? "bg-success/10 text-success border-success/25"
+                        : "bg-accent/10 text-accent border-accent/25";
+
+                  return (
+                    <div
+                      key={evt.id}
+                      className="flex items-center gap-4 py-3.5 first:pt-0 last:pb-0"
+                    >
+                      {/* Date Bubble */}
+                      <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-muted/10 border border-border/80 text-center">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                          {weekday}
+                        </span>
+                        <span className="text-sm font-bold text-foreground mt-0.5">
+                          {day}
+                        </span>
+                      </div>
+
+                      {/* Info */}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-sm text-foreground truncate">
+                          {evt.title}
+                        </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                          <span className="inline-flex items-center gap-1 text-muted">
+                            <IconClock size={12} />
+                            {time}
+                          </span>
+                          <span
+                            className={`rounded-md border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${typeColor}`}
+                          >
+                            {evt.type}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Action */}
+                      {evt.joinUrl && (
+                        <a
+                          href={evt.joinUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn-primary px-3 py-1.5 text-xs font-semibold shrink-0"
+                        >
+                          Join
+                        </a>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ═══ TAB: MY SESSIONS ═══ */}
+        {activeTab === "sessions" && (
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
+            {/* Live & Upcoming Sessions */}
+            <div className="glass-card p-5 border border-border/80 rounded-2xl bg-card space-y-4">
+              <p className="sp-eyebrow">Sessions Today & Upcoming</p>
+              <div className="divide-y divide-border/60">
+                {liveSessionsToday.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 text-center text-muted">
+                    <IconVideo size={32} className="mb-2 text-muted/60" />
+                    <p className="text-sm font-semibold">No active sessions scheduled</p>
+                  </div>
+                ) : (
+                  liveSessionsToday.map((s) => {
+                    const start = new Date(s.scheduledAt);
+                    const time = start.toLocaleTimeString("en-IN", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+                    const date = start.toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                    });
+                    const isLive = s.status === "LIVE";
+
+                    return (
+                      <div
+                        key={s.id}
+                        className="flex items-center justify-between py-3.5 first:pt-0 last:pb-0"
+                      >
+                        <div className="min-w-0 flex-1 pr-3">
+                          <div className="flex items-center gap-2">
+                            {isLive && (
+                              <span className="live-pulse h-2.5 w-2.5 rounded-full bg-danger shrink-0" />
+                            )}
+                            <p className="font-bold text-sm text-foreground truncate">
+                              {s.title}
+                            </p>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Course: {s.courseTitle} | Instructor: {s.instructor}
+                          </p>
+                          <p className="text-[11px] text-muted mt-1.5 flex items-center gap-1.5">
+                            <IconCalendar size={12} />
+                            {date} at {time}
+                          </p>
+                        </div>
+                        {isLive && s.joinUrl ? (
+                          <a
+                            href={s.joinUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="btn-primary py-1.5 px-4 text-xs font-semibold shrink-0"
+                          >
+                            Join Session
+                          </a>
+                        ) : (
+                          <span className="text-xs font-bold text-muted bg-muted/10 border border-border/80 rounded-lg px-2.5 py-1 shrink-0">
+                            Upcoming
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Past Recordings */}
+            <div className="glass-card p-5 border border-border/80 rounded-2xl bg-card space-y-4">
+              <p className="sp-eyebrow">Recent Recordings</p>
+              {continueLearning.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center text-muted">
+                  <IconPlayerPlay size={28} className="mb-2 text-muted/60" />
+                  <p className="text-sm font-semibold">No recordings found</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {continueLearning.map((item) => (
+                    <button
+                      key={item.recordingId}
+                      onClick={() =>
+                        navigate({
+                          view: "RECORDING_PLAYER",
+                          params: {
+                            batchId: item.batchId,
+                            sessionId: item.recordingId,
+                          },
+                        })
+                      }
+                      className="flex items-center gap-3 w-full p-2.5 rounded-xl border border-border bg-card/60 hover:border-primary/45 transition-colors text-left"
+                    >
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
+                        <IconPlayerPlay size={16} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-xs text-foreground truncate">
+                          {item.courseTitle}
+                        </p>
+                        <p className="text-[10px] text-muted mt-0.5">
+                          {item.dayLabel}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ═══ TAB: NOTIFICATIONS / ALERTS ═══ */}
+        {activeTab === "notifications" && (
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
+            {/* Overdue Alerts */}
+            <div className="glass-card p-5 border border-border/80 rounded-2xl bg-card space-y-4">
+              <p className="sp-eyebrow">Pending Overdue Tasks</p>
+              <div className="space-y-3">
+                {overdueTotal === 0 ? (
+                  <div className="flex items-center gap-3.5 p-5 rounded-2xl border border-success/20 bg-success/[0.03]">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-success/15 text-success border border-success/25">
+                      <IconSparkles size={20} className="animate-pulse" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-semibold text-success">
+                        All caught up!
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        There are no pending assignments or quizzes overdue.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {overdueAssignments
+                      .filter((item) => item.status === "PENDING")
+                      .map((item) => {
+                        const isQuiz = item.type === "QUIZ";
+                        return (
+                          <div
+                            key={item.id}
+                            className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border ${
+                              isQuiz
+                                ? "border-accent/25 bg-accent/[0.02]"
+                                : "border-danger/25 bg-danger/[0.02]"
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div
+                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                                  isQuiz
+                                    ? "bg-accent/15 text-accent border border-accent/25"
+                                    : "bg-danger/15 text-danger border border-danger/25"
+                                }`}
+                              >
+                                {isQuiz ? (
+                                  <IconClock size={16} />
+                                ) : (
+                                  <IconPencil size={16} />
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-bold text-sm text-foreground">
+                                  {item.assignmentName}
+                                </p>
+                                <p className="text-xs text-muted mt-0.5">
+                                  Course: {item.courseName} | Unit:{" "}
+                                  {item.unitName}
+                                </p>
+                                <p className="text-[10px] text-danger font-semibold mt-1">
+                                  Due Date:{" "}
+                                  {new Date(item.dueDate).toLocaleDateString(
+                                    "en-IN",
+                                    { day: "numeric", month: "short" },
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() =>
+                                navigate(
+                                  isQuiz
+                                    ? { view: "QUIZ_OVERDUE" }
+                                    : { view: "ASSIGNMENT_OVERDUE" },
+                                )
+                              }
+                              className="btn-primary py-1.5 px-3 text-xs font-semibold shrink-0 self-start sm:self-center"
+                            >
+                              Attempt Now
+                            </button>
+                          </div>
+                        );
+                      })}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Notification History */}
+            <div className="glass-card p-5 border border-border/80 rounded-2xl bg-card space-y-4">
+              <p className="sp-eyebrow">General Feed</p>
+              <div className="space-y-3.5">
+                <div className="flex gap-3 text-left">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20 mt-0.5">
+                    <IconBell size={15} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">
-                      {item.courseTitle}
+                    <p className="text-xs font-semibold text-foreground">
+                      LMS Update Rolled Out
                     </p>
-                    <p className="mt-0.5 text-xs text-muted">{item.dayLabel}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Check out the streamlined tabs, solid color stats, and updated branding!
+                    </p>
+                    <p className="text-[10px] text-muted mt-1">Today</p>
                   </div>
-                  <span className="btn-primary shrink-0 px-3 py-1 text-xs opacity-0 transition-opacity group-hover:opacity-100">
-                    Resume
-                  </span>
-                </button>
-              );
-            })}
+                </div>
+                <div className="flex gap-3 text-left">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-success/10 text-success border border-success/20 mt-0.5">
+                    <IconCertificate size={15} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-foreground">
+                      Certificate Earned
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Congratulations on completing Python Foundations Course!
+                    </p>
+                    <p className="text-[10px] text-muted mt-1">3 days ago</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ── Browse Courses CTA ────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-br from-primary/15 via-primary/5 to-violet-500/10 p-6 sm:p-8">
+        {/* ═══ TAB: SUPPORT & MENTORSHIP ═══ */}
+        {activeTab === "support" && (
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
+            {/* Mentorship Booking */}
+            <div className="glass-card p-5 border border-border/80 rounded-2xl bg-card space-y-4">
+              <p className="sp-eyebrow">Book 1-on-1 Mentorship</p>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  alert("Mentorship booking requested successfully!");
+                }}
+                className="space-y-3.5"
+              >
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Select Course
+                  </label>
+                  <select className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none">
+                    {enrolledCourses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Topic / Query Details
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Describe what you want to learn or discuss with your mentor..."
+                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Preferred Date & Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full btn-primary py-2.5 text-sm font-semibold shadow-md mt-1"
+                >
+                  Request Session
+                </button>
+              </form>
+            </div>
+
+            {/* Tickets Status */}
+            <div className="glass-card p-5 border border-border/80 rounded-2xl bg-card space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="sp-eyebrow">Mentorship Log</p>
+                {openTicketCount > 0 && (
+                  <span className="rounded-full bg-success/15 border border-success/20 px-2 py-0.5 text-[9px] font-bold text-success animate-pulse">
+                    {openTicketCount} active
+                  </span>
+                )}
+              </div>
+              <div className="space-y-3">
+                {openTickets.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-6 text-center text-muted">
+                    <IconHeart size={28} className="mb-2 text-muted/60" />
+                    <p className="text-xs font-semibold">No booking log found</p>
+                  </div>
+                ) : (
+                  openTickets.map((t) => {
+                    const isActive = t.status === "OPEN" || t.status === "ASSIGNED" || t.status === "SCHEDULED";
+                    return (
+                      <div
+                        key={t.id}
+                        className="p-3 rounded-xl border border-border bg-card/60"
+                      >
+                        <p className="font-bold text-xs text-foreground truncate">
+                          {t.topic}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          Course: {t.courseTitle} | Instructor:{" "}
+                          {t.instructor || "Assigning..."}
+                        </p>
+                        <div className="mt-2.5 flex items-center justify-between gap-2">
+                          <span
+                            className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                              isActive
+                                ? "bg-primary/10 text-primary border-primary/20"
+                                : "bg-muted/10 text-muted border-border"
+                            }`}
+                          >
+                            {t.status}
+                          </span>
+                          {t.joinUrl && (
+                            <a
+                              href={t.joinUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="btn-primary py-1 px-2.5 text-[10px] font-bold"
+                            >
+                              Join Meeting
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Browse Courses CTA ───────────────────────────────────────────── */}
+      <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/15 via-primary/5 to-violet-500/10 p-6 sm:p-8 shadow-lg shadow-primary/5 hover:border-primary/35 transition-colors duration-300">
         <div className="absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute bottom-0 left-1/3 h-24 w-24 translate-y-4 rounded-full bg-accent/10 blur-2xl" />
-        <div className="relative flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <p className="sp-eyebrow">Course Catalogue</p>
-            <h2 className="mt-1 text-xl font-bold text-foreground">
-              Expand your skills
+        <div className="relative flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+          <div className="space-y-1.5">
+            <p className="sp-eyebrow text-xs font-bold text-primary">
+              Course Catalogue
+            </p>
+            <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+              Expand your skills & boost your career
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground max-w-md">
-              New batches starting every month. Find the perfect course to
-              accelerate your career.
+            <p className="max-w-md text-sm text-muted-foreground">
+              New cohorts starting monthly. Find the perfect specialized track
+              to accelerate your learning.
             </p>
           </div>
           <button
             onClick={() => navigate({ view: "BROWSE_CATALOGUE" })}
-            className="btn-primary shrink-0 gap-2"
+            className="btn-primary shrink-0 gap-2.5 px-5 py-3 text-sm font-semibold shadow-lg shadow-primary/15 hover:shadow-primary/25 transition-all hover:scale-[1.02]"
           >
             Browse Courses
-              <IconArrowRight size={16} />
+            <IconArrowRight size={16} />
           </button>
         </div>
       </div>
     </div>
-  );
-}
-
-function ListRow({
-  children,
-  onClick,
-  className,
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  className?: string;
-}) {
-  const Component = onClick ? "button" : "div";
-  return (
-    <Component
-      onClick={onClick}
-      className={`flex items-center justify-between rounded-lg border border-border/40 bg-card/50 p-3 text-left ${onClick ? "transition-colors hover:border-border hover:bg-card-hover" : ""} ${className || ""}`}
-    >
-      {children}
-    </Component>
   );
 }

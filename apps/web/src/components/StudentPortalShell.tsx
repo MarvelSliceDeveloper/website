@@ -51,7 +51,7 @@ export default function StudentPortalShell({
   const router = useRouter();
   const [notifOpen, setNotifOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -155,14 +155,20 @@ export default function StudentPortalShell({
               </button>
 
               {!hideLogo && (
-                <div className="flex items-center gap-2">
+                <div
+                  className="flex items-center gap-2 cursor-pointer select-none group"
+                  onClick={() => router.push("/student")}
+                >
                   <img
                     src="/images/logo.svg"
                     alt="Marvel Slice"
-                    className="h-9 w-auto object-contain"
+                    className="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
                   />
-                  <span className="text-base font-bold text-foreground">
-                    Marvel Slice
+                  <span className="text-base font-extrabold tracking-tight text-foreground sm:text-lg">
+                    <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400">
+                      Marvel
+                    </span>
+                    <span className="text-orange-500 ml-0.5">Slice</span>
                   </span>
                 </div>
               )}

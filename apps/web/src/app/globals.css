@@ -338,6 +338,53 @@ a:focus-visible {
   animation: sp-fade-up 0.3s ease both;
 }
 
+/* Hero shimmer gradient animation */
+@keyframes hero-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.hero-shimmer {
+  background-size: 200% 200%;
+  animation: hero-shimmer 10s ease infinite;
+}
+
+/* Horizontal snap scroll */
+.snap-scroll-x {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.snap-scroll-x > * {
+  scroll-snap-align: start;
+}
+
+/* Bento card stagger entrance */
+@keyframes bento-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.bento-card {
+  animation: bento-in 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
 /* Hide scrollbar but keep scroll */
 .scrollbar-none {
   scrollbar-width: none;

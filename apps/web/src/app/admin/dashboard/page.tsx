@@ -199,24 +199,40 @@ function SuperAdminDashboard() {
       value: saStats.totalSuperAdmins,
       icon: IconShield,
       variant: "red" as const,
+      bg: "bg-gradient-to-br from-danger/10 via-danger/5 to-red-400/[0.02] hover:bg-danger/[0.06]",
+      border: "border-danger/25 hover:border-danger/40",
+      textColor: "text-danger",
+      iconColor: "text-danger",
     },
     {
       label: "Admins",
       value: saStats.totalAdmins,
       icon: IconShield,
       variant: "purple" as const,
+      bg: "bg-gradient-to-br from-primary/10 via-primary/5 to-violet-500/[0.02] hover:bg-primary/[0.06]",
+      border: "border-primary/25 hover:border-primary/40",
+      textColor: "text-primary",
+      iconColor: "text-primary",
     },
     {
       label: "Instructors",
       value: saStats.totalInstructors,
       icon: IconUsers,
       variant: "blue" as const,
+      bg: "bg-gradient-to-br from-accent/10 via-accent/5 to-cyan-400/[0.02] hover:bg-accent/[0.06]",
+      border: "border-accent/25 hover:border-accent/40",
+      textColor: "text-accent",
+      iconColor: "text-accent",
     },
     {
       label: "Students",
       value: saStats.totalStudents,
       icon: IconSchool,
       variant: "green" as const,
+      bg: "bg-gradient-to-br from-success/10 via-success/5 to-emerald-400/[0.02] hover:bg-success/[0.06]",
+      border: "border-success/25 hover:border-success/40",
+      textColor: "text-success",
+      iconColor: "text-success",
     },
   ];
 
@@ -291,13 +307,13 @@ function SuperAdminDashboard() {
           {userCards.map((card) => (
             <div
               key={card.label}
-              className="border border-border bg-card-hover/30 p-4 text-center"
+              className={`border p-5 text-center transition-all duration-300 rounded-xl bg-card ${card.border} ${card.bg}`}
             >
-              <card.icon size={24} className="mx-auto mb-2 text-muted" />
-              <p className="text-2xl font-bold text-foreground">
+              <card.icon size={28} className={`mx-auto mb-2 ${card.iconColor}`} />
+              <p className={`text-3xl font-extrabold tracking-tight ${card.textColor}`}>
                 {loading ? "—" : card.value}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">{card.label}</p>
+              <p className="text-xs font-semibold text-muted-foreground mt-1.5 uppercase tracking-wider">{card.label}</p>
             </div>
           ))}
         </div>

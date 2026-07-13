@@ -30,13 +30,7 @@ export default function Header({
   inboxHref?: string;
 }) {
   const router = useRouter();
-  const [theme, setTheme] = useState<"dark" | "light">(() => {
-    if (typeof window !== "undefined") {
-      const saved = window.localStorage.getItem("lms-theme");
-      return saved === "dark" ? "dark" : "light";
-    }
-    return "light";
-  });
+  const [theme, setTheme] = useState<"dark" | "light">("light");
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -86,8 +80,10 @@ export default function Header({
 
   useEffect(() => {
     const saved = window.localStorage.getItem("lms-theme");
-    const initialTheme = saved === "dark" ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", initialTheme);
+    if (saved === "light" || saved === "dark") {
+      setTheme(saved);
+      document.documentElement.setAttribute("data-theme", saved);
+    }
   }, []);
 
   // Toggle between light and dark theme

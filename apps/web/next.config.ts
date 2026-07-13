@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(process.cwd(), "../.."),
   },
+  allowedDevOrigins: ['automaker-speed-unroasted.ngrok-free.dev'],
   async rewrites() {
     return [
       {
@@ -15,6 +16,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  
 };
 
 export default nextConfig;

@@ -59,8 +59,7 @@ export default function MicrosoftPage() {
   }, []);
 
   function handleLink() {
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-    window.location.href = `${API_BASE}/api/auth/azure/login`;
+    window.location.href = "/api/auth/azure/login";
   }
 
   if (loading) {

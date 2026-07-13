@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect, type ComponentType } from "react";
+import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import {
   IconBook,
@@ -28,7 +28,7 @@ import {
 
 import type { NavItem, NavItemChild } from "@/components/shared/SidebarTypes";
 
-// Link for a child nav item under a parent group
+// Readable, high-contrast child menu link
 function ChildNavLink({
   child,
   pathname,
@@ -63,17 +63,17 @@ function ChildNavLink({
     <li>
       <Link
         href={child.href}
-        className={`group flex items-center gap-2 py-1.5 px-3 text-[13px] font-medium rounded-lg border transition-all duration-150 ${
+        className={`group flex items-center gap-2.5 py-2 pl-9 pr-4 text-[13px] transition-all border-l-3 ${
           isChildActive
-            ? "border-primary/40 bg-primary/10 text-primary font-semibold shadow-sm"
-            : "border-border/60 bg-card text-muted shadow-sm hover:border-border-hover hover:shadow-md hover:text-foreground"
+            ? "border-primary bg-primary/8 text-primary font-bold"
+            : "border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
         }`}
       >
         <span
-          className={`h-1.5 w-1.5 rounded-full transition-all duration-150 ${
+          className={`h-1.5 w-1.5 rounded-full transition-transform ${
             isChildActive
-              ? "bg-primary scale-125"
-              : "bg-muted/40 group-hover:bg-muted"
+              ? "bg-primary scale-125 shadow-sm shadow-primary/40"
+              : "bg-slate-400/40 dark:bg-slate-600 group-hover:bg-slate-500"
           }`}
         />
         <span>{child.label}</span>
@@ -82,7 +82,7 @@ function ChildNavLink({
   );
 }
 
-// Collapsible nav group with auto-expand for active child
+// Collapsible navigation group for sidebar
 function NavGroup({
   label,
   items,
@@ -122,15 +122,15 @@ function NavGroup({
   };
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       <p
-        className={`px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted ${
+        className={`px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-border/40 ${
           collapsed ? "hidden" : "block"
         }`}
       >
         {label}
       </p>
-      <ul className={`space-y-1 ${collapsed ? "mx-auto w-fit" : ""}`}>
+      <ul className="space-y-0.5">
         {items.map((item) => {
           const hasChildren = !!item.children?.length;
           const isExpanded = expandedGroup === item.label;
@@ -148,15 +148,14 @@ function NavGroup({
             <li key={item.label} className="space-y-0.5">
               {hasChildren ? (
                 collapsed ? (
-                  // Collapsed sidebar + group item: icon-only button, no dead link
                   <button
                     type="button"
                     title={item.label}
                     onClick={() => toggleGroup(item.label)}
-                    className={`w-full flex items-center justify-center px-2 py-2.5 text-sm font-medium rounded-lg border-2 transition-all duration-150 cursor-pointer ${
+                    className={`w-full flex items-center justify-center p-3 text-sm transition-colors cursor-pointer ${
                       isActive
-                        ? "border-primary bg-primary/[0.08] text-primary shadow-sm"
-                        : "border-border/60 bg-card text-muted shadow-sm hover:border-border-hover hover:shadow-md hover:text-foreground"
+                        ? "bg-primary/10 text-primary border-r-3 border-primary"
+                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
                     }`}
                   >
                     <item.icon size={18} stroke={1.8} className="shrink-0" />
@@ -167,35 +166,35 @@ function NavGroup({
                       type="button"
                       onClick={() => toggleGroup(item.label)}
                       title={item.label}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium rounded-lg border-2 transition-all duration-150 select-none text-left cursor-pointer ${
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-[13.5px] font-semibold transition-colors select-none text-left cursor-pointer border-l-3 ${
                         isActive
-                          ? "border-primary bg-primary/[0.08] text-primary shadow-sm"
-                          : "border-border/60 bg-card text-muted shadow-sm hover:border-border-hover hover:shadow-md hover:text-foreground"
+                          ? "border-primary bg-primary/8 text-primary"
+                          : "border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
                       }`}
                     >
-                      <item.icon size={18} stroke={1.8} className="shrink-0" />
+                      <item.icon size={18} stroke={1.8} className="shrink-0 opacity-80" />
                       <span className="flex-1 truncate">{item.label}</span>
                       {item.badge != null && (
-                        <span className="rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-medium text-white mr-1">
+                        <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary mr-1">
                           {item.badge}
                         </span>
                       )}
                       <IconChevronDown
-                        size={16}
+                        size={15}
                         stroke={1.8}
-                        className={`shrink-0 text-muted transition-transform duration-200 ${
+                        className={`shrink-0 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${
                           isExpanded ? "rotate-180" : ""
                         }`}
                       />
                     </button>
                     <div
-                      className={`overflow-hidden transition-all duration-300 ${
+                      className={`overflow-hidden transition-all duration-200 ${
                         isExpanded
-                          ? "max-h-64 opacity-100 mt-0.5"
+                          ? "max-h-64 opacity-100"
                           : "max-h-0 opacity-0 pointer-events-none"
                       }`}
                     >
-                      <ul className="pl-4 ml-5 space-y-0.5">
+                      <ul className="space-y-0.5 bg-slate-500/[0.03] border-l border-border/60 ml-6">
                         {item.children!.map((child) => (
                           <ChildNavLink
                             key={child.href}
@@ -211,17 +210,17 @@ function NavGroup({
                 <Link
                   href={item.href}
                   title={item.label}
-                  className={`flex items-center text-sm font-medium rounded-lg border-2 transition-all duration-150 ${
+                  className={`flex items-center text-[13.5px] font-semibold transition-colors ${
                     collapsed
-                      ? "justify-center px-2 py-2.5"
-                      : "gap-2.5 px-3 py-2.5"
+                      ? "justify-center p-3"
+                      : "gap-3 px-4 py-2.5 border-l-3"
                   } ${
                     isActive
-                      ? "border-primary bg-primary/[0.08] text-primary shadow-sm"
-                      : "border-border/60 bg-card text-muted shadow-sm hover:border-border-hover hover:shadow-md hover:text-foreground"
+                      ? "border-primary bg-primary/8 text-primary font-bold"
+                      : "border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
                   }`}
                 >
-                  <item.icon size={18} stroke={1.8} className="shrink-0" />
+                  <item.icon size={18} stroke={1.8} className="shrink-0 opacity-80" />
                   <span
                     className={`flex-1 truncate ${collapsed ? "hidden" : "block"}`}
                   >
@@ -232,7 +231,7 @@ function NavGroup({
                       className={`${
                         collapsed
                           ? "hidden"
-                          : "rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-medium text-white"
+                          : "rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary"
                       }`}
                     >
                       {item.badge}
@@ -248,7 +247,7 @@ function NavGroup({
   );
 }
 
-// Admin sidebar with collapsible multi-level navigation
+// Main Sidebar Component
 export default function AdminSidebar({
   collapsed = false,
   onToggleCollapse,
@@ -305,9 +304,6 @@ export default function AdminSidebar({
             href: "/admin/users",
             icon: IconUsers,
             children: [
-              { label: "All Users", href: "/admin/users" },
-              { label: "Students", href: "/admin/users?role=STUDENT" },
-              { label: "Instructors", href: "/admin/users?role=INSTRUCTOR" },
               { label: "Login History", href: "/admin/users/login-history" },
             ],
           },
@@ -394,11 +390,6 @@ export default function AdminSidebar({
             label: "Users",
             href: "/admin/users",
             icon: IconUsers,
-            children: [
-              { label: "All Users", href: "/admin/users" },
-              { label: "Students", href: "/admin/users?role=STUDENT" },
-              { label: "Instructors", href: "/admin/users?role=INSTRUCTOR" },
-            ],
           },
           {
             label: "Mentorship",
@@ -441,37 +432,37 @@ export default function AdminSidebar({
         collapsed ? "w-16" : "w-64"
       }`}
     >
+      {/* Sidebar Header */}
       <div
-        className={`flex h-14 items-center border-b border-border ${
-          collapsed ? "justify-center px-2" : "gap-2 px-4"
+        className={`flex h-14 items-center border-b border-border bg-card ${
+          collapsed ? "justify-center px-2" : "gap-2.5 px-4"
         }`}
       >
         <div
-          className={`flex items-center gap-2 min-w-0 flex-1 ${collapsed ? "hidden" : "block"}`}
+          className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer select-none"
+          onClick={() => router.push("/admin/dashboard")}
         >
           <img
             src="/images/logo.svg"
-            alt="LMS Logo"
-            className="h-9 w-auto object-contain"
+            alt="Marvel Slice"
+            className="h-9 w-auto object-contain transition-transform duration-300 hover:scale-105"
           />
-          <span className="text-base font-bold text-foreground">
-            Marvel Slice
+          <span className={`text-base font-extrabold tracking-tight text-foreground ${collapsed ? "hidden" : "block"}`}>
+            <span>Marvel</span>
+            <span className="text-primary ml-0.5">Slice</span>
           </span>
         </div>
         <button
           onClick={onToggleCollapse}
-          className="flex h-7 w-7 shrink-0 items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-colors"
+          className="flex h-7 w-7 shrink-0 items-center justify-center text-muted hover:text-foreground hover:bg-muted/15 transition-colors rounded-lg"
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? <IconMenu2 size={16} /> : <IconX size={14} />}
         </button>
       </div>
 
-      <nav
-        className={`flex-1 overflow-y-auto py-3 ${
-          collapsed ? "space-y-4 px-2" : "space-y-4 px-3"
-        }`}
-      >
+      {/* Navigation Links */}
+      <nav className="flex-1 overflow-y-auto py-3 space-y-4">
         <NavGroup
           label="Overview"
           items={sidebarItems}
@@ -480,20 +471,21 @@ export default function AdminSidebar({
         />
       </nav>
 
-      <div className="border-t border-border p-3 space-y-1.5">
+      {/* Footer Profile & Logout */}
+      <div className="border-t border-border bg-card p-3 space-y-1.5">
         <div
           className={`flex items-center ${
-            collapsed ? "justify-center" : "gap-2.5 px-2 py-2"
+            collapsed ? "justify-center" : "gap-2.5 px-2 py-1.5"
           }`}
         >
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-primary/15 text-[11px] font-semibold text-primary">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-primary/10 text-[10px] font-bold text-primary">
             AD
           </div>
           <div className={`min-w-0 ${collapsed ? "hidden" : "block"}`}>
-            <p className="truncate text-sm font-medium text-foreground">
+            <p className="truncate text-xs font-semibold text-foreground">
               {userName || "Admin"}
             </p>
-            <p className="truncate text-xs text-muted">{userEmail || ""}</p>
+            <p className="truncate text-[10px] text-muted-foreground">{userEmail || ""}</p>
           </div>
         </div>
         <button
@@ -501,7 +493,7 @@ export default function AdminSidebar({
             await api.post("/api/auth/logout");
             router.push("/login");
           }}
-          className="btn-danger w-full justify-center"
+          className="btn-danger w-full justify-center py-2 text-xs font-semibold"
         >
           <IconLogout size={15} stroke={1.8} className="shrink-0" />
           <span className={collapsed ? "hidden" : "inline"}>Sign out</span>
