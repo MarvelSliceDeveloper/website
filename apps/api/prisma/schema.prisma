@@ -41,6 +41,12 @@ enum CourseStatus {
   ARCHIVED
 }
 
+enum PackageStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
 enum BatchStatus {
   UPCOMING
   ACTIVE
@@ -81,6 +87,7 @@ model User {
    supportTickets       SupportTicket[]     @relation("UserSupportTickets")
    supportMessages      SupportMessage[]    @relation("UserSupportMessages")
    notes                Note[]
+   packageEnrollments   PackageEnrollment[]
  }
 
 model Course {
@@ -109,6 +116,8 @@ model Course {
   notes              Note[]
   quizTemplates      CourseQuizTemplate[]
   assignmentTemplates CourseAssignmentTemplate[]
+  packageCourses     PackageCourse[]
+  packageEnrollmentCourses PackageEnrollmentCourse[]
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 }
@@ -162,6 +171,7 @@ model Batch {
   enrollments  EnrollmentRequest[]
   sessions     LiveSession[]
   assignments  Assignment[]
+  packageEnrollmentCourses PackageEnrollmentCourse[]
 }
 
 // Student applies → pays → pending → admin approves → assigned to batch
@@ -619,4 +629,53 @@ model CourseAssignmentTemplate {
   assignmentTemplate  AssignmentTemplate  @relation(fields: [assignmentTemplateId], references: [id])
 
   @@unique([courseId, assignmentTemplateId])
+}
+
+// === COURSE PACKAGES ===
+
+model CoursePackage {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  price       Float         @default(0)
+  status      PackageStatus @default(DRAFT)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  courses     PackageCourse[]
+  enrollments PackageEnrollment[]
+}
+
+model PackageCourse {
+  id        String      @id @default(cuid())
+  packageId String
+  courseId   String
+  order     Int         @default(0)
+  package   CoursePackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  course    Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([packageId, courseId])
+}
+
+model PackageEnrollment {
+  id        String        @id @default(cuid())
+  userId    String
+  packageId String
+  status    EnrollmentStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user    User         @relation(fields: [userId], references: [id])
+  package CoursePackage @relation(fields: [packageId], references: [id])
+  courses PackageEnrollmentCourse[]
+}
+
+model PackageEnrollmentCourse {
+  id           String @id @default(cuid())
+  enrollmentId String
+  courseId      String
+  batchId      String?
+  enrollment   PackageEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  course       Course  @relation(fields: [courseId], references: [id])
+  batch        Batch?  @relation(fields: [batchId], references: [id])
 }

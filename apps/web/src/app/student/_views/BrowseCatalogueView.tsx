@@ -108,6 +108,15 @@ export default function BrowseCatalogueView({
                     const isValidUrl =
                       thumb &&
                       (thumb.startsWith("/") || thumb.startsWith("http"));
+                    
+                    // Generate hash color based on course title
+                    const hash = course.title.split('').reduce((acc, char) => {
+                      return char.charCodeAt(0) + ((acc << 5) - acc);
+                    }, 0);
+                    const hue = Math.abs(hash % 360);
+                    const bgColor = `hsl(${hue}, 60%, 95%)`;
+                    const textColor = `hsl(${hue}, 70%, 40%)`;
+                    
                     return isValidUrl ? (
                       <Image
                         src={thumb}
@@ -125,7 +134,12 @@ export default function BrowseCatalogueView({
                         }}
                       />
                     ) : (
-                      <>{thumb || "📚"}</>
+                      <div 
+                        className="w-full h-full flex items-center justify-center text-sm font-bold"
+                        style={{ backgroundColor: bgColor, color: textColor }}
+                      >
+                        {thumb || course.title.charAt(0).toUpperCase()}
+                      </div>
                     );
                   })()}
                 </div>
@@ -148,10 +162,7 @@ export default function BrowseCatalogueView({
                     </div>
                   </div>
                   <p className="mt-0.5 text-sm text-muted-foreground">
-                    {course.duration} · Instructor: {course.instructor} ·{" "}
-                    <span className="font-semibold text-foreground">
-                      ₹{course.price.toLocaleString("en-IN")}
-                    </span>
+                    {course.duration} · Instructor: {course.instructor}
                   </p>
                   <p className="mt-0.5 text-xs text-muted">
                     Next Batch: {course.nextBatch}

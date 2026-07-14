@@ -43,6 +43,7 @@ import { logRouter } from "./modules/logs/log.routes";
 import { loginHistoryRouter } from "./modules/logs/login-history.routes";
 import { consentLogRouter } from "./modules/logs/consent-log.routes";
 import { trashRouter } from "./modules/super-admin/trash.routes";
+import { packageRouter, packageEnrollmentRouter } from "./modules/packages/package.routes";
 
 const logger = pino({
   level: process.env.LOG_LEVEL || "info",
@@ -140,6 +141,8 @@ app.use("/api/courses", studentCourseRouter);
 app.use("/api/notifications", notificationRouter);
 app.use("/api/attendance", attendanceRouter);
 app.use("/api/admin/enrollments", enrollmentRouter);
+app.use("/api/admin/packages", packageRouter);
+app.use("/api/admin/package-enrollments", packageEnrollmentRouter);
 app.use("/api/assignments", assignmentRouter);
 app.use("/api/admin/dashboard", dashboardRouter);
 app.use("/api/messages", messageRouter);

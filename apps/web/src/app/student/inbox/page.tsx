@@ -243,7 +243,7 @@ export default function StudentInboxPage() {
                     className={`group flex items-start gap-4 rounded-xl border p-4 transition-all ${
                       n.read
                         ? "border-border/50 bg-card/40 hover:bg-card-hover/50"
-                        : "border-primary/20 bg-primary/5 hover:bg-primary/8"
+                        : "border-primary/20 bg-primary/5 hover:bg-primary/12"
                     }`}
                   >
                     <NotificationIcon type={n.type} />

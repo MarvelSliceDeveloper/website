@@ -128,7 +128,7 @@ export function SubmissionReviewPanel({
                   {submissions.map((sub) => (
                     <tr
                       key={sub.id}
-                      className={`hover:bg-card-hover transition-colors ${selectedSubmission?.id === sub.id ? "bg-violet-500/5" : ""}`}
+                      className={`hover:bg-card-hover transition-colors ${selectedSubmission?.id === sub.id ? "bg-violet-500/12" : ""}`}
                     >
                       <td className="py-3 pr-2">
                         <p className="font-semibold text-foreground">

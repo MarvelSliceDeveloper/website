@@ -50,10 +50,10 @@ function useCountUp(target: number, duration = 800) {
 }
 
 const GRADIENT_STYLES: Record<string, string> = {
-  primary: "from-blue-600 to-indigo-600 shadow-blue-500/10 hover:shadow-blue-500/20 hover:from-blue-500 hover:to-indigo-500",
-  danger: "from-orange-500 to-red-500 shadow-orange-500/10 hover:shadow-orange-500/20 hover:from-orange-400 hover:to-red-400",
-  accent: "from-sky-500 to-blue-500 shadow-cyan-500/10 hover:shadow-cyan-500/20 hover:from-sky-400 hover:to-blue-400",
-  success: "from-green-500 to-emerald-600 shadow-emerald-500/10 hover:shadow-emerald-500/20 hover:from-green-400 hover:to-emerald-500",
+  primary: "from-teal-500 to-cyan-600 shadow-cyan-500/20 hover:shadow-cyan-500/30 hover:from-teal-400 hover:to-cyan-500",
+  danger: "from-rose-500 to-pink-600 shadow-rose-500/20 hover:shadow-rose-500/30 hover:from-rose-400 hover:to-pink-500",
+  accent: "from-violet-500 to-purple-600 shadow-violet-500/20 hover:shadow-violet-500/30 hover:from-violet-400 hover:to-purple-500",
+  success: "from-amber-500 to-orange-600 shadow-amber-500/20 hover:shadow-amber-500/30 hover:from-amber-400 hover:to-orange-500",
 };
 
 // Single stat tile with count-up animation

@@ -199,47 +199,47 @@ function SuperAdminDashboard() {
       value: saStats.totalSuperAdmins,
       icon: IconShield,
       variant: "red" as const,
-      bg: "bg-gradient-to-br from-danger/10 via-danger/5 to-red-400/[0.02] hover:bg-danger/[0.06]",
-      border: "border-danger/25 hover:border-danger/40",
-      textColor: "text-danger",
-      iconColor: "text-danger",
+      bg: "bg-gradient-to-br from-rose-500/20 via-rose-400/10 to-red-400/5 hover:from-rose-500/25 hover:to-red-400/10",
+      border: "border-rose-500/30 hover:border-rose-500/50",
+      textColor: "text-rose-600",
+      iconColor: "text-rose-600",
     },
     {
       label: "Admins",
       value: saStats.totalAdmins,
       icon: IconShield,
       variant: "purple" as const,
-      bg: "bg-gradient-to-br from-primary/10 via-primary/5 to-violet-500/[0.02] hover:bg-primary/[0.06]",
-      border: "border-primary/25 hover:border-primary/40",
-      textColor: "text-primary",
-      iconColor: "text-primary",
+      bg: "bg-gradient-to-br from-violet-500/20 via-violet-400/10 to-purple-400/5 hover:from-violet-500/25 hover:to-purple-400/10",
+      border: "border-violet-500/30 hover:border-violet-500/50",
+      textColor: "text-violet-600",
+      iconColor: "text-violet-600",
     },
     {
       label: "Instructors",
       value: saStats.totalInstructors,
       icon: IconUsers,
       variant: "blue" as const,
-      bg: "bg-gradient-to-br from-accent/10 via-accent/5 to-cyan-400/[0.02] hover:bg-accent/[0.06]",
-      border: "border-accent/25 hover:border-accent/40",
-      textColor: "text-accent",
-      iconColor: "text-accent",
+      bg: "bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-cyan-400/5 hover:from-blue-500/25 hover:to-cyan-400/10",
+      border: "border-blue-500/30 hover:border-blue-500/50",
+      textColor: "text-blue-600",
+      iconColor: "text-blue-600",
     },
     {
       label: "Students",
       value: saStats.totalStudents,
       icon: IconSchool,
       variant: "green" as const,
-      bg: "bg-gradient-to-br from-success/10 via-success/5 to-emerald-400/[0.02] hover:bg-success/[0.06]",
-      border: "border-success/25 hover:border-success/40",
-      textColor: "text-success",
-      iconColor: "text-success",
+      bg: "bg-gradient-to-br from-emerald-500/20 via-emerald-400/10 to-green-400/5 hover:from-emerald-500/25 hover:to-green-400/10",
+      border: "border-emerald-500/30 hover:border-emerald-500/50",
+      textColor: "text-emerald-600",
+      iconColor: "text-emerald-600",
     },
   ];
 
   return (
     <div className="space-y-6">
       {/* Greeting Banner */}
-      <div className="relative overflow-hidden rounded-lg border border-border bg-card p-5 sm:p-6">
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 sm:p-6">
         <div className="flex items-center gap-4">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-red-600 text-xl font-bold text-white">
             SA
@@ -307,7 +307,7 @@ function SuperAdminDashboard() {
           {userCards.map((card) => (
             <div
               key={card.label}
-              className={`border p-5 text-center transition-all duration-300 rounded-xl bg-card ${card.border} ${card.bg}`}
+              className={`border p-5 text-center transition-all duration-300 rounded-2xl bg-card ${card.border} ${card.bg}`}
             >
               <card.icon size={28} className={`mx-auto mb-2 ${card.iconColor}`} />
               <p className={`text-3xl font-extrabold tracking-tight ${card.textColor}`}>
@@ -327,9 +327,9 @@ function SuperAdminDashboard() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Link
             href="/admin/settings/system"
-            className="border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
+            className="rounded-2xl border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
           >
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-red-100 text-red-600 group-hover:scale-110 transition-transform">
+            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/15 text-rose-600 border border-rose-500/20 group-hover:scale-110 transition-transform">
               <IconSettings size={20} stroke={1.8} />
             </div>
             <p className="text-sm font-medium text-foreground">
@@ -338,27 +338,27 @@ function SuperAdminDashboard() {
           </Link>
           <Link
             href="/admin/settings/api-keys"
-            className="border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
+            className="rounded-2xl border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
           >
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 text-amber-600 group-hover:scale-110 transition-transform">
+            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 border border-amber-500/20 group-hover:scale-110 transition-transform">
               <IconKey size={20} stroke={1.8} />
             </div>
             <p className="text-sm font-medium text-foreground">API Keys</p>
           </Link>
           <Link
             href="/admin/trash"
-            className="border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
+            className="rounded-2xl border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
           >
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 text-orange-600 group-hover:scale-110 transition-transform">
+            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/15 text-orange-600 border border-orange-500/20 group-hover:scale-110 transition-transform">
               <IconTrash size={20} stroke={1.8} />
             </div>
             <p className="text-sm font-medium text-foreground">Trash</p>
           </Link>
           <Link
             href="/admin/users/login-history"
-            className="border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
+            className="rounded-2xl border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
           >
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-100 text-cyan-600 group-hover:scale-110 transition-transform">
+            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-600 border border-cyan-500/20 group-hover:scale-110 transition-transform">
               <IconHistory size={20} stroke={1.8} />
             </div>
             <p className="text-sm font-medium text-foreground">Login History</p>
@@ -490,28 +490,28 @@ function AdminDashboard() {
     chartData?.revenueTrend?.reduce((s, r) => s + r.total, 0) ?? 0;
   const quickActions = [
     {
-      label: "Create Course",
+      label: "Add Course",
       href: "/admin/courses/new",
       icon: IconEdit,
-      color: "bg-blue-100 text-blue-600",
+      color: "bg-blue-500/15 text-blue-600 border border-blue-500/20",
     },
     {
       label: "Manage Batches",
       href: "/admin/batches",
       icon: IconUsersGroup,
-      color: "bg-cyan-100 text-cyan-600",
+      color: "bg-cyan-500/15 text-cyan-600 border border-cyan-500/20",
     },
     {
       label: "View Sessions",
       href: "/admin/sessions",
       icon: IconCalendar,
-      color: "bg-emerald-100 text-emerald-600",
+      color: "bg-emerald-500/15 text-emerald-600 border border-emerald-500/20",
     },
     {
       label: "Mentorship Tickets",
       href: "/admin/mentorship",
       icon: IconTicket,
-      color: "bg-amber-100 text-amber-600",
+      color: "bg-amber-500/15 text-amber-600 border border-amber-500/20",
     },
   ];
 
@@ -776,10 +776,10 @@ function AdminDashboard() {
             <Link
               key={action.label}
               href={action.href}
-              className="border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
+              className="rounded-2xl border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
             >
               <div
-                className={`mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg ${action.color} group-hover:scale-110 transition-transform`}
+                className={`mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${action.color} group-hover:scale-110 transition-transform`}
               >
                 <action.icon size={20} stroke={1.8} />
               </div>

@@ -69,12 +69,6 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
             {courses.length} course{courses.length !== 1 ? "s" : ""} enrolled
           </p>
         </div>
-        <button
-          onClick={() => navigate({ view: "BROWSE_CATALOGUE" })}
-          className="btn-secondary text-sm"
-        >
-          Browse Catalogue →
-        </button>
       </div>
 
       {/* Search + Filters */}
@@ -128,12 +122,6 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
               ? "Try a different search term."
               : "You haven't enrolled in any courses yet."}
           </p>
-          <button
-            onClick={() => navigate({ view: "BROWSE_CATALOGUE" })}
-            className="btn-primary mt-2 text-sm"
-          >
-            Browse Catalogue →
-          </button>
         </div>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  IconArrowRight,
   IconBook,
   IconCalendar,
   IconCertificate,
@@ -18,10 +17,8 @@ import {
   IconUser,
   IconPhone,
   IconBell,
-  IconTrendingUp,
   IconNotes,
   IconHelp,
-  IconMessageCircle,
 } from "@tabler/icons-react";
 import type { ViewState } from "../_types/student-portal";
 import type {
@@ -214,23 +211,16 @@ export default function HomeView({
 
       {/* ── Quick Access Links ─────────────────────────────────────────── */}
       <div className="space-y-3">
-        <p className="text-[11.5px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
+        <p className="text-[11.5px] font-bold uppercase tracking-wider text-foreground px-1">
           Quick Access
         </p>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {[
-            {
-              label: "Browse Catalogue",
-              sub: "Explore new courses",
-              icon: <IconBook size={20} />,
-              color: "blue",
-              onClick: () => navigate({ view: "BROWSE_CATALOGUE" }),
-            },
             {
               label: "Study Notes",
               sub: "Review saved notes",
               icon: <IconNotes size={20} />,
-              color: "orange",
+              color: "blue",
               onClick: () => router.push("/student/notes"),
             },
             {
@@ -244,34 +234,34 @@ export default function HomeView({
               label: "Mentorship",
               sub: "Book 1-on-1 sessions",
               icon: <IconHeart size={20} />,
-              color: "blue",
+              color: "orange",
               onClick: () => navigate({ view: "MENTORSHIP" }),
             },
             {
               label: "Inbox Messages",
               sub: "Check alerts & mails",
               icon: <IconMail size={20} />,
-              color: "orange",
+              color: "green",
               onClick: () => router.push("/student/inbox"),
             },
             {
               label: "Support Center",
               sub: "Get help from staff",
               icon: <IconHelp size={20} />,
-              color: "green",
+              color: "blue",
               onClick: () => router.push("/student/support"),
             },
           ].map((action, idx) => {
             const colorClasses = {
-              blue: "border-blue-500/25 bg-blue-500/5 hover:bg-blue-500/10 hover:border-blue-500/50 text-blue-600 dark:text-blue-400 hover:shadow-blue-500/8",
-              orange: "border-orange-500/25 bg-orange-500/5 hover:bg-orange-500/10 hover:border-orange-500/50 text-orange-600 dark:text-orange-400 hover:shadow-orange-500/8",
-              green: "border-emerald-500/25 bg-emerald-500/5 hover:bg-emerald-500/10 hover:border-emerald-500/50 text-emerald-600 dark:text-emerald-400 hover:shadow-emerald-500/8",
+              blue: "border-blue-500/35 bg-blue-500/12 hover:bg-blue-500/20 hover:border-blue-500/55 text-blue-600 dark:text-blue-400 hover:shadow-blue-500/15",
+              orange: "border-orange-500/35 bg-orange-500/12 hover:bg-orange-500/20 hover:border-orange-500/55 text-orange-600 dark:text-orange-400 hover:shadow-orange-500/15",
+              green: "border-emerald-500/35 bg-emerald-500/12 hover:bg-emerald-500/20 hover:border-emerald-500/55 text-emerald-600 dark:text-emerald-400 hover:shadow-emerald-500/15",
             }[action.color];
 
             const iconBg = {
-              blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20",
-              orange: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20",
-              green: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
+              blue: "bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/25",
+              orange: "bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/25",
+              green: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25",
             }[action.color];
 
             return (
@@ -1070,33 +1060,6 @@ export default function HomeView({
             </div>
           </div>
         )}
-      </div>
-
-      {/* ── Browse Courses CTA ───────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/15 via-primary/5 to-violet-500/10 p-6 sm:p-8 shadow-lg shadow-primary/5 hover:border-primary/35 transition-colors duration-300">
-        <div className="absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 h-24 w-24 translate-y-4 rounded-full bg-accent/10 blur-2xl" />
-        <div className="relative flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
-          <div className="space-y-1.5">
-            <p className="sp-eyebrow text-xs font-bold text-primary">
-              Course Catalogue
-            </p>
-            <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-              Expand your skills & boost your career
-            </h2>
-            <p className="max-w-md text-sm text-muted-foreground">
-              New cohorts starting monthly. Find the perfect specialized track
-              to accelerate your learning.
-            </p>
-          </div>
-          <button
-            onClick={() => navigate({ view: "BROWSE_CATALOGUE" })}
-            className="btn-primary shrink-0 gap-2.5 px-5 py-3 text-sm font-semibold shadow-lg shadow-primary/15 hover:shadow-primary/25 transition-all hover:scale-[1.02]"
-          >
-            Browse Courses
-            <IconArrowRight size={16} />
-          </button>
-        </div>
       </div>
     </div>
   );

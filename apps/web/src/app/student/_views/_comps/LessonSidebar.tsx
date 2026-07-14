@@ -68,7 +68,7 @@ export function LessonSidebar({
                   onClick={() => {
                     onToggleModule(mod.id);
                   }}
-                  className={`flex items-center gap-2.5 px-4 py-2.5 cursor-pointer transition-colors ${isSelected ? "bg-primary/[0.04]" : "hover:bg-muted/5"}`}
+                  className={`flex items-center gap-2.5 px-4 py-2.5 cursor-pointer transition-colors ${isSelected ? "bg-primary/[0.04]" : "hover:bg-muted/12"}`}
                 >
                   <div
                     className={`w-5 h-5 rounded-full flex items-center justify-center text-[12px] flex-shrink-0 border ${
@@ -138,7 +138,7 @@ export function LessonSidebar({
                           onClick={() => {
                             onSelectLesson(lesson, mod.id);
                           }}
-                          className={`flex items-center gap-2 py-1.5 px-3 rounded-md cursor-pointer transition-colors ${isLessonSelected ? "bg-primary/10" : "hover:bg-muted/5"}`}
+                          className={`flex items-center gap-2 py-1.5 px-3 rounded-md cursor-pointer transition-colors ${isLessonSelected ? "bg-primary/10" : "hover:bg-muted/12"}`}
                         >
                           <div
                             className={`w-1.5 h-1.5 rounded-full shrink-0 ${isLessonSelected ? "bg-primary" : "bg-border"}`}
@@ -176,7 +176,7 @@ export function LessonSidebar({
                           onSelectModule(mod.id);
                           onSelectRecording(rec.id);
                         }}
-                        className={`flex items-center gap-2 py-1.5 px-3 rounded-md cursor-pointer transition-colors ${selectedRecordingId === rec.id ? "bg-primary/10" : "hover:bg-muted/5"}`}
+                        className={`flex items-center gap-2 py-1.5 px-3 rounded-md cursor-pointer transition-colors ${selectedRecordingId === rec.id ? "bg-primary/10" : "hover:bg-muted/12"}`}
                       >
                         <div
                           className={`w-1.5 h-1.5 rounded-full shrink-0 ${selectedRecordingId === rec.id ? "bg-primary" : rec.isCompleted ? "bg-primary" : "bg-border"}`}

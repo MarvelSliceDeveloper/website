@@ -9,7 +9,6 @@ export type ViewName =
   | "CALENDAR"
   | "MENTORSHIP"
   | "CERTIFICATES"
-  | "BROWSE_CATALOGUE"
   | "COURSE_DETAIL"
   | "COURSE_CONTENT"
   | "ASSIGNMENT_OVERDUE"

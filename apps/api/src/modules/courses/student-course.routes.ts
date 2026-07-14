@@ -11,6 +11,7 @@ router.get("/enrolled", async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 
+    // Fetch individual enrollments
     const enrollments = await prisma.enrollmentRequest.findMany({
       where: { userId },
       include: {
@@ -43,7 +44,7 @@ router.get("/enrolled", async (req: AuthRequest, res: Response) => {
       where: { id: { in: pendingCourseIds } },
     });
 
-    const courses = enrollments.map((e) => {
+    const individualCourses = enrollments.map((e) => {
       if (e.status === "PENDING" || !e.batch) {
         const course = pendingCourses.find((c) => c.id === e.courseId);
         return {
@@ -55,13 +56,13 @@ router.get("/enrolled", async (req: AuthRequest, res: Response) => {
           instructor: "—",
           progress: 0,
           status: "PENDING",
+          source: "enrollment" as const,
         };
       }
 
       const batch = e.batch;
       const course = batch.course;
 
-      // Calculate progress based on recording watch status
       const sessions = batch.sessions;
       const totalRecordings = sessions.filter((s) => s.recording).length;
       let progress = 0;
@@ -102,10 +103,107 @@ router.get("/enrolled", async (req: AuthRequest, res: Response) => {
         instructor: batch.instructor.name,
         progress,
         status,
+        source: "enrollment" as const,
       };
     });
 
-    return res.status(200).json({ courses });
+    // Fetch package enrollments
+    const packageEnrollments = await prisma.packageEnrollment.findMany({
+      where: { userId, status: "APPROVED" },
+      include: {
+        courses: {
+          include: {
+            course: true,
+            batch: {
+              include: {
+                instructor: { select: { name: true } },
+                sessions: {
+                  include: {
+                    recording: {
+                      include: {
+                        progress: { where: { userId } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const packageCourses = packageEnrollments.flatMap((pe) =>
+      pe.courses.map((pec) => {
+        if (!pec.batch) {
+          return {
+            id: pec.course.id,
+            title: pec.course.title,
+            thumbnail: pec.course.thumbnailUrl || "📚",
+            batchId: "",
+            batchLabel: "—",
+            instructor: "—",
+            progress: 0,
+            status: "PENDING",
+            source: "package" as const,
+          };
+        }
+
+        const batch = pec.batch;
+        const sessions = batch.sessions;
+        const totalRecordings = sessions.filter((s) => s.recording).length;
+        let progress = 0;
+
+        if (totalRecordings > 0) {
+          let totalWatchedPercent = 0;
+          for (const session of sessions) {
+            if (session.recording) {
+              const watchProgress = session.recording.progress[0];
+              if (watchProgress) {
+                if (watchProgress.completedAt) {
+                  totalWatchedPercent += 100;
+                } else {
+                  const percent = Math.min(
+                    100,
+                    Math.round(
+                      (watchProgress.watchedSeconds /
+                        session.recording.duration) *
+                        100,
+                    ),
+                  );
+                  totalWatchedPercent += percent;
+                }
+              }
+            }
+          }
+          progress = Math.round(totalWatchedPercent / totalRecordings);
+        }
+
+        const status = batch.status === "COMPLETED" ? "COMPLETED" : "ACTIVE";
+
+        return {
+          id: pec.course.id,
+          title: pec.course.title,
+          thumbnail: pec.course.thumbnailUrl || "📚",
+          batchId: batch.id,
+          batchLabel: batch.name,
+          instructor: batch.instructor?.name || "—",
+          progress,
+          status,
+          source: "package" as const,
+        };
+      }),
+    );
+
+    // Merge and deduplicate (prefer individual enrollment if both exist)
+    const courseMap = new Map<string, any>();
+    for (const course of [...packageCourses, ...individualCourses]) {
+      if (!courseMap.has(course.id)) {
+        courseMap.set(course.id, course);
+      }
+    }
+
+    return res.status(200).json({ courses: Array.from(courseMap.values()) });
   } catch (error: any) {
     console.error("Error fetching enrolled courses:", error);
     return res.status(500).json({ error: "Failed to fetch enrolled courses" });

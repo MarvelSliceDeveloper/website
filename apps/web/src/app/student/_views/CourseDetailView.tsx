@@ -74,9 +74,6 @@ export default function CourseDetailView({
               Duration: {course.duration} · Instructor: {course.instructor} ·
               Next Batch: {course.nextBatch}
             </p>
-            <p className="mt-2 text-2xl font-bold text-primary">
-              ₹{course.price.toLocaleString("en-IN")}
-            </p>
           </div>
         </div>
       </div>
@@ -145,15 +142,14 @@ export default function CourseDetailView({
             <div>
               <p className="font-semibold text-foreground">Ready to join?</p>
               <p className="text-sm text-muted-foreground">
-                Enroll & pay ₹{course.price.toLocaleString("en-IN")} via
-                Razorpay
+                Enroll via Razorpay
               </p>
             </div>
             <button
               onClick={() => setShowConfirm(true)}
               className="btn-primary flex-shrink-0"
             >
-              Enroll & Pay ₹{course.price.toLocaleString("en-IN")} →
+              Enroll Now →
             </button>
           </div>
         ) : (

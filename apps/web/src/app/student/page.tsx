@@ -47,7 +47,6 @@ import LiveSessionsView from "./_views/LiveSessionsView";
 import CalendarView from "./_views/CalendarView";
 import MentorshipView from "./_views/MentorshipView";
 import CertificatesView from "./_views/CertificatesView";
-import BrowseCatalogueView from "./_views/BrowseCatalogueView";
 import CourseDetailView from "./_views/CourseDetailView";
 import CourseContentView from "./_views/CourseContentView";
 import AssignmentOverdueView from "./_views/AssignmentOverdueView";
@@ -396,14 +395,12 @@ function buildBreadcrumbs(
       return [home, { label: "Mentorship" }];
     case "CERTIFICATES":
       return [home, { label: "Certificates" }];
-    case "BROWSE_CATALOGUE":
-      return [home, { label: "Browse Courses" }];
     case "COURSE_DETAIL":
       return [
         home,
         {
-          label: "Browse Courses",
-          onClick: () => navigate({ view: "BROWSE_CATALOGUE" }),
+          label: "Courses",
+          onClick: () => navigate({ view: "COURSES" }),
         },
         {
           label:
@@ -492,8 +489,6 @@ function StudentPortalContent() {
         return { view: "MENTORSHIP" };
       case "certificates":
         return { view: "CERTIFICATES" };
-      case "catalogue":
-        return { view: "BROWSE_CATALOGUE" };
       case "course-detail":
         return {
           view: "COURSE_DETAIL",
@@ -557,9 +552,6 @@ function StudentPortalContent() {
         break;
       case "CERTIFICATES":
         params.set("view", "certificates");
-        break;
-      case "BROWSE_CATALOGUE":
-        params.set("view", "catalogue");
         break;
       case "COURSE_DETAIL":
         params.set("view", "course-detail");
@@ -833,14 +825,6 @@ function StudentPortalContent() {
 
       case "CERTIFICATES":
         return <CertificatesView certificates={portalData.certificates} />;
-
-      case "BROWSE_CATALOGUE":
-        return (
-          <BrowseCatalogueView
-            courses={portalData.catalogue}
-            navigate={navigate}
-          />
-        );
 
       case "COURSE_DETAIL": {
         const courseId = currentView.params?.courseId ?? "";

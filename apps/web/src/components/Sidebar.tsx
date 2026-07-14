@@ -63,11 +63,14 @@ function NavGroup({
         {label}
       </p>
       <ul className={`space-y-0.5 ${collapsed ? "mx-auto w-fit" : ""}`}>
-        {items.map((item) => {
+        {items.map((item, idx) => {
           const isActive =
             pathname === item.href || pathname?.startsWith(item.href + "/");
           return (
             <li key={item.href}>
+              {idx > 0 && !collapsed && (
+                <div className="mx-3 my-0.5 border-t border-border/40" />
+              )}
               <Link
                 href={item.href}
                 title={item.label}

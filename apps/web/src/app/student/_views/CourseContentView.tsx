@@ -858,7 +858,7 @@ export default function CourseContentView({
                     selectModule(bId);
                     setActiveRail("lesson");
                   }}
-                  className="flex w-full items-center gap-2 rounded-md border border-border px-2.5 py-2 text-left text-xs hover:bg-muted/5 transition-colors"
+                  className="flex w-full items-center gap-2 rounded-md border border-border px-2.5 py-2 text-left text-xs hover:bg-muted/12 transition-colors"
                 >
                   <IconBookmark size={12} className="text-warning shrink-0" />
                   <span className="truncate text-muted-foreground">
@@ -958,7 +958,7 @@ export default function CourseContentView({
                   href={r.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-3 rounded-lg border border-border px-3.5 py-2.5 text-sm hover:bg-muted/5 transition-colors"
+                  className="flex items-center gap-3 rounded-lg border border-border px-3.5 py-2.5 text-sm hover:bg-muted/12 transition-colors"
                 >
                   <IconFileDescription
                     size={18}
@@ -1168,7 +1168,7 @@ export default function CourseContentView({
             <button
               key={tab}
               onClick={() => setActiveRail(tab)}
-              className={`w-20 h-20 rounded-lg flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors mb-0.5 ${activeRail === tab ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/5 hover:text-foreground"}`}
+              className={`w-20 h-20 rounded-lg flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors mb-0.5 ${activeRail === tab ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/12 hover:text-foreground"}`}
               title={railLabels[tab]}
             >
               {railIcons[tab]}

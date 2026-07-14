@@ -831,13 +831,13 @@ function ModuleCard({
             </button>
             <button
               onClick={() => setEditing(true)}
-              className="text-xs font-medium text-primary hover:text-primary-hover transition-colors px-2 py-1 rounded-md hover:bg-primary/5"
+              className="text-xs font-medium text-primary hover:text-primary-hover transition-colors px-2 py-1 rounded-md hover:bg-primary/12"
             >
               Edit
             </button>
             <button
               onClick={handleDelete}
-              className="p-1.5 text-muted hover:text-danger transition-colors rounded-md hover:bg-danger/5"
+              className="p-1.5 text-muted hover:text-danger transition-colors rounded-md hover:bg-danger/12"
               title="Delete module"
             >
               <IconTrash size={15} />
@@ -1060,13 +1060,13 @@ function LessonCard({
         <div className="flex items-center gap-0.5 shrink-0">
           <button
             onClick={() => setEditing(true)}
-            className="text-[10px] font-medium text-primary hover:text-primary-hover transition-colors px-1.5 py-1 rounded hover:bg-primary/5"
+            className="text-[10px] font-medium text-primary hover:text-primary-hover transition-colors px-1.5 py-1 rounded hover:bg-primary/12"
           >
             Edit
           </button>
           <button
             onClick={handleDelete}
-            className="p-1 text-muted hover:text-danger transition-colors rounded hover:bg-danger/5"
+            className="p-1 text-muted hover:text-danger transition-colors rounded hover:bg-danger/12"
           >
             <IconTrash size={12} />
           </button>

@@ -204,7 +204,7 @@ export default function ModuleStudyMaterialsSection({
       {selectedModuleId ? (
         <div className="space-y-4">
           <div className="glass-card p-6 space-y-4 border-2 border-dashed border-border">
-            <label className="flex flex-col items-center justify-center cursor-pointer p-4 rounded-lg hover:bg-primary/5 transition-colors">
+            <label className="flex flex-col items-center justify-center cursor-pointer p-4 rounded-lg hover:bg-primary/12 transition-colors">
               <span className="text-3xl mb-2">{"\uD83D\uDCC1"}</span>
               <span className="text-sm font-medium text-foreground">
                 Click to upload or drag and drop

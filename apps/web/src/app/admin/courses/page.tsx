@@ -241,19 +241,6 @@ function CoursesPageContent() {
       ),
     },
     {
-      key: "price",
-      label: "Price",
-      render: (_, course) => (
-        <span className="text-sm font-medium text-foreground">
-          {course.price === 0 ? (
-            <span className="text-success">Free</span>
-          ) : (
-            `₹${course.price.toLocaleString()}`
-          )}
-        </span>
-      ),
-    },
-    {
       key: "updatedAt",
       label: "Updated",
       render: (_, course) => (
@@ -332,7 +319,7 @@ function CoursesPageContent() {
         description={`${total} course${total !== 1 ? "s" : ""} total`}
         action={
           <Link href="/admin/courses/new" className="btn-primary">
-            + Create Course
+            + Add Course
           </Link>
         }
       />
@@ -372,13 +359,13 @@ function CoursesPageContent() {
           variant="glass"
           icon={IconBook}
           title="No courses yet"
-          description="Create your first course to get started."
+          description="Add your first course to get started."
           action={
             <Link
               href="/admin/courses/new"
               className="btn-primary mt-4 inline-flex"
             >
-              + Create Course
+              + Add Course
             </Link>
           }
         />

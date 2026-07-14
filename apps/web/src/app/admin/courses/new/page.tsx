@@ -122,7 +122,7 @@ export default function CreateCoursePage() {
           Admin
         </p>
         <h1 className="mt-1 text-2xl font-bold text-foreground">
-          Create New Course
+          Add New Course
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Start with the basics. You can add modules, videos, and design the
@@ -198,38 +198,18 @@ export default function CreateCoursePage() {
           </div>
         </div>
 
-        {/* Category + Price — side by side */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Category
-            </label>
-            <input
-              type="text"
-              value={form.category}
-              onChange={(e) => update("category", e.target.value)}
-              placeholder="e.g. Programming, Design"
-              className="field"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Price (₹)
-            </label>
-            <input
-              type="number"
-              value={form.price}
-              onChange={(e) => update("price", e.target.value)}
-              placeholder="0 for free"
-              className="field"
-              min={0}
-              step={1}
-            />
-            <p className="mt-1 text-xs text-muted">
-              Set to 0 for a free course.
-            </p>
-          </div>
+        {/* Category */}
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
+            Category
+          </label>
+          <input
+            type="text"
+            value={form.category}
+            onChange={(e) => update("category", e.target.value)}
+            placeholder="e.g. Programming, Design"
+            className="field"
+          />
         </div>
 
         {/* Info box */}
@@ -252,7 +232,7 @@ export default function CreateCoursePage() {
             Cancel
           </button>
           <button type="submit" className="btn-primary" disabled={submitting}>
-            {submitting ? "Creating..." : "Create Course"}
+            {submitting ? "Adding..." : "Add Course"}
           </button>
         </div>
       </form>

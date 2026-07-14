@@ -138,7 +138,7 @@ export default function StudentPortalShell({
   return (
     <div className="min-h-screen bg-background">
       {!hideHeader && (
-        <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-xl">
+        <header className="sticky top-0 z-40 border-b border-border bg-card">
           <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-6">
             <div className="flex min-w-0 flex-1 items-center gap-3">
               <button
@@ -151,7 +151,7 @@ export default function StudentPortalShell({
                 aria-label="Go back"
               >
                 <IconArrowLeft size={15} stroke={2} />
-                <span className="hidden sm:inline">Back</span>
+                <span className="hidden sm:inline">Previous</span>
               </button>
 
               {!hideLogo && (
@@ -324,7 +324,7 @@ export default function StudentPortalShell({
                       setAvatarOpen((v) => !v);
                       setNotifOpen(false);
                     }}
-                    className="flex h-9 items-center gap-2 rounded-xl border border-border bg-card px-2.5 text-sm font-medium text-foreground transition-colors hover:border-border-hover"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
                     aria-label="User menu"
                     aria-haspopup="true"
                     aria-expanded={avatarOpen}
@@ -332,8 +332,6 @@ export default function StudentPortalShell({
                     <div className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-primary to-violet-600 text-[11px] font-bold text-white">
                       {studentName.charAt(0).toUpperCase()}
                     </div>
-                    <span className="hidden sm:inline">{studentName}</span>
-                    <IconChevronDown size={13} className="text-muted" />
                   </button>
 
                   {avatarOpen && (
