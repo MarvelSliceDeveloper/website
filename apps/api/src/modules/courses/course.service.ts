@@ -6,7 +6,6 @@ import { prisma } from "../../utils/prisma";
 export const CreateCourseSchema = z.object({
   title: z.string().min(3).max(200),
   description: z.string().min(10),
-  price: z.number().min(0),
   category: z.string().max(100).optional(),
   tags: z.array(z.string()).optional(),
   learningObjectives: z.array(z.string()).optional(),
@@ -17,7 +16,6 @@ export const CreateCourseSchema = z.object({
 export const UpdateCourseSchema = z.object({
   title: z.string().min(3).max(200).optional(),
   description: z.string().min(10).optional(),
-  price: z.number().min(0).optional(),
   category: z.string().max(100).nullable().optional(),
   tags: z.array(z.string()).optional(),
   learningObjectives: z.array(z.string()).optional(),
@@ -76,7 +74,6 @@ export const courseService = {
         title: data.title,
         slug,
         description: data.description,
-        price: data.price,
         category: data.category,
         tags: data.tags ?? [],
         learningObjectives: data.learningObjectives ?? [],
@@ -373,16 +370,7 @@ export const courseService = {
         });
       }
 
-      // Enrollment → Payment
-      const enrollmentIds = (
-        await tx.enrollmentRequest.findMany({
-          where: { courseId },
-          select: { id: true },
-        })
-      ).map((e: { id: string }) => e.id);
-      await tx.payment.deleteMany({
-        where: { enrollmentId: { in: enrollmentIds } },
-      });
+      // Enrollment cleanup
       await tx.enrollmentRequest.deleteMany({ where: { courseId } });
 
       // Quiz → Question (via module)

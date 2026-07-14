@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import type { CalendarEvent } from "@/lib/student-mock-data";
+import type { CalendarEvent } from "@/lib/api-types";
 
 const CalendarWidget = dynamic(() => import("./CalendarWidget"), {
   ssr: false,

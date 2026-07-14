@@ -91,61 +91,64 @@ enum PackageStatus {
 
 ### New Module: `apps/api/src/modules/packages/`
 
-| File | Purpose |
-|------|---------|
-| `package.routes.ts` | CRUD routes + enrollment endpoints |
-| `package.controller.ts` | Request handlers |
-| `package.service.ts` | Business logic |
-| `package.validation.ts` | Zod schemas |
+| File                    | Purpose                            |
+| ----------------------- | ---------------------------------- |
+| `package.routes.ts`     | CRUD routes + enrollment endpoints |
+| `package.controller.ts` | Request handlers                   |
+| `package.service.ts`    | Business logic                     |
+| `package.validation.ts` | Zod schemas                        |
 
 ### Endpoints
 
 #### Package Management (Admin)
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | `/api/admin/packages` | List all packages |
-| POST | `/api/admin/packages` | Create package |
-| GET | `/api/admin/packages/:id` | Get package details |
-| PUT | `/api/admin/packages/:id` | Update package |
-| DELETE | `/api/admin/packages/:id` | Delete (DRAFT only) |
-| PATCH | `/api/admin/packages/:id/status` | Activate/archive |
+| Method | Route                            | Description         |
+| ------ | -------------------------------- | ------------------- |
+| GET    | `/api/admin/packages`            | List all packages   |
+| POST   | `/api/admin/packages`            | Create package      |
+| GET    | `/api/admin/packages/:id`        | Get package details |
+| PUT    | `/api/admin/packages/:id`        | Update package      |
+| DELETE | `/api/admin/packages/:id`        | Delete (DRAFT only) |
+| PATCH  | `/api/admin/packages/:id/status` | Activate/archive    |
 
 #### Package Enrollments (Admin)
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| POST | `/api/admin/packages/:id/enroll` | Enroll student into package |
-| PATCH | `/api/admin/package-enrollments/:id/approve` | Approve + assign batches |
-| PATCH | `/api/admin/package-enrollments/:id/reject` | Reject enrollment |
-| GET | `/api/admin/package-enrollments` | List enrollments (filterable) |
+| Method | Route                                        | Description                   |
+| ------ | -------------------------------------------- | ----------------------------- |
+| POST   | `/api/admin/packages/:id/enroll`             | Enroll student into package   |
+| PATCH  | `/api/admin/package-enrollments/:id/approve` | Approve + assign batches      |
+| PATCH  | `/api/admin/package-enrollments/:id/reject`  | Reject enrollment             |
+| GET    | `/api/admin/package-enrollments`             | List enrollments (filterable) |
 
 #### Student
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | `/api/student/packages` | Get enrolled packages + courses |
+| Method | Route                   | Description                     |
+| ------ | ----------------------- | ------------------------------- |
+| GET    | `/api/student/packages` | Get enrolled packages + courses |
 
 ## Frontend Changes
 
 ### Admin Sidebar (`AdminSidebar.tsx`)
+
 - Rename "Enrollments" → "Packages"
 - Update hrefs to `/admin/packages/*`
 
 ### New Pages: `apps/web/src/app/admin/packages/`
 
-| Page | Purpose |
-|------|---------|
-| `page.tsx` | Package list (cards with course count, status) |
-| `new/page.tsx` | Create package (name, description, multi-course selector) |
-| `[id]/page.tsx` | Package detail (courses, enrolled students) |
+| Page                   | Purpose                                                    |
+| ---------------------- | ---------------------------------------------------------- |
+| `page.tsx`             | Package list (cards with course count, status)             |
+| `new/page.tsx`         | Create package (name, description, multi-course selector)  |
+| `[id]/page.tsx`        | Package detail (courses, enrolled students)                |
 | `enrollments/page.tsx` | Enrollment requests with approve/reject + batch assignment |
 
 ### Remove
+
 - `apps/web/src/app/admin/enrollments/` — redirect to packages
 - `apps/web/src/app/catalogue/` — delete entirely
 
 ### Student Dashboard
+
 - Update course query to include courses from approved `PackageEnrollment`s
 
 ## Execution Order

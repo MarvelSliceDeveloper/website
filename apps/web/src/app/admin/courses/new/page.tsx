@@ -22,7 +22,6 @@ export default function CreateCoursePage() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    price: 0,
     category: "",
   });
 
@@ -76,7 +75,6 @@ export default function CreateCoursePage() {
       const course = await api.post<{ id: string }>("/api/admin/courses", {
         title: form.title,
         description: form.description,
-        price: Number(form.price),
         category: form.category || undefined,
       });
 

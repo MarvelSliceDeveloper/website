@@ -10,7 +10,7 @@ import { dashboardController } from "./dashboard.controller";
 const router = Router();
 
 router.use(requireAuth);
-router.use(requireRole([UserRole.ADMIN]));
+router.use(requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]));
 
 // GET /api/admin/dashboard/stats — aggregated dashboard statistics
 router.get("/stats", dashboardController.getStats);

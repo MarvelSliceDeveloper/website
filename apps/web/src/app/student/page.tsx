@@ -12,31 +12,18 @@ import { toast } from "@/lib/toast";
 
 // Types
 import type { ViewState } from "./_types/student-portal";
-
-// Mock data
-import {
-  MOCK_ENABLED,
-  MOCK_STATS,
-  MOCK_OVERDUE_ASSIGNMENTS,
-  MOCK_ENROLLED_COURSES,
-  MOCK_LIVE_SESSIONS,
-  MOCK_CALENDAR_EVENTS,
-  MOCK_MENTORSHIP_TICKETS,
-  MOCK_CERTIFICATES,
-  MOCK_CATALOGUE,
-  MOCK_BATCHES,
-  MOCK_CONTINUE_LEARNING,
-  type DashboardStats,
-  type OverdueAssignment,
-  type EnrolledCourse,
-  type Batch,
-  type LiveSession,
-  type CalendarEvent,
-  type MentorshipTicket,
-  type Certificate,
-  type CatalogueCourse,
-  type ContinueLearningItem,
-} from "@/lib/student-mock-data";
+import type {
+  DashboardStats,
+  OverdueAssignment,
+  EnrolledCourse,
+  Batch,
+  LiveSession,
+  CalendarEvent,
+  MentorshipTicket,
+  Certificate,
+  CatalogueCourse,
+  ContinueLearningItem,
+} from "@/lib/api-types";
 
 // Views
 import HomeView from "./_views/HomeView";
@@ -151,21 +138,6 @@ function computeSessionStatus(
 }
 
 async function fetchPortalData(): Promise<PortalData> {
-  if (MOCK_ENABLED) {
-    return {
-      stats: MOCK_STATS,
-      overdueAssignments: MOCK_OVERDUE_ASSIGNMENTS,
-      enrolledCourses: MOCK_ENROLLED_COURSES,
-      batches: MOCK_BATCHES,
-      liveSessions: MOCK_LIVE_SESSIONS,
-      calendarEvents: MOCK_CALENDAR_EVENTS,
-      mentorshipTickets: MOCK_MENTORSHIP_TICKETS,
-      certificates: MOCK_CERTIFICATES,
-      catalogue: MOCK_CATALOGUE,
-      continueLearning: MOCK_CONTINUE_LEARNING,
-    };
-  }
-
   // Real API calls — run in parallel
   const [
     enrolled,
@@ -404,9 +376,8 @@ function buildBreadcrumbs(
         },
         {
           label:
-            data?.catalogue.find(
-              (c) => c.id === currentView.params?.courseId,
-            )?.title ?? "Course",
+            data?.catalogue.find((c) => c.id === currentView.params?.courseId)
+              ?.title ?? "Course",
         },
       ];
     case "COURSE_CONTENT":
@@ -732,7 +703,11 @@ function StudentPortalContent() {
           <p className="font-semibold text-foreground">Failed to load portal</p>
           <p className="text-sm text-muted-foreground">{error}</p>
           <button
-            onClick={() => { setError(""); setIsLoading(true); loadData().finally(() => setIsLoading(false)); }}
+            onClick={() => {
+              setError("");
+              setIsLoading(true);
+              loadData().finally(() => setIsLoading(false));
+            }}
             className="btn-primary text-sm"
           >
             Retry
@@ -885,7 +860,9 @@ function StudentPortalContent() {
       hideHeader={isCourseContent}
     >
       {/* View transition wrapper */}
-      <div key={currentView.view} className="sp-view-enter">{renderView()}</div>
+      <div key={currentView.view} className="sp-view-enter">
+        {renderView()}
+      </div>
     </StudentPortalShell>
   );
 }
@@ -939,7 +916,10 @@ function HomeSkeleton() {
         {/* Left: stat tiles */}
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className="animate-pulse rounded-2xl border border-border/40 bg-card-hover/40 p-5">
+            <div
+              key={i}
+              className="animate-pulse rounded-2xl border border-border/40 bg-card-hover/40 p-5"
+            >
               <div className="mb-4 h-12 w-12 rounded-xl bg-card-hover" />
               <div className="mb-2 h-3 w-20 rounded bg-card-hover" />
               <div className="h-8 w-16 rounded bg-card-hover" />

@@ -107,9 +107,7 @@ export default function AssignmentTemplateEditorPage() {
               Library
             </p>
             <h1 className="text-xl font-bold text-foreground">
-              {isNew
-                ? "Create Assignment Template"
-                : "Edit Assignment Template"}
+              {isNew ? "Add Assignment Template" : "Edit Assignment Template"}
             </h1>
           </div>
         </div>
@@ -169,7 +167,7 @@ export default function AssignmentTemplateEditorPage() {
           disabled={saving}
           className="btn-primary text-sm py-2.5 px-6 disabled:opacity-40"
         >
-          {saving ? "Saving..." : isNew ? "Create Template" : "Save Changes"}
+          {saving ? "Saving..." : isNew ? "Add Template" : "Save Changes"}
         </button>
         <button
           onClick={() => router.push("/admin/assignment-templates")}

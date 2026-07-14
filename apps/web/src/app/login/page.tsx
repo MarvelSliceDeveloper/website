@@ -153,7 +153,8 @@ export default function LoginPage() {
         <div
           className="relative z-10 pt-14"
           style={{
-            animation: "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both",
+            animation:
+              "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both",
           }}
         >
           <div className="flex items-center gap-3">
@@ -174,7 +175,8 @@ export default function LoginPage() {
         <div
           className="relative z-10 mt-20 max-w-lg"
           style={{
-            animation: "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both",
+            animation:
+              "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both",
           }}
         >
           <h1 className="text-[2.6rem] font-bold leading-[1.15] text-white">
@@ -183,8 +185,8 @@ export default function LoginPage() {
             With Expert Mentors
           </h1>
           <p className="mt-5 max-w-md text-[15px] leading-relaxed text-white/70">
-            Join 10M+ learners advancing their careers with world-class
-            courses, live sessions, and hands-on projects.
+            Join 10M+ learners advancing their careers with world-class courses,
+            live sessions, and hands-on projects.
           </p>
         </div>
 
@@ -192,7 +194,8 @@ export default function LoginPage() {
         <div
           className="relative z-8 mt-23 grid grid-cols-3 gap-4 pb-14 max-w-lg"
           style={{
-            animation: "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both",
+            animation:
+              "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both",
           }}
         >
           <StatCard

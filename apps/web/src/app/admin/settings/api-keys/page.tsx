@@ -99,7 +99,7 @@ export default function ApiKeysPage() {
             }}
             className="btn-primary text-xs py-2"
           >
-            Create Key
+            Add Key
           </button>
         </div>
       </div>
@@ -108,7 +108,7 @@ export default function ApiKeysPage() {
       {showCreate && (
         <div className="glass-card p-5 border border-primary/30">
           <h3 className="text-sm font-bold mb-3">
-            {createdKey ? "API Key Created" : "Create New API Key"}
+            {createdKey ? "API Key Created" : "Add New API Key"}
           </h3>
           {createdKey ? (
             <div className="space-y-3">

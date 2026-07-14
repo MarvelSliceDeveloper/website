@@ -26,7 +26,6 @@ export default function CreatePackagePage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("0");
   const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
   const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -66,7 +65,6 @@ export default function CreatePackagePage() {
       await api.post("/api/admin/packages", {
         name: name.trim(),
         description: description.trim() || undefined,
-        price: parseFloat(price) || 0,
         courseIds: selectedCourseIds,
       });
       toast.success("Package created successfully");
@@ -88,11 +86,11 @@ export default function CreatePackagePage() {
   return (
     <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500 max-w-3xl">
       <AdminPageHeader
-        title="Create Package"
+        title="Add Package"
         description="Bundle courses together into a single package."
         breadcrumbs={[
           { label: "Packages", href: "/admin/packages" },
-          { label: "Create", href: "/admin/packages/new" },
+          { label: "Add", href: "/admin/packages/new" },
         ]}
         action={
           <Link
@@ -108,7 +106,9 @@ export default function CreatePackagePage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Info */}
         <div className="glass-card p-6 space-y-4">
-          <h2 className="text-sm font-semibold text-foreground">Package Details</h2>
+          <h2 className="text-sm font-semibold text-foreground">
+            Package Details
+          </h2>
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">
@@ -134,20 +134,6 @@ export default function CreatePackagePage() {
               placeholder="What's included in this package?"
               className="field w-full min-h-[80px]"
               rows={3}
-            />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Price (₹)
-            </label>
-            <input
-              type="number"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              min="0"
-              step="0.01"
-              className="field w-full max-w-[200px]"
             />
           </div>
         </div>
@@ -254,10 +240,10 @@ export default function CreatePackagePage() {
             {loading ? (
               <>
                 <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
-                Creating...
+                Adding...
               </>
             ) : (
-              "Create Package"
+              "Add Package"
             )}
           </button>
         </div>

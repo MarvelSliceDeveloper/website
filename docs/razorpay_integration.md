@@ -3,6 +3,7 @@
 ## What was built
 
 ### 1. Unified Login Page (`/login`)
+
 The existing login page has been completely redesigned into a premium, animated login/sign-up experience:
 
 - **Sign In / Sign Up tabs** — Users can toggle between login and registration forms
@@ -13,16 +14,18 @@ The existing login page has been completely redesigned into a premium, animated 
 - **Role-based redirect** — After login: Admin → `/admin/dashboard`, Instructor → `/instructor/dashboard`, Student → `/student/`
 
 ### 2. Test Page (`/test-page`)
+
 An exact copy of the login page placed at `/test-page` so **anyone can preview** the UI without it affecting the real login route. Includes a yellow "🧪 Test Page Preview" banner at the top.
 
 ### 3. Razorpay Payment API (`/api/payments/*`)
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/payments/order` | POST | Creates a Razorpay order + enrollment request |
-| `/api/payments/verify` | POST | Verifies Razorpay signature, marks payment paid, approves enrollment |
+| Endpoint               | Method | Description                                                          |
+| ---------------------- | ------ | -------------------------------------------------------------------- |
+| `/api/payments/order`  | POST   | Creates a Razorpay order + enrollment request                        |
+| `/api/payments/verify` | POST   | Verifies Razorpay signature, marks payment paid, approves enrollment |
 
 **Key design decisions:**
+
 - Uses **direct REST API calls** to Razorpay (no `razorpay` npm package needed — avoids adding deps)
 - **Falls back to mock** order IDs when `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` are not set
 - Signature verification uses `crypto.createHmac` — standard Razorpay approach
@@ -31,6 +34,7 @@ An exact copy of the login page placed at `/test-page` so **anyone can preview**
 ### 4. Course Catalogue Page (`/catalogue`)
 
 A premium, publicly-browsable course catalogue with:
+
 - **Dynamic grid layout** with course cards showing thumbnail, price, curriculum, tags, and "What You'll Learn"
 - **Razorpay Checkout integration** — Click "Buy ₹X" → Razorpay popup opens → on success → enrollment approved
 - **Search** — Filter courses by title, instructor, or tags
@@ -49,13 +53,13 @@ RAZORPAY_KEY_SECRET=xxxxx
 
 ## Files Created/Modified
 
-| File | Action |
-|------|--------|
-| `apps/web/src/app/login/page.tsx` | **Rewritten** — Unified login + sign up |
-| `apps/web/src/app/test-page/page.tsx` | **Created** — Public preview of login page |
-| `apps/web/src/app/catalogue/page.tsx` | **Created** — Course catalogue with Razorpay |
+| File                                              | Action                                         |
+| ------------------------------------------------- | ---------------------------------------------- |
+| `apps/web/src/app/login/page.tsx`                 | **Rewritten** — Unified login + sign up        |
+| `apps/web/src/app/test-page/page.tsx`             | **Created** — Public preview of login page     |
+| `apps/web/src/app/catalogue/page.tsx`             | **Created** — Course catalogue with Razorpay   |
 | `apps/api/src/modules/payments/payment.routes.ts` | **Created** — Payment order + verify endpoints |
-| `apps/api/src/app.ts` | **Modified** — Registered `paymentRouter` |
+| `apps/api/src/app.ts`                             | **Modified** — Registered `paymentRouter`      |
 
 ## Payment Flow
 

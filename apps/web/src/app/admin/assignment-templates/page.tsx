@@ -57,7 +57,7 @@ export default function AssignmentTemplatesPage() {
           onClick={() => router.push("/admin/assignment-templates/new")}
           className="btn-primary text-xs py-2 flex items-center gap-1.5"
         >
-          <IconPlus size={14} /> Create Template
+          <IconPlus size={14} /> Add Template
         </button>
       </div>
 

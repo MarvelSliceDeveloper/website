@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Image from "next/image";
 import { IconArrowRight, IconClock, IconSearch } from "@tabler/icons-react";
 import type { ViewState } from "../_types/student-portal";
-import type { EnrolledCourse } from "@/lib/student-mock-data";
+import type { EnrolledCourse } from "@/lib/api-types";
 
 interface CoursesViewProps {
   courses: EnrolledCourse[];

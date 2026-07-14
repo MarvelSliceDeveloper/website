@@ -16,9 +16,7 @@ export default function InstructorShell({
 
   useEffect(() => {
     api
-      .get<{ user: { name: string; email: string } }>(
-        "/api/auth/me",
-      )
+      .get<{ user: { name: string; email: string } }>("/api/auth/me")
       .then((res) => {
         if (res?.user) {
           setUserName(res.user.name);

@@ -50,10 +50,14 @@ function useCountUp(target: number, duration = 800) {
 }
 
 const GRADIENT_STYLES: Record<string, string> = {
-  primary: "from-teal-500 to-cyan-600 shadow-cyan-500/20 hover:shadow-cyan-500/30 hover:from-teal-400 hover:to-cyan-500",
-  danger: "from-rose-500 to-pink-600 shadow-rose-500/20 hover:shadow-rose-500/30 hover:from-rose-400 hover:to-pink-500",
-  accent: "from-violet-500 to-purple-600 shadow-violet-500/20 hover:shadow-violet-500/30 hover:from-violet-400 hover:to-purple-500",
-  success: "from-amber-500 to-orange-600 shadow-amber-500/20 hover:shadow-amber-500/30 hover:from-amber-400 hover:to-orange-500",
+  primary:
+    "from-teal-500 to-cyan-600 shadow-cyan-500/20 hover:shadow-cyan-500/30 hover:from-teal-400 hover:to-cyan-500",
+  danger:
+    "from-rose-500 to-pink-600 shadow-rose-500/20 hover:shadow-rose-500/30 hover:from-rose-400 hover:to-pink-500",
+  accent:
+    "from-violet-500 to-purple-600 shadow-violet-500/20 hover:shadow-violet-500/30 hover:from-violet-400 hover:to-purple-500",
+  success:
+    "from-amber-500 to-orange-600 shadow-amber-500/20 hover:shadow-amber-500/30 hover:from-amber-400 hover:to-orange-500",
 };
 
 // Single stat tile with count-up animation
@@ -71,11 +75,9 @@ function StatTile({ tile }: { tile: StudentStatTile }) {
       {/* Decorative inner blur elements */}
       <div className="absolute -right-6 -bottom-6 h-20 w-20 rounded-full bg-white/10 blur-xl transition-transform duration-500 group-hover:scale-125" />
       <div className="absolute -left-6 -top-6 h-16 w-16 rounded-full bg-white/5 blur-lg" />
-      
+
       <div className="relative flex items-center justify-between">
-        <div
-          className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 text-white border border-white/20 shadow-sm"
-        >
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 text-white border border-white/20 shadow-sm">
           <div className="[&>svg]:size-[22px]">{tile.icon}</div>
         </div>
         {tile.liveBadge ? (
@@ -85,14 +87,14 @@ function StatTile({ tile }: { tile: StudentStatTile }) {
         ) : null}
       </div>
       <div className="relative text-white">
-        <p className="text-xs font-semibold uppercase tracking-wider text-white/70">{tile.label}</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-white/70">
+          {tile.label}
+        </p>
         <p className="mt-0.5 text-4xl font-extrabold tracking-tight text-white">
           {count}
         </p>
         {tile.trend && (
-          <span
-            className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-white/80"
-          >
+          <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-white/80">
             <IconTrendingUp size={13} className="text-white/70" />
             {tile.trend.value >= 0 ? "+" : ""}
             {tile.trend.value}% {tile.trend.label}

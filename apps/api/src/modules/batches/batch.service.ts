@@ -6,6 +6,7 @@ import { UserRole } from "@lms/types";
 
 export const CreateBatchSchema = z.object({
   courseId: z.string().cuid(),
+  packageId: z.string().cuid().optional(),
   instructorId: z.string().cuid(),
   name: z.string().min(3).max(100),
   startDate: z.string().datetime(),
@@ -52,9 +53,31 @@ export const batchService = {
       throw new Error("User is not an instructor");
     }
 
+    // If packageId is provided, verify package exists, is ACTIVE, and course belongs to it
+    if (data.packageId) {
+      const pkg = await prisma.coursePackage.findUnique({
+        where: { id: data.packageId },
+      });
+      if (!pkg) throw new Error("Package not found");
+      if (pkg.status !== "ACTIVE") throw new Error("Package is not active");
+
+      const packageCourse = await prisma.packageCourse.findUnique({
+        where: {
+          packageId_courseId: {
+            packageId: data.packageId,
+            courseId: data.courseId,
+          },
+        },
+      });
+      if (!packageCourse) {
+        throw new Error("Course does not belong to the specified package");
+      }
+    }
+
     return prisma.batch.create({
       data: {
         courseId: data.courseId,
+        packageId: data.packageId,
         instructorId: data.instructorId,
         name: data.name,
         startDate: new Date(data.startDate),
@@ -66,6 +89,7 @@ export const batchService = {
       include: {
         course: { select: { id: true, title: true } },
         instructor: { select: { id: true, name: true, email: true } },
+        package: { select: { id: true, name: true } },
       },
     });
   },
@@ -76,12 +100,14 @@ export const batchService = {
     status?: string;
     search?: string;
     instructorId?: string;
+    packageId?: string;
   }) {
     const where: any = {};
 
     if (filters.courseId) where.courseId = filters.courseId;
     if (filters.status) where.status = filters.status;
     if (filters.instructorId) where.instructorId = filters.instructorId;
+    if (filters.packageId) where.packageId = filters.packageId;
     if (filters.search) {
       where.name = { contains: filters.search, mode: "insensitive" };
     }
@@ -91,6 +117,7 @@ export const batchService = {
       include: {
         course: { select: { id: true, title: true } },
         instructor: { select: { id: true, name: true, email: true } },
+        package: { select: { id: true, name: true } },
         _count: {
           select: {
             enrollments: { where: { status: "APPROVED" } },
@@ -102,6 +129,51 @@ export const batchService = {
     });
   },
 
+  // Gets all batches grouped by course for a given package
+  async getBatchesByPackage(packageId: string) {
+    const pkg = await prisma.coursePackage.findUnique({
+      where: { id: packageId },
+    });
+    if (!pkg) throw new Error("Package not found");
+
+    const packageCourses = await prisma.packageCourse.findMany({
+      where: { packageId },
+      include: {
+        course: {
+          select: {
+            id: true,
+            title: true,
+            batches: {
+              where: { deletedAt: null },
+              select: {
+                id: true,
+                name: true,
+                startDate: true,
+                endDate: true,
+                status: true,
+                maxStudents: true,
+                instructor: { select: { id: true, name: true } },
+                _count: {
+                  select: { enrollments: { where: { status: "APPROVED" } } },
+                },
+              },
+              orderBy: { startDate: "desc" },
+            },
+          },
+        },
+      },
+      orderBy: { order: "asc" },
+    });
+
+    return {
+      courses: packageCourses.map((pc) => ({
+        courseId: pc.course.id,
+        courseTitle: pc.course.title,
+        batches: pc.course.batches,
+      })),
+    };
+  },
+
   // Gets a single batch with full details
   async getBatchById(batchId: string) {
     const batch = await prisma.batch.findUnique({
@@ -109,6 +181,7 @@ export const batchService = {
       include: {
         course: { select: { id: true, title: true } },
         instructor: { select: { id: true, name: true, email: true } },
+        package: { select: { id: true, name: true } },
         enrollments: {
           include: {
             user: { select: { id: true, name: true, email: true } },

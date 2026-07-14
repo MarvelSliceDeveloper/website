@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import type { CatalogueCourse } from "@/lib/student-mock-data";
+import type { CatalogueCourse } from "@/lib/api-types";
 
 interface CourseDetailViewProps {
   course: CatalogueCourse;
@@ -142,7 +142,7 @@ export default function CourseDetailView({
             <div>
               <p className="font-semibold text-foreground">Ready to join?</p>
               <p className="text-sm text-muted-foreground">
-                Enroll via Razorpay
+                Request enrollment
               </p>
             </div>
             <button
@@ -155,8 +155,8 @@ export default function CourseDetailView({
         ) : (
           <div className="space-y-4">
             <div className="rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
-              ⚠️ Payment creates a pending request. Admin reviews and assigns
-              you to the next available batch. You&apos;ll be notified by email.
+              Enrollment request will be submitted for admin approval.
+              You&apos;ll be notified by email.
             </div>
             <div className="flex gap-2">
               <button
@@ -170,7 +170,7 @@ export default function CourseDetailView({
                 disabled={enrolling}
                 className="btn-primary flex-1"
               >
-                {enrolling ? "Processing…" : "Confirm & Pay →"}
+                {enrolling ? "Processing…" : "Submit Request →"}
               </button>
             </div>
           </div>

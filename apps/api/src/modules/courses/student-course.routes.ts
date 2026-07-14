@@ -268,7 +268,6 @@ router.get("/catalogue", async (req: AuthRequest, res: Response) => {
         thumbnail: course.thumbnailUrl || "📚",
         duration: durationHours,
         instructor: instructorName,
-        price: course.price,
         nextBatch: nextBatchLabel,
         isEnrolled: enrolledCourseIds.has(course.id),
         tags,

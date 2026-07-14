@@ -13,7 +13,7 @@ import {
   IconCircleCheck,
   IconCircleX,
 } from "@tabler/icons-react";
-import type { OverdueAssignment } from "@/lib/student-mock-data";
+import type { OverdueAssignment } from "@/lib/api-types";
 
 type McqOption = {
   id: string;

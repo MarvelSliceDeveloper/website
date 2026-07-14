@@ -18,6 +18,7 @@ import {
   IconEdit,
   IconTrash,
   IconCheck,
+  IconSearch,
 } from "@tabler/icons-react";
 import {
   Select,
@@ -33,6 +34,16 @@ type User = {
   email: string;
   role: "STUDENT" | "INSTRUCTOR" | "ADMIN" | "SUPER_ADMIN";
   isSuspended?: boolean;
+  packageEnrollments?: {
+    package: { id: string; name: string };
+    courses: { courseId: string; batchId: string | null }[];
+  }[];
+};
+
+type PackageSummary = {
+  id: string;
+  name: string;
+  count: number;
 };
 
 const roleStyles: Record<string, string> = {
@@ -53,10 +64,14 @@ export default function AdminUsersPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
+  const [packages, setPackages] = useState<PackageSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const roleFilter = searchParams.get("role") || "";
+  const packageFilter = searchParams.get("packageId") || "";
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   // Create user modal
   const [showModal, setShowModal] = useState(false);
@@ -66,6 +81,8 @@ export default function AdminUsersPage() {
     email: "",
     password: "",
     role: "STUDENT",
+    packageId: "",
+    batchId: "",
   });
 
   // Edit user modal
@@ -74,21 +91,46 @@ export default function AdminUsersPage() {
     name: "",
     email: "",
     role: "STUDENT" as string,
+    packageId: "",
+    batchId: "",
   });
   const [editing, setEditing] = useState(false);
+  // Batches for edit modal's selected package
+  const [editBatches, setEditBatches] = useState<
+    { id: string; name: string; courseTitle: string }[]
+  >([]);
 
   // Delete confirmation
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Active packages for create modal
+  const [activePackages, setActivePackages] = useState<
+    { id: string; name: string }[]
+  >([]);
+
+  // Batches for the selected package (flat list)
+  const [packageBatches, setPackageBatches] = useState<
+    { id: string; name: string; courseTitle: string }[]
+  >([]);
+
   const fetchUsers = () => {
     setLoading(true);
+    const params = new URLSearchParams();
+    if (packageFilter) params.set("packageId", packageFilter);
+
     api
-      .get<User[]>("/api/users")
-      .then(setUsers)
+      .get<{ users: User[]; packages: PackageSummary[] }>(
+        `/api/users${params.toString() ? `?${params.toString()}` : ""}`,
+      )
+      .then((res) => {
+        setUsers(res.users);
+        setPackages(res.packages);
+      })
       .catch((err) => {
         toast.error(getErrorMessage(err));
         setUsers([]);
+        setPackages([]);
       })
       .finally(() => setLoading(false));
   };
@@ -101,17 +143,94 @@ export default function AdminUsersPage() {
         if (res?.user) setCurrentUserRole(res.user.role);
       })
       .catch(() => {});
+  }, [packageFilter]);
+
+  useEffect(() => {
+    api
+      .get<{ packages: any[] }>("/api/admin/packages")
+      .then((res) => {
+        const active = (res.packages ?? []).filter(
+          (p: any) => p.status === "ACTIVE",
+        );
+        setActivePackages(active.map((p: any) => ({ id: p.id, name: p.name })));
+      })
+      .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!form.packageId) {
+      setPackageBatches([]);
+      return;
+    }
+    api
+      .get<{ id: string; name: string; course: { title: string } }[]>(
+        "/api/admin/batches",
+        { packageId: form.packageId },
+      )
+      .then((res: any) => {
+        const batches = Array.isArray(res) ? res : [];
+        setPackageBatches(
+          batches.map((b: any) => ({
+            id: b.id,
+            name: b.name,
+            courseTitle: b.course?.title ?? "",
+          })),
+        );
+      })
+      .catch(() => setPackageBatches([]));
+  }, [form.packageId]);
+
+  // Fetch batches when edit modal's package changes
+  useEffect(() => {
+    if (!editForm.packageId || !editUser) {
+      setEditBatches([]);
+      return;
+    }
+    api
+      .get<{ id: string; name: string; course: { title: string } }[]>(
+        "/api/admin/batches",
+        { packageId: editForm.packageId },
+      )
+      .then((res: any) => {
+        const batches = Array.isArray(res) ? res : [];
+        setEditBatches(
+          batches.map((b: any) => ({
+            id: b.id,
+            name: b.name,
+            courseTitle: b.course?.title ?? "",
+          })),
+        );
+      })
+      .catch(() => setEditBatches([]));
+  }, [editForm.packageId, editUser?.id]);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
 
     try {
-      await api.post("/api/users", form);
-      setForm({ name: "", email: "", password: "", role: "STUDENT" });
+      // Validate: students must have a package
+      if (form.role === "STUDENT" && !form.packageId) {
+        toast.error("Please select a package for the student");
+        setSubmitting(false);
+        return;
+      }
+
+      await api.post("/api/users", {
+        ...form,
+        packageId: form.packageId || undefined,
+        batchId: form.batchId || undefined,
+      });
+      setForm({
+        name: "",
+        email: "",
+        password: "",
+        role: "STUDENT",
+        packageId: "",
+        batchId: "",
+      });
       setShowModal(false);
-      toast.success("User created successfully");
+      toast.success("User added successfully");
       fetchUsers();
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
@@ -126,7 +245,17 @@ export default function AdminUsersPage() {
     setEditing(true);
 
     try {
-      await api.patch(`/api/users/${editUser.id}`, editForm);
+      const payload: Record<string, string> = {
+        name: editForm.name,
+        email: editForm.email,
+        role: editForm.role,
+      };
+      // Only send package/batch for students
+      if (editForm.role === "STUDENT") {
+        if (editForm.packageId) payload.packageId = editForm.packageId;
+        if (editForm.batchId) payload.batchId = editForm.batchId;
+      }
+      await api.patch(`/api/users/${editUser.id}`, payload);
       setEditUser(null);
       toast.success("User updated successfully");
       fetchUsers();
@@ -154,8 +283,40 @@ export default function AdminUsersPage() {
   };
 
   const openEditModal = (user: User) => {
+    const currentPkg = user.packageEnrollments?.[0]?.package?.id ?? "";
+    // Find the batch from the first enrollment course that has a batchId
+    const currentBatch =
+      user.packageEnrollments?.[0]?.courses?.find((c) => c.batchId)?.batchId ??
+      "";
     setEditUser(user);
-    setEditForm({ name: user.name, email: user.email, role: user.role });
+    setEditForm({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      packageId: currentPkg,
+      batchId: currentBatch,
+    });
+    // Load batches for the current package
+    if (currentPkg) {
+      api
+        .get<{ id: string; name: string; course: { title: string } }[]>(
+          "/api/admin/batches",
+          { packageId: currentPkg },
+        )
+        .then((res: any) => {
+          const batches = Array.isArray(res) ? res : [];
+          setEditBatches(
+            batches.map((b: any) => ({
+              id: b.id,
+              name: b.name,
+              courseTitle: b.course?.title ?? "",
+            })),
+          );
+        })
+        .catch(() => setEditBatches([]));
+    } else {
+      setEditBatches([]);
+    }
   };
 
   const handleApproveInstructor = async (userId: string) => {
@@ -168,14 +329,23 @@ export default function AdminUsersPage() {
     }
   };
 
+  useEffect(() => {
+    setPage(1);
+  }, [search, roleFilter, packageFilter]);
+
   const filtered = users.filter((u) => {
     const matchesSearch =
       !search ||
       u.name.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase());
     const matchesRole = !roleFilter || u.role === roleFilter;
-    return matchesSearch && matchesRole;
+    const matchesPackage =
+      !packageFilter ||
+      u.packageEnrollments?.some((pe) => pe.package.id === packageFilter);
+    return matchesSearch && matchesRole && matchesPackage;
   });
+
+  const paginatedData = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const counts = {
     total: users.length,
@@ -212,20 +382,28 @@ export default function AdminUsersPage() {
       label: "Email",
     },
     {
+      key: "package",
+      label: "Package",
+      render: (_, user) => {
+        const pkgs =
+          user.packageEnrollments?.map((pe) => pe.package.name) ?? [];
+        return pkgs.length > 0 ? (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium bg-emerald-100 text-emerald-700">
+            {pkgs.join(", ")}
+          </span>
+        ) : (
+          <span className="text-sm text-muted-foreground">—</span>
+        );
+      },
+    },
+    {
       key: "role",
       label: "Role",
       render: (_, user) => (
-        <span className="inline-flex items-center gap-1.5">
-          <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium ${roleStyles[user.role]}`}
-          >
-            {roleIcons[user.role]} {user.role}
-          </span>
-          {user.role === "INSTRUCTOR" && user.isSuspended && (
-            <span className="text-[10px] font-medium text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">
-              Pending
-            </span>
-          )}
+        <span
+          className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium ${roleStyles[user.role]}`}
+        >
+          {roleIcons[user.role]}
         </span>
       ),
     },
@@ -233,31 +411,31 @@ export default function AdminUsersPage() {
       key: "id",
       label: "Actions",
       render: (_, user) => (
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-1">
           {currentUserRole === "SUPER_ADMIN" &&
             user.role === "INSTRUCTOR" &&
             user.isSuspended && (
               <button
                 onClick={() => handleApproveInstructor(user.id)}
-                className="rounded-md border border-success/20 px-2.5 py-1 text-xs font-medium text-success hover:bg-success/10 transition-colors"
+                className="rounded-md border border-success/20 p-1.5 text-success hover:bg-success/10 transition-colors"
                 title="Approve instructor"
               >
-                <IconCheck size={14} /> Approve
+                <IconCheck size={14} />
               </button>
             )}
           <button
             onClick={() => openEditModal(user)}
-            className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+            className="rounded-md border border-border p-1.5 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
             title="Edit user"
           >
-            <IconEdit size={14} /> Edit
+            <IconEdit size={14} />
           </button>
           <button
             onClick={() => setDeleteUserId(user.id)}
-            className="rounded-md border border-danger/20 px-2.5 py-1 text-xs font-medium text-danger hover:bg-danger/10 transition-colors"
+            className="rounded-md border border-danger/20 p-1.5 text-danger hover:bg-danger/10 transition-colors"
             title="Delete user"
           >
-            <IconTrash size={14} /> Delete
+            <IconTrash size={14} />
           </button>
         </div>
       ),
@@ -274,15 +452,45 @@ export default function AdminUsersPage() {
             onClick={() => setShowModal(true)}
             className="btn-primary text-sm shadow-md"
           >
-            + Create User
+            + Add User
           </button>
         }
       />
 
-      {/* Stat chips */}
+      {/* Package filter chips — only visible when STUDENT filter is active */}
+      {roleFilter === "STUDENT" && packages.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {packages.map((pkg) => (
+            <button
+              key={pkg.id}
+              onClick={() =>
+                router.replace(
+                  packageFilter === pkg.id
+                    ? `/admin/users?role=STUDENT`
+                    : `/admin/users?role=STUDENT&packageId=${pkg.id}`,
+                )
+              }
+              className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+                packageFilter === pkg.id
+                  ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                  : "border-border text-muted-foreground hover:bg-card-hover"
+              }`}
+            >
+              {pkg.name} · {pkg.count}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Role filter chips */}
       <div className="flex flex-wrap gap-2">
-        {(["STUDENT", "INSTRUCTOR", "ADMIN", "SUPER_ADMIN"] as const).map(
-          (role) => (
+        {(["STUDENT", "INSTRUCTOR", "ADMIN", "SUPER_ADMIN"] as const)
+          .filter(
+            (role) =>
+              currentUserRole === "SUPER_ADMIN" ||
+              (role !== "ADMIN" && role !== "SUPER_ADMIN"),
+          )
+          .map((role) => (
             <button
               key={role}
               onClick={() =>
@@ -301,24 +509,45 @@ export default function AdminUsersPage() {
               <span>{roleIcons[role]}</span>
               {role} · {counts[role]}
             </button>
-          ),
-        )}
+          ))}
       </div>
 
       {/* Search */}
-      <input
-        type="text"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search by name or email..."
-        className="field max-w-sm"
-      />
+      <div className="flex items-center gap-2 max-w-sm">
+        <div className="relative flex-1">
+          <IconSearch
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Search by name or email..."
+            className="field field-search w-full"
+          />
+        </div>
+        <button
+          onClick={() => setPage(1)}
+          className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+          title="Search"
+        >
+          <IconSearch size={16} />
+        </button>
+      </div>
 
       {/* Table */}
       <DataTable
         columns={columns}
-        data={filtered}
+        data={paginatedData}
         loading={loading}
+        page={page}
+        pageSize={pageSize}
+        totalItems={filtered.length}
+        onPageChange={setPage}
         emptyState={
           <EmptyState
             variant="glass"
@@ -329,11 +558,11 @@ export default function AdminUsersPage() {
         }
       />
 
-      {/* Create User Modal */}
+      {/* Add User Modal */}
       <FormModal
         open={showModal}
         onClose={() => setShowModal(false)}
-        title="Create New User"
+        title="Add New User"
         footer={
           <>
             <button
@@ -353,10 +582,10 @@ export default function AdminUsersPage() {
               {submitting ? (
                 <>
                   <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
-                  Creating...
+                  Adding...
                 </>
               ) : (
-                "Create User"
+                "Add User"
               )}
             </button>
           </>
@@ -416,7 +645,14 @@ export default function AdminUsersPage() {
             </label>
             <Select
               value={form.role}
-              onValueChange={(value) => setForm({ ...form, role: value })}
+              onValueChange={(value) =>
+                setForm({
+                  ...form,
+                  role: value,
+                  packageId: "",
+                  batchId: "",
+                })
+              }
             >
               <SelectTrigger>
                 <SelectValue />
@@ -433,6 +669,67 @@ export default function AdminUsersPage() {
               </SelectContent>
             </Select>
           </div>
+
+          {form.role === "STUDENT" && (
+            <>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted">
+                  Package <span className="text-danger">*</span>
+                </label>
+                <Select
+                  value={form.packageId || ""}
+                  onValueChange={(value) =>
+                    setForm({
+                      ...form,
+                      packageId: value,
+                      batchId: "",
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a package..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activePackages.map((pkg) => (
+                      <SelectItem key={pkg.id} value={pkg.id}>
+                        {pkg.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {form.packageId && (
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted">
+                    Batch <span className="text-danger">*</span>
+                  </label>
+                  <Select
+                    value={form.batchId || ""}
+                    onValueChange={(value) =>
+                      setForm({ ...form, batchId: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a batch..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {packageBatches.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.name} — {b.courseTitle}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {packageBatches.length === 0 && (
+                    <p className="mt-1 text-xs text-muted-foreground italic">
+                      No batches in this package yet — create one first
+                    </p>
+                  )}
+                </div>
+              )}
+            </>
+          )}
         </form>
       </FormModal>
 
@@ -511,7 +808,12 @@ export default function AdminUsersPage() {
             <Select
               value={editForm.role}
               onValueChange={(value) =>
-                setEditForm({ ...editForm, role: value })
+                setEditForm({
+                  ...editForm,
+                  role: value,
+                  packageId: "",
+                  batchId: "",
+                })
               }
             >
               <SelectTrigger>
@@ -520,11 +822,76 @@ export default function AdminUsersPage() {
               <SelectContent>
                 <SelectItem value="STUDENT">Student</SelectItem>
                 <SelectItem value="INSTRUCTOR">Instructor</SelectItem>
-                <SelectItem value="ADMIN">Administrator</SelectItem>
-                <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
+                {currentUserRole === "SUPER_ADMIN" && (
+                  <>
+                    <SelectItem value="ADMIN">Administrator</SelectItem>
+                    <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
+                  </>
+                )}
               </SelectContent>
             </Select>
           </div>
+
+          {editForm.role === "STUDENT" && (
+            <>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted">
+                  Package
+                </label>
+                <Select
+                  value={editForm.packageId || ""}
+                  onValueChange={(value) =>
+                    setEditForm({
+                      ...editForm,
+                      packageId: value,
+                      batchId: "",
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a package..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activePackages.map((pkg) => (
+                      <SelectItem key={pkg.id} value={pkg.id}>
+                        {pkg.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {editForm.packageId && (
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted">
+                    Batch
+                  </label>
+                  <Select
+                    value={editForm.batchId || ""}
+                    onValueChange={(value) =>
+                      setEditForm({ ...editForm, batchId: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a batch..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {editBatches.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.name} — {b.courseTitle}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {editBatches.length === 0 && (
+                    <p className="mt-1 text-xs text-muted-foreground italic">
+                      No batches in this package yet
+                    </p>
+                  )}
+                </div>
+              )}
+            </>
+          )}
         </form>
       </FormModal>
 

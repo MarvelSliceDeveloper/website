@@ -13,7 +13,7 @@ import { notificationService } from "../notifications/notification.service";
 const router = Router();
 
 router.use(requireAuth);
-router.use(requireRole([UserRole.ADMIN]));
+router.use(requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]));
 
 function handleError(res: Response, error: unknown) {
   const message =
@@ -23,19 +23,65 @@ function handleError(res: Response, error: unknown) {
 
 // GET /api/users — list non-admin users (admin only)
 // Lists STUDENT and INSTRUCTOR users only
-router.get("/", async (_req: Request, res: Response) => {
+router.get("/", async (req: Request, res: Response) => {
   try {
+    const { packageId } = req.query;
+
+    const where: any = {};
+
+    // If packageId is provided, filter users who have a PackageEnrollment for that package
+    if (packageId && typeof packageId === "string") {
+      where.packageEnrollments = {
+        some: { packageId, status: "APPROVED" },
+      };
+    }
+
     const users = await prisma.user.findMany({
+      where,
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
         isSuspended: true,
+        packageEnrollments: {
+          select: {
+            id: true,
+            status: true,
+            package: { select: { id: true, name: true } },
+            courses: { select: { courseId: true, batchId: true } },
+          },
+        },
       },
       orderBy: [{ role: "asc" }, { name: "asc" }],
     });
-    return res.json(users);
+
+    // Build unique packages list with counts
+    const packageMap = new Map<
+      string,
+      { id: string; name: string; count: number }
+    >();
+    for (const user of users) {
+      for (const pe of user.packageEnrollments) {
+        if (pe.status === "APPROVED") {
+          const existing = packageMap.get(pe.package.id);
+          if (existing) {
+            existing.count++;
+          } else {
+            packageMap.set(pe.package.id, {
+              id: pe.package.id,
+              name: pe.package.name,
+              count: 1,
+            });
+          }
+        }
+      }
+    }
+
+    return res.json({
+      users,
+      packages: Array.from(packageMap.values()),
+    });
   } catch (error) {
     return handleError(res, error);
   }
@@ -45,7 +91,7 @@ router.get("/", async (_req: Request, res: Response) => {
 // Creates a new user account
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, packageId, batchId } = req.body;
 
     if (!name || !email || !password || !role) {
       return res
@@ -64,24 +110,96 @@ router.post("/", async (req: Request, res: Response) => {
         .json({ error: "User with this email already exists" });
     }
 
-    const isSuspended = role === "INSTRUCTOR";
+    // If packageId is provided, verify it exists and is active
+    if (packageId && role === "STUDENT") {
+      const pkg = await prisma.coursePackage.findUnique({
+        where: { id: packageId },
+      });
+      if (!pkg) {
+        return res.status(400).json({ error: "Package not found" });
+      }
+      if (pkg.status !== "ACTIVE") {
+        return res.status(400).json({ error: "Package is not active" });
+      }
 
+      // If batchId is provided, verify it belongs to this package
+      if (batchId) {
+        const batch = await prisma.batch.findUnique({
+          where: { id: batchId },
+        });
+        if (!batch) {
+          return res.status(400).json({ error: "Batch not found" });
+        }
+        if (batch.packageId !== packageId) {
+          return res.status(400).json({
+            error: "Batch does not belong to the selected package",
+          });
+        }
+      }
+    }
+
+    const isSuspended = role === "INSTRUCTOR";
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        passwordHash,
-        role: role as UserRole,
-        isSuspended,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        isSuspended: true,
-      },
+
+    const user = await prisma.$transaction(async (tx) => {
+      const createdUser = await tx.user.create({
+        data: {
+          name,
+          email,
+          passwordHash,
+          role: role as UserRole,
+          isSuspended,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          isSuspended: true,
+        },
+      });
+
+      // Create package enrollment if packageId is provided for STUDENT
+      if (packageId && role === "STUDENT") {
+        const enrollment = await tx.packageEnrollment.create({
+          data: {
+            userId: createdUser.id,
+            packageId,
+            status: "APPROVED",
+          },
+        });
+
+        // Get all courses in the package
+        const packageCourses = await tx.packageCourse.findMany({
+          where: { packageId },
+          select: { courseId: true },
+        });
+
+        // If a batch was provided, look up which course it belongs to
+        let batchCourseId: string | null = null;
+        if (batchId) {
+          const batch = await tx.batch.findUnique({
+            where: { id: batchId },
+            select: { courseId: true },
+          });
+          batchCourseId = batch?.courseId ?? null;
+        }
+
+        // Create enrollment courses for each course in the package
+        // The batch is only assigned to the matching course
+        for (const pc of packageCourses) {
+          await tx.packageEnrollmentCourse.create({
+            data: {
+              enrollmentId: enrollment.id,
+              courseId: pc.courseId,
+              batchId:
+                batchCourseId && pc.courseId === batchCourseId ? batchId : null,
+            },
+          });
+        }
+      }
+
+      return createdUser;
     });
 
     emailService
@@ -113,34 +231,50 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
-// PATCH /api/users/:id — update user name, email, role (admin only)
-// Updates a user's details
+// PATCH /api/users/:id — update user name, email, role, package, batch (admin only)
+// Updates a user's details. For STUDENTs, also supports changing package and batch.
 router.patch("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, email, role } = req.body;
+    const { name, email, role, packageId, batchId } = req.body;
 
-    if (!name && !email && !role) {
-      return res
-        .status(400)
-        .json({ error: "At least one field (name, email, role) is required" });
+    const hasUserFields = name || email || role;
+    const hasEnrollmentFields =
+      packageId !== undefined || batchId !== undefined;
+
+    if (!hasUserFields && !hasEnrollmentFields) {
+      return res.status(400).json({
+        error:
+          "At least one field (name, email, role, packageId, batchId) is required",
+      });
     }
 
-    if (role && !["STUDENT", "INSTRUCTOR", "ADMIN"].includes(role)) {
+    if (
+      role &&
+      !["STUDENT", "INSTRUCTOR", "ADMIN", "SUPER_ADMIN"].includes(role)
+    ) {
       return res.status(400).json({ error: "Invalid user role" });
     }
 
-    const existing = await prisma.user.findUnique({ where: { id } });
+    const existing = await prisma.user.findUnique({
+      where: { id },
+      include: {
+        packageEnrollments: {
+          include: {
+            courses: true,
+            package: true,
+          },
+        },
+      },
+    });
     if (!existing) {
       return res.status(404).json({ error: "User not found" });
     }
 
     if (role && existing.role === "ADMIN" && role !== "ADMIN") {
-      // Prevent self-demotion
       if (id === (req as AuthRequest).user!.userId) {
         return res.status(403).json({ error: "You cannot demote yourself" });
       }
-      // Prevent demoting the last admin
       const adminCount = await prisma.user.count({
         where: { role: "ADMIN" },
       });
@@ -158,18 +292,138 @@ router.patch("/:id", async (req: Request, res: Response) => {
       }
     }
 
-    const updateData: Record<string, string> = {};
-    if (name) updateData.name = name;
-    if (email) updateData.email = email;
-    if (role) updateData.role = role;
+    // Validate package if provided
+    const targetPackageId =
+      packageId || existing.packageEnrollments[0]?.packageId;
 
-    const user = await prisma.user.update({
-      where: { id },
-      data: updateData,
-      select: { id: true, name: true, email: true, role: true },
+    if (packageId) {
+      const pkg = await prisma.coursePackage.findUnique({
+        where: { id: packageId },
+      });
+      if (!pkg) {
+        return res.status(400).json({ error: "Package not found" });
+      }
+      if (pkg.status !== "ACTIVE") {
+        return res.status(400).json({ error: "Package is not active" });
+      }
+    }
+
+    // Validate batch if provided
+    if (batchId) {
+      const batch = await prisma.batch.findUnique({
+        where: { id: batchId },
+      });
+      if (!batch) {
+        return res.status(400).json({ error: "Batch not found" });
+      }
+      if (targetPackageId && batch.packageId !== targetPackageId) {
+        return res.status(400).json({
+          error: "Batch does not belong to the selected package",
+        });
+      }
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      // Update user fields
+      const updateData: Record<string, string> = {};
+      if (name) updateData.name = name;
+      if (email) updateData.email = email;
+      if (role) updateData.role = role;
+
+      const user = hasUserFields
+        ? await tx.user.update({
+            where: { id },
+            data: updateData,
+            select: { id: true, name: true, email: true, role: true },
+          })
+        : await tx.user.findUnique({
+            where: { id },
+            select: { id: true, name: true, email: true, role: true },
+          });
+
+      // Handle enrollment changes (package/batch) for students
+      if (hasEnrollmentFields) {
+        const currentEnrollment = existing.packageEnrollments[0];
+
+        if (
+          packageId &&
+          (!currentEnrollment || currentEnrollment.packageId !== packageId)
+        ) {
+          // Package changed or new — delete old enrollment if exists
+          if (currentEnrollment) {
+            await tx.packageEnrollment.delete({
+              where: { id: currentEnrollment.id },
+            });
+          }
+
+          // Create new enrollment
+          const enrollment = await tx.packageEnrollment.create({
+            data: {
+              userId: id,
+              packageId,
+              status: "APPROVED",
+            },
+          });
+
+          // Get all courses in the package
+          const packageCourses = await tx.packageCourse.findMany({
+            where: { packageId },
+            select: { courseId: true },
+          });
+
+          // Look up batch course if batchId provided
+          let batchCourseId: string | null = null;
+          if (batchId) {
+            const batch = await tx.batch.findUnique({
+              where: { id: batchId },
+              select: { courseId: true },
+            });
+            batchCourseId = batch?.courseId ?? null;
+          }
+
+          // Create enrollment courses
+          for (const pc of packageCourses) {
+            await tx.packageEnrollmentCourse.create({
+              data: {
+                enrollmentId: enrollment.id,
+                courseId: pc.courseId,
+                batchId:
+                  batchCourseId && pc.courseId === batchCourseId
+                    ? batchId
+                    : null,
+              },
+            });
+          }
+        } else if (batchId && currentEnrollment) {
+          // Same package but batch changed — update the batch assignment
+          // Find the batch's course and update only that enrollment course
+          const batch = await tx.batch.findUnique({
+            where: { id: batchId },
+            select: { courseId: true },
+          });
+
+          if (batch) {
+            // Clear all batch assignments first
+            await tx.packageEnrollmentCourse.updateMany({
+              where: { enrollmentId: currentEnrollment.id },
+              data: { batchId: null },
+            });
+            // Assign batch to the matching course
+            await tx.packageEnrollmentCourse.updateMany({
+              where: {
+                enrollmentId: currentEnrollment.id,
+                courseId: batch.courseId,
+              },
+              data: { batchId },
+            });
+          }
+        }
+      }
+
+      return user;
     });
 
-    return res.json(user);
+    return res.json(result);
   } catch (error) {
     return handleError(res, error);
   }
@@ -221,6 +475,10 @@ router.delete("/:id", async (req: Request, res: Response) => {
       await tx.attendance.deleteMany({ where: { userId: id } });
       await tx.mentorshipTicket.deleteMany({ where: { studentId: id } });
       await tx.assignmentSubmission.deleteMany({ where: { studentId: id } });
+      await tx.packageEnrollmentCourse.deleteMany({
+        where: { enrollment: { userId: id } },
+      });
+      await tx.packageEnrollment.deleteMany({ where: { userId: id } });
 
       await tx.user.delete({ where: { id } });
     });

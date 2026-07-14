@@ -29,7 +29,7 @@ import type {
   MentorshipTicket,
   EnrolledCourse,
   CalendarEvent,
-} from "@/lib/student-mock-data";
+} from "@/lib/api-types";
 import StudentStatTiles from "@/components/student/StudentStatTiles";
 
 interface HomeViewProps {
@@ -108,7 +108,9 @@ export default function HomeView({
     {
       id: "enrolled",
       label: "Courses To Do",
-      value: enrolledCourses.filter((c) => c.status !== "COMPLETED").length || stats.enrolledCount,
+      value:
+        enrolledCourses.filter((c) => c.status !== "COMPLETED").length ||
+        stats.enrolledCount,
       icon: <IconBook size={20} />,
       gradient: "",
       onClick: () => navigate({ view: "COURSES" }),
@@ -138,7 +140,9 @@ export default function HomeView({
     {
       id: "completed",
       label: "Completed Course",
-      value: enrolledCourses.filter((c) => c.status === "COMPLETED").length || stats.completedCount,
+      value:
+        enrolledCourses.filter((c) => c.status === "COMPLETED").length ||
+        stats.completedCount,
       icon: <IconCertificate size={20} />,
       gradient: "",
       onClick: () => navigate({ view: "COURSE_COMPLETED" }),
@@ -179,7 +183,9 @@ export default function HomeView({
             <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
               {greeting}, {studentName}
             </h1>
-            <p className="mt-1 text-sm font-medium text-muted-foreground">{dateStr}</p>
+            <p className="mt-1 text-sm font-medium text-muted-foreground">
+              {dateStr}
+            </p>
             <p className="mt-2 flex items-center gap-1.5 text-xs text-muted">
               <IconSparkles size={13} className="text-warning animate-pulse" />
               Ready to continue your learning journey?
@@ -254,14 +260,18 @@ export default function HomeView({
           ].map((action, idx) => {
             const colorClasses = {
               blue: "border-blue-500/35 bg-blue-500/12 hover:bg-blue-500/20 hover:border-blue-500/55 text-blue-600 dark:text-blue-400 hover:shadow-blue-500/15",
-              orange: "border-orange-500/35 bg-orange-500/12 hover:bg-orange-500/20 hover:border-orange-500/55 text-orange-600 dark:text-orange-400 hover:shadow-orange-500/15",
-              green: "border-emerald-500/35 bg-emerald-500/12 hover:bg-emerald-500/20 hover:border-emerald-500/55 text-emerald-600 dark:text-emerald-400 hover:shadow-emerald-500/15",
+              orange:
+                "border-orange-500/35 bg-orange-500/12 hover:bg-orange-500/20 hover:border-orange-500/55 text-orange-600 dark:text-orange-400 hover:shadow-orange-500/15",
+              green:
+                "border-emerald-500/35 bg-emerald-500/12 hover:bg-emerald-500/20 hover:border-emerald-500/55 text-emerald-600 dark:text-emerald-400 hover:shadow-emerald-500/15",
             }[action.color];
 
             const iconBg = {
               blue: "bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/25",
-              orange: "bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/25",
-              green: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25",
+              orange:
+                "bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/25",
+              green:
+                "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25",
             }[action.color];
 
             return (
@@ -378,7 +388,8 @@ export default function HomeView({
                         No completed courses yet
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        Completed courses will appear here with your final grades.
+                        Completed courses will appear here with your final
+                        grades.
                       </p>
                     </div>
                   ) : (
@@ -628,7 +639,9 @@ export default function HomeView({
               {calendarEvents.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center text-muted">
                   <IconCalendar size={32} className="mb-2 text-muted/60" />
-                  <p className="text-sm font-semibold">No schedule events found</p>
+                  <p className="text-sm font-semibold">
+                    No schedule events found
+                  </p>
                 </div>
               ) : (
                 calendarEvents.map((evt) => {
@@ -720,7 +733,9 @@ export default function HomeView({
                 {liveSessionsToday.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10 text-center text-muted">
                     <IconVideo size={32} className="mb-2 text-muted/60" />
-                    <p className="text-sm font-semibold">No active sessions scheduled</p>
+                    <p className="text-sm font-semibold">
+                      No active sessions scheduled
+                    </p>
                   </div>
                 ) : (
                   liveSessionsToday.map((s) => {
@@ -921,7 +936,8 @@ export default function HomeView({
                       LMS Update Rolled Out
                     </p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Check out the streamlined tabs, solid color stats, and updated branding!
+                      Check out the streamlined tabs, solid color stats, and
+                      updated branding!
                     </p>
                     <p className="text-[10px] text-muted mt-1">Today</p>
                   </div>
@@ -1014,11 +1030,16 @@ export default function HomeView({
                 {openTickets.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-6 text-center text-muted">
                     <IconHeart size={28} className="mb-2 text-muted/60" />
-                    <p className="text-xs font-semibold">No booking log found</p>
+                    <p className="text-xs font-semibold">
+                      No booking log found
+                    </p>
                   </div>
                 ) : (
                   openTickets.map((t) => {
-                    const isActive = t.status === "OPEN" || t.status === "ASSIGNED" || t.status === "SCHEDULED";
+                    const isActive =
+                      t.status === "OPEN" ||
+                      t.status === "ASSIGNED" ||
+                      t.status === "SCHEDULED";
                     return (
                       <div
                         key={t.id}

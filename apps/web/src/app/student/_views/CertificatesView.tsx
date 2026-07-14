@@ -1,6 +1,6 @@
 "use client";
 
-import type { Certificate } from "@/lib/student-mock-data";
+import type { Certificate } from "@/lib/api-types";
 
 interface CertificatesViewProps {
   certificates: Certificate[];

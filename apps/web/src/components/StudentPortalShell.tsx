@@ -198,9 +198,7 @@ export default function StudentPortalShell({
 
             <div className="flex items-center gap-2">
               <button
-                onClick={() =>
-                  setTheme(theme === "dark" ? "light" : "dark")
-                }
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                 className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
                 aria-label={
                   theme === "dark"

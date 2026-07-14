@@ -218,7 +218,11 @@ function NavGroup({
                           : "border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
                       }`}
                     >
-                      <item.icon size={18} stroke={1.8} className="shrink-0 opacity-80" />
+                      <item.icon
+                        size={18}
+                        stroke={1.8}
+                        className="shrink-0 opacity-80"
+                      />
                       <span className="flex-1 truncate">{item.label}</span>
                       {item.badge != null && (
                         <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary mr-1">
@@ -266,7 +270,11 @@ function NavGroup({
                       : "border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
                   }`}
                 >
-                  <item.icon size={18} stroke={1.8} className="shrink-0 opacity-80" />
+                  <item.icon
+                    size={18}
+                    stroke={1.8}
+                    className="shrink-0 opacity-80"
+                  />
                   <span
                     className={`flex-1 truncate ${collapsed ? "hidden" : "block"}`}
                   >
@@ -320,7 +328,12 @@ export default function InstructorSidebar({
 
   // Get initials for profile picture
   const displayInitials = userName
-    ? userName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
+    ? userName
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
     : "IN";
 
   return (
@@ -344,7 +357,9 @@ export default function InstructorSidebar({
             alt="Marvel Slice"
             className="h-9 w-auto object-contain transition-transform duration-300 hover:scale-105"
           />
-          <span className={`text-base font-extrabold tracking-tight text-foreground ${collapsed ? "hidden" : "block"}`}>
+          <span
+            className={`text-base font-extrabold tracking-tight text-foreground ${collapsed ? "hidden" : "block"}`}
+          >
             <span>Marvel</span>
             <span className="text-primary ml-0.5">Slice</span>
           </span>
@@ -382,7 +397,9 @@ export default function InstructorSidebar({
             <p className="truncate text-xs font-semibold text-foreground">
               {userName || "Instructor"}
             </p>
-            <p className="truncate text-[10px] text-muted-foreground">{userEmail || ""}</p>
+            <p className="truncate text-[10px] text-muted-foreground">
+              {userEmail || ""}
+            </p>
           </div>
         </div>
         <button

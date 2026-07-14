@@ -69,7 +69,7 @@ export default function QuizTemplatesPage() {
           onClick={() => router.push("/admin/quiz-templates/new")}
           className="btn-primary text-xs py-2 flex items-center gap-1.5"
         >
-          <IconPlus size={14} /> Create Template
+          <IconPlus size={14} /> Add Template
         </button>
       </div>
 

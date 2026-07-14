@@ -5,6 +5,7 @@ interface FetchOptions extends RequestInit {
 }
 
 let csrfTokenPromise: Promise<string> | null = null;
+let csrfRetryCount = 0;
 
 async function fetchCsrfToken(): Promise<string> {
   const res = await fetch(`${API_BASE}/api/csrf-token`, {
@@ -14,8 +15,8 @@ async function fetchCsrfToken(): Promise<string> {
   return data.csrfToken;
 }
 
-function getCsrfToken(): Promise<string> {
-  if (!csrfTokenPromise) {
+function getCsrfToken(forceRefresh = false): Promise<string> {
+  if (!csrfTokenPromise || forceRefresh) {
     csrfTokenPromise = fetchCsrfToken();
   }
   return csrfTokenPromise;
@@ -54,6 +55,28 @@ async function request<T>(
     credentials: "include",
     headers,
   });
+
+  // If 403 (CSRF likely), refresh token and retry once
+  if (res.status === 403 && isStateChanging && csrfRetryCount === 0) {
+    csrfRetryCount++;
+    csrfTokenPromise = null; // clear stale token
+    const newToken = await getCsrfToken(true);
+    headers["x-csrf-token"] = newToken;
+    const retryRes = await fetch(url, {
+      ...fetchOptions,
+      credentials: "include",
+      headers,
+    });
+    csrfRetryCount = 0;
+    if (!retryRes.ok) {
+      const errorBody = await retryRes
+        .json()
+        .catch(() => ({ error: retryRes.statusText }));
+      throw new Error(errorBody.error || `API error: ${retryRes.status}`);
+    }
+    if (retryRes.status === 204) return null as T;
+    return retryRes.json();
+  }
 
   if (!res.ok) {
     const errorBody = await res.json().catch(() => ({ error: res.statusText }));

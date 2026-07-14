@@ -165,7 +165,6 @@ async function main() {
     title: "Python for Data Science",
     description:
       "Master Python for data analysis, visualization, and machine learning.",
-    price: 4999,
     category: "Data Science",
     createdBy: ravi.id,
     tags: ["python", "data-science", "pandas", "numpy"],
@@ -182,7 +181,6 @@ async function main() {
     title: "React Full Stack",
     description:
       "Build modern web apps with React, Next.js, and server components.",
-    price: 3999,
     category: "Frontend",
     createdBy: priya.id,
     tags: ["react", "nextjs", "frontend", "javascript"],
@@ -199,7 +197,6 @@ async function main() {
     title: "AWS Cloud Architecture",
     description:
       "Learn AWS cloud computing from fundamentals to advanced architecture patterns.",
-    price: 5499,
     category: "Cloud",
     createdBy: suresh.id,
     tags: ["aws", "cloud", "devops", "infrastructure"],
@@ -216,7 +213,6 @@ async function main() {
     title: "JavaScript Foundations",
     description:
       "Core JavaScript concepts for beginners — from variables to closures.",
-    price: 2499,
     category: "Programming",
     createdBy: anita.id,
     tags: ["javascript", "programming", "web"],
@@ -514,39 +510,151 @@ async function main() {
 
   console.log("✅ Batches created");
 
+  // ─── Packages ─────────────────────────────────────────────────────────────
+  // Full Stack Developer: Python + React + JS
+  const fullStackPkg = await prisma.coursePackage.upsert({
+    where: { id: "pkg-fullstack" },
+    update: {},
+    create: {
+      id: "pkg-fullstack",
+      name: "Full Stack Developer Bootcamp",
+      description:
+        "Complete full stack training: Python for backend/data, React for frontend, and JavaScript foundations.",
+      status: "ACTIVE",
+      courses: {
+        create: [
+          { courseId: pythonCourse.id, order: 0 },
+          { courseId: reactCourse.id, order: 1 },
+          { courseId: jsCourse.id, order: 2 },
+        ],
+      },
+    },
+  });
+
+  // Cloud & DevOps: AWS + Python
+  const cloudPkg = await prisma.coursePackage.upsert({
+    where: { id: "pkg-cloud" },
+    update: {},
+    create: {
+      id: "pkg-cloud",
+      name: "Cloud & DevOps Engineer",
+      description:
+        "Cloud computing with AWS plus Python scripting for automation and infrastructure.",
+      status: "ACTIVE",
+      courses: {
+        create: [
+          { courseId: awsCourse.id, order: 0 },
+          { courseId: pythonCourse.id, order: 1 },
+        ],
+      },
+    },
+  });
+
+  console.log("✅ Packages created");
+
+  // ─── Link batches to packages ─────────────────────────────────────────────
+  await prisma.batch.update({
+    where: { id: pythonBatch.id },
+    data: { packageId: fullStackPkg.id },
+  });
+  await prisma.batch.update({
+    where: { id: reactBatch.id },
+    data: { packageId: fullStackPkg.id },
+  });
+  await prisma.batch.update({
+    where: { id: jsBatch.id },
+    data: { packageId: fullStackPkg.id },
+  });
+  await prisma.batch.update({
+    where: { id: awsBatch.id },
+    data: { packageId: cloudPkg.id },
+  });
+
+  // Also create a second Python batch for the cloud package
+  const pythonBatchCloud = await upsertBatch({
+    courseId: pythonCourse.id,
+    instructorId: vikram.id,
+    name: "Python for Cloud — Apr 2025",
+    startDate: new Date("2025-04-01"),
+    endDate: new Date("2025-06-15"),
+    maxStudents: 20,
+    status: "UPCOMING",
+    description: "Python batch tailored for Cloud & DevOps students.",
+  });
+  await prisma.batch.update({
+    where: { id: pythonBatchCloud.id },
+    data: { packageId: cloudPkg.id },
+  });
+
+  console.log("✅ Batches linked to packages");
+
   // ─── Enrollments ──────────────────────────────────────────────────────────
-  const enrollmentPairs: [typeof demoStudent, string][] = [
-    [demoStudent, pythonBatch.id],
-    [demoStudent, reactBatch.id],
-    [demoStudent, awsBatch.id],
-    [demoStudent, jsBatch.id],
-    [moreStudents[0], pythonBatch.id],
-    [moreStudents[1], pythonBatch.id],
-    [moreStudents[2], reactBatch.id],
-    [moreStudents[3], awsBatch.id],
-    [moreStudents[4], pythonBatch.id],
-    [moreStudents[5], reactBatch.id],
+  // Package enrollments: students enrolled in packages with a single batch assignment
+  const pkgEnrollments = [
+    { student: demoStudent, pkgId: fullStackPkg.id, batchId: pythonBatch.id },
+    {
+      student: moreStudents[0],
+      pkgId: fullStackPkg.id,
+      batchId: reactBatch.id,
+    },
+    {
+      student: moreStudents[1],
+      pkgId: fullStackPkg.id,
+      batchId: pythonBatch.id,
+    },
+    { student: moreStudents[2], pkgId: cloudPkg.id, batchId: awsBatch.id },
+    { student: moreStudents[3], pkgId: fullStackPkg.id, batchId: jsBatch.id },
+    {
+      student: moreStudents[4],
+      pkgId: cloudPkg.id,
+      batchId: pythonBatchCloud.id,
+    },
+    {
+      student: moreStudents[5],
+      pkgId: fullStackPkg.id,
+      batchId: reactBatch.id,
+    },
   ];
 
-  for (const [student, batchId] of enrollmentPairs) {
-    const exists = await prisma.enrollmentRequest.findFirst({
-      where: { userId: student.id, batchId },
+  for (const { student, pkgId, batchId } of pkgEnrollments) {
+    const exists = await prisma.packageEnrollment.findFirst({
+      where: { userId: student.id, packageId: pkgId },
     });
     if (!exists) {
-      await prisma.enrollmentRequest.create({
+      const enrollment = await prisma.packageEnrollment.create({
         data: {
           userId: student.id,
-          courseId: (await prisma.batch.findUnique({ where: { id: batchId } }))!
-            .courseId,
-          batchId,
+          packageId: pkgId,
           status: "APPROVED",
-          reviewedAt: new Date(),
         },
       });
+
+      // Get all courses in the package
+      const pkgCourses = await prisma.packageCourse.findMany({
+        where: { packageId: pkgId },
+        select: { courseId: true },
+      });
+
+      // Look up which course the batch belongs to
+      const batch = await prisma.batch.findUnique({
+        where: { id: batchId },
+        select: { courseId: true },
+      });
+
+      // Create enrollment courses — batch assigned only to the matching course
+      for (const pc of pkgCourses) {
+        await prisma.packageEnrollmentCourse.create({
+          data: {
+            enrollmentId: enrollment.id,
+            courseId: pc.courseId,
+            batchId: batch?.courseId === pc.courseId ? batchId : null,
+          },
+        });
+      }
     }
   }
 
-  console.log("✅ Enrollments created");
+  console.log("✅ Package enrollments created");
 
   // ─── Notification Preferences ──────────────────────────────────────────
   const allUsers = [
@@ -621,7 +729,6 @@ async function upsertCourse(data: {
   slug: string;
   title: string;
   description: string;
-  price: number;
   category: string;
   createdBy: string;
   tags: string[];

@@ -83,13 +83,17 @@ export default function StatCard({
   const style = variantStyles[variant] || variantStyles.blue;
 
   const cardContent = (
-    <div className={`border p-4 transition-all duration-300 rounded-2xl ${style.border} ${style.bg} bg-card`}>
+    <div
+      className={`border p-4 transition-all duration-300 rounded-2xl ${style.border} ${style.bg} bg-card`}
+    >
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
             {label}
           </p>
-          <p className={`mt-1.5 text-2xl font-extrabold tracking-tight ${style.text}`}>
+          <p
+            className={`mt-1.5 text-2xl font-extrabold tracking-tight ${style.text}`}
+          >
             {displayValue}
           </p>
           {trend && (

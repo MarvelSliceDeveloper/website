@@ -64,7 +64,6 @@ type PackageDetail = {
   id: string;
   name: string;
   description: string | null;
-  price: number;
   status: "DRAFT" | "ACTIVE" | "ARCHIVED";
   createdAt: string;
   courses: PackageCourse[];
@@ -87,7 +86,10 @@ const statusConfig: Record<string, { label: string; classes: string }> = {
   },
 };
 
-const enrollmentStatusConfig: Record<string, { label: string; classes: string }> = {
+const enrollmentStatusConfig: Record<
+  string,
+  { label: string; classes: string }
+> = {
   PENDING: {
     label: "Pending",
     classes: "bg-warning/15 text-warning border-warning/25",
@@ -125,9 +127,7 @@ export default function PackageDetailPage({
   const [approveModal, setApproveModal] = useState<PackageEnrollment | null>(
     null,
   );
-  const [batchesMap, setBatchesMap] = useState<
-    Record<string, Batch[]>
-  >({});
+  const [batchesMap, setBatchesMap] = useState<Record<string, Batch[]>>({});
   const [loadingBatches, setLoadingBatches] = useState(false);
   const [batchAssignments, setBatchAssignments] = useState<
     Record<string, string>
@@ -199,9 +199,7 @@ export default function PackageDetailPage({
       // Filter out empty batchIds - admin will assign during approval
       await api.post(`/api/admin/packages/${id}/enroll`, {
         userId: selectedStudentId,
-        courseBatchAssignments: courseBatchAssignments.filter(
-          (a) => a.batchId,
-        ),
+        courseBatchAssignments: courseBatchAssignments.filter((a) => a.batchId),
       });
       toast.success("Student enrolled in package");
       setEnrollModal(false);
@@ -257,9 +255,9 @@ export default function PackageDetailPage({
     setLoadingStudents(true);
     setSelectedStudentId("");
     try {
-      const data = await api.get<{ users: { id: string; name: string; email: string }[] }>(
-        "/api/users?role=STUDENT",
-      );
+      const data = await api.get<{
+        users: { id: string; name: string; email: string }[];
+      }>("/api/users?role=STUDENT");
       setStudents(data.users || []);
     } catch {
       setStudents([]);
@@ -386,7 +384,8 @@ export default function PackageDetailPage({
                       {pc.course.title}
                     </p>
                     <p className="text-xs text-muted">
-                      {pc.course._count.modules} modules · {pc.course._count.batches} batches
+                      {pc.course._count.modules} modules ·{" "}
+                      {pc.course._count.batches} batches
                     </p>
                   </div>
                 </div>
@@ -645,7 +644,9 @@ export default function PackageDetailPage({
                         (batchesMap[pc.courseId] || []).map((batch) => (
                           <SelectItem key={batch.id} value={batch.id}>
                             {batch.name} — {batch._count?.enrollments || 0}
-                            {batch.maxStudents ? `/${batch.maxStudents}` : ""}{" "}
+                            {batch.maxStudents
+                              ? `/${batch.maxStudents}`
+                              : ""}{" "}
                             students
                           </SelectItem>
                         ))

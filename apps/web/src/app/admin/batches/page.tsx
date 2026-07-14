@@ -20,6 +20,7 @@ type Batch = {
   maxStudents: number | null;
   course: { id: string; title: string };
   instructor: { id: string; name: string; email: string };
+  package: { id: string; name: string } | null;
   _count: { enrollments: number; sessions: number };
 };
 
@@ -88,7 +89,7 @@ function BatchesPageContent() {
         description={`${batches.length} batch${batches.length !== 1 ? "es" : ""}`}
         action={
           <Link href="/admin/batches/new" className="btn-primary">
-            + Create Batch
+            + Add Batch
           </Link>
         }
       />
@@ -123,7 +124,7 @@ function BatchesPageContent() {
           description="Create your first batch to start enrolling students."
           action={
             <Link href="/admin/batches/new" className="btn-primary inline-flex">
-              + Create Batch
+              + Add Batch
             </Link>
           }
         />
@@ -146,6 +147,11 @@ function BatchesPageContent() {
                     <p className="text-xs text-muted mt-0.5">
                       {batch.course.title}
                     </p>
+                    {batch.package && (
+                      <p className="text-[10px] text-muted mt-0.5">
+                        Package: {batch.package.name}
+                      </p>
+                    )}
                   </div>
                   <span
                     className={`shrink-0 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium ${statusStyles[batch.status]}`}

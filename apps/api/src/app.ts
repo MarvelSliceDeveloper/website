@@ -8,6 +8,8 @@ import pino from "pino";
 import rateLimit from "express-rate-limit";
 import fs from "fs";
 import cookieParser from "cookie-parser";
+import crypto from "crypto";
+import jwt from "jsonwebtoken";
 import { doubleCsrf } from "csrf-csrf";
 import { authRouter } from "./modules/auth/auth.routes";
 import { calendarRouter } from "./modules/calendar/calendar.routes";
@@ -43,7 +45,10 @@ import { logRouter } from "./modules/logs/log.routes";
 import { loginHistoryRouter } from "./modules/logs/login-history.routes";
 import { consentLogRouter } from "./modules/logs/consent-log.routes";
 import { trashRouter } from "./modules/super-admin/trash.routes";
-import { packageRouter, packageEnrollmentRouter } from "./modules/packages/package.routes";
+import {
+  packageRouter,
+  packageEnrollmentRouter,
+} from "./modules/packages/package.routes";
 
 const logger = pino({
   level: process.env.LOG_LEVEL || "info",
@@ -79,12 +84,33 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   getSecret: () => {
     const secret = process.env.CSRF_SECRET;
     if (!secret) {
-      throw new Error("Missing required environment variable: CSRFSECRET");
+      throw new Error("Missing required environment variable: CSRF_SECRET");
     }
     return secret;
   },
-  getSessionIdentifier: (req) =>
-    (req.headers["x-forwarded-for"] as string) || req.ip || "unknown",
+  getSessionIdentifier: (req) => {
+    // doubleCsrfProtection runs BEFORE the route-level auth middleware, so
+    // req.user is not populated here. Derive a stable identifier from the
+    // httpOnly access-token cookie instead — this yields the same value for
+    // every request belonging to a given authenticated session, which is
+    // required for the issued CSRF token to validate on the next request.
+    const token = (req as any).cookies?.accessToken as string | undefined;
+    if (token) {
+      try {
+        const decoded = jwt.decode(token) as { userId?: string } | null;
+        if (decoded?.userId) return decoded.userId;
+      } catch {
+        /* fall through to per-request fallback */
+      }
+    }
+    // Unauthenticated fallback (state-changing unauthenticated requests are
+    // rejected by auth anyway). Cached per-request so a token issued and
+    // validated within the same logical flow stays consistent.
+    if (!(req as any)._csrfSessionId) {
+      (req as any)._csrfSessionId = crypto.randomBytes(16).toString("hex");
+    }
+    return (req as any)._csrfSessionId;
+  },
   cookieName: "x-csrf-token",
   cookieOptions: {
     httpOnly: true,

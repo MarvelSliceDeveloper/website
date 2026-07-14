@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "@/lib/toast";
-import type { MentorshipTicket } from "@/lib/student-mock-data";
-import type { EnrolledCourse } from "@/lib/student-mock-data";
+import type { MentorshipTicket } from "@/lib/api-types";
+import type { EnrolledCourse } from "@/lib/api-types";
 
 interface MentorshipViewProps {
   tickets: MentorshipTicket[];

@@ -11,7 +11,6 @@ type CertificateSummary = {
     category: string | null;
     thumbnailUrl: string | null;
     coverImageUrl: string | null;
-    price: number;
     updatedAt: Date;
   };
   totalRecordings: number;
@@ -59,7 +58,6 @@ async function buildCourseCompletionMap(userId: string) {
         category: true,
         thumbnailUrl: true,
         coverImageUrl: true,
-        price: true,
         updatedAt: true,
       },
     }),

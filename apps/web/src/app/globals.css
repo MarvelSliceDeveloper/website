@@ -532,8 +532,9 @@ a:focus-visible {
   border: 1px solid var(--border);
   background: #fff;
   color: var(--foreground);
-  padding: 0.45rem 0.75rem;
+  padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
+  line-height: 1.25rem;
 }
 
 [data-section="admin"] .field::placeholder {
@@ -544,6 +545,10 @@ a:focus-visible {
   border-color: var(--primary);
   outline: none;
   box-shadow: 0 0 0 3px rgba(79, 118, 230, 0.1);
+}
+
+[data-section="admin"] .field-search {
+  padding-left: 2.25rem !important;
 }
 
 [data-section="admin"] header.sticky {
@@ -578,7 +583,8 @@ a:focus-visible {
 }
 
 @keyframes logo-pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
     filter: drop-shadow(0 0 0px transparent);
   }
@@ -600,7 +606,8 @@ a:focus-visible {
 }
 
 @keyframes login-float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) rotate(0deg);
   }
 

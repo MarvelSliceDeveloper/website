@@ -6,14 +6,14 @@ import { prisma } from "../../utils/prisma";
 export const CreatePackageSchema = z.object({
   name: z.string().min(2).max(100),
   description: z.string().optional(),
-  price: z.number().min(0).default(0),
-  courseIds: z.array(z.string().cuid()).min(1, "At least one course is required"),
+  courseIds: z
+    .array(z.string().cuid())
+    .min(1, "At least one course is required"),
 });
 
 export const UpdatePackageSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   description: z.string().nullable().optional(),
-  price: z.number().min(0).optional(),
   courseIds: z.array(z.string().cuid()).min(1).optional(),
 });
 
@@ -26,7 +26,7 @@ export const ApproveEnrollmentSchema = z.object({
     z.object({
       courseId: z.string().cuid(),
       batchId: z.string().cuid(),
-    })
+    }),
   ),
 });
 
@@ -47,7 +47,6 @@ export const packageService = {
       data: {
         name: data.name,
         description: data.description,
-        price: data.price,
         courses: {
           create: data.courseIds.map((courseId, index) => ({
             courseId,
@@ -58,7 +57,9 @@ export const packageService = {
       include: {
         courses: {
           include: {
-            course: { select: { id: true, title: true, slug: true, thumbnailUrl: true } },
+            course: {
+              select: { id: true, title: true, slug: true, thumbnailUrl: true },
+            },
           },
           orderBy: { order: "asc" },
         },
@@ -131,8 +132,13 @@ export const packageService = {
   },
 
   // Update a package
-  async updatePackage(packageId: string, data: z.infer<typeof UpdatePackageSchema>) {
-    const existing = await prisma.coursePackage.findUnique({ where: { id: packageId } });
+  async updatePackage(
+    packageId: string,
+    data: z.infer<typeof UpdatePackageSchema>,
+  ) {
+    const existing = await prisma.coursePackage.findUnique({
+      where: { id: packageId },
+    });
     if (!existing) throw new Error("Package not found");
 
     // If updating courses, verify they all exist
@@ -191,7 +197,9 @@ export const packageService = {
 
   // Update package status
   async updatePackageStatus(packageId: string, status: string) {
-    const pkg = await prisma.coursePackage.findUnique({ where: { id: packageId } });
+    const pkg = await prisma.coursePackage.findUnique({
+      where: { id: packageId },
+    });
     if (!pkg) throw new Error("Package not found");
 
     return prisma.coursePackage.update({
@@ -208,7 +216,10 @@ export const packageService = {
   },
 
   // Enroll a student into a package
-  async enrollStudent(packageId: string, data: z.infer<typeof EnrollStudentSchema>) {
+  async enrollStudent(
+    packageId: string,
+    data: z.infer<typeof EnrollStudentSchema>,
+  ) {
     const pkg = await prisma.coursePackage.findUnique({
       where: { id: packageId },
       include: { courses: { select: { courseId: true } } },
@@ -219,7 +230,9 @@ export const packageService = {
     }
 
     // Verify student exists
-    const student = await prisma.user.findUnique({ where: { id: data.userId } });
+    const student = await prisma.user.findUnique({
+      where: { id: data.userId },
+    });
     if (!student) throw new Error("Student not found");
 
     // Check for existing enrollment
@@ -290,7 +303,7 @@ export const packageService = {
   // Approve a package enrollment
   async approveEnrollment(
     enrollmentId: string,
-    data: z.infer<typeof ApproveEnrollmentSchema>
+    data: z.infer<typeof ApproveEnrollmentSchema>,
   ) {
     const enrollment = await prisma.packageEnrollment.findUnique({
       where: { id: enrollmentId },
@@ -303,7 +316,9 @@ export const packageService = {
     });
     if (!enrollment) throw new Error("Enrollment not found");
     if (enrollment.status !== "PENDING") {
-      throw new Error(`Cannot approve enrollment with status: ${enrollment.status}`);
+      throw new Error(
+        `Cannot approve enrollment with status: ${enrollment.status}`,
+      );
     }
 
     // Verify all batch assignments are for courses in this package
@@ -318,7 +333,9 @@ export const packageService = {
       });
       if (!batch) throw new Error(`Batch ${assignment.batchId} not found`);
       if (batch.courseId !== assignment.courseId) {
-        throw new Error(`Batch ${assignment.batchId} does not belong to course ${assignment.courseId}`);
+        throw new Error(
+          `Batch ${assignment.batchId} does not belong to course ${assignment.courseId}`,
+        );
       }
     }
 
@@ -331,8 +348,8 @@ export const packageService = {
             courseId: a.courseId,
           },
           data: { batchId: a.batchId },
-        })
-      )
+        }),
+      ),
     );
 
     const updated = await prisma.packageEnrollment.update({
@@ -360,7 +377,9 @@ export const packageService = {
     });
     if (!enrollment) throw new Error("Enrollment not found");
     if (enrollment.status !== "PENDING") {
-      throw new Error(`Cannot reject enrollment with status: ${enrollment.status}`);
+      throw new Error(
+        `Cannot reject enrollment with status: ${enrollment.status}`,
+      );
     }
 
     return prisma.packageEnrollment.update({

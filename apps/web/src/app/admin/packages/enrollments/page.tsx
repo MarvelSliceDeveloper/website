@@ -405,7 +405,9 @@ export default function PackageEnrollmentsPage() {
                         (batchesMap[ec.courseId] || []).map((batch) => (
                           <SelectItem key={batch.id} value={batch.id}>
                             {batch.name} — {batch._count?.enrollments || 0}
-                            {batch.maxStudents ? `/${batch.maxStudents}` : ""}{" "}
+                            {batch.maxStudents
+                              ? `/${batch.maxStudents}`
+                              : ""}{" "}
                             students
                           </SelectItem>
                         ))

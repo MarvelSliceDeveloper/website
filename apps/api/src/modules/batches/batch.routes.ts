@@ -36,6 +36,16 @@ router.get(
 // POST /api/admin/batches — create a new batch
 router.post("/", requireRole([UserRole.ADMIN]), batchController.create);
 
+// POST /api/admin/batches/bulk — create batches for all courses in a package
+router.post("/bulk", requireRole([UserRole.ADMIN]), batchController.createBulk);
+
+// GET /api/admin/batches/by-package/:packageId — get batches grouped by course for a package
+router.get(
+  "/by-package/:packageId",
+  requireRole([UserRole.ADMIN]),
+  batchController.getBatchesByPackage,
+);
+
 // GET /api/admin/batches/:id — get batch detail
 router.get(
   "/:id",

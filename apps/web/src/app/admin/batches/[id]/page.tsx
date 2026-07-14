@@ -180,7 +180,7 @@ export default function BatchDetailPage() {
               </p>
             </div>
           ) : (
-            <div className="glass-card overflow-hidden">
+            <div className="glass-card overflow-hidden rounded-none">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border text-left">

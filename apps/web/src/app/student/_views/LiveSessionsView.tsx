@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import type { LiveSession } from "@/lib/student-mock-data";
+import type { LiveSession } from "@/lib/api-types";
 import { api } from "@/lib/api";
 interface LiveSessionsViewProps {
   sessions: LiveSession[];

@@ -6,7 +6,16 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
-import { IconBook } from "@tabler/icons-react";
+import {
+  IconBook,
+  IconSearch,
+  IconEdit,
+  IconPhoto,
+  IconUpload,
+  IconArchive,
+  IconRefresh,
+  IconTrash,
+} from "@tabler/icons-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import DataTable from "@/components/admin/DataTable";
 import type { DataTableColumn } from "@/components/admin/DataTable";
@@ -19,7 +28,6 @@ type Course = {
   slug: string;
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   category: string | null;
-  price: number;
   thumbnailUrl: string | null;
   updatedAt: string;
   _count: { modules: number; batches: number };
@@ -257,36 +265,44 @@ function CoursesPageContent() {
       key: "id",
       label: "Actions",
       render: (_, course) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-end gap-1">
           <Link
             href={`/admin/courses/${course.id}`}
-            className="text-xs font-medium text-primary hover:text-primary-hover transition-colors"
+            className="rounded-md border border-border p-1.5 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+            title="Edit course"
           >
-            Edit
+            <IconEdit size={14} />
           </Link>
           {course.status === "DRAFT" && (
             <button
               onClick={() => handlePublish(course.id)}
-              className="text-xs font-medium text-success hover:text-success/80 transition-colors"
+              className="rounded-md border border-success/20 p-1.5 text-success hover:bg-success/10 transition-colors"
+              title="Publish course"
             >
-              Publish
+              <IconUpload size={14} />
             </button>
           )}
           {course.status === "PUBLISHED" && (
             <button
               onClick={() => handleUnpublish(course.id)}
-              className="text-xs font-medium text-warning hover:text-warning/80 transition-colors"
+              className="rounded-md border border-warning/20 p-1.5 text-warning hover:bg-warning/10 transition-colors"
+              title="Unpublish course"
             >
-              Unpublish
+              <IconPhoto size={14} />
             </button>
           )}
           {course.status !== "ARCHIVED" && (
             <button
               onClick={() => handleDelete(course.id, course.title)}
               disabled={deleting === course.id}
-              className="btn-danger text-xs disabled:opacity-50"
+              className="rounded-md border border-danger/20 p-1.5 text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
+              title="Archive course"
             >
-              {deleting === course.id ? "..." : "Archive"}
+              {deleting === course.id ? (
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border border-danger border-t-transparent" />
+              ) : (
+                <IconArchive size={14} />
+              )}
             </button>
           )}
           {course.status === "ARCHIVED" && (
@@ -294,16 +310,26 @@ function CoursesPageContent() {
               <button
                 onClick={() => handleRecover(course.id)}
                 disabled={recovering === course.id}
-                className="text-xs font-medium text-success hover:text-success/80 transition-colors disabled:opacity-50"
+                className="rounded-md border border-success/20 p-1.5 text-success hover:bg-success/10 transition-colors disabled:opacity-50"
+                title="Recover course"
               >
-                {recovering === course.id ? "..." : "Recover"}
+                {recovering === course.id ? (
+                  <span className="h-3.5 w-3.5 animate-spin rounded-full border border-success border-t-transparent" />
+                ) : (
+                  <IconRefresh size={14} />
+                )}
               </button>
               <button
                 onClick={() => handlePermanentDelete(course.id, course.title)}
                 disabled={purging === course.id}
-                className="text-xs font-medium text-danger hover:text-danger/80 transition-colors disabled:opacity-50"
+                className="rounded-md border border-danger/20 p-1.5 text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
+                title="Delete permanently"
               >
-                {purging === course.id ? "..." : "Delete Permanently"}
+                {purging === course.id ? (
+                  <span className="h-3.5 w-3.5 animate-spin rounded-full border border-danger border-t-transparent" />
+                ) : (
+                  <IconTrash size={14} />
+                )}
               </button>
             </>
           )}
@@ -325,14 +351,30 @@ function CoursesPageContent() {
       />
 
       <div className="flex flex-wrap items-center gap-3">
-        <form onSubmit={handleSearch} className="flex-1 min-w-[200px]">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search courses..."
-            className="field max-w-sm"
-          />
+        <form
+          onSubmit={handleSearch}
+          className="flex-1 min-w-[200px] flex items-center gap-2 max-w-sm"
+        >
+          <div className="relative flex-1">
+            <IconSearch
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search courses..."
+              className="field field-search w-full"
+            />
+          </div>
+          <button
+            type="submit"
+            className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+            title="Search"
+          >
+            <IconSearch size={16} />
+          </button>
         </form>
 
         <div className="flex gap-1.5">

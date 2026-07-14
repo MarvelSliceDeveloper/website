@@ -6,7 +6,7 @@ import {
   IconShare2,
   IconStar,
 } from "@tabler/icons-react";
-import type { EnrolledCourse } from "@/lib/student-mock-data";
+import type { EnrolledCourse } from "@/lib/api-types";
 
 interface CourseCompletedViewProps {
   courses: EnrolledCourse[];

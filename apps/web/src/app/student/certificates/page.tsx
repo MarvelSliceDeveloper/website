@@ -18,7 +18,6 @@ type CertificateItem = {
     category: string | null;
     thumbnailUrl: string | null;
     coverImageUrl: string | null;
-    price: number;
     updatedAt: string;
   };
 };

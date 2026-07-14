@@ -4,8 +4,7 @@ import StatCard from "@/components/admin/StatCard";
 import { ChartSkeleton } from "@/components/admin/LoadingSkeleton";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { MOCK_DASHBOARD_CHARTS, MOCK_ENABLED } from "@/lib/admin-mock-data";
-import type { DashboardChartData } from "@/lib/admin-mock-data";
+import type { DashboardChartData } from "@/lib/api-types";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -13,11 +12,11 @@ import {
   IconBook,
   IconCalendar,
   IconChartPie,
-  IconCurrencyDollar,
   IconEdit,
   IconHistory,
   IconKey,
   IconLock,
+  IconPackage,
   IconSchool,
   IconServer,
   IconSettings,
@@ -309,11 +308,18 @@ function SuperAdminDashboard() {
               key={card.label}
               className={`border p-5 text-center transition-all duration-300 rounded-2xl bg-card ${card.border} ${card.bg}`}
             >
-              <card.icon size={28} className={`mx-auto mb-2 ${card.iconColor}`} />
-              <p className={`text-3xl font-extrabold tracking-tight ${card.textColor}`}>
+              <card.icon
+                size={28}
+                className={`mx-auto mb-2 ${card.iconColor}`}
+              />
+              <p
+                className={`text-3xl font-extrabold tracking-tight ${card.textColor}`}
+              >
                 {loading ? "—" : card.value}
               </p>
-              <p className="text-xs font-semibold text-muted-foreground mt-1.5 uppercase tracking-wider">{card.label}</p>
+              <p className="text-xs font-semibold text-muted-foreground mt-1.5 uppercase tracking-wider">
+                {card.label}
+              </p>
             </div>
           ))}
         </div>
@@ -383,27 +389,6 @@ function AdminDashboard() {
 
   useEffect(() => {
     async function loadStats() {
-      if (MOCK_ENABLED) {
-        const activeBatches =
-          MOCK_DASHBOARD_CHARTS.batchDistribution.find(
-            (batch) => batch.status === "ACTIVE",
-          )?.count ?? 0;
-        const totalStudents = MOCK_DASHBOARD_CHARTS.studentsPerCourse.reduce(
-          (sum, course) => sum + course.count,
-          0,
-        );
-
-        setChartData(MOCK_DASHBOARD_CHARTS);
-        setStats({
-          totalCourses: MOCK_DASHBOARD_CHARTS.studentsPerCourse.length,
-          activeBatches,
-          liveSessions: 0,
-          totalStudents,
-        });
-        setLoading(false);
-        return;
-      }
-
       try {
         const [
           coursesRes,
@@ -415,7 +400,9 @@ function AdminDashboard() {
           api.get<{ total: number }>("/api/admin/courses", { limit: "1" }),
           api.get<unknown[]>("/api/admin/batches", { status: "ACTIVE" }),
           api.get<{ sessions: unknown[] }>("/api/sessions", { status: "live" }),
-          api.get<Array<{ role: string }>>("/api/users"),
+          api.get<{ users: Array<{ role: string }>; packages: unknown[] }>(
+            "/api/users",
+          ),
           api.get<DashboardChartData>("/api/admin/dashboard/stats"),
         ]);
 
@@ -432,7 +419,8 @@ function AdminDashboard() {
               : 0,
           totalStudents:
             usersRes.status === "fulfilled"
-              ? usersRes.value.filter((user) => user.role === "STUDENT").length
+              ? usersRes.value.users.filter((user) => user.role === "STUDENT")
+                  .length
               : 0,
         });
 
@@ -486,8 +474,6 @@ function AdminDashboard() {
     },
   ];
 
-  const totalRevenue =
-    chartData?.revenueTrend?.reduce((s, r) => s + r.total, 0) ?? 0;
   const quickActions = [
     {
       label: "Add Course",
@@ -524,17 +510,6 @@ function AdminDashboard() {
           <div className="hidden items-center gap-4 sm:flex">
             <div className="text-right">
               <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                Revenue
-              </p>
-              <p className="text-lg font-bold text-success">
-                {loading
-                  ? "\u2014"
-                  : `\u20B9${(totalRevenue / 1000).toFixed(0)}k`}
-              </p>
-            </div>
-            <div className="h-8 w-px bg-border/60" />
-            <div className="text-right">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                 Students
               </p>
               <p className="text-lg font-bold text-primary">
@@ -554,17 +529,17 @@ function AdminDashboard() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* Students per Course */}
+        {/* Students per Package */}
         <div className="border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <IconBook size={18} stroke={1.5} className="text-primary" />
+            <IconPackage size={18} stroke={1.5} className="text-primary" />
             <h3 className="text-base font-semibold text-foreground">
-              Students per Course
+              Students per Package
             </h3>
           </div>
           {loading ? (
             <ChartSkeleton height={280} />
-          ) : chartData?.studentsPerCourse?.length ? (
+          ) : chartData?.studentsPerPackage?.length ? (
             <Chart
               options={{
                 chart: {
@@ -575,8 +550,8 @@ function AdminDashboard() {
                 colors: [COLORS.primary],
                 plotOptions: { bar: { borderRadius: 4, columnWidth: "60%" } },
                 xaxis: {
-                  categories: chartData.studentsPerCourse.map(
-                    (d) => d.courseTitle,
+                  categories: chartData.studentsPerPackage.map(
+                    (d) => d.packageName,
                   ),
                   labels: {
                     style: { colors: "var(--muted)", fontSize: "11px" },
@@ -594,7 +569,7 @@ function AdminDashboard() {
               series={[
                 {
                   name: "Students",
-                  data: chartData.studentsPerCourse.map((d) => d.count),
+                  data: chartData.studentsPerPackage.map((d) => d.count),
                 },
               ]}
               type="bar"
@@ -710,52 +685,41 @@ function AdminDashboard() {
           )}
         </div>
 
-        {/* Monthly Revenue */}
+        {/* User Role Distribution */}
         <div className="border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <IconCurrencyDollar
-              size={18}
-              stroke={1.5}
-              className="text-primary"
-            />
+            <IconUsersGroup size={18} stroke={1.5} className="text-primary" />
             <h3 className="text-base font-semibold text-foreground">
-              Monthly Revenue
+              User Roles
             </h3>
           </div>
           {loading ? (
             <ChartSkeleton height={280} />
-          ) : chartData?.revenueTrend?.length ? (
+          ) : chartData?.userRoleDistribution?.length ? (
             <Chart
               options={{
                 chart: {
-                  type: "bar",
+                  type: "donut",
                   toolbar: { show: false },
                   fontFamily: "inherit",
                 },
-                colors: [COLORS.success],
-                plotOptions: { bar: { borderRadius: 4, columnWidth: "60%" } },
-                xaxis: {
-                  categories: chartData.revenueTrend.map((d) => d.month),
-                  labels: {
-                    style: { colors: "var(--muted)", fontSize: "11px" },
+                colors: PIE_COLORS,
+                labels: chartData.userRoleDistribution.map((u) => u.role),
+                plotOptions: {
+                  pie: {
+                    donut: { size: "65%" },
                   },
                 },
-                yaxis: {
-                  labels: {
-                    style: { colors: "var(--muted)", fontSize: "11px" },
-                  },
+                legend: {
+                  position: "bottom",
+                  fontSize: "12px",
+                  labels: { colors: "var(--muted-foreground)" },
                 },
-                grid: { borderColor: "var(--border)" },
                 tooltip: { theme: "light" },
                 dataLabels: { enabled: false },
               }}
-              series={[
-                {
-                  name: "Revenue",
-                  data: chartData.revenueTrend.map((d) => d.total),
-                },
-              ]}
-              type="bar"
+              series={chartData.userRoleDistribution.map((u) => u.count)}
+              type="donut"
               height={280}
             />
           ) : (
@@ -765,6 +729,77 @@ function AdminDashboard() {
           )}
         </div>
       </div>
+
+      {/* Recent Enrollments */}
+      {chartData?.recentEnrollments &&
+        chartData.recentEnrollments.length > 0 && (
+          <div className="border border-border bg-card p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <IconHistory size={18} stroke={1.5} className="text-primary" />
+              <h3 className="text-base font-semibold text-foreground">
+                Recent Enrollments
+              </h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left">
+                    <th className="pb-2 text-xs font-medium uppercase text-muted">
+                      Student
+                    </th>
+                    <th className="pb-2 text-xs font-medium uppercase text-muted">
+                      Package
+                    </th>
+                    <th className="pb-2 text-xs font-medium uppercase text-muted">
+                      Status
+                    </th>
+                    <th className="pb-2 text-xs font-medium uppercase text-muted">
+                      Date
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {chartData.recentEnrollments.map((e) => (
+                    <tr
+                      key={e.id}
+                      className="border-b border-border/50 last:border-0"
+                    >
+                      <td className="py-2.5">
+                        <p className="font-medium text-foreground">
+                          {e.userName}
+                        </p>
+                        <p className="text-xs text-muted">{e.userEmail}</p>
+                      </td>
+                      <td className="py-2.5 text-foreground">
+                        {e.packageName}
+                      </td>
+                      <td className="py-2.5">
+                        <span
+                          className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                            e.status === "APPROVED"
+                              ? "bg-success/15 text-success"
+                              : e.status === "PENDING"
+                                ? "bg-warning/15 text-warning"
+                                : "bg-danger/15 text-danger"
+                          }`}
+                        >
+                          {e.status}
+                        </span>
+                      </td>
+                      <td className="py-2.5 text-muted-foreground">
+                        {new Date(e.appliedAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
       {/* Quick Actions */}
       <div className="border border-border bg-card p-5">

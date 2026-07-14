@@ -19,39 +19,19 @@ router.get(
 // --- Package CRUD ---
 
 // GET /api/admin/packages — list all packages
-router.get(
-  "/",
-  requireRole([UserRole.ADMIN]),
-  packageController.list,
-);
+router.get("/", requireRole([UserRole.ADMIN]), packageController.list);
 
 // POST /api/admin/packages — create a new package
-router.post(
-  "/",
-  requireRole([UserRole.ADMIN]),
-  packageController.create,
-);
+router.post("/", requireRole([UserRole.ADMIN]), packageController.create);
 
 // GET /api/admin/packages/:id — get package detail
-router.get(
-  "/:id",
-  requireRole([UserRole.ADMIN]),
-  packageController.getById,
-);
+router.get("/:id", requireRole([UserRole.ADMIN]), packageController.getById);
 
 // PUT /api/admin/packages/:id — update package
-router.put(
-  "/:id",
-  requireRole([UserRole.ADMIN]),
-  packageController.update,
-);
+router.put("/:id", requireRole([UserRole.ADMIN]), packageController.update);
 
 // DELETE /api/admin/packages/:id — delete package
-router.delete(
-  "/:id",
-  requireRole([UserRole.ADMIN]),
-  packageController.delete,
-);
+router.delete("/:id", requireRole([UserRole.ADMIN]), packageController.delete);
 
 // PATCH /api/admin/packages/:id/status — update package status
 router.patch(

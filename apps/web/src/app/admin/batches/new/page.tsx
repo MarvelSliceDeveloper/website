@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type CourseOption = { id: string; title: string };
+type PackageOption = { id: string; name: string };
 type InstructorOption = {
   id: string;
   name: string;
@@ -24,11 +24,11 @@ export default function CreateBatchPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
 
-  const [courses, setCourses] = useState<CourseOption[]>([]);
+  const [packages, setPackages] = useState<PackageOption[]>([]);
   const [instructors, setInstructors] = useState<InstructorOption[]>([]);
 
   const [form, setForm] = useState({
-    courseId: "",
+    packageId: "",
     instructorId: "",
     name: "",
     startDate: "",
@@ -37,10 +37,16 @@ export default function CreateBatchPage() {
     description: "",
   });
 
+  // Fetch active packages and instructors on mount
   useEffect(() => {
     api
-      .get<CourseOption[]>("/api/admin/batches/courses")
-      .then(setCourses)
+      .get<{ packages: any[] }>("/api/admin/packages")
+      .then((res) => {
+        const active = (res.packages ?? []).filter(
+          (p: any) => p.status === "ACTIVE",
+        );
+        setPackages(active.map((p: any) => ({ id: p.id, name: p.name })));
+      })
       .catch(() => {});
     api
       .get<InstructorOption[]>("/api/admin/batches/instructors")
@@ -56,17 +62,23 @@ export default function CreateBatchPage() {
     setSubmitting(true);
 
     try {
-      const batch = await api.post<{ id: string }>("/api/admin/batches", {
-        courseId: form.courseId,
-        instructorId: form.instructorId,
-        name: form.name,
-        startDate: new Date(form.startDate).toISOString(),
-        endDate: new Date(form.endDate).toISOString(),
-        maxStudents: form.maxStudents ? Number(form.maxStudents) : undefined,
-        description: form.description || undefined,
-      });
+      const result = await api.post<{ batches: { id: string }[] }>(
+        "/api/admin/batches/bulk",
+        {
+          packageId: form.packageId,
+          instructorId: form.instructorId,
+          name: form.name,
+          startDate: new Date(form.startDate).toISOString(),
+          endDate: new Date(form.endDate).toISOString(),
+          maxStudents: form.maxStudents ? Number(form.maxStudents) : undefined,
+          description: form.description || undefined,
+        },
+      );
 
-      router.push(`/admin/batches/${batch.id}`);
+      toast.success(
+        `Created ${result.batches.length} batch${result.batches.length > 1 ? "es" : ""}`,
+      );
+      router.push("/admin/batches");
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -87,10 +99,10 @@ export default function CreateBatchPage() {
           Admin
         </p>
         <h1 className="mt-1 text-2xl font-bold text-foreground">
-          Create New Batch
+          Add New Batch
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          A batch is a cohort of students taking a course together.
+          A batch is created for each course in the selected package.
         </p>
       </div>
 
@@ -110,54 +122,53 @@ export default function CreateBatchPage() {
           />
         </div>
 
-        {/* Course + Instructor */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Course <span className="text-danger">*</span>
-            </label>
-            <Select
-              value={form.courseId}
-              onValueChange={(v) => update("courseId", v)}
-            >
-              <SelectTrigger className="field">
-                <SelectValue placeholder="Select a course" />
-              </SelectTrigger>
-              <SelectContent>
-                {courses.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {courses.length === 0 && (
-              <p className="mt-1 text-xs text-warning">
-                No published courses found. Publish a course first.
-              </p>
-            )}
-          </div>
+        {/* Package */}
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
+            Package <span className="text-danger">*</span>
+          </label>
+          <Select
+            value={form.packageId}
+            onValueChange={(v) => update("packageId", v)}
+          >
+            <SelectTrigger className="field">
+              <SelectValue placeholder="Select a package" />
+            </SelectTrigger>
+            <SelectContent>
+              {packages.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {packages.length === 0 && (
+            <p className="mt-1 text-xs text-warning">
+              No active packages found. Create and activate a package first.
+            </p>
+          )}
+        </div>
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Instructor <span className="text-danger">*</span>
-            </label>
-            <Select
-              value={form.instructorId}
-              onValueChange={(v) => update("instructorId", v)}
-            >
-              <SelectTrigger className="field">
-                <SelectValue placeholder="Select an instructor" />
-              </SelectTrigger>
-              <SelectContent>
-                {instructors.map((i) => (
-                  <SelectItem key={i.id} value={i.id}>
-                    {i.name} ({i.role})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Instructor */}
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
+            Instructor <span className="text-danger">*</span>
+          </label>
+          <Select
+            value={form.instructorId}
+            onValueChange={(v) => update("instructorId", v)}
+          >
+            <SelectTrigger className="field">
+              <SelectValue placeholder="Select an instructor" />
+            </SelectTrigger>
+            <SelectContent>
+              {instructors.map((i) => (
+                <SelectItem key={i.id} value={i.id}>
+                  {i.name} ({i.role})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Dates */}
@@ -226,7 +237,7 @@ export default function CreateBatchPage() {
             Cancel
           </button>
           <button type="submit" className="btn-primary" disabled={submitting}>
-            {submitting ? "Creating..." : "Create Batch"}
+            {submitting ? "Adding..." : "Add Batch"}
           </button>
         </div>
       </form>

@@ -57,7 +57,6 @@ type Course = {
   slug: string;
   description: string;
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
-  price: number;
   category: string | null;
   tags: string[] | null;
   learningObjectives: string[] | null;
@@ -121,7 +120,6 @@ export default function CourseDetailPage() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    price: 0,
     category: "",
   });
 
@@ -132,7 +130,6 @@ export default function CourseDetailPage() {
       setForm({
         title: data.title,
         description: data.description,
-        price: data.price,
         category: data.category || "",
       });
     } catch {
@@ -150,7 +147,6 @@ export default function CourseDetailPage() {
         setForm({
           title: data.title,
           description: data.description,
-          price: data.price,
           category: data.category || "",
         });
       })
@@ -164,7 +160,6 @@ export default function CourseDetailPage() {
       await api.put(`/api/admin/courses/${id}`, {
         title: form.title,
         description: form.description,
-        price: Number(form.price),
         category: form.category || null,
       });
       toast.success("Course saved!");
@@ -414,7 +409,6 @@ type ChecklistItem = {
 type CourseFormData = {
   title: string;
   description: string;
-  price: number;
   category: string;
 };
 
@@ -522,23 +516,6 @@ function CourseDetailsTab({
               }))
             }
             className="field"
-          />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Price (\u20B9)
-          </label>
-          <input
-            type="number"
-            value={form.price}
-            onChange={(e) =>
-              setForm((p: CourseFormData) => ({
-                ...p,
-                price: Number(e.target.value),
-              }))
-            }
-            className="field"
-            min={0}
           />
         </div>
       </div>

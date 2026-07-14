@@ -15,7 +15,7 @@ enum Role {
 }
 
 enum EnrollmentStatus {
-  PENDING // paid, waiting admin approval
+  PENDING // waiting admin approval
   APPROVED // admin approved, assigned to batch
   REJECTED
 }
@@ -98,7 +98,6 @@ model Course {
   thumbnailUrl       String?
   coverImageUrl      String?
   status             CourseStatus @default(DRAFT)
-  price              Float
   category           String?
   tags               Json?        // string[]
   learningObjectives Json?        // string[]
@@ -154,6 +153,7 @@ model Lesson {
 model Batch {
   id           String              @id @default(cuid())
   courseId     String
+  packageId    String?              // Optional: batch belongs to a package
   instructorId String              // Assigned mentor/instructor
   name         String              // e.g. "Python Batch Jan 2025"
   startDate    DateTime
@@ -167,21 +167,23 @@ model Batch {
   restoredAt   DateTime?
   restoredBy   String?
   course       Course              @relation(fields: [courseId], references: [id])
+  package      CoursePackage?      @relation(fields: [packageId], references: [id])
   instructor   User                @relation("BatchInstructor", fields: [instructorId], references: [id])
   enrollments  EnrollmentRequest[]
   sessions     LiveSession[]
   assignments  Assignment[]
   packageEnrollmentCourses PackageEnrollmentCourse[]
+
+  @@index([packageId])
 }
 
-// Student applies → pays → pending → admin approves → assigned to batch
+// Student applies → pending → admin approves → assigned to batch
 model EnrollmentRequest {
   id         String           @id @default(cuid())
   userId     String
-  courseId   String // Which course they paid for
+  courseId   String // Which course they are enrolling in
   batchId    String? // Filled by admin on approval
   status     EnrollmentStatus @default(PENDING)
-  payment    Payment?
   appliedAt  DateTime         @default(now())
   reviewedAt DateTime?
   user       User             @relation(fields: [userId], references: [id])
@@ -256,17 +258,6 @@ model Certificate {
   courseId String
   issuedAt DateTime @default(now())
   user     User     @relation(fields: [userId], references: [id])
-}
-
-model Payment {
-  id                String            @id @default(cuid())
-  enrollmentId      String            @unique
-  razorpayOrderId   String
-  razorpayPaymentId String?
-  status            String // created | paid | failed
-  amount            Float
-  createdAt         DateTime          @default(now())
-  enrollment        EnrollmentRequest @relation(fields: [enrollmentId], references: [id])
 }
 
 model Quiz {
@@ -637,13 +628,13 @@ model CoursePackage {
   id          String        @id @default(cuid())
   name        String
   description String?
-  price       Float         @default(0)
   status      PackageStatus @default(DRAFT)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
   courses     PackageCourse[]
   enrollments PackageEnrollment[]
+  batches     Batch[]
 }
 
 model PackageCourse {

@@ -14,7 +14,6 @@ type Package = {
   id: string;
   name: string;
   description: string | null;
-  price: number;
   status: "DRAFT" | "ACTIVE" | "ARCHIVED";
   createdAt: string;
   courses: {
@@ -82,9 +81,12 @@ export default function AdminPackagesPage() {
         title="Course Packages"
         description="Create and manage course bundles for students."
         action={
-          <Link href="/admin/packages/new" className="btn-primary text-sm flex items-center gap-1.5">
+          <Link
+            href="/admin/packages/new"
+            className="btn-primary text-sm flex items-center gap-1.5"
+          >
             <IconPlus size={16} stroke={1.5} />
-            Create Package
+            Add Package
           </Link>
         }
       />
@@ -122,7 +124,7 @@ export default function AdminPackagesPage() {
           description="Create your first package to bundle courses together."
           action={
             <Link href="/admin/packages/new" className="btn-primary text-sm">
-              Create Package
+              Add Package
             </Link>
           }
         />
@@ -149,16 +151,13 @@ export default function AdminPackagesPage() {
 
               <div className="flex items-center gap-4 text-xs text-muted">
                 <span>
-                  {pkg.courses.length} course{pkg.courses.length !== 1 ? "s" : ""}
+                  {pkg.courses.length} course
+                  {pkg.courses.length !== 1 ? "s" : ""}
                 </span>
                 <span>
-                  {pkg._count.enrollments} enrollment{pkg._count.enrollments !== 1 ? "s" : ""}
+                  {pkg._count.enrollments} enrollment
+                  {pkg._count.enrollments !== 1 ? "s" : ""}
                 </span>
-                {pkg.price > 0 && (
-                  <span className="font-medium text-foreground">
-                    ₹{pkg.price.toLocaleString()}
-                  </span>
-                )}
               </div>
 
               {pkg.courses.length > 0 && (

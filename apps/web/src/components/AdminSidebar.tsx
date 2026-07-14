@@ -24,6 +24,7 @@ import {
   IconX,
   IconFileDescription,
   IconTrash,
+  IconUserCheck,
   IconBellRinging,
 } from "@tabler/icons-react";
 
@@ -173,7 +174,11 @@ function NavGroup({
                           : "border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
                       }`}
                     >
-                      <item.icon size={18} stroke={1.8} className="shrink-0 opacity-80" />
+                      <item.icon
+                        size={18}
+                        stroke={1.8}
+                        className="shrink-0 opacity-80"
+                      />
                       <span className="flex-1 truncate">{item.label}</span>
                       {item.badge != null && (
                         <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary mr-1">
@@ -221,7 +226,11 @@ function NavGroup({
                       : "border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
                   }`}
                 >
-                  <item.icon size={18} stroke={1.8} className="shrink-0 opacity-80" />
+                  <item.icon
+                    size={18}
+                    stroke={1.8}
+                    className="shrink-0 opacity-80"
+                  />
                   <span
                     className={`flex-1 truncate ${collapsed ? "hidden" : "block"}`}
                   >
@@ -300,6 +309,15 @@ export default function AdminSidebar({
               }>,
             },
           ],
+          {
+            label: "Approvals",
+            href: "/admin/approvals",
+            icon: IconUserCheck as React.ComponentType<{
+              size?: number | string;
+              stroke?: number | string;
+              className?: string;
+            }>,
+          },
           {
             label: "Users",
             href: "/admin/users",
@@ -383,8 +401,14 @@ export default function AdminSidebar({
             children: [
               { label: "All Packages", href: "/admin/packages" },
               { label: "Create Package", href: "/admin/packages/new" },
-              { label: "Pending Enrollments", href: "/admin/packages/enrollments?status=PENDING" },
-              { label: "Active Packages", href: "/admin/packages?status=ACTIVE" },
+              {
+                label: "Pending Enrollments",
+                href: "/admin/packages/enrollments?status=PENDING",
+              },
+              {
+                label: "Active Packages",
+                href: "/admin/packages?status=ACTIVE",
+              },
             ],
           },
           { label: "Calendar", href: "/admin/calendar", icon: IconCalendar },
@@ -413,11 +437,6 @@ export default function AdminSidebar({
                 href: "/admin/mentorship?status=COMPLETED",
               },
             ],
-          },
-          {
-            label: "Microsoft",
-            href: "/admin/microsoft",
-            icon: IconBrandWindows,
           },
           {
             label: "Settings",
@@ -449,7 +468,9 @@ export default function AdminSidebar({
             alt="Marvel Slice"
             className="h-9 w-auto object-contain transition-transform duration-300 hover:scale-105"
           />
-          <span className={`text-base font-extrabold tracking-tight text-foreground ${collapsed ? "hidden" : "block"}`}>
+          <span
+            className={`text-base font-extrabold tracking-tight text-foreground ${collapsed ? "hidden" : "block"}`}
+          >
             <span>Marvel</span>
             <span className="text-primary ml-0.5">Slice</span>
           </span>
@@ -487,7 +508,9 @@ export default function AdminSidebar({
             <p className="truncate text-xs font-semibold text-foreground">
               {userName || "Admin"}
             </p>
-            <p className="truncate text-[10px] text-muted-foreground">{userEmail || ""}</p>
+            <p className="truncate text-[10px] text-muted-foreground">
+              {userEmail || ""}
+            </p>
           </div>
         </div>
         <button

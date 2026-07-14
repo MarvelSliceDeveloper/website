@@ -83,7 +83,10 @@ export const packageController = {
       if (!status || !["DRAFT", "ACTIVE", "ARCHIVED"].includes(status)) {
         return res.status(400).json({ error: "Invalid status" });
       }
-      const pkg = await packageService.updatePackageStatus(req.params.id, status);
+      const pkg = await packageService.updatePackageStatus(
+        req.params.id,
+        status,
+      );
       return res.json(pkg);
     } catch (error: any) {
       if (error.message === "Package not found")
@@ -96,7 +99,10 @@ export const packageController = {
   async enrollStudent(req: AuthRequest, res: Response) {
     try {
       const data = EnrollStudentSchema.parse(req.body);
-      const enrollment = await packageService.enrollStudent(req.params.id, data);
+      const enrollment = await packageService.enrollStudent(
+        req.params.id,
+        data,
+      );
       return res.status(201).json(enrollment);
     } catch (error: any) {
       if (error instanceof ZodError)
@@ -123,7 +129,10 @@ export const packageController = {
   async approveEnrollment(req: AuthRequest, res: Response) {
     try {
       const data = ApproveEnrollmentSchema.parse(req.body);
-      const enrollment = await packageService.approveEnrollment(req.params.id, data);
+      const enrollment = await packageService.approveEnrollment(
+        req.params.id,
+        data,
+      );
       return res.json({ message: "Enrollment approved", enrollment });
     } catch (error: any) {
       if (error instanceof ZodError)

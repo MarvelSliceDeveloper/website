@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { LiveSession } from "@/lib/student-mock-data";
+import type { LiveSession } from "@/lib/api-types";
 
 export type ComputedStatus = "LIVE" | "UPCOMING" | "PAST";
 

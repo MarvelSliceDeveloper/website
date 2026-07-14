@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { IconCalendarPlus } from "@tabler/icons-react";
 import type { ViewState } from "../_types/student-portal";
-import type { Batch, BatchRecording } from "@/lib/student-mock-data";
+import type { Batch, BatchRecording } from "@/lib/api-types";
 import StudentTable, {
   type StudentTableColumn,
 } from "@/components/student/StudentTable";

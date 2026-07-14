@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { ZodError } from "zod";
+import { ZodError, z } from "zod";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import {
   batchService,
@@ -7,6 +7,17 @@ import {
   UpdateBatchSchema,
   AddStudentsSchema,
 } from "./batch.service";
+import { prisma } from "../../utils/prisma";
+
+const BulkCreateBatchSchema = z.object({
+  packageId: z.string().cuid(),
+  instructorId: z.string().cuid(),
+  name: z.string().min(3).max(100),
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime(),
+  maxStudents: z.number().int().min(1).optional(),
+  description: z.string().optional(),
+});
 
 export const batchController = {
   // Creates a new batch
@@ -22,10 +33,67 @@ export const batchController = {
     }
   },
 
+  // Creates batches for all courses in a package
+  async createBulk(req: AuthRequest, res: Response) {
+    try {
+      const data = BulkCreateBatchSchema.parse(req.body);
+
+      // Verify package
+      const pkg = await prisma.coursePackage.findUnique({
+        where: { id: data.packageId },
+      });
+      if (!pkg) return res.status(400).json({ error: "Package not found" });
+      if (pkg.status !== "ACTIVE")
+        return res.status(400).json({ error: "Package is not active" });
+
+      // Verify instructor
+      const instructor = await prisma.user.findUnique({
+        where: { id: data.instructorId },
+      });
+      if (!instructor)
+        return res.status(400).json({ error: "Instructor not found" });
+
+      // Get all courses in the package
+      const packageCourses = await prisma.packageCourse.findMany({
+        where: { packageId: data.packageId },
+        select: { courseId: true },
+      });
+      if (packageCourses.length === 0)
+        return res
+          .status(400)
+          .json({ error: "Package has no courses. Add courses first." });
+
+      // Create one batch per course
+      const batches = await prisma.$transaction(
+        packageCourses.map((pc) =>
+          prisma.batch.create({
+            data: {
+              courseId: pc.courseId,
+              packageId: data.packageId,
+              instructorId: data.instructorId,
+              name: data.name,
+              startDate: new Date(data.startDate),
+              endDate: new Date(data.endDate),
+              maxStudents: data.maxStudents,
+              description: data.description,
+              status: "UPCOMING",
+            },
+          }),
+        ),
+      );
+
+      return res.status(201).json({ batches });
+    } catch (error: any) {
+      if (error instanceof ZodError)
+        return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: error.message });
+    }
+  },
+
   // Lists batches with filters
   async list(req: AuthRequest, res: Response) {
     try {
-      const { courseId, status, search } = req.query;
+      const { courseId, status, search, packageId } = req.query;
       const instructorId =
         req.user?.role === "INSTRUCTOR" ? req.user.userId : undefined;
       const batches = await batchService.listBatches({
@@ -33,6 +101,7 @@ export const batchController = {
         status: status as string,
         search: search as string,
         instructorId,
+        packageId: packageId as string,
       });
       return res.json(batches);
     } catch (error: any) {
@@ -135,6 +204,17 @@ export const batchController = {
       return res.json(instructors);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
+    }
+  },
+
+  // Gets batches grouped by course for a package
+  async getBatchesByPackage(req: AuthRequest, res: Response) {
+    try {
+      const { packageId } = req.params;
+      const result = await batchService.getBatchesByPackage(packageId);
+      return res.json(result);
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
     }
   },
 

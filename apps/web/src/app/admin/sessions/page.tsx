@@ -84,9 +84,11 @@ export default function AdminSessionsPage() {
     );
     setEditStart(new Date(session.scheduledAt).toISOString().slice(0, 16));
     setEditEnd(
-      new Date(new Date(session.scheduledAt).getTime() + 3600000)
-        .toISOString()
-        .slice(0, 16),
+      session.scheduledEndAt
+        ? new Date(session.scheduledEndAt).toISOString().slice(0, 16)
+        : new Date(new Date(session.scheduledAt).getTime() + 3600000)
+            .toISOString()
+            .slice(0, 16),
     );
   };
 

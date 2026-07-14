@@ -74,7 +74,7 @@ export default function DataTable<T>({
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+      <div className="rounded-none border border-border bg-card overflow-hidden">
         <div className="overflow-x-auto min-w-[600px]">
           <table className="w-full">
             <thead>
@@ -108,7 +108,7 @@ export default function DataTable<T>({
 
   if (data.length === 0) {
     return (
-      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+      <div className="rounded-none border border-border bg-card overflow-hidden">
         <div className="px-4 py-10 text-center text-sm text-muted">
           {emptyState ?? "No data"}
         </div>
@@ -117,7 +117,7 @@ export default function DataTable<T>({
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+    <div className="rounded-none border border-border bg-card overflow-hidden">
       {/* Desktop Table */}
       <div className="hidden md:block overflow-x-auto min-w-[600px]">
         <table className="w-full">
@@ -147,7 +147,7 @@ export default function DataTable<T>({
             {sorted.map((row, i) => (
               <tr
                 key={i}
-                className={`${i % 2 === 1 ? "bg-[#f9fafb]" : ""} hover:bg-primary/[0.02] transition-colors`}
+                className={`${i % 2 === 1 ? "bg-slate-50" : ""} hover:bg-primary/[0.03] transition-colors`}
               >
                 {columns.map((col) => (
                   <td

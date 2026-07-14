@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Batch } from "@/lib/student-mock-data";
+import type { Batch } from "@/lib/api-types";
 
 interface RecordingPlayerViewProps {
   batch: Batch;
