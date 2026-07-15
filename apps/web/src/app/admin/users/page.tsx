@@ -97,7 +97,13 @@ export default function AdminUsersPage() {
   const [editing, setEditing] = useState(false);
   // Batches for edit modal's selected package
   const [editBatches, setEditBatches] = useState<
-    { id: string; name: string; courseTitle: string }[]
+    {
+      id: string
+      name: string
+      courseTitle: string
+      filledCount: number
+      maxStudents: number | null
+    }[]
   >([]);
 
   // Delete confirmation
@@ -111,7 +117,13 @@ export default function AdminUsersPage() {
 
   // Batches for the selected package (flat list)
   const [packageBatches, setPackageBatches] = useState<
-    { id: string; name: string; courseTitle: string }[]
+    {
+      id: string
+      name: string
+      courseTitle: string
+      filledCount: number
+      maxStudents: number | null
+    }[]
   >([]);
 
   const fetchUsers = () => {
@@ -173,7 +185,9 @@ export default function AdminUsersPage() {
           batches.map((b: any) => ({
             id: b.id,
             name: b.name,
-            courseTitle: b.course?.title ?? "",
+            courseTitle: b.course?.title ?? b.package?.name ?? "All Courses",
+            filledCount: b._count?.enrollments ?? 0,
+            maxStudents: b.maxStudents ?? null,
           })),
         );
       })
@@ -197,7 +211,9 @@ export default function AdminUsersPage() {
           batches.map((b: any) => ({
             id: b.id,
             name: b.name,
-            courseTitle: b.course?.title ?? "",
+            courseTitle: b.course?.title ?? b.package?.name ?? "All Courses",
+            filledCount: b._count?.enrollments ?? 0,
+            maxStudents: b.maxStudents ?? null,
           })),
         );
       })
@@ -309,7 +325,9 @@ export default function AdminUsersPage() {
             batches.map((b: any) => ({
               id: b.id,
               name: b.name,
-              courseTitle: b.course?.title ?? "",
+              courseTitle: b.course?.title ?? b.package?.name ?? "All Courses",
+              filledCount: b._count?.enrollments ?? 0,
+              maxStudents: b.maxStudents ?? null,
             })),
           );
         })
@@ -717,6 +735,9 @@ export default function AdminUsersPage() {
                       {packageBatches.map((b) => (
                         <SelectItem key={b.id} value={b.id}>
                           {b.name} — {b.courseTitle}
+                          {b.maxStudents
+                            ? ` (${b.filledCount}/${b.maxStudents} filled, ${b.maxStudents - b.filledCount} remaining)`
+                            : ` (${b.filledCount} enrolled, unlimited)`}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -879,6 +900,9 @@ export default function AdminUsersPage() {
                       {editBatches.map((b) => (
                         <SelectItem key={b.id} value={b.id}>
                           {b.name} — {b.courseTitle}
+                          {b.maxStudents
+                            ? ` (${b.filledCount}/${b.maxStudents} filled, ${b.maxStudents - b.filledCount} remaining)`
+                            : ` (${b.filledCount} enrolled, unlimited)`}
                         </SelectItem>
                       ))}
                     </SelectContent>

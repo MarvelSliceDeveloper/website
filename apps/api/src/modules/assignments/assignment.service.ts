@@ -72,7 +72,23 @@ export const assignmentService = {
       throw new Error("You are not the instructor of this batch");
     }
     if (batch.courseId !== courseId) {
-      throw new Error("Batch does not belong to the selected course");
+      // Package-level batch: verify the course is part of the package
+      if (
+        batch.courseId === null &&
+        batch.packageId &&
+        (await prisma.packageCourse.findUnique({
+          where: {
+            packageId_courseId: {
+              packageId: batch.packageId,
+              courseId,
+            },
+          },
+        }))
+      ) {
+        // Course belongs to this package — valid
+      } else {
+        throw new Error("Batch does not belong to the selected course");
+      }
     }
     return batch;
   },

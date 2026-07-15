@@ -57,9 +57,11 @@ LMS/
 
 ### Batch (Cohort) Management
 
-- Group students into batches per course
-- Assign instructors to batches
-- Track start/end dates and max student capacity
+- A batch is a cohort tied to a single **course**; it may optionally be linked to a **package** (`packageId`).
+- A package can contain **many** batches (e.g. multiple cohorts, or one batch per course).
+- Creation flow (admin "Add New Batch" form): pick a **Package** → instructor, name, and dates → `POST /api/admin/batches` (without `courseId`) creates **one batch** with `courseId: null` representing the entire package cohort. Course membership is derived from `PackageCourse` records.
+- All courses from an approved package appear on the student dashboard — those with an assigned batch show ACTIVE status; those without show as PENDING.
+- Assign instructors to batches; track start/end dates and max student capacity.
 
 ### Live Sessions
 

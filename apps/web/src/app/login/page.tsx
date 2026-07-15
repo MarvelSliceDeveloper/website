@@ -112,7 +112,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen overflow-x-hidden bg-[#f8f9fc]">
       {/* ─── LEFT: Hero Panel (hidden on mobile/tablet) ─── */}
-      <section className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-[#f97316] via-[#ea580c] to-[#c2410c] px-12 lg:flex lg:w-[55%]">
+      <section className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-[#3b82f6] via-[#2563eb] to-[#1d4ed8] px-12 lg:flex lg:w-[55%]">
         {/* Diagonal stripe texture overlay */}
         <div
           className="absolute inset-0 opacity-[0.04]"
@@ -241,8 +241,8 @@ export default function LoginPage() {
                   className="h-11 w-auto object-contain"
                 />
                 <span className="text-2xl font-extrabold tracking-tight">
-                  <span className="text-orange-500">Marvel</span>{" "}
-                  <span className="text-green-600">Slice</span>
+                  <span className="text-blue-500">Marvel</span>{" "}
+                  <span className="text-blue-800">Slice</span>
                 </span>
               </div>
 
@@ -278,7 +278,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3.5 text-sm text-gray-800 outline-none transition-all duration-300 placeholder:text-gray-400 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100/60 hover:border-gray-300"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3.5 text-sm text-gray-800 outline-none transition-all duration-300 placeholder:text-gray-400 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100/60 hover:border-gray-300"
                 />
 
                 {/* Password */}
@@ -289,7 +289,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     required
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3.5 pr-11 text-sm text-gray-800 outline-none transition-all duration-300 placeholder:text-gray-400 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-100/60 hover:border-gray-300"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3.5 pr-11 text-sm text-gray-800 outline-none transition-all duration-300 placeholder:text-gray-400 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100/60 hover:border-gray-300"
                   />
                   <button
                     type="button"
@@ -314,13 +314,13 @@ export default function LoginPage() {
                       type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 accent-orange-500"
+                      className="h-4 w-4 rounded border-gray-300 accent-blue-500"
                     />
                     Remember Me
                   </label>
                   <button
                     type="button"
-                    className="font-semibold text-orange-500 transition-colors hover:text-orange-600"
+                    className="font-semibold text-blue-500 transition-colors hover:text-blue-600"
                   >
                     Forgot Password?
                   </button>
@@ -330,7 +330,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition-all duration-300 hover:from-orange-600 hover:to-orange-700 hover:shadow-xl hover:shadow-orange-500/30 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0"
+                  className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/25 transition-all duration-300 hover:from-blue-600 hover:to-blue-700 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0"
                 >
                   <span
                     className="relative z-10"
@@ -364,7 +364,7 @@ export default function LoginPage() {
               {/* SSO Button */}
               <button
                 type="button"
-                className="mt-4 w-full rounded-xl border-2 border-orange-200 bg-orange-50/50 py-3 text-sm font-semibold text-orange-600 transition-all duration-300 hover:border-orange-400 hover:bg-orange-50 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]"
+                className="mt-4 w-full rounded-xl border-2 border-blue-200 bg-blue-50/50 py-3 text-sm font-semibold text-blue-600 transition-all duration-300 hover:border-blue-400 hover:bg-blue-50 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]"
                 style={{
                   animation:
                     "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both",
@@ -374,54 +374,56 @@ export default function LoginPage() {
               </button>
 
               {/* Demo Accounts */}
-              <div
-                className="mt-6 rounded-xl border border-dashed border-gray-200 bg-gray-50/50 p-4"
-                style={{
-                  animation:
-                    "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both",
-                }}
-              >
-                <p className="mb-2.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                  Demo Accounts (dev only)
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    {
-                      label: "Student",
-                      email: "student@lms.local",
-                      pw: "student123",
-                    },
-                    {
-                      label: "Instructor",
-                      email: "instructor@lms.local",
-                      pw: "instructor123",
-                    },
-                    {
-                      label: "Admin",
-                      email: "admin@lms.local",
-                      pw: "admin123",
-                    },
-                    {
-                      label: "Super Admin",
-                      email: "superadmin@lms.local",
-                      pw: "superadmin123",
-                    },
-                  ].map((d) => (
-                    <button
-                      key={d.email}
-                      type="button"
-                      onClick={() => {
-                        setEmail(d.email);
-                        setPassword(d.pw);
-                        toast.info(`Filled ${d.label} credentials`);
-                      }}
-                      className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-medium text-gray-500 shadow-sm transition-all duration-200 hover:border-orange-300 hover:text-orange-600 hover:shadow-md hover:-translate-y-0.5 active:scale-95"
-                    >
-                      {d.label}
-                    </button>
-                  ))}
+              {process.env.NODE_ENV === "development" && (
+                <div
+                  className="mt-6 rounded-xl border border-dashed border-gray-200 bg-gray-50/50 p-4"
+                  style={{
+                    animation:
+                      "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both",
+                  }}
+                >
+                  <p className="mb-2.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                    Demo Accounts (dev only)
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      {
+                        label: "Student",
+                        email: "student@lms.local",
+                        pw: "student123",
+                      },
+                      {
+                        label: "Instructor",
+                        email: "instructor@lms.local",
+                        pw: "instructor123",
+                      },
+                      {
+                        label: "Admin",
+                        email: "admin@lms.local",
+                        pw: "admin123",
+                      },
+                      {
+                        label: "Super Admin",
+                        email: "superadmin@lms.local",
+                        pw: "superadmin123",
+                      },
+                    ].map((d) => (
+                      <button
+                        key={d.email}
+                        type="button"
+                        onClick={() => {
+                          setEmail(d.email);
+                          setPassword(d.pw);
+                          toast.info(`Filled ${d.label} credentials`);
+                        }}
+                        className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-medium text-gray-500 shadow-sm transition-all duration-200 hover:border-blue-300 hover:text-blue-600 hover:shadow-md hover:-translate-y-0.5 active:scale-95"
+                      >
+                        {d.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

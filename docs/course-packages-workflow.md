@@ -19,7 +19,7 @@ Replace the current per-course enrollment approval system with a **Package-based
 2. Admin creates **Packages** (bundles of courses, e.g. "Backend Development")
 3. No public catalogue (removed)
 4. Admin directly enrolls students into packages (no online payment)
-5. Admin assigns batches for each course in the package
+5. Admin creates batches as needed — a package can hold **many** batches (e.g. multiple cohorts). The "Add New Batch" form is package-first: select a package (no course picker), then an instructor, name, and dates. On submit (`POST /api/admin/batches` without `courseId`), the backend creates **one batch** with `courseId: null` representing the entire package cohort. The batch's course membership is derived from `PackageCourse` records, not from a single `courseId`. When a student is enrolled and approved, the batch is assigned to all their `PackageEnrollmentCourse` records.
 6. Student sees all package courses in dashboard
 
 ## Prisma Schema Changes

@@ -81,7 +81,6 @@ export interface Note {
 }
 
 export type RailTab = "lesson" | "editor" | "note" | "session" | "resource";
-export type SidebarTab = "all" | "live" | "recordings";
 
 export interface CourseContentViewProps {
   courseId: string;

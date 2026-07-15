@@ -1,4 +1,6 @@
-import type { CourseContentData, SidebarTab } from "./types";
+import type { CourseContentData } from "./types";
+
+type SidebarTab = "all" | "live" | "recordings";
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();

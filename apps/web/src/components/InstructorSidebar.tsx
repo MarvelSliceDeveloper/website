@@ -112,7 +112,7 @@ function ChildNavLink({
         className={`group flex items-center gap-2.5 py-2 pl-9 pr-4 text-[13px] transition-all border-l-3 ${
           isChildActive
             ? "border-primary bg-primary/8 text-primary font-bold"
-            : "border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
+            : "border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
         }`}
       >
         <span
@@ -386,9 +386,9 @@ export default function InstructorSidebar({
       {/* Footer Profile & Logout */}
       <div className="border-t border-border bg-card p-3 space-y-1.5">
         <div
-          className={`flex items-center ${
-            collapsed ? "justify-center" : "gap-2.5 px-2 py-1.5"
-          }`}
+          className={`flex items-center border border-border rounded-lg bg-slate-170 dark:bg-slate-90/5 ${
+          collapsed ? "justify-center" : "gap-2.5 px-2 py-1.5"
+        }`}
         >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-primary/10 text-[10px] font-bold text-primary">
             {displayInitials}

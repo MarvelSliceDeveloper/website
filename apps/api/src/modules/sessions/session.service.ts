@@ -9,6 +9,7 @@ import { getSuperAdminId } from "../../utils/super-admin";
 export const CreateSessionSchema = z
   .object({
     batchId: z.string().cuid(),
+    courseId: z.string().cuid().optional(),
     moduleId: z.string().cuid().optional(),
     title: z.string().min(3).max(200),
     startDateTime: z
@@ -41,6 +42,7 @@ export const sessionService = {
   ) {
     const {
       batchId,
+      courseId,
       moduleId,
       title,
       startDateTime,
@@ -52,15 +54,39 @@ export const sessionService = {
     // Verify the batch exists
     const batch = await prisma.batch.findUnique({
       where: { id: batchId },
-      include: { course: true },
+      include: {
+        course: true,
+        package: { include: { courses: { select: { courseId: true } } } },
+      },
     });
 
     if (!batch) throw new Error("Batch not found");
 
-    if (moduleId) {
-      // Verify the module belongs to this batch's course
+    // Resolve which course this session targets
+    const resolvedCourseId = courseId ?? batch.courseId;
+
+    if (resolvedCourseId) {
+      // Verify course exists
+      const course = await prisma.course.findUnique({
+        where: { id: resolvedCourseId },
+      });
+      if (!course) throw new Error("Course not found");
+
+      // If batch is package-only, verify course belongs to the package
+      if (!batch.courseId && batch.packageId) {
+        const belongs = batch.package?.courses.some(
+          (pc) => pc.courseId === resolvedCourseId,
+        );
+        if (!belongs) {
+          throw new Error("Course is not part of this batch's package");
+        }
+      }
+    }
+
+    if (moduleId && resolvedCourseId) {
+      // Verify the module belongs to the target course
       const module = await prisma.module.findFirst({
-        where: { id: moduleId, courseId: batch.courseId },
+        where: { id: moduleId, courseId: resolvedCourseId },
       });
       if (!module) throw new Error("Module not found in this course");
     }
@@ -125,6 +151,7 @@ export const sessionService = {
     const session = await prisma.liveSession.create({
       data: {
         batchId,
+        courseId: resolvedCourseId,
         moduleId,
         title,
         teamsMeetingId,

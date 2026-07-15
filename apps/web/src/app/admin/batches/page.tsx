@@ -21,7 +21,11 @@ type Batch = {
   course: { id: string; title: string };
   instructor: { id: string; name: string; email: string };
   package: { id: string; name: string } | null;
-  _count: { enrollments: number; sessions: number };
+  _count: {
+    enrollments: number;
+    packageEnrollmentCourses: number;
+    sessions: number;
+  };
 };
 
 const statusStyles: Record<string, string> = {
@@ -145,7 +149,9 @@ function BatchesPageContent() {
                       {batch.name}
                     </Link>
                     <p className="text-xs text-muted mt-0.5">
-                      {batch.course.title}
+                      {batch.course?.title ??
+                        batch.package?.name ??
+                        "All Courses"}
                     </p>
                     {batch.package && (
                       <p className="text-[10px] text-muted mt-0.5">
@@ -163,7 +169,8 @@ function BatchesPageContent() {
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="panel p-2">
                     <p className="text-lg font-bold text-foreground">
-                      {batch._count.enrollments}
+                      {batch._count.enrollments +
+                        batch._count.packageEnrollmentCourses}
                     </p>
                     <p className="text-[10px] text-muted uppercase">Students</p>
                   </div>

@@ -11,9 +11,9 @@ router.get("/enrolled", async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 
-    // Fetch individual enrollments
+    // Fetch individual enrollments (exclude rejected)
     const enrollments = await prisma.enrollmentRequest.findMany({
-      where: { userId },
+      where: { userId, status: { not: "REJECTED" } },
       include: {
         batch: {
           include: {
@@ -55,13 +55,14 @@ router.get("/enrolled", async (req: AuthRequest, res: Response) => {
           batchLabel: "—",
           instructor: "—",
           progress: 0,
-          status: "PENDING",
+          status: e.status,
           source: "enrollment" as const,
         };
       }
 
       const batch = e.batch;
-      const course = batch.course;
+      // Individual enrollment batches always have a course assigned
+      const course = batch.course!;
 
       const sessions = batch.sessions;
       const totalRecordings = sessions.filter((s) => s.recording).length;
@@ -144,13 +145,16 @@ router.get("/enrolled", async (req: AuthRequest, res: Response) => {
             batchLabel: "—",
             instructor: "—",
             progress: 0,
-            status: "PENDING",
+            status: pe.status,
             source: "package" as const,
           };
         }
 
         const batch = pec.batch;
-        const sessions = batch.sessions;
+        // Filter sessions: only show sessions for this course + package-wide sessions (courseId=null)
+        const sessions = batch.sessions.filter(
+          (s) => !s.courseId || s.courseId === pec.course.id,
+        );
         const totalRecordings = sessions.filter((s) => s.recording).length;
         let progress = 0;
 
@@ -197,7 +201,7 @@ router.get("/enrolled", async (req: AuthRequest, res: Response) => {
 
     // Merge and deduplicate (prefer individual enrollment if both exist)
     const courseMap = new Map<string, any>();
-    for (const course of [...packageCourses, ...individualCourses]) {
+    for (const course of [...individualCourses, ...packageCourses]) {
       if (!courseMap.has(course.id)) {
         courseMap.set(course.id, course);
       }
@@ -240,10 +244,17 @@ router.get("/catalogue", async (req: AuthRequest, res: Response) => {
       },
     });
 
-    const userEnrollments = await prisma.enrollmentRequest.findMany({
-      where: { userId },
-    });
-    const enrolledCourseIds = new Set(userEnrollments.map((e) => e.courseId));
+    const [userEnrollments, packageCourseEnrollments] = await Promise.all([
+      prisma.enrollmentRequest.findMany({ where: { userId } }),
+      prisma.packageEnrollmentCourse.findMany({
+        where: { enrollment: { userId, status: "APPROVED" } },
+        select: { courseId: true },
+      }),
+    ]);
+    const enrolledCourseIds = new Set([
+      ...userEnrollments.map((e) => e.courseId),
+      ...packageCourseEnrollments.map((p) => p.courseId),
+    ]);
 
     const catalogue = courses.map((course) => {
       const nextBatch = course.batches[0];
@@ -292,17 +303,34 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
     const { courseId } = req.params;
 
-    // Verify user is enrolled
+    // Verify user is enrolled (check both individual and package enrollments)
+    let batchId: string | null = null;
+    let batch: any = null;
+
     const enrollment = await prisma.enrollmentRequest.findFirst({
       where: { userId, courseId, status: "APPROVED" },
       include: { batch: true },
     });
 
-    if (!enrollment) {
-      return res.status(403).json({ error: "Not enrolled in this course" });
-    }
+    if (enrollment) {
+      batchId = enrollment.batchId;
+      batch = enrollment.batch;
+    } else {
+      const packageCourse = await prisma.packageEnrollmentCourse.findFirst({
+        where: {
+          courseId,
+          enrollment: { userId, status: "APPROVED" },
+        },
+        include: { batch: true },
+      });
 
-    const batchId = enrollment.batchId;
+      if (!packageCourse) {
+        return res.status(403).json({ error: "Not enrolled in this course" });
+      }
+
+      batchId = packageCourse.batchId;
+      batch = packageCourse.batch;
+    }
 
     // Fetch course with modules and lessons
     const course = await prisma.course.findUnique({
@@ -332,7 +360,10 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
 
     if (batchId) {
       const batchSessions = await prisma.liveSession.findMany({
-        where: { batchId },
+        where: {
+          batchId,
+          OR: [{ courseId }, { courseId: null }],
+        },
         orderBy: { scheduledAt: "asc" },
         include: {
           module: { select: { id: true, title: true } },
@@ -446,13 +477,13 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
         thumbnailUrl: course.thumbnailUrl,
         status: course.status,
       },
-      batch: enrollment.batch
+      batch: batch
         ? {
-            id: enrollment.batch.id,
-            name: enrollment.batch.name,
-            status: enrollment.batch.status,
-            startDate: enrollment.batch.startDate,
-            endDate: enrollment.batch.endDate,
+            id: batch.id,
+            name: batch.name,
+            status: batch.status,
+            startDate: batch.startDate,
+            endDate: batch.endDate,
           }
         : null,
       modules,
@@ -484,11 +515,19 @@ router.post("/enroll", async (req: AuthRequest, res: Response) => {
         .json({ error: "Course not found or not available" });
     }
 
-    // Check if already enrolled or has a pending request
-    const existing = await prisma.enrollmentRequest.findFirst({
-      where: { userId, courseId, status: { in: ["PENDING", "APPROVED"] } },
-    });
-    if (existing) {
+    // Check if already enrolled or has a pending request (individual or package)
+    const [existingEnrollment, existingPackage] = await Promise.all([
+      prisma.enrollmentRequest.findFirst({
+        where: { userId, courseId, status: { in: ["PENDING", "APPROVED"] } },
+      }),
+      prisma.packageEnrollmentCourse.findFirst({
+        where: {
+          courseId,
+          enrollment: { userId, status: { in: ["PENDING", "APPROVED"] } },
+        },
+      }),
+    ]);
+    if (existingEnrollment || existingPackage) {
       return res.status(400).json({
         error: "You already have an active enrollment for this course",
       });

@@ -139,10 +139,10 @@ export const studentService = {
           items.push({
             recordingId: session.recording.id,
             batchId: enrollment.batchId,
-            courseTitle: `${enrollment.batch.course.title} — Batch ${enrollment.batch.id.slice(0, 8)}`,
+            courseTitle: `${enrollment.batch.course?.title || "Package Course"} — Batch ${enrollment.batch.id.slice(0, 8)}`,
             dayLabel: `Day ${items.filter((i) => i.batchId === enrollment.batchId).length + 1}`,
             watchedPercent,
-            thumbnail: enrollment.batch.course.thumbnailUrl || "📚",
+            thumbnail: enrollment.batch.course?.thumbnailUrl || "📚",
           });
         }
       }

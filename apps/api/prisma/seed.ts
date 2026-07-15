@@ -586,6 +586,26 @@ async function main() {
     data: { packageId: cloudPkg.id },
   });
 
+  // Create a package-only batch (courseId=null) for the Fullstack package
+  const existingPkgBatch = await prisma.batch.findFirst({
+    where: { courseId: null, packageId: fullStackPkg.id, name: "Fullstack Package Batch — Jul 2025" },
+  });
+  if (!existingPkgBatch) {
+    await prisma.batch.create({
+      data: {
+        courseId: null,
+        packageId: fullStackPkg.id,
+        instructorId: vikram.id,
+        name: "Fullstack Package Batch — Jul 2025",
+        startDate: new Date("2025-07-01"),
+        endDate: new Date("2025-12-31"),
+        maxStudents: 50,
+        status: "ACTIVE",
+        description: "Package-level batch covering all courses in the Fullstack package.",
+      },
+    });
+  }
+
   console.log("✅ Batches linked to packages");
 
   // ─── Enrollments ──────────────────────────────────────────────────────────

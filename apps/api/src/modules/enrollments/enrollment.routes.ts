@@ -91,14 +91,18 @@ router.patch("/:id/approve", async (req: AuthRequest, res: Response) => {
     const batch = await prisma.batch.findUnique({
       where: { id: batchId },
       include: {
-        _count: { select: { enrollments: true } },
+        _count: {
+          select: {
+            enrollments: { where: { status: "APPROVED" } },
+          },
+        },
         course: { select: { title: true } },
       },
     });
     if (!batch) {
       return res.status(404).json({ error: "Batch not found" });
     }
-    if (batch.courseId !== enrollment.courseId) {
+    if (batch.courseId !== null && batch.courseId !== enrollment.courseId) {
       return res
         .status(400)
         .json({ error: "Batch does not belong to the enrolled course" });

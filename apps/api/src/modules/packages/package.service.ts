@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
+import {
+  notificationService,
+  dispatchEmailsForNotification,
+} from "../notifications/notification.service";
 
 // --- Zod Schemas ---
 
@@ -330,11 +334,26 @@ export const packageService = {
       // Verify batch exists and belongs to the course
       const batch = await prisma.batch.findUnique({
         where: { id: assignment.batchId },
+        include: {
+          _count: {
+            select: {
+              enrollments: { where: { status: "APPROVED" } },
+              packageEnrollmentCourses: true,
+            },
+          },
+        },
       });
       if (!batch) throw new Error(`Batch ${assignment.batchId} not found`);
-      if (batch.courseId !== assignment.courseId) {
+      if (batch.courseId !== null && batch.courseId !== assignment.courseId) {
         throw new Error(
           `Batch ${assignment.batchId} does not belong to course ${assignment.courseId}`,
+        );
+      }
+      const totalEnrolled =
+        batch._count.enrollments + batch._count.packageEnrollmentCourses;
+      if (batch.maxStudents && totalEnrolled >= batch.maxStudents) {
+        throw new Error(
+          `Batch "${batch.name}" has reached maximum capacity (${batch.maxStudents})`,
         );
       }
     }
@@ -367,6 +386,19 @@ export const packageService = {
       },
     });
 
+    notificationService.create({
+      userId: enrollment.userId,
+      type: "ENROLLMENT_APPROVED",
+      title: "Package Enrollment Approved!",
+      message: `Your enrollment in package "${enrollment.package.name}" has been approved.`,
+      metadata: { packageId: enrollment.packageId },
+    });
+
+    dispatchEmailsForNotification([enrollment.userId], "ENROLLMENT_APPROVED", {
+      courseName: enrollment.package.name,
+      batchName: "",
+    });
+
     return updated;
   },
 
@@ -374,6 +406,9 @@ export const packageService = {
   async rejectEnrollment(enrollmentId: string) {
     const enrollment = await prisma.packageEnrollment.findUnique({
       where: { id: enrollmentId },
+      include: {
+        package: { select: { name: true } },
+      },
     });
     if (!enrollment) throw new Error("Enrollment not found");
     if (enrollment.status !== "PENDING") {
@@ -382,7 +417,7 @@ export const packageService = {
       );
     }
 
-    return prisma.packageEnrollment.update({
+    const updated = await prisma.packageEnrollment.update({
       where: { id: enrollmentId },
       data: { status: "REJECTED" },
       include: {
@@ -390,6 +425,22 @@ export const packageService = {
         package: { select: { id: true, name: true } },
       },
     });
+
+    notificationService.create({
+      userId: enrollment.userId,
+      type: "ENROLLMENT_REJECTED",
+      title: "Package Enrollment Update",
+      message:
+        "Unfortunately, your package enrollment request was not approved at this time.",
+      metadata: { packageId: enrollment.packageId },
+    });
+
+    dispatchEmailsForNotification([enrollment.userId], "ENROLLMENT_REJECTED", {
+      courseName: enrollment.package.name,
+      reason: undefined,
+    });
+
+    return updated;
   },
 
   // Get student's enrolled packages

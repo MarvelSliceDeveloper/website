@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { api } from "@/lib/api";
 import {
@@ -20,14 +20,25 @@ type InstructorOption = {
   role: string;
 };
 
+type FormState = {
+  packageId: string;
+  instructorId: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  maxStudents: string;
+  description: string;
+};
+
 export default function CreateBatchPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [attempted, setAttempted] = useState(false);
 
   const [packages, setPackages] = useState<PackageOption[]>([]);
   const [instructors, setInstructors] = useState<InstructorOption[]>([]);
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     packageId: "",
     instructorId: "",
     name: "",
@@ -40,12 +51,14 @@ export default function CreateBatchPage() {
   // Fetch active packages and instructors on mount
   useEffect(() => {
     api
-      .get<{ packages: any[] }>("/api/admin/packages")
+      .get<{ packages: Array<{ id: string; name: string; status: string }> }>(
+        "/api/admin/packages",
+      )
       .then((res) => {
         const active = (res.packages ?? []).filter(
-          (p: any) => p.status === "ACTIVE",
+          (p) => p.status === "ACTIVE",
         );
-        setPackages(active.map((p: any) => ({ id: p.id, name: p.name })));
+        setPackages(active.map((p) => ({ id: p.id, name: p.name })));
       })
       .catch(() => {});
     api
@@ -54,30 +67,62 @@ export default function CreateBatchPage() {
       .catch(() => {});
   }, []);
 
-  const update = (field: string, value: string) =>
+  const update = (field: keyof FormState, value: string) =>
     setForm((p) => ({ ...p, [field]: value }));
+
+  const errors = useMemo(() => {
+    const e: Partial<Record<keyof FormState, string>> = {};
+    if (!form.packageId) e.packageId = "Please select a package";
+    if (!form.instructorId) e.instructorId = "Please select an instructor";
+    if (form.name.trim().length < 3)
+      e.name = "Name must be at least 3 characters";
+    if (!form.startDate) e.startDate = "Start date is required";
+    if (!form.endDate) e.endDate = "End date is required";
+    if (
+      form.startDate &&
+      form.endDate &&
+      new Date(form.endDate) < new Date(form.startDate)
+    ) {
+      e.endDate = "End date must be after the start date";
+    }
+    if (form.maxStudents && Number(form.maxStudents) < 1) {
+      e.maxStudents = "Max students must be at least 1";
+    }
+    return e;
+  }, [form]);
+
+  const isValid = Object.keys(errors).length === 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAttempted(true);
+
+    if (!isValid) {
+      const firstError = Object.values(errors)[0];
+      toast.error(firstError ?? "Please fix the highlighted fields");
+      return;
+    }
+
     setSubmitting(true);
-
     try {
-      const result = await api.post<{ batches: { id: string }[] }>(
-        "/api/admin/batches/bulk",
-        {
-          packageId: form.packageId,
-          instructorId: form.instructorId,
-          name: form.name,
-          startDate: new Date(form.startDate).toISOString(),
-          endDate: new Date(form.endDate).toISOString(),
-          maxStudents: form.maxStudents ? Number(form.maxStudents) : undefined,
-          description: form.description || undefined,
-        },
-      );
+      const result = await api.post<
+        | { id: string; name: string }
+        | { message: string; batches: { id: string; name: string }[] }
+      >("/api/admin/batches", {
+        packageId: form.packageId,
+        instructorId: form.instructorId,
+        name: form.name,
+        startDate: new Date(form.startDate).toISOString(),
+        endDate: new Date(form.endDate).toISOString(),
+        maxStudents: form.maxStudents ? Number(form.maxStudents) : undefined,
+        description: form.description || undefined,
+      });
 
-      toast.success(
-        `Created ${result.batches.length} batch${result.batches.length > 1 ? "es" : ""}`,
-      );
+      if ("batches" in result) {
+        toast.success(result.message);
+      } else {
+        toast.success(`Created batch "${result.name}"`);
+      }
       router.push("/admin/batches");
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -85,6 +130,11 @@ export default function CreateBatchPage() {
       setSubmitting(false);
     }
   };
+
+  const showError = (field: keyof FormState) =>
+    attempted && errors[field] ? (
+      <p className="mt-1 text-xs text-danger">{errors[field]}</p>
+    ) : null;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -102,26 +152,12 @@ export default function CreateBatchPage() {
           Add New Batch
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          A batch is created for each course in the selected package.
+          Select a package to create a batch for each of its courses. A package
+          can have multiple batches over time.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="glass-card p-6 space-y-5">
-        {/* Batch Name */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Batch Name <span className="text-danger">*</span>
-          </label>
-          <input
-            type="text"
-            value={form.name}
-            onChange={(e) => update("name", e.target.value)}
-            placeholder="e.g. Python Batch — June 2025"
-            className="field"
-            required
-          />
-        </div>
-
         {/* Package */}
         <div>
           <label className="mb-1.5 block text-sm font-medium text-foreground">
@@ -147,6 +183,7 @@ export default function CreateBatchPage() {
               No active packages found. Create and activate a package first.
             </p>
           )}
+          {showError("packageId")}
         </div>
 
         {/* Instructor */}
@@ -169,6 +206,22 @@ export default function CreateBatchPage() {
               ))}
             </SelectContent>
           </Select>
+          {showError("instructorId")}
+        </div>
+
+        {/* Batch Name */}
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
+            Batch Name <span className="text-danger">*</span>
+          </label>
+          <input
+            type="text"
+            value={form.name}
+            onChange={(e) => update("name", e.target.value)}
+            placeholder="e.g. Python Batch — June 2025"
+            className="field"
+          />
+          {showError("name")}
         </div>
 
         {/* Dates */}
@@ -182,8 +235,8 @@ export default function CreateBatchPage() {
               value={form.startDate}
               onChange={(e) => update("startDate", e.target.value)}
               className="field"
-              required
             />
+            {showError("startDate")}
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">
@@ -194,8 +247,8 @@ export default function CreateBatchPage() {
               value={form.endDate}
               onChange={(e) => update("endDate", e.target.value)}
               className="field"
-              required
             />
+            {showError("endDate")}
           </div>
         </div>
 
@@ -213,6 +266,7 @@ export default function CreateBatchPage() {
               className="field"
               min={1}
             />
+            {showError("maxStudents")}
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">
@@ -236,7 +290,11 @@ export default function CreateBatchPage() {
           >
             Cancel
           </button>
-          <button type="submit" className="btn-primary" disabled={submitting}>
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={submitting || !isValid}
+          >
             {submitting ? "Adding..." : "Add Batch"}
           </button>
         </div>

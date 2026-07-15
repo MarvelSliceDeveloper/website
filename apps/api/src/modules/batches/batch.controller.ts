@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { ZodError, z } from "zod";
+import { ZodError } from "zod";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import {
   batchService,
@@ -7,82 +7,22 @@ import {
   UpdateBatchSchema,
   AddStudentsSchema,
 } from "./batch.service";
-import { prisma } from "../../utils/prisma";
-
-const BulkCreateBatchSchema = z.object({
-  packageId: z.string().cuid(),
-  instructorId: z.string().cuid(),
-  name: z.string().min(3).max(100),
-  startDate: z.string().datetime(),
-  endDate: z.string().datetime(),
-  maxStudents: z.number().int().min(1).optional(),
-  description: z.string().optional(),
-});
 
 export const batchController = {
-  // Creates a new batch
+  // Creates a new batch (single with courseId, or one-per-course when only packageId)
   async create(req: AuthRequest, res: Response) {
     try {
       const data = CreateBatchSchema.parse(req.body);
-      const batch = await batchService.createBatch(data);
-      return res.status(201).json(batch);
-    } catch (error: any) {
-      if (error instanceof ZodError)
-        return res.status(400).json({ error: error.errors });
-      return res.status(400).json({ error: error.message });
-    }
-  },
 
-  // Creates batches for all courses in a package
-  async createBulk(req: AuthRequest, res: Response) {
-    try {
-      const data = BulkCreateBatchSchema.parse(req.body);
-
-      // Verify package
-      const pkg = await prisma.coursePackage.findUnique({
-        where: { id: data.packageId },
-      });
-      if (!pkg) return res.status(400).json({ error: "Package not found" });
-      if (pkg.status !== "ACTIVE")
-        return res.status(400).json({ error: "Package is not active" });
-
-      // Verify instructor
-      const instructor = await prisma.user.findUnique({
-        where: { id: data.instructorId },
-      });
-      if (!instructor)
-        return res.status(400).json({ error: "Instructor not found" });
-
-      // Get all courses in the package
-      const packageCourses = await prisma.packageCourse.findMany({
-        where: { packageId: data.packageId },
-        select: { courseId: true },
-      });
-      if (packageCourses.length === 0)
-        return res
-          .status(400)
-          .json({ error: "Package has no courses. Add courses first." });
-
-      // Create one batch per course
-      const batches = await prisma.$transaction(
-        packageCourses.map((pc) =>
-          prisma.batch.create({
-            data: {
-              courseId: pc.courseId,
-              packageId: data.packageId,
-              instructorId: data.instructorId,
-              name: data.name,
-              startDate: new Date(data.startDate),
-              endDate: new Date(data.endDate),
-              maxStudents: data.maxStudents,
-              description: data.description,
-              status: "UPCOMING",
-            },
-          }),
-        ),
-      );
-
-      return res.status(201).json({ batches });
+      if (data.courseId) {
+        // Single batch for a specific course
+        const batch = await batchService.createBatch(data);
+        return res.status(201).json(batch);
+      } else {
+        // packageId is guaranteed by Zod refinement — creates one batch for the whole package
+        const batch = await batchService.createBatchesForPackage(data);
+        return res.status(201).json(batch);
+      }
     } catch (error: any) {
       if (error instanceof ZodError)
         return res.status(400).json({ error: error.errors });

@@ -110,6 +110,7 @@ model Course {
   restoredBy         String?
   modules            Module[]
   batches            Batch[]
+  liveSessions       LiveSession[]
   assignments        Assignment[]
   mentorshipTickets  MentorshipTicket[]
   notes              Note[]
@@ -152,7 +153,7 @@ model Lesson {
 // A Batch is a course cohort — e.g. "Python Batch Jan 2025"
 model Batch {
   id           String              @id @default(cuid())
-  courseId     String
+  courseId     String?
   packageId    String?              // Optional: batch belongs to a package
   instructorId String              // Assigned mentor/instructor
   name         String              // e.g. "Python Batch Jan 2025"
@@ -166,7 +167,7 @@ model Batch {
   deletedBy    String?
   restoredAt   DateTime?
   restoredBy   String?
-  course       Course              @relation(fields: [courseId], references: [id])
+  course       Course?             @relation(fields: [courseId], references: [id])
   package      CoursePackage?      @relation(fields: [packageId], references: [id])
   instructor   User                @relation("BatchInstructor", fields: [instructorId], references: [id])
   enrollments  EnrollmentRequest[]
@@ -194,6 +195,7 @@ model EnrollmentRequest {
 model LiveSession {
   id                 String             @id @default(cuid())
   batchId            String? // null for mentorship sessions
+  courseId           String?
   moduleId           String?
   title              String // Session title
   teamsMeetingId     String             @unique
@@ -209,6 +211,7 @@ model LiveSession {
   restoredAt         DateTime?
   restoredBy         String?
   batch              Batch?             @relation(fields: [batchId], references: [id])
+  course             Course?            @relation(fields: [courseId], references: [id])
   module             Module?            @relation(fields: [moduleId], references: [id])
   mentorshipTicket   MentorshipTicket?  @relation(fields: [mentorshipTicketId], references: [id])
   recording          Recording?

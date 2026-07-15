@@ -43,7 +43,8 @@ async function buildCourseCompletionMap(userId: string) {
     };
   }
 
-  const [certificates, courses, batches] = await Promise.all([
+  // Start all independent queries in parallel
+  const [certificates, courses, pkgCourseRows] = await Promise.all([
     prisma.certificate.findMany({
       where: { userId, courseId: { in: courseIds } },
       select: { id: true, courseId: true, issuedAt: true },
@@ -61,15 +62,27 @@ async function buildCourseCompletionMap(userId: string) {
         updatedAt: true,
       },
     }),
-    prisma.batch.findMany({
+    prisma.packageCourse.findMany({
       where: { courseId: { in: courseIds } },
-      select: { id: true, courseId: true },
+      select: { packageId: true },
     }),
   ]);
 
-  const batchToCourse = new Map(
-    batches.map((batch) => [batch.id, batch.courseId]),
-  );
+  const packageIds = pkgCourseRows.map((pc) => pc.packageId);
+
+  // Fetch regular batches (with courseId) AND package-only batches whose package contains these courses
+  const batches = await prisma.batch.findMany({
+    where: {
+      OR: [
+        { courseId: { in: courseIds } },
+        ...(packageIds.length
+          ? [{ courseId: null as string | null, packageId: { in: packageIds } }]
+          : []),
+      ],
+    },
+    select: { id: true, courseId: true },
+  });
+
   const batchIds = batches.map((batch) => batch.id);
 
   const recordings = batchIds.length
@@ -77,7 +90,7 @@ async function buildCourseCompletionMap(userId: string) {
         where: { session: { batchId: { in: batchIds } } },
         select: {
           id: true,
-          session: { select: { batchId: true } },
+          session: { select: { batchId: true, courseId: true } },
           progress: {
             where: { userId },
             select: { completedAt: true },
@@ -95,9 +108,10 @@ async function buildCourseCompletionMap(userId: string) {
   }
 
   for (const recording of recordings) {
-    const batchId = recording.session.batchId;
-    if (!batchId) continue;
-    const courseId = batchToCourse.get(batchId);
+    // Use session.courseId (direct field) when available, fall back to batch.courseId
+    const courseId =
+      recording.session.courseId ??
+      batches.find((b) => b.id === recording.session.batchId)?.courseId;
     if (!courseId) continue;
 
     const stats = recordingsByCourse.get(courseId);

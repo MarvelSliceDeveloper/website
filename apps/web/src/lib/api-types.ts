@@ -2,7 +2,7 @@
 // Shared TypeScript types for API data (replaces mock data type exports)
 // ──────────────────────────────────────────────────────────────────────────────
 
-export type CourseStatus = "ACTIVE" | "COMPLETED" | "PENDING";
+export type CourseStatus = "ACTIVE" | "COMPLETED" | "PENDING" | "REJECTED";
 export type SessionStatus = "LIVE" | "UPCOMING" | "PAST";
 export type TicketStatus =
   | "OPEN"

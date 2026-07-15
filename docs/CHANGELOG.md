@@ -1,5 +1,44 @@
 # Changelog
 
+## 2026-07-15 - Enrollment & Content Access Fixes
+
+### Fixed
+
+- **CRITICAL: Course content 403 for package-enrolled students**. The `GET /api/courses/:courseId/content` endpoint only checked the `EnrollmentRequest` table for approved status. If a student was enrolled via a package (`PackageEnrollmentCourse`), they got a 403 even though the admin correctly saw "APPROVED". Now checks both `EnrollmentRequest` and `PackageEnrollmentCourse` before returning content. (`apps/api/src/modules/courses/student-course.routes.ts`)
+- **CRITICAL: No admin UI for individual enrollment approvals**. The `/admin/enrollments` page was just a redirect to `/admin/packages/enrollments`, making it impossible for admins to approve individual `EnrollmentRequest` records through the UI. Replaced with a full approval management page (status filters, approve/reject with batch assignment modal). (`apps/web/src/app/admin/enrollments/page.tsx`)
+- **MODERATE: Deduplication order inverted**. The `/enrolled` endpoint comment said "prefer individual enrollment" but the spread order `[...packageCourses, ...individualCourses]` made package courses win. Fixed to `[...individualCourses, ...packageCourses]`. (`apps/api/src/modules/courses/student-course.routes.ts`)
+- **MODERATE: No notifications for package enrollment approval/rejection**. Unlike individual enrollments, package enrollment approval/rejection sent no in-app notification or email to the student. Added `notificationService.create()` and `dispatchEmailsForNotification()` calls in both `approveEnrollment` and `rejectEnrollment`. (`apps/api/src/modules/packages/package.service.ts`)
+- **LOW: Hardcoded "PENDING" status for enrollments without batch**. The `/enrolled` endpoint hardcoded `status: "PENDING"` for enrollments where `!e.batch`, even if the actual DB status was `APPROVED` or `REJECTED`. Now uses the actual status from the database. (`apps/api/src/modules/courses/student-course.routes.ts`)
+
+## 2026-07-15 - Package-Only Batch Refactor
+
+### Changed
+
+- **`Batch.courseId` is now nullable.** One batch can represent an entire package cohort
+  (`courseId: null`, `packageId` set) instead of one batch per course. The admin "Add New Batch"
+  form creates **one batch** for the whole package (not N batches). Course membership is
+  derived from `PackageCourse` records.
+- **`LiveSession.courseId` added.** Admins can directly pick which course within a package
+  a live session belongs to, enabling per-course session filtering in the student dashboard.
+- **`POST /api/admin/batches` can now create either a single batch** (when `courseId`
+  is provided — direct API usage) **or one batch for the whole package** (when only `packageId`
+  is provided — used by the admin form). The old `POST /api/admin/batches/bulk` endpoint
+  was removed; its logic was folded into the single create endpoint.
+- **Relaxed ID validation.** `courseId`, `packageId`, and `instructorId` in the batch
+  create schemas are now validated as non-empty strings (`z.string().min(1)`) instead of
+  `z.string().cuid()`. The DB uses `@default(cuid())` but does not enforce the format,
+  and seed data uses fixed IDs (e.g. `"pkg-fullstack"`), so strict cuid checks rejected
+  valid IDs (the `Invalid cuid` error on `packageId`).
+- **Improved frontend error display.** `lib/api.ts` now attaches the structured error
+  body to thrown errors and `lib/toast.ts` `getErrorMessage` renders Zod error arrays as
+  readable, field-level messages (e.g. `packageId: Invalid cuid`) instead of
+  `[object Object],[object Object]`.
+
+### Added
+
+- The batch create form now has client-side validation (required package/instructor/name/dates)
+  with inline errors and a disabled submit until valid.
+
 ## 2026-07-13 - UI/UX Improvements
 
 ### Added

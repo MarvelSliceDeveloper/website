@@ -4,6 +4,36 @@ interface FetchOptions extends RequestInit {
   params?: Record<string, string>;
 }
 
+// Converts a Zod issues array into a readable, field-level message.
+function describeIssues(issues: unknown): string {
+  if (!Array.isArray(issues) || issues.length === 0) return "Validation failed";
+  return (issues as Array<{ path?: (string | number)[]; message?: string }>)
+    .map((i) => {
+      const field =
+        Array.isArray(i?.path) && i.path.length
+          ? i.path.join(".")
+          : "field";
+      return `${field}: ${i?.message ?? "invalid"}`;
+    })
+    .join("; ");
+}
+
+// Produces a human-readable error message from an API error body.
+export function formatApiErrorMessage(body: unknown, status?: number): string {
+  if (body == null) return `Request failed${status ? ` (${status})` : ""}`;
+  const b = body as {
+    error?: unknown;
+    details?: unknown;
+    message?: unknown;
+  };
+  if (Array.isArray(b.error)) return describeIssues(b.error);
+  if (typeof b.error === "string" && b.error) return b.error;
+  if (Array.isArray(b.details)) return describeIssues(b.details);
+  if (typeof b.details === "string" && b.details) return b.details;
+  if (typeof b.message === "string" && b.message) return b.message;
+  return `Request failed${status ? ` (${status})` : ""}`;
+}
+
 let csrfTokenPromise: Promise<string> | null = null;
 let csrfRetryCount = 0;
 
@@ -72,7 +102,12 @@ async function request<T>(
       const errorBody = await retryRes
         .json()
         .catch(() => ({ error: retryRes.statusText }));
-      throw new Error(errorBody.error || `API error: ${retryRes.status}`);
+      const message = formatApiErrorMessage(errorBody, retryRes.status);
+      const err = new Error(message) as Error & {
+        response?: { data: unknown; status: number };
+      };
+      err.response = { data: errorBody ?? { error: retryRes.statusText }, status: retryRes.status };
+      throw err;
     }
     if (retryRes.status === 204) return null as T;
     return retryRes.json();
@@ -80,7 +115,12 @@ async function request<T>(
 
   if (!res.ok) {
     const errorBody = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(errorBody.error || `API error: ${res.status}`);
+    const message = formatApiErrorMessage(errorBody, res.status);
+    const err = new Error(message) as Error & {
+      response?: { data: unknown; status: number };
+    };
+    err.response = { data: errorBody ?? { error: res.statusText }, status: res.status };
+    throw err;
   }
 
   if (res.status === 204) return null as T;

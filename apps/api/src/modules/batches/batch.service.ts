@@ -4,16 +4,23 @@ import { UserRole } from "@lms/types";
 
 // --- Zod Schemas ---
 
-export const CreateBatchSchema = z.object({
-  courseId: z.string().cuid(),
-  packageId: z.string().cuid().optional(),
-  instructorId: z.string().cuid(),
-  name: z.string().min(3).max(100),
-  startDate: z.string().datetime(),
-  endDate: z.string().datetime(),
-  maxStudents: z.number().int().min(1).optional(),
-  description: z.string().optional(),
-});
+// NOTE: IDs are validated as non-empty strings rather than `z.string().cuid()`.
+// The DB uses `@default(cuid())` but does not enforce the format (seed data uses
+// fixed IDs like "pkg-fullstack"), so strict cuid checks reject valid IDs.
+export const CreateBatchSchema = z
+  .object({
+    courseId: z.string().optional(),
+    packageId: z.string().optional(),
+    instructorId: z.string().min(1, "Instructor is required"),
+    name: z.string().min(3).max(100),
+    startDate: z.string().datetime(),
+    endDate: z.string().datetime(),
+    maxStudents: z.number().int().min(1).optional(),
+    description: z.string().optional(),
+  })
+  .refine((data) => data.courseId || data.packageId, {
+    message: "Either courseId or packageId is required",
+  });
 
 export const UpdateBatchSchema = z.object({
   name: z.string().min(3).max(100).optional(),
@@ -32,8 +39,10 @@ export const AddStudentsSchema = z.object({
 // --- Service ---
 
 export const batchService = {
-  // Creates a new batch linked to a course
+  // Creates a new batch linked to a course (courseId must be provided)
   async createBatch(data: z.infer<typeof CreateBatchSchema>) {
+    if (!data.courseId)
+      throw new Error("courseId is required for single batch creation");
     // Verify the course exists
     const course = await prisma.course.findUnique({
       where: { id: data.courseId },
@@ -94,6 +103,62 @@ export const batchService = {
     });
   },
 
+  // Creates one batch per course in a package (when no courseId is given)
+  async createBatchesForPackage(data: z.infer<typeof CreateBatchSchema>) {
+    if (!data.packageId) throw new Error("packageId is required");
+
+    // Verify package exists and is active
+    const pkg = await prisma.coursePackage.findUnique({
+      where: { id: data.packageId },
+    });
+    if (!pkg) throw new Error("Package not found");
+    if (pkg.status !== "ACTIVE") throw new Error("Package is not active");
+
+    // Verify instructor
+    const instructor = await prisma.user.findUnique({
+      where: { id: data.instructorId },
+    });
+    if (!instructor) throw new Error("Instructor not found");
+    if (
+      instructor.role !== "INSTRUCTOR" &&
+      instructor.role !== "ADMIN" &&
+      instructor.role !== "SUPER_ADMIN"
+    ) {
+      throw new Error("User is not an instructor");
+    }
+
+    // Get all courses in the package
+    const packageCourses = await prisma.packageCourse.findMany({
+      where: { packageId: data.packageId },
+      include: { course: { select: { title: true } } },
+    });
+    if (packageCourses.length === 0) {
+      throw new Error("Package has no courses. Add courses first.");
+    }
+
+    // Create one batch for the entire package (courseId=null means it covers all package courses)
+    const batch = await prisma.batch.create({
+      data: {
+        courseId: null,
+        packageId: data.packageId,
+        instructorId: data.instructorId,
+        name: data.name,
+        startDate: new Date(data.startDate),
+        endDate: new Date(data.endDate),
+        maxStudents: data.maxStudents,
+        description: data.description,
+        status: "UPCOMING",
+      },
+      include: {
+        course: { select: { id: true, title: true } },
+        instructor: { select: { id: true, name: true, email: true } },
+        package: { select: { id: true, name: true } },
+      },
+    });
+
+    return batch;
+  },
+
   // Lists batches with optional filters
   async listBatches(filters: {
     courseId?: string;
@@ -104,7 +169,21 @@ export const batchService = {
   }) {
     const where: any = {};
 
-    if (filters.courseId) where.courseId = filters.courseId;
+    if (filters.courseId) {
+      // Also include package-only batches whose package contains this course
+      const pkgIds = await prisma.packageCourse
+        .findMany({
+          where: { courseId: filters.courseId },
+          select: { packageId: true },
+        })
+        .then((rows) => rows.map((r) => r.packageId));
+
+      const courseFilter: any[] = [{ courseId: filters.courseId }];
+      if (pkgIds.length > 0) {
+        courseFilter.push({ courseId: null, packageId: { in: pkgIds } });
+      }
+      where.OR = courseFilter;
+    }
     if (filters.status) where.status = filters.status;
     if (filters.instructorId) where.instructorId = filters.instructorId;
     if (filters.packageId) where.packageId = filters.packageId;
@@ -121,6 +200,7 @@ export const batchService = {
         _count: {
           select: {
             enrollments: { where: { status: "APPROVED" } },
+            packageEnrollmentCourses: true,
             sessions: true,
           },
         },
@@ -154,7 +234,10 @@ export const batchService = {
                 maxStudents: true,
                 instructor: { select: { id: true, name: true } },
                 _count: {
-                  select: { enrollments: { where: { status: "APPROVED" } } },
+                  select: {
+                    enrollments: { where: { status: "APPROVED" } },
+                    packageEnrollmentCourses: true,
+                  },
                 },
               },
               orderBy: { startDate: "desc" },
@@ -169,7 +252,11 @@ export const batchService = {
       courses: packageCourses.map((pc) => ({
         courseId: pc.course.id,
         courseTitle: pc.course.title,
-        batches: pc.course.batches,
+        batches: pc.course.batches.map((b) => ({
+          ...b,
+          totalStudents:
+            b._count.enrollments + b._count.packageEnrollmentCourses,
+        })),
       })),
     };
   },
@@ -187,6 +274,15 @@ export const batchService = {
             user: { select: { id: true, name: true, email: true } },
           },
         },
+        packageEnrollmentCourses: {
+          include: {
+            enrollment: {
+              include: {
+                user: { select: { id: true, name: true, email: true } },
+              },
+            },
+          },
+        },
         sessions: {
           orderBy: { scheduledAt: "asc" },
           include: {
@@ -196,6 +292,7 @@ export const batchService = {
         _count: {
           select: {
             enrollments: { where: { status: "APPROVED" } },
+            packageEnrollmentCourses: true,
             sessions: true,
           },
         },
@@ -267,6 +364,13 @@ export const batchService = {
     ]);
     if (!batch) throw new Error("Batch not found");
 
+    // Package-only batches: use the package enrollment flow instead
+    if (!batch.courseId) {
+      throw new Error(
+        "This is a package-level batch. Use the package enrollment flow to add students.",
+      );
+    }
+
     // Check capacity (only count approved enrollments)
     if (
       batch.maxStudents &&
@@ -289,7 +393,7 @@ export const batchService = {
         return prisma.enrollmentRequest.create({
           data: {
             userId,
-            courseId: batch.courseId,
+            courseId: batch.courseId as string,
             batchId,
             status: "APPROVED",
             reviewedAt: new Date(),

@@ -65,10 +65,52 @@ apps/api      # Express + Prisma + Zod
 apps/web      # Next.js 16 + React 19 + Tailwind 4
   src/app/             # App Router pages
   src/components/      # React components
+    StudentPortalShell.tsx  # Main student portal layout (header + <main>)
 packages/config # Shared Zod schemas
 packages/types  # Shared TS types
 packages/utils  # Shared utilities
 ```
+
+## Student Portal Shell
+
+`StudentPortalShell` wraps all student-facing views. It renders a sticky header and a `<main>` container.
+
+### Props
+
+| Prop | Default | Description |
+|------|---------|-------------|
+| `fullWidth` | `false` | When `true`, removes `max-w-7xl`, `px-4`, `py-6` from `<main>` so children span full viewport width. Use for video player / course content layouts. |
+| `hideHeader` | `false` | Hides the sticky header entirely. |
+| `hideProfile` | `false` | Hides user email, settings, and sign-out buttons. |
+| `hideLogo` | `false` | Hides the Marvel Slice logo. |
+| `breadcrumbs` | `[]` | Breadcrumb trail shown in the header. |
+| `showBack` | `false` | Shows the back button in the header. |
+
+### CSS Variable: `--shell-header-height`
+
+The shell measures its header height and sets `--shell-header-height` as an inline CSS variable on the root div. Child views can use this for height calculations:
+
+```css
+h-[calc(100vh-var(--shell-header-height,56px))]
+```
+
+The fallback is `56px` (approximate header height). This avoids overlap between the sticky header and full-height content areas like the course content video player.
+
+### Course Content Layout Pattern
+
+The course content view (`CourseContentView.tsx`) uses a two-column flex layout:
+
+```
+┌──────────────────────────────────┬──────────┐
+│ Video + lesson info + nav bar    │ Sidebar  │
+│ (flex-1)                         │ (380px)  │
+└──────────────────────────────────┴──────────┘
+```
+
+- Parent passes `fullWidth` to `StudentPortalShell` when `currentView.view === "COURSE_CONTENT"`
+- Root div uses `h-[calc(100vh-var(--shell-header-height,56px))]` to fill exactly the available viewport minus the header
+- Video area uses `aspect-video` (16:9) with `overflow-hidden`
+- Sidebar scrolls independently with `overflow-y-auto`
 
 ## Key Dependencies
 

@@ -29,7 +29,9 @@ interface Course {
 interface Batch {
   id: string;
   name: string;
-  courseId: string;
+  courseId: string | null;
+  packageId: string | null;
+  package?: { name: string } | null;
   instructor: {
     id: string;
     name: string;
@@ -175,10 +177,15 @@ export default function ScheduleSessionPage() {
       return;
     }
 
+    // Check if selected batch is a package batch (courseId=null → send explicit courseId)
+    const selectedBatch = batches.find((b) => b.id === form.batchId);
+    const isPackageBatch = selectedBatch && !selectedBatch.courseId;
+
     setSubmitting(true);
     try {
       await api.post("/api/sessions", {
         batchId: form.batchId,
+        courseId: isPackageBatch ? selectedCourseId : undefined,
         moduleId: form.moduleId || undefined,
         title: form.title,
         startDateTime: start.toISOString(),
@@ -273,8 +280,10 @@ export default function ScheduleSessionPage() {
                 <SelectContent>
                   {batches.map((batch) => (
                     <SelectItem key={batch.id} value={batch.id}>
-                      {batch.name} — Instructor:{" "}
-                      {batch.instructor?.name || "TBD"}
+                      {batch.name}
+                      {batch.courseId
+                        ? ` — Instructor: ${batch.instructor?.name || "TBD"}`
+                        : ` (Package: ${batch.package?.name || "N/A"})`}
                     </SelectItem>
                   ))}
                 </SelectContent>

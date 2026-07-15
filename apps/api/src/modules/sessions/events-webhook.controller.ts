@@ -181,8 +181,8 @@ async function handleEventCreatedOrUpdated(userId: string, msEventId: string) {
     select: { id: true, courseId: true },
   });
 
-  if (!instructorBatch) {
-    // No batch found — just upsert the calendar event without a LiveSession
+  if (!instructorBatch || !instructorBatch.courseId) {
+    // No batch found or package-level batch — just upsert the calendar event without a LiveSession
     await prisma.calendarEvent.upsert({
       where: { msEventId },
       create: {

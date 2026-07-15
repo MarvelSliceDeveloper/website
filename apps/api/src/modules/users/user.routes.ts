@@ -186,14 +186,20 @@ router.post("/", async (req: Request, res: Response) => {
         }
 
         // Create enrollment courses for each course in the package
-        // The batch is only assigned to the matching course
+        // Package batch (courseId=null) assigns batch to ALL courses
         for (const pc of packageCourses) {
           await tx.packageEnrollmentCourse.create({
             data: {
               enrollmentId: enrollment.id,
               courseId: pc.courseId,
               batchId:
-                batchCourseId && pc.courseId === batchCourseId ? batchId : null,
+                !batchId
+                  ? null
+                  : !batchCourseId
+                    ? batchId
+                    : pc.courseId === batchCourseId
+                      ? batchId
+                      : null,
             },
           });
         }
@@ -388,15 +394,18 @@ router.patch("/:id", async (req: Request, res: Response) => {
                 enrollmentId: enrollment.id,
                 courseId: pc.courseId,
                 batchId:
-                  batchCourseId && pc.courseId === batchCourseId
-                    ? batchId
-                    : null,
+                  !batchId
+                    ? null
+                    : !batchCourseId
+                      ? batchId
+                      : pc.courseId === batchCourseId
+                        ? batchId
+                        : null,
               },
             });
           }
         } else if (batchId && currentEnrollment) {
           // Same package but batch changed — update the batch assignment
-          // Find the batch's course and update only that enrollment course
           const batch = await tx.batch.findUnique({
             where: { id: batchId },
             select: { courseId: true },
@@ -408,11 +417,11 @@ router.patch("/:id", async (req: Request, res: Response) => {
               where: { enrollmentId: currentEnrollment.id },
               data: { batchId: null },
             });
-            // Assign batch to the matching course
+            // Assign batch — for package batches (courseId=null), update ALL courses
             await tx.packageEnrollmentCourse.updateMany({
               where: {
                 enrollmentId: currentEnrollment.id,
-                courseId: batch.courseId,
+                ...(batch.courseId ? { courseId: batch.courseId } : {}),
               },
               data: { batchId },
             });

@@ -1,6 +1,7 @@
 "use client";
 
 import { toast as sonnerToast } from "sonner";
+import { formatApiErrorMessage } from "@/lib/api";
 
 type SonnerToast = typeof sonnerToast;
 
@@ -63,13 +64,9 @@ export function showPromise<Data>(
 export function getErrorMessage(error: unknown): string {
   if (error && typeof error === "object" && "response" in error) {
     const err = error as {
-      response?: { data?: { error?: string; message?: string } };
+      response?: { data?: unknown; status?: number };
     };
-    return (
-      err.response?.data?.error ??
-      err.response?.data?.message ??
-      "Request failed"
-    );
+    return formatApiErrorMessage(err.response?.data, err.response?.status);
   }
   if (error instanceof Error) {
     return error.message;

@@ -846,8 +846,6 @@ function StudentPortalContent() {
     }
   }
 
-  const isCourseContent = currentView.view === "COURSE_CONTENT";
-
   return (
     <StudentPortalShell
       breadcrumbs={breadcrumbs}
@@ -855,9 +853,7 @@ function StudentPortalContent() {
       onBack={goBack}
       studentName={studentName}
       studentEmail={studentEmail}
-      hideProfile={isCourseContent}
-      hideLogo={isCourseContent}
-      hideHeader={isCourseContent}
+      fullWidth={currentView.view === "COURSE_CONTENT"}
     >
       {/* View transition wrapper */}
       <div key={currentView.view} className="sp-view-enter">

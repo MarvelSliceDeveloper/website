@@ -47,7 +47,7 @@ export const recordingSyncJob = {
 
       for (const session of pastSessionsWithoutRecordings) {
         console.log(
-          `[RecordingSyncJob] Auto-fetching recording for session ${session.id} (${session.batch.course.title} — ${session.batch.name})`,
+          `[RecordingSyncJob] Auto-fetching recording for session ${session.id} (${session.batch.course?.title || "Package Course"} — ${session.batch.name})`,
         );
         try {
           const recording = await recordingService.syncRecordingsForSession(

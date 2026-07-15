@@ -9,7 +9,6 @@ import {
   IconMoon,
   IconSun,
   IconX,
-  IconChevronDown,
   IconLogout,
   IconSettings,
   IconEye,
@@ -34,6 +33,7 @@ interface StudentPortalShellProps {
   hideProfile?: boolean;
   hideLogo?: boolean;
   hideHeader?: boolean;
+  fullWidth?: boolean;
 }
 
 // Student portal shell with header, breadcrumbs, and notifications
@@ -47,16 +47,15 @@ export default function StudentPortalShell({
   hideProfile = false,
   hideLogo = false,
   hideHeader = false,
+  fullWidth = false,
 }: StudentPortalShellProps) {
   const router = useRouter();
   const [notifOpen, setNotifOpen] = useState(false);
-  const [avatarOpen, setAvatarOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("light");
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const notifRef = useRef<HTMLDivElement>(null);
-  const avatarRef = useRef<HTMLDivElement>(null);
 
   // Fetch notifications from API
   const fetchNotifications = useCallback(async () => {
@@ -94,8 +93,6 @@ export default function StudentPortalShell({
     function handleClick(e: MouseEvent) {
       if (notifRef.current && !notifRef.current.contains(e.target as Node))
         setNotifOpen(false);
-      if (avatarRef.current && !avatarRef.current.contains(e.target as Node))
-        setAvatarOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -135,10 +132,22 @@ export default function StudentPortalShell({
     router.push("/login");
   }
 
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(56);
+
+  useEffect(() => {
+    if (headerRef.current) {
+      setHeaderHeight(headerRef.current.offsetHeight);
+    }
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className="min-h-screen bg-background"
+      style={{ "--shell-header-height": headerHeight + "px" } as React.CSSProperties}
+    >
       {!hideHeader && (
-        <header className="sticky top-0 z-40 border-b border-border bg-card">
+        <header ref={headerRef} className="sticky top-0 z-40 border-b border-border bg-card">
           <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-6">
             <div className="flex min-w-0 flex-1 items-center gap-3">
               <button
@@ -197,6 +206,19 @@ export default function StudentPortalShell({
             </div>
 
             <div className="flex items-center gap-2">
+              {!hideProfile && (
+                <>
+                  <span
+                    className="hidden max-w-[200px] truncate px-1 text-[13px] text-muted-foreground sm:inline"
+                    title={studentEmail}
+                  >
+                    {studentEmail}
+                  </span>
+
+                  <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
+                </>
+              )}
+
               <button
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                 className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
@@ -216,10 +238,7 @@ export default function StudentPortalShell({
               <div ref={notifRef} className="relative">
                 <button
                   id="sp-notif-btn"
-                  onClick={() => {
-                    setNotifOpen((v) => !v);
-                    setAvatarOpen(false);
-                  }}
+                  onClick={() => setNotifOpen((v) => !v)}
                   className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
                   aria-label="Notifications"
                   aria-haspopup="true"
@@ -315,60 +334,31 @@ export default function StudentPortalShell({
               </div>
 
               {!hideProfile && (
-                <div ref={avatarRef} className="relative">
+                <>
                   <button
-                    id="sp-avatar-btn"
-                    onClick={() => {
-                      setAvatarOpen((v) => !v);
-                      setNotifOpen(false);
-                    }}
+                    onClick={() => router.push("/student/settings")}
                     className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
-                    aria-label="User menu"
-                    aria-haspopup="true"
-                    aria-expanded={avatarOpen}
+                    aria-label="Settings"
+                    title={studentName}
                   >
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-primary to-violet-600 text-[11px] font-bold text-white">
-                      {studentName.charAt(0).toUpperCase()}
-                    </div>
+                    <IconSettings size={17} stroke={1.8} />
                   </button>
 
-                  {avatarOpen && (
-                    <div className="absolute right-0 top-11 z-50 w-44 rounded-2xl border border-border bg-card shadow-2xl">
-                      <div className="border-b border-border px-4 py-3">
-                        <p className="text-sm font-semibold text-foreground">
-                          {studentName}
-                        </p>
-                        <p className="text-[11px] text-muted">{studentEmail}</p>
-                      </div>
-                      <div className="p-1.5">
-                        <button
-                          id="sp-avatar-settings"
-                          onClick={() => router.push("/student/settings")}
-                          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-card-hover hover:text-foreground"
-                        >
-                          <IconSettings size={15} stroke={1.8} />
-                          Settings
-                        </button>
-                        <div className="my-1 border-t border-border" />
-                        <button
-                          id="sp-avatar-signout"
-                          onClick={handleSignOut}
-                          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-danger transition-colors hover:bg-danger/10"
-                        >
-                          <IconLogout size={15} stroke={1.8} />
-                          Sign Out
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-danger/40 hover:text-danger"
+                    aria-label="Sign out"
+                  >
+                    <IconLogout size={17} stroke={1.8} />
+                  </button>
+                </>
               )}
             </div>
           </div>
         </header>
       )}
       <main
-        className={`w-full ${hideHeader ? "" : "mx-auto max-w-7xl px-4 py-6 md:px-6"}`}
+        className={`w-full ${hideHeader || fullWidth ? "" : "mx-auto max-w-7xl px-4 py-6 md:px-6"}`}
       >
         {children}
       </main>

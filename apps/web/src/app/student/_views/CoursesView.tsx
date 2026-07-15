@@ -20,7 +20,7 @@ const FILTERS: { label: string; value: Filter }[] = [
   { label: "Pending Approval", value: "PENDING" },
 ];
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; classes: string }> = {
   ACTIVE: {
     label: "Active",
     classes: "border-success/30 bg-success/10 text-success",
@@ -32,6 +32,10 @@ const statusConfig = {
   PENDING: {
     label: "⏳ Pending",
     classes: "border-warning/30 bg-warning/10 text-warning",
+  },
+  REJECTED: {
+    label: "Rejected",
+    classes: "border-danger/30 bg-danger/10 text-danger",
   },
 };
 
@@ -126,7 +130,7 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((course) => {
-            const cfg = statusConfig[course.status];
+            const cfg = statusConfig[course.status] ?? { label: course.status, classes: "border-muted/30 bg-muted/10 text-muted" };
             const canOpen = course.status !== "PENDING" && course.batchId;
             return (
               <div

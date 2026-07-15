@@ -30,11 +30,19 @@ type Batch = {
   isActive: boolean;
   maxStudents: number | null;
   description: string | null;
-  course: { id: string; title: string };
+  course: { id: string; title: string } | null;
+  package?: { id: string; name: string } | null;
   instructor: { id: string; name: string; email: string };
   enrollments: Student[];
+  packageEnrollmentCourses: {
+    enrollment: { user: { id: string; name: string; email: string } };
+  }[];
   sessions: Session[];
-  _count: { enrollments: number; sessions: number };
+  _count: {
+    enrollments: number;
+    packageEnrollmentCourses: number;
+    sessions: number;
+  };
 };
 
 const statusStyles: Record<string, string> = {
@@ -118,7 +126,7 @@ export default function BatchDetailPage() {
             </span>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            {batch.course.title}
+            {batch.course?.title ?? batch.package?.name ?? "All Courses"}
           </p>
         </div>
       </div>
@@ -127,7 +135,7 @@ export default function BatchDetailPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="glass-card p-4 text-center">
           <p className="text-2xl font-bold text-foreground">
-            {batch._count.enrollments}
+            {batch._count.enrollments + batch._count.packageEnrollmentCourses}
           </p>
           <p className="text-xs text-muted">Students</p>
         </div>
@@ -164,7 +172,7 @@ export default function BatchDetailPage() {
             }`}
           >
             {t === "students"
-              ? `Students (${batch.enrollments.length})`
+              ? `Students (${batch.enrollments.length + batch.packageEnrollmentCourses.length})`
               : `Sessions (${batch.sessions.length})`}
           </button>
         ))}
@@ -173,7 +181,8 @@ export default function BatchDetailPage() {
       {/* Tab Content */}
       {tab === "students" && (
         <div className="space-y-4">
-          {batch.enrollments.length === 0 ? (
+          {batch.enrollments.length === 0 &&
+          batch.packageEnrollmentCourses.length === 0 ? (
             <div className="glass-card p-8 text-center">
               <p className="text-muted-foreground text-sm">
                 No students enrolled yet.
@@ -191,7 +200,7 @@ export default function BatchDetailPage() {
                       Email
                     </th>
                     <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
-                      Enrolled
+                      Enrollment
                     </th>
                     <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
                       Actions
@@ -223,18 +232,36 @@ export default function BatchDetailPage() {
                           { day: "numeric", month: "short", year: "numeric" },
                         )}
                       </td>
+                      <td className="px-5 py-3 text-xs">
+                        <span className="rounded bg-primary/10 px-2 py-0.5 text-[10px] text-primary">
+                          Course
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {batch.packageEnrollmentCourses.map((pec, idx) => (
+                    <tr
+                      key={`pkg-${idx}`}
+                      className="hover:bg-card-hover/50 transition-colors"
+                    >
                       <td className="px-5 py-3">
-                        <button
-                          onClick={() =>
-                            handleRemoveStudent(
-                              enrollment.user.id,
-                              enrollment.user.name,
-                            )
-                          }
-                          className="text-xs font-medium text-danger hover:text-danger/80 transition-colors"
-                        >
-                          Remove
-                        </button>
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/20 text-xs font-semibold text-accent">
+                            {pec.enrollment.user.name.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-sm font-medium text-foreground">
+                            {pec.enrollment.user.name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-sm text-muted-foreground">
+                        {pec.enrollment.user.email}
+                      </td>
+                      <td className="px-5 py-3 text-xs text-muted">Package</td>
+                      <td className="px-5 py-3 text-xs">
+                        <span className="rounded bg-accent/10 px-2 py-0.5 text-[10px] text-accent">
+                          Package
+                        </span>
                       </td>
                     </tr>
                   ))}

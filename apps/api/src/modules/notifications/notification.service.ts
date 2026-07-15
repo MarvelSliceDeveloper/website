@@ -334,6 +334,7 @@ export const notificationService = {
         batch: {
           include: {
             course: { select: { title: true } },
+            package: { select: { name: true } },
             enrollments: {
               where: { status: "APPROVED" },
               select: { userId: true },
@@ -358,7 +359,7 @@ export const notificationService = {
       : "unspecified time";
 
     if (!session.batch) return;
-    const message = `${session.batch.course.title} — ${session.batch.name}: A live session is scheduled for ${startStr}`;
+    const message = `${session.batch.course?.title || session.batch.package?.name || "Untitled Course"} — ${session.batch.name}: A live session is scheduled for ${startStr}`;
 
     const userIds = new Set<string>();
     if (session.batch?.instructorId) userIds.add(session.batch.instructorId);
@@ -387,7 +388,7 @@ export const notificationService = {
       sessionTitle: title,
       scheduledAt: startStr,
       joinUrl: session.joinUrl,
-      courseName: session.batch.course.title,
+      courseName: session.batch.course?.title || session.batch.package?.name || "Untitled Course",
       batchName: session.batch.name,
     };
     dispatchEmailsForNotification(
@@ -407,6 +408,7 @@ export const notificationService = {
         batch: {
           include: {
             course: { select: { title: true } },
+            package: { select: { name: true } },
             enrollments: {
               where: { status: "APPROVED" },
               select: { userId: true },
@@ -418,7 +420,7 @@ export const notificationService = {
 
     if (!session || !session.batch) return;
 
-    const message = `Recording is now available for ${session.batch.course.title} — ${session.batch.name}`;
+    const message = `Recording is now available for ${session.batch.course?.title || session.batch.package?.name || "Untitled Course"} — ${session.batch.name}`;
 
     const userIds = new Set<string>();
     if (session.batch?.instructorId) userIds.add(session.batch.instructorId);
@@ -444,7 +446,7 @@ export const notificationService = {
 
     const emailData = {
       sessionTitle: session.title,
-      courseName: session.batch.course.title,
+      courseName: session.batch.course?.title || session.batch.package?.name || "Untitled Course",
       batchName: session.batch.name,
     };
     dispatchEmailsForNotification(
@@ -464,6 +466,7 @@ export const notificationService = {
         batch: {
           include: {
             course: { select: { title: true } },
+            package: { select: { name: true } },
             enrollments: {
               where: { status: "APPROVED" },
               select: { userId: true },
@@ -474,7 +477,7 @@ export const notificationService = {
     });
     if (!session || !session.batch) return;
 
-    const message = `Session cancelled for ${session.batch.course.title} — ${session.batch.name}`;
+    const message = `Session cancelled for ${session.batch.course?.title || session.batch.package?.name || "Untitled Course"} — ${session.batch.name}`;
     const userIds = new Set<string>();
     if (session.batch?.instructorId) userIds.add(session.batch.instructorId);
     if (session.instructorId) userIds.add(session.instructorId);
@@ -493,7 +496,7 @@ export const notificationService = {
 
     const emailData = {
       sessionTitle: session.title,
-      courseName: session.batch.course.title,
+      courseName: session.batch.course?.title || session.batch.package?.name || "Untitled Course",
       batchName: session.batch.name,
     };
     dispatchEmailsForNotification(

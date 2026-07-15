@@ -976,15 +976,68 @@ This section lists every REST endpoint in the platform organized by module. All 
 | Method | Path                                   | Auth                   | Description                       |
 | ------ | -------------------------------------- | ---------------------- | --------------------------------- |
 | GET    | `/api/admin/batches/`                  | JWT (ADMIN/INSTRUCTOR) | List batches                      |
-| POST   | `/api/admin/batches/`                  | JWT (ADMIN)            | Create batch                      |
-| GET    | `/api/admin/batches/:id`               | JWT (ADMIN/INSTRUCTOR) | Get batch details                 |
+| POST   | `/api/admin/batches/`                  | JWT (ADMIN)            | Create a batch (courseId + packageId) |
+| GET    | `/api/admin/batches/:id`               | JWT (ADMIN/INSTRUCTOR) | Get batch detail                 |
 | PUT    | `/api/admin/batches/:id`               | JWT (ADMIN)            | Update batch                      |
 | DELETE | `/api/admin/batches/:id`               | JWT (ADMIN)            | Delete batch                      |
+| GET    | `/api/admin/batches/by-package/:packageId` | JWT (ADMIN)       | Batches grouped by course for a package |
 | GET    | `/api/admin/batches/instructors`       | JWT (ADMIN/INSTRUCTOR) | List instructors                  |
 | GET    | `/api/admin/batches/courses`           | JWT (ADMIN/INSTRUCTOR) | List courses for batch assignment |
 | GET    | `/api/admin/batches/:id/students`      | JWT (ADMIN/INSTRUCTOR) | List students in batch            |
 | POST   | `/api/admin/batches/:id/students`      | JWT (ADMIN)            | Add students to batch             |
 | DELETE | `/api/admin/batches/:id/students/:uid` | JWT (ADMIN)            | Remove student from batch         |
+
+**Create a batch** — `POST /api/admin/batches/`
+
+Accepts **either** a specific `courseId` (single batch for one course) **or** a `packageId`
+without `courseId` (one batch for the entire package). A package can have **many** batches
+over time (e.g. multiple cohorts).
+
+**1. Single batch — with `courseId`** (direct API usage)
+
+Creates one batch tied to a specific course. When `packageId` is also provided,
+the service verifies the package exists, is `ACTIVE`, and the `courseId` belongs
+to that package.
+
+```json
+{
+  "courseId": "string",          // required — the course this batch teaches
+  "packageId": "string | null",  // optional — links batch to a package
+  "instructorId": "string",      // required — INSTRUCTOR / ADMIN / SUPER_ADMIN
+  "name": "string",              // required, 3–100 chars
+  "startDate": "2025-06-01T00:00:00.000Z", // required, ISO datetime
+  "endDate": "2025-08-30T00:00:00.000Z",   // required, ISO datetime
+  "maxStudents": 30,              // optional, integer >= 1
+  "description": "string"        // optional
+}
+```
+Response: `{ id, name, course, instructor, package }` (single batch object).
+`course` may be `null` for package-level batches.
+
+**2. One batch for the whole package — with `packageId` only** (used by the admin form)
+
+Creates **one** batch with `courseId: null`, representing the entire package cohort.
+The backend verifies the package exists, is `ACTIVE`, and the instructor is valid.
+Course membership is derived from `PackageCourse` records — the batch itself does
+not have a specific course.
+
+```json
+{
+  "packageId": "string",         // required — the package this batch covers
+  "instructorId": "string",      // required
+  "name": "string",              // required, 3–100 chars
+  "startDate": "2025-06-01T00:00:00.000Z", // required
+  "endDate": "2025-08-30T00:00:00.000Z",   // required
+  "maxStudents": 30,              // optional
+  "description": "string"        // optional
+}
+```
+Response: `{ id, name, course: null, instructor, package }` (single batch object,
+not wrapped in `{ message, batches }`).
+
+> **ID format note:** ID fields are validated as non-empty strings, **not** `cuid`.
+> The database uses `@default(cuid())` but does not enforce the format (seed data
+> uses fixed IDs such as `"pkg-fullstack"`), so schemas use `z.string().min(1)`.
 
 ---
 
