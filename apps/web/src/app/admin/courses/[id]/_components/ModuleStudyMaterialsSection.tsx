@@ -107,6 +107,14 @@ export default function ModuleStudyMaterialsSection({
     }
   }, [selectedModule]);
 
+  useEffect(() => {
+    if (!selectedLessonId || !selectedModule) return;
+    const lesson = selectedModule.lessons.find((l) => l.id === selectedLessonId);
+    if (lesson) {
+      setResources(lesson.resources || []);
+    }
+  }, [selectedLessonId, selectedModule]);
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -203,6 +211,29 @@ export default function ModuleStudyMaterialsSection({
 
       {selectedModuleId ? (
         <div className="space-y-4">
+          {selectedModule && selectedModule.lessons.length > 1 && (
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
+                Select Lesson
+              </label>
+              <Select
+                value={selectedLessonId || ""}
+                onValueChange={setSelectedLessonId}
+              >
+                <SelectTrigger className="field">
+                  <SelectValue placeholder="-- Choose a lesson --" />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedModule.lessons.map((lesson) => (
+                    <SelectItem key={lesson.id} value={lesson.id}>
+                      {lesson.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="glass-card p-6 space-y-4 border-2 border-dashed border-border">
             <label className="flex flex-col items-center justify-center cursor-pointer p-4 rounded-lg hover:bg-primary/12 transition-colors">
               <span className="text-3xl mb-2">{"\uD83D\uDCC1"}</span>

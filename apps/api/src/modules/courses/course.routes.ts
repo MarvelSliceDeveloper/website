@@ -2,6 +2,8 @@ import { Router, Request, Response, NextFunction } from "express";
 import { courseController } from "./course.controller";
 import { moduleController } from "./module.controller";
 import { lessonController } from "./lesson.controller";
+import { quizController } from "./quiz.controller";
+import { assignmentController } from "./assignment.controller";
 import { uploadCourseThumbnail } from "./course.upload";
 import { uploadLessonResource } from "./modules.upload";
 import { requireAuth, requireRole } from "../../middleware/auth.middleware";
@@ -184,6 +186,52 @@ router.delete(
   "/lessons/:lessonId/resources/:resourceId",
   requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
   lessonController.deleteResource,
+);
+
+// --- Quiz Routes ---
+
+// POST /api/admin/courses/modules/:moduleId/quizzes — add a quiz to a module
+router.post(
+  "/modules/:moduleId/quizzes",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  quizController.addQuiz,
+);
+
+// PUT /api/admin/courses/modules/quizzes/:id — update a quiz
+router.put(
+  "/modules/quizzes/:id",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  quizController.updateQuiz,
+);
+
+// DELETE /api/admin/courses/modules/quizzes/:id — delete a quiz
+router.delete(
+  "/modules/quizzes/:id",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  quizController.deleteQuiz,
+);
+
+// --- Assignment Routes ---
+
+// POST /api/admin/courses/modules/:moduleId/assignments — add an assignment to a module
+router.post(
+  "/modules/:moduleId/assignments",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  assignmentController.addAssignment,
+);
+
+// PUT /api/admin/courses/modules/assignments/:id — update an assignment
+router.put(
+  "/modules/assignments/:id",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  assignmentController.updateAssignment,
+);
+
+// DELETE /api/admin/courses/modules/assignments/:id — delete an assignment
+router.delete(
+  "/modules/assignments/:id",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  assignmentController.deleteAssignment,
 );
 
 export const courseRouter = router;

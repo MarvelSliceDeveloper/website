@@ -13,6 +13,19 @@ export interface CourseLesson {
   resources: Array<{ name: string; url: string }>;
 }
 
+export interface QuizInfo {
+  id: string;
+  title: string;
+  questionCount: number;
+}
+
+export interface AssignmentInfo {
+  id: string;
+  title: string;
+  type: string;
+  dueDate: string;
+}
+
 export interface CourseModule {
   id: string;
   title: string;
@@ -23,7 +36,8 @@ export interface CourseModule {
   completionPercent: number;
   recordingsCount: number;
   sessionsCount: number;
-  hasQuiz: boolean;
+  quizzes: QuizInfo[];
+  assignments: AssignmentInfo[];
 }
 
 export interface CourseSession {

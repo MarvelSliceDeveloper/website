@@ -144,6 +144,12 @@ export const courseService = {
           orderBy: { order: "asc" },
           include: {
             lessons: { orderBy: { order: "asc" } },
+            quizzes: {
+              include: { questions: true },
+            },
+            assignments: {
+              orderBy: { dueDate: "asc" },
+            },
           },
         },
         _count: { select: { batches: true } },

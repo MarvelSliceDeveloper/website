@@ -11,7 +11,9 @@ import {
   IconVideo,
   IconChevronDown,
   IconPlayerPlay,
-  IconCircleCheck,
+  IconClipboardCheck,
+  IconFileSpreadsheet,
+  IconFile,
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 
@@ -235,6 +237,10 @@ export default function CourseContentView({
           (s, l) => s + (l.durationSeconds ?? 0),
           0,
         );
+        const itemCount =
+          module.lessons.length +
+          module.quizzes.length +
+          module.assignments.length;
 
         return (
           <li key={module.id} className="border-b border-border/50">
@@ -249,8 +255,7 @@ export default function CourseContentView({
                   Section {mIdx + 1}: {module.title}
                 </span>
                 <span className="block text-[11px] mt-1 text-muted-foreground">
-                  {module.lessons.length} lecture
-                  {module.lessons.length === 1 ? "" : "s"}
+                  {itemCount} {itemCount === 1 ? "item" : "items"}
                   {totalSeconds ? ` · ${formatMinutes(totalSeconds)}` : ""}
                 </span>
               </span>
@@ -281,17 +286,14 @@ export default function CourseContentView({
                             active ? "bg-primary" : "bg-muted"
                           }`}
                         >
-                          {active ? (
-                            <IconPlayerPlay
-                              size={11}
-                              className="text-primary-foreground ml-[1px]"
-                            />
-                          ) : (
-                            <IconCircleCheck
-                              size={13}
-                              className="text-muted-foreground"
-                            />
-                          )}
+                          <IconPlayerPlay
+                            size={11}
+                            className={
+                              active
+                                ? "text-primary-foreground ml-[1px]"
+                                : "text-muted-foreground"
+                            }
+                          />
                         </span>
                         <span className="min-w-0 flex-1">
                           <span
@@ -325,6 +327,82 @@ export default function CourseContentView({
                     </li>
                   );
                 })}
+
+                {module.quizzes.map((quiz) => (
+                  <li key={quiz.id} className="px-2">
+                    <div className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-500/15">
+                        <IconClipboardCheck
+                          size={12}
+                          className="text-amber-500"
+                        />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-xs truncate text-muted-foreground">
+                          {quiz.title}
+                        </span>
+                      </span>
+                      <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
+                        {quiz.questionCount}Q
+                      </span>
+                    </div>
+                  </li>
+                ))}
+
+                {module.assignments.map((assignment) => (
+                  <li key={assignment.id} className="px-2">
+                    <div className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500/15">
+                        <IconFileSpreadsheet
+                          size={12}
+                          className="text-blue-500"
+                        />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-xs truncate text-muted-foreground">
+                          {assignment.title}
+                        </span>
+                      </span>
+                      <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
+                        {new Date(assignment.dueDate).toLocaleDateString(
+                          "en-IN",
+                          { day: "numeric", month: "short" },
+                        )}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+
+                {module.lessons.some((l) => l.resources && l.resources.length > 0) && (
+                  <>
+                    {module.lessons
+                      .filter((l) => l.resources && l.resources.length > 0)
+                      .flatMap((l) =>
+                        l.resources.map((r) => (
+                          <li key={`${l.id}-resource-${r.url}`} className="px-2">
+                            <a
+                              href={r.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left hover:bg-muted/30 transition-colors"
+                            >
+                              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
+                                <IconFile
+                                  size={12}
+                                  className="text-emerald-500"
+                                />
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block text-xs truncate text-muted-foreground">
+                                  {r.name}
+                                </span>
+                              </span>
+                            </a>
+                          </li>
+                        )),
+                      )}
+                  </>
+                )}
               </ul>
             )}
           </li>

@@ -133,6 +133,7 @@ model Module {
   lessons     Lesson[]
   sessions    LiveSession[]
   quizzes     Quiz[]
+  assignments Assignment[]
 }
 
 model Lesson {
@@ -394,6 +395,7 @@ model Assignment {
   id              String                 @id @default(cuid())
   courseId        String
   batchId         String
+  moduleId        String?
   title           String
   description     String                 @db.Text
   type            String                 @default("QUIZ") // "QUIZ" or "ASSIGNMENT"
@@ -404,6 +406,7 @@ model Assignment {
   updatedAt   DateTime               @updatedAt
   course      Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
   batch       Batch                  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  module      Module?                @relation(fields: [moduleId], references: [id], onDelete: SetNull)
   deletedAt   DateTime?
   deletedBy   String?
   restoredAt  DateTime?

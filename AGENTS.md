@@ -112,6 +112,58 @@ The course content view (`CourseContentView.tsx`) uses a two-column flex layout:
 - Video area uses `aspect-video` (16:9) with `overflow-hidden`
 - Sidebar scrolls independently with `overflow-y-auto`
 
+### Course Content Sidebar Icons
+
+The sidebar uses type-specific icons for each content type:
+
+| Content Type | Icon | Color |
+|---|---|---|
+| Video lesson | `IconPlayerPlay` | Primary (active) / Muted (inactive) |
+| Quiz | `IconClipboardCheck` | Amber (`text-amber-500`) |
+| Assignment | `IconFileSpreadsheet` | Blue (`text-blue-500`) |
+| Study Material | `IconFile` | Emerald (`text-emerald-500`) |
+
+Module header shows total item count: `{lessons + quizzes + assignments} items`.
+
+**Note:** The `LessonSidebar.tsx` extracted component exists in `_comps/` but the production sidebar is inline in `CourseContentView.tsx`.
+
+## Admin Course Builder
+
+The admin course detail page (`apps/web/src/app/admin/courses/[id]/`) is organized into tabbed sections:
+
+### Component Structure
+
+```
+page.tsx                    # Thin orchestrator with state + API calls
+_components/
+  types.ts                  # Shared TypeScript types
+  CourseDetailsTab.tsx      # Course edit form (title, description, category, tags, objectives)
+  ContentTab.tsx            # Course builder with module list
+  ModuleCard.tsx            # Module card with lessons, quizzes, assignments
+  LessonCard.tsx            # Lesson card with video URL + isFreePreview toggle
+  AddModuleForm.tsx         # Inline add module form
+  AddLessonForm.tsx         # Inline add lesson form
+  QuizCard.tsx              # Quiz display/edit/delete
+  AddQuizForm.tsx           # Inline add quiz with questions
+  AssignmentCard.tsx        # Assignment display/edit/delete
+  AddAssignmentForm.tsx     # Inline add assignment form
+  ModuleStudyMaterialsSection.tsx  # File upload per lesson
+  SessionsTab.tsx           # Live session management
+  RecordingsTab.tsx         # Recording sync
+  TabButton.tsx             # Reusable tab button
+```
+
+### Quiz/Assignment API Routes
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/admin/courses/modules/:moduleId/quizzes` | Add quiz to module |
+| PUT | `/admin/courses/modules/quizzes/:id` | Update quiz |
+| DELETE | `/admin/courses/modules/quizzes/:id` | Delete quiz |
+| POST | `/admin/courses/modules/:moduleId/assignments` | Add assignment to module |
+| PUT | `/admin/courses/modules/assignments/:id` | Update assignment |
+| DELETE | `/admin/courses/modules/assignments/:id` | Delete assignment |
+
 ## Key Dependencies
 
 - **API**: Express, Prisma, Zod, bcryptjs, jsonwebtoken, pino, multer, express-rate-limit

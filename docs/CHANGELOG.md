@@ -1,5 +1,38 @@
 # Changelog
 
+## 2026-07-16 - Admin Course Builder Improvements
+
+### Added
+
+- **Admin course detail page refactored.** Split 1485-line monolith into 10 focused components under `_components/`. (`apps/web/src/app/admin/courses/[id]/`)
+- **Quiz inline creation.** Admins can now create quizzes with multiple questions and options directly in the course builder. (`apps/web/src/app/admin/courses/[id]/_components/AddQuizForm.tsx`, `QuizCard.tsx`)
+- **Assignment inline creation.** Admins can now create assignments with title, type, description, due date, and max points directly in the course builder. (`apps/web/src/app/admin/courses/[id]/_components/AddAssignmentForm.tsx`, `AssignmentCard.tsx`)
+- **Quiz/Assignment API endpoints.** Added CRUD routes for quizzes and assignments linked to modules. (`apps/api/src/modules/courses/quiz.service.ts`, `quiz.controller.ts`, `assignment.service.ts`, `assignment.controller.ts`)
+- **Study materials lesson selector.** Admins can now select which lesson to upload resources to instead of always targeting the first lesson. (`apps/web/src/app/admin/courses/[id]/_components/ModuleStudyMaterialsSection.tsx`)
+- **isFreePreview toggle.** Added checkbox to lesson and module creation forms to mark content as free preview. (`apps/web/src/app/admin/courses/[id]/_components/LessonCard.tsx`, `AddLessonForm.tsx`, `AddModuleForm.tsx`)
+- **Tags and learning objectives.** Course details form now supports adding/removing tags and learning objectives. (`apps/web/src/app/admin/courses/[id]/_components/CourseDetailsTab.tsx`)
+- **Better delete confirmations.** Delete actions now show descriptive warnings about what will be removed.
+
+### Changed
+
+- **Course content API includes quizzes/assignments.** Admin course detail endpoint now returns full quiz and assignment data per module. (`apps/api/src/modules/courses/course.service.ts`)
+- **Student sidebar shows study materials.** Files uploaded to lessons now appear in the student sidebar with `IconFile` (emerald). (`apps/web/src/app/student/_views/CourseContentView.tsx`)
+- **Module item count.** Now counts lessons + quizzes + assignments instead of just lessons.
+
+## 2026-07-16 - Sidebar Type-Specific Icons
+
+### Added
+
+- **Type-specific icons in course content sidebar.** Each content type now has a distinct icon: video lessons use `IconPlayerPlay`, quizzes use `IconClipboardCheck` (amber), assignments use `IconFileSpreadsheet` (blue). (`apps/web/src/app/student/_views/CourseContentView.tsx`)
+- **Quiz items in sidebar.** Modules now display their quizzes in the sidebar with question count. (`apps/web/src/app/student/_views/CourseContentView.tsx`)
+- **Assignment items in sidebar.** Modules now display their linked assignments in the sidebar with due date. (`apps/web/src/app/student/_views/CourseContentView.tsx`)
+
+### Changed
+
+- **`Assignment` model now has optional `moduleId`.** Assignments can be linked to a specific module within a course. Existing assignments without a `moduleId` will not appear in the sidebar. (`apps/api/prisma/schema.prisma`)
+- **Course content API response.** `GET /api/courses/:courseId/content` now returns `quizzes` (with question count) and `assignments` per module instead of `hasQuiz: boolean`. (`apps/api/src/modules/courses/student-course.routes.ts`)
+- **Module header text.** Changed from "{n} lectures" to "{n} items" to reflect all content types. (`apps/web/src/app/student/_views/CourseContentView.tsx`)
+
 ## 2026-07-15 - Enrollment & Content Access Fixes
 
 ### Fixed

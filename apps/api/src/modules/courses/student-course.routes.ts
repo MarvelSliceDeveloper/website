@@ -345,6 +345,9 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
             quizzes: {
               include: { questions: true },
             },
+            assignments: {
+              orderBy: { dueDate: "asc" },
+            },
           },
         },
       },
@@ -455,7 +458,17 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
         completionPercent,
         recordingsCount: moduleRecordings.length,
         sessionsCount: moduleSessions.length,
-        hasQuiz: m.quizzes.length > 0,
+        quizzes: m.quizzes.map((q) => ({
+          id: q.id,
+          title: q.title,
+          questionCount: q.questions.length,
+        })),
+        assignments: m.assignments.map((a) => ({
+          id: a.id,
+          title: a.title,
+          type: a.type,
+          dueDate: a.dueDate.toISOString(),
+        })),
       };
     });
 
