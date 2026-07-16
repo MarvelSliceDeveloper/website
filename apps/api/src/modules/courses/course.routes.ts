@@ -188,6 +188,13 @@ router.delete(
   lessonController.deleteResource,
 );
 
+// PATCH /api/admin/courses/lessons/:lessonId/resources/reorder — reorder resources
+router.patch(
+  "/lessons/:lessonId/resources/reorder",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  lessonController.reorderResources,
+);
+
 // --- Quiz Routes ---
 
 // POST /api/admin/courses/modules/:moduleId/quizzes — add a quiz to a module
@@ -209,6 +216,13 @@ router.delete(
   "/modules/quizzes/:id",
   requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
   quizController.deleteQuiz,
+);
+
+// PATCH /api/admin/courses/modules/:moduleId/quizzes/reorder — reorder quizzes
+router.patch(
+  "/modules/:moduleId/quizzes/reorder",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  quizController.reorderQuizzes,
 );
 
 // --- Assignment Routes ---

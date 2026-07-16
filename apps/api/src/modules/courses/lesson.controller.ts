@@ -107,4 +107,18 @@ export const lessonController = {
       return res.status(500).json({ error: error.message });
     }
   },
+
+  async reorderResources(req: AuthRequest, res: Response) {
+    try {
+      const { resourceIds } = req.body;
+      if (!Array.isArray(resourceIds))
+        return res.status(400).json({ error: "resourceIds must be an array" });
+      await lessonService.reorderResources(req.params.lessonId, resourceIds);
+      return res.json({ message: "Resources reordered" });
+    } catch (error: any) {
+      if (error.message === "Lesson not found")
+        return res.status(404).json({ error: error.message });
+      return res.status(400).json({ error: error.message });
+    }
+  },
 };

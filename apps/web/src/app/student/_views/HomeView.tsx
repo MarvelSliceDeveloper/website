@@ -304,22 +304,20 @@ export default function HomeView({
             { id: "sessions", label: "My Sessions" },
             {
               id: "notifications",
-              label: `Notifications ${
-                overdueTotal > 0 ? `(${overdueTotal})` : ""
-              }`,
+              label: `Notifications ${overdueTotal > 0 ? `(${overdueTotal})` : ""
+                }`,
             },
-            { id: "support", label: "Support" },
+            { id: "support", label: "Mentorship" },
           ].map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`pb-3 relative transition-colors ${
-                  isActive
-                    ? "text-primary font-bold"
-                    : "text-muted hover:text-foreground"
-                }`}
+                className={`pb-3 relative transition-colors ${isActive
+                  ? "text-primary font-bold"
+                  : "text-muted hover:text-foreground"
+                  }`}
               >
                 {tab.label}
                 {isActive && (
@@ -340,21 +338,19 @@ export default function HomeView({
               <div className="flex items-center gap-1.5 p-1 rounded-xl bg-card border border-border/50">
                 <button
                   onClick={() => setInnerTab("my_courses")}
-                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${
-                    innerTab === "my_courses"
-                      ? "bg-primary text-white shadow-sm"
-                      : "text-muted hover:text-foreground"
-                  }`}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${innerTab === "my_courses"
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-muted hover:text-foreground"
+                    }`}
                 >
                   MY COURSES
                 </button>
                 <button
                   onClick={() => setInnerTab("results")}
-                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${
-                    innerTab === "results"
-                      ? "bg-primary text-white shadow-sm"
-                      : "text-muted hover:text-foreground"
-                  }`}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${innerTab === "results"
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-muted hover:text-foreground"
+                    }`}
                 >
                   RESULTS
                 </button>
@@ -866,19 +862,17 @@ export default function HomeView({
                         return (
                           <div
                             key={item.id}
-                            className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border ${
-                              isQuiz
-                                ? "border-accent/25 bg-accent/[0.02]"
-                                : "border-danger/25 bg-danger/[0.02]"
-                            }`}
+                            className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border ${isQuiz
+                              ? "border-accent/25 bg-accent/[0.02]"
+                              : "border-danger/25 bg-danger/[0.02]"
+                              }`}
                           >
                             <div className="flex items-start gap-3">
                               <div
-                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                                  isQuiz
-                                    ? "bg-accent/15 text-accent border border-accent/25"
-                                    : "bg-danger/15 text-danger border border-danger/25"
-                                }`}
+                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${isQuiz
+                                  ? "bg-accent/15 text-accent border border-accent/25"
+                                  : "bg-danger/15 text-danger border border-danger/25"
+                                  }`}
                               >
                                 {isQuiz ? (
                                   <IconClock size={16} />
@@ -1054,11 +1048,10 @@ export default function HomeView({
                         </p>
                         <div className="mt-2.5 flex items-center justify-between gap-2">
                           <span
-                            className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                              isActive
-                                ? "bg-primary/10 text-primary border-primary/20"
-                                : "bg-muted/10 text-muted border-border"
-                            }`}
+                            className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${isActive
+                              ? "bg-primary/10 text-primary border-primary/20"
+                              : "bg-muted/10 text-muted border-border"
+                              }`}
                           >
                             {t.status}
                           </span>

@@ -93,4 +93,24 @@ export const quizService = {
     await prisma.quiz.delete({ where: { id: quizId } });
     return { deleted: true };
   },
+
+  async reorderQuizzes(moduleId: string, quizIds: string[]) {
+    const module = await prisma.module.findUnique({ where: { id: moduleId } });
+    if (!module) throw new Error("Module not found");
+
+    const quizzes = await prisma.quiz.findMany({
+      where: { moduleId },
+      select: { id: true },
+    });
+    const existingIds = new Set(quizzes.map((q) => q.id));
+    if (!quizIds.every((id) => existingIds.has(id)))
+      throw new Error("Some quiz IDs do not belong to this module");
+
+    await Promise.all(
+      quizIds.map((id, index) =>
+        prisma.quiz.update({ where: { id }, data: { order: index } }),
+      ),
+    );
+    return { reordered: true };
+  },
 };

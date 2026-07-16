@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CSS Reference — Every Property, Explained & Shown</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --bg:#0b0d12; --panel:#11141c; --panel2:#161a24; --border:#232838;
+    --text:#e4e7ee; --muted:#8891a7; --accent:#7dd3b0; --accent2:#f2b880;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); display:flex; min-height:100vh;}
+  a{color:inherit;}
+
+  #sidebar{
+    width:250px; flex-shrink:0; background:var(--panel); border-right:1px solid var(--border);
+    height:100vh; position:sticky; top:0; overflow-y:auto; padding:20px 0;
+  }
+  #sidebar h1{font-size:14px; padding:0 20px 14px; margin:0; color:var(--text); font-weight:600; letter-spacing:.02em;}
+  #search{
+    display:block; width:calc(100% - 32px); margin:0 16px 16px; padding:8px 10px;
+    background:var(--panel2); border:1px solid var(--border); border-radius:6px; color:var(--text);
+    font-size:13px; font-family:var(--sans);
+  }
+  #search:focus{outline:none; border-color:var(--accent);}
+  .nav-cat{
+    display:block; padding:7px 20px; font-size:12.5px; color:var(--muted); text-decoration:none;
+    border-left:2px solid transparent; cursor:pointer; transition:.15s;
+  }
+  .nav-cat:hover{color:var(--text); background:var(--panel2);}
+  .nav-cat.active{color:var(--accent); border-left-color:var(--accent); background:var(--panel2);}
+
+  #main{flex:1; padding:40px 48px; max-width:980px;}
+  #main > p.intro{color:var(--muted); font-size:14px; margin-top:0; margin-bottom:36px; max-width:640px; line-height:1.6;}
+
+  section.category{margin-bottom:56px; scroll-margin-top:24px;}
+  section.category > h2{
+    font-size:20px; margin:0 0 4px; padding-bottom:10px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:10px;
+  }
+  section.category > h2 .tag{
+    font-size:11px; font-weight:400; color:var(--muted); background:var(--panel2);
+    padding:2px 8px; border-radius:10px; border:1px solid var(--border);
+  }
+  section.category > p.desc{color:var(--muted); font-size:13.5px; margin:10px 0 20px; line-height:1.6;}
+
+  .prop{
+    background:var(--panel); border:1px solid var(--border); border-radius:10px;
+    padding:16px 18px; margin-bottom:12px;
+  }
+  .prop-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+  .prop-name{font-family:var(--mono); font-size:14.5px; color:var(--accent); font-weight:600;}
+  .prop-syntax{font-family:var(--mono); font-size:11.5px; color:var(--muted);}
+  .prop-desc{font-size:13.5px; color:#b7bdcc; margin:8px 0 12px; line-height:1.6;}
+
+  .values{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;}
+  .val{
+    font-family:var(--mono); font-size:11.5px; background:var(--panel2); color:var(--accent2);
+    border:1px solid var(--border); border-radius:5px; padding:3px 8px;
+  }
+
+  /* visual demo styles */
+  .demo{ background:var(--panel2); border:1px dashed var(--border); border-radius:8px; padding:14px; }
+  .demo-row{display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end;}
+  .demo-item{display:flex; flex-direction:column; align-items:center; gap:6px;}
+  .demo-label{font-family:var(--mono); font-size:10.5px; color:var(--muted); text-align:center; max-width:110px;}
+  .demo-box{width:64px; height:64px; border-radius:6px; background:var(--accent); flex-shrink:0;}
+  .demo-text-sample{font-size:14px; color:var(--text); background:var(--panel); padding:8px 12px; border-radius:6px; border:1px solid var(--border); min-width:110px; text-align:left;}
+  .demo-flexbox{width:190px; height:70px; background:var(--panel); border:1px solid var(--border); border-radius:6px; display:flex; padding:6px; gap:6px;}
+  .demo-flexbox .dot{width:20px; height:20px; border-radius:5px; background:var(--accent2); flex-shrink:0;}
+  .demo-gridbox{width:150px; height:100px; background:var(--panel); border:1px solid var(--border); border-radius:6px; display:grid; padding:6px; gap:5px;}
+  .demo-gridbox .cell{background:var(--accent); border-radius:4px;}
+  .demo-para{font-size:12.5px; color:var(--text); background:var(--panel); padding:10px; border-radius:6px; border:1px solid var(--border); width:190px;}
+  .demo-blend{position:relative; width:90px; height:70px;}
+  .demo-blend .c1, .demo-blend .c2{position:absolute; width:50px; height:50px; border-radius:50%;}
+  .demo-blend .c1{left:0; top:10px; background:var(--accent);}
+  .demo-blend .c2{left:28px; top:0; background:var(--accent2);}
+  .demo-cursor{width:100px; height:56px; background:var(--panel); border:1px solid var(--border); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--muted);}
+
+  /* Tailwind demo scaffolding — deliberately unstyled for size/color so Tailwind utility classes control those */
+  .tw-box{flex-shrink:0;}
+  .tw-flexbox{width:190px; min-height:70px; background:var(--panel); border:1px solid var(--border); border-radius:6px; padding:6px;}
+  .tw-flexbox .dot{width:20px; height:20px; border-radius:5px; background:var(--accent2); flex-shrink:0;}
+  .tw-gridbox{width:150px; height:100px; background:var(--panel); border:1px solid var(--border); border-radius:6px; padding:6px;}
+  .tw-gridbox .cell{background:var(--accent); border-radius:4px;}
+  .tw-text{font-size:14px; color:var(--text); background:var(--panel); padding:8px 12px; border-radius:6px; border:1px solid var(--border); min-width:110px; text-align:left;}
+  .tw-para{font-size:12.5px; color:var(--text); background:var(--panel); padding:10px; border-radius:6px; border:1px solid var(--border); width:190px;}
+  .tw-note{font-size:12.5px; color:var(--muted); margin:0; line-height:1.6;}
+  .tw-note code{color:var(--accent2); font-family:var(--mono); font-size:11.5px;}
+
+  .hidden{display:none !important;}
+  ::-webkit-scrollbar{width:8px; height:8px;}
+  ::-webkit-scrollbar-thumb{background:#2a3040; border-radius:4px;}
+
+  @media (max-width: 800px){
+    body{flex-direction:column;}
+    #sidebar{width:100%; height:auto; position:relative; border-right:none; border-bottom:1px solid var(--border);}
+    #main{padding:24px;}
+  }
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <h1>CSS Reference</h1>
+  <input type="text" id="search" placeholder="Search a property..." />
+  <div id="nav-list"></div>
+</nav>
+
+<main id="main">
+  <p class="intro">Every core CSS property — plus Tailwind CSS's utility classes — grouped by category, with a live rendered preview of what each value actually looks like. Tailwind demos run on the real Tailwind Play CDN, not simulated styles.</p>
+  <div id="content"></div>
+</main>
+
+<script>
+function box(label, style){ return `<div class="demo-item"><div class="demo-box" style="${style}"></div><span class="demo-label">${label}</span></div>`; }
+function text(label, style, sample){ return `<div class="demo-item"><div class="demo-text-sample" style="${style}">${sample||'Aa Bb Cc'}</div><span class="demo-label">${label}</span></div>`; }
+function para(label, style, sample){ return `<div class="demo-item"><div class="demo-para" style="${style}">${sample}</div><span class="demo-label">${label}</span></div>`; }
+function flexDemo(label, containerStyle){ return `<div class="demo-item"><div class="demo-flexbox" style="${containerStyle}"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="demo-label">${label}</span></div>`; }
+function gridDemo(label, containerStyle, cells){ return `<div class="demo-item"><div class="demo-gridbox" style="${containerStyle}">${Array(cells||4).fill('<div class="cell"></div>').join('')}</div><span class="demo-label">${label}</span></div>`; }
+function blendDemo(label, blendStyle){ return `<div class="demo-item"><div class="demo-blend"><div class="c1"></div><div class="c2" style="${blendStyle}"></div></div><span class="demo-label">${label}</span></div>`; }
+function cursorDemo(label, style){ return `<div class="demo-item"><div class="demo-cursor" style="${style}">hover me</div><span class="demo-label">${label}</span></div>`; }
+function wrap(rowHtml){ return `<div class="demo"><div class="demo-row">${rowHtml}</div></div>`; }
+
+// --- Tailwind demo helpers: size/color come entirely from the Tailwind class string, not local CSS ---
+function twBox(label, cls){ return `<div class="demo-item"><div class="tw-box ${cls}"></div><span class="demo-label">${label}</span></div>`; }
+function twText(label, cls, sample){ return `<div class="demo-item"><div class="tw-text ${cls}">${sample||'Aa Bb Cc'}</div><span class="demo-label">${label}</span></div>`; }
+function twPara(label, cls, sample){ return `<div class="demo-item"><div class="tw-para ${cls}">${sample}</div><span class="demo-label">${label}</span></div>`; }
+function twFlex(label, containerCls, dots){ return `<div class="demo-item"><div class="tw-flexbox flex ${containerCls}">${Array(dots||3).fill('<div class="dot"></div>').join('')}</div><span class="demo-label">${label}</span></div>`; }
+function twGrid(label, containerCls, cells){ return `<div class="demo-item"><div class="tw-gridbox grid ${containerCls}">${Array(cells||4).fill('<div class="cell"></div>').join('')}</div><span class="demo-label">${label}</span></div>`; }
+function twNote(html){ return `<div class="demo"><p class="tw-note">${html}</p></div>`; }
+
+const DATA = [
+  {
+    id: "display-position",
+    title: "Layout: Display & Position",
+    desc: "How an element participates in the page layout and where it sits.",
+    props: [
+      { name: "display", syntax: "display: value;", desc: "Sets how an element is treated in layout — as a box, inline text, flex container, etc.",
+        values: ["block","inline","inline-block","flex","grid","none","table"],
+        demo: wrap(
+          `<div class="demo-item"><div style="width:130px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:11px;">
+            <span style="display:block;background:var(--accent);color:#0b0d12;padding:2px 4px;border-radius:3px;">block</span>
+            <span style="display:block;background:var(--accent2);color:#0b0d12;padding:2px 4px;border-radius:3px;margin-top:2px;">block</span>
+          </div><span class="demo-label">display: block (stacks, full width)</span></div>` +
+          `<div class="demo-item"><div style="width:130px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:11px;">
+            <span style="display:inline;background:var(--accent);color:#0b0d12;padding:2px 4px;border-radius:3px;">inline</span>
+            <span style="display:inline;background:var(--accent2);color:#0b0d12;padding:2px 4px;border-radius:3px;">inline</span>
+          </div><span class="demo-label">display: inline (flows in line)</span></div>` +
+          `<div class="demo-item"><div style="width:130px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:8px;display:flex;gap:4px;font-size:11px;">
+            <span style="background:var(--accent);color:#0b0d12;padding:2px 4px;border-radius:3px;">flex</span>
+            <span style="background:var(--accent2);color:#0b0d12;padding:2px 4px;border-radius:3px;">flex</span>
+          </div><span class="demo-label">display: flex (row of items)</span></div>`
+        ) },
+      { name: "position", syntax: "position: value;", desc: "Choosing relative/absolute lets you offset an element with top/right/bottom/left.",
+        values: ["static","relative","absolute","fixed","sticky"],
+        demo: wrap(
+          `<div class="demo-item"><div style="position:relative;width:100px;height:70px;background:var(--panel);border:1px solid var(--border);border-radius:6px;">
+            <div style="position:absolute;top:8px;left:8px;width:26px;height:26px;background:var(--accent);border-radius:4px;"></div>
+            <div style="position:absolute;bottom:8px;right:8px;width:26px;height:26px;background:var(--accent2);border-radius:4px;"></div>
+          </div><span class="demo-label">absolute (positioned freely inside a relative parent)</span></div>`
+        ) },
+      { name: "float", syntax: "float: left;", desc: "Pulls an element to one side, letting inline content wrap around it.",
+        values: ["left","right","none"],
+        demo: wrap(`<div class="demo-item"><div style="width:170px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:11px;line-height:1.5;">
+          <span style="float:left;width:30px;height:30px;background:var(--accent);border-radius:4px;margin-right:6px;"></span>
+          Text wraps around the floated box on its left side, flowing naturally.
+        </div><span class="demo-label">float: left</span></div>`) },
+      { name: "overflow", syntax: "overflow: value;", desc: "What happens when content is bigger than its box.",
+        values: ["visible","hidden","scroll","auto","clip"],
+        demo: wrap(
+          box("hidden (clipped)", "background:var(--panel);border:1px solid var(--border);overflow:hidden;position:relative;") +
+          `<div class="demo-item"><div style="width:64px;height:64px;background:var(--panel);border:1px solid var(--border);border-radius:6px;overflow:auto;font-size:10px;color:var(--muted);padding:4px;">This text is longer than the box so it scrolls inside it.</div><span class="demo-label">auto (scrolls)</span></div>`
+        ) },
+      { name: "visibility", syntax: "visibility: value;", desc: "Hides an element visually but (unlike display:none) keeps its layout space.",
+        values: ["visible","hidden","collapse"],
+        demo: wrap(
+          `<div class="demo-item"><div style="display:flex;gap:6px;"><div class="demo-box" style="width:26px;height:26px;"></div><div class="demo-box" style="width:26px;height:26px;visibility:hidden;"></div><div class="demo-box" style="width:26px;height:26px;"></div></div><span class="demo-label">middle box: visibility:hidden — invisible, space kept</span></div>`
+        ) },
+    ]
+  },
+  {
+    id: "box-model",
+    title: "Box Model: Size & Spacing",
+    desc: "Dimensions and the space around/inside an element.",
+    props: [
+      { name: "margin", syntax: "margin: 10px 20px;", desc: "Space outside the element's border, pushing other elements away.",
+        values: ["0","8px","16px 32px","auto"],
+        demo: wrap(
+          `<div class="demo-item"><div style="background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:4px;"><div class="demo-box" style="width:36px;height:36px;margin:0;"></div></div><span class="demo-label">margin: 0</span></div>` +
+          `<div class="demo-item"><div style="background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:4px;"><div class="demo-box" style="width:36px;height:36px;margin:16px;"></div></div><span class="demo-label">margin: 16px</span></div>`
+        ) },
+      { name: "padding", syntax: "padding: 10px 20px;", desc: "Space inside the element's border, between the border and the content.",
+        values: ["0","8px","16px 24px"],
+        demo: wrap(
+          `<div class="demo-item"><div style="background:var(--accent);border-radius:6px;padding:2px;display:inline-block;"><div style="background:var(--panel);color:var(--text);font-size:10px;padding:2px;">text</div></div><span class="demo-label">padding: 2px</span></div>` +
+          `<div class="demo-item"><div style="background:var(--accent);border-radius:6px;padding:16px;display:inline-block;"><div style="background:var(--panel);color:var(--text);font-size:10px;padding:2px;">text</div></div><span class="demo-label">padding: 16px</span></div>`
+        ) },
+      { name: "width / height", syntax: "width: 200px;", desc: "Sets the box's size.",
+        values: ["auto","fixed length","percentage","min/max-content"],
+        demo: wrap( box("40px", "width:40px;height:40px;") + box("64px", "width:64px;height:64px;") + box("wide: 120px x 40px", "width:120px;height:40px;") ) },
+      { name: "aspect-ratio", syntax: "aspect-ratio: 16 / 9;", desc: "Preferred width-to-height ratio for a box.",
+        values: ["1 / 1","16 / 9","4 / 3"],
+        demo: wrap( box("1 / 1", "width:60px;aspect-ratio:1/1;") + box("16 / 9", "width:96px;aspect-ratio:16/9;") + box("4 / 3", "width:80px;aspect-ratio:4/3;") ) },
+    ]
+  },
+  {
+    id: "borders",
+    title: "Border & Outline",
+    desc: "Lines drawn around the edge of an element's box.",
+    props: [
+      { name: "border-style", syntax: "border-style: dashed;", desc: "The line pattern of the border.",
+        values: ["solid","dashed","dotted","double","groove","ridge"],
+        demo: wrap(
+          ["solid","dashed","dotted","double","groove","ridge"].map(s=>box(s, `background:transparent;border:4px ${s} var(--accent2);`)).join('')
+        ) },
+      { name: "border-radius", syntax: "border-radius: 8px;", desc: "Rounds the corners of the box.",
+        values: ["0","8px","16px","50% (circle)"],
+        demo: wrap( box("0", "border-radius:0;") + box("8px", "border-radius:8px;") + box("20px", "border-radius:20px;") + box("50% (circle)", "border-radius:50%;") ) },
+      { name: "border-width", syntax: "border-width: 4px;", desc: "Thickness of the border line.",
+        values: ["1px","2px","6px"],
+        demo: wrap( box("1px", "background:transparent;border:1px solid var(--accent2);") + box("3px", "background:transparent;border:3px solid var(--accent2);") + box("6px", "background:transparent;border:6px solid var(--accent2);") ) },
+      { name: "outline", syntax: "outline: 2px solid blue;", desc: "A line outside the border that doesn't affect layout — common for focus states.",
+        values: ["2px solid + offset"],
+        demo: wrap( box("outline, offset 3px", "border-radius:6px;outline:3px solid var(--accent2);outline-offset:3px;") ) },
+    ]
+  },
+  {
+    id: "background",
+    title: "Background",
+    desc: "Fills behind an element's content and padding.",
+    props: [
+      { name: "background-color", syntax: "background-color: #fafafa;", desc: "Solid fill color behind the element.",
+        values: ["hex","rgb()","hsl()","transparent"],
+        demo: wrap( box("teal", "background:#7dd3b0;") + box("amber", "background:#f2b880;") + box("dark", "background:#232838;") + box("transparent", "background:transparent;border:1px dashed var(--muted);") ) },
+      { name: "background-image (gradient)", syntax: "background-image: linear-gradient(...);", desc: "A gradient or image drawn behind content.",
+        values: ["linear-gradient","radial-gradient","conic-gradient"],
+        demo: wrap(
+          box("linear-gradient", "background:linear-gradient(135deg,#7dd3b0,#f2b880);") +
+          box("radial-gradient", "background:radial-gradient(circle,#f2b880,#11141c);") +
+          box("conic-gradient", "background:conic-gradient(#7dd3b0,#f2b880,#7dd3b0);")
+        ) },
+      { name: "background-repeat / size", syntax: "background-repeat: repeat;", desc: "How a background image tiles and scales within the box.",
+        values: ["repeat","no-repeat","cover"],
+        demo: wrap(
+          box("repeat (tiled pattern)", "background-image:repeating-linear-gradient(45deg,#7dd3b0 0 6px,#11141c 6px 12px);") +
+          box("no-repeat (single, top-left)", "background:linear-gradient(135deg,#f2b880,#7dd3b0) no-repeat top left / 30px 30px, var(--panel);")
+        ) },
+    ]
+  },
+  {
+    id: "typography",
+    title: "Typography",
+    desc: "Controls how text looks and flows.",
+    props: [
+      { name: "font-weight", syntax: "font-weight: 600;", desc: "Boldness of the text.",
+        values: ["300","400","600","700","900"],
+        demo: wrap( ["300","400","600","700","900"].map(w=>text(w, `font-weight:${w};`)).join('') ) },
+      { name: "font-style", syntax: "font-style: italic;", desc: "Slants the text.",
+        values: ["normal","italic"],
+        demo: wrap( text("normal","font-style:normal;") + text("italic","font-style:italic;") ) },
+      { name: "text-align", syntax: "text-align: center;", desc: "Horizontal alignment of text inside its container.",
+        values: ["left","center","right","justify"],
+        demo: wrap(
+          para("left","text-align:left;","Aligned to the left edge of the box.") +
+          para("center","text-align:center;","Centered in the box.") +
+          para("right","text-align:right;","Aligned to the right edge.")
+        ) },
+      { name: "text-decoration", syntax: "text-decoration: underline;", desc: "Lines drawn on text.",
+        values: ["none","underline","line-through","overline","wavy underline"],
+        demo: wrap(
+          text("underline","text-decoration:underline;") +
+          text("line-through","text-decoration:line-through;") +
+          text("overline","text-decoration:overline;") +
+          text("wavy","text-decoration:underline wavy var(--accent2);")
+        ) },
+      { name: "text-transform", syntax: "text-transform: uppercase;", desc: "Changes letter casing for display, without touching the underlying text.",
+        values: ["none","uppercase","lowercase","capitalize"],
+        demo: wrap(
+          text("uppercase","text-transform:uppercase;","hello world") +
+          text("lowercase","text-transform:lowercase;","HELLO WORLD") +
+          text("capitalize","text-transform:capitalize;","hello world")
+        ) },
+      { name: "letter-spacing", syntax: "letter-spacing: 0.1em;", desc: "Extra space between letters.",
+        values: ["normal","0.05em","0.2em","-0.05em"],
+        demo: wrap( text("normal","letter-spacing:normal;") + text("0.1em","letter-spacing:0.1em;") + text("0.3em","letter-spacing:0.3em;") ) },
+      { name: "line-height", syntax: "line-height: 1.5;", desc: "Vertical space each line of text occupies.",
+        values: ["1","1.5","2"],
+        demo: wrap(
+          para("line-height: 1","line-height:1;","This paragraph has tightly packed lines of text stacked closely.") +
+          para("line-height: 1.8","line-height:1.8;","This paragraph has airy, spaced-out lines that are easier to read.")
+        ) },
+      { name: "text-overflow", syntax: "text-overflow: ellipsis;", desc: "How clipped text is signaled (needs overflow:hidden + white-space:nowrap).",
+        values: ["clip","ellipsis"],
+        demo: wrap(
+          `<div class="demo-item"><div style="width:90px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:6px;font-size:11px;">This text is too long to fit</div><span class="demo-label">ellipsis</span></div>`+
+          `<div class="demo-item"><div style="width:90px;overflow:hidden;white-space:nowrap;text-overflow:clip;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:6px;font-size:11px;">This text is too long to fit</div><span class="demo-label">clip</span></div>`
+        ) },
+    ]
+  },
+  {
+    id: "color-effects",
+    title: "Color, Opacity & Effects",
+    desc: "Visual finishing touches — transparency, shadows, blur, blending.",
+    props: [
+      { name: "opacity", syntax: "opacity: 0.5;", desc: "Overall transparency of the element and its children.",
+        values: ["1","0.75","0.5","0.25"],
+        demo: wrap( box("1","opacity:1;") + box("0.75","opacity:0.75;") + box("0.5","opacity:0.5;") + box("0.25","opacity:0.25;") ) },
+      { name: "box-shadow", syntax: "box-shadow: 0 4px 12px rgba(0,0,0,.4);", desc: "Drop shadow around an element's box.",
+        values: ["small","medium","large","inset"],
+        demo: wrap(
+          box("small","background:var(--panel);border:1px solid var(--border);box-shadow:0 2px 6px rgba(0,0,0,.5);margin:6px;") +
+          box("large","background:var(--panel);border:1px solid var(--border);box-shadow:0 10px 24px rgba(0,0,0,.6);margin:6px;") +
+          box("inset","background:var(--panel);border:1px solid var(--border);box-shadow:inset 0 0 12px rgba(0,0,0,.6);margin:6px;") +
+          box("colored glow","background:var(--panel);border:1px solid var(--border);box-shadow:0 0 18px rgba(125,211,176,.6);margin:6px;")
+        ) },
+      { name: "filter", syntax: "filter: blur(4px);", desc: "Graphical effects applied to the whole element.",
+        values: ["blur()","grayscale()","brightness()","contrast()","invert()","hue-rotate()"],
+        demo: wrap(
+          box("normal","background:linear-gradient(135deg,#7dd3b0,#f2b880);") +
+          box("blur(3px)","background:linear-gradient(135deg,#7dd3b0,#f2b880);filter:blur(3px);") +
+          box("grayscale(1)","background:linear-gradient(135deg,#7dd3b0,#f2b880);filter:grayscale(1);") +
+          box("brightness(1.6)","background:linear-gradient(135deg,#7dd3b0,#f2b880);filter:brightness(1.6);") +
+          box("hue-rotate(120deg)","background:linear-gradient(135deg,#7dd3b0,#f2b880);filter:hue-rotate(120deg);") +
+          box("invert(1)","background:linear-gradient(135deg,#7dd3b0,#f2b880);filter:invert(1);")
+        ) },
+      { name: "mix-blend-mode", syntax: "mix-blend-mode: multiply;", desc: "How an element's content blends with content behind it.",
+        values: ["normal","multiply","screen","difference"],
+        demo: wrap(
+          blendDemo("normal","mix-blend-mode:normal;") +
+          blendDemo("multiply","mix-blend-mode:multiply;") +
+          blendDemo("screen","mix-blend-mode:screen;") +
+          blendDemo("difference","mix-blend-mode:difference;")
+        ) },
+    ]
+  },
+  {
+    id: "flexbox",
+    title: "Flexbox",
+    desc: "One-dimensional layout for rows or columns of items.",
+    props: [
+      { name: "flex-direction", syntax: "flex-direction: row;", desc: "Main axis direction of the flex container.",
+        values: ["row","column"],
+        demo: wrap( flexDemo("row","flex-direction:row;") + flexDemo("column","flex-direction:column;") ) },
+      { name: "justify-content", syntax: "justify-content: space-between;", desc: "Aligns items along the main axis.",
+        values: ["flex-start","center","space-between","space-around"],
+        demo: wrap(
+          flexDemo("flex-start","justify-content:flex-start;") +
+          flexDemo("center","justify-content:center;") +
+          flexDemo("space-between","justify-content:space-between;") +
+          flexDemo("space-around","justify-content:space-around;")
+        ) },
+      { name: "align-items", syntax: "align-items: center;", desc: "Aligns items along the cross axis.",
+        values: ["flex-start","center","flex-end","stretch"],
+        demo: wrap(
+          flexDemo("flex-start","align-items:flex-start;") +
+          flexDemo("center","align-items:center;") +
+          flexDemo("flex-end","align-items:flex-end;") +
+          flexDemo("stretch","align-items:stretch;")
+        ) },
+      { name: "flex-wrap", syntax: "flex-wrap: wrap;", desc: "Whether flex items wrap onto multiple lines.",
+        values: ["nowrap","wrap"],
+        demo: wrap(
+          `<div class="demo-item"><div class="demo-flexbox" style="flex-wrap:nowrap;">${Array(6).fill('<div class="dot"></div>').join('')}</div><span class="demo-label">nowrap (squeezes/overflows)</span></div>` +
+          `<div class="demo-item"><div class="demo-flexbox" style="flex-wrap:wrap;">${Array(6).fill('<div class="dot"></div>').join('')}</div><span class="demo-label">wrap (drops to new line)</span></div>`
+        ) },
+      { name: "gap", syntax: "gap: 12px;", desc: "Space between flex or grid items.",
+        values: ["4px","12px","24px"],
+        demo: wrap(
+          `<div class="demo-item"><div class="demo-flexbox" style="gap:2px;">${Array(3).fill('<div class="dot"></div>').join('')}</div><span class="demo-label">gap: 2px</span></div>`+
+          `<div class="demo-item"><div class="demo-flexbox" style="gap:16px;">${Array(3).fill('<div class="dot"></div>').join('')}</div><span class="demo-label">gap: 16px</span></div>`
+        ) },
+    ]
+  },
+  {
+    id: "grid",
+    title: "CSS Grid",
+    desc: "Two-dimensional layout of rows and columns.",
+    props: [
+      { name: "grid-template-columns", syntax: "grid-template-columns: 1fr 2fr;", desc: "Defines the size of each column track.",
+        values: ["repeat(3, 1fr)","1fr 2fr","100px 1fr"],
+        demo: wrap(
+          gridDemo("repeat(3, 1fr)","grid-template-columns:repeat(3,1fr);grid-template-rows:1fr;",3) +
+          gridDemo("1fr 2fr","grid-template-columns:1fr 2fr;grid-template-rows:1fr;",2) +
+          gridDemo("repeat(2, 1fr), 2 rows","grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);",4)
+        ) },
+      { name: "justify-items / align-items (grid)", syntax: "justify-items: center;", desc: "Aligns each item inside its own grid cell.",
+        values: ["stretch","start","center","end"],
+        demo: wrap(
+          `<div class="demo-item"><div class="demo-gridbox" style="grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);justify-items:stretch;align-items:stretch;"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div></div><span class="demo-label">stretch (fills cell)</span></div>`+
+          `<div class="demo-item"><div class="demo-gridbox" style="grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);justify-items:center;align-items:center;"><div class="cell" style="width:16px;height:16px;"></div><div class="cell" style="width:16px;height:16px;"></div><div class="cell" style="width:16px;height:16px;"></div><div class="cell" style="width:16px;height:16px;"></div></div><span class="demo-label">center (small, centered)</span></div>`
+        ) },
+      { name: "gap (grid)", syntax: "gap: 16px;", desc: "Row and column gaps between grid tracks.",
+        values: ["2px","12px","20px"],
+        demo: wrap(
+          gridDemo("gap: 2px","grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);gap:2px;",4) +
+          gridDemo("gap: 16px","grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);gap:16px;",4)
+        ) },
+    ]
+  },
+  {
+    id: "transform-transition",
+    title: "Transform & Animation",
+    desc: "Moving, scaling and rotating elements (hover to trigger transitions live).",
+    props: [
+      { name: "transform", syntax: "transform: rotate(20deg);", desc: "Applies 2D/3D transformations without affecting document flow.",
+        values: ["translate()","scale()","rotate()","skew()"],
+        demo: wrap(
+          box("translate(10px,10px)","transform:translate(10px,10px);") +
+          box("scale(0.7)","transform:scale(0.7);") +
+          box("rotate(25deg)","transform:rotate(25deg);") +
+          box("skew(15deg)","transform:skew(15deg);")
+        ) },
+      { name: "transition (hover to try)", syntax: "transition: all 0.3s ease;", desc: "Animates a property smoothly when its value changes — hover the swatches below.",
+        values: ["property","duration","timing-function","delay"],
+        demo: `<div class="demo"><div class="demo-row">
+          <div class="demo-item"><div class="demo-box" style="transition:transform .3s ease, background .3s ease; cursor:pointer;" onmouseover="this.style.transform='scale(1.25)';this.style.background='var(--accent2)'" onmouseout="this.style.transform='scale(1)';this.style.background='var(--accent)'"></div><span class="demo-label">hover me (transition: .3s ease)</span></div>
+        </div></div>` },
+    ]
+  },
+  {
+    id: "misc",
+    title: "Interaction & Lists",
+    desc: "Cursor, list styling and a few useful extras.",
+    props: [
+      { name: "cursor", syntax: "cursor: pointer;", desc: "Mouse cursor shown when hovering the element — try it live below.",
+        values: ["pointer","grab","not-allowed","text","crosshair","move"],
+        demo: wrap(
+          cursorDemo("pointer","cursor:pointer;") + cursorDemo("grab","cursor:grab;") +
+          cursorDemo("not-allowed","cursor:not-allowed;") + cursorDemo("crosshair","cursor:crosshair;") +
+          cursorDemo("move","cursor:move;")
+        ) },
+      { name: "list-style", syntax: "list-style: disc inside;", desc: "Bullet/number style for list items.",
+        values: ["disc","circle","square","decimal","none"],
+        demo: `<div class="demo"><div class="demo-row">
+          <div class="demo-item"><ul style="list-style:disc;margin:0;padding-left:16px;font-size:11px;color:var(--text);"><li>one</li><li>two</li></ul><span class="demo-label">disc</span></div>
+          <div class="demo-item"><ul style="list-style:square;margin:0;padding-left:16px;font-size:11px;color:var(--text);"><li>one</li><li>two</li></ul><span class="demo-label">square</span></div>
+          <div class="demo-item"><ol style="list-style:decimal;margin:0;padding-left:16px;font-size:11px;color:var(--text);"><li>one</li><li>two</li></ol><span class="demo-label">decimal</span></div>
+        </div></div>` },
+    ]
+  },
+  {
+    id: "tw-basics",
+    title: "Tailwind CSS: Utility Basics",
+    desc: "Utility-first classes that map straight to CSS values, composed right in your markup instead of a separate stylesheet. Live via the Tailwind Play CDN — these are real Tailwind classes rendering for real.",
+    props: [
+      { name: "Sizing (w- / h- / max-w-)", syntax: 'class="w-16 h-16"', desc: "Fixed-step width & height utilities (each step is 0.25rem), plus fractional and keyword sizes like w-full.",
+        values: ["w-16","w-24 h-10","w-full","max-w-xs"],
+        demo: wrap(
+          twBox("w-16 h-16","w-16 h-16 bg-emerald-400 rounded-md") +
+          twBox("w-24 h-10","w-24 h-10 bg-emerald-400 rounded-md") +
+          twBox("w-10 h-20","w-10 h-20 bg-emerald-400 rounded-md")
+        ) },
+      { name: "Spacing (p- / m- / gap-)", syntax: 'class="p-4 gap-4"', desc: "Padding, margin and gap utilities on the same 0.25rem step scale as sizing.",
+        values: ["p-1","p-4","p-8","gap-4"],
+        demo: wrap(
+          `<div class="demo-item"><div class="bg-slate-800 border border-slate-600 rounded-md inline-block p-1"><div class="w-9 h-9 bg-emerald-400 rounded"></div></div><span class="demo-label">p-1</span></div>` +
+          `<div class="demo-item"><div class="bg-slate-800 border border-slate-600 rounded-md inline-block p-4"><div class="w-9 h-9 bg-emerald-400 rounded"></div></div><span class="demo-label">p-4</span></div>` +
+          `<div class="demo-item"><div class="bg-slate-800 border border-slate-600 rounded-md inline-block p-8"><div class="w-9 h-9 bg-emerald-400 rounded"></div></div><span class="demo-label">p-8</span></div>`
+        ) },
+      { name: "Colors (bg- / text-)", syntax: 'class="bg-emerald-400 text-slate-900"', desc: "Background and text colors drawn from a full palette, each with 50–950 shade steps.",
+        values: ["bg-emerald-400","bg-amber-300","bg-slate-800","bg-transparent"],
+        demo: wrap(
+          twBox("bg-emerald-400","w-16 h-16 bg-emerald-400 rounded-md") +
+          twBox("bg-amber-300","w-16 h-16 bg-amber-300 rounded-md") +
+          twBox("bg-slate-800","w-16 h-16 bg-slate-800 border border-slate-600 rounded-md") +
+          twBox("bg-transparent","w-16 h-16 bg-transparent border border-dashed border-slate-500 rounded-md")
+        ) },
+      { name: "Borders (border- / rounded-)", syntax: 'class="border-2 rounded-lg"', desc: "Border width/color utilities and corner rounding, including full pill/circle shapes.",
+        values: ["border","border-2","rounded-md","rounded-full"],
+        demo: wrap(
+          twBox("rounded-none","w-16 h-16 bg-amber-300 rounded-none") +
+          twBox("rounded-lg","w-16 h-16 bg-amber-300 rounded-lg") +
+          twBox("rounded-full","w-16 h-16 bg-amber-300 rounded-full") +
+          twBox("border-4","w-16 h-16 bg-transparent border-4 border-amber-300 rounded-md")
+        ) },
+    ]
+  },
+  {
+    id: "tw-flexgrid",
+    title: "Tailwind: Flexbox & Grid",
+    desc: "The same one- and two-dimensional layout models as plain CSS flex/grid, driven entirely by class names.",
+    props: [
+      { name: "flex-direction", syntax: 'class="flex flex-row" / "flex flex-col"', desc: "Sets the main axis of a flex container.",
+        values: ["flex-row","flex-col"],
+        demo: wrap( twFlex("flex-row","flex-row") + twFlex("flex-col","flex-col") ) },
+      { name: "justify- (justify-content)", syntax: 'class="flex justify-between"', desc: "Aligns items along the main axis.",
+        values: ["justify-start","justify-center","justify-between","justify-around"],
+        demo: wrap(
+          twFlex("justify-start","flex-row justify-start") +
+          twFlex("justify-center","flex-row justify-center") +
+          twFlex("justify-between","flex-row justify-between")
+        ) },
+      { name: "items- (align-items)", syntax: 'class="flex items-center"', desc: "Aligns items along the cross axis.",
+        values: ["items-start","items-center","items-end","items-stretch"],
+        demo: wrap(
+          twFlex("items-start","flex-row items-start") +
+          twFlex("items-center","flex-row items-center") +
+          twFlex("items-end","flex-row items-end")
+        ) },
+      { name: "grid-cols- / gap-", syntax: 'class="grid grid-cols-3 gap-2"', desc: "Defines grid columns and the spacing between grid cells.",
+        values: ["grid-cols-2","grid-cols-3","gap-1","gap-4"],
+        demo: wrap(
+          twGrid("grid-cols-3 gap-1","grid-cols-3 gap-1",3) +
+          twGrid("grid-cols-2 gap-4","grid-cols-2 gap-4",4)
+        ) },
+    ]
+  },
+  {
+    id: "tw-typography",
+    title: "Tailwind: Typography",
+    desc: "Font size, weight, spacing and line-height, all as composable classes.",
+    props: [
+      { name: "font-size (text-)", syntax: 'class="text-lg"', desc: "A preset type scale from text-xs up to text-9xl.",
+        values: ["text-xs","text-base","text-xl","text-3xl"],
+        demo: wrap(
+          twText("text-xs","text-xs") +
+          twText("text-base","text-base") +
+          twText("text-2xl","text-2xl font-semibold","Aa Bb")
+        ) },
+      { name: "font-weight", syntax: 'class="font-bold"', desc: "Numeric font-weight steps mapped to readable utility names.",
+        values: ["font-light","font-normal","font-semibold","font-bold"],
+        demo: wrap(
+          twText("font-light","font-light") +
+          twText("font-normal","font-normal") +
+          twText("font-bold","font-bold")
+        ) },
+      { name: "tracking- / leading-", syntax: 'class="tracking-wide leading-relaxed"', desc: "Letter-spacing (tracking) and line-height (leading) utilities.",
+        values: ["tracking-tight","tracking-wide","leading-tight","leading-loose"],
+        demo: wrap(
+          twText("tracking-tight","tracking-tight") +
+          twText("tracking-widest","tracking-widest") +
+          twPara("leading-loose","leading-loose","This paragraph uses a loose line-height so the lines breathe.")
+        ) },
+      { name: "text-align / uppercase / italic", syntax: 'class="text-center uppercase italic"', desc: "Text alignment plus simple style transforms.",
+        values: ["text-left","text-center","uppercase","italic"],
+        demo: wrap(
+          twText("uppercase","uppercase","hello world") +
+          twText("italic","italic") +
+          twPara("text-center","text-center","Centered paragraph text.")
+        ) },
+    ]
+  },
+  {
+    id: "tw-effects",
+    title: "Tailwind: Effects, Shadows & Filters",
+    desc: "Shadows, opacity, and CSS filter utilities — the same underlying properties as plain CSS, just as classes.",
+    props: [
+      { name: "shadow-", syntax: 'class="shadow-lg"', desc: "Preset box-shadow depths.",
+        values: ["shadow-sm","shadow-md","shadow-lg","shadow-xl"],
+        demo: wrap(
+          twBox("shadow-sm","w-16 h-16 bg-emerald-400 rounded-md shadow-sm") +
+          twBox("shadow-lg","w-16 h-16 bg-emerald-400 rounded-md shadow-lg") +
+          twBox("shadow-xl","w-16 h-16 bg-emerald-400 rounded-md shadow-xl")
+        ) },
+      { name: "opacity-", syntax: 'class="opacity-50"', desc: "Element transparency in preset steps.",
+        values: ["opacity-100","opacity-75","opacity-50","opacity-25"],
+        demo: wrap(
+          twBox("opacity-100","w-16 h-16 bg-amber-300 rounded-md opacity-100") +
+          twBox("opacity-50","w-16 h-16 bg-amber-300 rounded-md opacity-50") +
+          twBox("opacity-25","w-16 h-16 bg-amber-300 rounded-md opacity-25")
+        ) },
+      { name: "blur- / grayscale / brightness-", syntax: 'class="blur-sm grayscale"', desc: "Filter utilities — the same CSS filter() functions as plain CSS, exposed as classes.",
+        values: ["blur-sm","grayscale","brightness-150","hue-rotate-90"],
+        demo: wrap(
+          twBox("normal","w-16 h-16 rounded-md bg-gradient-to-br from-emerald-400 to-amber-300") +
+          twBox("blur-sm","w-16 h-16 rounded-md bg-gradient-to-br from-emerald-400 to-amber-300 blur-sm") +
+          twBox("grayscale","w-16 h-16 rounded-md bg-gradient-to-br from-emerald-400 to-amber-300 grayscale") +
+          twBox("brightness-150","w-16 h-16 rounded-md bg-gradient-to-br from-emerald-400 to-amber-300 brightness-150")
+        ) },
+      { name: "transition + hover: (state variants)", syntax: 'class="hover:scale-110 transition"', desc: "Prefix any utility with a state like hover:, focus:, or active: to apply it only in that state — hover the swatch below.",
+        values: ["hover:","focus:","active:","transition"],
+        demo: `<div class="demo"><div class="demo-row"><div class="demo-item"><div class="tw-box w-16 h-16 bg-emerald-400 rounded-md transition-all duration-300 ease-out hover:scale-125 hover:bg-amber-300" style="cursor:pointer;"></div><span class="demo-label">hover me (hover:scale-125 hover:bg-amber-300)</span></div></div></div>` },
+    ]
+  },
+  {
+    id: "tw-responsive",
+    title: "Tailwind: Responsive & Dark Mode Prefixes",
+    desc: "Breakpoint and dark-mode prefixes compose with any utility above to apply it only conditionally — this is what makes Tailwind mobile-first.",
+    props: [
+      { name: "Responsive breakpoints", syntax: 'class="w-full md:w-1/2 lg:w-1/3"', desc: "Unprefixed utilities apply at every size; sm:/md:/lg:/xl: prefixes override them from that breakpoint upward (mobile-first, not desktop-first).",
+        values: ["sm: ≥640px","md: ≥768px","lg: ≥1024px","xl: ≥1280px"],
+        demo: twNote('Resize an actual browser window to see this live — try <code>class="w-full md:w-1/2 lg:w-1/3"</code>: full-width on phones, half-width on tablets, a third-width on desktop.') },
+      { name: "dark: variant", syntax: 'class="bg-white dark:bg-slate-900"', desc: "Applies a utility only when the user's system is in dark mode (or a .dark class is toggled manually) — pairs a light-mode and dark-mode style on one element.",
+        values: ["dark:bg-slate-900","dark:text-white","dark:border-slate-700"],
+        demo: twNote('e.g. <code>class="bg-white text-slate-900 dark:bg-slate-900 dark:text-white"</code> flips the whole color scheme without any extra CSS or JS.') },
+    ]
+  },
+  {
+    id: "tw-layout",
+    title: "Tailwind: Layout, Position & Overflow",
+    desc: "The display, positioning and overflow model, as utility classes — direct equivalents of the plain-CSS versions above.",
+    props: [
+      { name: "display", syntax: 'class="flex" / "hidden" / "grid"', desc: "How the element participates in layout.",
+        values: ["block","inline-block","flex","grid","hidden"],
+        demo: wrap(
+          `<div class="demo-item"><div class="w-32 bg-slate-800 border border-slate-600 rounded-md p-2 text-[11px]"><span class="block bg-emerald-400 text-slate-900 px-1 rounded">block</span><span class="block bg-amber-300 text-slate-900 px-1 rounded mt-0.5">block</span></div><span class="demo-label">block (stacks, full width)</span></div>` +
+          `<div class="demo-item"><div class="w-32 bg-slate-800 border border-slate-600 rounded-md p-2 flex gap-1 text-[11px]"><span class="bg-emerald-400 text-slate-900 px-1 rounded">flex</span><span class="bg-amber-300 text-slate-900 px-1 rounded">flex</span></div><span class="demo-label">flex (row of items)</span></div>`
+        ) },
+      { name: "position + inset utilities", syntax: 'class="absolute top-2 left-2"', desc: "relative/absolute/fixed/sticky, offset with top-/right-/bottom-/left- or inset-.",
+        values: ["relative","absolute","fixed","sticky","inset-0"],
+        demo: wrap(
+          `<div class="demo-item"><div class="relative w-28 h-20 bg-slate-800 border border-slate-600 rounded-md"><div class="absolute top-2 left-2 w-7 h-7 bg-emerald-400 rounded"></div><div class="absolute bottom-2 right-2 w-7 h-7 bg-amber-300 rounded"></div></div><span class="demo-label">absolute, positioned via top-/right-</span></div>` +
+          `<div class="demo-item"><div class="relative w-20 h-16 bg-slate-800 border border-slate-600 rounded-md"><div class="absolute inset-2 bg-emerald-400 rounded"></div></div><span class="demo-label">inset-2 (offsets all sides)</span></div>`
+        ) },
+      { name: "z-index (z-)", syntax: 'class="z-10"', desc: "Stacking order for overlapping positioned elements.",
+        values: ["z-0","z-10","z-50"],
+        demo: wrap(
+          `<div class="demo-item"><div class="relative w-20 h-16"><div class="absolute top-0 left-0 w-12 h-12 bg-slate-600 rounded z-0"></div><div class="absolute top-4 left-4 w-12 h-12 bg-emerald-400 rounded z-10"></div></div><span class="demo-label">z-10 box sits above z-0 box</span></div>`
+        ) },
+      { name: "overflow-", syntax: 'class="overflow-hidden"', desc: "What happens when content is bigger than its box.",
+        values: ["overflow-visible","overflow-hidden","overflow-auto","overflow-scroll"],
+        demo: wrap(
+          `<div class="demo-item"><div class="w-16 h-16 bg-slate-800 border border-slate-600 rounded-md overflow-hidden relative"><div class="absolute -top-2 -left-2 w-20 h-20 rounded bg-gradient-to-br from-emerald-400 to-amber-300"></div></div><span class="demo-label">overflow-hidden (clips)</span></div>` +
+          `<div class="demo-item"><div class="w-16 h-16 bg-slate-800 border border-slate-600 rounded-md overflow-auto text-[10px] text-slate-300 p-1">This text is longer than the box so it scrolls inside it.</div><span class="demo-label">overflow-auto (scrolls)</span></div>`
+        ) },
+      { name: "visibility (visible / invisible)", syntax: 'class="invisible"', desc: "Hides an element visually but — unlike hidden — keeps its layout space.",
+        values: ["visible","invisible"],
+        demo: wrap(
+          `<div class="demo-item"><div class="flex gap-1.5"><div class="w-7 h-7 bg-emerald-400 rounded"></div><div class="w-7 h-7 bg-emerald-400 rounded invisible"></div><div class="w-7 h-7 bg-emerald-400 rounded"></div></div><span class="demo-label">middle box: invisible — gone, space kept</span></div>`
+        ) },
+    ]
+  },
+  {
+    id: "tw-sizing-extra",
+    title: "Tailwind: Min/Max Sizing & Aspect Ratio",
+    desc: "Constraining a box's size instead of fixing it, plus locking a width-to-height ratio.",
+    props: [
+      { name: "min-w- / min-h-", syntax: 'class="min-w-[80px]"', desc: "A floor the box won't shrink below, even in a flexible container.",
+        values: ["min-w-0","min-w-[80px]","min-h-[60px]"],
+        demo: wrap(
+          `<div class="demo-item"><div class="flex w-32 bg-slate-800 border border-slate-600 rounded-md p-1 gap-1"><div class="min-w-[60px] bg-emerald-400 rounded text-[9px] text-slate-900 px-1">min-w-60</div><div class="bg-amber-300 rounded text-[9px] text-slate-900 px-1 flex-1">flex-1</div></div><span class="demo-label">min-w-[60px] resists shrinking</span></div>`
+        ) },
+      { name: "max-w- / max-h-", syntax: 'class="max-w-[100px]"', desc: "A ceiling the box won't grow past, common for readable text columns.",
+        values: ["max-w-xs","max-w-[100px]","max-h-24"],
+        demo: wrap(
+          `<div class="demo-item"><div class="max-w-[90px] bg-slate-800 border border-slate-600 rounded-md p-2 text-[10px] text-slate-300">This paragraph is capped by max-w so it wraps early.</div><span class="demo-label">max-w-[90px]</span></div>`
+        ) },
+      { name: "aspect-", syntax: 'class="aspect-video"', desc: "Preferred width-to-height ratio for a box.",
+        values: ["aspect-square","aspect-video","aspect-[4/3]"],
+        demo: wrap(
+          twBox("aspect-square","w-16 aspect-square bg-emerald-400 rounded-md") +
+          twBox("aspect-video","w-24 aspect-video bg-emerald-400 rounded-md") +
+          twBox("aspect-[4/3]","w-20 aspect-[4/3] bg-emerald-400 rounded-md")
+        ) },
+    ]
+  },
+  {
+    id: "tw-spacing-extra",
+    title: "Tailwind: Space Between & Negative Margins",
+    desc: "Spacing siblings apart without adding gap/margin to every child individually, and pulling elements together.",
+    props: [
+      { name: "space-x- / space-y-", syntax: 'class="flex space-x-4"', desc: "Adds margin between adjacent siblings automatically — no gap needed on non-flex/grid parents.",
+        values: ["space-x-1","space-x-4","space-y-4"],
+        demo: wrap(
+          `<div class="demo-item"><div class="flex space-x-4 bg-slate-800 border border-slate-600 rounded-md p-2"><div class="w-6 h-6 bg-amber-300 rounded"></div><div class="w-6 h-6 bg-amber-300 rounded"></div><div class="w-6 h-6 bg-amber-300 rounded"></div></div><span class="demo-label">space-x-4</span></div>`
+        ) },
+      { name: "Negative margin (-m-)", syntax: 'class="-ml-4"', desc: "Pulls an element outward, overlapping its neighbor — the minus sign prefixes any margin utility.",
+        values: ["-mt-2","-ml-4","-mx-2"],
+        demo: wrap(
+          `<div class="demo-item"><div class="flex bg-slate-800 border border-slate-600 rounded-md p-4"><div class="w-10 h-10 bg-emerald-400 rounded"></div><div class="w-10 h-10 bg-amber-300 rounded -ml-4"></div></div><span class="demo-label">-ml-4 (pulls left, overlaps)</span></div>`
+        ) },
+    ]
+  },
+  {
+    id: "tw-backgrounds",
+    title: "Tailwind: Backgrounds & Gradients",
+    desc: "Gradient direction/stops, tiling, and positioning utilities for background images.",
+    props: [
+      { name: "bg-gradient-to- + from/via/to", syntax: 'class="bg-gradient-to-r from-emerald-400 to-amber-300"', desc: "Direction plus color-stop utilities compose into a linear gradient.",
+        values: ["bg-gradient-to-r","bg-gradient-to-b","bg-gradient-to-tr"],
+        demo: wrap(
+          twBox("to-r","w-16 h-16 rounded-md bg-gradient-to-r from-emerald-400 to-amber-300") +
+          twBox("to-b","w-16 h-16 rounded-md bg-gradient-to-b from-emerald-400 to-amber-300") +
+          twBox("to-tr, 3 stops","w-16 h-16 rounded-md bg-gradient-to-tr from-emerald-400 via-slate-800 to-amber-300")
+        ) },
+      { name: "bg-repeat / bg-no-repeat", syntax: 'class="bg-repeat" / "bg-no-repeat"', desc: "Whether a background-image tiles across the box or appears once.",
+        values: ["bg-repeat","bg-no-repeat","bg-cover"],
+        demo: wrap(
+          `<div class="demo-item"><div class="w-16 h-16 rounded-md bg-repeat" style="background-image:repeating-linear-gradient(45deg,#7dd3b0 0 6px,#11141c 6px 12px)"></div><span class="demo-label">bg-repeat (tiled)</span></div>` +
+          `<div class="demo-item"><div class="w-16 h-16 rounded-md bg-no-repeat bg-center" style="background-image:linear-gradient(135deg,#f2b880,#7dd3b0);background-size:30px 30px;"></div><span class="demo-label">bg-no-repeat bg-center</span></div>`
+        ) },
+    ]
+  },
+  {
+    id: "tw-borders-extra",
+    title: "Tailwind: Rings, Divide & Outline",
+    desc: "Extra border-adjacent utilities Tailwind adds beyond plain CSS borders: focus rings and divider lines between children.",
+    props: [
+      { name: "ring-", syntax: 'class="ring-4 ring-emerald-400/50"', desc: "A box-shadow-based outline that doesn't affect layout — Tailwind's go-to for focus states.",
+        values: ["ring-1","ring-4","ring-offset-2"],
+        demo: wrap(
+          twBox("ring-4","w-16 h-16 bg-slate-800 rounded-md ring-4 ring-emerald-400/60") +
+          twBox("ring + offset","w-16 h-16 bg-slate-800 rounded-md ring-4 ring-offset-2 ring-offset-[#0b0d12] ring-amber-300/70")
+        ) },
+      { name: "divide-x / divide-y", syntax: 'class="divide-x divide-slate-600"', desc: "Adds a border between adjacent children automatically, without styling each child.",
+        values: ["divide-x","divide-y","divide-slate-600"],
+        demo: wrap(
+          `<div class="demo-item"><div class="flex divide-x divide-slate-600 bg-slate-800 border border-slate-600 rounded-md"><div class="px-3 py-2 text-[11px] text-slate-300">one</div><div class="px-3 py-2 text-[11px] text-slate-300">two</div><div class="px-3 py-2 text-[11px] text-slate-300">three</div></div><span class="demo-label">divide-x divide-slate-600</span></div>`
+        ) },
+      { name: "outline-", syntax: 'class="outline outline-2 outline-offset-2"', desc: "A line outside the border that doesn't affect layout.",
+        values: ["outline","outline-2","outline-offset-2"],
+        demo: wrap(
+          twBox("outline, offset","w-16 h-16 bg-slate-800 rounded-md outline outline-2 outline-offset-2 outline-amber-300")
+        ) },
+    ]
+  },
+  {
+    id: "tw-transform-animation",
+    title: "Tailwind: Transform & Animation",
+    desc: "Moving, scaling, rotating, and built-in looping animations — all class-driven.",
+    props: [
+      { name: "scale- / rotate- / translate- / skew-", syntax: 'class="rotate-12 scale-90"', desc: "2D transform utilities without affecting document flow.",
+        values: ["scale-75","rotate-12","translate-x-2","skew-x-6"],
+        demo: wrap(
+          twBox("scale-75","w-16 h-16 bg-emerald-400 rounded-md scale-75") +
+          twBox("rotate-12","w-16 h-16 bg-emerald-400 rounded-md rotate-12") +
+          twBox("translate-x-2 translate-y-2","w-16 h-16 bg-emerald-400 rounded-md translate-x-2 translate-y-2") +
+          twBox("skew-x-6","w-16 h-16 bg-emerald-400 rounded-md skew-x-6")
+        ) },
+      { name: "animate- (built-in keyframes)", syntax: 'class="animate-spin"', desc: "Ready-made looping animations for spinners, pings, pulses and gentle bounces.",
+        values: ["animate-spin","animate-ping","animate-pulse","animate-bounce"],
+        demo: wrap(
+          `<div class="demo-item"><div class="w-10 h-10 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin"></div><span class="demo-label">animate-spin</span></div>` +
+          `<div class="demo-item"><div class="w-6 h-6 bg-amber-300 rounded-full animate-ping"></div><span class="demo-label">animate-ping</span></div>` +
+          `<div class="demo-item"><div class="w-12 h-12 bg-emerald-400 rounded-md animate-pulse"></div><span class="demo-label">animate-pulse</span></div>` +
+          `<div class="demo-item"><div class="w-10 h-10 bg-amber-300 rounded-md animate-bounce"></div><span class="demo-label">animate-bounce</span></div>`
+        ) },
+      { name: "transition timing (duration- / ease-)", syntax: 'class="duration-500 ease-in-out"', desc: "How long a transition takes and its acceleration curve — hover to compare linear vs eased.",
+        values: ["duration-150","duration-700","ease-linear","ease-in-out"],
+        demo: `<div class="demo"><div class="demo-row">
+          <div class="demo-item"><div class="w-14 h-14 bg-emerald-400 rounded-md transition-transform duration-700 ease-linear hover:translate-x-8" style="cursor:pointer;"></div><span class="demo-label">ease-linear, 700ms</span></div>
+          <div class="demo-item"><div class="w-14 h-14 bg-amber-300 rounded-md transition-transform duration-700 ease-in-out hover:translate-x-8" style="cursor:pointer;"></div><span class="demo-label">ease-in-out, 700ms</span></div>
+        </div></div>` },
+    ]
+  },
+  {
+    id: "tw-interactivity",
+    title: "Tailwind: Interactivity & Lists",
+    desc: "Cursor, pointer/selection behavior, and list styling.",
+    props: [
+      { name: "cursor-", syntax: 'class="cursor-pointer"', desc: "Mouse cursor shown when hovering the element — try it live below.",
+        values: ["cursor-pointer","cursor-grab","cursor-not-allowed","cursor-crosshair"],
+        demo: wrap(
+          `<div class="demo-item"><div class="w-24 h-14 flex items-center justify-center bg-slate-800 border border-slate-600 rounded-md text-[11px] text-slate-400 cursor-pointer">pointer</div><span class="demo-label">cursor-pointer</span></div>` +
+          `<div class="demo-item"><div class="w-24 h-14 flex items-center justify-center bg-slate-800 border border-slate-600 rounded-md text-[11px] text-slate-400 cursor-grab">grab</div><span class="demo-label">cursor-grab</span></div>` +
+          `<div class="demo-item"><div class="w-24 h-14 flex items-center justify-center bg-slate-800 border border-slate-600 rounded-md text-[11px] text-slate-400 cursor-not-allowed">blocked</div><span class="demo-label">cursor-not-allowed</span></div>`
+        ) },
+      { name: "pointer-events- / select-", syntax: 'class="pointer-events-none select-none"', desc: "Disables mouse interaction entirely, or prevents text selection.",
+        values: ["pointer-events-none","select-none","select-all"],
+        demo: wrap(
+          twText("select-none (try selecting)","select-none","Try to select this text") 
+        ) },
+      { name: "list-style (list-)", syntax: 'class="list-disc list-inside"', desc: "Bullet/number style for list items.",
+        values: ["list-disc","list-decimal","list-none"],
+        demo: `<div class="demo"><div class="demo-row">
+          <div class="demo-item"><ul class="list-disc list-inside text-[11px] text-slate-200 m-0"><li>one</li><li>two</li></ul><span class="demo-label">list-disc</span></div>
+          <div class="demo-item"><ol class="list-decimal list-inside text-[11px] text-slate-200 m-0"><li>one</li><li>two</li></ol><span class="demo-label">list-decimal</span></div>
+        </div></div>` },
+    ]
+  },
+  {
+    id: "tw-effects-extra",
+    title: "Tailwind: Backdrop Filters & Blend Modes",
+    desc: "Effects applied to what's behind an element (backdrop-*) versus effects on how an element blends with what's behind it (mix-blend-*).",
+    props: [
+      { name: "backdrop-blur- / backdrop-brightness-", syntax: 'class="backdrop-blur-sm"', desc: "Applies a filter to whatever is visible *behind* a translucent element — the frosted-glass look.",
+        values: ["backdrop-blur-sm","backdrop-blur-md","backdrop-brightness-125"],
+        demo: wrap(
+          `<div class="demo-item"><div class="relative w-24 h-16 rounded-md overflow-hidden"><div class="absolute inset-0 bg-gradient-to-br from-emerald-400 to-amber-300"></div><div class="absolute inset-2 bg-white/10 backdrop-blur-sm rounded"></div></div><span class="demo-label">backdrop-blur-sm panel over gradient</span></div>`
+        ) },
+      { name: "mix-blend-", syntax: 'class="mix-blend-multiply"', desc: "How an element's own content blends with content behind it.",
+        values: ["mix-blend-normal","mix-blend-multiply","mix-blend-screen","mix-blend-difference"],
+        demo: wrap(
+          `<div class="demo-item"><div class="relative w-20 h-16"><div class="absolute left-0 top-2 w-10 h-10 rounded-full bg-emerald-400"></div><div class="absolute left-6 top-0 w-10 h-10 rounded-full bg-amber-300 mix-blend-multiply"></div></div><span class="demo-label">mix-blend-multiply</span></div>` +
+          `<div class="demo-item"><div class="relative w-20 h-16"><div class="absolute left-0 top-2 w-10 h-10 rounded-full bg-emerald-400"></div><div class="absolute left-6 top-0 w-10 h-10 rounded-full bg-amber-300 mix-blend-difference"></div></div><span class="demo-label">mix-blend-difference</span></div>`
+        ) },
+    ]
+  },
+];
+
+const content = document.getElementById('content');
+const navList = document.getElementById('nav-list');
+
+DATA.forEach(cat => {
+  const a = document.createElement('a');
+  a.href = '#' + cat.id;
+  a.className = 'nav-cat';
+  a.textContent = cat.title;
+  a.dataset.target = cat.id;
+  navList.appendChild(a);
+
+  const section = document.createElement('section');
+  section.className = 'category';
+  section.id = cat.id;
+  section.innerHTML = `<h2>${cat.title} <span class="tag">${cat.props.length} properties</span></h2><p class="desc">${cat.desc}</p>`;
+
+  cat.props.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'prop';
+    div.dataset.search = (p.name + ' ' + p.desc).toLowerCase();
+    div.innerHTML = `
+      <div class="prop-head">
+        <span class="prop-name">${p.name}</span>
+        <span class="prop-syntax">${p.syntax}</span>
+      </div>
+      <p class="prop-desc">${p.desc}</p>
+      <div class="values">${p.values.map(v => `<span class="val">${v}</span>`).join('')}</div>
+      ${p.demo || ''}
+    `;
+    section.appendChild(div);
+  });
+
+  content.appendChild(section);
+});
+
+const navLinks = [...document.querySelectorAll('.nav-cat')];
+const sections = [...document.querySelectorAll('section.category')];
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const link = navLinks.find(l => l.dataset.target === entry.target.id);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-10% 0px -80% 0px' });
+sections.forEach(s => io.observe(s));
+
+const searchInput = document.getElementById('search');
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim().toLowerCase();
+  document.querySelectorAll('.prop').forEach(el => {
+    el.classList.toggle('hidden', q.length > 0 && !el.dataset.search.includes(q));
+  });
+  document.querySelectorAll('section.category').forEach(sec => {
+    const anyVisible = [...sec.querySelectorAll('.prop')].some(el => !el.classList.contains('hidden'));
+    sec.classList.toggle('hidden', q.length > 0 && !anyVisible);
+  });
+});
+</script>
+</body>
+</html>

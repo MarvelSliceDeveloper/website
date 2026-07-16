@@ -187,4 +187,23 @@ export const lessonService = {
     });
     return { deleted: true };
   },
+
+  async reorderResources(lessonId: string, resourceIds: string[]) {
+    const lesson = await prisma.lesson.findUnique({ where: { id: lessonId } });
+    if (!lesson) throw new Error("Lesson not found");
+
+    const resources = Array.isArray(lesson.resources) ? lesson.resources : [];
+    const reordered = resourceIds
+      .map((id) => resources.find((r: any) => r.id === id))
+      .filter(Boolean);
+
+    if (reordered.length !== resourceIds.length)
+      throw new Error("Some resource IDs do not belong to this lesson");
+
+    await prisma.lesson.update({
+      where: { id: lessonId },
+      data: { resources: reordered },
+    });
+    return { reordered: true };
+  },
 };

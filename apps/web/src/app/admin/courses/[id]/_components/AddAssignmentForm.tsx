@@ -35,7 +35,7 @@ export default function AddAssignmentForm({
 
     setLoading(true);
     try {
-      await api.post(`/admin/courses/modules/${moduleId}/assignments`, {
+      await api.post(`/api/admin/courses/modules/${moduleId}/assignments`, {
         title,
         type,
         description,

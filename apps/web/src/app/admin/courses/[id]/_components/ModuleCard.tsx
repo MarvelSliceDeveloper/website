@@ -8,14 +8,31 @@ import {
   IconDeviceFloppy,
   IconTrash,
   IconPlus,
+  IconFile,
+  IconDownload,
 } from "@tabler/icons-react";
-import type { Module } from "./types";
+import type { Module, Resource } from "./types";
 import LessonCard from "./LessonCard";
 import AddLessonForm from "./AddLessonForm";
 import QuizCard from "./QuizCard";
 import AddQuizForm from "./AddQuizForm";
 import AssignmentCard from "./AssignmentCard";
 import AddAssignmentForm from "./AddAssignmentForm";
+
+const ALLOWED_RESOURCE_TYPES = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
+
+const MAX_RESOURCE_SIZE = 50 * 1024 * 1024;
 
 export default function ModuleCard({
   module: mod,
@@ -46,8 +63,26 @@ export default function ModuleCard({
   });
   const [lessonDragIdx, setLessonDragIdx] = useState<number | null>(null);
   const [lessonOverIdx, setLessonOverIdx] = useState<number | null>(null);
+  const [quizDragIdx, setQuizDragIdx] = useState<number | null>(null);
+  const [quizOverIdx, setQuizOverIdx] = useState<number | null>(null);
+  const [resourceDragIdx, setResourceDragIdx] = useState<number | null>(null);
+  const [resourceOverIdx, setResourceOverIdx] = useState<number | null>(null);
   const [showAddQuiz, setShowAddQuiz] = useState(false);
   const [showAddAssignment, setShowAddAssignment] = useState(false);
+  const [resourceLessonId, setResourceLessonId] = useState<string>(
+    mod.lessons[0]?.id || ""
+  );
+  const [uploadingResource, setUploadingResource] = useState(false);
+  const [resourceError, setResourceError] = useState("");
+
+  const allResources: Array<Resource & { lessonTitle: string; lessonId: string }> = 
+    mod.lessons.flatMap((lesson) =>
+      (lesson.resources || []).map((resource) => ({
+        ...resource,
+        lessonTitle: lesson.title,
+        lessonId: lesson.id,
+      }))
+    );
 
   const handleSave = async () => {
     try {
@@ -100,6 +135,117 @@ export default function ModuleCard({
     } catch {
       toast.error("Failed to reorder lessons");
       onChanged();
+    }
+  };
+
+  const handleQuizDrop = async (dropIdx: number) => {
+    if (quizDragIdx === null || quizDragIdx === dropIdx) {
+      setQuizDragIdx(null);
+      setQuizOverIdx(null);
+      return;
+    }
+    const reordered = [...mod.quizzes];
+    const [moved] = reordered.splice(quizDragIdx, 1);
+    reordered.splice(dropIdx, 0, moved);
+    setQuizDragIdx(null);
+    setQuizOverIdx(null);
+    try {
+      await api.patch(`/api/admin/courses/modules/${mod.id}/quizzes/reorder`, {
+        quizIds: reordered.map((q) => q.id),
+      });
+      onChanged();
+    } catch {
+      toast.error("Failed to reorder quizzes");
+      onChanged();
+    }
+  };
+
+  const handleResourceDrop = async (dropIdx: number) => {
+    if (resourceDragIdx === null || resourceDragIdx === dropIdx) {
+      setResourceDragIdx(null);
+      setResourceOverIdx(null);
+      return;
+    }
+    const reordered = [...allResources];
+    const [moved] = reordered.splice(resourceDragIdx, 1);
+    reordered.splice(dropIdx, 0, moved);
+    setResourceDragIdx(null);
+    setResourceOverIdx(null);
+
+    const groupedByLesson: Record<string, string[]> = {};
+    for (const r of reordered) {
+      if (!groupedByLesson[r.lessonId]) groupedByLesson[r.lessonId] = [];
+      groupedByLesson[r.lessonId].push(r.id);
+    }
+
+    try {
+      await Promise.all(
+        Object.entries(groupedByLesson).map(([lessonId, resourceIds]) =>
+          api.patch(`/api/admin/courses/lessons/${lessonId}/resources/reorder`, {
+            resourceIds,
+          })
+        )
+      );
+      onChanged();
+    } catch {
+      toast.error("Failed to reorder resources");
+      onChanged();
+    }
+  };
+
+  const handleResourceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setResourceError("");
+
+    if (!ALLOWED_RESOURCE_TYPES.has(file.type)) {
+      setResourceError("File type not allowed. Upload PDF, DOCX, PPTX, XLSX, or images.");
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_RESOURCE_SIZE) {
+      setResourceError("File too large. Maximum size is 50 MB.");
+      e.target.value = "";
+      return;
+    }
+
+    const lessonId = resourceLessonId || mod.lessons[0]?.id;
+    if (!lessonId) {
+      setResourceError("No lesson available to attach resources to.");
+      e.target.value = "";
+      return;
+    }
+
+    setUploadingResource(true);
+    try {
+      const uploadData = new FormData();
+      uploadData.append("resource", file);
+      await api.post(
+        `/api/admin/courses/${courseId}/lessons/${lessonId}/resources`,
+        uploadData
+      );
+      toast.success("Resource uploaded");
+      onChanged();
+      e.target.value = "";
+    } catch (err: unknown) {
+      setResourceError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingResource(false);
+    }
+  };
+
+  const handleDeleteResource = async (lessonId: string, resourceId: string) => {
+    if (!confirm("Delete this resource?")) return;
+    try {
+      await api.delete(
+        `/api/admin/courses/lessons/${lessonId}/resources/${resourceId}`
+      );
+      toast.success("Resource deleted");
+      onChanged();
+    } catch {
+      toast.error("Failed to delete resource");
     }
   };
 
@@ -256,8 +402,26 @@ export default function ModuleCard({
               <div className="px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-amber-600">
                 Quizzes
               </div>
-              {mod.quizzes.map((quiz) => (
-                <QuizCard key={quiz.id} quiz={quiz} onUpdate={onChanged} />
+              {mod.quizzes.map((quiz, qIdx) => (
+                <div key={quiz.id}>
+                  {quizOverIdx === qIdx &&
+                    quizDragIdx !== qIdx &&
+                    quizOverIdx !== null && (
+                      <div className="h-0.5 rounded-full bg-primary/30 mx-6" />
+                    )}
+                  <QuizCard
+                    quiz={quiz}
+                    onUpdate={onChanged}
+                    onDragStart={() => setQuizDragIdx(qIdx)}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setQuizOverIdx(qIdx);
+                    }}
+                    onDragLeave={() => setQuizOverIdx(null)}
+                    onDrop={() => handleQuizDrop(qIdx)}
+                    isDragging={quizDragIdx === qIdx}
+                  />
+                </div>
               ))}
             </div>
           )}
@@ -274,6 +438,91 @@ export default function ModuleCard({
                   onUpdate={onChanged}
                 />
               ))}
+            </div>
+          )}
+
+          {mod.lessons.length > 0 && (
+            <div className="py-2 px-2 border-t border-border/40">
+              <div className="px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-emerald-600 mb-2">
+                Study Materials ({allResources.length})
+              </div>
+              
+              {mod.lessons.length > 1 && (
+                <div className="mb-2">
+                  <select
+                    value={resourceLessonId}
+                    onChange={(e) => setResourceLessonId(e.target.value)}
+                    className="w-full text-xs border border-border rounded-md px-2 py-1.5 bg-background"
+                  >
+                    {mod.lessons.map((lesson) => (
+                      <option key={lesson.id} value={lesson.id}>
+                        {lesson.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <label className="flex items-center justify-center gap-2 w-full p-2 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-success/10 transition-colors text-xs text-success">
+                <IconPlus size={14} />
+                {uploadingResource ? "Uploading..." : "Add Study Material"}
+                <input
+                  type="file"
+                  onChange={handleResourceUpload}
+                  disabled={uploadingResource}
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.webp"
+                />
+              </label>
+              {resourceError && (
+                <p className="text-[10px] text-danger mt-1 px-2">{resourceError}</p>
+              )}
+
+              {allResources.length > 0 ? (
+                <div className="mt-2 space-y-1">
+                  {allResources.map((resource, rIdx) => (
+                    <div
+                      key={resource.id}
+                      draggable
+                      onDragStart={() => setResourceDragIdx(rIdx)}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setResourceOverIdx(rIdx);
+                      }}
+                      onDragLeave={() => setResourceOverIdx(null)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        handleResourceDrop(rIdx);
+                      }}
+                      className={`flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-card/50 text-xs transition-all duration-200 cursor-grab active:cursor-grabbing ${
+                        resourceDragIdx === rIdx ? "opacity-40 scale-[0.98]" : ""
+                      }`}
+                    >
+                      <IconGripVertical size={12} className="text-muted shrink-0" />
+                      <IconFile size={12} className="text-success shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate text-foreground">{resource.originalName}</p>
+                        <p className="text-[10px] text-muted truncate">{resource.lessonTitle}</p>
+                      </div>
+                      <a
+                        href={resource.url}
+                        download
+                        className="text-muted hover:text-foreground transition-colors p-1"
+                      >
+                        <IconDownload size={12} />
+                      </a>
+                      <button
+                        onClick={() => handleDeleteResource(resource.lessonId, resource.id)}
+                        className="text-muted hover:text-danger transition-colors p-1"
+                      >
+                        <IconTrash size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[10px] text-muted text-center mt-2 px-2">No resources uploaded yet</p>
+              )}
             </div>
           )}
 

@@ -44,7 +44,7 @@ export default function AssignmentCard({
 
     setLoading(true);
     try {
-      await api.put(`/admin/courses/modules/assignments/${assignment.id}`, {
+      await api.put(`/api/admin/courses/modules/assignments/${assignment.id}`, {
         title,
         type,
         description,

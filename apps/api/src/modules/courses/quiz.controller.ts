@@ -46,4 +46,18 @@ export const quizController = {
       return res.status(500).json({ error: error.message });
     }
   },
+
+  async reorderQuizzes(req: AuthRequest, res: Response) {
+    try {
+      const { quizIds } = req.body;
+      if (!Array.isArray(quizIds))
+        return res.status(400).json({ error: "quizIds must be an array" });
+      await quizService.reorderQuizzes(req.params.moduleId, quizIds);
+      return res.json({ message: "Quizzes reordered" });
+    } catch (error: any) {
+      if (error.message === "Module not found")
+        return res.status(404).json({ error: error.message });
+      return res.status(400).json({ error: error.message });
+    }
+  },
 };

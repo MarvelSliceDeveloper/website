@@ -12,7 +12,6 @@ import type {
 } from "./_components/types";
 import CourseDetailsTab from "./_components/CourseDetailsTab";
 import ContentTab from "./_components/ContentTab";
-import ModuleStudyMaterialsSection from "./_components/ModuleStudyMaterialsSection";
 import SessionsTab from "./_components/SessionsTab";
 import RecordingsTab from "./_components/RecordingsTab";
 import TabButton from "./_components/TabButton";
@@ -40,7 +39,7 @@ export default function CourseDetailPage() {
   const [thumbnailUploading, setThumbnailUploading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<
-    "details" | "content" | "materials" | "sessions" | "recordings"
+    "details" | "content" | "sessions" | "recordings"
   >("details");
 
   const [form, setForm] = useState<CourseFormData>({
@@ -246,11 +245,6 @@ export default function CourseDetailPage() {
           onClick={() => setActiveTab("content")}
         />
         <TabButton
-          label="Study Materials"
-          active={activeTab === "materials"}
-          onClick={() => setActiveTab("materials")}
-        />
-        <TabButton
           label="Live Sessions"
           active={activeTab === "sessions"}
           onClick={() => setActiveTab("sessions")}
@@ -279,14 +273,6 @@ export default function CourseDetailPage() {
           courseId={id}
           modules={sortedModules}
           onContentChanged={fetchCourse}
-        />
-      )}
-
-      {activeTab === "materials" && (
-        <ModuleStudyMaterialsSection
-          courseId={id}
-          modules={course.modules}
-          onResourcesUpdated={fetchCourse}
         />
       )}
 

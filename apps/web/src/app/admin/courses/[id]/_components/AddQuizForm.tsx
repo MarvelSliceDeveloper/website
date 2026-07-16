@@ -90,7 +90,7 @@ export default function AddQuizForm({
 
     setLoading(true);
     try {
-      await api.post(`/admin/courses/modules/${moduleId}/quizzes`, {
+      await api.post(`/api/admin/courses/modules/${moduleId}/quizzes`, {
         title,
         questions,
       });

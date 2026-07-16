@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
-import { IconX } from "@tabler/icons-react";
+import { IconX, IconGripVertical } from "@tabler/icons-react";
 
 interface QuizOption {
   id?: string;
@@ -26,9 +26,22 @@ interface Quiz {
 interface QuizCardProps {
   quiz: Quiz;
   onUpdate: () => void;
+  onDragStart?: () => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragLeave?: () => void;
+  onDrop?: () => void;
+  isDragging?: boolean;
 }
 
-export default function QuizCard({ quiz, onUpdate }: QuizCardProps) {
+export default function QuizCard({
+  quiz,
+  onUpdate,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  isDragging,
+}: QuizCardProps) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(quiz.title);
   const [questions, setQuestions] = useState<QuizQuestion[]>(
@@ -98,7 +111,7 @@ export default function QuizCard({ quiz, onUpdate }: QuizCardProps) {
 
     setLoading(true);
     try {
-      await api.put(`/admin/courses/modules/quizzes/${quiz.id}`, {
+      await api.put(`/api/admin/courses/modules/quizzes/${quiz.id}`, {
         title,
         questions,
       });
@@ -115,7 +128,7 @@ export default function QuizCard({ quiz, onUpdate }: QuizCardProps) {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await api.delete(`/admin/courses/modules/quizzes/${quiz.id}`);
+      await api.delete(`/api/admin/courses/modules/quizzes/${quiz.id}`);
       toast.success("Quiz deleted successfully");
       onUpdate();
     } catch (error) {
@@ -258,8 +271,23 @@ export default function QuizCard({ quiz, onUpdate }: QuizCardProps) {
   }
 
   return (
-    <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+    <div
+      draggable={!!onDragStart}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => {
+        e.preventDefault();
+        onDrop?.();
+      }}
+      className={`flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-3 py-2 transition-all duration-200 ${isDragging ? "opacity-40 scale-[0.98]" : ""}`}
+    >
       <div className="flex items-center gap-2">
+        {onDragStart && (
+          <span className="cursor-grab active:cursor-grabbing text-amber-400 hover:text-amber-600 transition-colors">
+            <IconGripVertical size={12} />
+          </span>
+        )}
         <span className="text-sm font-medium text-amber-700">
           {quiz.title}
         </span>
