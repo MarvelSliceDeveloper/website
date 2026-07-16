@@ -23,5 +23,8 @@ export interface ViewState {
     courseId?: string;
     moduleId?: string;
     ticketId?: string;
+    quizId?: string;
+    resourceUrl?: string;
+    resourceName?: string;
   };
 }

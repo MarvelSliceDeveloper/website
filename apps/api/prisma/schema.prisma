@@ -81,8 +81,9 @@ model User {
   notificationPreferences NotificationPreference[]
   attendance           Attendance[]
   sessionsLed          LiveSession[]       @relation("SessionInstructor")
-  assignmentSubmissions AssignmentSubmission[]
-  sentMessages         Message[]           @relation("SentMessages")
+   assignmentSubmissions AssignmentSubmission[]
+   quizAttempts         QuizAttempt[]
+   sentMessages         Message[]           @relation("SentMessages")
   receivedMessages     Message[]           @relation("ReceivedMessages")
    supportTickets       SupportTicket[]     @relation("UserSupportTickets")
    supportMessages      SupportMessage[]    @relation("UserSupportMessages")
@@ -269,8 +270,10 @@ model Quiz {
   moduleId  String
   title     String
   order     Int        @default(0)
+  dueDate   DateTime?
   questions Question[]
   module    Module     @relation(fields: [moduleId], references: [id])
+  attempts  QuizAttempt[]
 }
 
 model Question {
@@ -279,6 +282,19 @@ model Question {
   text    String
   options Json // [{label, isCorrect}]
   quiz    Quiz   @relation(fields: [quizId], references: [id])
+}
+
+// Stores student quiz submissions for course-content quizzes
+model QuizAttempt {
+  id        String   @id @default(cuid())
+  quizId    String
+  userId    String
+  answers   Json     // [{ questionId, selectedOptionId }]
+  score     Int      @default(0) // number of correct answers
+  total     Int      @default(0) // total questions
+  createdAt DateTime @default(now())
+  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // One-on-one mentorship ticket - student requests, admin assigns mentor

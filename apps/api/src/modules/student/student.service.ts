@@ -2,7 +2,9 @@ import { prisma } from "../../utils/prisma";
 
 export interface OverdueAssignmentItem {
   id: string;
+  courseId: string;
   courseName: string;
+  moduleName: string;
   unitName: string;
   assignmentName: string;
   dueDate: string;
@@ -33,14 +35,18 @@ export const studentService = {
       },
       select: {
         batchId: true,
+        batch: {
+          select: { courseId: true, course: { select: { title: true } } },
+        },
       },
     });
 
     const batchIds = enrollments.map((e) => e.batchId as string);
     if (batchIds.length === 0) return [];
 
-    // Fetch all overdue assignments for these batches
     const now = new Date();
+
+    // ── Batch Assignment model overdue items ──────────────────────────
     const assignments = await prisma.assignment.findMany({
       where: {
         batchId: { in: batchIds },
@@ -49,6 +55,7 @@ export const studentService = {
       include: {
         course: { select: { title: true } },
         batch: { select: { name: true } },
+        module: { select: { title: true } },
         submissions: {
           where: { studentId: userId },
           select: { id: true, status: true },
@@ -57,12 +64,14 @@ export const studentService = {
       orderBy: { dueDate: "desc" },
     });
 
-    return assignments.map((assignment) => {
+    const result: OverdueAssignmentItem[] = assignments.map((assignment) => {
       const submission = assignment.submissions[0];
       const status = submission ? ("SUBMITTED" as const) : ("PENDING" as const);
       return {
         id: assignment.id,
+        courseId: assignment.courseId,
         courseName: assignment.course.title,
+        moduleName: assignment.module?.title || "—",
         unitName: assignment.type === "QUIZ" ? "Quiz" : "Assignment",
         assignmentName: assignment.title,
         dueDate: assignment.dueDate.toISOString(),
@@ -71,6 +80,118 @@ export const studentService = {
         submissionId: submission?.id || null,
       };
     });
+
+    // Include course-content items (Quiz model + Assignment model records with no batchId)
+    // that live in the student's enrolled courses but outside the batch-assignment system.
+    const courseIds = [
+      ...new Set(
+        enrollments
+          .map((e) => e.batch?.courseId)
+          .filter((id): id is string => !!id),
+      ),
+    ];
+
+    if (courseIds.length > 0) {
+      const courseModules = await prisma.module.findMany({
+        where: { courseId: { in: courseIds } },
+        select: { id: true, title: true, courseId: true },
+      });
+      const moduleIds = courseModules.map((m) => m.id);
+      const moduleMap = new Map(courseModules.map((m) => [m.id, m]));
+
+      const courseQuizRecords = await prisma.quiz.findMany({
+        where: {
+          moduleId: { in: moduleIds },
+          OR: [
+            { dueDate: { lt: now } },
+            { dueDate: null },
+          ],
+        },
+        select: {
+          id: true,
+          title: true,
+          dueDate: true,
+          moduleId: true,
+          attempts: {
+            where: { userId },
+            select: { id: true },
+            take: 1,
+          },
+        },
+        orderBy: { dueDate: "desc" },
+      });
+
+      for (const quiz of courseQuizRecords) {
+        const mod = moduleMap.get(quiz.moduleId);
+        const enrollment = enrollments.find(
+          (e) => e.batch?.courseId === mod?.courseId,
+        );
+        const courseName = enrollment?.batch?.course?.title ?? "—";
+        result.push({
+          id: quiz.id,
+          courseId: mod?.courseId ?? "",
+          courseName,
+          moduleName: mod?.title ?? "—",
+          unitName: "Quiz",
+          assignmentName: quiz.title,
+          dueDate: quiz.dueDate?.toISOString() ?? new Date().toISOString(),
+          status: quiz.attempts.length > 0 ? "SUBMITTED" : "PENDING",
+          type: "QUIZ",
+          submissionId: quiz.attempts[0]?.id ?? null,
+        });
+      }
+
+      // Assignment model records created via admin course builder (batchId is empty/null)
+      // These are course-content assignments that don't belong to a specific batch.
+      const courseAssignments = await prisma.assignment.findMany({
+        where: {
+          moduleId: { in: moduleIds },
+          batchId: { in: ["", null] },
+          dueDate: { lt: now },
+        },
+        select: {
+          id: true,
+          title: true,
+          type: true,
+          dueDate: true,
+          moduleId: true,
+          courseId: true,
+          submissions: {
+            where: { studentId: userId },
+            select: { id: true, status: true },
+            take: 1,
+          },
+        },
+        orderBy: { dueDate: "desc" },
+      });
+
+      for (const assignment of courseAssignments) {
+        const mod = moduleMap.get(assignment.moduleId);
+        const enrollment = enrollments.find(
+          (e) => e.batch?.courseId === mod?.courseId,
+        );
+        const courseName = enrollment?.batch?.course?.title ?? "—";
+        const submission = assignment.submissions[0];
+        result.push({
+          id: assignment.id,
+          courseId: assignment.courseId,
+          courseName,
+          moduleName: mod?.title ?? "—",
+          unitName: assignment.type === "QUIZ" ? "Quiz" : "Assignment",
+          assignmentName: assignment.title,
+          dueDate: assignment.dueDate.toISOString(),
+          status: submission ? "SUBMITTED" : "PENDING",
+          type: assignment.type as "QUIZ" | "ASSIGNMENT",
+          submissionId: submission?.id ?? null,
+        });
+      }
+    }
+
+    result.sort(
+      (a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime(),
+    );
+
+    return result;
   },
 
   async getContinueLearning(

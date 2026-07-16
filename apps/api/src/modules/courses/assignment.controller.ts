@@ -1,3 +1,4 @@
+import { prisma } from "../../utils/prisma";
 import { Response } from "express";
 import { ZodError } from "zod";
 import { AuthRequest } from "../../middleware/auth.middleware";
@@ -11,11 +12,27 @@ export const assignmentController = {
   async addAssignment(req: AuthRequest, res: Response) {
     try {
       const data = CreateAssignmentSchema.parse(req.body);
-      const { courseId, batchId } = req.body;
-      if (!courseId || !batchId) {
+      const { courseId } = req.body;
+
+      if (!courseId) {
         return res
           .status(400)
-          .json({ error: "courseId and batchId are required" });
+          .json({ error: "courseId is required" });
+      }
+
+      let { batchId } = req.body;
+      if (!batchId) {
+        const firstBatch = await prisma.batch.findFirst({
+          where: { courseId },
+          select: { id: true },
+          orderBy: { startDate: "asc" },
+        });
+        batchId = firstBatch?.id || "";
+        if (!batchId) {
+          return res.status(400).json({
+            error: "No batches found for this course. Please create a batch first, or provide a batchId.",
+          });
+        }
       }
       const assignment = await assignmentService.addAssignment(
         req.params.moduleId,

@@ -12,8 +12,10 @@ import {
   IconAward,
   IconCircleCheck,
   IconCircleX,
+  IconExternalLink,
 } from "@tabler/icons-react";
 import type { OverdueAssignment } from "@/lib/api-types";
+import type { ViewState } from "../_types/student-portal";
 
 type McqOption = {
   id: string;
@@ -62,6 +64,7 @@ type SubmissionResult = {
 
 interface QuizOverdueViewProps {
   quizzes: OverdueAssignment[];
+  navigate?: (v: ViewState) => void;
 }
 
 type SubView =
@@ -69,7 +72,7 @@ type SubView =
   | { type: "QUIZ"; assignmentId: string; data: AssignmentQuestions }
   | { type: "RESULT"; data: SubmissionResult };
 
-export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
+export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewProps) {
   const [subView, setSubView] = useState<SubView>({ type: "LIST" });
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -428,12 +431,25 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
     );
   }
 
+  const [listFilter, setListFilter] = useState<"all" | "pending" | "completed">("all");
+
+  const allItems = [
+    ...overdueItems,
+    ...completedItems,
+  ];
+
+  const filteredItems = listFilter === "all"
+    ? allItems
+    : listFilter === "pending"
+      ? overdueItems
+      : completedItems;
+
   // ── LIST VIEW (DEFAULT) ──
   return (
     <div className="sp-view-enter space-y-6">
       <div>
         <p className="sp-eyebrow">Assessments</p>
-        <h1 className="text-2xl font-bold text-foreground">Quiz Overdue</h1>
+        <h1 className="text-2xl font-bold text-foreground">Quizzes</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Complete your pending quizzes to progress in your courses.
         </p>
@@ -445,129 +461,175 @@ export default function QuizOverdueView({ quizzes }: QuizOverdueViewProps) {
         </div>
       )}
 
-      {overdueItems.length > 0 && (
-        <div>
-          <div className="mb-4 flex items-center gap-2">
-            <IconAlertCircle size={20} className="text-danger" />
-            <h2 className="text-lg font-semibold text-foreground">
-              Pending ({overdueItems.length})
-            </h2>
-          </div>
-          <div className="space-y-3">
-            {overdueItems.map((quiz) => {
-              const daysOverdue = Math.floor(
-                (new Date().getTime() - new Date(quiz.dueDate).getTime()) /
-                  (1000 * 60 * 60 * 24),
-              );
-              const isOverdue = daysOverdue > 0;
-              return (
-                <div
-                  key={quiz.id}
-                  className={`glass-card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between ${
-                    isOverdue ? "border-danger/20" : "border-amber-500/20"
-                  }`}
-                >
-                  <div className="flex gap-3">
-                    <div
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border ${
-                        isOverdue
-                          ? "border-danger/30 bg-danger/10"
-                          : "border-amber-500/30 bg-amber-500/10"
-                      }`}
+      <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1 w-fit">
+        {(["all", "pending", "completed"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setListFilter(tab)}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+              listFilter === tab
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {tab === "all" && `All (${allItems.length})`}
+            {tab === "pending" && `Pending (${overdueItems.length})`}
+            {tab === "completed" && `Completed (${completedItems.length})`}
+          </button>
+        ))}
+      </div>
+
+      {filteredItems.length > 0 ? (
+        <div className="glass-card border border-border overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-border bg-card-hover">
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Quiz Name
+                  </th>
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Course
+                  </th>
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Module
+                  </th>
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Due Date
+                  </th>
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-right">
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredItems.map((quiz) => {
+                  const isPending = quiz.status === "PENDING";
+                  const daysOverdue = isPending
+                    ? Math.floor(
+                        (new Date().getTime() - new Date(quiz.dueDate).getTime()) /
+                          (1000 * 60 * 60 * 24),
+                      )
+                    : 0;
+                  const isOverdue = daysOverdue > 0;
+
+                  return (
+                    <tr
+                      key={quiz.id}
+                      className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
                     >
-                      <span className="text-lg">❓</span>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold text-foreground">
-                        {quiz.assignmentName}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-500/15">
+                            <IconAlertCircle size={13} className="text-amber-500" />
+                          </span>
+                          <span className="text-sm font-medium text-foreground truncate max-w-[200px]">
+                            {quiz.assignmentName}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">
                         {quiz.courseName}
-                      </p>
-                      <div className="mt-2 flex items-center gap-2">
-                        <IconClock
-                          size={14}
-                          className={
-                            isOverdue ? "text-danger" : "text-amber-400"
-                          }
-                        />
-                        <span
-                          className={`text-xs font-medium ${isOverdue ? "text-danger" : "text-amber-400"}`}
-                        >
-                          {isOverdue
-                            ? `${daysOverdue} day${daysOverdue !== 1 ? "s" : ""} overdue`
-                            : `Due ${new Date(quiz.dueDate).toLocaleDateString()}`}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleStartQuiz(quiz.id)}
-                    disabled={loading}
-                    className="btn-primary flex-shrink-0 text-sm sm:w-auto"
-                  >
-                    Start Quiz →
-                  </button>
-                </div>
-              );
-            })}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">
+                        {quiz.moduleName}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <IconClock
+                            size={13}
+                            className={isOverdue ? "text-danger" : isPending ? "text-amber-400" : "text-emerald-400"}
+                          />
+                          <span
+                            className={`text-xs font-medium ${
+                              isOverdue
+                                ? "text-danger"
+                                : isPending
+                                  ? "text-amber-400"
+                                  : "text-emerald-400"
+                            }`}
+                          >
+                            {isPending
+                              ? isOverdue
+                                ? `${daysOverdue}d overdue`
+                                : new Date(quiz.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
+                              : "—"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {isPending ? (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500">
+                            Pending
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">
+                            <IconCheck size={11} /> Completed
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {quiz.courseId && navigate && (
+                            <button
+                              onClick={() =>
+                                navigate({
+                                  view: "COURSE_CONTENT",
+                                  params: { courseId: quiz.courseId },
+                                })
+                              }
+                              className="btn-ghost text-xs px-2 py-1.5"
+                              title="View in Course"
+                            >
+                              <IconExternalLink size={13} />
+                            </button>
+                          )}
+                          {isPending ? (
+                            <button
+                              onClick={() => handleStartQuiz(quiz.id)}
+                              disabled={loading}
+                              className="btn-primary text-xs px-3 py-1.5"
+                            >
+                              Start Quiz
+                            </button>
+                          ) : quiz.submissionId ? (
+                            <button
+                              onClick={() => handleViewResult(quiz.submissionId!)}
+                              className="btn-secondary text-xs px-3 py-1.5"
+                            >
+                              View Score
+                            </button>
+                          ) : (
+                            <span className="text-[11px] font-medium text-emerald-400">Submitted</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
-      )}
-
-      {completedItems.length > 0 && (
-        <div>
-          <div className="mb-4 flex items-center gap-2">
-            <IconCheck size={20} className="text-success" />
-            <h2 className="text-lg font-semibold text-foreground">
-              Completed ({completedItems.length})
-            </h2>
-          </div>
-          <div className="space-y-3">
-            {completedItems.map((quiz) => (
-              <div
-                key={quiz.id}
-                className="glass-card flex items-center justify-between border-success/20 p-4"
-              >
-                <div className="flex gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-success/30 bg-success/10">
-                    <IconCheck size={18} className="text-success" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-foreground">
-                      {quiz.assignmentName}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {quiz.courseName}
-                    </p>
-                  </div>
-                </div>
-                {quiz.submissionId ? (
-                  <button
-                    onClick={() => handleViewResult(quiz.submissionId!)}
-                    className="btn-secondary text-xs px-3 py-1.5 shrink-0"
-                  >
-                    View Score
-                  </button>
-                ) : (
-                  <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">
-                    ✅ Submitted
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {overdueItems.length === 0 && completedItems.length === 0 && (
+      ) : (
         <div className="glass-card flex flex-col items-center justify-center py-12 text-center">
           <span className="text-4xl">✅</span>
           <p className="mt-3 font-semibold text-foreground">
-            All quizzes completed
+            {listFilter === "all"
+              ? "All quizzes completed"
+              : listFilter === "pending"
+                ? "No pending quizzes"
+                : "No completed quizzes yet"}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Great work! You&apos;re up to date with all assessments.
+            {listFilter === "all"
+              ? "Great work! You're up to date with all assessments."
+              : listFilter === "pending"
+                ? "You're all caught up!"
+                : "Complete a quiz to see it here."}
           </p>
         </div>
       )}

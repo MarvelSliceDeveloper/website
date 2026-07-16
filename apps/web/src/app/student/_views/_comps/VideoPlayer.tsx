@@ -65,13 +65,18 @@ function SafePlyr({ source, options }: SafePlyrProps) {
         instanceRef.current = null;
       }
 
-      const plyr = new PlyrJS(videoRef.current, {
-        ...DEFAULT_OPTIONS,
-        ...options,
-      });
-      plyr.source = source;
-      instanceRef.current = plyr;
-      setReady(true);
+      try {
+        const plyr = new PlyrJS(videoRef.current, {
+          ...DEFAULT_OPTIONS,
+          ...options,
+        });
+        plyr.source = source;
+        instanceRef.current = plyr;
+        setReady(true);
+      } catch {
+        // Plyr's YouTube iframe API callback can fire after the element
+        // is unmounted (e.g. when switching to quiz/resource preview).
+      }
     })();
 
     return () => {

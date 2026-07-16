@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
-import { IconX } from "@tabler/icons-react";
+import { IconX, IconExternalLink } from "@tabler/icons-react";
 
 interface Assignment {
   id: string;
@@ -25,7 +25,6 @@ export default function AssignmentCard({
 }: AssignmentCardProps) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(assignment.title);
-  const [type, setType] = useState(assignment.type);
   const [description, setDescription] = useState(assignment.description || "");
   const [dueDate, setDueDate] = useState(
     assignment.dueDate
@@ -33,6 +32,7 @@ export default function AssignmentCard({
       : "",
   );
   const [maxPoints, setMaxPoints] = useState(assignment.maxPoints);
+  const [questionPdfUrl, setQuestionPdfUrl] = useState(assignment.questionPdfUrl || "");
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -46,10 +46,10 @@ export default function AssignmentCard({
     try {
       await api.put(`/api/admin/courses/modules/assignments/${assignment.id}`, {
         title,
-        type,
         description,
         dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
         maxPoints,
+        questionPdfUrl: questionPdfUrl || undefined,
       });
       toast.success("Assignment updated successfully");
       setEditing(false);
@@ -79,7 +79,6 @@ export default function AssignmentCard({
   const cancelEdit = () => {
     setEditing(false);
     setTitle(assignment.title);
-    setType(assignment.type);
     setDescription(assignment.description || "");
     setDueDate(
       assignment.dueDate
@@ -87,6 +86,7 @@ export default function AssignmentCard({
         : "",
     );
     setMaxPoints(assignment.maxPoints);
+    setQuestionPdfUrl(assignment.questionPdfUrl || "");
   };
 
   if (editing) {
@@ -111,18 +111,6 @@ export default function AssignmentCard({
             placeholder="Enter assignment title"
             className="field"
           />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-xs font-medium">Type</label>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            className="field"
-          >
-            <option value="ASSIGNMENT">Assignment</option>
-            <option value="QUIZ">Quiz</option>
-          </select>
         </div>
 
         <div className="space-y-2">
@@ -157,6 +145,20 @@ export default function AssignmentCard({
           </div>
         </div>
 
+        <div className="space-y-2">
+          <label className="text-xs font-medium">Google Drive PDF Link</label>
+          <input
+            type="url"
+            value={questionPdfUrl}
+            onChange={(e) => setQuestionPdfUrl(e.target.value)}
+            placeholder="https://drive.google.com/file/d/.../preview"
+            className="field text-xs"
+          />
+          <p className="text-[10px] text-muted">
+            Paste a Google Drive embed URL to render the PDF inline for students
+          </p>
+        </div>
+
         <div className="flex justify-end gap-2 pt-2">
           <button onClick={cancelEdit} className="btn-secondary text-xs">
             Cancel
@@ -186,6 +188,16 @@ export default function AssignmentCard({
           <span className="text-xs text-blue-500">
             Due: {new Date(assignment.dueDate).toLocaleDateString()}
           </span>
+        )}
+        {assignment.questionPdfUrl && (
+          <a
+            href={assignment.questionPdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-500 hover:text-blue-700 underline"
+          >
+            <IconExternalLink size={12} /> PDF
+          </a>
         )}
       </div>
       <div className="flex gap-1">

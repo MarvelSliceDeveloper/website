@@ -27,6 +27,7 @@ export default function AddQuizForm({
   onCancel,
 }: AddQuizFormProps) {
   const [title, setTitle] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [questions, setQuestions] = useState<QuizQuestion[]>([
     { text: "", options: [{ label: "", isCorrect: false }] },
   ]);
@@ -92,6 +93,7 @@ export default function AddQuizForm({
     try {
       await api.post(`/api/admin/courses/modules/${moduleId}/quizzes`, {
         title,
+        dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
         questions,
       });
       toast.success("Quiz added successfully");
@@ -122,6 +124,16 @@ export default function AddQuizForm({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Enter quiz title"
+          className="field"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-xs font-medium">Due Date (optional)</label>
+        <input
+          type="datetime-local"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
           className="field"
         />
       </div>

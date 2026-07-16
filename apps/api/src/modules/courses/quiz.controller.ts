@@ -8,6 +8,16 @@ import {
 } from "./quiz.service";
 
 export const quizController = {
+  async getQuestions(req: AuthRequest, res: Response) {
+    try {
+      const quiz = await quizService.getQuizQuestions(req.params.quizId);
+      return res.status(200).json(quiz);
+    } catch (error: any) {
+      if (error.message === "Quiz not found")
+        return res.status(404).json({ error: error.message });
+      return res.status(500).json({ error: "Failed to get quiz questions" });
+    }
+  },
   async addQuiz(req: AuthRequest, res: Response) {
     try {
       const data = CreateQuizSchema.parse(req.body);

@@ -1,6 +1,7 @@
 import { Router, Response } from "express";
 import { requireAuth, AuthRequest } from "../../middleware/auth.middleware";
 import { prisma } from "../../utils/prisma";
+import { quizController } from "./quiz.controller";
 
 const router = Router();
 
@@ -309,7 +310,13 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
 
     const enrollment = await prisma.enrollmentRequest.findFirst({
       where: { userId, courseId, status: "APPROVED" },
-      include: { batch: true },
+      include: {
+        batch: {
+          include: {
+            instructor: { select: { id: true, name: true } },
+          },
+        },
+      },
     });
 
     if (enrollment) {
@@ -321,7 +328,13 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
           courseId,
           enrollment: { userId, status: "APPROVED" },
         },
-        include: { batch: true },
+        include: {
+          batch: {
+            include: {
+              instructor: { select: { id: true, name: true } },
+            },
+          },
+        },
       });
 
       if (!packageCourse) {
@@ -462,6 +475,7 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
           id: q.id,
           title: q.title,
           questionCount: q.questions.length,
+          dueDate: q.dueDate ? q.dueDate.toISOString() : null,
         })),
         assignments: m.assignments.map((a) => ({
           id: a.id,
@@ -497,6 +511,7 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
             status: batch.status,
             startDate: batch.startDate,
             endDate: batch.endDate,
+            instructor: batch.instructor?.name || "TBD",
           }
         : null,
       modules,
@@ -565,6 +580,105 @@ router.post("/enroll", async (req: AuthRequest, res: Response) => {
     return res
       .status(500)
       .json({ error: "Failed to submit enrollment request" });
+  }
+});
+
+// GET /api/courses/quizzes/:quizId/questions — get a course quiz's questions
+router.get("/quizzes/:quizId/questions", quizController.getQuestions);
+
+// POST /api/courses/quizzes/:quizId/submit — submit quiz answers and get score
+router.post("/quizzes/:quizId/submit", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { quizId } = req.params;
+    const { answers } = req.body; // [{ questionId, selectedOptionId }]
+
+    if (!Array.isArray(answers) || answers.length === 0) {
+      return res.status(400).json({ error: "answers must be a non-empty array" });
+    }
+
+    const quiz = await prisma.quiz.findUnique({
+      where: { id: quizId },
+      include: { questions: true },
+    });
+
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    // Check for existing attempt
+    const existing = await prisma.quizAttempt.findFirst({
+      where: { quizId, userId },
+    });
+
+    if (existing) {
+      return res.status(400).json({ error: "Quiz already submitted", attempt: existing });
+    }
+
+    // Score the answers
+    let score = 0;
+    const enrichedAnswers = answers.map((a: { questionId: string; selectedOptionId: string }) => {
+      const question = quiz.questions.find((q) => q.id === a.questionId);
+      if (!question) return { questionId: a.questionId, selectedOptionId: a.selectedOptionId, isCorrect: false };
+
+      const options = question.options as Array<{ label: string; isCorrect: boolean }>;
+      const selectedIdx = parseInt(a.selectedOptionId, 10);
+      const isCorrect = !isNaN(selectedIdx) && options[selectedIdx]?.isCorrect === true;
+      if (isCorrect) score++;
+      return { questionId: a.questionId, selectedOptionId: a.selectedOptionId, isCorrect };
+    });
+
+    const total = quiz.questions.length;
+
+    const attempt = await prisma.quizAttempt.create({
+      data: {
+        quizId,
+        userId,
+        answers: enrichedAnswers,
+        score,
+        total,
+      },
+    });
+
+    return res.status(201).json({
+      attemptId: attempt.id,
+      score,
+      total,
+      percentage: total > 0 ? Math.round((score / total) * 100) : 0,
+      answers: enrichedAnswers,
+      submittedAt: attempt.createdAt,
+    });
+  } catch (error: any) {
+    console.error("Error submitting quiz:", error);
+    return res.status(500).json({ error: "Failed to submit quiz" });
+  }
+});
+
+// GET /api/courses/quizzes/:quizId/attempt — get user's existing attempt for this quiz
+router.get("/quizzes/:quizId/attempt", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { quizId } = req.params;
+
+    const attempt = await prisma.quizAttempt.findFirst({
+      where: { quizId, userId },
+    });
+
+    if (!attempt) {
+      return res.status(404).json({ error: "No attempt found" });
+    }
+
+    return res.json({
+      attemptId: attempt.id,
+      score: attempt.score,
+      total: attempt.total,
+      percentage: attempt.total > 0 ? Math.round((attempt.score / attempt.total) * 100) : 0,
+      answers: attempt.answers,
+      submittedAt: attempt.createdAt,
+    });
+  } catch (error: any) {
+    console.error("Error fetching quiz attempt:", error);
+    return res.status(500).json({ error: "Failed to fetch quiz attempt" });
   }
 });
 

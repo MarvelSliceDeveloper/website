@@ -227,13 +227,7 @@ export const assignmentService = {
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId },
       include: {
-        batch: {
-          include: {
-            enrollments: {
-              where: { userId, status: "APPROVED" },
-            },
-          },
-        },
+        batch: true,
         questions: {
           orderBy: { orderIndex: "asc" },
           include: {
@@ -246,8 +240,30 @@ export const assignmentService = {
     if (!assignment) throw new Error("Assignment not found");
 
     if (!isInstructor) {
-      const isEnrolled = assignment.batch.enrollments.length > 0;
-      if (!isEnrolled) throw new Error("You are not enrolled in this batch");
+      // Check enrollment via EnrollmentRequest or PackageEnrollmentCourse
+      // (same pattern as the course content endpoint)
+      const enrollmentRequest = await prisma.enrollmentRequest.findFirst({
+        where: {
+          userId,
+          courseId: assignment.courseId,
+          batchId: assignment.batchId,
+          status: "APPROVED",
+        },
+      });
+
+      if (!enrollmentRequest) {
+        const packageCourse = await prisma.packageEnrollmentCourse.findFirst({
+          where: {
+            courseId: assignment.courseId,
+            batchId: assignment.batchId,
+            enrollment: { userId, status: "APPROVED" },
+          },
+        });
+
+        if (!packageCourse) {
+          throw new Error("You are not enrolled in this batch");
+        }
+      }
     }
 
     const questions = assignment.questions.map((q) => ({

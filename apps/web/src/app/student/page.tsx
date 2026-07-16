@@ -816,6 +816,9 @@ function StudentPortalContent() {
             courseId={courseId}
             navigate={navigate}
             goBack={goBack}
+            initialQuizId={currentView.params?.quizId}
+            initialResourceUrl={currentView.params?.resourceUrl}
+            initialResourceName={currentView.params?.resourceName}
           />
         );
       }
@@ -835,6 +838,7 @@ function StudentPortalContent() {
             quizzes={portalData.overdueAssignments.filter(
               (a) => a.type === "QUIZ",
             )}
+            navigate={navigate}
           />
         );
 

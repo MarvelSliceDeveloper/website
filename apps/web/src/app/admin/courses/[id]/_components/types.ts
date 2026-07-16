@@ -40,6 +40,7 @@ export type Assignment = {
   description: string | null;
   dueDate: string | null;
   maxPoints: number;
+  questionPdfUrl: string | null;
 };
 
 export type Module = {

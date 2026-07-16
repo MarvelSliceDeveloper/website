@@ -16,6 +16,7 @@ import {
   IconFile,
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
+import { toast } from "@/lib/toast";
 
 import { VideoPlayer } from "./_comps/VideoPlayer";
 import StickyNoteWidget from "@/components/StickyNoteWidget";
@@ -34,6 +35,9 @@ function formatMinutes(totalSeconds: number) {
 export default function CourseContentView({
   courseId,
   goBack,
+  initialQuizId,
+  initialResourceUrl,
+  initialResourceName,
 }: CourseContentViewProps) {
   const [data, setData] = useState<CourseContentData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,6 +57,39 @@ export default function CourseContentView({
 
   const [showStickyWidget, setShowStickyWidget] = useState(false);
   const [bookmarks, setBookmarks] = useState<string[]>([]);
+
+  const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [quizData, setQuizData] = useState<{
+    id: string;
+    title: string;
+    description: string;
+    dueDate: string;
+    maxPoints: number;
+    questionCount: number;
+    questions: Array<{
+      id: string;
+      questionText: string;
+      marks: number;
+      options: Array<{ id: string; optionText: string; isCorrect: boolean }>;
+    }>;
+  } | null>(null);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [quizSubmitting, setQuizSubmitting] = useState(false);
+  const [quizResult, setQuizResult] = useState<{
+    score: number;
+    total: number;
+    percentage: number;
+    answers: Array<{ questionId: string; selectedOptionId: string; isCorrect: boolean }>;
+  } | null>(null);
+
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | null>(null);
+
+  const [selectedResource, setSelectedResource] = useState<{
+    name: string;
+    url: string;
+  } | null>(null);
 
   // ── Data fetching ──────────────────────────────────────────────────────
 
@@ -89,6 +126,18 @@ export default function CourseContentView({
     };
   }, [courseId, retryKey]);
 
+  useEffect(() => {
+    if (initialQuizId && data) {
+      selectQuiz(initialQuizId);
+    }
+  }, [initialQuizId, data]);
+
+  useEffect(() => {
+    if (initialResourceUrl && initialResourceName && data) {
+      selectResource(initialResourceName, initialResourceUrl);
+    }
+  }, [initialResourceUrl, initialResourceName, data]);
+
   // ── Navigation ─────────────────────────────────────────────────────────
 
   const toggleModule = (moduleId: string) => {
@@ -124,6 +173,119 @@ export default function CourseContentView({
   };
 
   const clearRecording = () => setSelectedRecordingId(null);
+
+  const selectQuiz = async (quizId: string) => {
+    setSelectedQuizId(quizId);
+    setSelectedResource(null);
+    setSelectedLessonId(null);
+    setSelectedRecordingId(null);
+    setQuizLoading(true);
+    setQuizData(null);
+    setSelectedAnswers({});
+    setQuizSubmitted(false);
+    setQuizResult(null);
+    try {
+      const [res, attemptRes] = await Promise.all([
+        api.get<{
+          id: string;
+          title: string;
+          description: string;
+          dueDate: string;
+          maxPoints: number;
+          questions: Array<{
+            id: string;
+            questionText: string;
+            marks: number;
+            orderIndex: number;
+            options: Array<{ id: string; optionText: string }>;
+          }>;
+        }>(`/api/courses/quizzes/${quizId}/questions`),
+        api.get<{
+          score: number;
+          total: number;
+          percentage: number;
+          answers: Array<{ questionId: string; selectedOptionId: string; isCorrect: boolean }>;
+        }>(`/api/courses/quizzes/${quizId}/attempt`).catch(() => null),
+      ]);
+      setQuizData({
+        ...res,
+        questionCount: res.questions.length,
+      });
+      if (attemptRes) {
+        setQuizSubmitted(true);
+        setQuizResult(attemptRes);
+        const preFilled: Record<string, string> = {};
+        for (const a of attemptRes.answers) {
+          preFilled[a.questionId] = a.selectedOptionId;
+        }
+        setSelectedAnswers(preFilled);
+      }
+    } catch {
+      toast.error("Failed to load quiz");
+      setSelectedQuizId(null);
+    } finally {
+      setQuizLoading(false);
+    }
+  };
+
+  const selectAssignment = (assignment: {
+    id: string;
+    title: string;
+    type: string;
+    dueDate: string;
+  }) => {
+    setSelectedAssignmentId(assignment.id);
+    setSelectedQuizId(null);
+    setQuizData(null);
+    setSelectedLessonId(null);
+    setSelectedRecordingId(null);
+    setSelectedResource(null);
+  };
+
+  const selectResource = (name: string, url: string) => {
+    setSelectedResource({ name, url });
+    setSelectedQuizId(null);
+    setQuizData(null);
+    setSelectedLessonId(null);
+    setSelectedRecordingId(null);
+    setSelectedAssignmentId(null);
+  };
+
+  const clearQuizPreview = () => {
+    setSelectedQuizId(null);
+    setQuizData(null);
+  };
+
+  const handleSubmitQuiz = async () => {
+    if (!quizData) return;
+    setQuizSubmitting(true);
+    try {
+      const answers = Object.entries(selectedAnswers).map(([questionId, selectedOptionId]) => ({
+        questionId,
+        selectedOptionId,
+      }));
+      const res = await api.post<{
+        score: number;
+        total: number;
+        percentage: number;
+        answers: Array<{ questionId: string; selectedOptionId: string; isCorrect: boolean }>;
+      }>(`/api/courses/quizzes/${quizData.id}/submit`, { answers });
+      setQuizResult({
+        score: res.score,
+        total: res.total,
+        percentage: res.percentage,
+        answers: res.answers,
+      });
+      setQuizSubmitted(true);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to submit quiz";
+      toast.error(msg);
+    } finally {
+      setQuizSubmitting(false);
+    }
+  };
+
+  const clearResourcePreview = () => setSelectedResource(null);
 
   const toggleBookmark = (id: string) => {
     setBookmarks((prev) =>
@@ -176,55 +338,310 @@ export default function CourseContentView({
 
   // ── Main pane: video + lesson info ──────────────────────────────────────
 
-  const renderMain = () => (
-    <>
-      <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-card border border-border">
-        <VideoPlayer lesson={selectedLesson} recording={selectedRecording} />
-      </div>
-      <div className="px-1">
-        <h2 className="text-base font-semibold text-foreground mt-4">
-          {selectedRecording?.title ??
-            selectedLesson?.title ??
-            selectedModule?.title ??
-            "Select a lesson"}
-        </h2>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          {selectedRecording ? (
-            "Recorded live session"
+  const renderMain = () => {
+    if (selectedQuizId && quizLoading) {
+      return (
+        <div className="flex items-center justify-center h-full gap-3 py-16">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
+          <p className="text-sm text-muted-foreground">Loading quiz...</p>
+        </div>
+      );
+    }
+
+    if (selectedQuizId && quizData) {
+      return (
+        <div className="space-y-5">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={clearQuizPreview}
+              className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
+            >
+              ← Back to lesson
+            </button>
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <IconClipboardCheck size={18} className="text-amber-500" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-amber-500">
+                Quiz
+              </span>
+            </div>
+            <h2 className="text-lg font-bold text-foreground">
+              {quizData.title}
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {quizData.description}
+            </p>
+            <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
+              {quizData.dueDate && (
+                <span>
+                  📅 Due:{" "}
+                  {new Date(quizData.dueDate).toLocaleDateString("en-IN")}
+                </span>
+              )}
+              <span>💯 Max Points: {quizData.maxPoints}</span>
+              <span>📝 Questions: {quizData.questionCount}</span>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {quizData.questions.map((q, idx) => (
+              <div
+                key={q.id}
+                className="bg-card border border-border rounded-xl p-4 space-y-3"
+              >
+                <div className="flex items-start justify-between">
+                  <p className="text-sm font-semibold text-foreground leading-snug">
+                    <span className="text-amber-500 mr-1.5">Q{idx + 1}.</span>
+                    {q.questionText}
+                  </p>
+                  <span className="text-[10px] font-bold text-muted bg-muted px-2 py-0.5 rounded shrink-0 ml-3">
+                    {q.marks} {q.marks === 1 ? "mark" : "marks"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {q.options.map((opt, optIdx) => {
+                    const isSelected = selectedAnswers[q.id] === opt.id;
+                    const isCorrectAnswer = opt.isCorrect;
+                    let borderClass = "border-border/60";
+                    if (quizSubmitted) {
+                      if (isCorrectAnswer) borderClass = "border-emerald-500/60 bg-emerald-500/10";
+                      else if (isSelected) borderClass = "border-danger/60 bg-danger/10";
+                    } else if (isSelected) {
+                      borderClass = "border-primary/60 bg-primary/5";
+                    }
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        disabled={quizSubmitted}
+                        onClick={() =>
+                          setSelectedAnswers((prev) => ({
+                            ...prev,
+                            [q.id]: opt.id,
+                          }))
+                        }
+                        className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs text-left transition-colors ${
+                          quizSubmitted && isCorrectAnswer
+                            ? "text-emerald-700 dark:text-emerald-300"
+                            : quizSubmitted && isSelected
+                              ? "text-danger"
+                              : "text-muted-foreground"
+                        } ${borderClass}`}
+                      >
+                        <span
+                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+                            quizSubmitted && isCorrectAnswer
+                              ? "bg-emerald-500 text-white"
+                              : quizSubmitted && isSelected
+                                ? "bg-danger text-white"
+                                : isSelected
+                                  ? "bg-primary text-primary-foreground"
+                                  : "border border-border text-muted"
+                          }`}
+                        >
+                          {quizSubmitted && isCorrectAnswer
+                            ? "✓"
+                            : quizSubmitted && isSelected && !isCorrectAnswer
+                              ? "✗"
+                              : String.fromCharCode(65 + optIdx)}
+                        </span>
+                        <span className="flex-1">{opt.optionText}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {!quizSubmitted ? (
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-xs text-muted-foreground">
+                {Object.keys(selectedAnswers).length} of {quizData.questions.length} answered
+              </p>
+              <button
+                onClick={handleSubmitQuiz}
+                disabled={
+                  Object.keys(selectedAnswers).length < quizData.questions.length || quizSubmitting
+                }
+                className="btn-primary text-sm px-6 py-2"
+              >
+                Submit Answers
+              </button>
+            </div>
           ) : (
-            <>
-              {currentLessonIndex >= 0
-                ? `Lesson ${currentLessonIndex + 1}`
-                : ""}
-              {currentModuleIndex >= 0
-                ? ` · Module ${currentModuleIndex + 1}`
-                : ""}
-              {selectedLesson?.durationSeconds
-                ? ` · ${Math.floor(selectedLesson.durationSeconds / 60)} min`
-                : ""}
-            </>
+            <div className="rounded-xl bg-card border border-border p-4">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">
+                  {(() => {
+                    const pct = quizResult?.percentage ?? 0;
+                    return pct >= 70 ? "🎉" : pct >= 40 ? "💪" : "📚";
+                  })()}
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    {quizResult
+                      ? `${quizResult.score}/${quizResult.total} correct`
+                      : "Calculating..."}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Score: {quizResult ? `${quizResult.percentage}%` : "..."}
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
-        </p>
-        {selectedRecording && (
+        </div>
+      );
+    }
+
+    if (selectedAssignmentId) {
+      const allModules = data.modules;
+      let foundAssignment: (typeof data.modules)[number]["assignments"][number] | null = null;
+      let foundModule: string | null = null;
+      for (const mod of allModules) {
+        const a = mod.assignments.find((a) => a.id === selectedAssignmentId);
+        if (a) {
+          foundAssignment = a;
+          foundModule = mod.title;
+          break;
+        }
+      }
+      if (foundAssignment) {
+        return (
+          <div className="space-y-5">
+            <button
+              onClick={() => setSelectedAssignmentId(null)}
+              className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
+            >
+              ← Back to lesson
+            </button>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <IconFileSpreadsheet size={18} className="text-blue-500" />
+                <span className="text-xs font-semibold uppercase tracking-wider text-blue-500">
+                  Assignment
+                </span>
+              </div>
+              <h2 className="text-lg font-bold text-foreground mt-1">
+                {foundAssignment.title}
+              </h2>
+              {foundModule && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Module: {foundModule}
+                </p>
+              )}
+              <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
+                <span>
+                  📅 Due:{" "}
+                  {new Date(foundAssignment.dueDate).toLocaleDateString("en-IN")}
+                </span>
+                <span>📋 Type: {foundAssignment.type}</span>
+              </div>
+            </div>
+
+            <div className="bg-card border border-border rounded-xl p-6 flex flex-col items-center justify-center gap-3 text-center">
+              <IconFileSpreadsheet size={40} className="text-blue-500/60" />
+              <p className="text-sm text-muted-foreground max-w-md">
+                Submit your assignment from the{" "}
+                <button
+                  onClick={() => {
+                    /* Navigate to assignments overdue view - handled by parent */
+                  }}
+                  className="text-primary font-medium hover:underline"
+                >
+                  Assignments
+                </button>{" "}
+                page.
+              </p>
+            </div>
+          </div>
+        );
+      }
+    }
+
+    if (selectedResource) {
+      return (
+        <div className="space-y-4">
           <button
-            onClick={clearRecording}
-            className="text-xs font-medium text-primary hover:underline mt-2"
+            onClick={clearResourcePreview}
+            className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
           >
-            ← Back to current lesson
+            ← Back to lesson
           </button>
-        )}
-      </div>
-      <div className="bg-card-hover border border-border rounded-xl p-4 mt-4">
-        <h3 className="text-sm font-medium text-foreground mb-1.5">
-          {selectedRecording ? "About this session" : "About this lesson"}
-        </h3>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          {selectedLesson?.description ??
-            "Select a lesson from the sidebar to view details."}
-        </p>
-      </div>
-    </>
-  );
+          <div className="flex items-center gap-2">
+            <IconFile size={18} className="text-emerald-500" />
+            <span className="text-sm font-semibold text-foreground">
+              {selectedResource.name}
+            </span>
+          </div>
+          <div className="w-full rounded-xl overflow-hidden border border-border bg-card">
+            <iframe
+              src={selectedResource.url}
+              title={selectedResource.name}
+              className="w-full h-[calc(100vh-var(--shell-header-height,56px)-200px)]"
+            />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-card border border-border">
+          <VideoPlayer lesson={selectedLesson} recording={selectedRecording} />
+        </div>
+        <div className="px-1">
+          <h2 className="text-base font-semibold text-foreground mt-4">
+            {selectedRecording?.title ??
+              selectedLesson?.title ??
+              selectedModule?.title ??
+              "Select a lesson"}
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {selectedRecording ? (
+              "Recorded live session"
+            ) : (
+              <>
+                {currentLessonIndex >= 0
+                  ? `Lesson ${currentLessonIndex + 1}`
+                  : ""}
+                {currentModuleIndex >= 0
+                  ? ` · Module ${currentModuleIndex + 1}`
+                  : ""}
+                {selectedLesson?.durationSeconds
+                  ? ` · ${Math.floor(selectedLesson.durationSeconds / 60)} min`
+                  : ""}
+              </>
+            )}
+          </p>
+          {data.batch?.instructor && (
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Instructor: {data.batch.instructor}
+            </p>
+          )}
+          {selectedRecording && (
+            <button
+              onClick={clearRecording}
+              className="text-xs font-medium text-primary hover:underline mt-2"
+            >
+              ← Back to current lesson
+            </button>
+          )}
+        </div>
+        <div className="bg-card-hover border border-border rounded-xl p-4 mt-4">
+          <h3 className="text-sm font-medium text-foreground mb-1.5">
+            {selectedRecording ? "About this session" : "About this lesson"}
+          </h3>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {selectedLesson?.description ??
+              "Select a lesson from the sidebar to view details."}
+          </p>
+        </div>
+      </>
+    );
+  };
 
   // ── Sidebar: "Course content" / "Live Session" tab pair ────────────────
 
@@ -328,78 +745,144 @@ export default function CourseContentView({
                   );
                 })}
 
-                {module.quizzes.map((quiz) => (
-                  <li key={quiz.id} className="px-2">
-                    <div className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-500/15">
-                        <IconClipboardCheck
-                          size={12}
-                          className="text-amber-500"
-                        />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-xs truncate text-muted-foreground">
-                          {quiz.title}
+                {module.quizzes.map((quiz) => {
+                  const isActive = selectedQuizId === quiz.id;
+                  return (
+                    <li key={quiz.id} className="px-2">
+                      <button
+                        onClick={() => selectQuiz(quiz.id)}
+                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
+                          isActive ? "bg-amber-500/15" : "hover:bg-muted/30"
+                        }`}
+                      >
+                        <span
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+                            isActive ? "bg-amber-500" : "bg-amber-500/15"
+                          }`}
+                        >
+                          <IconClipboardCheck
+                            size={12}
+                            className={
+                              isActive
+                                ? "text-white"
+                                : "text-amber-500"
+                            }
+                          />
                         </span>
-                      </span>
-                      <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
-                        {quiz.questionCount}Q
-                      </span>
-                    </div>
-                  </li>
-                ))}
+                        <span className="min-w-0 flex-1">
+                          <span
+                            className={`block text-xs truncate ${
+                              isActive
+                                ? "text-foreground font-medium"
+                                : "text-muted-foreground"
+                            }`}
+                          >
+                            {quiz.title}
+                          </span>
+                        </span>
+                        <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
+                          {quiz.questionCount}Q
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
 
-                {module.assignments.map((assignment) => (
-                  <li key={assignment.id} className="px-2">
-                    <div className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500/15">
-                        <IconFileSpreadsheet
-                          size={12}
-                          className="text-blue-500"
-                        />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-xs truncate text-muted-foreground">
-                          {assignment.title}
+                {module.assignments.map((assignment) => {
+                  const isActive = selectedAssignmentId === assignment.id;
+                  return (
+                    <li key={assignment.id} className="px-2">
+                      <button
+                        onClick={() => selectAssignment(assignment)}
+                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
+                          isActive ? "bg-blue-500/15" : "hover:bg-muted/30"
+                        }`}
+                      >
+                        <span
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+                            isActive ? "bg-blue-500" : "bg-blue-500/15"
+                          }`}
+                        >
+                          <IconFileSpreadsheet
+                            size={12}
+                            className={
+                              isActive
+                                ? "text-white"
+                                : "text-blue-500"
+                            }
+                          />
                         </span>
-                      </span>
-                      <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
-                        {new Date(assignment.dueDate).toLocaleDateString(
-                          "en-IN",
-                          { day: "numeric", month: "short" },
-                        )}
-                      </span>
-                    </div>
-                  </li>
-                ))}
+                        <span className="min-w-0 flex-1">
+                          <span
+                            className={`block text-xs truncate ${
+                              isActive
+                                ? "text-foreground font-medium"
+                                : "text-muted-foreground"
+                            }`}
+                          >
+                            {assignment.title}
+                          </span>
+                        </span>
+                        <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
+                          {new Date(assignment.dueDate).toLocaleDateString(
+                            "en-IN",
+                            { day: "numeric", month: "short" },
+                          )}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
 
                 {module.lessons.some((l) => l.resources && l.resources.length > 0) && (
                   <>
                     {module.lessons
                       .filter((l) => l.resources && l.resources.length > 0)
                       .flatMap((l) =>
-                        l.resources.map((r) => (
-                          <li key={`${l.id}-resource-${r.url}`} className="px-2">
-                            <a
-                              href={r.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left hover:bg-muted/30 transition-colors"
-                            >
-                              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-                                <IconFile
-                                  size={12}
-                                  className="text-emerald-500"
-                                />
-                              </span>
-                              <span className="min-w-0 flex-1">
-                                <span className="block text-xs truncate text-muted-foreground">
-                                  {r.name}
+                        l.resources.map((r) => {
+                          const isActive =
+                            selectedResource?.url === r.url;
+                          return (
+                            <li key={`${l.id}-resource-${r.url}`} className="px-2">
+                              <button
+                                onClick={() => selectResource(r.name, r.url)}
+                                className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
+                                  isActive
+                                    ? "bg-emerald-500/15"
+                                    : "hover:bg-muted/30"
+                                }`}
+                              >
+                                <span
+                                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+                                    isActive
+                                      ? "bg-emerald-500"
+                                      : "bg-emerald-500/15"
+                                  }`}
+                                >
+                                  <IconFile
+                                    size={12}
+                                    className={
+                                      isActive
+                                        ? "text-white"
+                                        : "text-emerald-500"
+                                    }
+                                  />
                                 </span>
-                              </span>
-                            </a>
-                          </li>
-                        )),
+                                <span className="min-w-0 flex-1">
+                                  <span
+                                    className={`block text-xs truncate ${
+                                      isActive
+                                        ? "text-foreground font-medium"
+                                        : "text-muted-foreground"
+                                    }`}
+                                  >
+                                    {r.name}
+                                  </span>
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        }),
                       )}
                   </>
                 )}

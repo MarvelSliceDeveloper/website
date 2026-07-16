@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
-import { IconPlus, IconX } from "@tabler/icons-react";
+import { IconX } from "@tabler/icons-react";
 
 interface AddAssignmentFormProps {
   moduleId: string;
@@ -21,10 +21,10 @@ export default function AddAssignmentForm({
   onCancel,
 }: AddAssignmentFormProps) {
   const [title, setTitle] = useState("");
-  const [type, setType] = useState<"ASSIGNMENT" | "QUIZ">("ASSIGNMENT");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [maxPoints, setMaxPoints] = useState(100);
+  const [questionPdfUrl, setQuestionPdfUrl] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
@@ -37,10 +37,10 @@ export default function AddAssignmentForm({
     try {
       await api.post(`/api/admin/courses/modules/${moduleId}/assignments`, {
         title,
-        type,
         description,
         dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
         maxPoints,
+        questionPdfUrl: questionPdfUrl || undefined,
         courseId,
         batchId,
       });
@@ -77,24 +77,23 @@ export default function AddAssignmentForm({
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-medium">Type</label>
-        <select
-          value={type}
-          onChange={(e) => setType(e.target.value as "ASSIGNMENT" | "QUIZ")}
-          className="field"
-        >
-          <option value="ASSIGNMENT">Assignment</option>
-          <option value="QUIZ">Quiz</option>
-        </select>
-      </div>
-
-      <div className="space-y-2">
         <label className="text-xs font-medium">Description (optional)</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Enter description"
           className="field min-h-[80px]"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-xs font-medium">Google Drive PDF Link (optional)</label>
+        <input
+          type="url"
+          value={questionPdfUrl}
+          onChange={(e) => setQuestionPdfUrl(e.target.value)}
+          placeholder="https://drive.google.com/file/d/.../preview"
+          className="field text-xs"
         />
       </div>
 

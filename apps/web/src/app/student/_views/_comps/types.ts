@@ -17,6 +17,7 @@ export interface QuizInfo {
   id: string;
   title: string;
   questionCount: number;
+  dueDate: string | null;
 }
 
 export interface AssignmentInfo {
@@ -80,6 +81,7 @@ export interface CourseContentData {
     status: string;
     startDate: string;
     endDate: string;
+    instructor: string;
   } | null;
   modules: CourseModule[];
   sessions: CourseSession[];
@@ -100,4 +102,7 @@ export interface CourseContentViewProps {
   courseId: string;
   navigate: (v: ViewState) => void;
   goBack: () => void;
+  initialQuizId?: string;
+  initialResourceUrl?: string;
+  initialResourceName?: string;
 }

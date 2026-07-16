@@ -3,6 +3,7 @@ import { prisma } from "../../utils/prisma";
 
 export const CreateQuizSchema = z.object({
   title: z.string().min(2).max(200),
+  dueDate: z.string().datetime().optional(),
   questions: z
     .array(
       z.object({
@@ -22,6 +23,7 @@ export const CreateQuizSchema = z.object({
 
 export const UpdateQuizSchema = z.object({
   title: z.string().min(2).max(200).optional(),
+  dueDate: z.string().datetime().optional().nullable(),
   questions: z
     .array(
       z.object({
@@ -41,6 +43,41 @@ export const UpdateQuizSchema = z.object({
 });
 
 export const quizService = {
+  async getQuizQuestions(quizId: string) {
+    const quiz = await prisma.quiz.findUnique({
+      where: { id: quizId },
+      include: { questions: true },
+    });
+
+    if (!quiz) throw new Error("Quiz not found");
+
+    const questions = quiz.questions.map((q, qIdx) => {
+      const rawOptions = q.options as Array<{ label: string; isCorrect: boolean }>;
+      const options = rawOptions.map((opt, oIdx) => ({
+        id: `${oIdx}`,
+        optionText: opt.label,
+        isCorrect: opt.isCorrect,
+      }));
+
+      return {
+        id: q.id,
+        questionText: q.text,
+        marks: 1,
+        orderIndex: qIdx,
+        options,
+      };
+    });
+
+    return {
+      id: quiz.id,
+      title: quiz.title,
+      description: "",
+      dueDate: quiz.dueDate ? quiz.dueDate.toISOString() : "",
+      maxPoints: questions.reduce((sum, q) => sum + q.marks, 0),
+      questionCount: questions.length,
+      questions,
+    };
+  },
   async addQuiz(moduleId: string, data: z.infer<typeof CreateQuizSchema>) {
     const module = await prisma.module.findUnique({ where: { id: moduleId } });
     if (!module) throw new Error("Module not found");
@@ -49,6 +86,7 @@ export const quizService = {
       data: {
         moduleId,
         title: data.title,
+        ...(data.dueDate && { dueDate: new Date(data.dueDate) }),
         questions: {
           create: data.questions.map((q, idx) => ({
             text: q.text,
@@ -72,6 +110,7 @@ export const quizService = {
       where: { id: quizId },
       data: {
         ...(data.title && { title: data.title }),
+        ...(data.dueDate !== undefined && { dueDate: data.dueDate ? new Date(data.dueDate) : null }),
         ...(data.questions && {
           questions: {
             create: data.questions.map((q) => ({

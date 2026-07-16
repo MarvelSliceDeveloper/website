@@ -155,7 +155,9 @@ export interface DashboardChartData {
 
 export interface OverdueAssignment {
   id: string;
+  courseId: string;
   courseName: string;
+  moduleName: string;
   unitName: string;
   assignmentName: string;
   dueDate: string;

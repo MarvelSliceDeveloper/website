@@ -10,6 +10,7 @@ import {
   IconPlus,
   IconFile,
   IconDownload,
+  IconX,
 } from "@tabler/icons-react";
 import type { Module, Resource } from "./types";
 import LessonCard from "./LessonCard";
@@ -69,6 +70,7 @@ export default function ModuleCard({
   const [resourceOverIdx, setResourceOverIdx] = useState<number | null>(null);
   const [showAddQuiz, setShowAddQuiz] = useState(false);
   const [showAddAssignment, setShowAddAssignment] = useState(false);
+  const [showStudyMaterialUpload, setShowStudyMaterialUpload] = useState(false);
   const [resourceLessonId, setResourceLessonId] = useState<string>(
     mod.lessons[0]?.id || ""
   );
@@ -446,40 +448,9 @@ export default function ModuleCard({
               <div className="px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-emerald-600 mb-2">
                 Study Materials ({allResources.length})
               </div>
-              
-              {mod.lessons.length > 1 && (
-                <div className="mb-2">
-                  <select
-                    value={resourceLessonId}
-                    onChange={(e) => setResourceLessonId(e.target.value)}
-                    className="w-full text-xs border border-border rounded-md px-2 py-1.5 bg-background"
-                  >
-                    {mod.lessons.map((lesson) => (
-                      <option key={lesson.id} value={lesson.id}>
-                        {lesson.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <label className="flex items-center justify-center gap-2 w-full p-2 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-success/10 transition-colors text-xs text-success">
-                <IconPlus size={14} />
-                {uploadingResource ? "Uploading..." : "Add Study Material"}
-                <input
-                  type="file"
-                  onChange={handleResourceUpload}
-                  disabled={uploadingResource}
-                  className="hidden"
-                  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.webp"
-                />
-              </label>
-              {resourceError && (
-                <p className="text-[10px] text-danger mt-1 px-2">{resourceError}</p>
-              )}
 
               {allResources.length > 0 ? (
-                <div className="mt-2 space-y-1">
+                <div className="space-y-1">
                   {allResources.map((resource, rIdx) => (
                     <div
                       key={resource.id}
@@ -521,7 +492,9 @@ export default function ModuleCard({
                   ))}
                 </div>
               ) : (
-                <p className="text-[10px] text-muted text-center mt-2 px-2">No resources uploaded yet</p>
+                <p className="text-[10px] text-muted text-center">
+                  No study materials yet. Click "Study Material" below to upload.
+                </p>
               )}
             </div>
           )}
@@ -547,6 +520,65 @@ export default function ModuleCard({
                 }}
                 onCancel={() => setShowAddAssignment(false)}
               />
+            ) : showStudyMaterialUpload ? (
+              <div className="rounded-lg border border-success/20 bg-success/5 p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-semibold text-success">Add Study Material</h4>
+                  <button
+                    onClick={() => setShowStudyMaterialUpload(false)}
+                    className="p-1 text-muted hover:text-foreground"
+                  >
+                    <IconX size={14} />
+                  </button>
+                </div>
+
+                {mod.lessons.length === 0 ? (
+                  <p className="text-xs text-muted">Add a lesson first to attach study materials.</p>
+                ) : (
+                  <>
+                    {mod.lessons.length > 1 && (
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium">Attach to Lesson</label>
+                        <select
+                          value={resourceLessonId}
+                          onChange={(e) => setResourceLessonId(e.target.value)}
+                          className="w-full text-xs border border-border rounded-md px-2 py-1.5 bg-background"
+                        >
+                          {mod.lessons.map((lesson) => (
+                            <option key={lesson.id} value={lesson.id}>
+                              {lesson.title}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    <label className="flex items-center justify-center gap-2 w-full p-3 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-success/10 transition-colors text-xs text-success">
+                      <IconPlus size={14} />
+                      {uploadingResource ? "Uploading..." : "Choose File"}
+                      <input
+                        type="file"
+                        onChange={(e) => {
+                          handleResourceUpload(e);
+                          if (!e.target.files?.[0]) return;
+                          setTimeout(() => setShowStudyMaterialUpload(false), 500);
+                        }}
+                        disabled={uploadingResource}
+                        className="hidden"
+                        accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.webp"
+                      />
+                    </label>
+
+                    {resourceError && (
+                      <p className="text-[10px] text-danger">{resourceError}</p>
+                    )}
+
+                    <p className="text-[10px] text-muted">
+                      Accepted: PDF, DOCX, PPTX, XLSX, Images (max 50 MB)
+                    </p>
+                  </>
+                )}
+              </div>
             ) : (
               <div className="flex gap-2 px-2">
                 <button
@@ -562,6 +594,13 @@ export default function ModuleCard({
                 >
                   <IconPlus size={12} />
                   Add Assignment
+                </button>
+                <button
+                  onClick={() => setShowStudyMaterialUpload(true)}
+                  className="text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors px-2 py-1 rounded-md hover:bg-emerald-50 flex items-center gap-1"
+                >
+                  <IconPlus size={12} />
+                  Study Material
                 </button>
               </div>
             )}

@@ -7,6 +7,7 @@ export const CreateAssignmentSchema = z.object({
   description: z.string().optional(),
   dueDate: z.string().datetime().optional(),
   maxPoints: z.number().int().min(1).default(100),
+  questionPdfUrl: z.string().url().optional().or(z.literal("")),
 });
 
 export const UpdateAssignmentSchema = z.object({
@@ -15,6 +16,7 @@ export const UpdateAssignmentSchema = z.object({
   description: z.string().optional(),
   dueDate: z.string().datetime().optional(),
   maxPoints: z.number().int().min(1).optional(),
+  questionPdfUrl: z.string().url().optional().or(z.literal("")),
 });
 
 export const assignmentService = {
@@ -37,6 +39,7 @@ export const assignmentService = {
         description: data.description || "",
         dueDate: data.dueDate ? new Date(data.dueDate) : new Date(),
         maxPoints: data.maxPoints,
+        ...(data.questionPdfUrl ? { questionPdfUrl: data.questionPdfUrl } : {}),
       },
     });
   },
@@ -58,6 +61,7 @@ export const assignmentService = {
         ...(data.description !== undefined && { description: data.description }),
         ...(data.dueDate && { dueDate: new Date(data.dueDate) }),
         ...(data.maxPoints && { maxPoints: data.maxPoints }),
+        ...(data.questionPdfUrl !== undefined && { questionPdfUrl: data.questionPdfUrl || null }),
       },
     });
   },
