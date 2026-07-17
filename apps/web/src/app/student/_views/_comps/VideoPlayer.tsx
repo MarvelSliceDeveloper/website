@@ -50,7 +50,7 @@ interface SafePlyrProps {
 
 function SafePlyr({ source, options }: SafePlyrProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const instanceRef = useRef<any>(null);
+  const instanceRef = useRef<{ destroy: () => void; source: unknown } | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {

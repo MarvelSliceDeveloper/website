@@ -80,6 +80,7 @@ export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewPr
     Record<string, string>
   >({});
   const [locallySubmittedIds, setLocallySubmittedIds] = useState<string[]>([]);
+  const [listFilter, setListFilter] = useState<"all" | "pending" | "completed">("all");
 
   const overdueItems = quizzes.filter(
     (q) => q.status === "PENDING" && !locallySubmittedIds.includes(q.id),
@@ -484,8 +485,6 @@ export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewPr
       </div>
     );
   }
-
-  const [listFilter, setListFilter] = useState<"all" | "pending" | "completed">("all");
 
   const allItems = [
     ...overdueItems,

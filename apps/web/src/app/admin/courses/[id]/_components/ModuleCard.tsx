@@ -515,7 +515,7 @@ export default function ModuleCard({
                 </div>
               ) : (
                 <p className="text-[10px] text-muted text-center">
-                  No study materials yet. Click "Study Material" below to upload.
+                  No study materials yet. Click &ldquo;Study Material&rdquo; below to upload.
                 </p>
               )}
             </div>

@@ -187,34 +187,6 @@ export default function CourseContentView({
     };
   }, [courseId, retryKey]);
 
-  useEffect(() => {
-    if (initialQuizId && data) {
-      selectQuiz(initialQuizId);
-    }
-  }, [initialQuizId, data]);
-
-  useEffect(() => {
-    if (initialAssignmentId && data) {
-      for (const mod of data.modules) {
-        const assignment = mod.assignments.find((a) => a.id === initialAssignmentId);
-        if (assignment) {
-          selectAssignment(assignment);
-          if (!expandedModules.has(mod.id)) {
-            setExpandedModules((prev) => new Set([...prev, mod.id]));
-          }
-          setSelectedModuleId(mod.id);
-          break;
-        }
-      }
-    }
-  }, [initialAssignmentId, data]);
-
-  useEffect(() => {
-    if (initialResourceUrl && initialResourceName && data) {
-      selectResource(initialResourceName, initialResourceUrl);
-    }
-  }, [initialResourceUrl, initialResourceName, data]);
-
   // ── Navigation ─────────────────────────────────────────────────────────
 
   const toggleModule = (moduleId: string) => {
@@ -353,6 +325,34 @@ export default function CourseContentView({
     setSelectedRecordingId(null);
     setSelectedAssignmentId(null);
   };
+
+  useEffect(() => {
+    if (initialQuizId && data) {
+      selectQuiz(initialQuizId);
+    }
+  }, [initialQuizId, data]);
+
+  useEffect(() => {
+    if (initialAssignmentId && data) {
+      for (const mod of data.modules) {
+        const assignment = mod.assignments.find((a) => a.id === initialAssignmentId);
+        if (assignment) {
+          selectAssignment(assignment);
+          if (!expandedModules.has(mod.id)) {
+            setExpandedModules((prev) => new Set([...prev, mod.id]));
+          }
+          setSelectedModuleId(mod.id);
+          break;
+        }
+      }
+    }
+  }, [initialAssignmentId, data]);
+
+  useEffect(() => {
+    if (initialResourceUrl && initialResourceName && data) {
+      selectResource(initialResourceName, initialResourceUrl);
+    }
+  }, [initialResourceUrl, initialResourceName, data]);
 
   const clearQuizPreview = () => {
     setSelectedQuizId(null);

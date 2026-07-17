@@ -12,6 +12,7 @@ interface Assignment {
   description: string | null;
   dueDate: string | null;
   maxPoints: number;
+  questionPdfUrl?: string | null;
 }
 
 interface AssignmentCardProps {

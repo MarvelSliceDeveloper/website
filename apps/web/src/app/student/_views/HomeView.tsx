@@ -312,22 +312,22 @@ export default function HomeView({
       {/* ── In-line Menu ────────────────────────────────────────────────── */}
       <div className="border-b border-border/70">
         <nav className="flex flex-wrap gap-6 text-sm font-semibold">
-          {[
-            { id: "courses", label: "My Courses" },
-            { id: "calendar", label: "Calendar" },
-            { id: "sessions", label: "My Sessions" },
+          {([
+            { id: "courses" as const, label: "My Courses" },
+            { id: "calendar" as const, label: "Calendar" },
+            { id: "sessions" as const, label: "My Sessions" },
             {
-              id: "notifications",
+              id: "notifications" as const,
               label: `Notifications ${overdueTotal > 0 ? `(${overdueTotal})` : ""
                 }`,
             },
-            { id: "support", label: "Mentorship" },
-          ].map((tab) => {
+            { id: "support" as const, label: "Mentorship" },
+          ] as const).map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id)}
                 className={`pb-3 relative transition-colors ${isActive
                   ? "text-primary font-bold"
                   : "text-muted hover:text-foreground"

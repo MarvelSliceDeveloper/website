@@ -33,7 +33,7 @@ export default function QuizTemplateEditorPage() {
             title: string;
             description: string | null;
             category: string | null;
-            questions: any[];
+            questions: QuestionForm[];
           };
         }>(`/api/admin/quiz-templates/${id}`)
         .then((data) => {
@@ -42,10 +42,10 @@ export default function QuizTemplateEditorPage() {
           setDescription(t.description || "");
           setCategory(t.category || "");
           setQuestions(
-            t.questions.map((q: any) => ({
+            t.questions.map((q) => ({
               text: q.text,
               marks: q.marks,
-              options: q.options.map((o: any) => ({
+              options: q.options.map((o) => ({
                 optionText: o.optionText,
                 isCorrect: o.isCorrect,
               })),

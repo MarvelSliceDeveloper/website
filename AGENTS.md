@@ -234,6 +234,62 @@ _components/
 - Conventional commits: `feat:`, `fix:`, `docs:`, etc.
 - Format with `pnpm format` before commit
 
+## React / Next.js Code Quality
+
+### Required Route Files
+
+Each route segment should have:
+
+- **`error.tsx`** — Client component (`"use client"`) that catches errors and shows a reset button. Pattern:
+  ```tsx
+  "use client";
+  export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+    return <button onClick={reset}>Try again</button>;
+  }
+  ```
+- **`loading.tsx`** — Server component (no `"use client"`) for Suspense fallback. Shows a spinner.
+
+Existing at: root, `/student`, `/admin`, `/instructor`.
+
+### `"use client"` Rules
+
+- Only add `"use client"` when the component uses **React hooks** (`useState`, `useEffect`), **event handlers**, or **browser APIs**.
+- **Do NOT** add `"use client"` to pure presentational components (e.g. `StatCard.tsx`, `LoadingSkeleton.tsx`, `StudentTable.tsx`) — they can be Server Components.
+
+### State Mutations — Immutable Patterns
+
+When updating arrays/objects in state, **never mutate directly**:
+
+```tsx
+// ❌ BAD — mutates state directly
+questions[qIndex].options.push(newOption);
+updated[qIndex].options[qIndex] = { ... };
+
+// ✅ GOOD — immutable update
+setQuestions(prev => prev.map((q, i) =>
+  i === qIndex ? { ...q, options: [...q.options, newOption] } : q
+));
+```
+
+### `any` Type Avoidance
+
+- **Never** use `: any` type annotations. Use `unknown` + narrowing instead.
+- For catch blocks: `catch (err: unknown)` then `err instanceof Error ? err.message : fallback`.
+- Use `getErrorMessage(err: unknown)` from `@/lib/toast` for API errors.
+- For jsPDF autoTable `lastAutoTable.finalY` — use the type declaration in `src/types/jspdf-autotable.d.ts` (augments jsPDF module with `lastAutoTable?: { finalY: number }`).
+
+### Array Keys
+
+- Use stable, unique keys (not array indices) for dynamic lists that can reorder or have items removed/added.
+- Key with `index` is acceptable only for **static, never-reordered** lists.
+
+## Code Architecture
+
+### Type Declarations
+
+Project-level `.d.ts` files live in `apps/web/src/types/`:
+- `jspdf-autotable.d.ts` — Augments `jsPDF` interface with `lastAutoTable` property
+
 ## Common Gotchas
 
 - **Postgres port**: Use `5433` in `DATABASE_URL` (docker-compose maps 5433→5432)
