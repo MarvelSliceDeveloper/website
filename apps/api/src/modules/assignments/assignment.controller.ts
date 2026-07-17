@@ -3,36 +3,25 @@ import { ZodError } from "zod";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import {
   assignmentService,
-  CreateQuizSchema,
   CreateFileAssignmentSchema,
-  SubmitMcqAnswersSchema,
   GradeSubmissionSchema,
 } from "./assignment.service";
 import { buildAssignmentFileUrl } from "./assignment.upload";
 
 export const assignmentController = {
-  // POST /api/assignments — creates a new quiz or assignment
+  // POST /api/assignments — creates a new file-based assignment
   async create(req: AuthRequest, res: Response) {
     try {
       if (!req.user)
         return res.status(401).json({ error: "Authentication required" });
 
-      if (req.body.type === "ASSIGNMENT") {
-        const data = CreateFileAssignmentSchema.parse(req.body);
-        const assignment = await assignmentService.createFileAssignment(
-          req.user.userId,
-          data,
-          data.questionPdfUrl,
-        );
-        return res.status(201).json({ assignment });
-      } else {
-        const data = CreateQuizSchema.parse(req.body);
-        const assignment = await assignmentService.createQuiz(
-          req.user.userId,
-          data,
-        );
-        return res.status(201).json({ assignment });
-      }
+      const data = CreateFileAssignmentSchema.parse(req.body);
+      const assignment = await assignmentService.createFileAssignment(
+        req.user.userId,
+        data,
+        data.questionPdfUrl,
+      );
+      return res.status(201).json({ assignment });
     } catch (error: any) {
       if (error instanceof ZodError) {
         return res.status(400).json({ error: error.errors });
@@ -68,74 +57,6 @@ export const assignmentController = {
     } catch (error: any) {
       console.error("Error listing assignments:", error.message);
       return res.status(500).json({ error: "Failed to list assignments" });
-    }
-  },
-
-  // GET /api/assignments/:id/questions — gets questions for an assignment
-  async getQuestions(req: AuthRequest, res: Response) {
-    try {
-      if (!req.user)
-        return res.status(401).json({ error: "Authentication required" });
-
-      const isInstructor =
-        req.user.role === "INSTRUCTOR" || req.user.role === "ADMIN";
-      const data = await assignmentService.getAssignmentQuestions(
-        req.params.id,
-        req.user.userId,
-        isInstructor,
-      );
-
-      return res.status(200).json(data);
-    } catch (error: any) {
-      if (
-        error.message.includes("not enrolled") ||
-        error.message.includes("Access denied")
-      ) {
-        return res.status(403).json({ error: error.message });
-      }
-      if (error.message.includes("not found")) {
-        return res.status(404).json({ error: error.message });
-      }
-      console.error("Error getting assignment questions:", error.message);
-      return res.status(500).json({ error: "Failed to get questions" });
-    }
-  },
-
-  // POST /api/assignments/:id/submit/mcq — submits MCQ answers for grading
-  async submitMcq(req: AuthRequest, res: Response) {
-    try {
-      if (!req.user)
-        return res.status(401).json({ error: "Authentication required" });
-      if (req.user.role !== "STUDENT") {
-        return res
-          .status(403)
-          .json({ error: "Only students can submit assignments" });
-      }
-
-      const { answers } = SubmitMcqAnswersSchema.parse(req.body);
-      const submission = await assignmentService.submitMcqAnswers(
-        req.user.userId,
-        req.params.id,
-        answers,
-      );
-
-      return res.status(200).json({ submission });
-    } catch (error: any) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      if (
-        error.message.includes("due date has passed") ||
-        error.message.includes("already submitted") ||
-        error.message.includes("not enrolled")
-      ) {
-        return res.status(400).json({ error: error.message });
-      }
-      if (error.message.includes("not found")) {
-        return res.status(404).json({ error: error.message });
-      }
-      console.error("Error submitting answers:", error.message);
-      return res.status(500).json({ error: "Failed to submit answers" });
     }
   },
 

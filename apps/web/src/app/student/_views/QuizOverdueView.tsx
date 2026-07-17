@@ -94,14 +94,14 @@ export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewPr
       .map((q) => ({ ...q, status: "SUBMITTED" as const })),
   ];
 
-  async function handleStartQuiz(assignmentId: string) {
+  async function handleStartQuiz(quizId: string) {
     try {
       setLoading(true);
       const data = await api.get<AssignmentQuestions>(
-        `/api/assignments/${assignmentId}/questions`,
+        `/api/courses/quizzes/${quizId}/questions`,
       );
       setSelectedAnswers({});
-      setSubView({ type: "QUIZ", assignmentId, data });
+      setSubView({ type: "QUIZ", assignmentId: quizId, data });
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -109,13 +109,44 @@ export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewPr
     }
   }
 
-  async function handleViewResult(submissionId: string) {
+  async function handleViewResult(quizId: string) {
     try {
       setLoading(true);
-      const resultRes = await api.get<{ result: SubmissionResult }>(
-        `/api/assignments/submissions/${submissionId}/result`,
+      const attemptRes = await api.get<{
+        attemptId: string;
+        score: number;
+        total: number;
+        percentage: number;
+        answers: Array<{ questionId: string; selectedOptionId: string; isCorrect: boolean }>;
+      }>(`/api/courses/quizzes/${quizId}/attempt`);
+
+      const questionsRes = await api.get<AssignmentQuestions>(
+        `/api/courses/quizzes/${quizId}/questions`,
       );
-      setSubView({ type: "RESULT", data: resultRes.result });
+
+      const result: SubmissionResult = {
+        id: attemptRes.attemptId,
+        status: "GRADED",
+        totalScore: attemptRes.score,
+        grade: null,
+        feedback: null,
+        assignment: {
+          title: questionsRes.title,
+          maxPoints: questionsRes.maxPoints,
+          questions: questionsRes.questions.map((q) => ({
+            id: q.id,
+            questionText: q.questionText,
+            marks: q.marks,
+            options: q.options.map((o) => ({
+              id: o.id,
+              optionText: o.optionText,
+              isCorrect: false,
+            })),
+          })),
+        },
+        questionResponses: attemptRes.answers,
+      };
+      setSubView({ type: "RESULT", data: result });
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -144,16 +175,39 @@ export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewPr
 
     try {
       setSubmitting(true);
-      const res = await api.post<{ submission: { id: string } }>(
-        `/api/assignments/${assignmentId}/submit/mcq`,
-        { answers },
-      );
 
-      const resultRes = await api.get<{ result: SubmissionResult }>(
-        `/api/assignments/submissions/${res.submission.id}/result`,
-      );
+      const res = await api.post<{
+        attemptId: string;
+        score: number;
+        total: number;
+        percentage: number;
+        answers: Array<{ questionId: string; selectedOptionId: string; isCorrect: boolean }>;
+      }>(`/api/courses/quizzes/${assignmentId}/submit`, { answers });
+
+      const result: SubmissionResult = {
+        id: res.attemptId,
+        status: "GRADED",
+        totalScore: res.score,
+        grade: null,
+        feedback: null,
+        assignment: {
+          title: data.title,
+          maxPoints: data.maxPoints,
+          questions: data.questions.map((q) => ({
+            id: q.id,
+            questionText: q.questionText,
+            marks: q.marks,
+            options: q.options.map((o) => ({
+              id: o.id,
+              optionText: o.optionText,
+              isCorrect: false,
+            })),
+          })),
+        },
+        questionResponses: res.answers,
+      };
       setLocallySubmittedIds((prev) => [...prev, assignmentId]);
-      setSubView({ type: "RESULT", data: resultRes.result });
+      setSubView({ type: "RESULT", data: result });
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -595,12 +649,12 @@ export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewPr
                             >
                               Start Quiz
                             </button>
-                          ) : quiz.submissionId ? (
+                          ) : quiz.courseId && navigate ? (
                             <button
-                              onClick={() => handleViewResult(quiz.submissionId!)}
+                              onClick={() => navigate({ view: "COURSE_CONTENT", params: { courseId: quiz.courseId, quizId: quiz.id } })}
                               className="btn-secondary text-xs px-3 py-1.5"
                             >
-                              View Score
+                              View
                             </button>
                           ) : (
                             <span className="text-[11px] font-medium text-emerald-400">Submitted</span>

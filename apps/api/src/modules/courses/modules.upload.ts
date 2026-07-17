@@ -4,8 +4,8 @@ import path from "path";
 import type { Request } from "express";
 import multer from "multer";
 
-export const MODULE_RESOURCE_FIELD = "resource";
-export const MAX_RESOURCE_BYTES = 50 * 1024 * 1024; // 50MB
+const MODULE_RESOURCE_FIELD = "resource";
+const MAX_RESOURCE_BYTES = 50 * 1024 * 1024; // 50MB
 
 const allowedMimeTypes = new Set([
   "application/pdf",
@@ -68,23 +68,6 @@ const fileFilter: multer.Options["fileFilter"] = (_req, file, cb) => {
   }
   return cb(null, true);
 };
-
-export const uploadModuleResource = multer({
-  storage,
-  fileFilter,
-  limits: { fileSize: MAX_RESOURCE_BYTES },
-}).single(MODULE_RESOURCE_FIELD);
-
-export function buildModuleResourceUrl(
-  req: Request,
-  courseId: string,
-  moduleId: string,
-  filename: string,
-) {
-  const host = req.get("host");
-  const protocol = req.protocol;
-  return `${protocol}://${host}/uploads/modules/${courseId}/${moduleId}/${filename}`;
-}
 
 const lessonStorage = multer.diskStorage({
   destination: (req, _file, cb) => {

@@ -56,16 +56,15 @@ export const studentService = {
 
     const uniqueBatchIds = [...new Set(batchIds)];
     const uniqueCourseIds = [...new Set(courseIds)];
-    const now = new Date();
 
     const result: OverdueAssignmentItem[] = [];
+    const seenAssignmentIds = new Set<string>();
 
     // ── Batch Assignment model overdue items ──────────────────────────
     if (uniqueBatchIds.length > 0) {
       const assignments = await prisma.assignment.findMany({
         where: {
           batchId: { in: uniqueBatchIds },
-          dueDate: { lt: now },
         },
         include: {
           course: { select: { title: true } },
@@ -81,6 +80,7 @@ export const studentService = {
 
       for (const assignment of assignments) {
         const submission = assignment.submissions[0];
+        seenAssignmentIds.add(assignment.id);
         result.push({
           id: assignment.id,
           courseId: assignment.courseId,
@@ -96,7 +96,7 @@ export const studentService = {
       }
     }
 
-    // ── Course-content items (Quiz + Assignment in modules) ──────────
+    // ── Course-content assignments (Assignment model with a moduleId) ──
     const courseModules = await prisma.module.findMany({
       where: { courseId: { in: uniqueCourseIds } },
       select: { id: true, title: true, courseId: true },
@@ -105,51 +105,10 @@ export const studentService = {
     const moduleMap = new Map(courseModules.map((m) => [m.id, m]));
 
     if (moduleIds.length > 0) {
-      const courseQuizRecords = await prisma.quiz.findMany({
-        where: {
-          moduleId: { in: moduleIds },
-          OR: [
-            { dueDate: { lt: now } },
-            { dueDate: null },
-          ],
-        },
-        select: {
-          id: true,
-          title: true,
-          dueDate: true,
-          moduleId: true,
-          attempts: {
-            where: { userId, status: "SUBMITTED" },
-            select: { id: true, status: true },
-            take: 1,
-          },
-        },
-        orderBy: { dueDate: "desc" },
-      });
-
-      for (const quiz of courseQuizRecords) {
-        const mod = moduleMap.get(quiz.moduleId);
-        const courseId = mod?.courseId ?? "";
-        result.push({
-          id: quiz.id,
-          courseId,
-          courseName: courseNameMap.get(courseId) ?? "—",
-          moduleName: mod?.title ?? "—",
-          unitName: "Quiz",
-          assignmentName: quiz.title,
-          dueDate: quiz.dueDate?.toISOString() ?? new Date().toISOString(),
-          status: quiz.attempts.length > 0 ? "SUBMITTED" : "PENDING",
-          type: "QUIZ",
-          submissionId: quiz.attempts[0]?.id ?? null,
-        });
-      }
-
-      // Assignment model records with no batchId (course-content assignments)
+      // Course-content assignments (Assignment model with a moduleId)
       const courseAssignments = await prisma.assignment.findMany({
         where: {
           moduleId: { in: moduleIds },
-          batchId: { in: ["", null] },
-          dueDate: { lt: now },
         },
         select: {
           id: true,
@@ -168,9 +127,10 @@ export const studentService = {
       });
 
       for (const assignment of courseAssignments) {
-        const mod = moduleMap.get(assignment.moduleId);
+        if (seenAssignmentIds.has(assignment.id)) continue;
+        const mod = assignment.moduleId ? moduleMap.get(assignment.moduleId) : null;
         const courseId = assignment.courseId;
-        const submission = assignment.submissions[0];
+        const submission = (assignment as any).submissions?.[0];
         result.push({
           id: assignment.id,
           courseId,
@@ -182,6 +142,41 @@ export const studentService = {
           status: submission ? "SUBMITTED" : "PENDING",
           type: assignment.type as "QUIZ" | "ASSIGNMENT",
           submissionId: submission?.id ?? null,
+        });
+      }
+    }
+
+    // ── Course-content Quiz model quizzes ──────────────────────────────
+    if (moduleIds.length > 0) {
+      const quizModelQuizzes = await prisma.quiz.findMany({
+        where: {
+          moduleId: { in: moduleIds },
+          dueDate: { not: null },
+        },
+        include: {
+          module: { select: { title: true } },
+          attempts: {
+            where: { userId, status: "SUBMITTED" },
+            select: { id: true },
+            take: 1,
+          },
+        },
+        orderBy: { dueDate: "desc" },
+      });
+
+      for (const quiz of quizModelQuizzes) {
+        const attempt = quiz.attempts[0];
+        result.push({
+          id: quiz.id,
+          courseId: moduleMap.get(quiz.moduleId)?.courseId ?? "",
+          courseName: courseNameMap.get(moduleMap.get(quiz.moduleId)?.courseId ?? "") ?? "—",
+          moduleName: quiz.module?.title ?? "—",
+          unitName: "Quiz",
+          assignmentName: quiz.title,
+          dueDate: (quiz.dueDate as Date).toISOString(),
+          status: attempt ? "SUBMITTED" : "PENDING",
+          type: "QUIZ",
+          submissionId: attempt?.id ?? null,
         });
       }
     }

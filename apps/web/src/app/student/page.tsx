@@ -89,6 +89,7 @@ interface ApiMentorshipTicket {
   title: string;
   status: string;
   createdAt: string;
+  preferredTime?: string | null;
   notes?: string | null;
   joinUrl?: string | null;
   course?: { title: string } | null;
@@ -221,6 +222,7 @@ async function fetchPortalData(): Promise<PortalData> {
         topic: t.title,
         status: t.status as MentorshipTicket["status"],
         createdAt: t.createdAt,
+        preferredTime: t.preferredTime || undefined,
         notes: t.notes || undefined,
         instructor: t.mentor?.name || undefined,
         joinUrl: t.joinUrl || undefined,
@@ -468,7 +470,11 @@ function StudentPortalContent() {
       case "course-content":
         return {
           view: "COURSE_CONTENT",
-          params: { courseId: searchParams.get("courseId") ?? undefined },
+          params: {
+            courseId: searchParams.get("courseId") ?? undefined,
+            quizId: searchParams.get("quizId") ?? undefined,
+            assignmentId: searchParams.get("assignmentId") ?? undefined,
+          },
         };
       case "assignments":
         return { view: "ASSIGNMENT_OVERDUE" };
@@ -742,6 +748,7 @@ function StudentPortalContent() {
             sectionApiAvailability={sectionApiAvailability}
             firstBatchId={firstBatchId}
             navigate={navigate}
+            onMentorshipSubmit={handleMentorshipSubmit}
           />
         );
       }
@@ -817,6 +824,7 @@ function StudentPortalContent() {
             navigate={navigate}
             goBack={goBack}
             initialQuizId={currentView.params?.quizId}
+            initialAssignmentId={currentView.params?.assignmentId}
             initialResourceUrl={currentView.params?.resourceUrl}
             initialResourceName={currentView.params?.resourceName}
           />
@@ -829,6 +837,7 @@ function StudentPortalContent() {
             assignments={portalData.overdueAssignments.filter(
               (a) => a.type === "ASSIGNMENT",
             )}
+            navigate={navigate}
           />
         );
 

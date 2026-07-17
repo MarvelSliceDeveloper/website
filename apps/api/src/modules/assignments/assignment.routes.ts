@@ -9,7 +9,7 @@ const router = Router();
 // All assignment routes require authentication
 router.use(requireAuth);
 
-// POST /api/assignments — create a new assignment (admins + instructors)
+// POST /api/assignments — create a new file-based assignment (admins + instructors)
 router.post(
   "/",
   requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
@@ -26,16 +26,6 @@ router.post(
 
 // GET /api/assignments — list assignments
 router.get("/", assignmentController.list);
-
-// GET /api/assignments/:id/questions — get assignment questions
-router.get("/:id/questions", assignmentController.getQuestions);
-
-// POST /api/assignments/:id/submit/mcq — submit MCQ responses (student only)
-router.post(
-  "/:id/submit/mcq",
-  requireRole([UserRole.STUDENT]),
-  assignmentController.submitMcq,
-);
 
 // POST /api/assignments/:id/submit/file — submit answer file (student only)
 router.post(

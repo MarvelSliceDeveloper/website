@@ -95,20 +95,12 @@ export interface CourseContentData {
   overallProgress: number;
 }
 
-export interface Note {
-  id: string;
-  title: string;
-  body: string;
-  createdAt: string;
-}
-
-export type RailTab = "lesson" | "editor" | "note" | "session" | "resource";
-
 export interface CourseContentViewProps {
   courseId: string;
   navigate: (v: ViewState) => void;
   goBack: () => void;
   initialQuizId?: string;
+  initialAssignmentId?: string;
   initialResourceUrl?: string;
   initialResourceName?: string;
 }

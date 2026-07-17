@@ -96,6 +96,7 @@ export default function CourseContentView({
   courseId,
   goBack,
   initialQuizId,
+  initialAssignmentId,
   initialResourceUrl,
   initialResourceName,
 }: CourseContentViewProps) {
@@ -191,6 +192,22 @@ export default function CourseContentView({
       selectQuiz(initialQuizId);
     }
   }, [initialQuizId, data]);
+
+  useEffect(() => {
+    if (initialAssignmentId && data) {
+      for (const mod of data.modules) {
+        const assignment = mod.assignments.find((a) => a.id === initialAssignmentId);
+        if (assignment) {
+          selectAssignment(assignment);
+          if (!expandedModules.has(mod.id)) {
+            setExpandedModules((prev) => new Set([...prev, mod.id]));
+          }
+          setSelectedModuleId(mod.id);
+          break;
+        }
+      }
+    }
+  }, [initialAssignmentId, data]);
 
   useEffect(() => {
     if (initialResourceUrl && initialResourceName && data) {

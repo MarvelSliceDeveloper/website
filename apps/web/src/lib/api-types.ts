@@ -92,6 +92,7 @@ export interface MentorshipTicket {
   topic: string;
   status: TicketStatus;
   createdAt: string;
+  preferredTime?: string;
   notes?: string;
   instructor?: string;
   joinUrl?: string;

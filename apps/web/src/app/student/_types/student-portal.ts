@@ -24,6 +24,7 @@ export interface ViewState {
     moduleId?: string;
     ticketId?: string;
     quizId?: string;
+    assignmentId?: string;
     resourceUrl?: string;
     resourceName?: string;
   };

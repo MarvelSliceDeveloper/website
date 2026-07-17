@@ -127,6 +127,46 @@ Module header shows total item count: `{lessons + quizzes + assignments} items`.
 
 **Note:** The `LessonSidebar.tsx` extracted component exists in `_comps/` but the production sidebar is inline in `CourseContentView.tsx`.
 
+### CourseContentView Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `initialQuizId` | `string?` | If set, auto-selects the matching quiz in the sidebar on mount |
+| `initialAssignmentId` | `string?` | If set, auto-selects the matching assignment in the sidebar on mount |
+| `initialShowSubmit` | `boolean?` | If `true`, opens the submit dialog immediately on mount |
+
+Both `initialQuizId` and `initialAssignmentId` use `useEffect` to find the item in the loaded module data and call `selectQuiz()` / `selectAssignment()` respectively.
+
+## Student Portal — Overdue / Assignment Views
+
+### Overdue API
+
+`GET /api/student/assignments/overdue`
+
+Returns **all** quizzes and assignments (not just overdue items). The frontend handles Pending vs Completed tabs locally.
+
+Quizzes (type `QUIZ`) come from the **Quiz model** and use Quiz model API routes:
+- Questions: `GET /api/courses/quizzes/:quizId/questions`
+- Submit: `POST /api/courses/quizzes/:quizId/submit`
+- Attempt: `GET /api/courses/quizzes/:quizId/attempt`
+
+Assignments (type `ASSIGNMENT`) come from the **Assignment model** and use Assignment model file upload routes:
+- Submit: `POST /api/assignments/:id/submit/file`
+
+### QuizOverdueView Navigation
+
+- **"Start Quiz"** fetches questions from Quiz model, takes MCQ submission via Quiz model routes
+- **"View"** button navigates to `COURSE_CONTENT` view with `quizId` param — opens the quiz in CourseContentView sidebar
+
+### AssignmentOverdueView Navigation
+
+- **"View"** button navigates to `COURSE_CONTENT` view with `assignmentId` param — opens the assignment in CourseContentView sidebar
+- **"Submit"** button opens the file upload UI (same as before)
+
+### ViewState — `assignmentId` param
+
+`assignmentId` is a recognized param in the `StudentViewState` discriminated union (`apps/web/src/app/student/_types/student-portal.ts`). It follows the same pattern as `quizId` — parsed from URL hash and forwarded to `CourseContentView` as `initialAssignmentId`.
+
 ## Admin Course Builder
 
 The admin course detail page (`apps/web/src/app/admin/courses/[id]/`) is organized into tabbed sections:

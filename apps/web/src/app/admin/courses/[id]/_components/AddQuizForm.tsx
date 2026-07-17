@@ -47,28 +47,41 @@ export default function AddQuizForm({
   };
 
   const addOption = (qIndex: number) => {
-    const updated = [...questions];
-    updated[qIndex].options.push({ label: "", isCorrect: false });
-    setQuestions(updated);
+    setQuestions(
+      questions.map((q, i) =>
+        i === qIndex
+          ? { ...q, options: [...q.options, { label: "", isCorrect: false }] }
+          : q,
+      ),
+    );
   };
 
   const removeOption = (qIndex: number, oIndex: number) => {
     if (questions[qIndex].options.length > 1) {
-      const updated = [...questions];
-      updated[qIndex].options = updated[qIndex].options.filter(
-        (_, i) => i !== oIndex,
+      setQuestions(
+        questions.map((q, i) =>
+          i === qIndex
+            ? { ...q, options: q.options.filter((_, oi) => oi !== oIndex) }
+            : q,
+        ),
       );
-      setQuestions(updated);
     }
   };
 
   const setCorrectOption = (qIndex: number, oIndex: number) => {
-    const updated = [...questions];
-    updated[qIndex].options = updated[qIndex].options.map((opt, i) => ({
-      ...opt,
-      isCorrect: i === oIndex,
-    }));
-    setQuestions(updated);
+    setQuestions(
+      questions.map((q, i) =>
+        i === qIndex
+          ? {
+              ...q,
+              options: q.options.map((opt, oi) => ({
+                ...opt,
+                isCorrect: oi === oIndex,
+              })),
+            }
+          : q,
+      ),
+    );
   };
 
   const handleSubmit = async () => {
@@ -160,9 +173,13 @@ export default function AddQuizForm({
               type="text"
               value={q.text}
               onChange={(e) => {
-                const updated = [...questions];
-                updated[qIndex].text = e.target.value;
-                setQuestions(updated);
+                setQuestions(
+                  questions.map((question, i) =>
+                    i === qIndex
+                      ? { ...question, text: e.target.value }
+                      : question,
+                  ),
+                );
               }}
               placeholder="Enter question"
               className="field"
@@ -185,9 +202,20 @@ export default function AddQuizForm({
                     type="text"
                     value={opt.label}
                     onChange={(e) => {
-                      const updated = [...questions];
-                      updated[qIndex].options[oIndex].label = e.target.value;
-                      setQuestions(updated);
+                      setQuestions(
+                        questions.map((question, qi) =>
+                          qi === qIndex
+                            ? {
+                                ...question,
+                                options: question.options.map((option, oi) =>
+                                  oi === oIndex
+                                    ? { ...option, label: e.target.value }
+                                    : option,
+                                ),
+                              }
+                            : question,
+                        ),
+                      );
                     }}
                     placeholder={`Option ${oIndex + 1}`}
                     className="field flex-1"

@@ -438,7 +438,7 @@ export default function ReportsPage() {
           styles: { fontSize: 9, cellPadding: 3 },
           margin: { left: 20, right: 20 },
         });
-        y = (doc as any).lastAutoTable.finalY + 10;
+        y = doc.lastAutoTable!.finalY + 10;
       } else {
         doc.setFontSize(9);
         doc.setFont("helvetica", "italic");
@@ -475,7 +475,7 @@ export default function ReportsPage() {
           styles: { fontSize: 9, cellPadding: 3 },
           margin: { left: 20, right: 20 },
         });
-        y = (doc as any).lastAutoTable.finalY + 10;
+        y = doc.lastAutoTable!.finalY + 10;
       } else {
         doc.setFontSize(9);
         doc.setFont("helvetica", "italic");
@@ -515,7 +515,7 @@ export default function ReportsPage() {
           styles: { fontSize: 9, cellPadding: 3 },
           margin: { left: 20, right: 20 },
         });
-        y = (doc as any).lastAutoTable.finalY + 10;
+        y = doc.lastAutoTable!.finalY + 10;
       } else {
         doc.setFontSize(9);
         doc.setFont("helvetica", "italic");
@@ -549,7 +549,7 @@ export default function ReportsPage() {
           styles: { fontSize: 9, cellPadding: 3 },
           margin: { left: 20, right: 20 },
         });
-        y = (doc as any).lastAutoTable.finalY + 10;
+        y = doc.lastAutoTable!.finalY + 10;
       } else {
         doc.setFontSize(9);
         doc.setFont("helvetica", "italic");
@@ -612,7 +612,7 @@ export default function ReportsPage() {
           },
           margin: { left: 20, right: 20 },
         });
-        y = (doc as any).lastAutoTable.finalY + 10;
+        y = doc.lastAutoTable!.finalY + 10;
       } else {
         doc.setFontSize(9);
         doc.setFont("helvetica", "italic");

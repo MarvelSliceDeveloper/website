@@ -30,6 +30,7 @@ import type {
   EnrolledCourse,
   CalendarEvent,
 } from "@/lib/api-types";
+import { toast } from "@/lib/toast";
 import StudentStatTiles from "@/components/student/StudentStatTiles";
 
 interface HomeViewProps {
@@ -53,6 +54,11 @@ interface HomeViewProps {
   };
   firstBatchId?: string;
   navigate: (v: ViewState) => void;
+  onMentorshipSubmit?: (
+    courseId: string,
+    topic: string,
+    preferredDate: string,
+  ) => Promise<void>;
 }
 
 export default function HomeView({
@@ -66,6 +72,7 @@ export default function HomeView({
   studentName = "Student",
   firstBatchId,
   navigate,
+  onMentorshipSubmit,
 }: HomeViewProps) {
   const now = new Date();
   const router = useRouter();
@@ -89,6 +96,13 @@ export default function HomeView({
   const [referralName, setReferralName] = useState("");
   const [referralEmail, setReferralEmail] = useState("");
   const [referralPhone, setReferralPhone] = useState("");
+
+  const [mentorCourseId, setMentorCourseId] = useState(
+    enrolledCourses[0]?.id ?? "",
+  );
+  const [mentorTopic, setMentorTopic] = useState("");
+  const [mentorDateTime, setMentorDateTime] = useState("");
+  const [mentorSubmitting, setMentorSubmitting] = useState(false);
 
   const liveCount = liveSessionsToday.filter((s) => s.status === "LIVE").length;
   const openTicketCount = openTickets.filter(
@@ -962,9 +976,24 @@ export default function HomeView({
             <div className="glass-card p-5 border border-border/80 rounded-2xl bg-card space-y-4">
               <p className="sp-eyebrow">Book 1-on-1 Mentorship</p>
               <form
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
-                  alert("Mentorship booking requested successfully!");
+                  if (!mentorTopic.trim()) return;
+                  setMentorSubmitting(true);
+                  try {
+                    await onMentorshipSubmit?.(
+                      mentorCourseId,
+                      mentorTopic,
+                      mentorDateTime,
+                    );
+                    toast.success("Mentorship request submitted!");
+                    setMentorTopic("");
+                    setMentorDateTime("");
+                  } catch {
+                    toast.error("Failed to submit request");
+                  } finally {
+                    setMentorSubmitting(false);
+                  }
                 }}
                 className="space-y-3.5"
               >
@@ -972,7 +1001,11 @@ export default function HomeView({
                   <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     Select Course
                   </label>
-                  <select className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none">
+                  <select
+                    value={mentorCourseId}
+                    onChange={(e) => setMentorCourseId(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                  >
                     {enrolledCourses.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.title}
@@ -987,6 +1020,8 @@ export default function HomeView({
                   <textarea
                     rows={3}
                     placeholder="Describe what you want to learn or discuss with your mentor..."
+                    value={mentorTopic}
+                    onChange={(e) => setMentorTopic(e.target.value)}
                     className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
                     required
                   />
@@ -997,20 +1032,23 @@ export default function HomeView({
                   </label>
                   <input
                     type="datetime-local"
+                    value={mentorDateTime}
+                    onChange={(e) => setMentorDateTime(e.target.value)}
                     className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
                     required
                   />
                 </div>
                 <button
                   type="submit"
-                  className="w-full btn-primary py-2.5 text-sm font-semibold shadow-md mt-1"
+                  disabled={mentorSubmitting}
+                  className="w-full btn-primary py-2.5 text-sm font-semibold shadow-md mt-1 disabled:opacity-50"
                 >
-                  Request Session
+                  {mentorSubmitting ? "Submitting..." : "Request Session"}
                 </button>
               </form>
             </div>
 
-            {/* Tickets Status */}
+            {/* Tickets Status — Mentorship Log */}
             <div className="glass-card p-5 border border-border/80 rounded-2xl bg-card space-y-4">
               <div className="flex items-center justify-between">
                 <p className="sp-eyebrow">Mentorship Log</p>
@@ -1021,55 +1059,120 @@ export default function HomeView({
                 )}
               </div>
               <div className="space-y-3">
-                {openTickets.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-6 text-center text-muted">
-                    <IconHeart size={28} className="mb-2 text-muted/60" />
-                    <p className="text-xs font-semibold">
-                      No booking log found
-                    </p>
-                  </div>
-                ) : (
-                  openTickets.map((t) => {
-                    const isActive =
+                {(() => {
+                  const active = openTickets.filter(
+                    (t) =>
                       t.status === "OPEN" ||
                       t.status === "ASSIGNED" ||
-                      t.status === "SCHEDULED";
+                      t.status === "SCHEDULED",
+                  );
+                  const past = openTickets.filter(
+                    (t) =>
+                      t.status === "COMPLETED" || t.status === "CANCELLED",
+                  );
+
+                  if (active.length === 0 && past.length === 0) {
                     return (
-                      <div
-                        key={t.id}
-                        className="p-3 rounded-xl border border-border bg-card/60"
-                      >
-                        <p className="font-bold text-xs text-foreground truncate">
-                          {t.topic}
+                      <div className="flex flex-col items-center justify-center py-6 text-center text-muted">
+                        <IconHeart
+                          size={28}
+                          className="mb-2 text-muted/60"
+                        />
+                        <p className="text-xs font-semibold">
+                          No booking log found
                         </p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">
-                          Course: {t.courseTitle} | Instructor:{" "}
-                          {t.instructor || "Assigning..."}
-                        </p>
-                        <div className="mt-2.5 flex items-center justify-between gap-2">
-                          <span
-                            className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${isActive
-                              ? "bg-primary/10 text-primary border-primary/20"
-                              : "bg-muted/10 text-muted border-border"
-                              }`}
-                          >
-                            {t.status}
-                          </span>
-                          {t.joinUrl && (
-                            <a
-                              href={t.joinUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="btn-primary py-1 px-2.5 text-[10px] font-bold"
-                            >
-                              Join Meeting
-                            </a>
-                          )}
-                        </div>
                       </div>
                     );
-                  })
-                )}
+                  }
+
+                  return (
+                    <>
+                      {active.length > 0 &&
+                        active.map((t) => (
+                          <div
+                            key={t.id}
+                            className="p-3 rounded-xl border border-border bg-card/60"
+                          >
+                            <p className="font-bold text-xs text-foreground truncate">
+                              {t.topic}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                              Course: {t.courseTitle} | Instructor:{" "}
+                              {t.instructor || "Assigning..."}
+                            </p>
+                            {t.preferredTime && (
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                Preferred:{" "}
+                                {new Date(
+                                  t.preferredTime,
+                                ).toLocaleDateString("en-IN", {
+                                  day: "numeric",
+                                  month: "short",
+                                })}
+                              </p>
+                            )}
+                            <div className="mt-2.5 flex items-center justify-between gap-2">
+                              <span
+                                className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${t.status === "OPEN"
+                                    ? "bg-warning/10 text-warning border-warning/20"
+                                    : t.status === "ASSIGNED"
+                                      ? "bg-accent/10 text-accent border-accent/20"
+                                      : "bg-success/10 text-success border-success/20"
+                                  }`}
+                              >
+                                {t.status}
+                              </span>
+                              {t.joinUrl && (
+                                <a
+                                  href={t.joinUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="btn-primary py-1 px-2.5 text-[10px] font-bold"
+                                >
+                                  Join Meeting
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      {past.length > 0 && (
+                        <>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="h-px flex-1 bg-border/60" />
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-muted">
+                              Past
+                            </span>
+                            <div className="h-px flex-1 bg-border/60" />
+                          </div>
+                          {past.map((t) => (
+                            <div
+                              key={t.id}
+                              className="p-3 rounded-xl border border-border/50 bg-card/30 opacity-70"
+                            >
+                              <p className="font-bold text-xs text-foreground truncate">
+                                {t.topic}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                Course: {t.courseTitle} | Instructor:{" "}
+                                {t.instructor || "N/A"}
+                              </p>
+                              <div className="mt-2.5">
+                                <span
+                                  className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${t.status === "COMPLETED"
+                                      ? "bg-primary/10 text-primary border-primary/20"
+                                      : "bg-muted/10 text-muted border-border"
+                                    }`}
+                                >
+                                  {t.status}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </div>

@@ -194,7 +194,7 @@ export default function CourseDetailsTab({
         </label>
         <div className="space-y-2 mb-2">
           {form.learningObjectives.map((obj, index) => (
-            <div key={index} className="flex items-center gap-2">
+            <div key={obj} className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">•</span>
               <span className="text-sm flex-1">{obj}</span>
               <button

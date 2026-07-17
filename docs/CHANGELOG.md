@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-07-17 - Quiz System Consolidation
+
+### Removed
+
+- **Assignment model quiz creation path eliminated.** Removed `createQuiz()`, `CreateQuizSchema`, `SubmitMcqAnswersSchema`, `submitMcqAnswers()`, and `getAssignmentQuestions()` from `assignments/assignment.service.ts`. Quizzes are now created exclusively via the Quiz model (`POST /api/admin/courses/modules/:moduleId/quizzes`).
+- **Assignment MCQ routes removed.** Removed `GET /api/assignments/:id/questions` and `POST /api/assignments/:id/submit/mcq` from routes and controller. Quiz MCQ submission now only goes through Quiz model routes (`/api/courses/quizzes/:id/submit`).
+- **`quizSystem` field removed.** The `quizSystem: "QUIZ_MODEL" | "ASSIGNMENT_MODEL"` discriminator was removed from `OverdueAssignmentItem` (API), `OverdueAssignment` (frontend type), and all `result.push()` calls in `student.service.ts`. Quizzes always use Quiz model routes; assignments always use Assignment model file upload.
+- **QuizOverdueView simplified.** Removed all `quizSystem` branching — `handleStartQuiz()`, `handleViewResult()`, and `handleSubmitMcq()` now always use Quiz model API routes (`/api/courses/quizzes/:id/...`).
+
+### Changed
+
+- **Assignment model is now file-upload only.** The `POST /api/assignments/` route now only accepts `CreateFileAssignmentSchema` (PDF questions, file-upload answers). The `type: "QUIZ"` creation path was removed.
+- **Remaining assignment routes:** `POST /` (file assignment creation), `POST /upload-pdf`, `GET /` (list), `POST /:id/submit/file`, `GET /submissions/:id/result`, `GET /:id/submissions`, `POST /submissions/:id/grade`.
+
+## 2026-07-17 - Unused Code Cleanup (Phase 1)
+
+### Removed
+
+- **21 dead files deleted.** Legacy student components (Sidebar.tsx, StudentShell.tsx, StudentTopNoticeBar.tsx, StudentSectionTabs.tsx, OverdueAssignmentsPanel.tsx), duplicate mentorship components (MentorshipTickets.tsx, MentorshipRequestModal.tsx), replaced course content sidebars (LessonSidebar.tsx, SessionSidebar.tsx), orphaned instructor assignment components (8 files across _comps/ and _components/), dead utilities (use-session-status.ts, dropdown-menu.tsx), and unnecessary test-page redirect.
+- **2 dead shared packages deleted.** `packages/utils/` (generateSlug, formatCurrency — never imported) and `packages/config/` (EnvSchema, EnvConfig — never imported). Removed `@lms/config` and `@lms/utils` from api/package.json.
+- **7 unused npm dependencies removed.** From web: `react-icons`, `recharts`, `plyr-react`, `@tiptap/extension-character-count`, `@radix-ui/react-dropdown-menu`. From api: `@lms/config`, `@lms/utils`.
+- **Dead exports cleaned.** `toast.ts` reduced to 2 exports (toast, getErrorMessage) from 9. Dead types `Note` and `RailTab` removed from student types. Dead `uploadModuleResource` and `buildModuleResourceUrl` removed from modules.upload.ts.
+- **4 empty directories removed.** `instructor/assignments/_comps/`, `instructor/assignments/_components/`, `test-page/`, `components/mentorship/`.
+
 ## 2026-07-17 - Cross-Type DnD, Quiz Fixes & Overdue Pipeline Fix
 
 ### Added

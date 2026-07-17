@@ -10,15 +10,19 @@ import {
   IconUpload,
   IconFile,
   IconX,
+  IconExternalLink,
 } from "@tabler/icons-react";
 import type { OverdueAssignment } from "@/lib/api-types";
+import type { ViewState } from "../_types/student-portal";
 
 interface AssignmentOverdueViewProps {
   assignments: OverdueAssignment[];
+  navigate?: (v: ViewState) => void;
 }
 
 export default function AssignmentOverdueView({
   assignments,
+  navigate,
 }: AssignmentOverdueViewProps) {
   const [uploading, setUploading] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -214,23 +218,34 @@ export default function AssignmentOverdueView({
                           )}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          {isPending ? (
-                            <button
-                              onClick={() =>
-                                isActive
-                                  ? (setActiveUploadId(null), setSelectedFile(null))
-                                  : handleOpenUpload(assignment.id)
-                              }
-                              className="btn-primary text-xs px-3 py-1.5"
-                            >
-                              <IconUpload size={13} className="inline mr-1" />
-                              {isActive ? "Cancel" : "Upload"}
-                            </button>
-                          ) : (
-                            <span className="text-[11px] font-medium text-emerald-400">
-                              Done
-                            </span>
-                          )}
+                          <div className="flex items-center justify-end gap-2">
+                            {assignment.courseId && navigate && (
+                              <button
+                                onClick={() => navigate({ view: "COURSE_CONTENT", params: { courseId: assignment.courseId, assignmentId: assignment.id } })}
+                                className="btn-ghost text-xs px-2 py-1.5"
+                                title="View in Course"
+                              >
+                                <IconExternalLink size={13} />
+                              </button>
+                            )}
+                            {isPending ? (
+                              <button
+                                onClick={() =>
+                                  isActive
+                                    ? (setActiveUploadId(null), setSelectedFile(null))
+                                    : handleOpenUpload(assignment.id)
+                                }
+                                className="btn-primary text-xs px-3 py-1.5"
+                              >
+                                <IconUpload size={13} className="inline mr-1" />
+                                {isActive ? "Cancel" : "Submit"}
+                              </button>
+                            ) : (
+                              <span className="text-[11px] font-medium text-emerald-400">
+                                Done
+                              </span>
+                            )}
+                          </div>
                         </td>
                       </tr>
                       {isPending && isActive && (
