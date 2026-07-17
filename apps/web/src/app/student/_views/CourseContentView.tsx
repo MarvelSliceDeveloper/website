@@ -23,7 +23,14 @@ import StickyNoteWidget from "@/components/StickyNoteWidget";
 import QuizContent from "./_comps/QuizContent";
 import AssignmentContent from "./_comps/AssignmentContent";
 import StudyMaterialContent from "./_comps/StudyMaterialContent";
-import type { CourseContentData, CourseContentViewProps } from "./_comps/types";
+import type {
+  AssignmentInfo,
+  CourseContentData,
+  CourseContentViewProps,
+  CourseLesson,
+  CourseModule,
+  QuizInfo,
+} from "./_comps/types";
 
 type ContentPanel = "content" | "live";
 
