@@ -77,4 +77,21 @@ export const assignmentController = {
       return res.status(500).json({ error: error.message });
     }
   },
+
+  async reorderAssignments(req: AuthRequest, res: Response) {
+    try {
+      const { assignmentIds } = req.body;
+      if (!Array.isArray(assignmentIds))
+        return res.status(400).json({ error: "assignmentIds must be an array" });
+      const result = await assignmentService.reorderAssignments(
+        req.params.moduleId,
+        assignmentIds,
+      );
+      return res.json(result);
+    } catch (error: any) {
+      if (error.message === "Module not found")
+        return res.status(404).json({ error: error.message });
+      return res.status(400).json({ error: error.message });
+    }
+  },
 };

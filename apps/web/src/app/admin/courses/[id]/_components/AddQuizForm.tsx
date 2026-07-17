@@ -99,7 +99,8 @@ export default function AddQuizForm({
       toast.success("Quiz added successfully");
       onSuccess();
     } catch (error) {
-      toast.error("Failed to add quiz");
+      console.error("Failed to add quiz:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to add quiz");
     } finally {
       setLoading(false);
     }

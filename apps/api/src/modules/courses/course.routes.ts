@@ -137,6 +137,13 @@ router.delete(
   moduleController.deleteModule,
 );
 
+// PATCH /api/admin/courses/modules/:moduleId/content/reorder — cross-type reorder
+router.patch(
+  "/modules/:moduleId/content/reorder",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  moduleController.reorderContent,
+);
+
 // --- Lesson Routes ---
 
 // POST /api/admin/courses/modules/:moduleId/lessons — add a lesson to a module
@@ -246,6 +253,13 @@ router.delete(
   "/modules/assignments/:id",
   requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
   assignmentController.deleteAssignment,
+);
+
+// PATCH /api/admin/courses/modules/:moduleId/assignments/reorder — reorder assignments
+router.patch(
+  "/modules/:moduleId/assignments/reorder",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  assignmentController.reorderAssignments,
 );
 
 export const courseRouter = router;

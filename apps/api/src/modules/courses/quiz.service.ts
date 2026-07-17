@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
+import { appendToContentOrder, removeFromContentOrder } from "./module.service";
 
 export const CreateQuizSchema = z.object({
   title: z.string().min(2).max(200),
@@ -82,7 +83,7 @@ export const quizService = {
     const module = await prisma.module.findUnique({ where: { id: moduleId } });
     if (!module) throw new Error("Module not found");
 
-    return prisma.quiz.create({
+    const quiz = await prisma.quiz.create({
       data: {
         moduleId,
         title: data.title,
@@ -96,6 +97,10 @@ export const quizService = {
       },
       include: { questions: true },
     });
+
+    await appendToContentOrder(moduleId, "QUIZ", quiz.id);
+
+    return quiz;
   },
 
   async updateQuiz(quizId: string, data: z.infer<typeof UpdateQuizSchema>) {
@@ -130,6 +135,7 @@ export const quizService = {
 
     await prisma.question.deleteMany({ where: { quizId } });
     await prisma.quiz.delete({ where: { id: quizId } });
+    await removeFromContentOrder(quiz.moduleId, quizId);
     return { deleted: true };
   },
 

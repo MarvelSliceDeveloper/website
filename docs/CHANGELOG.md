@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-07-17 - Cross-Type DnD, Quiz Fixes & Overdue Pipeline Fix
+
+### Added
+
+- **Cross-type drag-and-drop reordering.** Admins can now freely mix lessons, quizzes, and assignments in any order within a module via drag-and-drop. The ordering is stored as a JSON `contentOrder` field on the Module model and respected in both admin and student views. (`apps/api/prisma/schema.prisma`, `apps/api/src/modules/courses/module.service.ts`, `apps/web/src/app/admin/courses/[id]/_components/ModuleCard.tsx`)
+- **`PATCH /api/admin/courses/modules/:moduleId/content/reorder`** endpoint. Accepts `{ items: [{type, id}] }` and validates all IDs belong to the target module. (`apps/api/src/modules/courses/module.controller.ts`, `apps/api/src/modules/courses/course.routes.ts`)
+- **`ContentOrderItem` type** added to both admin and student type definitions. (`apps/web/src/app/admin/courses/[id]/_components/types.ts`, `apps/web/src/app/student/_views/_comps/types.ts`)
+- **`QuizAttemptStatus` enum** (`PENDING | SUBMITTED | GRADED`) and `status` field on `QuizAttempt` model. (`apps/api/prisma/schema.prisma`)
+- **Assignment `order` field** added to the Assignment model for future ordering. (`apps/api/prisma/schema.prisma`)
+- **Quiz Next/Submit button at bottom of active phase.** Students now see a green Submit button on the last question instead of only the inline submit in the question card. (`apps/web/src/app/student/_views/_comps/QuizContent.tsx`)
+- **`passingPercentage={60}` prop** passed to QuizContent from CourseContentView. (`apps/web/src/app/student/_views/CourseContentView.tsx`)
+- **`buildUnifiedList()` helper** in both admin ModuleCard and student CourseContentView. Renders lessons, quizzes, and assignments in `contentOrder` sequence with backward-compat fallback. (`apps/web/src/app/admin/courses/[id]/_components/ModuleCard.tsx`, `apps/web/src/app/student/_views/CourseContentView.tsx`)
+
+### Changed
+
+- **Student sidebar now respects `contentOrder`.** The course content accordion renders items in the admin-defined mixed sequence instead of always showing lessons → quizzes → assignments. (`apps/web/src/app/student/_views/CourseContentView.tsx`)
+- **Student Previous/Next navigation follows unified order.** Navigation buttons now cycle through all content types in `contentOrder` sequence, including cross-module transitions. Counter shows "Item X of Y" instead of "Lesson X of Y". (`apps/web/src/app/student/_views/CourseContentView.tsx`)
+- **Student content API returns `contentOrder`.** The `GET /api/courses/:courseId/content` endpoint now includes the `contentOrder` JSON field in its module response. (`apps/api/src/modules/courses/student-course.routes.ts`)
+- **CRUD hooks maintain `contentOrder`.** Adding or deleting a lesson, quiz, or assignment now appends to / removes from the module's `contentOrder` array automatically. (`apps/api/src/modules/courses/lesson.service.ts`, `quiz.service.ts`, `assignment.service.ts`)
+- **Admin `ModuleCard` rewritten** with unified `buildUnifiedList()`, single `contentDragIdx`/`contentOverIdx` state, and `handleContentDrop()` calling the new reorder API. (`apps/web/src/app/admin/courses/[id]/_components/ModuleCard.tsx`)
+- **Quiz/Assignment error handling.** `QuizCard.tsx`, `AddQuizForm.tsx`, and `handleSubmitQuiz` now `console.error` + show real error messages via `toast.error()`. (`apps/web/src/app/admin/courses/[id]/_components/QuizCard.tsx`, `AddQuizForm.tsx`, `apps/web/src/app/student/_views/CourseContentView.tsx`)
+- **Fixed duplicate "Result Page" text** in quiz navigator. (`apps/web/src/app/student/_views/_comps/QuizContent.tsx`)
+
+### Fixed
+
+- **CRITICAL: Overdue assignments and continue learning showed empty.** `getOverdueAssignments()` and `getContinueLearning()` in `student.service.ts` queried the `EnrollmentRequest` table (zero records for package-enrolled students) instead of `PackageEnrollment` → `PackageEnrollmentCourse`. Rewrote both methods to use the correct enrollment tables. (`apps/api/src/modules/courses/student.service.ts`)
+
+### Extracted
+
+- **QuizContent, AssignmentContent, StudyMaterialContent** extracted from CourseContentView into `_comps/` directory for maintainability. (`apps/web/src/app/student/_views/_comps/QuizContent.tsx`, `AssignmentContent.tsx`, `StudyMaterialContent.tsx`)
+
 ## 2026-07-16 - Admin Course Builder Improvements
 
 ### Added

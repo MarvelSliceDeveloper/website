@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
+import { appendToContentOrder, removeFromContentOrder } from "./module.service";
 
 export const CreateAssignmentSchema = z.object({
   title: z.string().min(2).max(200),
@@ -29,7 +30,7 @@ export const assignmentService = {
     const module = await prisma.module.findUnique({ where: { id: moduleId } });
     if (!module) throw new Error("Module not found");
 
-    return prisma.assignment.create({
+    const assignment = await prisma.assignment.create({
       data: {
         courseId,
         batchId,
@@ -42,6 +43,10 @@ export const assignmentService = {
         ...(data.questionPdfUrl ? { questionPdfUrl: data.questionPdfUrl } : {}),
       },
     });
+
+    await appendToContentOrder(moduleId, "ASSIGNMENT", assignment.id);
+
+    return assignment;
   },
 
   async updateAssignment(
@@ -73,6 +78,29 @@ export const assignmentService = {
     if (!assignment) throw new Error("Assignment not found");
 
     await prisma.assignment.delete({ where: { id: assignmentId } });
+    if (assignment.moduleId) {
+      await removeFromContentOrder(assignment.moduleId, assignmentId);
+    }
     return { deleted: true };
+  },
+
+  async reorderAssignments(moduleId: string, assignmentIds: string[]) {
+    const module = await prisma.module.findUnique({ where: { id: moduleId } });
+    if (!module) throw new Error("Module not found");
+
+    const assignments = await prisma.assignment.findMany({
+      where: { moduleId },
+      select: { id: true },
+    });
+    const existingIds = new Set(assignments.map((a) => a.id));
+    if (!assignmentIds.every((id) => existingIds.has(id)))
+      throw new Error("Some assignment IDs do not belong to this module");
+
+    await Promise.all(
+      assignmentIds.map((id, index) =>
+        prisma.assignment.update({ where: { id }, data: { order: index } }),
+      ),
+    );
+    return { reordered: true };
   },
 };

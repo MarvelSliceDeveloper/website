@@ -124,17 +124,18 @@ model Course {
 }
 
 model Module {
-  id          String         @id @default(cuid())
-  courseId    String
-  title       String
-  description String?
-  order       Int
-  isFreePreview Boolean       @default(false)
-  course      Course         @relation(fields: [courseId], references: [id])
-  lessons     Lesson[]
-  sessions    LiveSession[]
-  quizzes     Quiz[]
-  assignments Assignment[]
+  id            String         @id @default(cuid())
+  courseId       String
+  title         String
+  description   String?
+  order         Int
+  isFreePreview Boolean        @default(false)
+  contentOrder  Json?          // [{type: "LESSON"|"QUIZ"|"ASSIGNMENT", id: string}]
+  course        Course         @relation(fields: [courseId], references: [id])
+  lessons       Lesson[]
+  sessions      LiveSession[]
+  quizzes       Quiz[]
+  assignments   Assignment[]
 }
 
 model Lesson {
@@ -286,15 +287,16 @@ model Question {
 
 // Stores student quiz submissions for course-content quizzes
 model QuizAttempt {
-  id        String   @id @default(cuid())
+  id        String            @id @default(cuid())
   quizId    String
   userId    String
-  answers   Json     // [{ questionId, selectedOptionId }]
-  score     Int      @default(0) // number of correct answers
-  total     Int      @default(0) // total questions
-  createdAt DateTime @default(now())
-  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers   Json              // [{ questionId, selectedOptionId }]
+  score     Int               @default(0) // number of correct answers
+  total     Int               @default(0) // total questions
+  status    QuizAttemptStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+  quiz      Quiz              @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // One-on-one mentorship ticket - student requests, admin assigns mentor
@@ -403,6 +405,12 @@ model Attendance {
   @@unique([userId, sessionId])
 }
 
+enum QuizAttemptStatus {
+  PENDING
+  SUBMITTED
+  GRADED
+}
+
 enum SubmissionStatus {
   PENDING
   GRADED
@@ -417,6 +425,7 @@ model Assignment {
   description     String                 @db.Text
   type            String                 @default("QUIZ") // "QUIZ" or "ASSIGNMENT"
   questionPdfUrl  String?                // PDF file URL for ASSIGNMENT type
+  order           Int                    @default(0)
   dueDate         DateTime
   maxPoints       Int                    @default(100)
   createdAt   DateTime               @default(now())

@@ -119,7 +119,8 @@ export default function QuizCard({
       setEditing(false);
       onUpdate();
     } catch (error) {
-      toast.error("Failed to update quiz");
+      console.error("Failed to update quiz:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to update quiz");
     } finally {
       setLoading(false);
     }
@@ -132,7 +133,8 @@ export default function QuizCard({
       toast.success("Quiz deleted successfully");
       onUpdate();
     } catch (error) {
-      toast.error("Failed to delete quiz");
+      console.error("Failed to delete quiz:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to delete quiz");
     } finally {
       setDeleting(false);
     }

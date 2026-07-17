@@ -93,8 +93,8 @@ function SafePlyr({ source, options }: SafePlyrProps) {
     <>
       <style>{`
         .plyr__video-embed iframe {
-          top: -40px;
-          height: calc(100% + 80px);
+          top: -60px;
+          height: calc(100% + 125px);
           pointer-events: none !important;
         }
       `}</style>
@@ -146,11 +146,11 @@ export function VideoPlayer({ lesson, recording }: Props) {
             <IconPlayerPlay size={24} className="text-white ml-0.5" />
           </div>
         </div>
-        <div className="absolute top-3 left-3 rounded-lg bg-black/50 backdrop-blur-sm px-2.5 py-1 text-xs font-medium text-white/90">
+        <div className="absolute top-10 left-90 rounded-lg bg-black/50 backdrop-blur-sm px-2.5 py-1 text-xs font-medium text-white/90">
           {recording.title}
         </div>
         <div className="absolute bottom-0 left-0 right-0 p-3">
-          <div className="mb-1.5 h-1 overflow-hidden rounded-full bg-white/20">
+          <div className="mb-2.5 h-1 overflow-hidden rounded-full bg-white/20">
             <div
               className="h-full rounded-full bg-primary transition-all"
               style={{ width: `${recording.watchedPercent}%` }}

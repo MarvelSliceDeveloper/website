@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
-import { IconX, IconExternalLink } from "@tabler/icons-react";
+import { IconX, IconExternalLink, IconGripVertical } from "@tabler/icons-react";
 
 interface Assignment {
   id: string;
@@ -17,11 +17,21 @@ interface Assignment {
 interface AssignmentCardProps {
   assignment: Assignment;
   onUpdate: () => void;
+  onDragStart?: () => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragLeave?: () => void;
+  onDrop?: () => void;
+  isDragging?: boolean;
 }
 
 export default function AssignmentCard({
   assignment,
   onUpdate,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  isDragging,
 }: AssignmentCardProps) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(assignment.title);
@@ -176,8 +186,23 @@ export default function AssignmentCard({
   }
 
   return (
-    <div className="flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
+    <div
+      draggable={!!onDragStart}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => {
+        e.preventDefault();
+        onDrop?.();
+      }}
+      className={`flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 px-3 py-2 transition-all duration-200 ${isDragging ? "opacity-40 scale-[0.98]" : ""}`}
+    >
       <div className="flex items-center gap-2">
+        {onDragStart && (
+          <span className="cursor-grab active:cursor-grabbing text-blue-400 hover:text-blue-600 transition-colors">
+            <IconGripVertical size={12} />
+          </span>
+        )}
         <span className="text-sm font-medium text-blue-700">
           {assignment.title}
         </span>

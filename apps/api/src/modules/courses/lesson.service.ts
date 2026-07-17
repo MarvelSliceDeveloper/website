@@ -3,6 +3,7 @@ import { prisma } from "../../utils/prisma";
 import { parseVideoUrl } from "../../utils/video";
 import * as fs from "fs";
 import * as path from "path";
+import { appendToContentOrder, removeFromContentOrder } from "./module.service";
 
 export const CreateLessonSchema = z.object({
   title: z.string().min(2).max(200),
@@ -52,7 +53,7 @@ export const lessonService = {
       }
     }
 
-    return prisma.lesson.create({
+    const lesson = await prisma.lesson.create({
       data: {
         moduleId,
         title: data.title,
@@ -66,6 +67,10 @@ export const lessonService = {
         resources: data.resources ?? [],
       },
     });
+
+    await appendToContentOrder(moduleId, "LESSON", lesson.id);
+
+    return lesson;
   },
 
   async updateLesson(
@@ -96,6 +101,7 @@ export const lessonService = {
     if (!lesson) throw new Error("Lesson not found");
 
     await prisma.lesson.delete({ where: { id: lessonId } });
+    await removeFromContentOrder(lesson.moduleId, lessonId);
 
     const remaining = await prisma.lesson.findMany({
       where: { moduleId: lesson.moduleId },

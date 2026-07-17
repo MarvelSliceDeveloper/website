@@ -43,12 +43,18 @@ export type Assignment = {
   questionPdfUrl: string | null;
 };
 
+export type ContentOrderItem = {
+  type: "LESSON" | "QUIZ" | "ASSIGNMENT";
+  id: string;
+};
+
 export type Module = {
   id: string;
   title: string;
   description: string | null;
   order: number;
   isFreePreview: boolean;
+  contentOrder: ContentOrderItem[] | null;
   lessons: Lesson[];
   quizzes: Quiz[];
   assignments: Assignment[];

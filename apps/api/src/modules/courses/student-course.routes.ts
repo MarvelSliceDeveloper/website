@@ -467,6 +467,7 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
         description: m.description,
         order: m.order,
         isFreePreview: m.isFreePreview,
+        contentOrder: m.contentOrder,
         lessons,
         completionPercent,
         recordingsCount: moduleRecordings.length,
@@ -637,6 +638,7 @@ router.post("/quizzes/:quizId/submit", async (req: AuthRequest, res: Response) =
         answers: enrichedAnswers,
         score,
         total,
+        status: "SUBMITTED",
       },
     });
 

@@ -27,12 +27,18 @@ export interface AssignmentInfo {
   dueDate: string;
 }
 
+export interface ContentOrderItem {
+  type: "LESSON" | "QUIZ" | "ASSIGNMENT";
+  id: string;
+}
+
 export interface CourseModule {
   id: string;
   title: string;
   description: string | null;
   order: number;
   isFreePreview: boolean;
+  contentOrder: ContentOrderItem[] | null;
   lessons: CourseLesson[];
   completionPercent: number;
   recordingsCount: number;

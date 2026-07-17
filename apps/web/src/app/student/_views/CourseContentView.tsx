@@ -20,6 +20,9 @@ import { toast } from "@/lib/toast";
 
 import { VideoPlayer } from "./_comps/VideoPlayer";
 import StickyNoteWidget from "@/components/StickyNoteWidget";
+import QuizContent from "./_comps/QuizContent";
+import AssignmentContent from "./_comps/AssignmentContent";
+import StudyMaterialContent from "./_comps/StudyMaterialContent";
 import type { CourseContentData, CourseContentViewProps } from "./_comps/types";
 
 type ContentPanel = "content" | "live";
@@ -30,6 +33,56 @@ function formatMinutes(totalSeconds: number) {
   const h = Math.floor(mins / 60);
   const m = mins % 60;
   return m ? `${h}hr ${m}min` : `${h}hr`;
+}
+
+// ── Unified content ordering (matches admin ModuleCard pattern) ─────────
+
+type UnifiedItem =
+  | { type: "LESSON"; data: CourseLesson }
+  | { type: "QUIZ"; data: QuizInfo }
+  | { type: "ASSIGNMENT"; data: AssignmentInfo };
+
+function buildUnifiedList(mod: CourseModule): UnifiedItem[] {
+  const lessonMap = new Map(mod.lessons.map((l) => [l.id, l]));
+  const quizMap = new Map(mod.quizzes.map((q) => [q.id, q]));
+  const assignmentMap = new Map(mod.assignments.map((a) => [a.id, a]));
+
+  if (mod.contentOrder && mod.contentOrder.length > 0) {
+    const items: UnifiedItem[] = [];
+    for (const entry of mod.contentOrder) {
+      if (entry.type === "LESSON" && lessonMap.has(entry.id)) {
+        items.push({ type: "LESSON", data: lessonMap.get(entry.id)! });
+      } else if (entry.type === "QUIZ" && quizMap.has(entry.id)) {
+        items.push({ type: "QUIZ", data: quizMap.get(entry.id)! });
+      } else if (entry.type === "ASSIGNMENT" && assignmentMap.has(entry.id)) {
+        items.push({ type: "ASSIGNMENT", data: assignmentMap.get(entry.id)! });
+      }
+    }
+    // Append any items not in contentOrder (backward compat)
+    for (const lesson of mod.lessons) {
+      if (!items.some((i) => i.type === "LESSON" && i.data.id === lesson.id)) {
+        items.push({ type: "LESSON", data: lesson });
+      }
+    }
+    for (const quiz of mod.quizzes) {
+      if (!items.some((i) => i.type === "QUIZ" && i.data.id === quiz.id)) {
+        items.push({ type: "QUIZ", data: quiz });
+      }
+    }
+    for (const assignment of mod.assignments) {
+      if (!items.some((i) => i.type === "ASSIGNMENT" && i.data.id === assignment.id)) {
+        items.push({ type: "ASSIGNMENT", data: assignment });
+      }
+    }
+    return items;
+  }
+
+  // Fallback: lessons first, then quizzes, then assignments
+  const items: UnifiedItem[] = [];
+  for (const lesson of mod.lessons) items.push({ type: "LESSON", data: lesson });
+  for (const quiz of mod.quizzes) items.push({ type: "QUIZ", data: quiz });
+  for (const assignment of mod.assignments) items.push({ type: "ASSIGNMENT", data: assignment });
+  return items;
 }
 
 export default function CourseContentView({
@@ -153,16 +206,28 @@ export default function CourseContentView({
     setSelectedModuleId(moduleId);
     setSelectedRecordingId(null);
     setContentPanel("content");
+
+    setSelectedResource(null);
+    setSelectedQuizId(null);
+    setQuizData(null);
+    setSelectedAssignmentId(null);
+
     if (!expandedModules.has(moduleId)) {
       setExpandedModules((prev) => new Set([...prev, moduleId]));
     }
   };
-
   const selectLesson = (lesson: { id: string }, moduleId: string) => {
     setSelectedLessonId(lesson.id);
     setSelectedModuleId(moduleId);
     setSelectedRecordingId(null);
     setContentPanel("content");
+
+    // clear other panels so the video actually renders
+    setSelectedResource(null);
+    setSelectedQuizId(null);
+    setQuizData(null);
+    setSelectedAssignmentId(null);
+
     if (!expandedModules.has(moduleId)) {
       setExpandedModules((prev) => new Set([...prev, moduleId]));
     }
@@ -170,6 +235,10 @@ export default function CourseContentView({
 
   const selectRecording = (recordingId: string) => {
     setSelectedRecordingId(recordingId || null);
+    setSelectedResource(null);
+    setSelectedQuizId(null);
+    setQuizData(null);
+    setSelectedAssignmentId(null);
   };
 
   const clearRecording = () => setSelectedRecordingId(null);
@@ -209,6 +278,16 @@ export default function CourseContentView({
       ]);
       setQuizData({
         ...res,
+        questions: res.questions.map((question) => ({
+          id: question.id,
+          questionText: question.questionText,
+          marks: question.marks,
+          options: question.options.map((option) => ({
+            id: option.id,
+            optionText: option.optionText,
+            isCorrect: false,
+          })),
+        })),
         questionCount: res.questions.length,
       });
       if (attemptRes) {
@@ -278,6 +357,7 @@ export default function CourseContentView({
       });
       setQuizSubmitted(true);
     } catch (err: unknown) {
+      console.error("Failed to submit quiz:", err);
       const msg = err instanceof Error ? err.message : "Failed to submit quiz";
       toast.error(msg);
     } finally {
@@ -350,149 +430,19 @@ export default function CourseContentView({
 
     if (selectedQuizId && quizData) {
       return (
-        <div className="space-y-5">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={clearQuizPreview}
-              className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
-            >
-              ← Back to lesson
-            </button>
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <IconClipboardCheck size={18} className="text-amber-500" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-amber-500">
-                Quiz
-              </span>
-            </div>
-            <h2 className="text-lg font-bold text-foreground">
-              {quizData.title}
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              {quizData.description}
-            </p>
-            <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
-              {quizData.dueDate && (
-                <span>
-                  📅 Due:{" "}
-                  {new Date(quizData.dueDate).toLocaleDateString("en-IN")}
-                </span>
-              )}
-              <span>💯 Max Points: {quizData.maxPoints}</span>
-              <span>📝 Questions: {quizData.questionCount}</span>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {quizData.questions.map((q, idx) => (
-              <div
-                key={q.id}
-                className="bg-card border border-border rounded-xl p-4 space-y-3"
-              >
-                <div className="flex items-start justify-between">
-                  <p className="text-sm font-semibold text-foreground leading-snug">
-                    <span className="text-amber-500 mr-1.5">Q{idx + 1}.</span>
-                    {q.questionText}
-                  </p>
-                  <span className="text-[10px] font-bold text-muted bg-muted px-2 py-0.5 rounded shrink-0 ml-3">
-                    {q.marks} {q.marks === 1 ? "mark" : "marks"}
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {q.options.map((opt, optIdx) => {
-                    const isSelected = selectedAnswers[q.id] === opt.id;
-                    const isCorrectAnswer = opt.isCorrect;
-                    let borderClass = "border-border/60";
-                    if (quizSubmitted) {
-                      if (isCorrectAnswer) borderClass = "border-emerald-500/60 bg-emerald-500/10";
-                      else if (isSelected) borderClass = "border-danger/60 bg-danger/10";
-                    } else if (isSelected) {
-                      borderClass = "border-primary/60 bg-primary/5";
-                    }
-                    return (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        disabled={quizSubmitted}
-                        onClick={() =>
-                          setSelectedAnswers((prev) => ({
-                            ...prev,
-                            [q.id]: opt.id,
-                          }))
-                        }
-                        className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs text-left transition-colors ${
-                          quizSubmitted && isCorrectAnswer
-                            ? "text-emerald-700 dark:text-emerald-300"
-                            : quizSubmitted && isSelected
-                              ? "text-danger"
-                              : "text-muted-foreground"
-                        } ${borderClass}`}
-                      >
-                        <span
-                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
-                            quizSubmitted && isCorrectAnswer
-                              ? "bg-emerald-500 text-white"
-                              : quizSubmitted && isSelected
-                                ? "bg-danger text-white"
-                                : isSelected
-                                  ? "bg-primary text-primary-foreground"
-                                  : "border border-border text-muted"
-                          }`}
-                        >
-                          {quizSubmitted && isCorrectAnswer
-                            ? "✓"
-                            : quizSubmitted && isSelected && !isCorrectAnswer
-                              ? "✗"
-                              : String.fromCharCode(65 + optIdx)}
-                        </span>
-                        <span className="flex-1">{opt.optionText}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {!quizSubmitted ? (
-            <div className="flex items-center justify-between pt-2">
-              <p className="text-xs text-muted-foreground">
-                {Object.keys(selectedAnswers).length} of {quizData.questions.length} answered
-              </p>
-              <button
-                onClick={handleSubmitQuiz}
-                disabled={
-                  Object.keys(selectedAnswers).length < quizData.questions.length || quizSubmitting
-                }
-                className="btn-primary text-sm px-6 py-2"
-              >
-                Submit Answers
-              </button>
-            </div>
-          ) : (
-            <div className="rounded-xl bg-card border border-border p-4">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">
-                  {(() => {
-                    const pct = quizResult?.percentage ?? 0;
-                    return pct >= 70 ? "🎉" : pct >= 40 ? "💪" : "📚";
-                  })()}
-                </span>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    {quizResult
-                      ? `${quizResult.score}/${quizResult.total} correct`
-                      : "Calculating..."}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Score: {quizResult ? `${quizResult.percentage}%` : "..."}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        <QuizContent
+          quizData={quizData}
+          selectedAnswers={selectedAnswers}
+          quizSubmitted={quizSubmitted}
+          quizSubmitting={quizSubmitting}
+          quizResult={quizResult}
+          onAnswerSelect={(questionId, optionId) =>
+            setSelectedAnswers((prev) => ({ ...prev, [questionId]: optionId }))
+          }
+          onSubmit={handleSubmitQuiz}
+          onBack={clearQuizPreview}
+          passingPercentage={60}
+        />
       );
     }
 
@@ -510,80 +460,22 @@ export default function CourseContentView({
       }
       if (foundAssignment) {
         return (
-          <div className="space-y-5">
-            <button
-              onClick={() => setSelectedAssignmentId(null)}
-              className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
-            >
-              ← Back to lesson
-            </button>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <IconFileSpreadsheet size={18} className="text-blue-500" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-blue-500">
-                  Assignment
-                </span>
-              </div>
-              <h2 className="text-lg font-bold text-foreground mt-1">
-                {foundAssignment.title}
-              </h2>
-              {foundModule && (
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Module: {foundModule}
-                </p>
-              )}
-              <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
-                <span>
-                  📅 Due:{" "}
-                  {new Date(foundAssignment.dueDate).toLocaleDateString("en-IN")}
-                </span>
-                <span>📋 Type: {foundAssignment.type}</span>
-              </div>
-            </div>
-
-            <div className="bg-card border border-border rounded-xl p-6 flex flex-col items-center justify-center gap-3 text-center">
-              <IconFileSpreadsheet size={40} className="text-blue-500/60" />
-              <p className="text-sm text-muted-foreground max-w-md">
-                Submit your assignment from the{" "}
-                <button
-                  onClick={() => {
-                    /* Navigate to assignments overdue view - handled by parent */
-                  }}
-                  className="text-primary font-medium hover:underline"
-                >
-                  Assignments
-                </button>{" "}
-                page.
-              </p>
-            </div>
-          </div>
+          <AssignmentContent
+            assignment={foundAssignment}
+            moduleName={foundModule}
+            onBack={() => setSelectedAssignmentId(null)}
+          />
         );
       }
     }
 
     if (selectedResource) {
       return (
-        <div className="space-y-4">
-          <button
-            onClick={clearResourcePreview}
-            className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
-          >
-            ← Back to lesson
-          </button>
-          <div className="flex items-center gap-2">
-            <IconFile size={18} className="text-emerald-500" />
-            <span className="text-sm font-semibold text-foreground">
-              {selectedResource.name}
-            </span>
-          </div>
-          <div className="w-full rounded-xl overflow-hidden border border-border bg-card">
-            <iframe
-              src={selectedResource.url}
-              title={selectedResource.name}
-              className="w-full h-[calc(100vh-var(--shell-header-height,56px)-200px)]"
-            />
-          </div>
-        </div>
+        <StudyMaterialContent
+          name={selectedResource.name}
+          url={selectedResource.url}
+          onBack={clearResourcePreview}
+        />
       );
     }
 
@@ -663,9 +555,8 @@ export default function CourseContentView({
           <li key={module.id} className="border-b border-border/50">
             <button
               onClick={() => toggleModule(module.id)}
-              className={`w-full flex items-start justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/50 ${
-                isActiveModule ? "bg-muted/30" : ""
-              }`}
+              className={`w-full flex items-start justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/50 ${isActiveModule ? "bg-muted/30" : ""
+                }`}
             >
               <span className="min-w-0">
                 <span className="block text-[13px] font-semibold leading-snug text-foreground">
@@ -678,130 +569,123 @@ export default function CourseContentView({
               </span>
               <IconChevronDown
                 size={16}
-                className={`flex-shrink-0 mt-0.5 text-muted-foreground transition-transform duration-200 ${
-                  isExpanded ? "rotate-180" : ""
-                }`}
+                className={`flex-shrink-0 mt-0.5 text-muted-foreground transition-transform duration-200 ${isExpanded ? "rotate-180" : ""
+                  }`}
               />
             </button>
 
             {isExpanded && (
               <ul className="pb-2">
-                {module.lessons.map((lesson, lIdx) => {
-                  const active =
-                    lesson.id === selectedLessonId && !selectedRecordingId;
-                  const isBookmarked = bookmarks.includes(lesson.id);
-                  return (
-                    <li key={lesson.id} className="px-2">
-                      <button
-                        onClick={() => selectLesson(lesson, module.id)}
-                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
-                          active ? "bg-primary/15" : "hover:bg-muted/30"
-                        }`}
-                      >
-                        <span
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                            active ? "bg-primary" : "bg-muted"
-                          }`}
+                {buildUnifiedList(module).map((item, idx) => {
+                  if (item.type === "LESSON") {
+                    const lesson = item.data;
+                    const active =
+                      lesson.id === selectedLessonId && !selectedRecordingId;
+                    const isBookmarked = bookmarks.includes(lesson.id);
+                    return (
+                      <li key={lesson.id} className="px-2">
+                        <button
+                          onClick={() => selectLesson(lesson, module.id)}
+                          className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${active ? "bg-primary/15" : "hover:bg-muted/30"
+                            }`}
                         >
-                          <IconPlayerPlay
-                            size={11}
-                            className={
-                              active
-                                ? "text-primary-foreground ml-[1px]"
-                                : "text-muted-foreground"
-                            }
-                          />
-                        </span>
-                        <span className="min-w-0 flex-1">
                           <span
-                            className={`block text-xs truncate ${
-                              active
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${active ? "bg-primary" : "bg-muted"
+                              }`}
+                          >
+                            <IconPlayerPlay
+                              size={11}
+                              className={
+                                active
+                                  ? "text-primary-foreground ml-[1px]"
+                                  : "text-muted-foreground"
+                              }
+                            />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span
+                              className={`block text-xs truncate ${active
                                 ? "text-foreground font-medium"
                                 : "text-muted-foreground"
-                            }`}
-                          >
-                            {lIdx + 1}. {lesson.title}
+                                }`}
+                            >
+                              {idx + 1}. {lesson.title}
+                            </span>
                           </span>
-                        </span>
-                        {lesson.durationSeconds ? (
+                          {lesson.durationSeconds ? (
+                            <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
+                              {formatMinutes(lesson.durationSeconds)}
+                            </span>
+                          ) : null}
+                          <span
+                            role="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleBookmark(lesson.id);
+                            }}
+                            className={`text-[10px] flex-shrink-0 ${isBookmarked ? "text-primary" : "text-transparent"
+                              }`}
+                          >
+                            ●
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  }
+
+                  if (item.type === "QUIZ") {
+                    const quiz = item.data;
+                    const isActive = selectedQuizId === quiz.id;
+                    return (
+                      <li key={quiz.id} className="px-2">
+                        <button
+                          onClick={() => selectQuiz(quiz.id)}
+                          className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${isActive ? "bg-amber-500/15" : "hover:bg-muted/30"
+                            }`}
+                        >
+                          <span
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${isActive ? "bg-amber-500" : "bg-amber-500/15"
+                              }`}
+                          >
+                            <IconClipboardCheck
+                              size={12}
+                              className={
+                                isActive
+                                  ? "text-white"
+                                  : "text-amber-500"
+                              }
+                            />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span
+                              className={`block text-xs truncate ${isActive
+                                ? "text-foreground font-medium"
+                                : "text-muted-foreground"
+                                }`}
+                            >
+                              {idx + 1}. {quiz.title}
+                            </span>
+                          </span>
                           <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
-                            {formatMinutes(lesson.durationSeconds)}
+                            {quiz.questionCount}Q
                           </span>
-                        ) : null}
-                        <span
-                          role="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleBookmark(lesson.id);
-                          }}
-                          className={`text-[10px] flex-shrink-0 ${
-                            isBookmarked ? "text-primary" : "text-transparent"
-                          }`}
-                        >
-                          ●
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
+                        </button>
+                      </li>
+                    );
+                  }
 
-                {module.quizzes.map((quiz) => {
-                  const isActive = selectedQuizId === quiz.id;
-                  return (
-                    <li key={quiz.id} className="px-2">
-                      <button
-                        onClick={() => selectQuiz(quiz.id)}
-                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
-                          isActive ? "bg-amber-500/15" : "hover:bg-muted/30"
-                        }`}
-                      >
-                        <span
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                            isActive ? "bg-amber-500" : "bg-amber-500/15"
-                          }`}
-                        >
-                          <IconClipboardCheck
-                            size={12}
-                            className={
-                              isActive
-                                ? "text-white"
-                                : "text-amber-500"
-                            }
-                          />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span
-                            className={`block text-xs truncate ${
-                              isActive
-                                ? "text-foreground font-medium"
-                                : "text-muted-foreground"
-                            }`}
-                          >
-                            {quiz.title}
-                          </span>
-                        </span>
-                        <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
-                          {quiz.questionCount}Q
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-
-                {module.assignments.map((assignment) => {
+                  const assignment = item.data;
                   const isActive = selectedAssignmentId === assignment.id;
                   return (
                     <li key={assignment.id} className="px-2">
                       <button
                         onClick={() => selectAssignment(assignment)}
-                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
-                          isActive ? "bg-blue-500/15" : "hover:bg-muted/30"
-                        }`}
+                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${isActive ? "bg-blue-500/15" : "hover:bg-muted/30"
+                          }`}
                       >
                         <span
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                            isActive ? "bg-blue-500" : "bg-blue-500/15"
-                          }`}
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${isActive ? "bg-blue-500" : "bg-blue-500/15"
+                            }`}
                         >
                           <IconFileSpreadsheet
                             size={12}
@@ -814,13 +698,12 @@ export default function CourseContentView({
                         </span>
                         <span className="min-w-0 flex-1">
                           <span
-                            className={`block text-xs truncate ${
-                              isActive
-                                ? "text-foreground font-medium"
-                                : "text-muted-foreground"
-                            }`}
+                            className={`block text-xs truncate ${isActive
+                              ? "text-foreground font-medium"
+                              : "text-muted-foreground"
+                              }`}
                           >
-                            {assignment.title}
+                            {idx + 1}. {assignment.title}
                           </span>
                         </span>
                         <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
@@ -846,18 +729,16 @@ export default function CourseContentView({
                             <li key={`${l.id}-resource-${r.url}`} className="px-2">
                               <button
                                 onClick={() => selectResource(r.name, r.url)}
-                                className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
-                                  isActive
-                                    ? "bg-emerald-500/15"
-                                    : "hover:bg-muted/30"
-                                }`}
+                                className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${isActive
+                                  ? "bg-emerald-500/15"
+                                  : "hover:bg-muted/30"
+                                  }`}
                               >
                                 <span
-                                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                                    isActive
-                                      ? "bg-emerald-500"
-                                      : "bg-emerald-500/15"
-                                  }`}
+                                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${isActive
+                                    ? "bg-emerald-500"
+                                    : "bg-emerald-500/15"
+                                    }`}
                                 >
                                   <IconFile
                                     size={12}
@@ -870,11 +751,10 @@ export default function CourseContentView({
                                 </span>
                                 <span className="min-w-0 flex-1">
                                   <span
-                                    className={`block text-xs truncate ${
-                                      isActive
-                                        ? "text-foreground font-medium"
-                                        : "text-muted-foreground"
-                                    }`}
+                                    className={`block text-xs truncate ${isActive
+                                      ? "text-foreground font-medium"
+                                      : "text-muted-foreground"
+                                      }`}
                                   >
                                     {r.name}
                                   </span>
@@ -899,22 +779,20 @@ export default function CourseContentView({
       <div className="flex items-center border-b border-border flex-shrink-0">
         <button
           onClick={() => setContentPanel("content")}
-          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-3.5 border-b-2 transition-colors ${
-            contentPanel === "content"
-              ? "border-foreground text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
+          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-3.5 border-b-2 transition-colors ${contentPanel === "content"
+            ? "border-foreground text-foreground"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
         >
           <IconBook2 size={14} />
           Course content
         </button>
         <button
           onClick={() => setContentPanel("live")}
-          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-3.5 border-b-2 transition-colors ${
-            contentPanel === "live"
-              ? "border-danger text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
+          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-3.5 border-b-2 transition-colors ${contentPanel === "live"
+            ? "border-danger text-foreground"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
         >
           <IconCalendarEvent
             size={14}
@@ -978,30 +856,28 @@ export default function CourseContentView({
                       <li key={rec.id} className="px-2">
                         <button
                           onClick={() => selectRecording(rec.id)}
-                          className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
-                            active ? "bg-primary/15" : "hover:bg-muted/30"
-                          }`}
+                          className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${active ? "bg-primary/15" : "hover:bg-muted/30"
+                            }`}
                         >
                           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
                             <IconVideo size={16} />
                           </span>
                           <span className="min-w-0 flex-1">
                             <span
-                              className={`block text-xs font-medium truncate ${
-                                active ? "text-foreground" : "text-foreground"
-                              }`}
+                              className={`block text-xs font-medium truncate ${active ? "text-foreground" : "text-foreground"
+                                }`}
                             >
                               {rec.title}
                             </span>
                             <span className="block text-[11px] text-muted-foreground">
                               {rec.scheduledAt
                                 ? new Date(rec.scheduledAt).toLocaleDateString(
-                                    "en-IN",
-                                    {
-                                      day: "numeric",
-                                      month: "short",
-                                    },
-                                  )
+                                  "en-IN",
+                                  {
+                                    day: "numeric",
+                                    month: "short",
+                                  },
+                                )
                                 : "Recorded session"}
                             </span>
                           </span>
@@ -1028,71 +904,120 @@ export default function CourseContentView({
         <div className="flex items-center gap-3 px-5 py-2.5 bg-card border-t border-border flex-shrink-0">
           <button
             onClick={() => {
-              const allLessons = data.modules.flatMap((m) =>
-                m.lessons.map((l) => ({ lesson: l, moduleId: m.id })),
-              );
-              const curIdx = allLessons.findIndex(
-                (x) => x.lesson.id === selectedLessonId,
+              if (!selectedModule) return;
+              const unified = buildUnifiedList(selectedModule);
+              const curIdx = unified.findIndex(
+                (item) =>
+                  (item.type === "LESSON" && item.data.id === selectedLessonId) ||
+                  (item.type === "QUIZ" && item.data.id === selectedQuizId) ||
+                  (item.type === "ASSIGNMENT" && item.data.id === selectedAssignmentId),
               );
               if (curIdx > 0) {
-                const prev = allLessons[curIdx - 1];
-                selectLesson(prev.lesson, prev.moduleId);
-                setExpandedModules(
-                  (prevSet) => new Set([...prevSet, prev.moduleId]),
-                );
+                const prev = unified[curIdx - 1];
+                if (prev.type === "LESSON") selectLesson(prev.data, selectedModule.id);
+                else if (prev.type === "QUIZ") selectQuiz(prev.data.id);
+                else if (prev.type === "ASSIGNMENT") selectAssignment(prev.data);
+              } else {
+                const modIdx = data.modules.findIndex((m) => m.id === selectedModuleId);
+                if (modIdx > 0) {
+                  const prevMod = data.modules[modIdx - 1];
+                  const prevUnified = buildUnifiedList(prevMod);
+                  if (prevUnified.length > 0) {
+                    const last = prevUnified[prevUnified.length - 1];
+                    setExpandedModules((prevSet) => new Set([...prevSet, prevMod.id]));
+                    if (last.type === "LESSON") selectLesson(last.data, prevMod.id);
+                    else if (last.type === "QUIZ") selectQuiz(last.data.id);
+                    else if (last.type === "ASSIGNMENT") selectAssignment(last.data);
+                  }
+                }
               }
             }}
-            disabled={
-              !selectedLessonId ||
-              data.modules
-                .flatMap((m) => m.lessons)
-                .findIndex((l) => l.id === selectedLessonId) <= 0
-            }
+            disabled={(() => {
+              if (!selectedModule) return true;
+              const unified = buildUnifiedList(selectedModule);
+              const curIdx = unified.findIndex(
+                (item) =>
+                  (item.type === "LESSON" && item.data.id === selectedLessonId) ||
+                  (item.type === "QUIZ" && item.data.id === selectedQuizId) ||
+                  (item.type === "ASSIGNMENT" && item.data.id === selectedAssignmentId),
+              );
+              const isAtFirstInModule = curIdx <= 0;
+              const modIdx = data.modules.findIndex((m) => m.id === selectedModuleId);
+              return isAtFirstInModule && modIdx <= 0;
+            })()}
             className="flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 disabled:opacity-40 disabled:hover:text-muted-foreground disabled:hover:border-border transition-colors"
           >
             <IconArrowLeft size={13} /> Previous
           </button>
           <div className="flex-1" />
           <span className="text-xs text-muted-foreground">
-            {selectedLessonId
-              ? `Lesson ${data.modules.flatMap((m) => m.lessons).findIndex((l) => l.id === selectedLessonId) + 1} of ${data.modules.reduce((s, m) => s + m.lessons.length, 0)}`
-              : ""}
+            {selectedModule && (() => {
+              const unified = buildUnifiedList(selectedModule);
+              const curIdx = unified.findIndex(
+                (item) =>
+                  (item.type === "LESSON" && item.data.id === selectedLessonId) ||
+                  (item.type === "QUIZ" && item.data.id === selectedQuizId) ||
+                  (item.type === "ASSIGNMENT" && item.data.id === selectedAssignmentId),
+              );
+              return curIdx >= 0
+                ? `Item ${curIdx + 1} of ${unified.length}`
+                : "";
+            })()}
           </span>
           <div className="flex-1" />
           <button
             onClick={() => setShowStickyWidget((v) => !v)}
-            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border transition-colors ${
-              showStickyWidget
-                ? "border-primary/50 bg-primary/15 text-primary"
-                : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
-            }`}
+            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border transition-colors ${showStickyWidget
+              ? "border-primary/50 bg-primary/15 text-primary"
+              : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
+              }`}
           >
             <IconPencil size={13} />{" "}
             {showStickyWidget ? "Close Notes" : "Take Note"}
           </button>
           <button
             onClick={() => {
-              const allLessons = data.modules.flatMap((m) =>
-                m.lessons.map((l) => ({ lesson: l, moduleId: m.id })),
+              if (!selectedModule) return;
+              const unified = buildUnifiedList(selectedModule);
+              const curIdx = unified.findIndex(
+                (item) =>
+                  (item.type === "LESSON" && item.data.id === selectedLessonId) ||
+                  (item.type === "QUIZ" && item.data.id === selectedQuizId) ||
+                  (item.type === "ASSIGNMENT" && item.data.id === selectedAssignmentId),
               );
-              const curIdx = allLessons.findIndex(
-                (x) => x.lesson.id === selectedLessonId,
-              );
-              if (curIdx >= 0 && curIdx < allLessons.length - 1) {
-                const next = allLessons[curIdx + 1];
-                selectLesson(next.lesson, next.moduleId);
-                setExpandedModules(
-                  (prevSet) => new Set([...prevSet, next.moduleId]),
-                );
+              if (curIdx >= 0 && curIdx < unified.length - 1) {
+                const next = unified[curIdx + 1];
+                if (next.type === "LESSON") selectLesson(next.data, selectedModule.id);
+                else if (next.type === "QUIZ") selectQuiz(next.data.id);
+                else if (next.type === "ASSIGNMENT") selectAssignment(next.data);
+              } else {
+                const modIdx = data.modules.findIndex((m) => m.id === selectedModuleId);
+                if (modIdx >= 0 && modIdx < data.modules.length - 1) {
+                  const nextMod = data.modules[modIdx + 1];
+                  const nextUnified = buildUnifiedList(nextMod);
+                  if (nextUnified.length > 0) {
+                    const first = nextUnified[0];
+                    setExpandedModules((prevSet) => new Set([...prevSet, nextMod.id]));
+                    if (first.type === "LESSON") selectLesson(first.data, nextMod.id);
+                    else if (first.type === "QUIZ") selectQuiz(first.data.id);
+                    else if (first.type === "ASSIGNMENT") selectAssignment(first.data);
+                  }
+                }
               }
             }}
-            disabled={
-              !selectedLessonId ||
-              data.modules
-                .flatMap((m) => m.lessons)
-                .findIndex((l) => l.id === selectedLessonId) >=
-                data.modules.reduce((s, m) => s + m.lessons.length, 0) - 1
-            }
+            disabled={(() => {
+              if (!selectedModule) return true;
+              const unified = buildUnifiedList(selectedModule);
+              const curIdx = unified.findIndex(
+                (item) =>
+                  (item.type === "LESSON" && item.data.id === selectedLessonId) ||
+                  (item.type === "QUIZ" && item.data.id === selectedQuizId) ||
+                  (item.type === "ASSIGNMENT" && item.data.id === selectedAssignmentId),
+              );
+              const isAtLastInModule = curIdx >= 0 && curIdx >= unified.length - 1;
+              const modIdx = data.modules.findIndex((m) => m.id === selectedModuleId);
+              return isAtLastInModule && modIdx >= data.modules.length - 1;
+            })()}
             className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg text-primary-foreground bg-primary hover:opacity-90 disabled:opacity-40 transition-opacity"
           >
             Continue <IconArrowRight size={13} />

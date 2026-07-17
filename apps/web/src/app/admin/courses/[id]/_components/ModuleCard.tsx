@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import {
@@ -12,7 +12,7 @@ import {
   IconDownload,
   IconX,
 } from "@tabler/icons-react";
-import type { Module, Resource } from "./types";
+import type { Module, Resource, Lesson, Quiz, Assignment, ContentOrderItem } from "./types";
 import LessonCard from "./LessonCard";
 import AddLessonForm from "./AddLessonForm";
 import QuizCard from "./QuizCard";
@@ -34,6 +34,52 @@ const ALLOWED_RESOURCE_TYPES = new Set([
 ]);
 
 const MAX_RESOURCE_SIZE = 50 * 1024 * 1024;
+
+type UnifiedItem =
+  | { type: "LESSON"; data: Lesson }
+  | { type: "QUIZ"; data: Quiz }
+  | { type: "ASSIGNMENT"; data: Assignment };
+
+function buildUnifiedList(mod: Module): UnifiedItem[] {
+  const lessonMap = new Map(mod.lessons.map((l) => [l.id, l]));
+  const quizMap = new Map(mod.quizzes.map((q) => [q.id, q]));
+  const assignmentMap = new Map(mod.assignments.map((a) => [a.id, a]));
+
+  if (mod.contentOrder && mod.contentOrder.length > 0) {
+    const items: UnifiedItem[] = [];
+    for (const entry of mod.contentOrder) {
+      if (entry.type === "LESSON" && lessonMap.has(entry.id)) {
+        items.push({ type: "LESSON", data: lessonMap.get(entry.id)! });
+      } else if (entry.type === "QUIZ" && quizMap.has(entry.id)) {
+        items.push({ type: "QUIZ", data: quizMap.get(entry.id)! });
+      } else if (entry.type === "ASSIGNMENT" && assignmentMap.has(entry.id)) {
+        items.push({ type: "ASSIGNMENT", data: assignmentMap.get(entry.id)! });
+      }
+    }
+    for (const lesson of mod.lessons) {
+      if (!items.some((i) => i.type === "LESSON" && i.data.id === lesson.id)) {
+        items.push({ type: "LESSON", data: lesson });
+      }
+    }
+    for (const quiz of mod.quizzes) {
+      if (!items.some((i) => i.type === "QUIZ" && i.data.id === quiz.id)) {
+        items.push({ type: "QUIZ", data: quiz });
+      }
+    }
+    for (const assignment of mod.assignments) {
+      if (!items.some((i) => i.type === "ASSIGNMENT" && i.data.id === assignment.id)) {
+        items.push({ type: "ASSIGNMENT", data: assignment });
+      }
+    }
+    return items;
+  }
+
+  const items: UnifiedItem[] = [];
+  for (const lesson of mod.lessons) items.push({ type: "LESSON", data: lesson });
+  for (const quiz of mod.quizzes) items.push({ type: "QUIZ", data: quiz });
+  for (const assignment of mod.assignments) items.push({ type: "ASSIGNMENT", data: assignment });
+  return items;
+}
 
 export default function ModuleCard({
   module: mod,
@@ -62,10 +108,8 @@ export default function ModuleCard({
     title: mod.title,
     description: mod.description || "",
   });
-  const [lessonDragIdx, setLessonDragIdx] = useState<number | null>(null);
-  const [lessonOverIdx, setLessonOverIdx] = useState<number | null>(null);
-  const [quizDragIdx, setQuizDragIdx] = useState<number | null>(null);
-  const [quizOverIdx, setQuizOverIdx] = useState<number | null>(null);
+  const [contentDragIdx, setContentDragIdx] = useState<number | null>(null);
+  const [contentOverIdx, setContentOverIdx] = useState<number | null>(null);
   const [resourceDragIdx, setResourceDragIdx] = useState<number | null>(null);
   const [resourceOverIdx, setResourceOverIdx] = useState<number | null>(null);
   const [showAddQuiz, setShowAddQuiz] = useState(false);
@@ -76,6 +120,8 @@ export default function ModuleCard({
   );
   const [uploadingResource, setUploadingResource] = useState(false);
   const [resourceError, setResourceError] = useState("");
+
+  const unifiedItems = useMemo(() => buildUnifiedList(mod), [mod]);
 
   const allResources: Array<Resource & { lessonTitle: string; lessonId: string }> = 
     mod.lessons.flatMap((lesson) =>
@@ -118,46 +164,24 @@ export default function ModuleCard({
     }
   };
 
-  const handleLessonDrop = async (dropIdx: number) => {
-    if (lessonDragIdx === null || lessonDragIdx === dropIdx) {
-      setLessonDragIdx(null);
-      setLessonOverIdx(null);
+  const handleContentDrop = async (dropIdx: number) => {
+    if (contentDragIdx === null || contentDragIdx === dropIdx) {
+      setContentDragIdx(null);
+      setContentOverIdx(null);
       return;
     }
-    const reordered = [...mod.lessons];
-    const [moved] = reordered.splice(lessonDragIdx, 1);
+    const reordered = [...unifiedItems];
+    const [moved] = reordered.splice(contentDragIdx, 1);
     reordered.splice(dropIdx, 0, moved);
-    setLessonDragIdx(null);
-    setLessonOverIdx(null);
+    setContentDragIdx(null);
+    setContentOverIdx(null);
     try {
-      await api.patch(`/api/admin/courses/modules/${mod.id}/lessons/reorder`, {
-        lessonIds: reordered.map((l) => l.id),
+      await api.patch(`/api/admin/courses/modules/${mod.id}/content/reorder`, {
+        contentOrder: reordered.map((item) => ({ type: item.type, id: item.data.id })),
       });
       onChanged();
     } catch {
-      toast.error("Failed to reorder lessons");
-      onChanged();
-    }
-  };
-
-  const handleQuizDrop = async (dropIdx: number) => {
-    if (quizDragIdx === null || quizDragIdx === dropIdx) {
-      setQuizDragIdx(null);
-      setQuizOverIdx(null);
-      return;
-    }
-    const reordered = [...mod.quizzes];
-    const [moved] = reordered.splice(quizDragIdx, 1);
-    reordered.splice(dropIdx, 0, moved);
-    setQuizDragIdx(null);
-    setQuizOverIdx(null);
-    try {
-      await api.patch(`/api/admin/courses/modules/${mod.id}/quizzes/reorder`, {
-        quizIds: reordered.map((q) => q.id),
-      });
-      onChanged();
-    } catch {
-      toast.error("Failed to reorder quizzes");
+      toast.error("Failed to reorder content");
       onChanged();
     }
   };
@@ -366,79 +390,77 @@ export default function ModuleCard({
 
       {expanded && (
         <div className="border-t border-border/40">
-          {mod.lessons.length === 0 ? (
+          {unifiedItems.length === 0 ? (
             <div className="px-4 py-4 text-center">
               <p className="text-xs text-muted-foreground">
-                No lessons yet. Add one below.
+                No content yet. Add lessons, quizzes, or assignments below.
               </p>
             </div>
           ) : (
             <div className="py-2 px-2 space-y-1">
-              {mod.lessons.map((lesson, lidx) => (
-                <div key={lesson.id}>
-                  {lessonOverIdx === lidx &&
-                    lessonDragIdx !== lidx &&
-                    lessonOverIdx !== null && (
+              {unifiedItems.map((item, idx) => (
+                <div key={`${item.type}-${item.data.id}`}>
+                  {contentOverIdx === idx &&
+                    contentDragIdx !== idx &&
+                    contentOverIdx !== null && (
                       <div className="h-0.5 rounded-full bg-primary/30 mx-6" />
                     )}
-                  <LessonCard
-                    lesson={lesson}
-                    index={lidx}
-                    onChanged={onChanged}
-                    onDragStart={() => setLessonDragIdx(lidx)}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setLessonOverIdx(lidx);
-                    }}
-                    onDragLeave={() => setLessonOverIdx(null)}
-                    onDrop={() => handleLessonDrop(lidx)}
-                    isDragging={lessonDragIdx === lidx}
-                  />
+                  {item.type === "LESSON" && (
+                    <LessonCard
+                      lesson={item.data}
+                      index={idx}
+                      onChanged={onChanged}
+                      onDragStart={() => setContentDragIdx(idx)}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setContentOverIdx(idx);
+                      }}
+                      onDragLeave={() => setContentOverIdx(null)}
+                      onDrop={() => handleContentDrop(idx)}
+                      isDragging={contentDragIdx === idx}
+                    />
+                  )}
+                  {item.type === "QUIZ" && (
+                    <div
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setContentOverIdx(idx);
+                      }}
+                      onDragLeave={() => setContentOverIdx(null)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        handleContentDrop(idx);
+                      }}
+                    >
+                      <QuizCard
+                        quiz={item.data}
+                        onUpdate={onChanged}
+                        onDragStart={() => setContentDragIdx(idx)}
+                        isDragging={contentDragIdx === idx}
+                      />
+                    </div>
+                  )}
+                  {item.type === "ASSIGNMENT" && (
+                    <div
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setContentOverIdx(idx);
+                      }}
+                      onDragLeave={() => setContentOverIdx(null)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        handleContentDrop(idx);
+                      }}
+                    >
+                      <AssignmentCard
+                        assignment={item.data}
+                        onUpdate={onChanged}
+                        onDragStart={() => setContentDragIdx(idx)}
+                        isDragging={contentDragIdx === idx}
+                      />
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
-
-          {mod.quizzes && mod.quizzes.length > 0 && (
-            <div className="py-2 px-2 space-y-1">
-              <div className="px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-amber-600">
-                Quizzes
-              </div>
-              {mod.quizzes.map((quiz, qIdx) => (
-                <div key={quiz.id}>
-                  {quizOverIdx === qIdx &&
-                    quizDragIdx !== qIdx &&
-                    quizOverIdx !== null && (
-                      <div className="h-0.5 rounded-full bg-primary/30 mx-6" />
-                    )}
-                  <QuizCard
-                    quiz={quiz}
-                    onUpdate={onChanged}
-                    onDragStart={() => setQuizDragIdx(qIdx)}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setQuizOverIdx(qIdx);
-                    }}
-                    onDragLeave={() => setQuizOverIdx(null)}
-                    onDrop={() => handleQuizDrop(qIdx)}
-                    isDragging={quizDragIdx === qIdx}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {mod.assignments && mod.assignments.length > 0 && (
-            <div className="py-2 px-2 space-y-1">
-              <div className="px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-blue-600">
-                Assignments
-              </div>
-              {mod.assignments.map((assignment) => (
-                <AssignmentCard
-                  key={assignment.id}
-                  assignment={assignment}
-                  onUpdate={onChanged}
-                />
               ))}
             </div>
           )}
