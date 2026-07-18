@@ -1,9 +1,11 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { authService, RegisterSchema, LoginSchema } from "./auth.service";
 import { ZodError } from "zod";
 import { prisma } from "../../utils/prisma";
 import { AuthRequest } from "../../middleware/auth.middleware";
+import { emailService } from "../../services/email.service";
 
 // Parse a JWT expiry string like "7d", "15m", "1h" into milliseconds
 function parseExpiryToMs(expiry: string): number {
@@ -489,6 +491,90 @@ export const authController = {
       });
 
       return res.json({ message: "Password set successfully", user: tokens.user });
+    } catch (error: unknown) {
+      return res.status(500).json({ error: (error as Error).message });
+    }
+  },
+
+  // POST /api/auth/forgot-password — send reset link by email
+  async forgotPassword(req: Request, res: Response) {
+    try {
+      const { email } = req.body;
+      if (!email || typeof email !== "string") {
+        return res.status(400).json({ error: "Email is required" });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { email: email.trim().toLowerCase() },
+      });
+
+      // Always return success to avoid email enumeration
+      if (!user || !user.passwordHash) {
+        return res.json({ message: "If the account exists, a reset link has been sent." });
+      }
+
+      const resetToken = jwt.sign(
+        { userId: user.id, purpose: "password-reset" },
+        process.env.JWT_SECRET!,
+        { expiresIn: "15m" },
+      );
+
+      const resetLink = `${process.env.WEB_URL || "http://localhost:3000"}/reset-password?token=${resetToken}`;
+
+      emailService.sendResetPasswordEmail({
+        name: user.name,
+        email: user.email,
+        resetLink,
+      }).catch((err) => console.error("[auth] Failed to send reset email:", err));
+
+      return res.json({ message: "If the account exists, a reset link has been sent." });
+    } catch (error: unknown) {
+      return res.status(500).json({ error: (error as Error).message });
+    }
+  },
+
+  // POST /api/auth/reset-password — reset password with token
+  async resetPassword(req: Request, res: Response) {
+    try {
+      const { token, newPassword } = req.body;
+      if (!token || typeof token !== "string") {
+        return res.status(400).json({ error: "Reset token is required" });
+      }
+      if (!newPassword || typeof newPassword !== "string" || newPassword.length < 8) {
+        return res.status(400).json({ error: "Password must be at least 8 characters" });
+      }
+      if (!/[A-Z]/.test(newPassword)) {
+        return res.status(400).json({ error: "Password must contain at least one uppercase letter" });
+      }
+      if (!/[a-z]/.test(newPassword)) {
+        return res.status(400).json({ error: "Password must contain at least one lowercase letter" });
+      }
+      if (!/\d/.test(newPassword)) {
+        return res.status(400).json({ error: "Password must contain at least one number" });
+      }
+
+      let payload: { userId: string };
+      try {
+        payload = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string; purpose: string };
+        if (payload.purpose !== "password-reset") {
+          return res.status(400).json({ error: "Invalid reset token" });
+        }
+      } catch {
+        return res.status(400).json({ error: "Reset token is invalid or has expired" });
+      }
+
+      const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+      if (!user || !user.passwordHash) {
+        return res.status(400).json({ error: "User not found" });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash: hashedPassword, mustChangePassword: false },
+      });
+
+      return res.json({ message: "Password reset successfully. You can now log in." });
     } catch (error: unknown) {
       return res.status(500).json({ error: (error as Error).message });
     }

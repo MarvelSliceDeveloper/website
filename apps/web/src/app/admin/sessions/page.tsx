@@ -78,9 +78,11 @@ export default function AdminSessionsPage() {
   const openEdit = (session: Session) => {
     setEditingSession(session);
     setEditTitle(
-      session.batch
+      session.batch?.course
         ? `${session.batch.course.title} — ${session.batch.name}`
-        : "Mentorship Session",
+        : session.batch
+          ? `${session.batch.name}`
+          : "Mentorship Session",
     );
     setEditStart(new Date(session.scheduledAt).toISOString().slice(0, 16));
     setEditEnd(
@@ -336,9 +338,11 @@ function SessionCard({
             })}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {session.batch
+            {session.batch?.course
               ? `${session.batch.course.title} · ${session.batch.name}`
-              : "Standalone Session"}
+              : session.batch
+                ? `${session.batch.name}`
+                : "Standalone Session"}
           </p>
           <div className="flex items-center gap-2 mt-1.5">
             <span className="text-[10px] uppercase font-medium bg-accent/15 text-accent px-1.5 py-0.5 rounded">

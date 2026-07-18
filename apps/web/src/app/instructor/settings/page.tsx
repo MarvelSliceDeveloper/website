@@ -22,7 +22,6 @@ import {
   IconInbox,
   IconChevronRight,
   IconPalette,
-  IconLock,
   IconCheck,
 } from "@tabler/icons-react";
 
@@ -89,7 +88,7 @@ const TYPE_CONFIG: Record<
   },
 };
 
-type SettingsSection = "profile" | "notifications" | "appearance" | "password";
+type SettingsSection = "profile" | "notifications" | "appearance";
 
 export default function InstructorSettingsPage() {
   const router = useRouter();
@@ -103,10 +102,7 @@ export default function InstructorSettingsPage() {
     useState<SettingsSection>("profile");
   const [nameInput, setNameInput] = useState("");
   const [savingName, setSavingName] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [savingPassword, setSavingPassword] = useState(false);
+
 
   useEffect(() => {
     api
@@ -183,39 +179,6 @@ export default function InstructorSettingsPage() {
     }
   }
 
-  async function handleChangePassword() {
-    if (!currentPassword) {
-      toast.error("Current password is required");
-      return;
-    }
-    if (!newPassword || newPassword.length < 8) {
-      toast.error("New password must be at least 8 characters");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-    setSavingPassword(true);
-    try {
-      await api.patch("/api/auth/me/password", {
-        currentPassword,
-        newPassword,
-      });
-      toast.success("Password changed successfully");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (e: unknown) {
-      toast.error(
-        (e as { response?: { data?: { error?: string } } })?.response?.data
-          ?.error || "Failed to change password",
-      );
-    } finally {
-      setSavingPassword(false);
-    }
-  }
-
   const hasPrefs = Object.keys(preferences).length > 0;
   const enabledCount = Object.values(preferences).filter(Boolean).length;
   const totalCount = NOTIFICATION_TYPES.length;
@@ -243,12 +206,6 @@ export default function InstructorSettingsPage() {
       label: "Appearance",
       icon: <IconPalette size={18} />,
       description: "Theme and display",
-    },
-    {
-      id: "password",
-      label: "Password",
-      icon: <IconLock size={18} />,
-      description: "Change your password",
     },
   ];
 
@@ -449,70 +406,6 @@ export default function InstructorSettingsPage() {
     );
   }
 
-  function renderPassword() {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
-            <IconLock size={20} />
-          </div>
-          <div>
-            <p className="font-semibold text-foreground">Password</p>
-            <p className="text-sm text-muted-foreground">
-              Update your account password.
-            </p>
-          </div>
-        </div>
-
-        <div className="glass-card p-5 space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
-              Current Password
-            </label>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-              placeholder="Enter current password"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
-              New Password
-            </label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-              placeholder="At least 8 characters"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
-              Confirm New Password
-            </label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all"
-              placeholder="Re-enter new password"
-            />
-          </div>
-          <button
-            onClick={handleChangePassword}
-            disabled={savingPassword}
-            className="btn-primary px-5 py-2.5 disabled:opacity-50"
-          >
-            {savingPassword ? "Changing..." : "Change Password"}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Page header */}
@@ -620,7 +513,6 @@ export default function InstructorSettingsPage() {
           {activeSection === "profile" && renderProfile()}
           {activeSection === "notifications" && renderNotifications()}
           {activeSection === "appearance" && renderAppearance()}
-          {activeSection === "password" && renderPassword()}
         </div>
       </div>
     </div>

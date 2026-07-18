@@ -14,6 +14,7 @@ import {
   SupportTicketReply,
   SupportTicketStatusChanged,
   CustomNotification,
+  ResetPasswordEmail,
 } from "@lms/email-templates";
 
 type EmailTemplateComponent = (
@@ -139,6 +140,32 @@ export const emailService = {
       });
     } catch (error: unknown) {
       console.error("[email] Failed to render/send welcome email:", error);
+      return false;
+    }
+  },
+
+  async sendResetPasswordEmail(user: {
+    name: string;
+    email: string;
+    resetLink: string;
+  }): Promise<boolean> {
+    if (!isConfigured()) {
+      console.warn("[email] BREVO_API_KEY not set — skipping reset password email");
+      return false;
+    }
+
+    try {
+      const html = await render(ResetPasswordEmail({ userName: user.name, resetLink: user.resetLink }));
+
+      return this.sendEmail({
+        to: [{ email: user.email, name: user.name }],
+        subject: "Reset Your Password — LMS Portal",
+        html,
+        text: `Hi ${user.name},\n\nWe received a request to reset your password. Click the link below to choose a new password:\n\n${user.resetLink}\n\nThis link expires in 15 minutes.\n\nIf you did not request this, you can safely ignore this email.\n\nBest regards,\nLMS Portal Team`,
+        tags: ["password-reset"],
+      });
+    } catch (error: unknown) {
+      console.error("[email] Failed to send reset password email:", error);
       return false;
     }
   },

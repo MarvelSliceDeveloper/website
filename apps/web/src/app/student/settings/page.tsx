@@ -89,7 +89,7 @@ const TYPE_CONFIG: Record<
   },
 };
 
-type SettingsSection = "notifications" | "appearance" | "security";
+type SettingsSection = "notifications" | "appearance";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -180,12 +180,6 @@ export default function SettingsPage() {
       label: "Appearance",
       icon: <IconPalette size={18} />,
       description: "Theme and display",
-    },
-    {
-      id: "security",
-      label: "Security",
-      icon: <IconShield size={18} />,
-      description: "Password and account",
     },
   ];
 
@@ -286,113 +280,6 @@ export default function SettingsPage() {
           </div>
         )}
       </>
-    );
-  }
-
-  // ── Security panel ─────────────────────────────────────────────────
-
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [changing, setChanging] = useState(false);
-
-  async function handleChangePassword(e: React.FormEvent) {
-    e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-    setChanging(true);
-    const promise = api.patch("/api/auth/me/password", {
-      currentPassword,
-      newPassword,
-    });
-    toast.promise(promise, {
-      loading: "Updating password...",
-      success: "Password updated successfully",
-      error: "Failed to update password",
-    });
-    try {
-      await promise;
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch {
-      /* handled by toast */
-    } finally {
-      setChanging(false);
-    }
-  }
-
-  function renderSecurity() {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
-            <IconShield size={20} />
-          </div>
-          <div>
-            <p className="font-semibold text-foreground">Security</p>
-            <p className="text-sm text-muted-foreground">
-              Manage your password and account security.
-            </p>
-          </div>
-        </div>
-
-        <div className="glass-card p-5 space-y-4">
-          <p className="text-sm font-medium text-foreground">Change Password</p>
-          <form onSubmit={handleChangePassword} className="space-y-4">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                Current Password
-              </label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none transition-colors"
-                placeholder="Enter current password"
-                required
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                New Password
-              </label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none transition-colors"
-                placeholder="Enter new password"
-                required
-                minLength={8}
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                Confirm New Password
-              </label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none transition-colors"
-                placeholder="Confirm new password"
-                required
-                minLength={8}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={changing}
-              className="btn-primary text-sm"
-            >
-              {changing ? "Updating..." : "Update Password"}
-            </button>
-          </form>
-        </div>
-      </div>
     );
   }
 
@@ -559,7 +446,6 @@ export default function SettingsPage() {
           <div className="lg:col-span-8 xl:col-span-9 rounded-xl border border-border/60 bg-card overflow-hidden">
             {activeSection === "notifications" && renderNotifications()}
             {activeSection === "appearance" && renderAppearance()}
-            {activeSection === "security" && renderSecurity()}
           </div>
         </div>
       </div>

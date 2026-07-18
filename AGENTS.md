@@ -370,3 +370,40 @@ When a guest user purchases a package via the catalogue, the payment service cre
 - **Prisma migrations**: Repo uses `db push --force-reset` + seed instead of `migrate dev`; migration files may be stale
 - **No pre-commit hooks**: No Husky config found — run `pnpm format` manually
 - **No CI workflows**: No `.github/workflows/` found
+
+## Features Added (Post-Research)
+
+### Forgot / Reset Password
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/auth/forgot-password` | POST | Sends reset link email (JWT token, 15 min expiry). Always returns success (no email enumeration). |
+| `/api/auth/reset-password` | POST | Verifies JWT token, validates password strength, hashes + updates. Clears `mustChangePassword`. |
+| `/forgot-password` | Page | Email input form, sends request, shows confirmation |
+| `/reset-password` | Page | Token from URL, password requirements checklist, new password form |
+
+Both endpoints are CSRF-exempt (line 93 of `app.ts`). Email template at `packages/email-templates/src/emails/ResetPasswordEmail.tsx`.
+
+### Error Tracking (Sentry)
+- **Backend**: `@sentry/node` initialized in `apps/api/src/app.ts` if `SENTRY_DSN` env var is set. Request/tracing/error handlers registered.
+- **Frontend**: `SentryProvider` + `SentryErrorBoundary` in `apps/web/src/components/`. Wraps root layout via `Providers.tsx`. Requires `NEXT_PUBLIC_SENTRY_DSN`.
+
+### Cookie Consent Banner
+- `CookieConsentBanner` component at `apps/web/src/components/CookieConsentBanner.tsx`
+- Renders at bottom of all pages (added to `layout.tsx`)
+- Stores consent in `localStorage` key `lms-cookie-consent`
+
+### Feature Flags
+- `packages/utils/src/feature-flags.ts` — env-var based flags (`FEATURE_NEW_DASHBOARD`, `FEATURE_ONBOARDING_WIZARD`, `FEATURE_I18N`, `FEATURE_COURSE_REVIEWS`, `FEATURE_LIVE_ANALYTICS`)
+- Use `isFeatureEnabled("NEW_DASHBOARD")` to check
+
+### HTTP Caching Headers
+- `apps/api/src/middleware/cache.middleware.ts` — Express middleware setting `Cache-Control` and `ETag` headers
+- Skips caching for authenticated requests or non-GET methods
+
+### i18n Structure
+- `next.config.ts` has `i18n: { locales: ["en"], defaultLocale: "en" }`
+- Translation file at `apps/web/messages/en.json`
+- See `docs/i18n.md` for activation instructions
+
+### Database Backup Docs
+- `docs/database-backup.md` — pg_dump commands, Docker backup, cron job example, retention policy

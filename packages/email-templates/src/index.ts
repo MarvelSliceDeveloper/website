@@ -14,4 +14,5 @@ export { default as SupportTicketCreated } from "./emails/SupportTicketCreated";
 export { default as SupportTicketReply } from "./emails/SupportTicketReply";
 export { default as SupportTicketStatusChanged } from "./emails/SupportTicketStatusChanged";
 export { default as CustomNotification } from "./emails/CustomNotification";
+export { default as ResetPasswordEmail } from "./emails/ResetPasswordEmail";
 export { default as BaseLayout } from "./emails/BaseLayout";

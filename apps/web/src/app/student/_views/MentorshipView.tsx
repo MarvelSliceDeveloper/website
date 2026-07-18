@@ -4,6 +4,21 @@ import { useState } from "react";
 import { toast } from "@/lib/toast";
 import type { MentorshipTicket } from "@/lib/api-types";
 import type { EnrolledCourse } from "@/lib/api-types";
+import {
+  IconUsers,
+  IconPlus,
+  IconX,
+  IconTicket,
+  IconClock,
+  IconVideo,
+  IconChevronDown,
+  IconCircleCheck,
+  IconCircleX,
+  IconUserCheck,
+  IconCalendarEvent,
+  IconMessageCircle,
+  IconBook2,
+} from "@tabler/icons-react";
 
 interface MentorshipViewProps {
   tickets: MentorshipTicket[];
@@ -17,27 +32,42 @@ interface MentorshipViewProps {
 
 const statusConfig: Record<
   MentorshipTicket["status"],
-  { label: string; classes: string }
+  {
+    label: string;
+    badgeClasses: string;
+    iconBg: string;
+    icon: React.ReactNode;
+  }
 > = {
   OPEN: {
     label: "Waiting review",
-    classes: "border-warning/30 bg-warning/10 text-warning",
+    badgeClasses: "border-warning/30 bg-warning/10 text-warning",
+    iconBg: "bg-warning/15 text-warning",
+    icon: <IconClock size={16} stroke={1.8} />,
   },
   ASSIGNED: {
     label: "Mentor assigned",
-    classes: "border-accent/30 bg-accent/10 text-accent",
+    badgeClasses: "border-accent/30 bg-accent/10 text-accent",
+    iconBg: "bg-accent/15 text-accent",
+    icon: <IconUserCheck size={16} stroke={1.8} />,
   },
   SCHEDULED: {
     label: "Scheduled",
-    classes: "border-success/30 bg-success/10 text-success",
+    badgeClasses: "border-success/30 bg-success/10 text-success",
+    iconBg: "bg-success/15 text-success",
+    icon: <IconCalendarEvent size={16} stroke={1.8} />,
   },
   COMPLETED: {
     label: "Resolved",
-    classes: "border-primary/30 bg-primary/10 text-primary",
+    badgeClasses: "border-primary/30 bg-primary/10 text-primary",
+    iconBg: "bg-primary/15 text-primary",
+    icon: <IconCircleCheck size={16} stroke={1.8} />,
   },
   CANCELLED: {
     label: "Cancelled",
-    classes: "border-danger/30 bg-danger/10 text-danger",
+    badgeClasses: "border-danger/30 bg-danger/10 text-danger",
+    iconBg: "bg-danger/15 text-danger",
+    icon: <IconCircleX size={16} stroke={1.8} />,
   },
 };
 
@@ -84,39 +114,94 @@ export default function MentorshipView({
   return (
     <div className="sp-view-enter space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="sp-eyebrow">Support</p>
-          <h1 className="text-2xl font-bold text-foreground">
-            1-on-1 Mentorship
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Need focused help? Request a private session with your instructor.
-          </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+            <IconUsers size={22} stroke={1.8} />
+          </div>
+          <div>
+            <p className="sp-eyebrow">Support</p>
+            <h1 className="text-2xl font-bold text-foreground">
+              1-on-1 Mentorship
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground max-w-md">
+              Need focused help? Request a private session with your
+              instructor.
+            </p>
+          </div>
         </div>
         <button
           id="sp-request-session-btn"
           onClick={() => setShowForm((v) => !v)}
-          className="btn-primary"
+          className="btn-primary shrink-0"
         >
-          {showForm ? "Cancel" : "Request New Session"}
+          {showForm ? (
+            <>
+              <IconX size={15} stroke={2} />
+              Cancel
+            </>
+          ) : (
+            <>
+              <IconPlus size={15} stroke={2} />
+              Request New Session
+            </>
+          )}
         </button>
       </div>
 
+      {/* Quick stats */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:max-w-md">
+        <div className="rounded-xl border border-border bg-card p-3.5">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+            Open
+          </p>
+          <p className="mt-1 text-xl font-bold text-foreground">
+            {openTickets.length}
+          </p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-3.5">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+            Resolved
+          </p>
+          <p className="mt-1 text-xl font-bold text-foreground">
+            {tickets.filter((t) => t.status === "COMPLETED").length}
+          </p>
+        </div>
+        <div className="hidden rounded-xl border border-border bg-card p-3.5 sm:block">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+            Total
+          </p>
+          <p className="mt-1 text-xl font-bold text-foreground">
+            {tickets.length}
+          </p>
+        </div>
+      </div>
+
       {submitted && (
-        <div className="rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm text-success">
+        <div className="flex items-center gap-2.5 rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm text-success">
+          <IconCircleCheck size={18} stroke={1.8} className="shrink-0" />
           Your request was submitted! Admin will review and assign a mentor.
         </div>
       )}
 
       {/* Inline Request Form */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="glass-card space-y-4 p-6">
-          <p className="font-semibold text-foreground">New Session Request</p>
+        <form
+          onSubmit={handleSubmit}
+          className="rounded-2xl border border-border bg-card p-6 space-y-4"
+        >
+          <div className="flex items-center gap-2.5 pb-1">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
+              <IconMessageCircle size={16} stroke={1.8} />
+            </div>
+            <p className="font-semibold text-foreground">
+              New Session Request
+            </p>
+          </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">
-              Course
+            <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+              <IconBook2 size={14} /> Course
             </label>
             <select
               value={courseId}
@@ -149,8 +234,8 @@ export default function MentorshipView({
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-muted-foreground">
-              Preferred Date (optional)
+            <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+              <IconCalendarEvent size={14} /> Preferred Date (optional)
             </label>
             <input
               type="date"
@@ -160,7 +245,7 @@ export default function MentorshipView({
             />
           </div>
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 pt-1">
             <button
               type="button"
               onClick={() => setShowForm(false)}
@@ -183,8 +268,10 @@ export default function MentorshipView({
       <div>
         <p className="sp-eyebrow mb-3">Open Requests</p>
         {openTickets.length === 0 ? (
-          <div className="glass-card flex flex-col items-center gap-3 py-10 text-center">
-            <span className="text-3xl">🎫</span>
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card/50 py-10 text-center">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted/10 text-muted">
+              <IconTicket size={22} stroke={1.5} />
+            </div>
             <p className="text-sm text-muted-foreground">
               No open or assigned tickets.
             </p>
@@ -226,23 +313,32 @@ function TicketCard({
   const cfg = statusConfig[ticket.status];
 
   return (
-    <div className="glass-card p-5">
+    <div className="rounded-2xl border border-border bg-card p-5 transition-colors hover:border-border/80">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-foreground">{ticket.topic}</p>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {ticket.courseTitle}
-            {ticket.instructor && ` · Instructor: ${ticket.instructor}`}
-          </p>
-          <p className="mt-0.5 text-xs text-muted">
-            {new Date(ticket.createdAt).toLocaleDateString("en-IN", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })}
-          </p>
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <div
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${cfg.iconBg}`}
+          >
+            {cfg.icon}
+          </div>
+          <div className="min-w-0">
+            <p className="font-semibold text-foreground truncate">
+              {ticket.topic}
+            </p>
+            <p className="mt-0.5 text-sm text-muted-foreground truncate">
+              {ticket.courseTitle}
+              {ticket.instructor && ` · Instructor: ${ticket.instructor}`}
+            </p>
+            <p className="mt-0.5 text-xs text-muted">
+              {new Date(ticket.createdAt).toLocaleDateString("en-IN", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {ticket.status === "SCHEDULED" && ticket.joinUrl && (
             <a
               href={ticket.joinUrl}
@@ -250,23 +346,28 @@ function TicketCard({
               rel="noopener noreferrer"
               className="btn-primary text-xs"
             >
+              <IconVideo size={13} className="inline mr-1" />
               Join Now
             </a>
           )}
           <span
-            className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${cfg.classes}`}
+            className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${cfg.badgeClasses}`}
           >
             {cfg.label}
           </span>
         </div>
       </div>
       {showNotes && ticket.notes && (
-        <div className="mt-3">
+        <div className="mt-3 pl-13">
           <button
             onClick={() => setExpanded((v) => !v)}
-            className="text-xs font-medium text-primary hover:underline"
+            className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
           >
-            {expanded ? "Hide Notes ↑" : "View Notes →"}
+            {expanded ? "Hide Notes" : "View Notes"}
+            <IconChevronDown
+              size={13}
+              className={`transition-transform ${expanded ? "rotate-180" : ""}`}
+            />
           </button>
           {expanded && (
             <div className="mt-2 rounded-xl border border-border/60 bg-background/40 p-3 text-sm text-muted-foreground">

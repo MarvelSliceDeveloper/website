@@ -12,7 +12,6 @@ import {
   IconAward,
   IconCircleCheck,
   IconCircleX,
-  IconExternalLink,
 } from "@tabler/icons-react";
 import type { OverdueAssignment } from "@/lib/api-types";
 import type { ViewState } from "../_types/student-portal";
@@ -576,8 +575,16 @@ export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewPr
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-amber-500/15">
-                            <IconAlertCircle size={13} className="text-amber-500" />
+                          <span
+                            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${
+                              isPending ? "bg-amber-500/15" : "bg-emerald-500/15"
+                            }`}
+                          >
+                            {isPending ? (
+                              <IconAlertCircle size={13} className="text-amber-500" />
+                            ) : (
+                              <IconCheck size={13} className="text-emerald-400" />
+                            )}
                           </span>
                           <span className="text-sm font-medium text-foreground truncate max-w-[200px]">
                             {quiz.assignmentName}
@@ -626,20 +633,6 @@ export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewPr
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {quiz.courseId && navigate && (
-                            <button
-                              onClick={() =>
-                                navigate({
-                                  view: "COURSE_CONTENT",
-                                  params: { courseId: quiz.courseId },
-                                })
-                              }
-                              className="btn-ghost text-xs px-2 py-1.5"
-                              title="View in Course"
-                            >
-                              <IconExternalLink size={13} />
-                            </button>
-                          )}
                           {isPending ? (
                             <button
                               onClick={() => handleStartQuiz(quiz.id)}
@@ -648,15 +641,14 @@ export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewPr
                             >
                               Start Quiz
                             </button>
-                          ) : quiz.courseId && navigate ? (
+                          ) : (
                             <button
-                              onClick={() => navigate({ view: "COURSE_CONTENT", params: { courseId: quiz.courseId, quizId: quiz.id } })}
+                              onClick={() => handleViewResult(quiz.id)}
+                              disabled={loading}
                               className="btn-secondary text-xs px-3 py-1.5"
                             >
                               View
                             </button>
-                          ) : (
-                            <span className="text-[11px] font-medium text-emerald-400">Submitted</span>
                           )}
                         </div>
                       </td>

@@ -6,8 +6,8 @@ import { notificationService } from "../notifications/notification.service";
 
 // Schema for creating a file-based assignment (PDF questions, file-upload answers)
 export const CreateFileAssignmentSchema = z.object({
-  courseId: z.string().cuid(),
-  batchId: z.string().cuid(),
+  courseId: z.string().min(1),
+  batchId: z.string().min(1),
   title: z.string().min(3).max(150),
   description: z.string().min(3),
   dueDate: z.string().datetime(),

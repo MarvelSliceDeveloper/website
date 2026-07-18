@@ -16,19 +16,32 @@ interface CalendarViewProps {
   events: CalendarEvent[];
 }
 
-type SessionStatus = "past" | "present" | "upcoming";
+type SessionStatus = "past" | "present" | "upcoming" | "unknown";
+
+// Cohesive palette: rose (live), sky (upcoming), violet (mentorship), slate (past/unknown)
+const COLORS = {
+  live: "#f43f5e", // rose-500
+  upcoming: "#0ea5e9", // sky-500
+  mentorship: "#8b5cf6", // violet-500
+  past: "#94a3b8", // slate-400
+  unknown: "#cbd5e1", // slate-300
+};
 
 function eventColor(type: CalendarEvent["type"]): string {
-  if (type === "live") return "#ef4444";
-  if (type === "mentorship") return "#6366f1";
-  return "#25c0e8";
+  if (type === "live") return COLORS.live;
+  if (type === "mentorship") return COLORS.mentorship;
+  return COLORS.upcoming;
 }
 
 function getSessionStatus(start: string, end: string): SessionStatus {
-  const now = Date.now();
   const startTime = new Date(start).getTime();
   const endTime = new Date(end).getTime();
 
+  // Guard against invalid/unparseable dates so they don't silently
+  // fall through to "present" (NaN comparisons are always false).
+  if (isNaN(startTime) || isNaN(endTime)) return "unknown";
+
+  const now = Date.now();
   if (now < startTime) return "upcoming";
   if (now > endTime) return "past";
   return "present";
@@ -37,13 +50,30 @@ function getSessionStatus(start: string, end: string): SessionStatus {
 function statusLabel(status: SessionStatus): string {
   if (status === "present") return "Live Now";
   if (status === "past") return "Past";
+  if (status === "unknown") return "Date TBD";
   return "Upcoming";
 }
 
 function statusColor(status: SessionStatus): string {
-  if (status === "present") return "#ef4444";
-  if (status === "past") return "#9ca3af";
-  return "#25c0e8";
+  if (status === "present") return COLORS.live;
+  if (status === "past") return COLORS.past;
+  if (status === "unknown") return COLORS.unknown;
+  return COLORS.upcoming;
+}
+
+// Start-of-week (Monday) through end-of-week (Sunday) for "This Week" filtering.
+function getWeekRange(reference: Date): { start: number; end: number } {
+  const day = reference.getDay(); // 0 = Sunday
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+
+  const start = new Date(reference);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() + diffToMonday);
+
+  const end = new Date(start);
+  end.setDate(end.getDate() + 7);
+
+  return { start: start.getTime(), end: end.getTime() };
 }
 
 export default function CalendarView({ events }: CalendarViewProps) {
@@ -59,6 +89,17 @@ export default function CalendarView({ events }: CalendarViewProps) {
       }))
     : [];
 
+  const { start: weekStart, end: weekEnd } = getWeekRange(new Date());
+
+  const thisWeekEvents = events
+    .filter((e) => {
+      const t = new Date(e.startAt).getTime();
+      return !isNaN(t) && t >= weekStart && t < weekEnd;
+    })
+    .sort(
+      (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
+    );
+
   return (
     <div className="sp-view-enter space-y-6">
       {/* Header */}
@@ -73,9 +114,9 @@ export default function CalendarView({ events }: CalendarViewProps) {
       {/* Legend */}
       <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
         {[
-          { color: "#ef4444", label: "Live Session" },
-          { color: "#25c0e8", label: "Upcoming Session" },
-          { color: "#6366f1", label: "Mentorship" },
+          { color: COLORS.live, label: "Live Session" },
+          { color: COLORS.upcoming, label: "Upcoming Session" },
+          { color: COLORS.mentorship, label: "Mentorship" },
         ].map((l) => (
           <span key={l.label} className="flex items-center gap-1.5">
             <span
@@ -101,7 +142,7 @@ export default function CalendarView({ events }: CalendarViewProps) {
       {/* This Week List */}
       <div>
         <p className="sp-eyebrow mb-3">This Week</p>
-        {events.length === 0 ? (
+        {thisWeekEvents.length === 0 ? (
           <div className="glass-card flex flex-col items-center gap-3 py-12 text-center">
             <span className="text-4xl">📅</span>
             <p className="text-sm text-muted-foreground">
@@ -110,7 +151,7 @@ export default function CalendarView({ events }: CalendarViewProps) {
           </div>
         ) : (
           <div className="space-y-2">
-            {events.map((e) => {
+            {thisWeekEvents.map((e) => {
               const start = new Date(e.startAt);
               const isValid = !isNaN(start.getTime());
               const status = getSessionStatus(e.startAt, e.endAt);

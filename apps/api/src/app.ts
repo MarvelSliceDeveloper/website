@@ -2,6 +2,9 @@ import * as dotenv from "dotenv";
 import * as path from "path";
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
+import * as Sentry from "@sentry/node";
+import { expressMiddleware } from "@sentry/integrations";
+
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import pino from "pino";
@@ -58,7 +61,23 @@ const logger = pino({
   level: process.env.LOG_LEVEL || "info",
 });
 
+// ── Sentry error tracking ──
+const sentryDsn = process.env.SENTRY_DSN;
+if (sentryDsn) {
+  Sentry.init({
+    dsn: sentryDsn,
+    environment: process.env.NODE_ENV || "development",
+    tracesSampleRate: 0.1,
+    integrations: [Sentry.httpIntegration()],
+  });
+}
+
 const app = express();
+
+if (sentryDsn) {
+  app.use(Sentry.Handlers.requestHandler());
+  app.use(Sentry.Handlers.tracingHandler());
+}
 
 const uploadsRoot = path.resolve(__dirname, "..", "uploads");
 fs.mkdirSync(uploadsRoot, { recursive: true });
@@ -95,6 +114,8 @@ const csrfExemptPaths = [
   "/api/auth/register",
   "/api/auth/logout",
   "/api/auth/me/set-password",
+  "/api/auth/forgot-password",
+  "/api/auth/reset-password",
   "/api/auth/azure-ad/callback",
   "/api/webhooks/",
   "/api/csrf-token",
@@ -220,6 +241,11 @@ app.use("/api/youtube", youtubeRouter);
 // ── Payments ──
 app.use("/api/payments", paymentRouter);
 app.use("/api/admin/payments", adminPaymentRouter);
+
+// Sentry error handler (must come before generic error handler)
+if (process.env.SENTRY_DSN) {
+  app.use(Sentry.Handlers.errorHandler());
+}
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   const status = err.statusCode || err.status || 500;

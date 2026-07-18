@@ -8,9 +8,9 @@ import { getSuperAdminId } from "../../utils/super-admin";
 
 export const CreateSessionSchema = z
   .object({
-    batchId: z.string().cuid(),
-    courseId: z.string().cuid().optional(),
-    moduleId: z.string().cuid().optional(),
+    batchId: z.string().min(1),
+    courseId: z.string().min(1).optional(),
+    moduleId: z.string().min(1).optional(),
     title: z.string().min(3).max(200),
     startDateTime: z
       .string()

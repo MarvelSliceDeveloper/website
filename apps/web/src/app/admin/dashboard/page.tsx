@@ -32,21 +32,35 @@ import {
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
+/**
+ * Palette notes:
+ * - primary   (indigo)  -> platform / navigation actions, the "brand" hue
+ * - accent    (teal)    -> growth / activity metrics, kept distinct from primary
+ *                          so charts don't read as one blue blob
+ * - success   (green)   -> healthy / approved / online states
+ * - warning   (amber)   -> needs attention, but not broken
+ * - danger    (coral)   -> broken / high privilege / blocking
+ * - violet    (extra)   -> 5th categorical slot for donut charts with >4 series
+ * - muted     (slate)   -> secondary text / axis labels
+ */
 const COLORS = {
-  primary: "#6d7dff",
-  accent: "#25c0e8",
-  success: "#2fbf71",
-  warning: "#f5ad42",
-  danger: "#f05d7d",
-  muted: "#8b93ae",
+  primary: "#4F5FE0",
+  accent: "#14B8A6",
+  success: "#22A06B",
+  warning: "#E0A030",
+  danger: "#E0526B",
+  violet: "#8B7CF6",
+  muted: "#7C88A6",
 };
 
+// Ordered for donut/pie legibility: alternating warm/cool so adjacent
+// slices never sit next to a near-identical hue.
 const PIE_COLORS = [
   COLORS.primary,
-  COLORS.accent,
-  COLORS.success,
   COLORS.warning,
+  COLORS.accent,
   COLORS.danger,
+  COLORS.violet,
 ];
 
 // --- Super Admin Dashboard ---
@@ -237,10 +251,17 @@ function SuperAdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Greeting Banner */}
+      {/* Greeting Banner — top accent bar signals health at a glance */}
       <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 sm:p-6">
+        <div
+          className={`absolute inset-x-0 top-0 h-1 ${
+            saStats.healthStatus === "ok"
+              ? "bg-gradient-to-r from-success via-success/70 to-transparent"
+              : "bg-gradient-to-r from-danger via-danger/70 to-transparent"
+          }`}
+        />
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-danger text-xl font-bold text-white">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-danger to-danger/70 text-xl font-bold text-white shadow-sm">
             SA
           </div>
           <div className="min-w-0 flex-1">
@@ -600,7 +621,7 @@ function AdminDashboard() {
                   toolbar: { show: false },
                   fontFamily: "inherit",
                 },
-                colors: [COLORS.primary],
+                colors: [COLORS.accent],
                 fill: {
                   type: "gradient",
                   gradient: {

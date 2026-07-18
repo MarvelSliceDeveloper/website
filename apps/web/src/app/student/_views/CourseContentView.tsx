@@ -495,17 +495,35 @@ export default function CourseContentView({
 
     if (selectedResource) {
       return (
-        <StudyMaterialContent
-          name={selectedResource.name}
-          url={selectedResource.url}
-          onBack={clearResourcePreview}
-        />
+        <>
+          {/* Study material header — mirrors the "About this lesson" pattern below */}
+          <div className="bg-white border border-border/60 rounded-xl p-4 mb-4 shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                <IconFile size={17} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600">
+                  Study Material
+                </p>
+                <p className="text-sm font-medium text-foreground truncate">
+                  {selectedResource.name}
+                </p>
+              </div>
+            </div>
+          </div>
+          <StudyMaterialContent
+            name={selectedResource.name}
+            url={selectedResource.url}
+            onBack={clearResourcePreview}
+          />
+        </>
       );
     }
 
     return (
       <>
-        <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-card border border-border">
+        <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-white border border-border/60 shadow-sm">
           <VideoPlayer lesson={selectedLesson} recording={selectedRecording} />
         </div>
         <div className="px-1">
@@ -546,11 +564,20 @@ export default function CourseContentView({
             </button>
           )}
         </div>
-        <div className="bg-card-hover border border-border rounded-xl p-4 mt-4">
-          <h3 className="text-sm font-medium text-foreground mb-1.5">
-            {selectedRecording ? "About this session" : "About this lesson"}
-          </h3>
-          <p className="text-xs text-muted-foreground leading-relaxed">
+        <div className="bg-white border border-border/60 rounded-xl p-4 mt-4 shadow-sm">
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+              {selectedRecording ? (
+                <IconVideo size={15} />
+              ) : (
+                <IconBook2 size={15} />
+              )}
+            </span>
+            <h3 className="text-sm font-semibold text-foreground">
+              {selectedRecording ? "About this session" : "About this lesson"}
+            </h3>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed pl-9.5">
             {selectedLesson?.description ??
               "Select a lesson from the sidebar to view details."}
           </p>
@@ -928,7 +955,10 @@ export default function CourseContentView({
         <div className="flex items-center gap-3 px-5 py-2.5 bg-card border-t border-border flex-shrink-0">
           <button
             onClick={() => {
-              if (!selectedModule) return;
+              // Guard: navigation position isn't tracked while a study
+              // material resource is open, since resources aren't part
+              // of the unified lesson/quiz/assignment ordering.
+              if (!selectedModule || selectedResource) return;
               const unified = buildUnifiedList(selectedModule);
               const curIdx = unified.findIndex(
                 (item) =>
@@ -957,7 +987,7 @@ export default function CourseContentView({
               }
             }}
             disabled={(() => {
-              if (!selectedModule) return true;
+              if (!selectedModule || selectedResource) return true;
               const unified = buildUnifiedList(selectedModule);
               const curIdx = unified.findIndex(
                 (item) =>
@@ -975,7 +1005,7 @@ export default function CourseContentView({
           </button>
           <div className="flex-1" />
           <span className="text-xs text-muted-foreground">
-            {selectedModule && (() => {
+            {selectedModule && !selectedResource && (() => {
               const unified = buildUnifiedList(selectedModule);
               const curIdx = unified.findIndex(
                 (item) =>
@@ -1001,7 +1031,7 @@ export default function CourseContentView({
           </button>
           <button
             onClick={() => {
-              if (!selectedModule) return;
+              if (!selectedModule || selectedResource) return;
               const unified = buildUnifiedList(selectedModule);
               const curIdx = unified.findIndex(
                 (item) =>
@@ -1030,7 +1060,7 @@ export default function CourseContentView({
               }
             }}
             disabled={(() => {
-              if (!selectedModule) return true;
+              if (!selectedModule || selectedResource) return true;
               const unified = buildUnifiedList(selectedModule);
               const curIdx = unified.findIndex(
                 (item) =>

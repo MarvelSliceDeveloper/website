@@ -31,7 +31,7 @@ export const ApproveEnrollmentSchema = z.object({
   courseBatchAssignments: z.array(
     z.object({
       courseId: z.string().cuid(),
-      batchId: z.string().cuid(),
+      batchId: z.string().min(1),
     }),
   ),
 });
