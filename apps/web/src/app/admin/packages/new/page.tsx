@@ -26,6 +26,7 @@ export default function CreatePackagePage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
   const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
   const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -62,9 +63,11 @@ export default function CreatePackagePage() {
 
     setLoading(true);
     try {
+      const priceNum = price ? parseInt(price, 10) * 100 : undefined;
       await api.post("/api/admin/packages", {
         name: name.trim(),
         description: description.trim() || undefined,
+        price: priceNum,
         courseIds: selectedCourseIds,
       });
       toast.success("Package created successfully");
@@ -134,6 +137,21 @@ export default function CreatePackagePage() {
               placeholder="What's included in this package?"
               className="field w-full min-h-[80px]"
               rows={3}
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Price (₹) <span className="text-xs text-muted-foreground">— leave empty for free</span>
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="e.g. 49999"
+              className="field w-full"
             />
           </div>
         </div>

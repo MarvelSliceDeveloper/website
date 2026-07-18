@@ -403,10 +403,11 @@ export default function ModuleCard({
                   {contentOverIdx === idx &&
                     contentDragIdx !== idx &&
                     contentOverIdx !== null && (
-                      <div className="h-0.5 rounded-full bg-primary/30 mx-6" />
+                      <div key="drag" className="h-0.5 rounded-full bg-primary/30 mx-6" />
                     )}
                   {item.type === "LESSON" && (
                     <LessonCard
+                      key="lesson"
                       lesson={item.data}
                       index={idx}
                       onChanged={onChanged}
@@ -422,6 +423,7 @@ export default function ModuleCard({
                   )}
                   {item.type === "QUIZ" && (
                     <div
+                      key="quiz"
                       onDragOver={(e) => {
                         e.preventDefault();
                         setContentOverIdx(idx);
@@ -433,6 +435,7 @@ export default function ModuleCard({
                       }}
                     >
                       <QuizCard
+                        key="quiz-card"
                         quiz={item.data}
                         onUpdate={onChanged}
                         onDragStart={() => setContentDragIdx(idx)}
@@ -442,6 +445,7 @@ export default function ModuleCard({
                   )}
                   {item.type === "ASSIGNMENT" && (
                     <div
+                      key="assignment"
                       onDragOver={(e) => {
                         e.preventDefault();
                         setContentOverIdx(idx);
@@ -453,6 +457,7 @@ export default function ModuleCard({
                       }}
                     >
                       <AssignmentCard
+                        key="assignment-card"
                         assignment={item.data}
                         onUpdate={onChanged}
                         onDragStart={() => setContentDragIdx(idx)}

@@ -17,6 +17,9 @@ router.patch("/me/profile", requireAuth, authController.updateProfile);
 // PATCH /api/auth/me/password — change password
 router.patch("/me/password", requireAuth, authController.changePassword);
 
+// POST /api/auth/me/set-password — set initial password (mustChangePassword flow)
+router.post("/me/set-password", requireAuth, authController.setPassword);
+
 // --- Microsoft Azure AD OAuth ---
 router.get("/azure-ad/status", requireAuth, authController.azureAdStatus);
 router.get("/azure-ad/login", requireAuth, authController.azureAdLogin);

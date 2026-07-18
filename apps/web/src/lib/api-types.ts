@@ -150,8 +150,35 @@ export interface DashboardChartData {
     userEmail: string;
     packageName: string;
     status: string;
+    razorpayPaymentId: string | null;
+    amount: number | null;
     appliedAt: string;
   }[];
+}
+
+export interface CataloguePackage {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number | null;
+  status: string;
+  createdAt: string;
+  courses: {
+    course: {
+      id: string;
+      title: string;
+      slug: string;
+      description: string | null;
+      thumbnailUrl: string | null;
+    };
+  }[];
+  batches: {
+    id: string;
+    name: string;
+    startDate: string;
+    maxStudents: number | null;
+  }[];
+  _count: { enrollments: number };
 }
 
 export interface OverdueAssignment {

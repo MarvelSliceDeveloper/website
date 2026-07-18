@@ -5,6 +5,7 @@ import { jwtVerify } from "jose";
 const protectedPrefixes = ["/admin", "/instructor", "/student"];
 
 const superAdminPrefixes = [
+  "/admin/super-admin",
   "/admin/logs",
   "/admin/trash",
   "/admin/announcements",
@@ -37,10 +38,6 @@ export async function middleware(request: NextRequest) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
-  }
-
-  if (pathname === "/login" && token) {
-    return NextResponse.redirect(new URL("/admin/dashboard", request.url));
   }
 
   const isSuperAdminRoute = superAdminPrefixes.some((p) =>

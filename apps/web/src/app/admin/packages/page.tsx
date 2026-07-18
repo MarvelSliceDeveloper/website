@@ -14,6 +14,7 @@ type Package = {
   id: string;
   name: string;
   description: string | null;
+  price: number | null;
   status: "DRAFT" | "ACTIVE" | "ARCHIVED";
   createdAt: string;
   courses: {
@@ -157,6 +158,11 @@ export default function AdminPackagesPage() {
                 <span>
                   {pkg._count.enrollments} enrollment
                   {pkg._count.enrollments !== 1 ? "s" : ""}
+                </span>
+                <span>
+                  {pkg.price != null
+                    ? `₹${(pkg.price / 100).toLocaleString("en-IN")}`
+                    : "Free"}
                 </span>
               </div>
 

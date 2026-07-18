@@ -103,6 +103,7 @@ async function main() {
       id: "pkg-datascience",
       name: "Data Science Program",
       description: "Complete data science track: Python, SQL, and Machine Learning.",
+      price: 4990000,
       status: "ACTIVE",
       courses: {
         create: [

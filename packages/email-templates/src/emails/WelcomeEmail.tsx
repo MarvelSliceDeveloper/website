@@ -12,17 +12,44 @@ import BaseLayout from "./BaseLayout";
 
 interface WelcomeEmailProps {
   userName: string;
+  credentials?: { email: string; password: string };
 }
 
-export default function WelcomeEmail({ userName }: WelcomeEmailProps) {
+export default function WelcomeEmail({ userName, credentials }: WelcomeEmailProps) {
   return (
     <BaseLayout previewText={`Welcome to LMS Portal, ${userName}!`}>
       <Section style={bodyStyle}>
-        <Heading style={headingStyle}>Welcome, {userName}! 🎉</Heading>
+        <Heading style={headingStyle}>Welcome, {userName}!</Heading>
         <Text style={textStyle}>
           We're excited to have you on board. Your account is ready, and your
           learning journey starts now.
         </Text>
+
+        {credentials && (
+          <>
+            <Section style={credBoxStyle}>
+              <Text style={credTitleStyle}>Your Login Credentials</Text>
+              <Text style={credFieldStyle}>
+                <strong>Email:</strong> {credentials.email}
+              </Text>
+              <Text style={credFieldStyle}>
+                <strong>Password:</strong> {credentials.password}
+              </Text>
+              <Section style={buttonContainerStyle}>
+                <Button
+                  href={`${process.env.WEB_URL || "http://localhost:3000"}/login`}
+                  style={buttonStyle}
+                >
+                  Log In to Your Account
+                </Button>
+              </Section>
+              <Text style={credNoteStyle}>
+                For security, please set your own password after logging in.
+              </Text>
+            </Section>
+            <Hr style={dividerStyle} />
+          </>
+        )}
 
         <Text style={sectionLabelStyle}>Here's what you can do next</Text>
 
@@ -130,6 +157,38 @@ const buttonStyle: React.CSSProperties = {
   textAlign: "center" as const,
   display: "inline-block",
   padding: "13px 32px",
+};
+
+const credBoxStyle: React.CSSProperties = {
+  backgroundColor: "#f0fdf4",
+  border: "1px solid #bbf7d0",
+  borderRadius: "8px",
+  padding: "16px 20px",
+  margin: "20px 0 16px",
+};
+
+const credTitleStyle: React.CSSProperties = {
+  color: "#166534",
+  fontSize: "14px",
+  fontWeight: "700",
+  margin: "0 0 10px",
+};
+
+const credFieldStyle: React.CSSProperties = {
+  color: "#374151",
+  fontSize: "14px",
+  lineHeight: "1.8",
+  margin: "0",
+  fontFamily: "monospace",
+};
+
+const credNoteStyle: React.CSSProperties = {
+  color: "#6b7280",
+  fontSize: "12px",
+  lineHeight: "1.5",
+  margin: "12px 0 0",
+  textAlign: "center" as const,
+  fontStyle: "italic",
 };
 
 const footerTextStyle: React.CSSProperties = {

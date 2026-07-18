@@ -80,7 +80,7 @@ export default function LoginPage() {
 
     try {
       const result = await api.post<{
-        user?: { role?: string };
+        user?: { role?: string; mustChangePassword?: boolean };
       }>("/api/auth/login", {
         email: normalizedEmail,
         password,
@@ -88,6 +88,11 @@ export default function LoginPage() {
 
       toast.success("Signed in successfully");
       const role = result?.user?.role;
+
+      if (result?.user?.mustChangePassword) {
+        router.push("/set-password");
+        return;
+      }
 
       if (role === "ADMIN" || role === "SUPER_ADMIN") {
         router.push("/admin/dashboard");
@@ -110,7 +115,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen overflow-x-hidden bg-[#f8f9fc]">
+    <div className="flex min-h-screen overflow-x-hidden bg-background">
       {/* ─── LEFT: Hero Panel (hidden on mobile/tablet) ─── */}
       <section className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-[#3b82f6] via-[#2563eb] to-[#1d4ed8] px-12 lg:flex lg:w-[55%]">
         {/* Diagonal stripe texture overlay */}
@@ -228,8 +233,8 @@ export default function LoginPage() {
           }}
         >
           {/* Glass wrapper */}
-          <div className="rounded-2xl bg-white/80 p-1 shadow-[0_8px_60px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-white/60">
-            <div className="rounded-[14px] bg-white px-8 py-10">
+          <div className="rounded-2xl bg-card/80 p-1 shadow-[0_8px_60px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-border/60">
+            <div className="rounded-[14px] bg-card px-8 py-10">
               {/* Logo (mobile only — on desktop the left panel has it) */}
               <div
                 className="flex items-center justify-center gap-2.5 lg:hidden"
@@ -241,8 +246,8 @@ export default function LoginPage() {
                   className="h-11 w-auto object-contain"
                 />
                 <span className="text-2xl font-extrabold tracking-tight">
-                  <span className="text-blue-500">Marvel</span>{" "}
-                  <span className="text-blue-800">Slice</span>
+                  <span className="text-primary">Marvel</span>{" "}
+                  <span className="text-primary/80">Slice</span>
                 </span>
               </div>
 
@@ -254,10 +259,10 @@ export default function LoginPage() {
                     "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both",
                 }}
               >
-                <h2 className="text-[22px] font-bold text-gray-800">
+                <h2 className="text-[22px] font-bold text-foreground">
                   Welcome back
                 </h2>
-                <p className="mt-1 text-sm text-gray-400">
+                <p className="mt-1 text-sm text-muted-foreground">
                   Log in to continue your learning journey
                 </p>
               </div>
@@ -272,14 +277,14 @@ export default function LoginPage() {
                 }}
               >
                 {/* Email */}
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3.5 text-sm text-gray-800 outline-none transition-all duration-300 placeholder:text-gray-400 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100/60 hover:border-gray-300"
-                />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    required
+                    className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3.5 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
+                  />
 
                 {/* Password */}
                 <div className="relative">
@@ -289,12 +294,12 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     required
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3.5 pr-11 text-sm text-gray-800 outline-none transition-all duration-300 placeholder:text-gray-400 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100/60 hover:border-gray-300"
+                    className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3.5 pr-11 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-all duration-200 hover:bg-muted/10 hover:text-foreground"
                     aria-label={
                       showPassword ? "Hide password" : "Show password"
                     }
@@ -309,18 +314,18 @@ export default function LoginPage() {
 
                 {/* Remember / Forgot */}
                 <div className="flex items-center justify-between text-[13px]">
-                  <label className="flex cursor-pointer select-none items-center gap-1.5 text-gray-500 transition-colors hover:text-gray-700">
+                  <label className="flex cursor-pointer select-none items-center gap-1.5 text-muted transition-colors hover:text-foreground">
                     <input
                       type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 accent-blue-500"
+                      className="h-4 w-4 rounded border-border accent-primary"
                     />
                     Remember Me
                   </label>
                   <button
                     type="button"
-                    className="font-semibold text-blue-500 transition-colors hover:text-blue-600"
+                    className="font-semibold text-primary transition-colors hover:text-primary-hover"
                   >
                     Forgot Password?
                   </button>
@@ -330,7 +335,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/25 transition-all duration-300 hover:from-blue-600 hover:to-blue-700 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0"
+                  className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-primary to-primary-hover py-3.5 text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all duration-300 hover:from-primary-hover hover:to-primary hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0"
                 >
                   <span
                     className="relative z-10"
@@ -356,15 +361,15 @@ export default function LoginPage() {
                     "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both",
                 }}
               >
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
-                <span className="text-xs font-medium text-gray-400">OR</span>
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
+                <span className="text-xs font-medium text-muted-foreground">OR</span>
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
               </div>
 
               {/* SSO Button */}
               <button
                 type="button"
-                className="mt-4 w-full rounded-xl border-2 border-blue-200 bg-blue-50/50 py-3 text-sm font-semibold text-blue-600 transition-all duration-300 hover:border-blue-400 hover:bg-blue-50 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]"
+                className="mt-4 w-full rounded-xl border-2 border-primary/30 bg-primary/10 py-3 text-sm font-semibold text-primary transition-all duration-300 hover:border-primary hover:bg-primary/15 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]"
                 style={{
                   animation:
                     "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both",
@@ -373,16 +378,32 @@ export default function LoginPage() {
                 Single Sign On
               </button>
 
+              {/* Catalogue Link */}
+              <div
+                className="mt-4 text-center"
+                style={{
+                  animation:
+                    "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both",
+                }}
+              >
+                <a
+                  href="/catalogue"
+                  className="text-sm font-medium text-primary transition-colors hover:text-primary-hover"
+                >
+                  Browse our course packages
+                </a>
+              </div>
+
               {/* Demo Accounts */}
               {process.env.NODE_ENV === "development" && (
                 <div
-                  className="mt-6 rounded-xl border border-dashed border-gray-200 bg-gray-50/50 p-4"
+                  className="mt-6 rounded-xl border border-dashed border-border bg-muted/5 p-4"
                   style={{
                     animation:
                       "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both",
                   }}
                 >
-                  <p className="mb-2.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                  <p className="mb-2.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     Demo Accounts (dev only)
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -416,7 +437,7 @@ export default function LoginPage() {
                           setPassword(d.pw);
                           toast.info(`Filled ${d.label} credentials`);
                         }}
-                        className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-[11px] font-medium text-gray-500 shadow-sm transition-all duration-200 hover:border-blue-300 hover:text-blue-600 hover:shadow-md hover:-translate-y-0.5 active:scale-95"
+                        className="rounded-lg border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-muted shadow-sm transition-all duration-200 hover:border-primary-hover hover:text-primary hover:shadow-md hover:-translate-y-0.5 active:scale-95"
                       >
                         {d.label}
                       </button>

@@ -151,6 +151,16 @@ export const packageController = {
     }
   },
 
+  // Get public catalogue of ACTIVE packages
+  async getPublicCatalogue(_req: AuthRequest, res: Response) {
+    try {
+      const packages = await packageService.getPublicCatalogue();
+      return res.json({ packages });
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  },
+
   // Get student's enrolled packages
   async getStudentPackages(req: AuthRequest, res: Response) {
     try {

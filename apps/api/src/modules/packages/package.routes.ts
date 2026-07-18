@@ -77,3 +77,10 @@ enrollmentRouter.patch(
 );
 
 export const packageEnrollmentRouter = enrollmentRouter;
+
+// --- Public Package Routes (no auth required) ---
+
+export const publicPackageRouter = Router();
+
+// GET /api/packages/public — public catalogue of ACTIVE packages with prices
+publicPackageRouter.get("/public", packageController.getPublicCatalogue);

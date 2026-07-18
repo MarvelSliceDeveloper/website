@@ -47,6 +47,13 @@ enum PackageStatus {
   ARCHIVED
 }
 
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
 enum BatchStatus {
   UPCOMING
   ACTIVE
@@ -63,6 +70,7 @@ model User {
   msRefreshToken String? // AES-256 encrypted
   role           Role                @default(STUDENT)
   isSuspended    Boolean             @default(false)
+  mustChangePassword Boolean          @default(false)
   suspendedAt    DateTime?
   suspendedBy    String?
   rateLimitPerMin Int                @default(60)
@@ -89,6 +97,7 @@ model User {
    supportMessages      SupportMessage[]    @relation("UserSupportMessages")
    notes                Note[]
    packageEnrollments   PackageEnrollment[]
+   payments             Payment[]
  }
 
 model Course {
@@ -677,6 +686,7 @@ model CoursePackage {
   id          String        @id @default(cuid())
   name        String
   description String?
+  price       Int?          // price in paise (₹500 = 50000); null = free/private
   status      PackageStatus @default(DRAFT)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -684,6 +694,7 @@ model CoursePackage {
   courses     PackageCourse[]
   enrollments PackageEnrollment[]
   batches     Batch[]
+  payments    Payment[]
 }
 
 model PackageCourse {
@@ -697,17 +708,37 @@ model PackageCourse {
   @@unique([packageId, courseId])
 }
 
+model Payment {
+  id                String        @id @default(cuid())
+  userId            String
+  packageId         String
+  amount            Int           // in paise
+  currency          String        @default("INR")
+  razorpayOrderId   String?       @unique
+  razorpayPaymentId String?       @unique
+  razorpaySignature String?
+  status            PaymentStatus @default(PENDING)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  user    User          @relation(fields: [userId], references: [id])
+  package CoursePackage @relation(fields: [packageId], references: [id])
+  enrollment PackageEnrollment?
+}
+
 model PackageEnrollment {
   id        String        @id @default(cuid())
   userId    String
   packageId String
   status    EnrollmentStatus @default(PENDING)
+  paymentId String?       @unique
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
   user    User         @relation(fields: [userId], references: [id])
   package CoursePackage @relation(fields: [packageId], references: [id])
   courses PackageEnrollmentCourse[]
+  payment Payment?      @relation(fields: [paymentId], references: [id])
 }
 
 model PackageEnrollmentCourse {

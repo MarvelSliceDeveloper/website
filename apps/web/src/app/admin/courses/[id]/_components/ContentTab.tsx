@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { IconPlus, IconGripVertical } from "@tabler/icons-react";
@@ -17,13 +17,16 @@ export default function ContentTab({
   modules: Module[];
   onContentChanged: () => void;
 }) {
-  const [items, setItems] = useState(modules);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
+  const [dragOrder, setDragOrder] = useState<string[] | null>(null);
 
-  useEffect(() => {
-    setItems(modules);
-  }, [modules]);
+  const items = useMemo(() => {
+    if (dragOrder) {
+      return dragOrder.map(id => modules.find(m => m.id === id)!).filter(Boolean);
+    }
+    return modules;
+  }, [modules, dragOrder]);
 
   const handleDragStart = (index: number) => {
     setDragIndex(index);
@@ -44,14 +47,16 @@ export default function ContentTab({
     const reordered = [...items];
     const [moved] = reordered.splice(dragIndex, 1);
     reordered.splice(dropIdx, 0, moved);
-    setItems(reordered);
+    setDragOrder(reordered.map((m) => m.id));
     try {
       await api.patch(`/api/admin/courses/${courseId}/modules/reorder`, {
         moduleIds: reordered.map((m) => m.id),
       });
+      setDragOrder(null);
       onContentChanged();
     } catch {
       toast.error("Failed to reorder");
+      setDragOrder(null);
       onContentChanged();
     }
     reset();
@@ -90,9 +95,10 @@ export default function ContentTab({
           {items.map((mod, idx) => (
             <div key={mod.id}>
               {overIndex === idx && dragIndex !== idx && overIndex !== null && (
-                <div className="h-1 rounded-full bg-primary/40 mx-1 transition-all" />
+                <div key="drag" className="h-1 rounded-full bg-primary/40 mx-1 transition-all" />
               )}
               <ModuleCard
+                key="module"
                 module={mod}
                 index={idx}
                 courseId={courseId}

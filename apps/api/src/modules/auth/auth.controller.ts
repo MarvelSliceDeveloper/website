@@ -94,7 +94,7 @@ export const authController = {
         return res.status(401).json({ error: "Authentication required" });
       const user = await prisma.user.findUnique({
         where: { id: req.user.userId },
-        select: { id: true, name: true, email: true, role: true },
+        select: { id: true, name: true, email: true, role: true, mustChangePassword: true },
       });
       if (!user) return res.status(404).json({ error: "User not found" });
       return res.json({ user });
@@ -401,10 +401,94 @@ export const authController = {
       const hashedPassword = await bcrypt.hash(newPassword, 12);
       await prisma.user.update({
         where: { id: req.user.userId },
-        data: { passwordHash: hashedPassword },
+        data: { passwordHash: hashedPassword, mustChangePassword: false },
       });
 
-      return res.json({ message: "Password changed successfully" });
+      const tokens = authService.generateTokens({
+        id: user.id,
+        role: user.role,
+        email: user.email,
+        name: user.name,
+        mustChangePassword: false,
+        sessionTimeoutMin: user.sessionTimeoutMin,
+      });
+
+      res.cookie("accessToken", tokens.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: ACCESS_TOKEN_MAX_AGE,
+      });
+
+      return res.json({ message: "Password changed successfully", user: tokens.user });
+    } catch (error: unknown) {
+      return res.status(500).json({ error: (error as Error).message });
+    }
+  },
+
+  // POST /api/auth/me/set-password — set initial password (mustChangePassword flow)
+  async setPassword(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
+
+      const { newPassword } = req.body;
+
+      if (
+        !newPassword ||
+        typeof newPassword !== "string" ||
+        newPassword.length < 8
+      ) {
+        return res
+          .status(400)
+          .json({ error: "Password must be at least 8 characters" });
+      }
+      if (!/[A-Z]/.test(newPassword)) {
+        return res.status(400).json({ error: "Password must contain at least one uppercase letter" });
+      }
+      if (!/[a-z]/.test(newPassword)) {
+        return res.status(400).json({ error: "Password must contain at least one lowercase letter" });
+      }
+      if (!/\d/.test(newPassword)) {
+        return res.status(400).json({ error: "Password must contain at least one number" });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.userId },
+      });
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      if (!user.mustChangePassword) {
+        return res.status(400).json({ error: "Password already set. Use the settings page to change it." });
+      }
+
+      if (!user.passwordHash) {
+        return res.status(400).json({ error: "Cannot set password. Account uses SSO authentication." });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      await prisma.user.update({
+        where: { id: req.user.userId },
+        data: { passwordHash: hashedPassword, mustChangePassword: false },
+      });
+
+      const tokens = authService.generateTokens({
+        id: user.id,
+        role: user.role,
+        email: user.email,
+        name: user.name,
+        mustChangePassword: false,
+        sessionTimeoutMin: user.sessionTimeoutMin,
+      });
+
+      res.cookie("accessToken", tokens.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: ACCESS_TOKEN_MAX_AGE,
+      });
+
+      return res.json({ message: "Password set successfully", user: tokens.user });
     } catch (error: unknown) {
       return res.status(500).json({ error: (error as Error).message });
     }

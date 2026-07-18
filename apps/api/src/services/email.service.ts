@@ -116,6 +116,7 @@ export const emailService = {
   async sendWelcomeEmail(user: {
     name: string;
     email: string;
+    credentials?: { email: string; password: string };
   }): Promise<boolean> {
     if (!isConfigured()) {
       console.warn("[email] BREVO_API_KEY not set — skipping welcome email");
@@ -123,13 +124,17 @@ export const emailService = {
     }
 
     try {
-      const html = await render(WelcomeEmail({ userName: user.name }));
+      const html = await render(WelcomeEmail({ userName: user.name, credentials: user.credentials }));
+
+      const credsText = user.credentials
+        ? `\n\nYour login credentials:\nEmail: ${user.credentials.email}\nPassword: ${user.credentials.password}\n\nPlease change your password after logging in.`
+        : "";
 
       return this.sendEmail({
         to: [{ email: user.email, name: user.name }],
         subject: "Welcome to LMS Portal!",
         html,
-        text: `Hi ${user.name},\n\nWelcome to LMS Portal! Your account has been created successfully.\n\nBest regards,\nLMS Portal Team`,
+        text: `Hi ${user.name},\n\nWelcome to LMS Portal! Your account has been created successfully.${credsText}\n\nBest regards,\nLMS Portal Team`,
         tags: ["welcome", "onboarding"],
       });
     } catch (error: unknown) {

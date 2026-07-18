@@ -10,6 +10,7 @@ import {
 export const CreatePackageSchema = z.object({
   name: z.string().min(2).max(100),
   description: z.string().optional(),
+  price: z.number().int().positive().optional(),
   courseIds: z
     .array(z.string().cuid())
     .min(1, "At least one course is required"),
@@ -18,6 +19,7 @@ export const CreatePackageSchema = z.object({
 export const UpdatePackageSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   description: z.string().nullable().optional(),
+  price: z.number().int().positive().nullable().optional(),
   courseIds: z.array(z.string().cuid()).min(1).optional(),
 });
 
@@ -51,6 +53,7 @@ export const packageService = {
       data: {
         name: data.name,
         description: data.description,
+        price: data.price,
         courses: {
           create: data.courseIds.map((courseId, index) => ({
             courseId,
@@ -441,6 +444,35 @@ export const packageService = {
     });
 
     return updated;
+  },
+
+  // Get public catalogue of ACTIVE packages (no auth required)
+  async getPublicCatalogue() {
+    return prisma.coursePackage.findMany({
+      where: { status: "ACTIVE" },
+      include: {
+        courses: {
+          include: {
+            course: {
+              select: {
+                id: true,
+                title: true,
+                slug: true,
+                description: true,
+                thumbnailUrl: true,
+              },
+            },
+          },
+          orderBy: { order: "asc" },
+        },
+        batches: {
+          where: { isActive: true },
+          select: { id: true, name: true, startDate: true, maxStudents: true },
+        },
+        _count: { select: { enrollments: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
   },
 
   // Get student's enrolled packages

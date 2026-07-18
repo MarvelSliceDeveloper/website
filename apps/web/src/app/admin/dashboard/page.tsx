@@ -198,40 +198,40 @@ function SuperAdminDashboard() {
       value: saStats.totalSuperAdmins,
       icon: IconShield,
       variant: "red" as const,
-      bg: "bg-gradient-to-br from-rose-500/20 via-rose-400/10 to-red-400/5 hover:from-rose-500/25 hover:to-red-400/10",
-      border: "border-rose-500/30 hover:border-rose-500/50",
-      textColor: "text-rose-600",
-      iconColor: "text-rose-600",
+      bg: "bg-gradient-to-br from-danger/20 via-danger/10 to-danger/5 hover:from-danger/25 hover:to-danger/10",
+      border: "border-danger/30 hover:border-danger/50",
+      textColor: "text-danger",
+      iconColor: "text-danger",
     },
     {
       label: "Admins",
       value: saStats.totalAdmins,
       icon: IconShield,
       variant: "purple" as const,
-      bg: "bg-gradient-to-br from-violet-500/20 via-violet-400/10 to-purple-400/5 hover:from-violet-500/25 hover:to-purple-400/10",
-      border: "border-violet-500/30 hover:border-violet-500/50",
-      textColor: "text-violet-600",
-      iconColor: "text-violet-600",
+      bg: "bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 hover:from-primary/25 hover:to-primary/10",
+      border: "border-primary/30 hover:border-primary/50",
+      textColor: "text-primary",
+      iconColor: "text-primary",
     },
     {
       label: "Instructors",
       value: saStats.totalInstructors,
       icon: IconUsers,
       variant: "blue" as const,
-      bg: "bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-cyan-400/5 hover:from-blue-500/25 hover:to-cyan-400/10",
-      border: "border-blue-500/30 hover:border-blue-500/50",
-      textColor: "text-blue-600",
-      iconColor: "text-blue-600",
+      bg: "bg-gradient-to-br from-accent/20 via-accent/10 to-accent/5 hover:from-accent/25 hover:to-accent/10",
+      border: "border-accent/30 hover:border-accent/50",
+      textColor: "text-accent",
+      iconColor: "text-accent",
     },
     {
       label: "Students",
       value: saStats.totalStudents,
       icon: IconSchool,
       variant: "green" as const,
-      bg: "bg-gradient-to-br from-emerald-500/20 via-emerald-400/10 to-green-400/5 hover:from-emerald-500/25 hover:to-green-400/10",
-      border: "border-emerald-500/30 hover:border-emerald-500/50",
-      textColor: "text-emerald-600",
-      iconColor: "text-emerald-600",
+      bg: "bg-gradient-to-br from-success/20 via-success/10 to-success/5 hover:from-success/25 hover:to-success/10",
+      border: "border-success/30 hover:border-success/50",
+      textColor: "text-success",
+      iconColor: "text-success",
     },
   ];
 
@@ -240,11 +240,11 @@ function SuperAdminDashboard() {
       {/* Greeting Banner */}
       <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 sm:p-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-red-600 text-xl font-bold text-white">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-danger text-xl font-bold text-white">
             SA
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-red-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-danger">
               Super Admin
             </p>
             <h1 className="text-xl font-bold text-foreground sm:text-2xl">
@@ -335,7 +335,7 @@ function SuperAdminDashboard() {
             href="/admin/settings/system"
             className="rounded-2xl border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
           >
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/15 text-rose-600 border border-rose-500/20 group-hover:scale-110 transition-transform">
+            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-danger/15 text-danger border border-danger/20 group-hover:scale-110 transition-transform">
               <IconSettings size={20} stroke={1.8} />
             </div>
             <p className="text-sm font-medium text-foreground">
@@ -346,7 +346,7 @@ function SuperAdminDashboard() {
             href="/admin/settings/api-keys"
             className="rounded-2xl border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
           >
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 border border-amber-500/20 group-hover:scale-110 transition-transform">
+            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-warning/15 text-warning border border-warning/20 group-hover:scale-110 transition-transform">
               <IconKey size={20} stroke={1.8} />
             </div>
             <p className="text-sm font-medium text-foreground">API Keys</p>
@@ -355,7 +355,7 @@ function SuperAdminDashboard() {
             href="/admin/trash"
             className="rounded-2xl border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
           >
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/15 text-orange-600 border border-orange-500/20 group-hover:scale-110 transition-transform">
+            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-warning/15 text-warning border border-warning/20 group-hover:scale-110 transition-transform">
               <IconTrash size={20} stroke={1.8} />
             </div>
             <p className="text-sm font-medium text-foreground">Trash</p>
@@ -364,7 +364,7 @@ function SuperAdminDashboard() {
             href="/admin/users/login-history"
             className="rounded-2xl border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
           >
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-600 border border-cyan-500/20 group-hover:scale-110 transition-transform">
+            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent border border-accent/20 group-hover:scale-110 transition-transform">
               <IconHistory size={20} stroke={1.8} />
             </div>
             <p className="text-sm font-medium text-foreground">Login History</p>
@@ -479,25 +479,25 @@ function AdminDashboard() {
       label: "Add Course",
       href: "/admin/courses/new",
       icon: IconEdit,
-      color: "bg-blue-500/15 text-blue-600 border border-blue-500/20",
+      color: "bg-primary/15 text-primary border border-primary/20",
     },
     {
       label: "Manage Batches",
       href: "/admin/batches",
       icon: IconUsersGroup,
-      color: "bg-cyan-500/15 text-cyan-600 border border-cyan-500/20",
+      color: "bg-accent/15 text-accent border border-accent/20",
     },
     {
       label: "View Sessions",
       href: "/admin/sessions",
       icon: IconCalendar,
-      color: "bg-emerald-500/15 text-emerald-600 border border-emerald-500/20",
+      color: "bg-success/15 text-success border border-success/20",
     },
     {
       label: "Mentorship Tickets",
       href: "/admin/mentorship",
       icon: IconTicket,
-      color: "bg-amber-500/15 text-amber-600 border border-amber-500/20",
+      color: "bg-warning/15 text-warning border border-warning/20",
     },
   ];
 
@@ -754,6 +754,12 @@ function AdminDashboard() {
                       Status
                     </th>
                     <th className="pb-2 text-xs font-medium uppercase text-muted">
+                      Razorpay ID
+                    </th>
+                    <th className="pb-2 text-xs font-medium uppercase text-muted">
+                      Amount
+                    </th>
+                    <th className="pb-2 text-xs font-medium uppercase text-muted">
                       Date
                     </th>
                   </tr>
@@ -785,6 +791,14 @@ function AdminDashboard() {
                         >
                           {e.status}
                         </span>
+                      </td>
+                      <td className="py-2.5 font-mono text-xs text-muted-foreground">
+                        {e.razorpayPaymentId ?? "—"}
+                      </td>
+                      <td className="py-2.5 text-foreground">
+                        {e.amount != null
+                          ? `₹${(e.amount / 100).toLocaleString("en-IN")}`
+                          : "—"}
                       </td>
                       <td className="py-2.5 text-muted-foreground">
                         {new Date(e.appliedAt).toLocaleDateString("en-IN", {

@@ -64,6 +64,7 @@ export const dashboardController = {
         include: {
           user: { select: { id: true, name: true, email: true } },
           package: { select: { name: true } },
+          payment: { select: { razorpayPaymentId: true, amount: true } },
         },
       });
 
@@ -73,6 +74,8 @@ export const dashboardController = {
         userEmail: e.user.email,
         packageName: e.package.name,
         status: e.status,
+        razorpayPaymentId: e.payment?.razorpayPaymentId ?? null,
+        amount: e.payment?.amount ?? null,
         appliedAt: e.createdAt,
       }));
 

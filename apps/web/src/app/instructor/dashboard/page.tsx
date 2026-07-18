@@ -63,10 +63,10 @@ type SubmissionRecord = {
 };
 
 const iconBg: Record<string, string> = {
-  violet: "bg-blue-100 text-blue-600",
-  emerald: "bg-green-100 text-green-600",
-  sky: "bg-purple-100 text-purple-600",
-  amber: "bg-orange-100 text-orange-600",
+  violet: "bg-primary/15 text-primary",
+  emerald: "bg-success/15 text-success",
+  sky: "bg-accent/15 text-accent",
+  amber: "bg-warning/15 text-warning",
 };
 
 export default function InstructorDashboardPage() {
@@ -371,7 +371,7 @@ export default function InstructorDashboardPage() {
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] uppercase font-bold text-warning bg-warning/15 px-1.5 py-0.5 rounded">
                       Pending
                     </span>
                     <span className="text-[10px] text-muted flex items-center gap-1">

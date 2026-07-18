@@ -201,7 +201,7 @@ export const lessonService = {
     const resources = Array.isArray(lesson.resources) ? lesson.resources : [];
     const reordered = resourceIds
       .map((id) => resources.find((r: any) => r.id === id))
-      .filter(Boolean);
+      .filter(<T>(r: T | undefined): r is T => r != null);
 
     if (reordered.length !== resourceIds.length)
       throw new Error("Some resource IDs do not belong to this lesson");

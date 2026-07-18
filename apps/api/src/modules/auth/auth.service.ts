@@ -61,7 +61,7 @@ export const authService = {
         console.error("[auth] Failed to send welcome email:", err);
       });
 
-    return this.generateTokens(user);
+    return this.generateTokens({ ...user, name: user.name });
   },
 
   async login(data: z.infer<typeof LoginSchema>) {
@@ -81,7 +81,14 @@ export const authService = {
       throw new Error("Account is pending approval. Please contact support.");
     }
 
-    return this.generateTokens(user);
+    return this.generateTokens({
+      id: user.id,
+      role: user.role,
+      email: user.email,
+      name: user.name,
+      mustChangePassword: user.mustChangePassword,
+      sessionTimeoutMin: user.sessionTimeoutMin,
+    });
   },
 
   // Generate JWT access token for a user
@@ -89,6 +96,8 @@ export const authService = {
     id: string;
     role: string;
     email: string;
+    name: string;
+    mustChangePassword?: boolean;
     sessionTimeoutMin?: number;
   }) {
     const payload = {
@@ -102,6 +111,6 @@ export const authService = {
       expiresIn: JWT_EXPIRY as any,
     });
 
-    return { accessToken, user: payload };
+    return { accessToken, user: { ...payload, name: user.name, mustChangePassword: user.mustChangePassword ?? false } };
   },
 };

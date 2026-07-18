@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
 
@@ -36,7 +37,7 @@ export async function removeFromContentOrder(
   const updated = current.filter((item) => item.id !== id);
   await prisma.module.update({
     where: { id: moduleId },
-    data: { contentOrder: updated.length > 0 ? updated : null },
+    data: { contentOrder: updated.length > 0 ? updated : Prisma.DbNull },
   });
 }
 

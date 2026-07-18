@@ -45,6 +45,7 @@ export default function AddLessonForm({
       if (data.title && !title) setTitle(data.title);
     } catch {
       setDurationSeconds(null);
+      toast.error("Failed to fetch video info. Check the URL or API key.");
     } finally {
       setFetchingInfo(false);
     }

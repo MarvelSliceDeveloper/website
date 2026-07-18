@@ -5,6 +5,7 @@ dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import pino from "pino";
+import pinoHttp from "pino-http";
 import rateLimit from "express-rate-limit";
 import fs from "fs";
 import cookieParser from "cookie-parser";
@@ -46,9 +47,11 @@ import { loginHistoryRouter } from "./modules/logs/login-history.routes";
 import { consentLogRouter } from "./modules/logs/consent-log.routes";
 import { trashRouter } from "./modules/super-admin/trash.routes";
 import { youtubeRouter } from "./modules/youtube/youtube.routes";
+import { paymentRouter, adminPaymentRouter } from "./modules/payments/payment.routes";
 import {
   packageRouter,
   packageEnrollmentRouter,
+  publicPackageRouter,
 } from "./modules/packages/package.routes";
 
 const logger = pino({
@@ -69,16 +72,36 @@ app.use(
 
 app.use(cookieParser());
 
+app.use(pinoHttp({
+  logger,
+  autoLogging: {
+    ignore: (req) => req.url === "/health",
+  },
+  customLogLevel: (res, err) => {
+    if (res.statusCode >= 500) return "error";
+    if (res.statusCode >= 400) return "warn";
+    return "info";
+  },
+  customSuccessMessage: (req, res) =>
+    `${req.method} ${req.url} ${res.statusCode}`,
+  customErrorMessage: (req, res, err) =>
+    `${req.method} ${req.url} ${res.statusCode} - ${err.message}`,
+}));
+
 // ── CSRF protection — applied BEFORE body parser so invalid requests
 //     are rejected without parsing the request body ──
 const csrfExemptPaths = [
   "/api/auth/login",
   "/api/auth/register",
   "/api/auth/logout",
+  "/api/auth/me/set-password",
   "/api/auth/azure-ad/callback",
   "/api/webhooks/",
   "/api/csrf-token",
   "/health",
+  "/api/payments/create-order",
+  "/api/payments/verify",
+  "/api/payments/batches",
 ];
 
 const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
@@ -170,6 +193,7 @@ app.use("/api/attendance", attendanceRouter);
 app.use("/api/admin/enrollments", enrollmentRouter);
 app.use("/api/admin/packages", packageRouter);
 app.use("/api/admin/package-enrollments", packageEnrollmentRouter);
+app.use("/api/packages", publicPackageRouter);
 app.use("/api/assignments", assignmentRouter);
 app.use("/api/admin/dashboard", dashboardRouter);
 app.use("/api/messages", messageRouter);
@@ -192,6 +216,10 @@ app.use("/api/admin/trash", trashRouter);
 
 // ── YouTube API (authenticated) ──
 app.use("/api/youtube", youtubeRouter);
+
+// ── Payments ──
+app.use("/api/payments", paymentRouter);
+app.use("/api/admin/payments", adminPaymentRouter);
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   const status = err.statusCode || err.status || 500;

@@ -1,18 +1,130 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
+import Link from "next/link";
 
-export default function SuperAdminRedirectPage() {
-  const router = useRouter();
+interface HealthData {
+  status: string;
+  timestamp: string;
+  uptime: number;
+  database: string;
+  memory: { rss: number; heapTotal: number; heapUsed: number };
+}
 
-  useEffect(() => {
-    router.replace("/admin/dashboard");
-  }, [router]);
+interface StatCardProps {
+  label: string;
+  value: string;
+  status?: "ok" | "degraded" | "error";
+}
+
+function StatCard({ label, value, status }: StatCardProps) {
+  const dotColor =
+    status === "ok"
+      ? "bg-success"
+      : status === "degraded"
+        ? "bg-warning"
+        : "bg-muted";
 
   return (
-    <div className="flex items-center justify-center h-64">
-      <p className="text-muted-foreground">Redirecting to dashboard...</p>
+    <div className="rounded-xl border border-border bg-card p-5">
+      <div className="flex items-center gap-2 mb-1">
+        {status && <span className={`w-2 h-2 rounded-full ${dotColor}`} />}
+        <span className="text-xs text-muted-foreground uppercase tracking-wide">{label}</span>
+      </div>
+      <p className="text-2xl font-bold text-foreground">{value}</p>
+    </div>
+  );
+}
+
+export default function SuperAdminPage() {
+  const [health, setHealth] = useState<HealthData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api
+      .get<HealthData>("/api/admin/users/health")
+      .then(setHealth)
+      .catch(() => toast.error("Failed to fetch health data"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const formatUptime = (seconds: number) => {
+    const d = Math.floor(seconds / 86400);
+    const h = Math.floor((seconds % 86400) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    return `${d}d ${h}h ${m}m`;
+  };
+
+  const tools = [
+    { label: "System Settings", href: "/admin/settings/system", desc: "Global platform configuration" },
+    { label: "API Keys", href: "/admin/settings/api-keys", desc: "Manage API access keys" },
+    { label: "Permissions", href: "/admin/settings/permissions", desc: "Role-based access control" },
+    { label: "Audit Logs", href: "/admin/logs", desc: "User activity and system logs" },
+    { label: "Login History", href: "/admin/users/login-history", desc: "User login records" },
+    { label: "Consent Logs", href: "/admin/consent-logs", desc: "User consent history" },
+    { label: "Trash", href: "/admin/trash", desc: "Soft-deleted items" },
+  ];
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Super Admin</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          System health monitoring and platform-wide administration.
+        </p>
+      </div>
+
+      {/* Health Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-24 rounded-xl bg-card border border-border animate-pulse" />
+          ))
+        ) : health ? (
+          <>
+            <StatCard
+              label="Server Status"
+              value={health.status === "ok" ? "Healthy" : "Degraded"}
+              status={health.status as "ok" | "degraded"}
+            />
+            <StatCard
+              label="Database"
+              value={health.database === "connected" ? "Connected" : "Disconnected"}
+              status={health.database === "connected" ? "ok" : "error"}
+            />
+            <StatCard label="Uptime" value={formatUptime(health.uptime)} />
+            <StatCard
+              label="Memory"
+              value={`${(health.memory.heapUsed / 1024 / 1024).toFixed(0)} MB`}
+            />
+          </>
+        ) : (
+          <div className="col-span-full text-center py-8 text-muted-foreground text-sm">
+            Unable to load health data.
+          </div>
+        )}
+      </div>
+
+      {/* Tools */}
+      <div>
+        <h2 className="text-lg font-semibold text-foreground mb-4">
+          Administration Tools
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {tools.map((tool) => (
+            <Link
+              key={tool.href}
+              href={tool.href}
+              className="rounded-xl border border-border bg-card p-4 hover:border-border-hover hover:bg-card-hover transition-colors"
+            >
+              <h3 className="font-medium text-foreground text-sm">{tool.label}</h3>
+              <p className="text-xs text-muted-foreground mt-1">{tool.desc}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

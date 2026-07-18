@@ -303,7 +303,7 @@ export default function SettingsPage() {
       return;
     }
     setChanging(true);
-    const promise = api.patch("/api/auth/password", {
+    const promise = api.patch("/api/auth/me/password", {
       currentPassword,
       newPassword,
     });

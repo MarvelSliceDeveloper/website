@@ -45,6 +45,17 @@ export default function LessonCard({
     lesson.durationSeconds ?? null,
   );
 
+  const startEditing = () => {
+    setEditForm({
+      title: lesson.title,
+      description: lesson.description || "",
+      videoUrl: lesson.videoUrl || "",
+      isFreePreview: lesson.isFreePreview,
+    });
+    setDurationSeconds(lesson.durationSeconds ?? null);
+    setEditing(true);
+  };
+
   const handleFetchVideoInfo = useCallback(async (url: string) => {
     if (!url.trim()) return;
     setFetchingInfo(true);
@@ -61,6 +72,7 @@ export default function LessonCard({
       setDurationSeconds(data.durationSeconds);
       toast.success(`Duration: ${Math.floor(data.durationSeconds / 60)} min`);
     } catch {
+      toast.error("Failed to fetch video info. Check the URL or API key.");
     } finally {
       setFetchingInfo(false);
     }
@@ -194,6 +206,7 @@ export default function LessonCard({
               </label>
               <button
                 onClick={handleSave}
+                disabled={fetchingInfo}
                 className="btn-primary text-[10px] px-2 py-1"
               >
                 <IconDeviceFloppy size={12} />
@@ -220,7 +233,7 @@ export default function LessonCard({
         )}
         {!editing && (
           <div className="flex items-center gap-2 mt-1 text-[9px] text-muted">
-            {lesson.durationSeconds && (
+            {lesson.durationSeconds != null && (
               <span>{Math.floor(lesson.durationSeconds / 60)} min</span>
             )}
             {lesson.videoType && (
@@ -240,7 +253,7 @@ export default function LessonCard({
       {!editing && (
         <div className="flex items-center gap-0.5 shrink-0">
           <button
-            onClick={() => setEditing(true)}
+            onClick={startEditing}
             className="text-[10px] font-medium text-primary hover:text-primary-hover transition-colors px-1.5 py-1 rounded hover:bg-primary/12"
           >
             Edit
