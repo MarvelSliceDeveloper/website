@@ -96,15 +96,19 @@ app.use(pinoHttp({
   autoLogging: {
     ignore: (req) => req.url === "/health",
   },
+  serializers: {
+    req: () => undefined,
+    res: () => undefined,
+  },
   customLogLevel: (res, err) => {
     if (res.statusCode >= 500) return "error";
     if (res.statusCode >= 400) return "warn";
     return "info";
   },
   customSuccessMessage: (req, res) =>
-    `${req.method} ${req.url} ${res.statusCode}`,
+    `${req.method} ${req.url} ${res.statusCode} ${res.responseTime}ms`,
   customErrorMessage: (req, res, err) =>
-    `${req.method} ${req.url} ${res.statusCode} - ${err.message}`,
+    `${req.method} ${req.url} ${res.statusCode} - ${err.message} ${res.responseTime}ms`,
 }));
 
 // ── CSRF protection — applied BEFORE body parser so invalid requests

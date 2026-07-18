@@ -314,6 +314,7 @@ export default function AdminSidebar({
           icon: IconUsers,
           children: [
             { label: "Login History", href: "/admin/users/login-history" },
+            { label: "All Users", href: "/admin/users" }
           ],
         },
         {

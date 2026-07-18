@@ -88,7 +88,7 @@ export default function SetPasswordPage() {
   return (
     <div className="flex min-h-screen overflow-x-hidden bg-background">
       {/* Left panel */}
-      <section className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-[#3b82f6] via-[#2563eb] to-[#1d4ed8] px-12 lg:flex lg:w-[55%]">
+      <section className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-[#f97316] via-[#ea580c] to-[#c2410c] px-12 lg:flex lg:w-[55%]">
         <div
           className="absolute inset-0 opacity-[0.04]"
           style={{

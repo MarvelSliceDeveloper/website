@@ -25,7 +25,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="flex min-h-screen overflow-x-hidden bg-background">
-      <section className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-primary via-primary-hover to-[#3045d8] px-12 lg:flex lg:w-[55%]">
+      <section className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-primary via-primary-hover to-[#c2410c] px-12 lg:flex lg:w-[55%]">
         <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(255,255,255,0.5) 10px, rgba(255,255,255,0.5) 11px)" }} />
         <div className="relative z-10 pt-14" style={{ animation: "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both" }}>
           <div className="flex items-center gap-3">
