@@ -119,6 +119,10 @@ router.get("/enrolled", async (req: AuthRequest, res: Response) => {
             batch: {
               include: {
                 instructor: { select: { name: true } },
+                courseVisibility: {
+                  where: { isVisible: true },
+                  select: { courseId: true },
+                },
                 sessions: {
                   include: {
                     recording: {
@@ -136,7 +140,10 @@ router.get("/enrolled", async (req: AuthRequest, res: Response) => {
     });
 
     const packageCourses = packageEnrollments.flatMap((pe) =>
-      pe.courses.map((pec) => {
+      pe.courses.filter((pec) => {
+        if (!pec.batch) return true;
+        return pec.batch.courseVisibility.some((bc) => bc.courseId === pec.course.id);
+      }).map((pec) => {
         if (!pec.batch) {
           return {
             id: pec.course.id,
@@ -343,6 +350,16 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
 
       batchId = packageCourse.batchId;
       batch = packageCourse.batch;
+    }
+
+    // Check visibility for package-level batches
+    if (batch?.packageId) {
+      const bc = await prisma.batchCourseVisibility.findUnique({
+        where: { batchId_courseId: { batchId: batch.id, courseId } },
+      });
+      if (bc && !bc.isVisible) {
+        return res.status(403).json({ error: "This course is not yet available" });
+      }
     }
 
     // Fetch course with modules and lessons

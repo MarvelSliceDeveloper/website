@@ -111,6 +111,7 @@ interface ApiBatchDetailResponse {
 interface ApiRecordingResponse {
   recordings: Array<{
     id: string;
+    duration: number;
     sessionId: string;
     moduleId?: string | null;
     moduleTitle?: string | null;
@@ -254,10 +255,10 @@ async function fetchBatch(batchId: string): Promise<Batch | null> {
         const matchedRecording = recordingsBySession.get(session.id);
         const watchedPercent = matchedRecording
           ? matchedRecording.progress.reduce((max, progress) => {
-              const durationSeconds = 100;
+              const dur = matchedRecording.duration || 1;
               const percent = Math.min(
                 100,
-                Math.round((progress.watchedSeconds / durationSeconds) * 100),
+                Math.round((progress.watchedSeconds / dur) * 100),
               );
               return Math.max(max, percent);
             }, 0)

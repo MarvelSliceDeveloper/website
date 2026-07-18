@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import "plyr/dist/plyr.css";
-import { IconVideo, IconPlayerPlay } from "@tabler/icons-react";
+import { IconVideo, IconPlayerPlay, IconAlertTriangle } from "@tabler/icons-react";
 import type { CourseLesson, CourseRecording } from "./types";
 
 type PlyrSource = import("plyr").default.SourceInfo;
@@ -48,46 +48,87 @@ interface SafePlyrProps {
   options?: PlyrOpts;
 }
 
+/**
+ * NOTE: this component is intentionally remounted (via a `key` prop from the
+ * parent) whenever the video changes, instead of relying on `plyr.source = ...`
+ * to swap sources on a live instance. Plyr's YouTube/Vimeo providers replace
+ * the underlying <video> element with an <iframe> internally, and destroy()
+ * on the old instance is not guaranteed to finish tearing down the previous
+ * iframe + YouTube IFrame API callbacks before a new instance attaches to the
+ * same DOM node. In practice this produced a player that rendered but never
+ * responded to play clicks after switching lessons. A full unmount/remount
+ * per video sidesteps that race entirely.
+ */
 function SafePlyr({ source, options }: SafePlyrProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const instanceRef = useRef<{ destroy: () => void; source: unknown } | null>(null);
-  const [ready, setReady] = useState(false);
+  // React owns this container div and NEVER renders children into it via
+  // JSX. Plyr mutates the DOM inside it directly (wrapping the <video>,
+  // and for YouTube/Vimeo replacing it with an <iframe>). If React also
+  // tried to manage that inner node, React's reconciler and Plyr's direct
+  // DOM manipulation fight over the same nodes, and on unmount React can
+  // try to removeChild a node Plyr already moved/replaced elsewhere,
+  // throwing "Failed to execute 'removeChild' on 'Node': the node to be
+  // removed is not a child of this node." Creating the <video> imperatively
+  // and letting React manage only the stable outer div avoids that entirely.
+  const containerRef = useRef<HTMLDivElement>(null);
+  const instanceRef = useRef<{ destroy: () => void } | null>(null);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
   useEffect(() => {
     let cancelled = false;
+    setStatus("loading");
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    // Clean slate: remove anything left over from a previous run.
+    container.innerHTML = "";
+    const video = document.createElement("video");
+    video.className = "plyr-react plyr";
+    video.style.width = "100%";
+    video.style.height = "100%";
+    container.appendChild(video);
 
     (async () => {
-      const { default: PlyrJS } = await import("plyr");
-      if (cancelled || !videoRef.current) return;
-
-      if (instanceRef.current) {
-        instanceRef.current.destroy();
-        instanceRef.current = null;
-      }
-
       try {
-        const plyr = new PlyrJS(videoRef.current, {
+        const { default: PlyrJS } = await import("plyr");
+        if (cancelled) return;
+
+        const plyr = new PlyrJS(video, {
           ...DEFAULT_OPTIONS,
           ...options,
         });
         plyr.source = source;
         instanceRef.current = plyr;
-        setReady(true);
-      } catch {
-        // Plyr's YouTube iframe API callback can fire after the element
-        // is unmounted (e.g. when switching to quiz/resource preview).
+
+        if (!cancelled) setStatus("ready");
+      } catch (err) {
+        // Plyr's YouTube iframe API callback can fire after the element is
+        // unmounted (e.g. when switching to quiz/resource preview), or the
+        // embed can fail to load (blocked script, bad video ID, etc).
+        console.error("Failed to initialize video player:", err);
+        if (!cancelled) setStatus("error");
       }
     })();
 
     return () => {
       cancelled = true;
       if (instanceRef.current) {
-        instanceRef.current.destroy();
+        try {
+          instanceRef.current.destroy();
+        } catch {
+          // ignore teardown errors from late embed callbacks
+        }
         instanceRef.current = null;
       }
+      // Manually clear whatever Plyr left behind. Since this div is never
+      // touched by React's JSX, it's always safe to wipe it directly.
+      if (container) container.innerHTML = "";
     };
+    // `source`/`options` are intentionally not deps here — this component is
+    // remounted wholesale via `key` when the video changes, so this effect
+    // only ever needs to run once per mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(source), JSON.stringify(options)]);
+  }, []);
 
   return (
     <>
@@ -98,11 +139,13 @@ function SafePlyr({ source, options }: SafePlyrProps) {
           pointer-events: none !important;
         }
       `}</style>
-      <video
-        ref={videoRef}
-        className="plyr-react plyr"
-        style={{ width: "100%", height: "100%" }}
-      />
+      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+      {status === "error" && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/80 text-white/80">
+          <IconAlertTriangle size={22} />
+          <p className="text-xs">Couldn&apos;t load this video.</p>
+        </div>
+      )}
     </>
   );
 }
@@ -112,18 +155,68 @@ interface Props {
   recording: CourseRecording | null;
 }
 
+/**
+ * `videoEmbedId` is expected to be a bare provider ID (e.g. "dQw4w9WgXcQ"),
+ * but data can end up containing a full URL instead. Extract the ID
+ * defensively so a full URL doesn't silently break playback.
+ */
+function extractYoutubeId(raw: string): string {
+  const trimmed = raw.trim();
+  if (!/^https?:\/\//i.test(trimmed) && !trimmed.includes("youtu")) {
+    return trimmed; // already looks like a bare ID
+  }
+  try {
+    const url = new URL(trimmed);
+    if (url.hostname.includes("youtu.be")) {
+      return url.pathname.replace("/", "");
+    }
+    const vParam = url.searchParams.get("v");
+    if (vParam) return vParam;
+    const embedMatch = url.pathname.match(/\/embed\/([^/?]+)/);
+    if (embedMatch) return embedMatch[1];
+    const shortsMatch = url.pathname.match(/\/shorts\/([^/?]+)/);
+    if (shortsMatch) return shortsMatch[1];
+  } catch {
+    // not a valid URL, fall through
+  }
+  return trimmed;
+}
+
+function extractVimeoId(raw: string): string {
+  const trimmed = raw.trim();
+  if (!/^https?:\/\//i.test(trimmed)) return trimmed;
+  try {
+    const url = new URL(trimmed);
+    const match = url.pathname.match(/(\d+)/);
+    if (match) return match[1];
+  } catch {
+    // not a valid URL, fall through
+  }
+  return trimmed;
+}
+
 function getVideoSource(lesson: CourseLesson): PlyrSource | null {
   if (lesson.videoType === "youtube" && lesson.videoEmbedId) {
     return {
       type: "video" as const,
-      sources: [{ src: lesson.videoEmbedId, provider: "youtube" as const }],
+      sources: [
+        {
+          src: extractYoutubeId(lesson.videoEmbedId),
+          provider: "youtube" as const,
+        },
+      ],
     };
   }
 
   if (lesson.videoType === "vimeo" && lesson.videoEmbedId) {
     return {
       type: "video" as const,
-      sources: [{ src: lesson.videoEmbedId, provider: "vimeo" as const }],
+      sources: [
+        {
+          src: extractVimeoId(lesson.videoEmbedId),
+          provider: "vimeo" as const,
+        },
+      ],
     };
   }
 
@@ -171,7 +264,9 @@ export function VideoPlayer({ lesson, recording }: Props) {
 
     return (
       <div className="absolute inset-0 bg-black">
-        <SafePlyr source={source} />
+        {/* `key` forces a full unmount/remount when the video changes,
+            avoiding the Plyr embed race condition described in SafePlyr. */}
+        <SafePlyr key={lesson.id} source={source} />
       </div>
     );
   }

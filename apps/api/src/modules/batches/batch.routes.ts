@@ -56,6 +56,22 @@ router.put("/:id", requireRole([UserRole.ADMIN]), batchController.update);
 // DELETE /api/admin/batches/:id — delete batch
 router.delete("/:id", requireRole([UserRole.ADMIN]), batchController.delete);
 
+// --- Course visibility management ---
+
+// GET /api/admin/batches/:id/courses — list courses with visibility for this batch
+router.get(
+  "/:id/courses",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  batchController.getBatchCourses,
+);
+
+// PUT /api/admin/batches/:id/courses/:courseId/visibility — toggle course visibility
+router.put(
+  "/:id/courses/:courseId/visibility",
+  requireRole([UserRole.ADMIN]),
+  batchController.toggleVisibility,
+);
+
 // --- Student management ---
 
 // GET /api/admin/batches/:id/students — list students in batch

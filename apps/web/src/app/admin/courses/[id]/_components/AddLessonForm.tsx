@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconRefresh } from "@tabler/icons-react";
 
 export default function AddLessonForm({
   moduleId,
@@ -18,6 +18,8 @@ export default function AddLessonForm({
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+  const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
+  const [fetchingInfo, setFetchingInfo] = useState(false);
   const [isFreePreview, setIsFreePreview] = useState(false);
   const [adding, setAdding] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -25,6 +27,28 @@ export default function AddLessonForm({
   useEffect(() => {
     if (show) inputRef.current?.focus();
   }, [show]);
+
+  const handleFetchVideoInfo = useCallback(async (url: string) => {
+    if (!url.trim()) {
+      setDurationSeconds(null);
+      return;
+    }
+    setFetchingInfo(true);
+    try {
+      const data = await api.get<{
+        videoId: string;
+        title: string;
+        durationSeconds: number;
+        thumbnail: string;
+      }>(`/api/youtube/video-info?url=${encodeURIComponent(url)}`);
+      setDurationSeconds(data.durationSeconds);
+      if (data.title && !title) setTitle(data.title);
+    } catch {
+      setDurationSeconds(null);
+    } finally {
+      setFetchingInfo(false);
+    }
+  }, [title]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,11 +58,13 @@ export default function AddLessonForm({
         title,
         description: desc || undefined,
         videoUrl: videoUrl || undefined,
+        durationSeconds: durationSeconds ?? undefined,
         isFreePreview,
       });
       setTitle("");
       setDesc("");
       setVideoUrl("");
+      setDurationSeconds(null);
       setIsFreePreview(false);
       setShow(false);
       toast.success("Lesson added");
@@ -70,13 +96,27 @@ export default function AddLessonForm({
             placeholder="Short description (optional)"
             className="field text-xs"
           />
-          <input
-            type="url"
-            value={videoUrl}
-            onChange={(e) => setVideoUrl(e.target.value)}
-            placeholder="Video URL — YouTube, Vimeo (optional)"
-            className="field text-xs"
-          />
+          <div className="relative">
+            <input
+              type="url"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              onBlur={() => handleFetchVideoInfo(videoUrl)}
+              placeholder="Video URL — YouTube (optional)"
+              className="field text-xs pr-7"
+            />
+            {fetchingInfo && (
+              <IconRefresh
+                size={13}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin"
+              />
+            )}
+          </div>
+          {durationSeconds !== null && (
+            <p className="text-[10px] text-primary">
+              Duration: {Math.floor(durationSeconds / 60)} min
+            </p>
+          )}
           <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <input
               type="checkbox"

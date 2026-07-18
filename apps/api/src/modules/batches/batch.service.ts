@@ -130,7 +130,8 @@ export const batchService = {
     // Get all courses in the package
     const packageCourses = await prisma.packageCourse.findMany({
       where: { packageId: data.packageId },
-      include: { course: { select: { title: true } } },
+      include: { course: { select: { id: true, title: true } } },
+      orderBy: { order: "asc" },
     });
     if (packageCourses.length === 0) {
       throw new Error("Package has no courses. Add courses first.");
@@ -448,5 +449,73 @@ export const batchService = {
       select: { id: true, title: true },
       orderBy: { title: "asc" },
     });
+  },
+
+  // Lists all courses for a batch with their visibility state
+  // Course data is derived from PackageCourse (the batch's package), not stored separately
+  async getBatchCourses(batchId: string) {
+    const batch = await prisma.batch.findUnique({
+      where: { id: batchId },
+      select: { id: true, packageId: true, courseId: true },
+    });
+    if (!batch) throw new Error("Batch not found");
+
+    if (!batch.packageId) {
+      return [];
+    }
+
+    // Fetch courses from PackageCourse (single source of truth) + left join visibility
+    const packageCourses = await prisma.packageCourse.findMany({
+      where: { packageId: batch.packageId },
+      orderBy: { order: "asc" },
+      include: {
+        course: { select: { id: true, title: true, slug: true } },
+      },
+    });
+
+    // Fetch existing visibility records for this batch
+    const visibilityRecords = await prisma.batchCourseVisibility.findMany({
+      where: { batchId },
+      select: { courseId: true, isVisible: true },
+    });
+    const visibilityMap = new Map(
+      visibilityRecords.map((v) => [v.courseId, v.isVisible]),
+    );
+
+    return packageCourses.map((pc) => ({
+      id: pc.id,
+      courseId: pc.course.id,
+      order: pc.order,
+      isVisible: visibilityMap.get(pc.course.id) ?? false,
+      course: pc.course,
+    }));
+  },
+
+  // Toggles isVisible for a course in a batch (upserts visibility record)
+  async toggleCourseVisibility(batchId: string, courseId: string) {
+    const existing = await prisma.batchCourseVisibility.findUnique({
+      where: { batchId_courseId: { batchId, courseId } },
+    });
+
+    const newIsVisible = existing ? !existing.isVisible : true;
+
+    const result = await prisma.batchCourseVisibility.upsert({
+      where: { batchId_courseId: { batchId, courseId } },
+      update: { isVisible: newIsVisible },
+      create: { batchId, courseId, isVisible: newIsVisible },
+    });
+
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: { id: true, title: true, slug: true },
+    });
+
+    return {
+      id: result.id,
+      courseId: result.courseId,
+      order: 0,
+      isVisible: result.isVisible,
+      course: course!,
+    };
   },
 };

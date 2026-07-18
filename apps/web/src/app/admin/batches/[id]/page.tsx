@@ -5,6 +5,20 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import {
+  IconEye,
+  IconEyeOff,
+  IconLock,
+  IconLockOpen,
+} from "@tabler/icons-react";
+
+type BatchCourse = {
+  id: string;
+  courseId: string;
+  order: number;
+  isVisible: boolean;
+  course: { id: string; title: string; slug: string };
+};
 
 type Student = {
   id: string;
@@ -55,9 +69,11 @@ export default function BatchDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [batch, setBatch] = useState<Batch | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"students" | "sessions">("students");
+  const [tab, setTab] = useState<"students" | "sessions" | "courses">("students");
+  const [courses, setCourses] = useState<BatchCourse[]>([]);
+  const [toggling, setToggling] = useState<string | null>(null);
 
-  const fetchBatch = async () => {
+  const fetchBatch = useCallback(async () => {
     try {
       const data = await api.get<Batch>(`/api/admin/batches/${id}`);
       setBatch(data);
@@ -66,15 +82,49 @@ export default function BatchDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  const fetchCourses = useCallback(async () => {
+    try {
+      const data = await api.get<{ courses: BatchCourse[] }>(
+        `/api/admin/batches/${id}/courses`,
+      );
+      setCourses(data.courses);
+    } catch {
+      setCourses([]);
+    }
+  }, [id]);
 
   useEffect(() => {
-    api
-      .get<Batch>(`/api/admin/batches/${id}`)
-      .then(setBatch)
-      .catch(() => setBatch(null))
-      .finally(() => setLoading(false));
-  }, [id]);
+    fetchBatch();
+  }, [fetchBatch]);
+
+  useEffect(() => {
+    if (tab === "courses") {
+      fetchCourses();
+    }
+  }, [tab, fetchCourses]);
+
+  const handleToggleVisibility = async (courseId: string) => {
+    setToggling(courseId);
+    try {
+      const result = await api.put<BatchCourse>(
+        `/api/admin/batches/${id}/courses/${courseId}/visibility`,
+      );
+      setCourses((prev) =>
+        prev.map((c) =>
+          c.courseId === result.courseId ? { ...c, isVisible: result.isVisible } : c,
+        ),
+      );
+      toast.success(
+        result.isVisible ? "Course is now visible" : "Course is now hidden",
+      );
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setToggling(null);
+    }
+  };
 
   const handleRemoveStudent = async (userId: string, name: string) => {
     if (!confirm(`Remove ${name} from this batch?`)) return;
@@ -161,7 +211,7 @@ export default function BatchDetailPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-border pb-0">
-        {(["students", "sessions"] as const).map((t) => (
+        {(["students", "sessions", "courses"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -173,7 +223,9 @@ export default function BatchDetailPage() {
           >
             {t === "students"
               ? `Students (${batch.enrollments.length + batch.packageEnrollmentCourses.length})`
-              : `Sessions (${batch.sessions.length})`}
+              : t === "sessions"
+                ? `Sessions (${batch.sessions.length})`
+                : `Courses (${courses.length || 0})`}
           </button>
         ))}
       </div>
@@ -326,6 +378,92 @@ export default function BatchDetailPage() {
                 </div>
               );
             })
+          )}
+        </div>
+      )}
+
+      {tab === "courses" && (
+        <div className="space-y-3">
+          {!batch.package ? (
+            <div className="glass-card p-8 text-center">
+              <p className="text-muted-foreground text-sm">
+                Course visibility is only available for package-level batches.
+              </p>
+            </div>
+          ) : courses.length === 0 ? (
+            <div className="glass-card p-8 text-center">
+              <p className="text-muted-foreground text-sm">
+                No courses found in the linked package.
+              </p>
+            </div>
+          ) : (
+            <div className="glass-card overflow-hidden rounded-none">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border text-left">
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted w-12">#</th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Course</th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Status</th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {courses.map((bc) => (
+                    <tr
+                      key={bc.courseId}
+                      className="hover:bg-card-hover/50 transition-colors"
+                    >
+                      <td className="px-5 py-3">
+                        <span className="flex h-7 w-7 items-center justify-center rounded bg-primary/10 text-xs font-bold text-primary">
+                          {bc.order + 1}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <span className="text-sm font-medium text-foreground">
+                          {bc.course.title}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        {bc.isVisible ? (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/10 px-2.5 py-0.5 text-[11px] font-medium text-success">
+                            <IconEye size={13} />
+                            Visible
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-muted/30 bg-muted/10 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                            <IconEyeOff size={13} />
+                            Hidden
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <button
+                          onClick={() => handleToggleVisibility(bc.courseId)}
+                          disabled={toggling === bc.courseId}
+                          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+                            bc.isVisible
+                              ? "border-warning/30 text-warning hover:bg-warning/10"
+                              : "border-primary/30 text-primary hover:bg-primary/10"
+                          } disabled:opacity-50`}
+                        >
+                          {toggling === bc.courseId ? (
+                            <span className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
+                          ) : bc.isVisible ? (
+                            <>
+                              <IconLockOpen size={13} /> Hide
+                            </>
+                          ) : (
+                            <>
+                              <IconLock size={13} /> Show
+                            </>
+                          )}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}

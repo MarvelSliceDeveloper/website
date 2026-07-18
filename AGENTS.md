@@ -210,7 +210,20 @@ _components/
 - **Web**: Next.js 16, React 19, Tailwind 4, Tiptap, FullCalendar, Recharts, Sonner
 - **Auth**: JWT + cookies, Microsoft OAuth (Teams/Graph), bcrypt
 - **Payments**: Razorpay
+- **YouTube**: YouTube Data API v3 (free tier: 10k quota/day)
 - **Testing**: Vitest (unit/integration), Playwright (E2E)
+
+## YouTube API Integration
+
+The project auto-fetches video metadata when an admin adds/edits a lesson URL.
+
+| Component | File |
+|-----------|------|
+| Service | `apps/api/src/services/youtube.service.ts` — calls YouTube Data API v3, parses ISO 8601 durations |
+| Route | `apps/api/src/modules/youtube/youtube.routes.ts` — `GET /api/youtube/video-info?url=...` |
+| Frontend fetch | `AddLessonForm.tsx` and `LessonCard.tsx` — fetches on blur of video URL input |
+
+**Env**: `YOUTUBE_API_KEY` in root `.env`. Get from [Google Cloud Console](https://console.cloud.google.com/). See `docs/youtube-integration.md`.
 
 ## Seed Users (after `pnpm prisma:reset`)
 

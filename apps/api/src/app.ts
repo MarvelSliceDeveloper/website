@@ -45,6 +45,7 @@ import { logRouter } from "./modules/logs/log.routes";
 import { loginHistoryRouter } from "./modules/logs/login-history.routes";
 import { consentLogRouter } from "./modules/logs/consent-log.routes";
 import { trashRouter } from "./modules/super-admin/trash.routes";
+import { youtubeRouter } from "./modules/youtube/youtube.routes";
 import {
   packageRouter,
   packageEnrollmentRouter,
@@ -188,6 +189,9 @@ app.use("/api/admin/logs", logRouter);
 app.use("/api/admin/login-history", loginHistoryRouter);
 app.use("/api/admin/consent-logs", consentLogRouter);
 app.use("/api/admin/trash", trashRouter);
+
+// ── YouTube API (authenticated) ──
+app.use("/api/youtube", youtubeRouter);
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   const status = err.statusCode || err.status || 500;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import {
@@ -10,6 +10,7 @@ import {
   IconDeviceFloppy,
   IconTrash,
   IconX,
+  IconRefresh,
 } from "@tabler/icons-react";
 import type { Lesson } from "./types";
 
@@ -33,12 +34,37 @@ export default function LessonCard({
   isDragging: boolean;
 }) {
   const [editing, setEditing] = useState(false);
+  const [fetchingInfo, setFetchingInfo] = useState(false);
   const [editForm, setEditForm] = useState({
     title: lesson.title,
     description: lesson.description || "",
     videoUrl: lesson.videoUrl || "",
     isFreePreview: lesson.isFreePreview,
   });
+  const [durationSeconds, setDurationSeconds] = useState<number | null>(
+    lesson.durationSeconds ?? null,
+  );
+
+  const handleFetchVideoInfo = useCallback(async (url: string) => {
+    if (!url.trim()) return;
+    setFetchingInfo(true);
+    try {
+      const data = await api.get<{
+        videoId: string;
+        title: string;
+        durationSeconds: number;
+      }>(`/api/youtube/video-info?url=${encodeURIComponent(url)}`);
+      setEditForm((p) => ({
+        ...p,
+        title: data.title || p.title,
+      }));
+      setDurationSeconds(data.durationSeconds);
+      toast.success(`Duration: ${Math.floor(data.durationSeconds / 60)} min`);
+    } catch {
+    } finally {
+      setFetchingInfo(false);
+    }
+  }, []);
 
   const handleSave = async () => {
     try {
@@ -46,6 +72,7 @@ export default function LessonCard({
         title: editForm.title,
         description: editForm.description || undefined,
         videoUrl: editForm.videoUrl || undefined,
+        durationSeconds: durationSeconds ?? undefined,
         isFreePreview: editForm.isFreePreview,
       });
       setEditing(false);
@@ -133,15 +160,24 @@ export default function LessonCard({
               className="field text-[11px]"
             />
             <div className="flex items-center gap-1.5">
-              <input
-                type="url"
-                value={editForm.videoUrl}
-                onChange={(e) =>
-                  setEditForm((p) => ({ ...p, videoUrl: e.target.value }))
-                }
-                placeholder="Video URL (YouTube, Vimeo...)"
-                className="field text-[11px] flex-1"
-              />
+              <div className="relative flex-1">
+                <input
+                  type="url"
+                  value={editForm.videoUrl}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, videoUrl: e.target.value }))
+                  }
+                  onBlur={() => handleFetchVideoInfo(editForm.videoUrl)}
+                  placeholder="Video URL (YouTube...)"
+                  className="field text-[11px] w-full pr-6"
+                />
+                {fetchingInfo && (
+                  <IconRefresh
+                    size={11}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin"
+                  />
+                )}
+              </div>
               <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground whitespace-nowrap">
                 <input
                   type="checkbox"

@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { IconClipboardCheck, IconCheck, IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import {
+  IconClipboardCheck,
+  IconCheck,
+  IconX,
+  IconChevronLeft,
+  IconChevronRight,
+  IconRotateClockwise,
+} from "@tabler/icons-react";
 
 interface QuizOption {
   id: string;
@@ -45,7 +52,7 @@ interface QuizContentProps {
   // Required: the pass threshold for this quiz, as returned by your API.
   // No default is assumed here — pass this through from real quiz data.
   passingPercentage: number;
-  // Optional: called when the user clicks "Reset" on the results screen.
+  // Optional: called when the user clicks "Retake" on the results screen.
   // The quiz data model here is single-attempt (selectedAnswers/quizSubmitted are
   // controlled by the parent), so actually clearing answers for a retake needs to
   // happen upstream — wire this up if/when retakes are supported.
@@ -54,13 +61,55 @@ interface QuizContentProps {
 
 type Phase = "intro" | "active" | "results";
 
-function resultEmoji(percentage: number, passingPercentage: number) {
-  if (percentage >= passingPercentage) return "🎉";
-  if (percentage >= passingPercentage / 2) return "💪";
-  return "📚";
+// Three-tier result language, shared by the emoji, gauge, and result pill so
+// they always agree with each other instead of the gauge staying green on a
+// fail.
+type ResultTier = "pass" | "partial" | "fail";
+
+function getResultTier(percentage: number, passingPercentage: number): ResultTier {
+  if (percentage >= passingPercentage) return "pass";
+  if (percentage >= passingPercentage / 2) return "partial";
+  return "fail";
 }
 
-function ScoreGauge({ percentage }: { percentage: number }) {
+// Distinct, colorblind-friendlier palette: green for pass, amber for partial,
+// rose for fail/incorrect. Rose (not the app's generic "danger" red) is used
+// specifically for wrong answers so it reads as "incorrect" rather than a
+// generic error state.
+const TIER_STYLES: Record<
+  ResultTier,
+  { stroke: string; text: string; bg: string; border: string; emoji: string }
+> = {
+  pass: {
+    stroke: "text-emerald-500",
+    text: "text-emerald-600",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/30",
+    emoji: "🎉",
+  },
+  partial: {
+    stroke: "text-amber-500",
+    text: "text-amber-600",
+    bg: "bg-amber-500/10",
+    border: "border-amber-500/30",
+    emoji: "💪",
+  },
+  fail: {
+    stroke: "text-rose-500",
+    text: "text-rose-600",
+    bg: "bg-rose-500/10",
+    border: "border-rose-500/30",
+    emoji: "📚",
+  },
+};
+
+function ScoreGauge({
+  percentage,
+  tier,
+}: {
+  percentage: number;
+  tier: ResultTier;
+}) {
   const radius = 80;
   const circumference = Math.PI * radius; // half circle
   const clamped = Math.max(0, Math.min(100, percentage));
@@ -86,11 +135,12 @@ function ScoreGauge({ percentage }: { percentage: number }) {
         d="M 20 100 A 80 80 0 0 1 180 100"
         fill="none"
         stroke="currentColor"
-        className="text-emerald-500"
+        className={TIER_STYLES[tier].stroke}
         strokeWidth="12"
         strokeLinecap="round"
         strokeDasharray={circumference}
         strokeDashoffset={offset}
+        style={{ transition: "stroke-dashoffset 0.6s ease, stroke 0.3s ease" }}
       />
       <text
         x="100"
@@ -134,6 +184,12 @@ export default function QuizContent({
 
   const goToQuestion = (idx: number) => {
     setCurrentIndex(Math.max(0, Math.min(totalQuestions - 1, idx)));
+  };
+
+  const handleRetake = () => {
+    onRetake?.();
+    setCurrentIndex(0);
+    setPhase("intro");
   };
 
   // ── Intro ────────────────────────────────────────────────────────────
@@ -182,7 +238,7 @@ export default function QuizContent({
             onClick={() => setPhase("active")}
             className="btn-primary text-sm px-8 py-2.5 rounded-full"
           >
-            Start
+            {quizResult ? "Start again" : "Start"}
           </button>
         </div>
       </div>
@@ -191,51 +247,77 @@ export default function QuizContent({
 
   // ── Results ──────────────────────────────────────────────────────────
   if (phase === "results" && quizResult) {
-    const passed = quizResult.percentage >= passingPercentage;
+    const tier = getResultTier(quizResult.percentage, passingPercentage);
+    const style = TIER_STYLES[tier];
+    const resultLabel =
+      tier === "pass"
+        ? "Passed"
+        : tier === "partial"
+          ? "Almost there"
+          : "Not yet passed";
+    const incorrectCount = quizResult.total - quizResult.score;
 
     return (
       <div className="space-y-5">
         {renderNavigator()}
 
         <div className="flex flex-col items-center pt-4 pb-2 text-center">
-          <ScoreGauge percentage={quizResult.percentage} />
+          <ScoreGauge percentage={quizResult.percentage} tier={tier} />
           <p className="text-sm text-foreground mt-2">
             You have scored <strong>{Math.round(quizResult.percentage)}%</strong>.
           </p>
-          <p className={`text-sm mt-1 ${passed ? "text-emerald-600" : "text-danger"}`}>
-            {passed
-              ? "Congratulations, you have passed the exam."
-              : "You did not reach the passing score this time."}
-          </p>
 
-          <div className="flex items-center gap-4 mt-4">
-            {onRetake && (
-              <button
-                onClick={onRetake}
-                className="btn-primary text-sm px-6 py-2 rounded-full"
-              >
-                Reset
-              </button>
-            )}
+          <span
+            className={`inline-flex items-center gap-1.5 mt-2 text-xs font-semibold px-3 py-1 rounded-full border ${style.bg} ${style.text} ${style.border}`}
+          >
+            {resultLabel}
+          </span>
+
+          <div className="flex items-center gap-3 mt-4">
             <button
               onClick={() => {
                 setCurrentIndex(0);
                 setPhase("active");
               }}
-              className="text-xs font-medium text-primary hover:underline"
+              className="btn-primary text-sm px-6 py-2 rounded-full"
             >
               Review Assessment
             </button>
+            {onRetake && (
+              <button
+                onClick={handleRetake}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+              >
+                <IconRotateClockwise size={14} />
+                Retake
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="rounded-xl bg-card border border-border p-4 flex items-center gap-2">
-          <span className="text-lg">
-            {resultEmoji(quizResult.percentage, passingPercentage)}
-          </span>
-          <p className="text-sm font-semibold text-foreground">
-            {quizResult.score}/{quizResult.total} correct
-          </p>
+        {/* Score breakdown: correct vs incorrect get their own color/icon so
+            the summary matches the per-question markers below. */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 flex items-center gap-2.5">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
+              <IconCheck size={15} />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                {quizResult.score} correct
+              </p>
+            </div>
+          </div>
+          <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 flex items-center gap-2.5">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-rose-500 text-white">
+              <IconX size={15} />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-rose-700 dark:text-rose-300">
+                {incorrectCount} incorrect
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -248,6 +330,26 @@ export default function QuizContent({
         {quizData.questions.map((q, i) => {
           const isAnswered = selectedAnswers[q.id] != null;
           const isCurrent = i === currentIndex && phase === "active";
+
+          // Once submitted, each dot reflects right/wrong, not just answered.
+          // Source of truth is the GRADED result (quizResult.answers), not
+          // quizData's option.isCorrect — many APIs strip isCorrect from the
+          // pre-submit question payload so it can't be read in devtools, and
+          // only reveal it in the graded response.
+          let markerClass =
+            "border-border text-muted-foreground";
+          if (quizSubmitted) {
+            const graded = quizResult?.answers.find((a) => a.questionId === q.id);
+            const wasCorrect = graded?.isCorrect ?? false;
+            markerClass = wasCorrect
+              ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-600"
+              : "border-rose-500/60 bg-rose-500/10 text-rose-600";
+          } else if (isCurrent) {
+            markerClass = "border-primary bg-primary/10 text-primary";
+          } else if (isAnswered) {
+            markerClass = "border-emerald-500/60 text-emerald-600";
+          }
+
           return (
             <button
               key={q.id}
@@ -255,11 +357,7 @@ export default function QuizContent({
                 setPhase("active");
                 goToQuestion(i);
               }}
-              className={`shrink-0 h-7 min-w-7 px-2 rounded-md border text-[11px] font-medium transition-colors ${isCurrent
-                ? "border-primary bg-primary/10 text-primary"
-                : isAnswered
-                  ? "border-emerald-500/60 text-emerald-600"
-                  : "border-border text-muted-foreground"
+              className={`shrink-0 h-7 min-w-7 px-2 rounded-md border text-[11px] font-medium transition-colors ${isCurrent && !quizSubmitted ? "border-primary bg-primary/10 text-primary" : markerClass
                 }`}
             >
               Q{i + 1}
@@ -301,22 +399,55 @@ export default function QuizContent({
             <p className="text-sm font-semibold text-foreground leading-snug">
               {currentQuestion.questionText}
             </p>
-            <span className="inline-block mt-1 text-[10px] font-bold text-muted bg-muted px-2 py-0.5 rounded">
+            <span className="inline-block mt-1 text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded">
               {currentQuestion.marks} {currentQuestion.marks === 1 ? "mark" : "marks"}
             </span>
           </div>
 
           <div className="space-y-2">
-            {currentQuestion.options.map((opt) => {
+            {(() => {
+              // Grade lookup for this question, done once per render instead
+              // of per-option. quizResult.answers is the authoritative,
+              // post-submission source — quizData's own option.isCorrect
+              // flags are frequently withheld by the API before grading.
+              const graded = quizSubmitted
+                ? quizResult?.answers.find((a) => a.questionId === currentQuestion.id)
+                : undefined;
+
+              return currentQuestion.options.map((opt) => {
               const isSelected = selectedAnswers[currentQuestion.id] === opt.id;
-              const isCorrectAnswer = opt.isCorrect;
+              // "This is the right option" is only trustworthy once graded:
+              // either the API's option flag confirms it, or it's the option
+              // the user picked and the grader marked correct.
+              const isCorrectAnswer =
+                quizSubmitted &&
+                (opt.isCorrect || (isSelected && graded?.isCorrect === true));
+              const isWrongSelection =
+                quizSubmitted && isSelected && graded?.isCorrect === false;
+
               let cardClass = "border-border/60";
               if (quizSubmitted) {
                 if (isCorrectAnswer) cardClass = "border-emerald-500/60 bg-emerald-500/10";
-                else if (isSelected) cardClass = "border-danger/60 bg-danger/10";
+                else if (isWrongSelection) cardClass = "border-rose-500/60 bg-rose-500/10";
               } else if (isSelected) {
                 cardClass = "border-primary/60 bg-primary/10";
               }
+
+              // Marker: check for correct, X for a wrong pick, filled dot for
+              // an in-progress selection, empty otherwise.
+              let markerIconClass = "border-border text-transparent";
+              let markerIcon = <IconCheck size={13} />;
+              if (quizSubmitted && isCorrectAnswer) {
+                markerIconClass = "bg-emerald-500 border-emerald-500 text-white";
+                markerIcon = <IconCheck size={13} />;
+              } else if (isWrongSelection) {
+                markerIconClass = "bg-rose-500 border-rose-500 text-white";
+                markerIcon = <IconX size={13} />;
+              } else if (!quizSubmitted && isSelected) {
+                markerIconClass = "bg-primary border-primary text-primary-foreground";
+                markerIcon = <IconCheck size={13} />;
+              }
+
               return (
                 <button
                   key={opt.id}
@@ -325,27 +456,31 @@ export default function QuizContent({
                   onClick={() => onAnswerSelect(currentQuestion.id, opt.id)}
                   className={`w-full flex items-center gap-3 p-3 rounded-lg border text-sm text-left transition-colors ${cardClass} ${quizSubmitted && isCorrectAnswer
                     ? "text-emerald-700 dark:text-emerald-300"
-                    : quizSubmitted && isSelected
-                      ? "text-danger"
+                    : isWrongSelection
+                      ? "text-rose-700 dark:text-rose-300"
                       : "text-foreground"
                     }`}
                 >
                   <span
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold ${quizSubmitted && isCorrectAnswer
-                      ? "bg-emerald-500 border-emerald-500 text-white"
-                      : quizSubmitted && isSelected
-                        ? "bg-danger border-danger text-white"
-                        : isSelected
-                          ? "bg-primary border-primary text-primary-foreground"
-                          : "border-border text-transparent"
-                      }`}
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold ${markerIconClass}`}
                   >
-                    <IconCheck size={13} />
+                    {markerIcon}
                   </span>
                   <span className="flex-1">{opt.optionText}</span>
+                  {quizSubmitted && isCorrectAnswer && (
+                    <span className="text-[10px] font-semibold text-emerald-600 shrink-0">
+                      Correct answer
+                    </span>
+                  )}
+                  {isWrongSelection && (
+                    <span className="text-[10px] font-semibold text-rose-600 shrink-0">
+                      Your answer
+                    </span>
+                  )}
                 </button>
               );
-            })}
+              });
+            })()}
           </div>
 
           <div className="flex items-center justify-between pt-2">

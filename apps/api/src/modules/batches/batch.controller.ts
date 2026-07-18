@@ -168,6 +168,31 @@ export const batchController = {
     }
   },
 
+  // Lists all courses in a batch with visibility state
+  async getBatchCourses(req: AuthRequest, res: Response) {
+    try {
+      const courses = await batchService.getBatchCourses(req.params.id);
+      return res.json({ courses });
+    } catch (error: any) {
+      if (error.message === "Batch not found")
+        return res.status(404).json({ error: error.message });
+      return res.status(500).json({ error: error.message });
+    }
+  },
+
+  // Toggles visibility of a course in a batch
+  async toggleVisibility(req: AuthRequest, res: Response) {
+    try {
+      const { id, courseId } = req.params;
+      const result = await batchService.toggleCourseVisibility(id, courseId);
+      return res.json(result);
+    } catch (error: any) {
+      if (error.message === "Course not found in this batch")
+        return res.status(404).json({ error: error.message });
+      return res.status(500).json({ error: error.message });
+    }
+  },
+
   // Gets batch details for an enrolled student
   async getByIdForStudent(req: AuthRequest, res: Response) {
     try {

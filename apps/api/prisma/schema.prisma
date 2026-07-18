@@ -119,6 +119,7 @@ model Course {
   assignmentTemplates CourseAssignmentTemplate[]
   packageCourses     PackageCourse[]
   packageEnrollmentCourses PackageEnrollmentCourse[]
+  courseVisibility   BatchCourseVisibility[]
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 }
@@ -177,8 +178,24 @@ model Batch {
   sessions     LiveSession[]
   assignments  Assignment[]
   packageEnrollmentCourses PackageEnrollmentCourse[]
+  courseVisibility    BatchCourseVisibility[]
 
   @@index([packageId])
+}
+
+// Tracks which courses are visible to batch members (manual toggle per batch)
+// Course data is derived from PackageCourse at query time — this just stores the visibility state
+model BatchCourseVisibility {
+  id        String   @id @default(cuid())
+  batchId   String
+  courseId  String
+  isVisible Boolean  @default(false)
+
+  batch  Batch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([batchId, courseId])
+  @@index([batchId])
 }
 
 // Student applies → pending → admin approves → assigned to batch
