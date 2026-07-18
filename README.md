@@ -1,118 +1,180 @@
 # LMS Portal
 
-Unified Learning Management System monorepo with an Express API and a Next.js web app.
+Unified Learning Management System monorepo — Express API + Next.js web app.
 
-## Monorepo layout
-
-- apps/api - Express API + Prisma
-- apps/web - Next.js frontend
-- packages/\* - shared config, types, utilities
-
-## Prerequisites
-
-- Node.js >= 20
-- pnpm >= 8
-- Docker Desktop (for Postgres + Redis)
-- Git
-
-## Setup (Windows PowerShell)
-
-All commands are run from the repo root.
-
-```powershell
-git clone <YOUR_REPO_URL>
-Set-Location LMS
-corepack enable
-corepack prepare pnpm@latest --activate
-pnpm install
-Copy-Item .env.example .env
-# Edit .env and set DATABASE_URL and other secrets
-# Start Postgres + Redis
-docker-compose up -d
-# Rebuild the Prisma schema from `schema.prisma` and seed data
-pnpm prisma:reset
-# Start API + Web dev servers
-pnpm dev
-```
-
-## Setup (macOS/Linux)
-
-All commands are run from the repo root.
+## Quick Start
 
 ```bash
-git clone <YOUR_REPO_URL>
-cd LMS
-corepack enable
-corepack prepare pnpm@latest --activate
 pnpm install
-cp .env.example .env
-# Edit .env and set DATABASE_URL and other secrets
-# Start Postgres + Redis
 docker-compose up -d
-# Rebuild the Prisma schema from `schema.prisma` and seed data
 pnpm prisma:reset
-# Start API + Web dev servers
 pnpm dev
 ```
 
-## Environment configuration
+- **Web**: http://localhost:3000
+- **API**: http://localhost:4000
+- **Postgres** (Docker): localhost:5433
+- **Redis** (Docker): localhost:6379
 
-Create a root .env file from .env.example and fill in your values.
+## Seed Logins
 
-Required for local dev:
+| Role | Email | Password |
+|------|-------|----------|
+| Super Admin | superadmin@lms.local | superadmin123 |
+| Admin | admin@lms.local | admin123 |
+| Instructor | instructor@lms.local | instructor123 |
+| Student | student@lms.local | student123 |
 
-- DATABASE_URL (Postgres connection string)
-- REDIS_URL
-- JWT_SECRET (min 32 chars)
-- TOKEN_ENCRYPTION_KEY (32 chars)
-- API_URL (http://localhost:4000)
-- WEB_URL (http://localhost:3000)
-
-Optional but needed for those features:
-
-- Microsoft OAuth / Teams (MS_CLIENT_ID, MS_CLIENT_SECRET, MS_TENANT_ID, MS_REDIRECT_URI, MS_WEBHOOK_CLIENT_STATE) — see [docs/MICROSOFT_GRAPH.md](docs/MICROSOFT_GRAPH.md)
-- Razorpay (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET)
-- Sentry (SENTRY_DSN)
-
-Frontend env (optional): create apps/web/.env.local
+## Monorepo Layout
 
 ```
-NEXT_PUBLIC_API_URL=http://localhost:4000
-NEXT_PUBLIC_USE_MOCK_DATA=false
+LMS/
+├── apps/
+│   ├── api/                  # Express + Prisma + Zod
+│   │   ├── prisma/
+│   │   │   ├── schema.prisma # 46 models
+│   │   │   └── seed.ts       # Dev seed data
+│   │   └── src/
+│   │       ├── app.ts        # Express setup
+│   │       ├── index.ts      # Server entry
+│   │       ├── middleware/    # Auth, CSRF, rate-limit
+│   │       ├── modules/      # Feature modules (30)
+│   │       │   ├── auth/
+│   │       │   ├── courses/
+│   │       │   ├── payments/
+│   │       │   ├── batches/
+│   │       │   ├── sessions/
+│   │       │   ├── calendar/
+│   │       │   ├── assignments/
+│   │       │   ├── packages/
+│   │       │   ├── dashboard/
+│   │       │   ├── enrollments/
+│   │       │   ├── student/
+│   │       │   ├── users/
+│   │       │   ├── certificates/
+│   │       │   ├── messages/
+│   │       │   ├── notes/
+│   │       │   ├── notifications/
+│   │       │   ├── mentorship/
+│   │       │   ├── support/
+│   │       │   ├── tickets/
+│   │       │   ├── attendance/
+│   │       │   ├── recordings/
+│   │       │   ├── youtube/
+│   │       │   ├── graph/          # MS Graph OAuth + API
+│   │       │   ├── api-keys/
+│   │       │   ├── permissions/
+│   │       │   ├── settings/
+│   │       │   ├── logs/
+│   │       │   ├── quiz-templates/
+│   │       │   ├── assignment-templates/
+│   │       │   ├── super-admin/
+│   │       │   └── announcements/
+│   │       ├── services/     # Email, YouTube
+│   │       ├── jobs/         # Background sync
+│   │       ├── utils/        # Prisma, encryption, video parsing
+│   │       └── __tests__/
+│   └── web/                  # Next.js 16 + React 19 + Tailwind 4
+│       └── src/
+│           ├── app/          # App Router pages
+│           │   ├── login/
+│           │   ├── set-password/
+│           │   ├── catalogue/      # Public course catalogue
+│           │   ├── admin/          # Admin dashboard + management
+│           │   │   ├── dashboard/
+│           │   │   ├── courses/[id]/  # Course builder
+│           │   │   ├── batches/
+│           │   │   ├── packages/
+│           │   │   ├── users/
+│           │   │   ├── sessions/
+│           │   │   ├── calendar/
+│           │   │   ├── settings/
+│           │   │   ├── reports/
+│           │   │   └── ...
+│           │   ├── student/        # Student portal (SPA)
+│           │   │   ├── _views/     # View components
+│           │   │   └── settings/
+│           │   └── instructor/     # Instructor portal
+│           │       ├── dashboard/
+│           │       └── ...
+│           ├── components/   # Shared components
+│           │   ├── admin/    # AdminShell, Sidebar, StatCard
+│           │   ├── student/  # StudentPortalShell
+│           │   ├── shared/   # EmptyState, StatusBadge, Skeleton
+│           │   └── ui/       # Badge, select
+│           ├── lib/          # API client, types, helpers
+│           ├── hooks/        # Custom hooks
+│           └── types/        # .d.ts declarations
+├── packages/
+│   ├── email-templates/      # 14 React Email templates
+│   └── types/                # Shared TS types
+├── docs/                     # 20+ documentation files
+├── scripts/                  # PowerShell test helpers
+├── uploads/                  # File uploads directory
+├── public/                   # Static assets
+├── docker-compose.yml
+├── turbo.json
+├── CONTRIBUTING.md
+└── AGENTS.md
 ```
 
-## URLs
+## Environment
 
-- Web app: http://localhost:3000
-- API: http://localhost:4000
-- API health check: http://localhost:4000/health
-- Postgres (Docker): localhost:5433
-- Redis (Docker): localhost:6379
-
-## Seed logins
-
-- Admin: admin@lms.local / admin123
-- Instructor: instructor@lms.local / instructor123
-- Student: student@lms.local / student123
-
-## Useful commands
-
-```bash
-pnpm dev
-pnpm dev:web
-pnpm dev:api
-pnpm build
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm test:all
-pnpm prisma:migrate
-pnpm prisma:seed
-pnpm prisma:studio
+```env
+DATABASE_URL=postgresql://lms:lms@localhost:5433/lms
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=your-32-char-min-secret
+TOKEN_ENCRYPTION_KEY=32-char-exact-key
+API_URL=http://localhost:4000
+WEB_URL=http://localhost:3000
+RAZORPAY_KEY_ID=rzp_test_...
+RAZORPAY_KEY_SECRET=...
+YOUTUBE_API_KEY=...
+BREVO_API_KEY=...
+MS_CLIENT_ID=...              # Microsoft OAuth
+MS_CLIENT_SECRET=...
+MS_TENANT_ID=...
 ```
 
-## Troubleshooting
+## Scripts
 
-- Postgres port mismatch: docker-compose maps host 5433 -> container 5432. Make sure DATABASE_URL uses port 5433 when using the provided compose file.
-- Prisma env loading: if prisma reports missing DATABASE_URL, ensure the .env file is in the repo root and the variable is set. If needed, copy .env into apps/api/ as well.
-- This repo currently uses `pnpm prisma:reset` instead of `pnpm prisma:migrate` because the checked-in migration SQL files are not present.
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start API + Web dev servers (Turbo) |
+| `pnpm build` | Build all packages |
+| `pnpm lint` | Lint all packages |
+| `pnpm typecheck` | TypeScript check |
+| `pnpm test` | Unit tests (Vitest) |
+| `pnpm test:e2e` | E2E tests (Playwright) |
+| `pnpm test:all` | All test suites |
+| `pnpm format` | Prettier format |
+| `pnpm prisma:reset` | Reset DB + seed |
+| `pnpm prisma:studio` | Open Prisma Studio |
+| `pnpm clean` | Clean build outputs |
+
+## Prisma Schema — 46 Models
+
+**Auth & Users:** User, LoginLog, ApiKey, PermissionOverride, ConsentLog
+**Courses:** Course, Module, Lesson, Batch, BatchCourseVisibility
+**Content:** Quiz, Question, QuizAttempt, Assignment, AssignmentQuestion, AssignmentMcqOption, AssignmentSubmission, StudentQuestionResponse
+**Learning:** Progress, Certificate, Note, Attendance, Recording
+**Sessions:** LiveSession, CalendarEvent
+**Packages:** CoursePackage, PackageCourse, PackageEnrollment, PackageEnrollmentCourse
+**Payments:** Payment
+**Support:** SupportTicket, SupportMessage
+**Mentorship:** MentorshipTicket
+**Messaging:** Message
+**Notifications:** Notification, NotificationPreference
+**Templates:** QuizTemplate, QuizTemplateQuestion, QuizTemplateOption, AssignmentTemplate
+**Course-Template Links:** CourseQuizTemplate, CourseAssignmentTemplate
+**Admin:** SystemSetting, Announcement, GraphApiLog
+
+## Key Architecture Decisions
+
+- **CSRF**: Double-csrf pattern with exempt paths for payments, auth set-password
+- **Auth**: JWT httpOnly cookies, role hierarchy (SUPER_ADMIN > ADMIN > INSTRUCTOR > STUDENT)
+- **Payments**: Razorpay, amounts in paise, guest user auto-creation
+- **File uploads**: Multer, static serving at `/uploads/`
+- **Video**: YouTube/Vimeo/Loom detection + embed ID extraction
+- **Email**: Brevo API via React Email templates
+- **Calendar/Sessions**: Microsoft Teams Graph API integration
