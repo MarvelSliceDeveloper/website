@@ -117,7 +117,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen overflow-x-hidden bg-background">
       {/* ─── LEFT: Hero Panel (hidden on mobile/tablet) ─── */}
-      <section className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-[#f97316] via-[#ea580c] to-[#c2410c] px-12 lg:flex lg:w-[55%]">
+      <section className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 px-12 lg:flex lg:w-[55%]">
         {/* Diagonal stripe texture overlay */}
         <div
           className="absolute inset-0 opacity-[0.04]"
@@ -246,8 +246,8 @@ export default function LoginPage() {
                   className="h-11 w-auto object-contain"
                 />
                 <span className="text-2xl font-extrabold tracking-tight">
-                  <span className="text-primary">Marvel</span>{" "}
-                  <span className="text-primary/80">Slice</span>
+                  <span className="text-blue-600">Marvel</span>{" "}
+                  <span className="text-blue-500">Slice</span>
                 </span>
               </div>
 
@@ -326,7 +326,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => router.push("/forgot-password")}
-                    className="font-semibold text-primary transition-colors hover:text-primary-hover"
+                    className="font-semibold text-blue-600 transition-colors hover:text-blue-700"
                   >
                     Forgot Password?
                   </button>
@@ -336,7 +336,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-primary to-primary-hover py-3.5 text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all duration-300 hover:from-primary-hover hover:to-primary hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0"
+                  className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition-all duration-300 hover:from-blue-700 hover:to-blue-600 hover:shadow-xl hover:shadow-blue-600/30 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0"
                 >
                   <span
                     className="relative z-10"
@@ -370,7 +370,7 @@ export default function LoginPage() {
               {/* SSO Button */}
               <button
                 type="button"
-                className="mt-4 w-full rounded-xl border-2 border-primary/30 bg-primary/10 py-3 text-sm font-semibold text-primary transition-all duration-300 hover:border-primary hover:bg-primary/15 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]"
+                className="mt-4 w-full rounded-xl border-2 border-blue-600/30 bg-blue-600/10 py-3 text-sm font-semibold text-blue-700 transition-all duration-300 hover:border-blue-600 hover:bg-blue-600/15 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]"
                 style={{
                   animation:
                     "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both",
@@ -389,7 +389,7 @@ export default function LoginPage() {
               >
                 <a
                   href="/catalogue"
-                  className="text-sm font-medium text-primary transition-colors hover:text-primary-hover"
+                  className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700"
                 >
                   Browse our course packages
                 </a>

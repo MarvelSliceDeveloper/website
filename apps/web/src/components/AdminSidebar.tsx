@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
+import { useUnreadCounts } from "@/hooks/useUnreadCounts";
 import {
   IconBook,
   IconBrandWindows,
@@ -30,13 +31,25 @@ import {
 
 import type { NavItem, NavItemChild } from "@/components/shared/SidebarTypes";
 
+// Small count badge, e.g. "3" or "9+". Renders nothing if count is falsy.
+function UnreadBadge({ count }: { count?: number }) {
+  if (!count) return null;
+  return (
+    <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white leading-none min-w-[16px] text-center">
+      {count > 9 ? "9+" : count}
+    </span>
+  );
+}
+
 // Readable, high-contrast child menu link
 function ChildNavLink({
   child,
   pathname,
+  unreadCounts,
 }: {
   child: NavItemChild;
   pathname: string;
+  unreadCounts: Record<string, number>;
 }) {
   const searchParams = useSearchParams();
 
@@ -60,6 +73,7 @@ function ChildNavLink({
   }
 
   const isChildActive = isPathActive && isQueryActive;
+  const childCount = child.unreadKey ? unreadCounts[child.unreadKey] : undefined;
 
   return (
     <li>
@@ -76,7 +90,8 @@ function ChildNavLink({
             : "bg-slate-400/40 dark:bg-slate-600 group-hover:bg-slate-500"
             }`}
         />
-        <span>{child.label}</span>
+        <span className="flex-1">{child.label}</span>
+        <UnreadBadge count={childCount} />
       </Link>
     </li>
   );
@@ -88,11 +103,13 @@ function NavGroup({
   items,
   pathname,
   collapsed = false,
+  unreadCounts,
 }: {
   label: string;
   items: NavItem[];
   pathname: string;
   collapsed?: boolean;
+  unreadCounts: Record<string, number>;
 }) {
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [manuallyCollapsed, setManuallyCollapsed] = useState<string | null>(
@@ -143,6 +160,15 @@ function NavGroup({
             });
           const isActive = isParentActive || isAnyChildActive;
 
+          // Unread count for this item. If the item has children with their
+          // own unreadKeys, fall back to summing them so the parent badge
+          // reflects the total even before it's expanded.
+          const ownCount = item.unreadKey ? unreadCounts[item.unreadKey] : undefined;
+          const childrenTotal = item.children?.reduce((sum, child) => {
+            return sum + (child.unreadKey ? unreadCounts[child.unreadKey] || 0 : 0);
+          }, 0);
+          const itemCount = ownCount ?? (childrenTotal || undefined);
+
           return (
             <li key={item.label} className="space-y-0.5">
               {hasChildren ? (
@@ -151,12 +177,15 @@ function NavGroup({
                     type="button"
                     title={item.label}
                     onClick={() => toggleGroup(item.label)}
-                    className={`w-full flex items-center justify-center p-3 text-sm transition-colors cursor-pointer ${isActive
+                    className={`relative w-full flex items-center justify-center p-3 text-sm transition-colors cursor-pointer ${isActive
                       ? "bg-primary/10 text-primary border-r-3 border-primary"
                       : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
                       }`}
                   >
                     <item.icon size={18} stroke={1.8} className="shrink-0" />
+                    {!!itemCount && (
+                      <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500" />
+                    )}
                   </button>
                 ) : (
                   <div className="space-y-0.5">
@@ -180,6 +209,7 @@ function NavGroup({
                           {item.badge}
                         </span>
                       )}
+                      <UnreadBadge count={itemCount} />
                       <IconChevronDown
                         size={15}
                         stroke={1.8}
@@ -199,6 +229,7 @@ function NavGroup({
                             key={child.href}
                             child={child}
                             pathname={pathname}
+                            unreadCounts={unreadCounts}
                           />
                         ))}
                       </ul>
@@ -209,7 +240,7 @@ function NavGroup({
                 <Link
                   href={item.href}
                   title={item.label}
-                  className={`flex items-center text-[13.5px] font-semibold transition-colors ${collapsed
+                  className={`relative flex items-center text-[13.5px] font-semibold transition-colors ${collapsed
                     ? "justify-center p-3"
                     : "gap-3 px-4 py-2.5 border-l-3"
                     } ${isActive
@@ -236,6 +267,13 @@ function NavGroup({
                     >
                       {item.badge}
                     </span>
+                  )}
+                  {collapsed ? (
+                    !!itemCount && (
+                      <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500" />
+                    )
+                  ) : (
+                    <UnreadBadge count={itemCount} />
                   )}
                 </Link>
               )}
@@ -264,6 +302,7 @@ export default function AdminSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const isSuperAdmin = userRole === "SUPER_ADMIN";
+  const unreadCounts = useUnreadCounts();
 
   const sidebarItems: NavItem[] = [
     { label: "Dashboard", href: "/admin/dashboard", icon: IconLayoutDashboard },
@@ -341,12 +380,13 @@ export default function AdminSidebar({
           label: "Inbox",
           href: "/admin/inbox",
           icon: IconMail,
+          unreadKey: "inbox",
           children: [
-            { label: "Notifications", href: "/admin/inbox" },
+            { label: "Notifications", href: "/admin/inbox", unreadKey: "notifications" },
             { label: "Send Notification", href: "/admin/notifications/send" },
-            { label: "Mentorship Tickets", href: "/admin/inbox/tickets" },
+            { label: "Mentorship Tickets", href: "/admin/inbox/tickets", unreadKey: "tickets" },
             { label: "Support", href: "/admin/inbox/support" },
-            { label: "Messages", href: "/admin/inbox/messages" },
+            { label: "Messages", href: "/admin/inbox/messages", unreadKey: "messages" },
           ],
         },
         {
@@ -412,11 +452,13 @@ export default function AdminSidebar({
           label: "Mentorship",
           href: "/admin/mentorship",
           icon: IconMessages,
+          unreadKey: "mentorship",
           children: [
             { label: "All Requests", href: "/admin/mentorship?status=all" },
             {
               label: "Pending Review",
               href: "/admin/mentorship?status=OPEN",
+              unreadKey: "mentorship_pending",
             },
             { label: "Assigned", href: "/admin/mentorship?status=ASSIGNED" },
             {
@@ -480,6 +522,7 @@ export default function AdminSidebar({
           items={sidebarItems}
           pathname={pathname}
           collapsed={collapsed}
+          unreadCounts={unreadCounts}
         />
       </nav>
 

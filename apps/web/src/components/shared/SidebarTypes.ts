@@ -1,6 +1,7 @@
 export type NavItemChild = {
   label: string;
   href: string;
+  unreadKey?: string;
 };
 
 export type NavItem = {
@@ -12,5 +13,6 @@ export type NavItem = {
     className?: string;
   }>;
   badge?: number;
+  unreadKey?: string;
   children?: NavItemChild[];
 };

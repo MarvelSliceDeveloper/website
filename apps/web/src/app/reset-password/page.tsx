@@ -58,7 +58,7 @@ function ResetPasswordForm() {
         </p>
         <Link
           href="/login"
-          className="mt-6 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary to-primary-hover px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5"
+          className="mt-6 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition-all hover:-translate-y-0.5"
         >
           <IconKey size={16} />
           Log In Now
@@ -89,8 +89,8 @@ function ResetPasswordForm() {
 
   return (
     <>
-      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/15">
-        <IconKey size={22} stroke={1.5} className="text-primary" />
+      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-600/15">
+        <IconKey size={22} stroke={1.5} className="text-blue-600" />
       </div>
       <h2 className="text-[22px] font-bold text-foreground text-center">Set New Password</h2>
       <p className="mt-1 text-sm text-muted-foreground text-center">Choose a strong password.</p>
@@ -145,14 +145,14 @@ function ResetPasswordForm() {
         <button
           type="submit"
           disabled={!allPassed || submitting}
-          className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-primary to-primary-hover py-3.5 text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all duration-300 hover:from-primary-hover hover:to-primary hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0"
+          className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition-all duration-300 hover:from-blue-700 hover:to-blue-600 hover:shadow-xl hover:shadow-blue-600/30 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0"
         >
           {submitting ? "Resetting..." : "Reset Password"}
         </button>
       </form>
 
       <div className="mt-6 text-center">
-        <Link href="/login" className="text-sm font-medium text-primary hover:text-primary-hover transition-colors">
+        <Link href="/login" className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
           Back to Login
         </Link>
       </div>
@@ -163,7 +163,7 @@ function ResetPasswordForm() {
 export default function ResetPasswordPage() {
   return (
     <div className="flex min-h-screen overflow-x-hidden bg-background">
-      <section className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-primary via-primary-hover to-[#c2410c] px-12 lg:flex lg:w-[55%]">
+      <section className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 px-12 lg:flex lg:w-[55%]">
         <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(255,255,255,0.5) 10px, rgba(255,255,255,0.5) 11px)" }} />
         <div className="relative z-10 pt-14" style={{ animation: "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both" }}>
           <div className="flex items-center gap-3">

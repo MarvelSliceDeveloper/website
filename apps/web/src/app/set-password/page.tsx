@@ -88,7 +88,7 @@ export default function SetPasswordPage() {
   return (
     <div className="flex min-h-screen overflow-x-hidden bg-background">
       {/* Left panel */}
-      <section className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-[#f97316] via-[#ea580c] to-[#c2410c] px-12 lg:flex lg:w-[55%]">
+      <section className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 px-12 lg:flex lg:w-[55%]">
         <div
           className="absolute inset-0 opacity-[0.04]"
           style={{
@@ -161,8 +161,8 @@ export default function SetPasswordPage() {
               >
                 <img src="/images/logo.svg" alt="Marvel Slice" className="h-11 w-auto object-contain" />
                 <span className="text-2xl font-extrabold tracking-tight">
-                  <span className="text-primary">Marvel</span>{" "}
-                  <span className="text-primary/80">Slice</span>
+                  <span className="text-blue-600">Marvel</span>{" "}
+                  <span className="text-blue-500">Slice</span>
                 </span>
               </div>
 
@@ -170,8 +170,8 @@ export default function SetPasswordPage() {
                 className="mt-6 text-center lg:mt-0"
                 style={{ animation: "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both" }}
               >
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/15">
-                  <IconLock size={22} stroke={1.5} className="text-primary" />
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-600/15">
+                  <IconLock size={22} stroke={1.5} className="text-blue-600" />
                 </div>
                 <h2 className="text-[22px] font-bold text-foreground">Set Your Password</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -256,7 +256,7 @@ export default function SetPasswordPage() {
                 <button
                   type="submit"
                   disabled={!allPassed || loading}
-                  className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-primary to-primary-hover py-3.5 text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all duration-300 hover:from-primary-hover hover:to-primary hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0"
+                  className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition-all duration-300 hover:from-blue-700 hover:to-blue-600 hover:shadow-xl hover:shadow-blue-600/30 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0"
                 >
                   {loading ? "Setting password..." : "Set Password"}
                 </button>

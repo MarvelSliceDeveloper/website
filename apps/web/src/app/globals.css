@@ -1,40 +1,40 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0f0a0a;
-  --foreground: #f5ede4;
-  --card: #1a1410;
-  --card-hover: #241d17;
-  --border: #362e27;
-  --border-hover: #4a3f36;
+  --background: #ffffff;
+  --foreground: #111827;
+  --card: #ffffff;
+  --card-hover: #f9fafb;
+  --border: #e5e7eb;
+  --border-hover: #d1d5db;
   --primary: #f97316;
   --primary-hover: #fb923c;
   --accent: #0891b2;
   --success: #22c55e;
   --warning: #f59e0b;
   --danger: #ef4444;
-  --muted: #a39686;
-  --muted-foreground: #c4b8a8;
+  --muted: #6b7280;
+  --muted-foreground: #9ca3af;
   --radius: 14px;
 }
 
 /* stylelint-disable at-rule-no-unknown */
 
 [data-theme="light"] {
-  --background: #fffaf5;
-  --foreground: #1a1410;
+  --background: #ffffff;
+  --foreground: #111827;
   --card: #ffffff;
-  --card-hover: #fef1e0;
-  --border: #eddccb;
-  --border-hover: #d4bfa8;
-  --primary: #ea580c;
-  --primary-hover: #c2410c;
-  --accent: #0e7490;
-  --success: #16a34a;
-  --warning: #d97706;
-  --danger: #dc2626;
-  --muted: #6b5d50;
-  --muted-foreground: #4a3f36;
+  --card-hover: #f9fafb;
+  --border: #e5e7eb;
+  --border-hover: #d1d5db;
+  --primary: #f97316;
+  --primary-hover: #fb923c;
+  --accent: #0891b2;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --muted: #6b7280;
+  --muted-foreground: #9ca3af;
 }
 
 @theme {
@@ -70,18 +70,7 @@ body {
 
 body {
   margin: 0;
-  background:
-    radial-gradient(
-      80rem 40rem at 100% -10%,
-      rgba(249, 115, 22, 0.14),
-      transparent 60%
-    ),
-    radial-gradient(
-      70rem 36rem at -10% 100%,
-      rgba(37, 192, 232, 0.1),
-      transparent 60%
-    ),
-    var(--background);
+  background: var(--background);
   color: var(--foreground);
   font-family:
     var(--font-body),
@@ -122,11 +111,7 @@ a:focus-visible {
 }
 
 .glass-card {
-  background: linear-gradient(
-    180deg,
-    rgba(26, 20, 16, 0.9),
-    rgba(26, 20, 16, 0.72)
-  );
+  background: #ffffff;
   backdrop-filter: blur(14px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -137,28 +122,16 @@ a:focus-visible {
 
 .glass-card:hover {
   border-color: var(--border-hover);
-  background: linear-gradient(
-    180deg,
-    rgba(36, 29, 23, 0.95),
-    rgba(36, 29, 23, 0.78)
-  );
+  background: #f9fafb;
 }
 
 [data-theme="light"] .glass-card {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.94),
-    rgba(255, 250, 245, 0.9)
-  );
+  background: #ffffff;
   border-color: var(--border);
 }
 
 [data-theme="light"] .glass-card:hover {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.98),
-    rgba(254, 241, 224, 0.92)
-  );
+  background: #f9fafb;
   border-color: var(--border-hover);
 }
 
@@ -189,7 +162,7 @@ a:focus-visible {
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 30px rgba(249, 115, 22, 0.32);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
 .btn-secondary {
@@ -242,7 +215,7 @@ a:focus-visible {
   width: 100%;
   border-radius: 0.72rem;
   border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--card) 88%, black);
+  background: #ffffff;
   color: var(--foreground);
   padding: 0.62rem 0.75rem;
   font-size: 0.875rem;
@@ -397,52 +370,52 @@ a:focus-visible {
 /* ─── Admin Theme (flat — overrides dark glass for admin/instructor section) ── */
 
 [data-section="admin"] {
-  --background: #fffaf5;
-  --foreground: #1a1410;
+  --background: #ffffff;
+  --foreground: #111827;
   --card: #ffffff;
-  --card-hover: #fef1e0;
-  --border: #eddccb;
-  --border-hover: #d4bfa8;
-  --primary: #ea580c;
-  --primary-hover: #c2410c;
-  --accent: #0e7490;
-  --success: #16a34a;
-  --warning: #d97706;
-  --danger: #dc2626;
-  --muted: #6b5d50;
-  --muted-foreground: #4a3f36;
-  --radius: 6px;
-}
-
-/* Flat dark palette for admin when global theme is dark */
-[data-theme="dark"] [data-section="admin"] {
-  --background: #0f0a0a;
-  --foreground: #f5ede4;
-  --card: #1a1410;
-  --card-hover: #241d17;
-  --border: #362e27;
-  --border-hover: #4a3f36;
+  --card-hover: #f9fafb;
+  --border: #e5e7eb;
+  --border-hover: #d1d5db;
   --primary: #f97316;
   --primary-hover: #fb923c;
   --accent: #0891b2;
   --success: #22c55e;
   --warning: #f59e0b;
   --danger: #ef4444;
-  --muted: #a39686;
-  --muted-foreground: #c4b8a8;
+  --muted: #6b7280;
+  --muted-foreground: #9ca3af;
+  --radius: 6px;
+}
+
+/* Flat dark palette for admin when global theme is dark */
+[data-theme="dark"] [data-section="admin"] {
+  --background: #ffffff;
+  --foreground: #111827;
+  --card: #ffffff;
+  --card-hover: #f9fafb;
+  --border: #e5e7eb;
+  --border-hover: #d1d5db;
+  --primary: #f97316;
+  --primary-hover: #fb923c;
+  --accent: #0891b2;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --muted: #6b7280;
+  --muted-foreground: #9ca3af;
   --radius: 6px;
 }
 
 [data-theme="dark"] [data-section="admin"] .field {
-  background: #1a1410;
+  background: #ffffff;
 }
 
 [data-theme="dark"] [data-section="admin"] .btn-danger:hover {
-  background: rgba(240, 93, 125, 0.1);
+  background: rgba(239, 68, 68, 0.1);
 }
 
 [data-theme="dark"] [data-section="admin"] .panel {
-  background: #1a1410;
+  background: #ffffff;
 }
 
 [data-section="admin"] .min-h-screen.bg-background {
@@ -530,7 +503,7 @@ a:focus-visible {
   width: 100%;
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  background: #fff;
+  background: #ffffff;
   color: var(--foreground);
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
@@ -544,7 +517,7 @@ a:focus-visible {
 [data-section="admin"] .field:focus {
   border-color: var(--primary);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
 }
 
 [data-section="admin"] .field-search {
@@ -559,7 +532,7 @@ a:focus-visible {
 
 [data-section="admin"] .panel {
   border: 1px solid var(--border);
-  background: #fffaf5;
+  background: #ffffff;
   border-radius: var(--radius);
 }
 
@@ -591,7 +564,7 @@ a:focus-visible {
 
   50% {
     transform: scale(1.03);
-    filter: drop-shadow(0 4px 12px rgba(249, 115, 22, 0.2));
+    filter: drop-shadow(0 4px 12px rgba(37, 99, 235, 0.2));
   }
 }
 
