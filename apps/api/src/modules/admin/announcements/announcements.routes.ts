@@ -42,7 +42,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
         title: title.trim(),
         body: body.trim(),
         targetRole: targetRole || "ADMIN",
-        createdBy: req.user!.id,
+        createdBy: req.user!.userId,
       },
     });
 
