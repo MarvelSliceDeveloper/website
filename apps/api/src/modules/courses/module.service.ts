@@ -15,7 +15,8 @@ export async function appendToContentOrder(
   });
   if (!mod) return;
 
-  const current = (mod.contentOrder as Array<{ type: ContentItemType; id: string }>) ?? [];
+  const current =
+    (mod.contentOrder as Array<{ type: ContentItemType; id: string }>) ?? [];
   const updated = [...current, { type, id }];
   await prisma.module.update({
     where: { id: moduleId },
@@ -23,17 +24,17 @@ export async function appendToContentOrder(
   });
 }
 
-export async function removeFromContentOrder(
-  moduleId: string,
-  id: string,
-) {
+export async function removeFromContentOrder(moduleId: string, id: string) {
   const mod = await prisma.module.findUnique({
     where: { id: moduleId },
     select: { contentOrder: true },
   });
   if (!mod || !mod.contentOrder) return;
 
-  const current = mod.contentOrder as Array<{ type: ContentItemType; id: string }>;
+  const current = mod.contentOrder as Array<{
+    type: ContentItemType;
+    id: string;
+  }>;
   const updated = current.filter((item) => item.id !== id);
   await prisma.module.update({
     where: { id: moduleId },

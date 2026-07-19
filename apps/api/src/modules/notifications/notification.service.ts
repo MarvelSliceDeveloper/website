@@ -388,7 +388,10 @@ export const notificationService = {
       sessionTitle: title,
       scheduledAt: startStr,
       joinUrl: session.joinUrl,
-      courseName: session.batch.course?.title || session.batch.package?.name || "Untitled Course",
+      courseName:
+        session.batch.course?.title ||
+        session.batch.package?.name ||
+        "Untitled Course",
       batchName: session.batch.name,
     };
     dispatchEmailsForNotification(
@@ -446,7 +449,10 @@ export const notificationService = {
 
     const emailData = {
       sessionTitle: session.title,
-      courseName: session.batch.course?.title || session.batch.package?.name || "Untitled Course",
+      courseName:
+        session.batch.course?.title ||
+        session.batch.package?.name ||
+        "Untitled Course",
       batchName: session.batch.name,
     };
     dispatchEmailsForNotification(
@@ -496,7 +502,10 @@ export const notificationService = {
 
     const emailData = {
       sessionTitle: session.title,
-      courseName: session.batch.course?.title || session.batch.package?.name || "Untitled Course",
+      courseName:
+        session.batch.course?.title ||
+        session.batch.package?.name ||
+        "Untitled Course",
       batchName: session.batch.name,
     };
     dispatchEmailsForNotification(

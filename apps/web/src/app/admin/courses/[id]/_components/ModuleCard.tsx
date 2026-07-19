@@ -12,7 +12,14 @@ import {
   IconDownload,
   IconX,
 } from "@tabler/icons-react";
-import type { Module, Resource, Lesson, Quiz, Assignment, ContentOrderItem } from "./types";
+import type {
+  Module,
+  Resource,
+  Lesson,
+  Quiz,
+  Assignment,
+  ContentOrderItem,
+} from "./types";
 import LessonCard from "./LessonCard";
 import AddLessonForm from "./AddLessonForm";
 import QuizCard from "./QuizCard";
@@ -67,7 +74,11 @@ function buildUnifiedList(mod: Module): UnifiedItem[] {
       }
     }
     for (const assignment of mod.assignments) {
-      if (!items.some((i) => i.type === "ASSIGNMENT" && i.data.id === assignment.id)) {
+      if (
+        !items.some(
+          (i) => i.type === "ASSIGNMENT" && i.data.id === assignment.id,
+        )
+      ) {
         items.push({ type: "ASSIGNMENT", data: assignment });
       }
     }
@@ -75,9 +86,11 @@ function buildUnifiedList(mod: Module): UnifiedItem[] {
   }
 
   const items: UnifiedItem[] = [];
-  for (const lesson of mod.lessons) items.push({ type: "LESSON", data: lesson });
+  for (const lesson of mod.lessons)
+    items.push({ type: "LESSON", data: lesson });
   for (const quiz of mod.quizzes) items.push({ type: "QUIZ", data: quiz });
-  for (const assignment of mod.assignments) items.push({ type: "ASSIGNMENT", data: assignment });
+  for (const assignment of mod.assignments)
+    items.push({ type: "ASSIGNMENT", data: assignment });
   return items;
 }
 
@@ -116,21 +129,22 @@ export default function ModuleCard({
   const [showAddAssignment, setShowAddAssignment] = useState(false);
   const [showStudyMaterialUpload, setShowStudyMaterialUpload] = useState(false);
   const [resourceLessonId, setResourceLessonId] = useState<string>(
-    mod.lessons[0]?.id || ""
+    mod.lessons[0]?.id || "",
   );
   const [uploadingResource, setUploadingResource] = useState(false);
   const [resourceError, setResourceError] = useState("");
 
   const unifiedItems = useMemo(() => buildUnifiedList(mod), [mod]);
 
-  const allResources: Array<Resource & { lessonTitle: string; lessonId: string }> = 
-    mod.lessons.flatMap((lesson) =>
-      (lesson.resources || []).map((resource) => ({
-        ...resource,
-        lessonTitle: lesson.title,
-        lessonId: lesson.id,
-      }))
-    );
+  const allResources: Array<
+    Resource & { lessonTitle: string; lessonId: string }
+  > = mod.lessons.flatMap((lesson) =>
+    (lesson.resources || []).map((resource) => ({
+      ...resource,
+      lessonTitle: lesson.title,
+      lessonId: lesson.id,
+    })),
+  );
 
   const handleSave = async () => {
     try {
@@ -177,7 +191,10 @@ export default function ModuleCard({
     setContentOverIdx(null);
     try {
       await api.patch(`/api/admin/courses/modules/${mod.id}/content/reorder`, {
-        contentOrder: reordered.map((item) => ({ type: item.type, id: item.data.id })),
+        contentOrder: reordered.map((item) => ({
+          type: item.type,
+          id: item.data.id,
+        })),
       });
       onChanged();
     } catch {
@@ -207,10 +224,13 @@ export default function ModuleCard({
     try {
       await Promise.all(
         Object.entries(groupedByLesson).map(([lessonId, resourceIds]) =>
-          api.patch(`/api/admin/courses/lessons/${lessonId}/resources/reorder`, {
-            resourceIds,
-          })
-        )
+          api.patch(
+            `/api/admin/courses/lessons/${lessonId}/resources/reorder`,
+            {
+              resourceIds,
+            },
+          ),
+        ),
       );
       onChanged();
     } catch {
@@ -219,14 +239,18 @@ export default function ModuleCard({
     }
   };
 
-  const handleResourceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleResourceUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setResourceError("");
 
     if (!ALLOWED_RESOURCE_TYPES.has(file.type)) {
-      setResourceError("File type not allowed. Upload PDF, DOCX, PPTX, XLSX, or images.");
+      setResourceError(
+        "File type not allowed. Upload PDF, DOCX, PPTX, XLSX, or images.",
+      );
       e.target.value = "";
       return;
     }
@@ -250,7 +274,7 @@ export default function ModuleCard({
       uploadData.append("resource", file);
       await api.post(
         `/api/admin/courses/${courseId}/lessons/${lessonId}/resources`,
-        uploadData
+        uploadData,
       );
       toast.success("Resource uploaded");
       onChanged();
@@ -266,7 +290,7 @@ export default function ModuleCard({
     if (!confirm("Delete this resource?")) return;
     try {
       await api.delete(
-        `/api/admin/courses/lessons/${lessonId}/resources/${resourceId}`
+        `/api/admin/courses/lessons/${lessonId}/resources/${resourceId}`,
       );
       toast.success("Resource deleted");
       onChanged();
@@ -275,7 +299,8 @@ export default function ModuleCard({
     }
   };
 
-  const itemCount = mod.lessons.length + mod.quizzes.length + mod.assignments.length;
+  const itemCount =
+    mod.lessons.length + mod.quizzes.length + mod.assignments.length;
 
   return (
     <div
@@ -403,7 +428,10 @@ export default function ModuleCard({
                   {contentOverIdx === idx &&
                     contentDragIdx !== idx &&
                     contentOverIdx !== null && (
-                      <div key="drag" className="h-0.5 rounded-full bg-primary/30 mx-6" />
+                      <div
+                        key="drag"
+                        className="h-0.5 rounded-full bg-primary/30 mx-6"
+                      />
                     )}
                   {item.type === "LESSON" && (
                     <LessonCard
@@ -493,14 +521,23 @@ export default function ModuleCard({
                         handleResourceDrop(rIdx);
                       }}
                       className={`flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-card/50 text-xs transition-all duration-200 cursor-grab active:cursor-grabbing ${
-                        resourceDragIdx === rIdx ? "opacity-40 scale-[0.98]" : ""
+                        resourceDragIdx === rIdx
+                          ? "opacity-40 scale-[0.98]"
+                          : ""
                       }`}
                     >
-                      <IconGripVertical size={12} className="text-muted shrink-0" />
+                      <IconGripVertical
+                        size={12}
+                        className="text-muted shrink-0"
+                      />
                       <IconFile size={12} className="text-success shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="truncate text-foreground">{resource.originalName}</p>
-                        <p className="text-[10px] text-muted truncate">{resource.lessonTitle}</p>
+                        <p className="truncate text-foreground">
+                          {resource.originalName}
+                        </p>
+                        <p className="text-[10px] text-muted truncate">
+                          {resource.lessonTitle}
+                        </p>
                       </div>
                       <a
                         href={resource.url}
@@ -510,7 +547,9 @@ export default function ModuleCard({
                         <IconDownload size={12} />
                       </a>
                       <button
-                        onClick={() => handleDeleteResource(resource.lessonId, resource.id)}
+                        onClick={() =>
+                          handleDeleteResource(resource.lessonId, resource.id)
+                        }
                         className="text-muted hover:text-danger transition-colors p-1"
                       >
                         <IconTrash size={12} />
@@ -520,7 +559,8 @@ export default function ModuleCard({
                 </div>
               ) : (
                 <p className="text-[10px] text-muted text-center">
-                  No study materials yet. Click &ldquo;Study Material&rdquo; below to upload.
+                  No study materials yet. Click &ldquo;Study Material&rdquo;
+                  below to upload.
                 </p>
               )}
             </div>
@@ -550,7 +590,9 @@ export default function ModuleCard({
             ) : showStudyMaterialUpload ? (
               <div className="rounded-lg border border-success/20 bg-success/5 p-3 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-semibold text-success">Add Study Material</h4>
+                  <h4 className="text-xs font-semibold text-success">
+                    Add Study Material
+                  </h4>
                   <button
                     onClick={() => setShowStudyMaterialUpload(false)}
                     className="p-1 text-muted hover:text-foreground"
@@ -560,12 +602,16 @@ export default function ModuleCard({
                 </div>
 
                 {mod.lessons.length === 0 ? (
-                  <p className="text-xs text-muted">Add a lesson first to attach study materials.</p>
+                  <p className="text-xs text-muted">
+                    Add a lesson first to attach study materials.
+                  </p>
                 ) : (
                   <>
                     {mod.lessons.length > 1 && (
                       <div className="space-y-1">
-                        <label className="text-xs font-medium">Attach to Lesson</label>
+                        <label className="text-xs font-medium">
+                          Attach to Lesson
+                        </label>
                         <select
                           value={resourceLessonId}
                           onChange={(e) => setResourceLessonId(e.target.value)}
@@ -588,7 +634,10 @@ export default function ModuleCard({
                         onChange={(e) => {
                           handleResourceUpload(e);
                           if (!e.target.files?.[0]) return;
-                          setTimeout(() => setShowStudyMaterialUpload(false), 500);
+                          setTimeout(
+                            () => setShowStudyMaterialUpload(false),
+                            500,
+                          );
                         }}
                         disabled={uploadingResource}
                         className="hidden"

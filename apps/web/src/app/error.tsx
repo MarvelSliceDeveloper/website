@@ -11,7 +11,9 @@ export default function ErrorPage({ error, reset }: ErrorProps) {
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-danger/10">
         <span className="text-3xl">⚠</span>
       </div>
-      <h1 className="text-2xl font-bold text-foreground">Something went wrong</h1>
+      <h1 className="text-2xl font-bold text-foreground">
+        Something went wrong
+      </h1>
       <p className="mt-2 max-w-md text-sm text-muted-foreground">
         {error.message || "An unexpected error occurred. Please try again."}
       </p>

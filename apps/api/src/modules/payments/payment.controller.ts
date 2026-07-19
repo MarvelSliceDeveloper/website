@@ -22,11 +22,16 @@ function parseExpiryToMs(expiry: string): number {
   if (!match) return 7 * 24 * 60 * 60 * 1000;
   const val = parseInt(match[1], 10);
   switch (match[2]) {
-    case "d": return val * 24 * 60 * 60 * 1000;
-    case "h": return val * 60 * 60 * 1000;
-    case "m": return val * 60 * 1000;
-    case "s": return val * 1000;
-    default: return 7 * 24 * 60 * 60 * 1000;
+    case "d":
+      return val * 24 * 60 * 60 * 1000;
+    case "h":
+      return val * 60 * 60 * 1000;
+    case "m":
+      return val * 60 * 1000;
+    case "s":
+      return val * 1000;
+    default:
+      return 7 * 24 * 60 * 60 * 1000;
   }
 }
 
@@ -45,7 +50,9 @@ export const paymentController = {
       // If not authenticated, create user account (guest checkout)
       if (!userId) {
         if (!name || !email) {
-          return res.status(400).json({ error: "name and email are required for guest checkout" });
+          return res
+            .status(400)
+            .json({ error: "name and email are required for guest checkout" });
         }
         const result = await paymentService.createGuestUser(name, email);
         userId = result.user.id;
@@ -71,9 +78,12 @@ export const paymentController = {
 
   async verifyPayment(req: Request, res: Response) {
     try {
-      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+        req.body;
       if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-        return res.status(400).json({ error: "Missing payment verification fields" });
+        return res
+          .status(400)
+          .json({ error: "Missing payment verification fields" });
       }
       const result = await paymentService.verifyPayment(
         razorpay_order_id,
@@ -90,7 +100,9 @@ export const paymentController = {
     try {
       const { packageId } = req.query;
       if (!packageId || typeof packageId !== "string") {
-        return res.status(400).json({ error: "packageId query param is required" });
+        return res
+          .status(400)
+          .json({ error: "packageId query param is required" });
       }
       const batches = await paymentService.getAvailableBatches(packageId);
       return res.status(200).json(batches);
@@ -103,9 +115,16 @@ export const paymentController = {
     try {
       const { paymentId, batchId, name, email } = req.body;
       if (!paymentId || !batchId) {
-        return res.status(400).json({ error: "paymentId and batchId are required" });
+        return res
+          .status(400)
+          .json({ error: "paymentId and batchId are required" });
       }
-      const result = await paymentService.enrollInBatch(paymentId, batchId, name || "", email || "");
+      const result = await paymentService.enrollInBatch(
+        paymentId,
+        batchId,
+        name || "",
+        email || "",
+      );
       return res.status(200).json(result);
     } catch (error: unknown) {
       return res.status(400).json({ error: extractErrorMessage(error) });
@@ -118,7 +137,11 @@ export const paymentController = {
       if (!paymentId) {
         return res.status(400).json({ error: "paymentId is required" });
       }
-      const result = await paymentService.createConsentEnrollment(paymentId, name || "", email || "");
+      const result = await paymentService.createConsentEnrollment(
+        paymentId,
+        name || "",
+        email || "",
+      );
       return res.status(200).json(result);
     } catch (error: unknown) {
       return res.status(400).json({ error: extractErrorMessage(error) });
@@ -128,7 +151,7 @@ export const paymentController = {
   async getAdminPayments(req: AuthRequest, res: Response) {
     try {
       const payments = await paymentService.getAdminPayments();
-      return res.status(200).json(payments);
+      return res.status(200).json({ payments });
     } catch (error: unknown) {
       return res.status(500).json({ error: "Failed to fetch payments" });
     }

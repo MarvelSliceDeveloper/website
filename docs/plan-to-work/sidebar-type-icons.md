@@ -7,6 +7,7 @@
 ## Goal
 
 Show distinct icons for each content type in the course content sidebar:
+
 - **Video** → `IconPlayerPlay` (primary color)
 - **Quiz** → `IconClipboardCheck` (amber)
 - **Assignment** → `IconFileSpreadsheet` (blue)
@@ -14,6 +15,7 @@ Show distinct icons for each content type in the course content sidebar:
 ## Changes
 
 ### 1. Prisma Schema — Add `moduleId` to Assignment
+
 **File:** `apps/api/prisma/schema.prisma`
 
 - Add `moduleId String?` to `Assignment` model
@@ -22,6 +24,7 @@ Show distinct icons for each content type in the course content sidebar:
 - Run `pnpm prisma:generate`
 
 ### 2. API — Include quizzes + assignments in course content
+
 **File:** `apps/api/src/modules/courses/student-course.routes.ts`
 
 - Return `quizzes: { id, title, questionCount }` per module (replace `hasQuiz: boolean`)
@@ -29,6 +32,7 @@ Show distinct icons for each content type in the course content sidebar:
 - Update module query to include assignments relation
 
 ### 3. Frontend Types
+
 **File:** `apps/web/src/app/student/_views/_comps/types.ts`
 
 - Add `QuizInfo` and `AssignmentInfo` types
@@ -36,6 +40,7 @@ Show distinct icons for each content type in the course content sidebar:
 - Remove `hasQuiz: boolean`
 
 ### 4. Sidebar Icons & Items
+
 **File:** `apps/web/src/app/student/_views/CourseContentView.tsx`
 
 - Import `IconClipboardCheck`, `IconFileSpreadsheet`
@@ -45,6 +50,7 @@ Show distinct icons for each content type in the course content sidebar:
 - Update module header text to count all content types
 
 ### 5. Verify
+
 - `pnpm prisma:generate`
 - `pnpm typecheck`
 - `pnpm lint`

@@ -39,8 +39,7 @@ export default function AssignmentContent({
         )}
         <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
           <span>
-            📅 Due:{" "}
-            {new Date(assignment.dueDate).toLocaleDateString("en-IN")}
+            📅 Due: {new Date(assignment.dueDate).toLocaleDateString("en-IN")}
           </span>
           <span>📋 Type: {assignment.type}</span>
         </div>

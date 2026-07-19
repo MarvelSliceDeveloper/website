@@ -54,6 +54,12 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum CertificateStatus {
+  ISSUED
+  CLAIMED
+  REVOKED
+}
+
 enum BatchStatus {
   UPCOMING
   ACTIVE
@@ -61,87 +67,92 @@ enum BatchStatus {
 }
 
 model User {
-  id             String              @id @default(cuid())
-  name           String
-  email          String              @unique
-  passwordHash   String? // null for MS OAuth users
-  msUserId       String? // Microsoft Object ID
-  msAccessToken  String? // AES-256 encrypted
-  msRefreshToken String? // AES-256 encrypted
-  role           Role                @default(STUDENT)
-  isSuspended    Boolean             @default(false)
-  mustChangePassword Boolean          @default(false)
-  suspendedAt    DateTime?
-  suspendedBy    String?
-  rateLimitPerMin Int                @default(60)
-  sessionTimeoutMin Int             @default(480)
-  deletedAt      DateTime?
-  deletedBy      String?
-  restoredAt     DateTime?
-  restoredBy     String?
-  enrollments    EnrollmentRequest[]
-  progress       Progress[]
-  certificates   Certificate[]
-  instructorOf   Batch[]             @relation("BatchInstructor")
-  ticketsCreated MentorshipTicket[]  @relation("TicketStudent")
-  ticketsAssigned MentorshipTicket[] @relation("TicketMentor")
-  notifications        Notification[]
+  id                      String                   @id @default(cuid())
+  name                    String
+  email                   String                   @unique
+  passwordHash            String? // null for MS OAuth users
+  msUserId                String? // Microsoft Object ID
+  msAccessToken           String? // AES-256 encrypted
+  msRefreshToken          String? // AES-256 encrypted
+  role                    Role                     @default(STUDENT)
+  isSuspended             Boolean                  @default(false)
+  mustChangePassword      Boolean                  @default(false)
+  suspendedAt             DateTime?
+  suspendedBy             String?
+  rateLimitPerMin         Int                      @default(60)
+  sessionTimeoutMin       Int                      @default(480)
+  deletedAt               DateTime?
+  deletedBy               String?
+  restoredAt              DateTime?
+  restoredBy              String?
+  enrollments             EnrollmentRequest[]
+  progress                Progress[]
+  certificates            Certificate[]
+  instructorOf            Batch[]                  @relation("BatchInstructor")
+  ticketsCreated          MentorshipTicket[]       @relation("TicketStudent")
+  ticketsAssigned         MentorshipTicket[]       @relation("TicketMentor")
+  notifications           Notification[]
   notificationPreferences NotificationPreference[]
-  attendance           Attendance[]
-  sessionsLed          LiveSession[]       @relation("SessionInstructor")
-   assignmentSubmissions AssignmentSubmission[]
-   quizAttempts         QuizAttempt[]
-   sentMessages         Message[]           @relation("SentMessages")
-  receivedMessages     Message[]           @relation("ReceivedMessages")
-   supportTickets       SupportTicket[]     @relation("UserSupportTickets")
-   supportMessages      SupportMessage[]    @relation("UserSupportMessages")
-   notes                Note[]
-   packageEnrollments   PackageEnrollment[]
-   payments             Payment[]
- }
+  attendance              Attendance[]
+  sessionsLed             LiveSession[]            @relation("SessionInstructor")
+  assignmentSubmissions   AssignmentSubmission[]
+  quizAttempts            QuizAttempt[]
+  sentMessages            Message[]                @relation("SentMessages")
+  receivedMessages        Message[]                @relation("ReceivedMessages")
+  supportTickets          SupportTicket[]          @relation("UserSupportTickets")
+  supportMessages         SupportMessage[]         @relation("UserSupportMessages")
+  notes                   Note[]
+  packageEnrollments      PackageEnrollment[]
+  payments                Payment[]
+  auditLogs               AuditLog[]
+}
 
 model Course {
-  id                 String       @id @default(cuid())
-  title              String
-  slug               String       @unique
-  description        String
-  thumbnailUrl       String?
-  coverImageUrl      String?
-  status             CourseStatus @default(DRAFT)
-  category           String?
-  tags               Json?        // string[]
-  learningObjectives Json?        // string[]
-  durationMinutes    Int?
-  createdBy          String?
-  publishedAt        DateTime?
-  deletedAt          DateTime?
-  deletedBy          String?
-  restoredAt         DateTime?
-  restoredBy         String?
-  modules            Module[]
-  batches            Batch[]
-  liveSessions       LiveSession[]
-  assignments        Assignment[]
-  mentorshipTickets  MentorshipTicket[]
-  notes              Note[]
-  quizTemplates      CourseQuizTemplate[]
-  assignmentTemplates CourseAssignmentTemplate[]
-  packageCourses     PackageCourse[]
+  id                       String                     @id @default(cuid())
+  title                    String
+  slug                     String                     @unique
+  description              String
+  thumbnailUrl             String?
+  coverImageUrl            String?
+  status                   CourseStatus               @default(DRAFT)
+  category                 String? // Legacy free-text category
+  categoryId               String? // New FK to Category model
+  tags                     Json? // string[]
+  learningObjectives       Json? // string[]
+  durationMinutes          Int?
+  createdBy                String?
+  publishedAt              DateTime?
+  deletedAt                DateTime?
+  deletedBy                String?
+  restoredAt               DateTime?
+  restoredBy               String?
+  modules                  Module[]
+  batches                  Batch[]
+  liveSessions             LiveSession[]
+  assignments              Assignment[]
+  mentorshipTickets        MentorshipTicket[]
+  notes                    Note[]
+  quizTemplates            CourseQuizTemplate[]
+  assignmentTemplates      CourseAssignmentTemplate[]
+  packageCourses           PackageCourse[]
   packageEnrollmentCourses PackageEnrollmentCourse[]
-  courseVisibility   BatchCourseVisibility[]
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
+  courseVisibility         BatchCourseVisibility[]
+  courseTags               CourseTag[]
+  certificates             Certificate[]
+  categoryRelation         Category?                  @relation(fields: [categoryId], references: [id])
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
 }
 
 model Module {
-  id            String         @id @default(cuid())
-  courseId       String
+  id            String        @id @default(cuid())
+  courseId      String
   title         String
   description   String?
   order         Int
-  isFreePreview Boolean        @default(false)
-  contentOrder  Json?          // [{type: "LESSON"|"QUIZ"|"ASSIGNMENT", id: string}]
-  course        Course         @relation(fields: [courseId], references: [id])
+  isFreePreview Boolean       @default(false)
+  contentOrder  Json? // [{type: "LESSON"|"QUIZ"|"ASSIGNMENT", id: string}]
+  course        Course        @relation(fields: [courseId], references: [id])
   lessons       Lesson[]
   sessions      LiveSession[]
   quizzes       Quiz[]
@@ -159,35 +170,35 @@ model Lesson {
   videoEmbedId    String?
   durationSeconds Int?
   isFreePreview   Boolean @default(false)
-  resources       Json?   // [{name, url}]
+  resources       Json? // [{name, url}]
   module          Module  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 }
 
 // A Batch is a course cohort — e.g. "Python Batch Jan 2025"
 model Batch {
-  id           String              @id @default(cuid())
-  courseId     String?
-  packageId    String?              // Optional: batch belongs to a package
-  instructorId String              // Assigned mentor/instructor
-  name         String              // e.g. "Python Batch Jan 2025"
-  startDate    DateTime
-  endDate      DateTime
-  isActive     Boolean             @default(true)
-  maxStudents  Int?
-  status       BatchStatus         @default(UPCOMING)
-  description  String?
-  deletedAt    DateTime?
-  deletedBy    String?
-  restoredAt   DateTime?
-  restoredBy   String?
-  course       Course?             @relation(fields: [courseId], references: [id])
-  package      CoursePackage?      @relation(fields: [packageId], references: [id])
-  instructor   User                @relation("BatchInstructor", fields: [instructorId], references: [id])
-  enrollments  EnrollmentRequest[]
-  sessions     LiveSession[]
-  assignments  Assignment[]
+  id                       String                    @id @default(cuid())
+  courseId                 String?
+  packageId                String? // Optional: batch belongs to a package
+  instructorId             String // Assigned mentor/instructor
+  name                     String // e.g. "Python Batch Jan 2025"
+  startDate                DateTime
+  endDate                  DateTime
+  isActive                 Boolean                   @default(true)
+  maxStudents              Int?
+  status                   BatchStatus               @default(UPCOMING)
+  description              String?
+  deletedAt                DateTime?
+  deletedBy                String?
+  restoredAt               DateTime?
+  restoredBy               String?
+  course                   Course?                   @relation(fields: [courseId], references: [id])
+  package                  CoursePackage?            @relation(fields: [packageId], references: [id])
+  instructor               User                      @relation("BatchInstructor", fields: [instructorId], references: [id])
+  enrollments              EnrollmentRequest[]
+  sessions                 LiveSession[]
+  assignments              Assignment[]
   packageEnrollmentCourses PackageEnrollmentCourse[]
-  courseVisibility    BatchCourseVisibility[]
+  courseVisibility         BatchCourseVisibility[]
 
   @@index([packageId])
 }
@@ -195,10 +206,10 @@ model Batch {
 // Tracks which courses are visible to batch members (manual toggle per batch)
 // Course data is derived from PackageCourse at query time — this just stores the visibility state
 model BatchCourseVisibility {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   batchId   String
   courseId  String
-  isVisible Boolean  @default(false)
+  isVisible Boolean @default(false)
 
   batch  Batch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -222,32 +233,32 @@ model EnrollmentRequest {
 
 // Admin creates Teams meeting → assigns to a batch
 model LiveSession {
-  id                 String             @id @default(cuid())
+  id                 String            @id @default(cuid())
   batchId            String? // null for mentorship sessions
   courseId           String?
   moduleId           String?
   title              String // Session title
-  teamsMeetingId     String             @unique
+  teamsMeetingId     String            @unique
   joinUrl            String
   scheduledAt        DateTime
   scheduledEndAt     DateTime
-  endedAt            DateTime?          // null = not ended; set when cancelled/admin-ends
+  endedAt            DateTime? // null = not ended; set when cancelled/admin-ends
   createdFrom        String // LMS, LMS_CUSTOM, TEAMS, MENTORSHIP
   createdBy          String // Admin user ID
-  mentorshipTicketId String?            @unique // link back to mentorship ticket
+  mentorshipTicketId String?           @unique // link back to mentorship ticket
   deletedAt          DateTime?
   deletedBy          String?
   restoredAt         DateTime?
   restoredBy         String?
-  batch              Batch?             @relation(fields: [batchId], references: [id])
-  course             Course?            @relation(fields: [courseId], references: [id])
-  module             Module?            @relation(fields: [moduleId], references: [id])
-  mentorshipTicket   MentorshipTicket?  @relation(fields: [mentorshipTicketId], references: [id])
+  batch              Batch?            @relation(fields: [batchId], references: [id])
+  course             Course?           @relation(fields: [courseId], references: [id])
+  module             Module?           @relation(fields: [moduleId], references: [id])
+  mentorshipTicket   MentorshipTicket? @relation(fields: [mentorshipTicketId], references: [id])
   recording          Recording?
   calendarEvent      CalendarEvent?
   attendance         Attendance[]
   instructorId       String?
-  instructor         User?              @relation("SessionInstructor", fields: [instructorId], references: [id])
+  instructor         User?             @relation("SessionInstructor", fields: [instructorId], references: [id])
 }
 
 model Recording {
@@ -285,21 +296,28 @@ model Progress {
 }
 
 model Certificate {
-  id       String   @id @default(cuid())
-  userId   String
-  courseId String
-  issuedAt DateTime @default(now())
-  user     User     @relation(fields: [userId], references: [id])
+  id                String            @id @default(cuid())
+  userId            String
+  courseId          String
+  certificateNumber String            @unique @default(cuid())
+  pdfUrl            String?
+  status            CertificateStatus @default(ISSUED)
+  issuedAt          DateTime          @default(now())
+  claimedAt         DateTime?
+  user              User              @relation(fields: [userId], references: [id])
+  course            Course            @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
 }
 
 model Quiz {
-  id        String     @id @default(cuid())
+  id        String        @id @default(cuid())
   moduleId  String
   title     String
-  order     Int        @default(0)
+  order     Int           @default(0)
   dueDate   DateTime?
   questions Question[]
-  module    Module     @relation(fields: [moduleId], references: [id])
+  module    Module        @relation(fields: [moduleId], references: [id])
   attempts  QuizAttempt[]
 }
 
@@ -316,7 +334,7 @@ model QuizAttempt {
   id        String            @id @default(cuid())
   quizId    String
   userId    String
-  answers   Json              // [{ questionId, selectedOptionId }]
+  answers   Json // [{ questionId, selectedOptionId }]
   score     Int               @default(0) // number of correct answers
   total     Int               @default(0) // total questions
   status    QuizAttemptStatus @default(PENDING)
@@ -327,27 +345,27 @@ model QuizAttempt {
 
 // One-on-one mentorship ticket - student requests, admin assigns mentor
 model MentorshipTicket {
-  id            String       @id @default(cuid())
-  studentId     String
-  mentorId      String?      // Assigned by admin
-  courseId      String?      // Optional course reference
-  title         String       // Topic/subject of mentorship
-  description   String       // Detailed request
-  preferredDate DateTime?    // Student's preferred date
-  preferredTime String?      // Student's preferred time slot
-  scheduledAt   DateTime?    // Final scheduled time (Teams meeting)
-  joinUrl       String?      // Teams meeting join URL
-  teamsMeetingId String?     // Microsoft Teams meeting ID
-  notes         String?      // Resolution notes by mentor/admin
-  status        TicketStatus @default(OPEN)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  resolvedAt    DateTime?    // When ticket is completed/cancelled
+  id             String       @id @default(cuid())
+  studentId      String
+  mentorId       String? // Assigned by admin
+  courseId       String? // Optional course reference
+  title          String // Topic/subject of mentorship
+  description    String // Detailed request
+  preferredDate  DateTime? // Student's preferred date
+  preferredTime  String? // Student's preferred time slot
+  scheduledAt    DateTime? // Final scheduled time (Teams meeting)
+  joinUrl        String? // Teams meeting join URL
+  teamsMeetingId String? // Microsoft Teams meeting ID
+  notes          String? // Resolution notes by mentor/admin
+  status         TicketStatus @default(OPEN)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  resolvedAt     DateTime? // When ticket is completed/cancelled
 
-  student       User         @relation("TicketStudent", fields: [studentId], references: [id])
-  mentor        User?        @relation("TicketMentor", fields: [mentorId], references: [id])
-  course        Course?      @relation(fields: [courseId], references: [id])
-  liveSession   LiveSession?
+  student     User         @relation("TicketStudent", fields: [studentId], references: [id])
+  mentor      User?        @relation("TicketMentor", fields: [mentorId], references: [id])
+  course      Course?      @relation(fields: [courseId], references: [id])
+  liveSession LiveSession?
 }
 
 // Support tickets — users (students/instructors) raise issues to admin
@@ -373,7 +391,7 @@ model SupportMessage {
   createdAt DateTime @default(now())
 
   ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  sender User         @relation("UserSupportMessages", fields: [senderId], references: [id])
+  sender User          @relation("UserSupportMessages", fields: [senderId], references: [id])
 }
 
 // In-app notification for students and instructors
@@ -382,9 +400,9 @@ model Notification {
   userId    String
   title     String
   message   String
-  type      String   // SESSION_SCHEDULED, SESSION_CANCELLED, RECORDING_AVAILABLE
+  type      String // SESSION_SCHEDULED, SESSION_CANCELLED, RECORDING_AVAILABLE
   read      Boolean  @default(false)
-  metadata  Json?    // { sessionId, courseId, joinUrl, etc. }
+  metadata  Json? // { sessionId, courseId, joinUrl, etc. }
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
 }
@@ -397,7 +415,7 @@ model Message {
   subject    String?
   body       String   @db.Text
   read       Boolean  @default(false)
-  entityType String?  // "BATCH" | "COURSE" | "SESSION" | null = general
+  entityType String? // "BATCH" | "COURSE" | "SESSION" | null = general
   entityId   String?
   createdAt  DateTime @default(now())
   sender     User     @relation("SentMessages", fields: [senderId], references: [id])
@@ -411,7 +429,7 @@ model Message {
 model NotificationPreference {
   id      String  @id @default(cuid())
   userId  String
-  type    String  // SESSION_SCHEDULED, RECORDING_AVAILABLE, etc.
+  type    String // SESSION_SCHEDULED, RECORDING_AVAILABLE, etc.
   enabled Boolean @default(true)
   email   Boolean @default(false)
   user    User    @relation(fields: [userId], references: [id])
@@ -443,48 +461,48 @@ enum SubmissionStatus {
 }
 
 model Assignment {
-  id              String                 @id @default(cuid())
-  courseId        String
-  batchId         String
-  moduleId        String?
-  title           String
-  description     String                 @db.Text
-  type            String                 @default("QUIZ") // "QUIZ" or "ASSIGNMENT"
-  questionPdfUrl  String?                // PDF file URL for ASSIGNMENT type
-  order           Int                    @default(0)
-  dueDate         DateTime
-  maxPoints       Int                    @default(100)
-  createdAt   DateTime               @default(now())
-  updatedAt   DateTime               @updatedAt
-  course      Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  batch       Batch                  @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  module      Module?                @relation(fields: [moduleId], references: [id], onDelete: SetNull)
-  deletedAt   DateTime?
-  deletedBy   String?
-  restoredAt  DateTime?
-  restoredBy  String?
-  questions   AssignmentQuestion[]
-  submissions AssignmentSubmission[]
+  id             String                 @id @default(cuid())
+  courseId       String
+  batchId        String
+  moduleId       String?
+  title          String
+  description    String                 @db.Text
+  type           String                 @default("QUIZ") // "QUIZ" or "ASSIGNMENT"
+  questionPdfUrl String? // PDF file URL for ASSIGNMENT type
+  order          Int                    @default(0)
+  dueDate        DateTime
+  maxPoints      Int                    @default(100)
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  course         Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  batch          Batch                  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  module         Module?                @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  deletedAt      DateTime?
+  deletedBy      String?
+  restoredAt     DateTime?
+  restoredBy     String?
+  questions      AssignmentQuestion[]
+  submissions    AssignmentSubmission[]
 }
 
 model AssignmentQuestion {
-  id            String                    @id @default(cuid())
-  assignmentId  String
-  questionText  String                    @db.Text
-  marks         Int                       @default(1)
-  orderIndex    Int                       @default(0)
-  assignment    Assignment                @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  options       AssignmentMcqOption[]
-  responses     StudentQuestionResponse[]
+  id           String                    @id @default(cuid())
+  assignmentId String
+  questionText String                    @db.Text
+  marks        Int                       @default(1)
+  orderIndex   Int                       @default(0)
+  assignment   Assignment                @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  options      AssignmentMcqOption[]
+  responses    StudentQuestionResponse[]
 }
 
 model AssignmentMcqOption {
-  id          String                    @id @default(cuid())
-  questionId  String
-  optionText  String
-  isCorrect   Boolean                   @default(false)
-  question    AssignmentQuestion        @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  responses   StudentQuestionResponse[]
+  id         String                    @id @default(cuid())
+  questionId String
+  optionText String
+  isCorrect  Boolean                   @default(false)
+  question   AssignmentQuestion        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  responses  StudentQuestionResponse[]
 }
 
 model AssignmentSubmission {
@@ -493,11 +511,11 @@ model AssignmentSubmission {
   studentId         String
   submittedAt       DateTime                  @default(now())
   status            SubmissionStatus          @default(PENDING)
-  grade             String?                   // e.g. "A+", "B", "95"
+  grade             String? // e.g. "A+", "B", "95"
   feedback          String?                   @db.Text
   gradedAt          DateTime?
-  totalScore        Int?                      // auto-calculated after MCQ grading
-  answerFileUrl     String?                   // File uploaded by student (for ASSIGNMENT type)
+  totalScore        Int? // auto-calculated after MCQ grading
+  answerFileUrl     String? // File uploaded by student (for ASSIGNMENT type)
   assignment        Assignment                @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   student           User                      @relation(fields: [studentId], references: [id], onDelete: Cascade)
   questionResponses StudentQuestionResponse[]
@@ -519,15 +537,15 @@ model StudentQuestionResponse {
 }
 
 model GraphApiLog {
-  id          String   @id @default(cuid())
-  userId      String   // Admin who performed the action
-  action      String   // e.g. "createOnlineMeeting", "getCalendarView", "syncRecording"
-  endpoint    String   // e.g. "POST /me/onlineMeetings", "GET /me/events"
-  statusCode  Int?     // HTTP response status
-  success     Boolean  @default(false)
-  errorMsg    String?  // Error message if failed
-  durationMs  Int?     // How long the request took
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  userId     String // Admin who performed the action
+  action     String // e.g. "createOnlineMeeting", "getCalendarView", "syncRecording"
+  endpoint   String // e.g. "POST /me/onlineMeetings", "GET /me/events"
+  statusCode Int? // HTTP response status
+  success    Boolean  @default(false)
+  errorMsg   String? // Error message if failed
+  durationMs Int? // How long the request took
+  createdAt  DateTime @default(now())
 
   @@index([userId])
   @@index([createdAt])
@@ -563,29 +581,29 @@ model SystemSetting {
 }
 
 model ApiKey {
-  id          String   @id @default(cuid())
-  key         String   @unique // hashed
+  id          String    @id @default(cuid())
+  key         String    @unique // hashed
   name        String
   description String?
-  permissions Json     @default("[]") // string[]
+  permissions Json      @default("[]") // string[]
   lastUsedAt  DateTime?
-  active      Boolean  @default(true)
+  active      Boolean   @default(true)
   createdBy   String
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 }
 
 model LoginLog {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   userId     String
   ip         String?
   userAgent  String?
   deviceInfo String?
-  loginAt    DateTime @default(now())
+  loginAt    DateTime  @default(now())
   logoutAt   DateTime?
 }
 
 model PermissionOverride {
-  id         String @id @default(cuid())
+  id         String  @id @default(cuid())
   role       Role
   permission String
   allowed    Boolean @default(true)
@@ -594,20 +612,20 @@ model PermissionOverride {
 }
 
 model Announcement {
-  id          String   @id @default(cuid())
-  title       String
-  body        String
-  createdBy   String
-  targetRole  Role     // ADMIN | INSTRUCTOR
-  createdAt   DateTime @default(now())
-  readBy      Json     @default("[]") // userId[]
+  id         String   @id @default(cuid())
+  title      String
+  body       String
+  createdBy  String
+  targetRole Role // ADMIN | INSTRUCTOR
+  createdAt  DateTime @default(now())
+  readBy     Json     @default("[]") // userId[]
 }
 
 model ConsentLog {
   id        String   @id @default(cuid())
   userId    String
-  type      String   // MICROSOFT | DATA_PROCESSING
-  action    String   // GRANTED | REVOKED | UPDATED
+  type      String // MICROSOFT | DATA_PROCESSING
+  action    String // GRANTED | REVOKED | UPDATED
   details   Json?
   createdAt DateTime @default(now())
 }
@@ -615,24 +633,24 @@ model ConsentLog {
 // === QUIZ & ASSIGNMENT TEMPLATES ===
 
 model QuizTemplate {
-  id          String               @id @default(cuid())
+  id          String                 @id @default(cuid())
   title       String
   description String?
   category    String?
   questions   QuizTemplateQuestion[]
   courses     CourseQuizTemplate[]
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
 }
 
 model QuizTemplateQuestion {
-  id             String              @id @default(cuid())
+  id             String               @id @default(cuid())
   quizTemplateId String
   text           String
-  marks          Int                 @default(1)
-  orderIndex     Int                 @default(0)
+  marks          Int                  @default(1)
+  orderIndex     Int                  @default(0)
   options        QuizTemplateOption[]
-  quizTemplate   QuizTemplate        @relation(fields: [quizTemplateId], references: [id])
+  quizTemplate   QuizTemplate         @relation(fields: [quizTemplateId], references: [id])
 }
 
 model QuizTemplateOption {
@@ -644,16 +662,16 @@ model QuizTemplateOption {
 }
 
 model AssignmentTemplate {
-  id             String                    @id @default(cuid())
+  id             String                     @id @default(cuid())
   title          String
   description    String
-  type           String                    @default("QUIZ") // QUIZ | FILE_UPLOAD
+  type           String                     @default("QUIZ") // QUIZ | FILE_UPLOAD
   questionPdfUrl String?
-  maxPoints      Int                       @default(100)
+  maxPoints      Int                        @default(100)
   category       String?
   courses        CourseAssignmentTemplate[]
-  createdAt      DateTime                  @default(now())
-  updatedAt      DateTime                  @updatedAt
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
 }
 
 model CourseQuizTemplate {
@@ -669,13 +687,13 @@ model CourseQuizTemplate {
 }
 
 model CourseAssignmentTemplate {
-  id                  String              @id @default(cuid())
-  courseId            String
+  id                   String             @id @default(cuid())
+  courseId             String
   assignmentTemplateId String
-  dueDate             DateTime?
-  maxPoints           Int                 @default(100)
-  course              Course              @relation(fields: [courseId], references: [id])
-  assignmentTemplate  AssignmentTemplate  @relation(fields: [assignmentTemplateId], references: [id])
+  dueDate              DateTime?
+  maxPoints            Int                @default(100)
+  course               Course             @relation(fields: [courseId], references: [id])
+  assignmentTemplate   AssignmentTemplate @relation(fields: [assignmentTemplateId], references: [id])
 
   @@unique([courseId, assignmentTemplateId])
 }
@@ -686,7 +704,7 @@ model CoursePackage {
   id          String        @id @default(cuid())
   name        String
   description String?
-  price       Int?          // price in paise (₹500 = 50000); null = free/private
+  price       Int? // price in paise (₹500 = 50000); null = free/private
   status      PackageStatus @default(DRAFT)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -698,12 +716,12 @@ model CoursePackage {
 }
 
 model PackageCourse {
-  id        String      @id @default(cuid())
+  id        String        @id @default(cuid())
   packageId String
-  courseId   String
-  order     Int         @default(0)
+  courseId  String
+  order     Int           @default(0)
   package   CoursePackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
-  course    Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course    Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([packageId, courseId])
 }
@@ -712,7 +730,7 @@ model Payment {
   id                String        @id @default(cuid())
   userId            String
   packageId         String
-  amount            Int           // in paise
+  amount            Int // in paise
   currency          String        @default("INR")
   razorpayOrderId   String?       @unique
   razorpayPaymentId String?       @unique
@@ -721,32 +739,112 @@ model Payment {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
-  user    User          @relation(fields: [userId], references: [id])
-  package CoursePackage @relation(fields: [packageId], references: [id])
+  user       User               @relation(fields: [userId], references: [id])
+  package    CoursePackage      @relation(fields: [packageId], references: [id])
   enrollment PackageEnrollment?
 }
 
 model PackageEnrollment {
-  id        String        @id @default(cuid())
+  id        String           @id @default(cuid())
   userId    String
   packageId String
   status    EnrollmentStatus @default(PENDING)
-  paymentId String?       @unique
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  paymentId String?          @unique
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
 
-  user    User         @relation(fields: [userId], references: [id])
-  package CoursePackage @relation(fields: [packageId], references: [id])
+  user    User                      @relation(fields: [userId], references: [id])
+  package CoursePackage             @relation(fields: [packageId], references: [id])
   courses PackageEnrollmentCourse[]
-  payment Payment?      @relation(fields: [paymentId], references: [id])
+  payment Payment?                  @relation(fields: [paymentId], references: [id])
 }
 
 model PackageEnrollmentCourse {
-  id           String @id @default(cuid())
+  id           String            @id @default(cuid())
   enrollmentId String
-  courseId      String
+  courseId     String
   batchId      String?
   enrollment   PackageEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
-  course       Course  @relation(fields: [courseId], references: [id])
-  batch        Batch?  @relation(fields: [batchId], references: [id])
+  course       Course            @relation(fields: [courseId], references: [id])
+  batch        Batch?            @relation(fields: [batchId], references: [id])
+}
+
+// === AUDIT LOG ===
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, BULK_IMPORT, etc.
+  entityType String // User, Course, Batch, Certificate, etc.
+  entityId   String?
+  details    Json? // Before/after diff, metadata
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// === CATEGORY & TAG MANAGEMENT ===
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  courses     Course[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Tag {
+  id        String      @id @default(cuid())
+  name      String      @unique
+  slug      String      @unique
+  courses   CourseTag[]
+  createdAt DateTime    @default(now())
+}
+
+model CourseTag {
+  id       String @id @default(cuid())
+  courseId String
+  tagId    String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, tagId])
+  @@index([courseId])
+  @@index([tagId])
+}
+
+// === STATIC PAGES (CMS) ===
+
+model StaticPage {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  content     String   @db.Text
+  isPublished Boolean  @default(false)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// === EMAIL TEMPLATES ===
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  name      String   @unique // e.g. "welcome", "reset-password"
+  subject   String
+  body      String   @db.Text // HTML/React Email template source
+  variables Json? // Available template variables ["userName", "courseTitle"]
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

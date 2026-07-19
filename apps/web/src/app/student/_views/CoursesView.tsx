@@ -78,16 +78,18 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
       {/* Search + Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <IconSearch
-            size={15}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
-          />
+          {!search && (
+            <IconSearch
+              size={15}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none z-10"
+            />
+          )}
           <input
             type="text"
-            placeholder="Search courses or instructors…"
+            placeholder="     Search courses or instructors…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="field pl-9"
+            className="field pl-10 pr-3"
           />
         </div>
         <div className="flex gap-1.5 overflow-x-auto pb-0.5">
@@ -130,7 +132,10 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((course) => {
-            const cfg = statusConfig[course.status] ?? { label: course.status, classes: "border-muted/30 bg-muted/10 text-muted" };
+            const cfg = statusConfig[course.status] ?? {
+              label: course.status,
+              classes: "border-muted/30 bg-muted/10 text-muted",
+            };
             const canOpen = course.status !== "PENDING" && course.batchId;
             return (
               <div

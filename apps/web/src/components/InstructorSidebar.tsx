@@ -387,8 +387,8 @@ export default function InstructorSidebar({
       <div className="border-t border-border bg-card p-3 space-y-1.5">
         <div
           className={`flex items-center border border-border rounded-lg bg-slate-170 dark:bg-slate-90/5 ${
-          collapsed ? "justify-center" : "gap-2.5 px-2 py-1.5"
-        }`}
+            collapsed ? "justify-center" : "gap-2.5 px-2 py-1.5"
+          }`}
         >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-primary/10 text-[10px] font-bold text-primary">
             {displayInitials}

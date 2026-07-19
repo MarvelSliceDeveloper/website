@@ -15,9 +15,7 @@ export const assignmentController = {
       const { courseId } = req.body;
 
       if (!courseId) {
-        return res
-          .status(400)
-          .json({ error: "courseId is required" });
+        return res.status(400).json({ error: "courseId is required" });
       }
 
       let { batchId } = req.body;
@@ -30,7 +28,8 @@ export const assignmentController = {
         batchId = firstBatch?.id || "";
         if (!batchId) {
           return res.status(400).json({
-            error: "No batches found for this course. Please create a batch first, or provide a batchId.",
+            error:
+              "No batches found for this course. Please create a batch first, or provide a batchId.",
           });
         }
       }
@@ -82,7 +81,9 @@ export const assignmentController = {
     try {
       const { assignmentIds } = req.body;
       if (!Array.isArray(assignmentIds))
-        return res.status(400).json({ error: "assignmentIds must be an array" });
+        return res
+          .status(400)
+          .json({ error: "assignmentIds must be an array" });
       const result = await assignmentService.reorderAssignments(
         req.params.moduleId,
         assignmentIds,

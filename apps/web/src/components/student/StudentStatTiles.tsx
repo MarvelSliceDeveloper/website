@@ -57,7 +57,7 @@ const GRADIENT_STYLES: Record<string, string> = {
   accent:
     "from-violet-500 to-purple-600 shadow-violet-500/20 hover:shadow-violet-500/30 hover:from-violet-400 hover:to-purple-500",
   success:
-    "from-amber-500 to-orange-600 shadow-amber-500/20 hover:shadow-amber-500/30 hover:from-amber-400 hover:to-orange-500",
+    "from-blue-500 to-indigo-600 shadow-blue-500/20 hover:shadow-blue-500/30 hover:from-blue-400 hover:to-indigo-500",
 };
 
 // Single stat tile with count-up animation

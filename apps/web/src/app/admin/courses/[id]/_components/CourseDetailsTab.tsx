@@ -174,7 +174,9 @@ export default function CourseDetailsTab({
             type="text"
             value={newTag}
             onChange={(e) => setNewTag(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
+            onKeyDown={(e) =>
+              e.key === "Enter" && (e.preventDefault(), addTag())
+            }
             placeholder="Add a tag"
             className="field flex-1"
           />

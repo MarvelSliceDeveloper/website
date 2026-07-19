@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   IconBook,
   IconCalendar,
@@ -275,7 +276,7 @@ export default function HomeView({
             const colorClasses = {
               blue: "border-blue-500/35 bg-blue-500/12 hover:bg-blue-500/20 hover:border-blue-500/55 text-blue-600 dark:text-blue-400 hover:shadow-blue-500/15",
               orange:
-                "border-orange-500/35 bg-orange-500/12 hover:bg-orange-500/20 hover:border-orange-500/55 text-orange-600 dark:text-orange-400 hover:shadow-orange-500/15",
+                "border-indigo-500/35 bg-indigo-500/12 hover:bg-indigo-500/20 hover:border-indigo-500/55 text-indigo-600 dark:text-indigo-400 hover:shadow-indigo-500/15",
               green:
                 "border-emerald-500/35 bg-emerald-500/12 hover:bg-emerald-500/20 hover:border-emerald-500/55 text-emerald-600 dark:text-emerald-400 hover:shadow-emerald-500/15",
             }[action.color];
@@ -283,7 +284,7 @@ export default function HomeView({
             const iconBg = {
               blue: "bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/25",
               orange:
-                "bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-500/25",
+                "bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25",
               green:
                 "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25",
             }[action.color];
@@ -312,26 +313,30 @@ export default function HomeView({
       {/* ── In-line Menu ────────────────────────────────────────────────── */}
       <div className="border-b border-border/70">
         <nav className="flex flex-wrap gap-6 text-sm font-semibold">
-          {([
-            { id: "courses" as const, label: "My Courses" },
-            { id: "calendar" as const, label: "Calendar" },
-            { id: "sessions" as const, label: "My Sessions" },
-            {
-              id: "notifications" as const,
-              label: `Notifications ${overdueTotal > 0 ? `(${overdueTotal})` : ""
+          {(
+            [
+              { id: "courses" as const, label: "My Courses" },
+              { id: "calendar" as const, label: "Calendar" },
+              { id: "sessions" as const, label: "My Sessions" },
+              {
+                id: "notifications" as const,
+                label: `Notifications ${
+                  overdueTotal > 0 ? `(${overdueTotal})` : ""
                 }`,
-            },
-            { id: "support" as const, label: "Mentorship" },
-          ] as const).map((tab) => {
+              },
+              { id: "support" as const, label: "Mentorship" },
+            ] as const
+          ).map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`pb-3 relative transition-colors ${isActive
-                  ? "text-primary font-bold"
-                  : "text-muted hover:text-foreground"
-                  }`}
+                className={`pb-3 relative transition-colors ${
+                  isActive
+                    ? "text-primary font-bold"
+                    : "text-muted hover:text-foreground"
+                }`}
               >
                 {tab.label}
                 {isActive && (
@@ -352,19 +357,21 @@ export default function HomeView({
               <div className="flex items-center gap-1.5 p-1 rounded-xl bg-card border border-border/50">
                 <button
                   onClick={() => setInnerTab("my_courses")}
-                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${innerTab === "my_courses"
-                    ? "bg-primary text-white shadow-sm"
-                    : "text-muted hover:text-foreground"
-                    }`}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+                    innerTab === "my_courses"
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-muted hover:text-foreground"
+                  }`}
                 >
                   MY COURSES
                 </button>
                 <button
                   onClick={() => setInnerTab("results")}
-                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${innerTab === "results"
-                    ? "bg-primary text-white shadow-sm"
-                    : "text-muted hover:text-foreground"
-                    }`}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+                    innerTab === "results"
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-muted hover:text-foreground"
+                  }`}
                 >
                   RESULTS
                 </button>
@@ -379,7 +386,7 @@ export default function HomeView({
                   placeholder="Search courses..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-card pl-9 pr-4 py-1.5 text-xs text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
+                  className="w-full rounded-xl border border-border bg-card pl-10 pr-4 py-1.5 text-xs text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
                 />
               </div>
             </div>
@@ -409,8 +416,21 @@ export default function HomeView({
                           key={c.id}
                           className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border border-border bg-card/50"
                         >
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-success/10 text-xl border border-success/20">
-                            {c.thumbnail || "🎓"}
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-success/10 border border-success/20 overflow-hidden">
+                            {c.thumbnail &&
+                            (c.thumbnail.startsWith("/") ||
+                              c.thumbnail.startsWith("http")) ? (
+                              <Image
+                                src={c.thumbnail}
+                                alt={c.title}
+                                width={48}
+                                height={48}
+                                className="h-full w-full object-cover"
+                                unoptimized
+                              />
+                            ) : (
+                              <span className="text-xl">📚</span>
+                            )}
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="font-bold text-sm text-foreground truncate">
@@ -446,8 +466,21 @@ export default function HomeView({
                             key={item.recordingId}
                             className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border border-border bg-card shadow-sm hover:border-primary/40 transition-colors"
                           >
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-xl font-bold text-white shadow-sm">
-                              {item.thumbnail || "📖"}
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-sm overflow-hidden">
+                              {item.thumbnail &&
+                              (item.thumbnail.startsWith("/") ||
+                                item.thumbnail.startsWith("http")) ? (
+                                <Image
+                                  src={item.thumbnail}
+                                  alt={item.courseTitle}
+                                  width={48}
+                                  height={48}
+                                  className="h-full w-full object-cover"
+                                  unoptimized
+                                />
+                              ) : (
+                                <IconBook size={20} />
+                              )}
                             </div>
                             <div className="min-w-0 flex-1">
                               <p className="font-bold text-sm text-foreground truncate">
@@ -506,8 +539,21 @@ export default function HomeView({
                             key={c.id}
                             className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border border-border bg-card/50 hover:bg-card hover:border-primary/30 transition-all duration-200"
                           >
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary/10 to-accent/10 border border-border/60 text-xl shadow-inner">
-                              {c.thumbnail || "📖"}
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary/10 to-accent/10 border border-border/60 shadow-inner overflow-hidden">
+                              {c.thumbnail &&
+                              (c.thumbnail.startsWith("/") ||
+                                c.thumbnail.startsWith("http")) ? (
+                                <Image
+                                  src={c.thumbnail}
+                                  alt={c.title}
+                                  width={48}
+                                  height={48}
+                                  className="h-full w-full object-cover"
+                                  unoptimized
+                                />
+                              ) : (
+                                <IconBook size={20} className="text-primary" />
+                              )}
                             </div>
                             <div className="min-w-0 flex-1">
                               <p className="font-bold text-sm text-foreground truncate">
@@ -876,17 +922,19 @@ export default function HomeView({
                         return (
                           <div
                             key={item.id}
-                            className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border ${isQuiz
-                              ? "border-accent/25 bg-accent/[0.02]"
-                              : "border-danger/25 bg-danger/[0.02]"
-                              }`}
+                            className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border ${
+                              isQuiz
+                                ? "border-accent/25 bg-accent/[0.02]"
+                                : "border-danger/25 bg-danger/[0.02]"
+                            }`}
                           >
                             <div className="flex items-start gap-3">
                               <div
-                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${isQuiz
-                                  ? "bg-accent/15 text-accent border border-accent/25"
-                                  : "bg-danger/15 text-danger border border-danger/25"
-                                  }`}
+                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                                  isQuiz
+                                    ? "bg-accent/15 text-accent border border-accent/25"
+                                    : "bg-danger/15 text-danger border border-danger/25"
+                                }`}
                               >
                                 {isQuiz ? (
                                   <IconClock size={16} />
@@ -1067,17 +1115,13 @@ export default function HomeView({
                       t.status === "SCHEDULED",
                   );
                   const past = openTickets.filter(
-                    (t) =>
-                      t.status === "COMPLETED" || t.status === "CANCELLED",
+                    (t) => t.status === "COMPLETED" || t.status === "CANCELLED",
                   );
 
                   if (active.length === 0 && past.length === 0) {
                     return (
                       <div className="flex flex-col items-center justify-center py-6 text-center text-muted">
-                        <IconHeart
-                          size={28}
-                          className="mb-2 text-muted/60"
-                        />
+                        <IconHeart size={28} className="mb-2 text-muted/60" />
                         <p className="text-xs font-semibold">
                           No booking log found
                         </p>
@@ -1103,22 +1147,24 @@ export default function HomeView({
                             {t.preferredTime && (
                               <p className="text-[10px] text-muted-foreground mt-0.5">
                                 Preferred:{" "}
-                                {new Date(
-                                  t.preferredTime,
-                                ).toLocaleDateString("en-IN", {
-                                  day: "numeric",
-                                  month: "short",
-                                })}
+                                {new Date(t.preferredTime).toLocaleDateString(
+                                  "en-IN",
+                                  {
+                                    day: "numeric",
+                                    month: "short",
+                                  },
+                                )}
                               </p>
                             )}
                             <div className="mt-2.5 flex items-center justify-between gap-2">
                               <span
-                                className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${t.status === "OPEN"
+                                className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                                  t.status === "OPEN"
                                     ? "bg-warning/10 text-warning border-warning/20"
                                     : t.status === "ASSIGNED"
                                       ? "bg-accent/10 text-accent border-accent/20"
                                       : "bg-success/10 text-success border-success/20"
-                                  }`}
+                                }`}
                               >
                                 {t.status}
                               </span>
@@ -1158,10 +1204,11 @@ export default function HomeView({
                               </p>
                               <div className="mt-2.5">
                                 <span
-                                  className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${t.status === "COMPLETED"
+                                  className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                                    t.status === "COMPLETED"
                                       ? "bg-primary/10 text-primary border-primary/20"
                                       : "bg-muted/10 text-muted border-border"
-                                    }`}
+                                  }`}
                                 >
                                   {t.status}
                                 </span>

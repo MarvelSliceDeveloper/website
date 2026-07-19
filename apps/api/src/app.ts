@@ -50,12 +50,26 @@ import { loginHistoryRouter } from "./modules/logs/login-history.routes";
 import { consentLogRouter } from "./modules/logs/consent-log.routes";
 import { trashRouter } from "./modules/super-admin/trash.routes";
 import { youtubeRouter } from "./modules/youtube/youtube.routes";
-import { paymentRouter, adminPaymentRouter } from "./modules/payments/payment.routes";
+import {
+  paymentRouter,
+  adminPaymentRouter,
+} from "./modules/payments/payment.routes";
 import {
   packageRouter,
   packageEnrollmentRouter,
   publicPackageRouter,
 } from "./modules/packages/package.routes";
+import categoriesRouter from "./modules/admin/categories/categories.routes";
+import tagsRouter from "./modules/admin/tags/tags.routes";
+import adminCertificatesRouter from "./modules/admin/certificates/certificates.routes";
+import staticPagesRouter from "./modules/admin/static-pages/static-pages.routes";
+import emailTemplatesRouter from "./modules/admin/email-templates/email-templates.routes";
+import auditLogsRouter from "./modules/admin/audit-logs/audit-logs.routes";
+import announcementsRouter from "./modules/admin/announcements/announcements.routes";
+import { bulkUsersRouter } from "./modules/admin/users/bulk.routes";
+import { brandingRouter } from "./modules/admin/branding/branding.routes";
+import { i18nRouter } from "./modules/admin/i18n/i18n.routes";
+import { cacheRouter } from "./modules/admin/cache/cache.routes";
 
 const logger = pino({
   level: process.env.LOG_LEVEL || "info",
@@ -91,25 +105,27 @@ app.use(
 
 app.use(cookieParser());
 
-app.use(pinoHttp({
-  logger,
-  autoLogging: {
-    ignore: (req) => req.url === "/health",
-  },
-  serializers: {
-    req: () => undefined,
-    res: () => undefined,
-  },
-  customLogLevel: (res, err) => {
-    if (res.statusCode >= 500) return "error";
-    if (res.statusCode >= 400) return "warn";
-    return "info";
-  },
-  customSuccessMessage: (req, res) =>
-    `${req.method} ${req.url} ${res.statusCode} ${res.responseTime}ms`,
-  customErrorMessage: (req, res, err) =>
-    `${req.method} ${req.url} ${res.statusCode} - ${err.message} ${res.responseTime}ms`,
-}));
+app.use(
+  pinoHttp({
+    logger,
+    autoLogging: {
+      ignore: (req) => req.url === "/health",
+    },
+    serializers: {
+      req: () => undefined,
+      res: () => undefined,
+    },
+    customLogLevel: (res, err) => {
+      if (res.statusCode >= 500) return "error";
+      if (res.statusCode >= 400) return "warn";
+      return "info";
+    },
+    customSuccessMessage: (req, res) =>
+      `${req.method} ${req.url} ${res.statusCode} ${res.responseTime}ms`,
+    customErrorMessage: (req, res, err) =>
+      `${req.method} ${req.url} ${res.statusCode} - ${err.message} ${res.responseTime}ms`,
+  }),
+);
 
 // ── CSRF protection — applied BEFORE body parser so invalid requests
 //     are rejected without parsing the request body ──
@@ -238,6 +254,21 @@ app.use("/api/admin/logs", logRouter);
 app.use("/api/admin/login-history", loginHistoryRouter);
 app.use("/api/admin/consent-logs", consentLogRouter);
 app.use("/api/admin/trash", trashRouter);
+
+// ── Admin feature routes ──
+app.use("/api/admin/categories", categoriesRouter);
+app.use("/api/admin/tags", tagsRouter);
+app.use("/api/admin/admin-certificates", adminCertificatesRouter);
+app.use("/api/admin/static-pages", staticPagesRouter);
+app.use("/api/admin/email-templates", emailTemplatesRouter);
+app.use("/api/admin/audit-logs", auditLogsRouter);
+app.use("/api/admin/announcements", announcementsRouter);
+
+// ── Bulk operations, branding, i18n, cache ──
+app.use("/api/admin/users", bulkUsersRouter);
+app.use("/api/admin/branding", brandingRouter);
+app.use("/api/admin/i18n", i18nRouter);
+app.use("/api/admin/cache", cacheRouter);
 
 // ── YouTube API (authenticated) ──
 app.use("/api/youtube", youtubeRouter);

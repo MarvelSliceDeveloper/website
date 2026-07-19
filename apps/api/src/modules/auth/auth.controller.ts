@@ -96,7 +96,13 @@ export const authController = {
         return res.status(401).json({ error: "Authentication required" });
       const user = await prisma.user.findUnique({
         where: { id: req.user.userId },
-        select: { id: true, name: true, email: true, role: true, mustChangePassword: true },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          mustChangePassword: true,
+        },
       });
       if (!user) return res.status(404).json({ error: "User not found" });
       return res.json({ user });
@@ -422,7 +428,10 @@ export const authController = {
         maxAge: ACCESS_TOKEN_MAX_AGE,
       });
 
-      return res.json({ message: "Password changed successfully", user: tokens.user });
+      return res.json({
+        message: "Password changed successfully",
+        user: tokens.user,
+      });
     } catch (error: unknown) {
       return res.status(500).json({ error: (error as Error).message });
     }
@@ -446,13 +455,23 @@ export const authController = {
           .json({ error: "Password must be at least 8 characters" });
       }
       if (!/[A-Z]/.test(newPassword)) {
-        return res.status(400).json({ error: "Password must contain at least one uppercase letter" });
+        return res
+          .status(400)
+          .json({
+            error: "Password must contain at least one uppercase letter",
+          });
       }
       if (!/[a-z]/.test(newPassword)) {
-        return res.status(400).json({ error: "Password must contain at least one lowercase letter" });
+        return res
+          .status(400)
+          .json({
+            error: "Password must contain at least one lowercase letter",
+          });
       }
       if (!/\d/.test(newPassword)) {
-        return res.status(400).json({ error: "Password must contain at least one number" });
+        return res
+          .status(400)
+          .json({ error: "Password must contain at least one number" });
       }
 
       const user = await prisma.user.findUnique({
@@ -461,11 +480,19 @@ export const authController = {
       if (!user) return res.status(404).json({ error: "User not found" });
 
       if (!user.mustChangePassword) {
-        return res.status(400).json({ error: "Password already set. Use the settings page to change it." });
+        return res
+          .status(400)
+          .json({
+            error: "Password already set. Use the settings page to change it.",
+          });
       }
 
       if (!user.passwordHash) {
-        return res.status(400).json({ error: "Cannot set password. Account uses SSO authentication." });
+        return res
+          .status(400)
+          .json({
+            error: "Cannot set password. Account uses SSO authentication.",
+          });
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 12);
@@ -490,7 +517,10 @@ export const authController = {
         maxAge: ACCESS_TOKEN_MAX_AGE,
       });
 
-      return res.json({ message: "Password set successfully", user: tokens.user });
+      return res.json({
+        message: "Password set successfully",
+        user: tokens.user,
+      });
     } catch (error: unknown) {
       return res.status(500).json({ error: (error as Error).message });
     }
@@ -510,7 +540,9 @@ export const authController = {
 
       // Always return success to avoid email enumeration
       if (!user || !user.passwordHash) {
-        return res.json({ message: "If the account exists, a reset link has been sent." });
+        return res.json({
+          message: "If the account exists, a reset link has been sent.",
+        });
       }
 
       const resetToken = jwt.sign(
@@ -521,13 +553,19 @@ export const authController = {
 
       const resetLink = `${process.env.WEB_URL || "http://localhost:3000"}/reset-password?token=${resetToken}`;
 
-      emailService.sendResetPasswordEmail({
-        name: user.name,
-        email: user.email,
-        resetLink,
-      }).catch((err) => console.error("[auth] Failed to send reset email:", err));
+      emailService
+        .sendResetPasswordEmail({
+          name: user.name,
+          email: user.email,
+          resetLink,
+        })
+        .catch((err) =>
+          console.error("[auth] Failed to send reset email:", err),
+        );
 
-      return res.json({ message: "If the account exists, a reset link has been sent." });
+      return res.json({
+        message: "If the account exists, a reset link has been sent.",
+      });
     } catch (error: unknown) {
       return res.status(500).json({ error: (error as Error).message });
     }
@@ -540,30 +578,53 @@ export const authController = {
       if (!token || typeof token !== "string") {
         return res.status(400).json({ error: "Reset token is required" });
       }
-      if (!newPassword || typeof newPassword !== "string" || newPassword.length < 8) {
-        return res.status(400).json({ error: "Password must be at least 8 characters" });
+      if (
+        !newPassword ||
+        typeof newPassword !== "string" ||
+        newPassword.length < 8
+      ) {
+        return res
+          .status(400)
+          .json({ error: "Password must be at least 8 characters" });
       }
       if (!/[A-Z]/.test(newPassword)) {
-        return res.status(400).json({ error: "Password must contain at least one uppercase letter" });
+        return res
+          .status(400)
+          .json({
+            error: "Password must contain at least one uppercase letter",
+          });
       }
       if (!/[a-z]/.test(newPassword)) {
-        return res.status(400).json({ error: "Password must contain at least one lowercase letter" });
+        return res
+          .status(400)
+          .json({
+            error: "Password must contain at least one lowercase letter",
+          });
       }
       if (!/\d/.test(newPassword)) {
-        return res.status(400).json({ error: "Password must contain at least one number" });
+        return res
+          .status(400)
+          .json({ error: "Password must contain at least one number" });
       }
 
       let payload: { userId: string };
       try {
-        payload = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string; purpose: string };
+        payload = jwt.verify(token, process.env.JWT_SECRET!) as {
+          userId: string;
+          purpose: string;
+        };
         if (payload.purpose !== "password-reset") {
           return res.status(400).json({ error: "Invalid reset token" });
         }
       } catch {
-        return res.status(400).json({ error: "Reset token is invalid or has expired" });
+        return res
+          .status(400)
+          .json({ error: "Reset token is invalid or has expired" });
       }
 
-      const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+      const user = await prisma.user.findUnique({
+        where: { id: payload.userId },
+      });
       if (!user || !user.passwordHash) {
         return res.status(400).json({ error: "User not found" });
       }
@@ -574,7 +635,9 @@ export const authController = {
         data: { passwordHash: hashedPassword, mustChangePassword: false },
       });
 
-      return res.json({ message: "Password reset successfully. You can now log in." });
+      return res.json({
+        message: "Password reset successfully. You can now log in.",
+      });
     } catch (error: unknown) {
       return res.status(500).json({ error: (error as Error).message });
     }

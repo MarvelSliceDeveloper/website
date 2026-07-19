@@ -113,7 +113,9 @@ export default function AddQuizForm({
       onSuccess();
     } catch (error) {
       console.error("Failed to add quiz:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to add quiz");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to add quiz",
+      );
     } finally {
       setLoading(false);
     }
@@ -154,7 +156,10 @@ export default function AddQuizForm({
 
       <div className="space-y-4">
         {questions.map((q, qIndex) => (
-          <div key={qIndex} className="space-y-2 rounded-md border border-border p-3">
+          <div
+            key={qIndex}
+            className="space-y-2 rounded-md border border-border p-3"
+          >
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground">
                 Question {qIndex + 1}

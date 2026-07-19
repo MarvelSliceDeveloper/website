@@ -63,10 +63,14 @@ export const assignmentService = {
       data: {
         ...(data.title && { title: data.title }),
         ...(data.type && { type: data.type }),
-        ...(data.description !== undefined && { description: data.description }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
         ...(data.dueDate && { dueDate: new Date(data.dueDate) }),
         ...(data.maxPoints && { maxPoints: data.maxPoints }),
-        ...(data.questionPdfUrl !== undefined && { questionPdfUrl: data.questionPdfUrl || null }),
+        ...(data.questionPdfUrl !== undefined && {
+          questionPdfUrl: data.questionPdfUrl || null,
+        }),
       },
     });
   },

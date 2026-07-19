@@ -23,7 +23,9 @@ export default function ContentTab({
 
   const items = useMemo(() => {
     if (dragOrder) {
-      return dragOrder.map(id => modules.find(m => m.id === id)!).filter(Boolean);
+      return dragOrder
+        .map((id) => modules.find((m) => m.id === id)!)
+        .filter(Boolean);
     }
     return modules;
   }, [modules, dragOrder]);
@@ -95,7 +97,10 @@ export default function ContentTab({
           {items.map((mod, idx) => (
             <div key={mod.id}>
               {overIndex === idx && dragIndex !== idx && overIndex !== null && (
-                <div key="drag" className="h-1 rounded-full bg-primary/40 mx-1 transition-all" />
+                <div
+                  key="drag"
+                  className="h-1 rounded-full bg-primary/40 mx-1 transition-all"
+                />
               )}
               <ModuleCard
                 key="module"

@@ -103,7 +103,6 @@ export default function InstructorSettingsPage() {
   const [nameInput, setNameInput] = useState("");
   const [savingName, setSavingName] = useState(false);
 
-
   useEffect(() => {
     api
       .get<{ preferences: { type: string; enabled: boolean }[] }>(

@@ -21,7 +21,9 @@ export function useUnreadCounts(pollIntervalMs = 30000): UnreadCounts {
       await Promise.all([
         safeGet<{ unreadCount: number }>("/api/notifications"),
         safeGet<{ unreadCount: number }>("/api/messages/conversations"),
-        safeGet<{ stats: { open: number } }>("/api/tickets/stats?type=MENTORSHIP"),
+        safeGet<{ stats: { open: number } }>(
+          "/api/tickets/stats?type=MENTORSHIP",
+        ),
         safeGet<{ stats: { open: number } }>("/api/tickets/stats?type=SUPPORT"),
       ]);
 

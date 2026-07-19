@@ -142,7 +142,10 @@ export default function CreatePackagePage() {
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Price (₹) <span className="text-xs text-muted-foreground">— leave empty for free</span>
+              Price (₹){" "}
+              <span className="text-xs text-muted-foreground">
+                — leave empty for free
+              </span>
             </label>
             <input
               type="number"

@@ -133,7 +133,9 @@ export default function QuizCard({
       onUpdate();
     } catch (error) {
       console.error("Failed to update quiz:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to update quiz");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update quiz",
+      );
     } finally {
       setLoading(false);
     }
@@ -147,7 +149,9 @@ export default function QuizCard({
       onUpdate();
     } catch (error) {
       console.error("Failed to delete quiz:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to delete quiz");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete quiz",
+      );
     } finally {
       setDeleting(false);
     }
@@ -190,7 +194,10 @@ export default function QuizCard({
 
         <div className="space-y-4">
           {questions.map((q, qIndex) => (
-            <div key={qIndex} className="space-y-2 rounded-md border border-border p-3">
+            <div
+              key={qIndex}
+              className="space-y-2 rounded-md border border-border p-3"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-muted-foreground">
                   Question {qIndex + 1}
@@ -318,11 +325,10 @@ export default function QuizCard({
             <IconGripVertical size={12} />
           </span>
         )}
-        <span className="text-sm font-medium text-amber-700">
-          {quiz.title}
-        </span>
+        <span className="text-sm font-medium text-amber-700">{quiz.title}</span>
         <span className="text-xs text-amber-600">
-          {quiz.questions.length} question{quiz.questions.length !== 1 ? "s" : ""}
+          {quiz.questions.length} question
+          {quiz.questions.length !== 1 ? "s" : ""}
         </span>
       </div>
       <div className="flex gap-1">

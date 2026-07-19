@@ -973,19 +973,19 @@ This section lists every REST endpoint in the platform organized by module. All 
 
 ### 7. Admin Batches — `/api/admin/batches`
 
-| Method | Path                                   | Auth                   | Description                       |
-| ------ | -------------------------------------- | ---------------------- | --------------------------------- |
-| GET    | `/api/admin/batches/`                  | JWT (ADMIN/INSTRUCTOR) | List batches                      |
-| POST   | `/api/admin/batches/`                  | JWT (ADMIN)            | Create a batch (courseId + packageId) |
-| GET    | `/api/admin/batches/:id`               | JWT (ADMIN/INSTRUCTOR) | Get batch detail                 |
-| PUT    | `/api/admin/batches/:id`               | JWT (ADMIN)            | Update batch                      |
-| DELETE | `/api/admin/batches/:id`               | JWT (ADMIN)            | Delete batch                      |
-| GET    | `/api/admin/batches/by-package/:packageId` | JWT (ADMIN)       | Batches grouped by course for a package |
-| GET    | `/api/admin/batches/instructors`       | JWT (ADMIN/INSTRUCTOR) | List instructors                  |
-| GET    | `/api/admin/batches/courses`           | JWT (ADMIN/INSTRUCTOR) | List courses for batch assignment |
-| GET    | `/api/admin/batches/:id/students`      | JWT (ADMIN/INSTRUCTOR) | List students in batch            |
-| POST   | `/api/admin/batches/:id/students`      | JWT (ADMIN)            | Add students to batch             |
-| DELETE | `/api/admin/batches/:id/students/:uid` | JWT (ADMIN)            | Remove student from batch         |
+| Method | Path                                       | Auth                   | Description                             |
+| ------ | ------------------------------------------ | ---------------------- | --------------------------------------- |
+| GET    | `/api/admin/batches/`                      | JWT (ADMIN/INSTRUCTOR) | List batches                            |
+| POST   | `/api/admin/batches/`                      | JWT (ADMIN)            | Create a batch (courseId + packageId)   |
+| GET    | `/api/admin/batches/:id`                   | JWT (ADMIN/INSTRUCTOR) | Get batch detail                        |
+| PUT    | `/api/admin/batches/:id`                   | JWT (ADMIN)            | Update batch                            |
+| DELETE | `/api/admin/batches/:id`                   | JWT (ADMIN)            | Delete batch                            |
+| GET    | `/api/admin/batches/by-package/:packageId` | JWT (ADMIN)            | Batches grouped by course for a package |
+| GET    | `/api/admin/batches/instructors`           | JWT (ADMIN/INSTRUCTOR) | List instructors                        |
+| GET    | `/api/admin/batches/courses`               | JWT (ADMIN/INSTRUCTOR) | List courses for batch assignment       |
+| GET    | `/api/admin/batches/:id/students`          | JWT (ADMIN/INSTRUCTOR) | List students in batch                  |
+| POST   | `/api/admin/batches/:id/students`          | JWT (ADMIN)            | Add students to batch                   |
+| DELETE | `/api/admin/batches/:id/students/:uid`     | JWT (ADMIN)            | Remove student from batch               |
 
 **Create a batch** — `POST /api/admin/batches/`
 
@@ -1001,16 +1001,17 @@ to that package.
 
 ```json
 {
-  "courseId": "string",          // required — the course this batch teaches
-  "packageId": "string | null",  // optional — links batch to a package
-  "instructorId": "string",      // required — INSTRUCTOR / ADMIN / SUPER_ADMIN
-  "name": "string",              // required, 3–100 chars
+  "courseId": "string", // required — the course this batch teaches
+  "packageId": "string | null", // optional — links batch to a package
+  "instructorId": "string", // required — INSTRUCTOR / ADMIN / SUPER_ADMIN
+  "name": "string", // required, 3–100 chars
   "startDate": "2025-06-01T00:00:00.000Z", // required, ISO datetime
-  "endDate": "2025-08-30T00:00:00.000Z",   // required, ISO datetime
-  "maxStudents": 30,              // optional, integer >= 1
-  "description": "string"        // optional
+  "endDate": "2025-08-30T00:00:00.000Z", // required, ISO datetime
+  "maxStudents": 30, // optional, integer >= 1
+  "description": "string" // optional
 }
 ```
+
 Response: `{ id, name, course, instructor, package }` (single batch object).
 `course` may be `null` for package-level batches.
 
@@ -1023,15 +1024,16 @@ not have a specific course.
 
 ```json
 {
-  "packageId": "string",         // required — the package this batch covers
-  "instructorId": "string",      // required
-  "name": "string",              // required, 3–100 chars
+  "packageId": "string", // required — the package this batch covers
+  "instructorId": "string", // required
+  "name": "string", // required, 3–100 chars
   "startDate": "2025-06-01T00:00:00.000Z", // required
-  "endDate": "2025-08-30T00:00:00.000Z",   // required
-  "maxStudents": 30,              // optional
-  "description": "string"        // optional
+  "endDate": "2025-08-30T00:00:00.000Z", // required
+  "maxStudents": 30, // optional
+  "description": "string" // optional
 }
 ```
+
 Response: `{ id, name, course: null, instructor, package }` (single batch object,
 not wrapped in `{ message, batches }`).
 

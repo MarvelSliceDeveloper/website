@@ -9,6 +9,42 @@ import StudentTable, {
 } from "@/components/student/StudentTable";
 import PaginationBar from "@/components/student/PaginationBar";
 
+function downloadIcs(event: {
+  title: string;
+  start: string;
+  end: string;
+  joinUrl?: string;
+}) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const toIcsDate = (d: Date) =>
+    `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+  const now = new Date();
+  const uid = `${Date.now()}@lms`;
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//LMS//Session//EN",
+    "BEGIN:VEVENT",
+    `UID:${uid}`,
+    `DTSTAMP:${toIcsDate(now)}`,
+    `DTSTART:${toIcsDate(new Date(event.start))}`,
+    `DTEND:${toIcsDate(new Date(event.end))}`,
+    `SUMMARY:${event.title}`,
+    event.joinUrl ? `URL:${event.joinUrl}` : "",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ]
+    .filter(Boolean)
+    .join("\r\n");
+  const blob = new Blob([lines], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${event.title.replace(/[^a-z0-9]/gi, "_")}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 interface BatchDetailViewProps {
   batch: Batch;
   navigate: (v: ViewState) => void;
@@ -201,17 +237,40 @@ export default function BatchDetailView({
                       </p>
                     </div>
                     {session.status === "LIVE" && session.joinUrl && (
-                      <a
-                        href={session.joinUrl}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
+                        onClick={async () => {
+                          try {
+                            const { api } = await import("@/lib/api");
+                            await api.post(
+                              `/api/attendance/${session.id}/join`,
+                            );
+                          } catch (err) {
+                            console.error("Failed to log attendance:", err);
+                          } finally {
+                            window.open(
+                              session.joinUrl,
+                              "_blank",
+                              "noopener,noreferrer",
+                            );
+                          }
+                        }}
                         className="btn-primary text-sm"
                       >
                         Join Session →
-                      </a>
+                      </button>
                     )}
                     {session.status === "UPCOMING" && (
-                      <button className="btn-secondary flex items-center gap-2 text-sm">
+                      <button
+                        className="btn-secondary flex items-center gap-2 text-sm"
+                        onClick={() =>
+                          downloadIcs({
+                            title: session.title,
+                            start: session.scheduledAt,
+                            end: session.endDateTime ?? session.scheduledAt,
+                            joinUrl: session.joinUrl,
+                          })
+                        }
+                      >
                         <IconCalendarPlus size={15} /> Add to Calendar
                       </button>
                     )}

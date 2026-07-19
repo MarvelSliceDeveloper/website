@@ -208,8 +208,7 @@ async function fetchPortalData(): Promise<PortalData> {
       completedCount: enrolled.courses.filter((c) => c.status === "COMPLETED")
         .length,
       liveTodayCount: mappedSessions.filter((s) => s.status === "LIVE").length,
-      certificatesCount: (certs.certificates ?? []).filter((c) => c.earned)
-        .length,
+      certificatesCount: (certs.certificates ?? []).length,
     },
     overdueAssignments: overdueAssignments.items,
     enrolledCourses: enrolled.courses,

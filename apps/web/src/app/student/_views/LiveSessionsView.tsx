@@ -3,6 +3,42 @@
 import { useState, useMemo } from "react";
 import type { LiveSession } from "@/lib/api-types";
 import { api } from "@/lib/api";
+
+function downloadIcs(event: {
+  title: string;
+  start: string;
+  end: string;
+  joinUrl?: string;
+}) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const toIcsDate = (d: Date) =>
+    `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+  const now = new Date();
+  const uid = `${Date.now()}@lms`;
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//LMS//Session//EN",
+    "BEGIN:VEVENT",
+    `UID:${uid}`,
+    `DTSTAMP:${toIcsDate(now)}`,
+    `DTSTART:${toIcsDate(new Date(event.start))}`,
+    `DTEND:${toIcsDate(new Date(event.end))}`,
+    `SUMMARY:${event.title}`,
+    event.joinUrl ? `URL:${event.joinUrl}` : "",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ]
+    .filter(Boolean)
+    .join("\r\n");
+  const blob = new Blob([lines], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${event.title.replace(/[^a-z0-9]/gi, "_")}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 interface LiveSessionsViewProps {
   sessions: LiveSession[];
 }
@@ -263,7 +299,19 @@ function SessionCard({
             </button>
           )}
           {status === "UPCOMING" && (
-            <button className="btn-secondary text-sm">Add to Calendar</button>
+            <button
+              className="btn-secondary text-sm"
+              onClick={() =>
+                downloadIcs({
+                  title: session.title,
+                  start: session.scheduledAt,
+                  end: session.endDateTime,
+                  joinUrl: session.joinUrl,
+                })
+              }
+            >
+              Add to Calendar
+            </button>
           )}
         </div>
       </div>

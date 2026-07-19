@@ -144,10 +144,15 @@ export default function StudentPortalShell({
   return (
     <div
       className="min-h-screen bg-background"
-      style={{ "--shell-header-height": headerHeight + "px" } as React.CSSProperties}
+      style={
+        { "--shell-header-height": headerHeight + "px" } as React.CSSProperties
+      }
     >
       {!hideHeader && (
-        <header ref={headerRef} className="sticky top-0 z-40 border-b border-border bg-card">
+        <header
+          ref={headerRef}
+          className="sticky top-0 z-40 border-b border-border bg-card"
+        >
           <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-6">
             <div className="flex min-w-0 flex-1 items-center gap-3">
               <button
@@ -177,7 +182,7 @@ export default function StudentPortalShell({
                     <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400">
                       Marvel
                     </span>
-                    <span className="text-orange-500 ml-0.5">Slice</span>
+                    <span className="text-indigo-500 ml-0.5">Slice</span>
                   </span>
                 </div>
               )}

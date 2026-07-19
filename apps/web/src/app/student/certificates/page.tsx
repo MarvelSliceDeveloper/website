@@ -44,9 +44,8 @@ export default function CertificatesPage() {
   const loadCertificates = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get<CertificatesResponse>(
-        "/api/certificates/my",
-      );
+      const response =
+        await api.get<CertificatesResponse>("/api/certificates/");
       setData(response);
     } catch (loadError: unknown) {
       toast.error(
@@ -61,7 +60,7 @@ export default function CertificatesPage() {
 
   useEffect(() => {
     api
-      .get<CertificatesResponse>("/api/certificates/my")
+      .get<CertificatesResponse>("/api/certificates/")
       .then((response) => {
         setData(response);
       })

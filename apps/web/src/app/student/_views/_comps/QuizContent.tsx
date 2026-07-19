@@ -37,7 +37,11 @@ export interface QuizResult {
   score: number;
   total: number;
   percentage: number;
-  answers: Array<{ questionId: string; selectedOptionId: string; isCorrect: boolean }>;
+  answers: Array<{
+    questionId: string;
+    selectedOptionId: string;
+    isCorrect: boolean;
+  }>;
 }
 
 interface QuizContentProps {
@@ -66,7 +70,10 @@ type Phase = "intro" | "active" | "results";
 // fail.
 type ResultTier = "pass" | "partial" | "fail";
 
-function getResultTier(percentage: number, passingPercentage: number): ResultTier {
+function getResultTier(
+  percentage: number,
+  passingPercentage: number,
+): ResultTier {
   if (percentage >= passingPercentage) return "pass";
   if (percentage >= passingPercentage / 2) return "partial";
   return "fail";
@@ -167,7 +174,9 @@ export default function QuizContent({
   passingPercentage,
   onRetake,
 }: QuizContentProps) {
-  const [phase, setPhase] = useState<Phase>(quizSubmitted ? "results" : "intro");
+  const [phase, setPhase] = useState<Phase>(
+    quizSubmitted ? "results" : "intro",
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Once the parent confirms the submission landed, jump to the results screen.
@@ -223,14 +232,19 @@ export default function QuizContent({
             </li>
             {quizData.dueDate && (
               <li>
-                Due: <strong>{new Date(quizData.dueDate).toLocaleDateString("en-IN")}</strong>
+                Due:{" "}
+                <strong>
+                  {new Date(quizData.dueDate).toLocaleDateString("en-IN")}
+                </strong>
               </li>
             )}
           </ul>
         </div>
 
         {quizData.description && (
-          <p className="text-sm text-muted-foreground">{quizData.description}</p>
+          <p className="text-sm text-muted-foreground">
+            {quizData.description}
+          </p>
         )}
 
         <div className="flex justify-center pt-2">
@@ -264,7 +278,8 @@ export default function QuizContent({
         <div className="flex flex-col items-center pt-4 pb-2 text-center">
           <ScoreGauge percentage={quizResult.percentage} tier={tier} />
           <p className="text-sm text-foreground mt-2">
-            You have scored <strong>{Math.round(quizResult.percentage)}%</strong>.
+            You have scored{" "}
+            <strong>{Math.round(quizResult.percentage)}%</strong>.
           </p>
 
           <span
@@ -336,10 +351,11 @@ export default function QuizContent({
           // quizData's option.isCorrect — many APIs strip isCorrect from the
           // pre-submit question payload so it can't be read in devtools, and
           // only reveal it in the graded response.
-          let markerClass =
-            "border-border text-muted-foreground";
+          let markerClass = "border-border text-muted-foreground";
           if (quizSubmitted) {
-            const graded = quizResult?.answers.find((a) => a.questionId === q.id);
+            const graded = quizResult?.answers.find(
+              (a) => a.questionId === q.id,
+            );
             const wasCorrect = graded?.isCorrect ?? false;
             markerClass = wasCorrect
               ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-600"
@@ -357,8 +373,11 @@ export default function QuizContent({
                 setPhase("active");
                 goToQuestion(i);
               }}
-              className={`shrink-0 h-7 min-w-7 px-2 rounded-md border text-[11px] font-medium transition-colors ${isCurrent && !quizSubmitted ? "border-primary bg-primary/10 text-primary" : markerClass
-                }`}
+              className={`shrink-0 h-7 min-w-7 px-2 rounded-md border text-[11px] font-medium transition-colors ${
+                isCurrent && !quizSubmitted
+                  ? "border-primary bg-primary/10 text-primary"
+                  : markerClass
+              }`}
             >
               Q{i + 1}
             </button>
@@ -371,7 +390,11 @@ export default function QuizContent({
           disabled={!allAnswered || quizSubmitting || quizSubmitted}
           className="shrink-0 h-7 px-3 rounded-md text-[11px] font-semibold bg-emerald-500 text-white disabled:opacity-40 transition-opacity"
         >
-          {quizSubmitted ? "Result Page" : quizSubmitting ? "Submitting..." : "Submit"}
+          {quizSubmitted
+            ? "Result Page"
+            : quizSubmitting
+              ? "Submitting..."
+              : "Submit"}
         </button>
       </div>
     );
@@ -400,7 +423,8 @@ export default function QuizContent({
               {currentQuestion.questionText}
             </p>
             <span className="inline-block mt-1 text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded">
-              {currentQuestion.marks} {currentQuestion.marks === 1 ? "mark" : "marks"}
+              {currentQuestion.marks}{" "}
+              {currentQuestion.marks === 1 ? "mark" : "marks"}
             </span>
           </div>
 
@@ -411,74 +435,82 @@ export default function QuizContent({
               // post-submission source — quizData's own option.isCorrect
               // flags are frequently withheld by the API before grading.
               const graded = quizSubmitted
-                ? quizResult?.answers.find((a) => a.questionId === currentQuestion.id)
+                ? quizResult?.answers.find(
+                    (a) => a.questionId === currentQuestion.id,
+                  )
                 : undefined;
 
               return currentQuestion.options.map((opt) => {
-              const isSelected = selectedAnswers[currentQuestion.id] === opt.id;
-              // "This is the right option" is only trustworthy once graded:
-              // either the API's option flag confirms it, or it's the option
-              // the user picked and the grader marked correct.
-              const isCorrectAnswer =
-                quizSubmitted &&
-                (opt.isCorrect || (isSelected && graded?.isCorrect === true));
-              const isWrongSelection =
-                quizSubmitted && isSelected && graded?.isCorrect === false;
+                const isSelected =
+                  selectedAnswers[currentQuestion.id] === opt.id;
+                // "This is the right option" is only trustworthy once graded:
+                // either the API's option flag confirms it, or it's the option
+                // the user picked and the grader marked correct.
+                const isCorrectAnswer =
+                  quizSubmitted &&
+                  (opt.isCorrect || (isSelected && graded?.isCorrect === true));
+                const isWrongSelection =
+                  quizSubmitted && isSelected && graded?.isCorrect === false;
 
-              let cardClass = "border-border/60";
-              if (quizSubmitted) {
-                if (isCorrectAnswer) cardClass = "border-emerald-500/60 bg-emerald-500/10";
-                else if (isWrongSelection) cardClass = "border-rose-500/60 bg-rose-500/10";
-              } else if (isSelected) {
-                cardClass = "border-primary/60 bg-primary/10";
-              }
+                let cardClass = "border-border/60";
+                if (quizSubmitted) {
+                  if (isCorrectAnswer)
+                    cardClass = "border-emerald-500/60 bg-emerald-500/10";
+                  else if (isWrongSelection)
+                    cardClass = "border-rose-500/60 bg-rose-500/10";
+                } else if (isSelected) {
+                  cardClass = "border-primary/60 bg-primary/10";
+                }
 
-              // Marker: check for correct, X for a wrong pick, filled dot for
-              // an in-progress selection, empty otherwise.
-              let markerIconClass = "border-border text-transparent";
-              let markerIcon = <IconCheck size={13} />;
-              if (quizSubmitted && isCorrectAnswer) {
-                markerIconClass = "bg-emerald-500 border-emerald-500 text-white";
-                markerIcon = <IconCheck size={13} />;
-              } else if (isWrongSelection) {
-                markerIconClass = "bg-rose-500 border-rose-500 text-white";
-                markerIcon = <IconX size={13} />;
-              } else if (!quizSubmitted && isSelected) {
-                markerIconClass = "bg-primary border-primary text-primary-foreground";
-                markerIcon = <IconCheck size={13} />;
-              }
+                // Marker: check for correct, X for a wrong pick, filled dot for
+                // an in-progress selection, empty otherwise.
+                let markerIconClass = "border-border text-transparent";
+                let markerIcon = <IconCheck size={13} />;
+                if (quizSubmitted && isCorrectAnswer) {
+                  markerIconClass =
+                    "bg-emerald-500 border-emerald-500 text-white";
+                  markerIcon = <IconCheck size={13} />;
+                } else if (isWrongSelection) {
+                  markerIconClass = "bg-rose-500 border-rose-500 text-white";
+                  markerIcon = <IconX size={13} />;
+                } else if (!quizSubmitted && isSelected) {
+                  markerIconClass =
+                    "bg-primary border-primary text-primary-foreground";
+                  markerIcon = <IconCheck size={13} />;
+                }
 
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  disabled={quizSubmitted}
-                  onClick={() => onAnswerSelect(currentQuestion.id, opt.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-lg border text-sm text-left transition-colors ${cardClass} ${quizSubmitted && isCorrectAnswer
-                    ? "text-emerald-700 dark:text-emerald-300"
-                    : isWrongSelection
-                      ? "text-rose-700 dark:text-rose-300"
-                      : "text-foreground"
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    disabled={quizSubmitted}
+                    onClick={() => onAnswerSelect(currentQuestion.id, opt.id)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg border text-sm text-left transition-colors ${cardClass} ${
+                      quizSubmitted && isCorrectAnswer
+                        ? "text-emerald-700 dark:text-emerald-300"
+                        : isWrongSelection
+                          ? "text-rose-700 dark:text-rose-300"
+                          : "text-foreground"
                     }`}
-                >
-                  <span
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold ${markerIconClass}`}
                   >
-                    {markerIcon}
-                  </span>
-                  <span className="flex-1">{opt.optionText}</span>
-                  {quizSubmitted && isCorrectAnswer && (
-                    <span className="text-[10px] font-semibold text-emerald-600 shrink-0">
-                      Correct answer
+                    <span
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold ${markerIconClass}`}
+                    >
+                      {markerIcon}
                     </span>
-                  )}
-                  {isWrongSelection && (
-                    <span className="text-[10px] font-semibold text-rose-600 shrink-0">
-                      Your answer
-                    </span>
-                  )}
-                </button>
-              );
+                    <span className="flex-1">{opt.optionText}</span>
+                    {quizSubmitted && isCorrectAnswer && (
+                      <span className="text-[10px] font-semibold text-emerald-600 shrink-0">
+                        Correct answer
+                      </span>
+                    )}
+                    {isWrongSelection && (
+                      <span className="text-[10px] font-semibold text-rose-600 shrink-0">
+                        Your answer
+                      </span>
+                    )}
+                  </button>
+                );
               });
             })()}
           </div>
@@ -502,7 +534,11 @@ export default function QuizContent({
                 disabled={!allAnswered || quizSubmitting || quizSubmitted}
                 className="flex items-center gap-1 text-xs font-semibold px-4 py-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-40 transition-colors"
               >
-                {quizSubmitted ? "Submitted ✓" : quizSubmitting ? "Submitting..." : "Submit"}
+                {quizSubmitted
+                  ? "Submitted ✓"
+                  : quizSubmitting
+                    ? "Submitting..."
+                    : "Submit"}
               </button>
             ) : (
               <button

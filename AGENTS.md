@@ -77,14 +77,14 @@ packages/utils  # Shared utilities
 
 ### Props
 
-| Prop | Default | Description |
-|------|---------|-------------|
-| `fullWidth` | `false` | When `true`, removes `max-w-7xl`, `px-4`, `py-6` from `<main>` so children span full viewport width. Use for video player / course content layouts. |
-| `hideHeader` | `false` | Hides the sticky header entirely. |
-| `hideProfile` | `false` | Hides user email, settings, and sign-out buttons. |
-| `hideLogo` | `false` | Hides the Marvel Slice logo. |
-| `breadcrumbs` | `[]` | Breadcrumb trail shown in the header. |
-| `showBack` | `false` | Shows the back button in the header. |
+| Prop          | Default | Description                                                                                                                                         |
+| ------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fullWidth`   | `false` | When `true`, removes `max-w-7xl`, `px-4`, `py-6` from `<main>` so children span full viewport width. Use for video player / course content layouts. |
+| `hideHeader`  | `false` | Hides the sticky header entirely.                                                                                                                   |
+| `hideProfile` | `false` | Hides user email, settings, and sign-out buttons.                                                                                                   |
+| `hideLogo`    | `false` | Hides the Marvel Slice logo.                                                                                                                        |
+| `breadcrumbs` | `[]`    | Breadcrumb trail shown in the header.                                                                                                               |
+| `showBack`    | `false` | Shows the back button in the header.                                                                                                                |
 
 ### CSS Variable: `--shell-header-height`
 
@@ -116,12 +116,12 @@ The course content view (`CourseContentView.tsx`) uses a two-column flex layout:
 
 The sidebar uses type-specific icons for each content type:
 
-| Content Type | Icon | Color |
-|---|---|---|
-| Video lesson | `IconPlayerPlay` | Primary (active) / Muted (inactive) |
-| Quiz | `IconClipboardCheck` | Amber (`text-amber-500`) |
-| Assignment | `IconFileSpreadsheet` | Blue (`text-blue-500`) |
-| Study Material | `IconFile` | Emerald (`text-emerald-500`) |
+| Content Type   | Icon                  | Color                               |
+| -------------- | --------------------- | ----------------------------------- |
+| Video lesson   | `IconPlayerPlay`      | Primary (active) / Muted (inactive) |
+| Quiz           | `IconClipboardCheck`  | Amber (`text-amber-500`)            |
+| Assignment     | `IconFileSpreadsheet` | Blue (`text-blue-500`)              |
+| Study Material | `IconFile`            | Emerald (`text-emerald-500`)        |
 
 Module header shows total item count: `{lessons + quizzes + assignments} items`.
 
@@ -129,11 +129,11 @@ Module header shows total item count: `{lessons + quizzes + assignments} items`.
 
 ### CourseContentView Props
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `initialQuizId` | `string?` | If set, auto-selects the matching quiz in the sidebar on mount |
-| `initialAssignmentId` | `string?` | If set, auto-selects the matching assignment in the sidebar on mount |
-| `initialShowSubmit` | `boolean?` | If `true`, opens the submit dialog immediately on mount |
+| Prop                  | Type       | Description                                                          |
+| --------------------- | ---------- | -------------------------------------------------------------------- |
+| `initialQuizId`       | `string?`  | If set, auto-selects the matching quiz in the sidebar on mount       |
+| `initialAssignmentId` | `string?`  | If set, auto-selects the matching assignment in the sidebar on mount |
+| `initialShowSubmit`   | `boolean?` | If `true`, opens the submit dialog immediately on mount              |
 
 Both `initialQuizId` and `initialAssignmentId` use `useEffect` to find the item in the loaded module data and call `selectQuiz()` / `selectAssignment()` respectively.
 
@@ -146,11 +146,13 @@ Both `initialQuizId` and `initialAssignmentId` use `useEffect` to find the item 
 Returns **all** quizzes and assignments (not just overdue items). The frontend handles Pending vs Completed tabs locally.
 
 Quizzes (type `QUIZ`) come from the **Quiz model** and use Quiz model API routes:
+
 - Questions: `GET /api/courses/quizzes/:quizId/questions`
 - Submit: `POST /api/courses/quizzes/:quizId/submit`
 - Attempt: `GET /api/courses/quizzes/:quizId/attempt`
 
 Assignments (type `ASSIGNMENT`) come from the **Assignment model** and use Assignment model file upload routes:
+
 - Submit: `POST /api/assignments/:id/submit/file`
 
 ### QuizOverdueView Navigation
@@ -195,14 +197,14 @@ _components/
 
 ### Quiz/Assignment API Routes
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| POST | `/admin/courses/modules/:moduleId/quizzes` | Add quiz to module |
-| PUT | `/admin/courses/modules/quizzes/:id` | Update quiz |
-| DELETE | `/admin/courses/modules/quizzes/:id` | Delete quiz |
-| POST | `/admin/courses/modules/:moduleId/assignments` | Add assignment to module |
-| PUT | `/admin/courses/modules/assignments/:id` | Update assignment |
-| DELETE | `/admin/courses/modules/assignments/:id` | Delete assignment |
+| Method | Route                                          | Description              |
+| ------ | ---------------------------------------------- | ------------------------ |
+| POST   | `/admin/courses/modules/:moduleId/quizzes`     | Add quiz to module       |
+| PUT    | `/admin/courses/modules/quizzes/:id`           | Update quiz              |
+| DELETE | `/admin/courses/modules/quizzes/:id`           | Delete quiz              |
+| POST   | `/admin/courses/modules/:moduleId/assignments` | Add assignment to module |
+| PUT    | `/admin/courses/modules/assignments/:id`       | Update assignment        |
+| DELETE | `/admin/courses/modules/assignments/:id`       | Delete assignment        |
 
 ## Key Dependencies
 
@@ -217,11 +219,11 @@ _components/
 
 The project auto-fetches video metadata when an admin adds/edits a lesson URL.
 
-| Component | File |
-|-----------|------|
-| Service | `apps/api/src/services/youtube.service.ts` — calls YouTube Data API v3, parses ISO 8601 durations |
-| Route | `apps/api/src/modules/youtube/youtube.routes.ts` — `GET /api/youtube/video-info?url=...` |
-| Frontend fetch | `AddLessonForm.tsx` and `LessonCard.tsx` — fetches on blur of video URL input |
+| Component      | File                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------- |
+| Service        | `apps/api/src/services/youtube.service.ts` — calls YouTube Data API v3, parses ISO 8601 durations |
+| Route          | `apps/api/src/modules/youtube/youtube.routes.ts` — `GET /api/youtube/video-info?url=...`          |
+| Frontend fetch | `AddLessonForm.tsx` and `LessonCard.tsx` — fetches on blur of video URL input                     |
 
 **Env**: `YOUTUBE_API_KEY` in root `.env`. Get from [Google Cloud Console](https://console.cloud.google.com/). See `docs/youtube-integration.md`.
 
@@ -256,7 +258,13 @@ Each route segment should have:
 - **`error.tsx`** — Client component (`"use client"`) that catches errors and shows a reset button. Pattern:
   ```tsx
   "use client";
-  export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  export default function Error({
+    error,
+    reset,
+  }: {
+    error: Error & { digest?: string };
+    reset: () => void;
+  }) {
     return <button onClick={reset}>Try again</button>;
   }
   ```
@@ -301,6 +309,7 @@ setQuestions(prev => prev.map((q, i) =>
 ### Type Declarations
 
 Project-level `.d.ts` files live in `apps/web/src/types/`:
+
 - `jspdf-autotable.d.ts` — Augments `jsPDF` interface with `lastAutoTable` property
 
 ## Password Management
@@ -320,11 +329,11 @@ When a guest user purchases a package via the catalogue, the payment service cre
 
 ### API Endpoints
 
-| Method | Route | Auth | Description |
-|--------|-------|------|-------------|
-| `POST` | `/api/auth/me/set-password` | `requireAuth` | Set initial password (`mustChangePassword` flow). Requires `mustChangePassword: true`. Skips current password check. |
-| `PATCH` | `/api/auth/me/password` | `requireAuth` | Change password (normal settings flow). Requires `currentPassword`. Resets `mustChangePassword: false`. |
-| `GET` | `/api/auth/me` | `requireAuth` | Returns `mustChangePassword` flag in response. |
+| Method  | Route                       | Auth          | Description                                                                                                          |
+| ------- | --------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `POST`  | `/api/auth/me/set-password` | `requireAuth` | Set initial password (`mustChangePassword` flow). Requires `mustChangePassword: true`. Skips current password check. |
+| `PATCH` | `/api/auth/me/password`     | `requireAuth` | Change password (normal settings flow). Requires `currentPassword`. Resets `mustChangePassword: false`.              |
+| `GET`   | `/api/auth/me`              | `requireAuth` | Returns `mustChangePassword` flag in response.                                                                       |
 
 ### Auth Controller Files
 
@@ -335,33 +344,33 @@ When a guest user purchases a package via the catalogue, the payment service cre
 
 ### Set Password Page
 
-| Aspect | Detail |
-|--------|--------|
-| Route | `/set-password` |
-| File | `apps/web/src/app/set-password/page.tsx` |
-| Design | Matches login page (blue gradient left panel + glass card form) |
+| Aspect     | Detail                                                                                     |
+| ---------- | ------------------------------------------------------------------------------------------ |
+| Route      | `/set-password`                                                                            |
+| File       | `apps/web/src/app/set-password/page.tsx`                                                   |
+| Design     | Matches login page (blue gradient left panel + glass card form)                            |
 | Auth guard | Checks `GET /api/auth/me` on mount; if `mustChangePassword: false`, redirects to dashboard |
-| Validation | Live password requirements checklist (8+ chars, uppercase, lowercase, digit, match) |
-| Success | Calls `POST /api/auth/me/set-password`, redirects to role-based dashboard |
+| Validation | Live password requirements checklist (8+ chars, uppercase, lowercase, digit, match)        |
+| Success    | Calls `POST /api/auth/me/set-password`, redirects to role-based dashboard                  |
 
 ### Settings Page Password Change
 
-| Role | File | API Endpoint |
-|------|------|-------------|
-| Admin | `apps/web/src/app/admin/settings/page.tsx` | `PATCH /api/auth/me/password` |
+| Role       | File                                            | API Endpoint                  |
+| ---------- | ----------------------------------------------- | ----------------------------- |
+| Admin      | `apps/web/src/app/admin/settings/page.tsx`      | `PATCH /api/auth/me/password` |
 | Instructor | `apps/web/src/app/instructor/settings/page.tsx` | `PATCH /api/auth/me/password` |
-| Student | `apps/web/src/app/student/settings/page.tsx` | `PATCH /api/auth/me/password` |
+| Student    | `apps/web/src/app/student/settings/page.tsx`    | `PATCH /api/auth/me/password` |
 
 ### Welcome Email
 
-| Aspect | Detail |
-|--------|--------|
-| Template | `packages/email-templates/src/emails/WelcomeEmail.tsx` — React Email component |
-| Props | `userName` + optional `credentials` (`{ email, password }`) |
-| Credentials box | Green background (`bg-green-50`), monospace font, appears only when `credentials` is passed |
-| CTA button | "Log In to Your Account" → `${WEB_URL}/login` |
-| Sending | `apps/api/src/services/email.service.ts` → `sendWelcomeEmail()` renders template via `@react-email/render`, sends via Brevo |
-| Dummy password | Generated by `generateDummyPassword()` in `payment.service.ts` — 10 chars, excludes ambiguous chars (`i`, `l`, `o`, `0`, `1`) |
+| Aspect          | Detail                                                                                                                        |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Template        | `packages/email-templates/src/emails/WelcomeEmail.tsx` — React Email component                                                |
+| Props           | `userName` + optional `credentials` (`{ email, password }`)                                                                   |
+| Credentials box | Green background (`bg-green-50`), monospace font, appears only when `credentials` is passed                                   |
+| CTA button      | "Log In to Your Account" → `${WEB_URL}/login`                                                                                 |
+| Sending         | `apps/api/src/services/email.service.ts` → `sendWelcomeEmail()` renders template via `@react-email/render`, sends via Brevo   |
+| Dummy password  | Generated by `generateDummyPassword()` in `payment.service.ts` — 10 chars, excludes ambiguous chars (`i`, `l`, `o`, `0`, `1`) |
 
 ## Common Gotchas
 
@@ -374,36 +383,43 @@ When a guest user purchases a package via the catalogue, the payment service cre
 ## Features Added (Post-Research)
 
 ### Forgot / Reset Password
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/auth/forgot-password` | POST | Sends reset link email (JWT token, 15 min expiry). Always returns success (no email enumeration). |
-| `/api/auth/reset-password` | POST | Verifies JWT token, validates password strength, hashes + updates. Clears `mustChangePassword`. |
-| `/forgot-password` | Page | Email input form, sends request, shows confirmation |
-| `/reset-password` | Page | Token from URL, password requirements checklist, new password form |
+
+| Endpoint                    | Method | Description                                                                                       |
+| --------------------------- | ------ | ------------------------------------------------------------------------------------------------- |
+| `/api/auth/forgot-password` | POST   | Sends reset link email (JWT token, 15 min expiry). Always returns success (no email enumeration). |
+| `/api/auth/reset-password`  | POST   | Verifies JWT token, validates password strength, hashes + updates. Clears `mustChangePassword`.   |
+| `/forgot-password`          | Page   | Email input form, sends request, shows confirmation                                               |
+| `/reset-password`           | Page   | Token from URL, password requirements checklist, new password form                                |
 
 Both endpoints are CSRF-exempt (line 93 of `app.ts`). Email template at `packages/email-templates/src/emails/ResetPasswordEmail.tsx`.
 
 ### Error Tracking (Sentry)
+
 - **Backend**: `@sentry/node` initialized in `apps/api/src/app.ts` if `SENTRY_DSN` env var is set. Request/tracing/error handlers registered.
 - **Frontend**: `SentryProvider` + `SentryErrorBoundary` in `apps/web/src/components/`. Wraps root layout via `Providers.tsx`. Requires `NEXT_PUBLIC_SENTRY_DSN`.
 
 ### Cookie Consent Banner
+
 - `CookieConsentBanner` component at `apps/web/src/components/CookieConsentBanner.tsx`
 - Renders at bottom of all pages (added to `layout.tsx`)
 - Stores consent in `localStorage` key `lms-cookie-consent`
 
 ### Feature Flags
+
 - `packages/utils/src/feature-flags.ts` — env-var based flags (`FEATURE_NEW_DASHBOARD`, `FEATURE_ONBOARDING_WIZARD`, `FEATURE_I18N`, `FEATURE_COURSE_REVIEWS`, `FEATURE_LIVE_ANALYTICS`)
 - Use `isFeatureEnabled("NEW_DASHBOARD")` to check
 
 ### HTTP Caching Headers
+
 - `apps/api/src/middleware/cache.middleware.ts` — Express middleware setting `Cache-Control` and `ETag` headers
 - Skips caching for authenticated requests or non-GET methods
 
 ### i18n Structure
+
 - `next.config.ts` has `i18n: { locales: ["en"], defaultLocale: "en" }`
 - Translation file at `apps/web/messages/en.json`
 - See `docs/i18n.md` for activation instructions
 
 ### Database Backup Docs
+
 - `docs/database-backup.md` — pg_dump commands, Docker backup, cron job example, retention policy

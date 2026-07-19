@@ -97,7 +97,7 @@ export default function CalendarView({ events }: CalendarViewProps) {
       return !isNaN(t) && t >= weekStart && t < weekEnd;
     })
     .sort(
-      (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
+      (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime(),
     );
 
   return (

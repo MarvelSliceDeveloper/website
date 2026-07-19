@@ -31,7 +31,9 @@ function StatCard({ label, value, status }: StatCardProps) {
     <div className="rounded-xl border border-border bg-card p-5">
       <div className="flex items-center gap-2 mb-1">
         {status && <span className={`w-2 h-2 rounded-full ${dotColor}`} />}
-        <span className="text-xs text-muted-foreground uppercase tracking-wide">{label}</span>
+        <span className="text-xs text-muted-foreground uppercase tracking-wide">
+          {label}
+        </span>
       </div>
       <p className="text-2xl font-bold text-foreground">{value}</p>
     </div>
@@ -58,13 +60,56 @@ export default function SuperAdminPage() {
   };
 
   const tools = [
-    { label: "System Settings", href: "/admin/settings/system", desc: "Global platform configuration" },
-    { label: "API Keys", href: "/admin/settings/api-keys", desc: "Manage API access keys" },
-    { label: "Permissions", href: "/admin/settings/permissions", desc: "Role-based access control" },
-    { label: "Audit Logs", href: "/admin/logs", desc: "User activity and system logs" },
-    { label: "Login History", href: "/admin/users/login-history", desc: "User login records" },
-    { label: "Consent Logs", href: "/admin/consent-logs", desc: "User consent history" },
-    { label: "Trash", href: "/admin/trash", desc: "Soft-deleted items" },
+    {
+      label: "System Health",
+      href: "/admin/health",
+      desc: "Real-time service status and diagnostics",
+    },
+    {
+      label: "System Settings",
+      href: "/admin/settings/system",
+      desc: "Global platform configuration",
+    },
+    {
+      label: "API Keys",
+      href: "/admin/settings/api-keys",
+      desc: "Manage API access keys",
+    },
+    {
+      label: "Permissions",
+      href: "/admin/settings/permissions",
+      desc: "Role-based access control",
+    },
+    {
+      label: "Microsoft Integration",
+      href: "/admin/microsoft",
+      desc: "Teams & Graph API setup",
+    },
+    {
+      label: "Announcements",
+      href: "/admin/announcements",
+      desc: "Platform-wide announcements",
+    },
+    {
+      label: "Audit Logs",
+      href: "/admin/logs",
+      desc: "User activity and system logs",
+    },
+    {
+      label: "Login History",
+      href: "/admin/users/login-history",
+      desc: "User login records",
+    },
+    {
+      label: "Consent Logs",
+      href: "/admin/consent-logs",
+      desc: "User consent history (GDPR)",
+    },
+    {
+      label: "Trash",
+      href: "/admin/trash",
+      desc: "Soft-deleted items with restore",
+    },
   ];
 
   return (
@@ -80,7 +125,10 @@ export default function SuperAdminPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-24 rounded-xl bg-card border border-border animate-pulse" />
+            <div
+              key={i}
+              className="h-24 rounded-xl bg-card border border-border animate-pulse"
+            />
           ))
         ) : health ? (
           <>
@@ -91,7 +139,9 @@ export default function SuperAdminPage() {
             />
             <StatCard
               label="Database"
-              value={health.database === "connected" ? "Connected" : "Disconnected"}
+              value={
+                health.database === "connected" ? "Connected" : "Disconnected"
+              }
               status={health.database === "connected" ? "ok" : "error"}
             />
             <StatCard label="Uptime" value={formatUptime(health.uptime)} />
@@ -119,7 +169,9 @@ export default function SuperAdminPage() {
               href={tool.href}
               className="rounded-xl border border-border bg-card p-4 hover:border-border-hover hover:bg-card-hover transition-colors"
             >
-              <h3 className="font-medium text-foreground text-sm">{tool.label}</h3>
+              <h3 className="font-medium text-foreground text-sm">
+                {tool.label}
+              </h3>
               <p className="text-xs text-muted-foreground mt-1">{tool.desc}</p>
             </Link>
           ))}

@@ -192,14 +192,13 @@ router.post("/", async (req: Request, res: Response) => {
             data: {
               enrollmentId: enrollment.id,
               courseId: pc.courseId,
-              batchId:
-                !batchId
-                  ? null
-                  : !batchCourseId
+              batchId: !batchId
+                ? null
+                : !batchCourseId
+                  ? batchId
+                  : pc.courseId === batchCourseId
                     ? batchId
-                    : pc.courseId === batchCourseId
-                      ? batchId
-                      : null,
+                    : null,
             },
           });
         }
@@ -393,14 +392,13 @@ router.patch("/:id", async (req: Request, res: Response) => {
               data: {
                 enrollmentId: enrollment.id,
                 courseId: pc.courseId,
-                batchId:
-                  !batchId
-                    ? null
-                    : !batchCourseId
+                batchId: !batchId
+                  ? null
+                  : !batchCourseId
+                    ? batchId
+                    : pc.courseId === batchCourseId
                       ? batchId
-                      : pc.courseId === batchCourseId
-                        ? batchId
-                        : null,
+                      : null,
               },
             });
           }

@@ -109,7 +109,9 @@ export default function ModuleStudyMaterialsSection({
 
   useEffect(() => {
     if (!selectedLessonId || !selectedModule) return;
-    const lesson = selectedModule.lessons.find((l) => l.id === selectedLessonId);
+    const lesson = selectedModule.lessons.find(
+      (l) => l.id === selectedLessonId,
+    );
     if (lesson) {
       setResources(lesson.resources || []);
     }

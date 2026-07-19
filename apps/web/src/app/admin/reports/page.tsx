@@ -60,6 +60,41 @@ function getDateRange(range: string): { from?: string; to?: string } {
   return { from: from.toISOString(), to };
 }
 
+// The period immediately preceding the current one, same duration.
+// Used to compute "+12% vs last period" deltas. Returns null for "all time"
+// since there is no meaningful prior period to compare against.
+function getPreviousDateRange(
+  range: string,
+): { from?: string; to?: string } | null {
+  if (range === "all") return null;
+  const current = getDateRange(range);
+  if (!current.from || !current.to) return null;
+  const fromMs = new Date(current.from).getTime();
+  const toMs = new Date(current.to).getTime();
+  const duration = toMs - fromMs;
+  return {
+    from: new Date(fromMs - duration).toISOString(),
+    to: new Date(fromMs).toISOString(),
+  };
+}
+
+function pctChange(
+  current: number,
+  previous: number,
+): { text: string; direction: "up" | "down" | "flat" } {
+  if (previous === 0) {
+    if (current === 0) return { text: "0%", direction: "flat" };
+    return { text: "New", direction: "up" };
+  }
+  const change = ((current - previous) / previous) * 100;
+  const rounded = Math.round(change);
+  if (rounded === 0) return { text: "0%", direction: "flat" };
+  return {
+    text: `${rounded > 0 ? "+" : ""}${rounded}%`,
+    direction: rounded > 0 ? "up" : "down",
+  };
+}
+
 // ── Canvas chart helpers (rendered to PNG, embedded in the PDF) ──
 type ChartDatum = { label: string; value: number };
 
@@ -189,11 +224,7 @@ function drawDonut(
   return c.toDataURL("image/png");
 }
 
-function drawArea(
-  labels: string[],
-  values: number[],
-  color: string,
-): string {
+function drawArea(labels: string[], values: number[], color: string): string {
   const c = makeCanvas(700, 300);
   const ctx = c.getContext("2d")!;
   ctx.fillStyle = "#ffffff";
@@ -257,8 +288,15 @@ function drawArea(
   return c.toDataURL("image/png");
 }
 
+// ── PDF layout constants (named instead of scattered magic numbers) ──
+const PAGE_MARGIN = 20;
+const PAGE_BREAK_Y = 250; // below this, a chart image forces a new page
+const SECTION_TABLE_BREAK_Y = 240;
+const FOOTER_Y_OFFSET = 10;
+
 export default function ReportsPage() {
   const [data, setData] = useState<DashboardChartData | null>(null);
+  const [prevData, setPrevData] = useState<DashboardChartData | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [timeRange, setTimeRange] = useState("all");
@@ -275,6 +313,26 @@ export default function ReportsPage() {
         `/api/admin/dashboard/stats${qs ? `?${qs}` : ""}`,
       );
       setData(res);
+
+      // Fetch the equivalent prior period so the report can show
+      // period-over-period deltas. Silently skipped for "all time".
+      const prevRange = getPreviousDateRange(range);
+      if (prevRange) {
+        const prevQuery = new URLSearchParams();
+        if (prevRange.from) prevQuery.set("from", prevRange.from);
+        if (prevRange.to) prevQuery.set("to", prevRange.to);
+        try {
+          const prevRes = await api.get<DashboardChartData>(
+            `/api/admin/dashboard/stats?${prevQuery.toString()}`,
+          );
+          setPrevData(prevRes);
+        } catch (e) {
+          console.error("Failed to load previous period data:", e);
+          setPrevData(null);
+        }
+      } else {
+        setPrevData(null);
+      }
     } catch (e) {
       console.error("Failed to load report data:", e);
       toast.error("Failed to load report data");
@@ -294,42 +352,42 @@ export default function ReportsPage() {
     try {
       const doc = new jsPDF("p", "mm", "a4");
       const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const periodLabel =
+        timeRange === "all"
+          ? "All Time"
+          : (TIME_RANGES.find((t) => t.value === timeRange)?.label ??
+            timeRange);
+      const generatedDate = new Date().toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      // Reserve page 1 (cover) and page 2 (table of contents) as blanks.
+      // We fill them in at the end once we know which page every section
+      // landed on — jsPDF lays out content sequentially, so page numbers
+      // aren't known ahead of time.
+      doc.addPage(); // page 2: TOC
+      doc.addPage(); // page 3: content starts here
+      doc.setPage(3);
       let y = 20;
 
-      // --- Header ---
-      // Logo (SVG converted to simple text-based logo since jsPDF doesn't support SVG directly)
-      doc.setFillColor(109, 125, 255); // primary color
-      doc.rect(0, 0, pageWidth, 40, "F");
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(22);
-      doc.setFont("helvetica", "bold");
-      doc.text("LMS Portal", 20, 18);
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      doc.text("Learning Management System — Reports", 20, 26);
-
-      // Date
-      doc.setFontSize(8);
-      doc.text(
-        `Generated: ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}`,
-        pageWidth - 20,
-        18,
-        { align: "right" },
-      );
-      doc.text(
-        `Period: ${timeRange === "all" ? "All Time" : (TIME_RANGES.find((t) => t.value === timeRange)?.label ?? timeRange)}`,
-        pageWidth - 20,
-        24,
-        { align: "right" },
-      );
-
-      y = 52;
+      // Tracks { sectionTitle: pageNumber } as each header is written,
+      // used to build the table of contents afterward.
+      const toc: { title: string; page: number }[] = [];
+      const recordSection = (title: string) => {
+        toc.push({ title, page: doc.internal.pages.length - 1 });
+      };
 
       // ── Pre-render charts to images ──
-      const pkgLabels = (data.studentsPerPackage ?? []).map((d) => d.packageName);
+      const pkgLabels = (data.studentsPerPackage ?? []).map(
+        (d) => d.packageName,
+      );
       const pkgVals = (data.studentsPerPackage ?? []).map((d) => d.count);
-      const courseLabels = (data.studentsPerCourse ?? []).map((d) => d.courseTitle);
+      const courseLabels = (data.studentsPerCourse ?? []).map(
+        (d) => d.courseTitle,
+      );
       const courseVals = (data.studentsPerCourse ?? []).map((d) => d.count);
       const growthLabels = (data.enrollmentTrend ?? []).map((d) => d.month);
       const growthVals = (data.enrollmentTrend ?? []).map((d) => d.count);
@@ -338,33 +396,80 @@ export default function ReportsPage() {
       const roleLabels = (data.userRoleDistribution ?? []).map((d) => d.role);
       const roleVals = (data.userRoleDistribution ?? []).map((d) => d.count);
 
-      const imgPkg = pkgVals.length ? drawBarChart(pkgLabels, pkgVals, CANVAS_COLORS[0]) : null;
-      const imgCourse = courseVals.length ? drawBarChart(courseLabels, courseVals, CANVAS_COLORS[1]) : null;
-      const imgGrowth = growthVals.length ? drawArea(growthLabels, growthVals, CANVAS_COLORS[0]) : null;
-      const imgBatch = batchVals.length ? drawDonut(batchLabels, batchVals, CANVAS_COLORS) : null;
-      const imgRoles = roleVals.length ? drawDonut(roleLabels, roleVals, CANVAS_COLORS) : null;
+      const imgPkg = pkgVals.length
+        ? drawBarChart(pkgLabels, pkgVals, CANVAS_COLORS[0])
+        : null;
+      const imgCourse = courseVals.length
+        ? drawBarChart(courseLabels, courseVals, CANVAS_COLORS[1])
+        : null;
+      const imgGrowth = growthVals.length
+        ? drawArea(growthLabels, growthVals, CANVAS_COLORS[0])
+        : null;
+      const imgBatch = batchVals.length
+        ? drawDonut(batchLabels, batchVals, CANVAS_COLORS)
+        : null;
+      const imgRoles = roleVals.length
+        ? drawDonut(roleLabels, roleVals, CANVAS_COLORS)
+        : null;
 
       const totalStudents =
-        (data.userRoleDistribution ?? []).find((u) => u.role === "STUDENT")?.count ?? 0;
+        (data.userRoleDistribution ?? []).find((u) => u.role === "STUDENT")
+          ?.count ?? 0;
       const totalInstructors =
-        (data.userRoleDistribution ?? []).find((u) => u.role === "INSTRUCTOR")?.count ?? 0;
+        (data.userRoleDistribution ?? []).find((u) => u.role === "INSTRUCTOR")
+          ?.count ?? 0;
       const activeBatches =
-        (data.batchDistribution ?? []).find((b) => b.status === "ACTIVE")?.count ?? 0;
+        (data.batchDistribution ?? []).find((b) => b.status === "ACTIVE")
+          ?.count ?? 0;
       const totalEnrollments = pkgVals.reduce((a, b) => a + b, 0);
       const totalPackages = pkgLabels.length;
 
-      // ── Executive Summary ──
+      // Prior-period equivalents for the delta badges on the summary cards.
+      const prevStudents = prevData
+        ? ((prevData.userRoleDistribution ?? []).find(
+            (u) => u.role === "STUDENT",
+          )?.count ?? 0)
+        : null;
+      const prevInstructors = prevData
+        ? ((prevData.userRoleDistribution ?? []).find(
+            (u) => u.role === "INSTRUCTOR",
+          )?.count ?? 0)
+        : null;
+      const prevActiveBatches = prevData
+        ? ((prevData.batchDistribution ?? []).find((b) => b.status === "ACTIVE")
+            ?.count ?? 0)
+        : null;
+      const prevPackages = prevData
+        ? (prevData.studentsPerPackage ?? []).length
+        : null;
+
+      // ══════════════════════════════════════════════
+      // SECTION 1 — Executive Summary
+      // ══════════════════════════════════════════════
+      recordSection("1. Executive Summary");
       doc.setTextColor(20, 24, 40);
       doc.setFontSize(15);
       doc.setFont("helvetica", "bold");
-      doc.text("Executive Summary", 20, y);
+      doc.text("1. Executive Summary", 20, y);
       y += 8;
 
-      const metrics = [
-        { label: "Total Learners", value: String(totalStudents) },
-        { label: "Packages", value: String(totalPackages) },
-        { label: "Active Batches", value: String(activeBatches) },
-        { label: "Instructors", value: String(totalInstructors) },
+      const metrics: { label: string; value: string; prev: number | null }[] = [
+        {
+          label: "Total Learners",
+          value: String(totalStudents),
+          prev: prevStudents,
+        },
+        { label: "Packages", value: String(totalPackages), prev: prevPackages },
+        {
+          label: "Active Batches",
+          value: String(activeBatches),
+          prev: prevActiveBatches,
+        },
+        {
+          label: "Instructors",
+          value: String(totalInstructors),
+          prev: prevInstructors,
+        },
       ];
       const cardW = 36;
       const cardGap = 5;
@@ -372,25 +477,53 @@ export default function ReportsPage() {
       metrics.forEach((m) => {
         doc.setFillColor(244, 246, 252);
         doc.setDrawColor(225, 230, 240);
-        doc.roundedRect(cardX, y, cardW, 22, 2, 2, "FD");
+        doc.roundedRect(cardX, y, cardW, 26, 2, 2, "FD");
         doc.setFontSize(7);
         doc.setTextColor(110, 120, 145);
         doc.setFont("helvetica", "normal");
-        doc.text(m.label.toUpperCase(), cardX + cardW / 2, y + 7, { align: "center" });
+        doc.text(m.label.toUpperCase(), cardX + cardW / 2, y + 7, {
+          align: "center",
+        });
         doc.setFontSize(16);
         doc.setTextColor(20, 24, 40);
         doc.setFont("helvetica", "bold");
-        doc.text(m.value, cardX + cardW / 2, y + 18, { align: "center" });
+        doc.text(m.value, cardX + cardW / 2, y + 17, { align: "center" });
+
+        // Period-over-period delta badge
+        if (m.prev !== null) {
+          const delta = pctChange(Number(m.value), m.prev);
+          const badgeColor =
+            delta.direction === "up"
+              ? [47, 191, 113]
+              : delta.direction === "down"
+                ? [240, 93, 125]
+                : [139, 147, 174];
+          doc.setFontSize(7.5);
+          doc.setFont("helvetica", "bold");
+          doc.setTextColor(badgeColor[0], badgeColor[1], badgeColor[2]);
+          const arrow =
+            delta.direction === "up"
+              ? "▲"
+              : delta.direction === "down"
+                ? "▼"
+                : "—";
+          doc.text(
+            `${arrow} ${delta.text} vs last period`,
+            cardX + cardW / 2,
+            y + 23,
+            { align: "center" },
+          );
+        }
         cardX += cardW + cardGap;
       });
-      y += 30;
+      y += 34;
 
       doc.setFontSize(9.5);
       doc.setTextColor(60, 66, 82);
       doc.setFont("helvetica", "normal");
       const summary =
         `This report presents a consolidated view of platform activity` +
-        `${timeRange === "all" ? "" : ` for the period "${TIME_RANGES.find((t) => t.value === timeRange)?.label ?? timeRange}"`}. ` +
+        `${timeRange === "all" ? "" : ` for the period "${periodLabel}"`}. ` +
         `As of the date of generation, the institution supports ${totalStudents} active learner(s) across ${totalPackages} learning package(s), ` +
         `delivered through ${activeBatches} active batch(es) and facilitated by ${totalInstructors} instructor(s). ` +
         `A cumulative total of ${totalEnrollments} package enrollment(s) have been recorded. ` +
@@ -398,17 +531,83 @@ export default function ReportsPage() {
         `batch lifecycle status, user-role composition, and a register of recent enrollments.`;
       const summaryLines = doc.splitTextToSize(summary, pageWidth - 40);
       doc.text(summaryLines, 20, y);
-      y += summaryLines.length * 5 + 10;
+      y += summaryLines.length * 5 + 8;
 
-      // ── Students per Package ──
+      // ── Key Insights (auto-generated highlights) ──
+      const insights: string[] = [];
+      if (pkgLabels.length) {
+        const maxIdx = pkgVals.indexOf(Math.max(...pkgVals));
+        const share = totalEnrollments
+          ? Math.round((pkgVals[maxIdx] / totalEnrollments) * 100)
+          : 0;
+        insights.push(
+          `"${pkgLabels[maxIdx]}" is the most subscribed package, accounting for ${pkgVals[maxIdx]} learner(s) (${share}% of total enrollments).`,
+        );
+      }
+      if (courseLabels.length) {
+        const maxIdx = courseVals.indexOf(Math.max(...courseVals));
+        insights.push(
+          `"${courseLabels[maxIdx]}" leads course enrollment with ${courseVals[maxIdx]} student(s).`,
+        );
+      }
+      if (growthVals.length >= 2) {
+        const trendDelta = pctChange(
+          growthVals[growthVals.length - 1],
+          growthVals[0],
+        );
+        const trendWord =
+          trendDelta.direction === "up"
+            ? "grew"
+            : trendDelta.direction === "down"
+              ? "declined"
+              : "held steady";
+        insights.push(
+          `Enrollment ${trendWord} ${trendDelta.text !== "0%" ? `by ${trendDelta.text.replace("+", "").replace("-", "")} ` : ""}from ${growthLabels[0]} to ${growthLabels[growthLabels.length - 1]}.`,
+        );
+      }
+      if (batchVals.length) {
+        const totalBatches = batchVals.reduce((a, b) => a + b, 0);
+        const activeShare = totalBatches
+          ? Math.round((activeBatches / totalBatches) * 100)
+          : 0;
+        insights.push(
+          `${activeShare}% of all batches (${activeBatches} of ${totalBatches}) are currently active.`,
+        );
+      }
+
+      if (insights.length) {
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(20, 24, 40);
+        doc.text("Key Insights", 20, y);
+        y += 6;
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(60, 66, 82);
+        insights.forEach((line) => {
+          const wrapped = doc.splitTextToSize(`•  ${line}`, pageWidth - 44);
+          doc.text(wrapped, 24, y);
+          y += wrapped.length * 5 + 2;
+        });
+        y += 6;
+      }
+
+      // ══════════════════════════════════════════════
+      // SECTION 2 — Students per Package
+      // ══════════════════════════════════════════════
+      if (y > SECTION_TABLE_BREAK_Y) {
+        doc.addPage();
+        y = 20;
+      }
+      recordSection("2. Students per Package");
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(20, 24, 40);
-      doc.text("Students per Package", 20, y);
+      doc.text("2. Students per Package", 20, y);
       y += 6;
       if (imgPkg) {
         const hPkg = (170 * 340) / 700;
-        if (y + hPkg > 250) {
+        if (y + hPkg > PAGE_BREAK_Y) {
           doc.addPage();
           y = 20;
         }
@@ -446,15 +645,22 @@ export default function ReportsPage() {
         y += 14;
       }
 
-      // --- Students per Course ---
+      // ══════════════════════════════════════════════
+      // SECTION 3 — Students per Course
+      // ══════════════════════════════════════════════
+      if (y > SECTION_TABLE_BREAK_Y) {
+        doc.addPage();
+        y = 20;
+      }
+      recordSection("3. Students per Course");
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(20, 24, 40);
-      doc.text("Students per Course", 20, y);
+      doc.text("3. Students per Course", 20, y);
       y += 6;
       if (imgCourse) {
         const hC = (170 * 340) / 700;
-        if (y + hC > 250) {
+        if (y + hC > PAGE_BREAK_Y) {
           doc.addPage();
           y = 20;
         }
@@ -483,21 +689,45 @@ export default function ReportsPage() {
         y += 14;
       }
 
-      // Page break if needed
-      if (y > 240) {
+      // ══════════════════════════════════════════════
+      // SECTION 4 — Enrollment Growth
+      // ══════════════════════════════════════════════
+      if (imgGrowth) {
+        if (y > SECTION_TABLE_BREAK_Y) {
+          doc.addPage();
+          y = 20;
+        }
+        recordSection("4. Enrollment Growth Over Time");
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(20, 24, 40);
+        doc.text("4. Enrollment Growth Over Time", 20, y);
+        y += 6;
+        const hG = (170 * 300) / 700;
+        if (y + hG > PAGE_BREAK_Y) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.addImage(imgGrowth, "PNG", 20, y, 170, hG);
+        y += hG + 10;
+      }
+
+      // ══════════════════════════════════════════════
+      // SECTION 5 — Batch Distribution
+      // ══════════════════════════════════════════════
+      if (y > SECTION_TABLE_BREAK_Y) {
         doc.addPage();
         y = 20;
       }
-
-      // --- Batch Distribution ---
+      recordSection("5. Batch Distribution");
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(20, 24, 40);
-      doc.text("Batch Distribution", 20, y);
+      doc.text("5. Batch Distribution", 20, y);
       y += 6;
       if (imgBatch) {
         const hD = (170 * 300) / 700;
-        if (y + hD > 250) {
+        if (y + hD > PAGE_BREAK_Y) {
           doc.addPage();
           y = 20;
         }
@@ -523,15 +753,22 @@ export default function ReportsPage() {
         y += 14;
       }
 
-      // --- User Roles ---
+      // ══════════════════════════════════════════════
+      // SECTION 6 — User Role Distribution
+      // ══════════════════════════════════════════════
+      if (y > SECTION_TABLE_BREAK_Y) {
+        doc.addPage();
+        y = 20;
+      }
+      recordSection("6. User Role Distribution");
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(20, 24, 40);
-      doc.text("User Role Distribution", 20, y);
+      doc.text("6. User Role Distribution", 20, y);
       y += 6;
       if (imgRoles) {
         const hR = (170 * 300) / 700;
-        if (y + hR > 250) {
+        if (y + hR > PAGE_BREAK_Y) {
           doc.addPage();
           y = 20;
         }
@@ -557,21 +794,18 @@ export default function ReportsPage() {
         y += 14;
       }
 
-      // Page break if needed
-      if (y > 200) {
+      // ══════════════════════════════════════════════
+      // SECTION 7 — Recent Enrollments
+      // ══════════════════════════════════════════════
+      if (y > SECTION_TABLE_BREAK_Y) {
         doc.addPage();
         y = 20;
       }
-
-      // --- Recent Enrollments ---
-      if (y > 200) {
-        doc.addPage();
-        y = 20;
-      }
+      recordSection("7. Recent Enrollments");
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(20, 24, 40);
-      doc.text("Recent Enrollments", 20, y);
+      doc.text("7. Recent Enrollments", 20, y);
       y += 6;
       if (data.recentEnrollments?.length) {
         doc.setFontSize(8.5);
@@ -620,16 +854,96 @@ export default function ReportsPage() {
         y += 14;
       }
 
-      // --- Footer ---
       const totalPages = doc.getNumberOfPages();
-      for (let i = 1; i <= totalPages; i++) {
+
+      // ══════════════════════════════════════════════
+      // PAGE 1 — Cover page
+      // ══════════════════════════════════════════════
+      doc.setPage(1);
+      doc.setFillColor(109, 125, 255);
+      doc.rect(0, 0, pageWidth, pageHeight, "F");
+      // Decorative accent shape
+      doc.setFillColor(255, 255, 255);
+      doc.setGState(new (doc as any).GState({ opacity: 0.08 }));
+      doc.circle(pageWidth - 20, 40, 70, "F");
+      doc.circle(10, pageHeight - 30, 50, "F");
+      doc.setGState(new (doc as any).GState({ opacity: 1 }));
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("LMS PORTAL", 20, 40);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.text("LEARNING MANAGEMENT SYSTEM", 20, 46);
+
+      doc.setFontSize(30);
+      doc.setFont("helvetica", "bold");
+      doc.text("Analytics Report", 20, pageHeight / 2 - 10);
+      doc.setFontSize(13);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Reporting Period: ${periodLabel}`, 20, pageHeight / 2 + 5);
+
+      doc.setFontSize(9.5);
+      doc.text(`Generated on ${generatedDate}`, 20, pageHeight - 40);
+      doc.setFontSize(8);
+      doc.setTextColor(255, 255, 255);
+      doc.text(
+        "This is an automatically generated report. All figures reflect platform data as of the generation date.",
+        20,
+        pageHeight - 32,
+        { maxWidth: pageWidth - 40 },
+      );
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.text("CONFIDENTIAL", 20, pageHeight - 20);
+
+      // ══════════════════════════════════════════════
+      // PAGE 2 — Table of contents
+      // ══════════════════════════════════════════════
+      doc.setPage(2);
+      doc.setTextColor(20, 24, 40);
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text("Table of Contents", 20, 30);
+      doc.setDrawColor(225, 230, 240);
+      doc.line(20, 35, pageWidth - 20, 35);
+
+      let tocY = 48;
+      toc.forEach((entry) => {
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(50, 56, 72);
+        doc.text(entry.title, 24, tocY);
+        const pageLabel = String(entry.page);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(109, 125, 255);
+        doc.text(pageLabel, pageWidth - 24, tocY, { align: "right" });
+        // dotted leader
+        const titleWidth = doc.getTextWidth(entry.title);
+        const pageLabelWidth = doc.getTextWidth(pageLabel);
+        const dotsStart = 24 + titleWidth + 3;
+        const dotsEnd = pageWidth - 24 - pageLabelWidth - 3;
+        doc.setTextColor(200, 205, 220);
+        doc.setFont("helvetica", "normal");
+        if (dotsEnd > dotsStart) {
+          doc.setLineDashPattern([0.5, 1.5], 0);
+          doc.setDrawColor(200, 205, 220);
+          doc.line(dotsStart, tocY - 1, dotsEnd, tocY - 1);
+          doc.setLineDashPattern([], 0);
+        }
+        tocY += 11;
+      });
+
+      // ── Footer + running header on every content page (skip cover) ──
+      for (let i = 2; i <= totalPages; i++) {
         doc.setPage(i);
         doc.setFontSize(7);
         doc.setTextColor(150, 150, 150);
         doc.text(
           `LMS Portal — Confidential Report | Page ${i} of ${totalPages}`,
           pageWidth / 2,
-          doc.internal.pageSize.getHeight() - 10,
+          pageHeight - FOOTER_Y_OFFSET,
           { align: "center" },
         );
       }

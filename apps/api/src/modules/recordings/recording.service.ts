@@ -4,6 +4,16 @@ import { GraphError } from "../graph/graph.client";
 import { notificationService } from "../notifications/notification.service";
 import { getSuperAdminId } from "../../utils/super-admin";
 
+/** Parse ISO 8601 duration (PT1H2M3S) to total seconds */
+function parseIsoDuration(iso: string): number {
+  const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?/);
+  if (!match) return 0;
+  const hours = parseInt(match[1] || "0", 10);
+  const minutes = parseInt(match[2] || "0", 10);
+  const seconds = parseFloat(match[3] || "0");
+  return Math.round(hours * 3600 + minutes * 60 + seconds);
+}
+
 export const recordingService = {
   // Syncs recordings from Microsoft Teams for a session
   async syncRecordingsForSession(sessionId: string) {
@@ -58,13 +68,18 @@ export const recordingService = {
       // Take the first recording (most meetings only have one)
       const msRecording = msRecordings[0];
 
-      // 3. Store in database
+      // 3. Extract duration from Graph API metadata
+      const durationSecs = msRecording.audioVideoMetadata?.duration
+        ? parseIsoDuration(msRecording.audioVideoMetadata.duration)
+        : 0;
+
+      // 4. Store in database
       const recording = await prisma.recording.create({
         data: {
           sessionId,
           teamsRecordingId: msRecording.id,
-          sharePointUrl: msRecording.webUrl || "", // The webUrl points to SharePoint/OneDrive
-          duration: 0, // Duration is not always immediately available in metadata
+          sharePointUrl: msRecording.webUrl || "",
+          duration: durationSecs,
           syncedAt: new Date(),
         },
       });

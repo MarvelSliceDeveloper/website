@@ -18,12 +18,12 @@ pnpm dev
 
 ## Seed Logins
 
-| Role | Email | Password |
-|------|-------|----------|
+| Role        | Email                | Password      |
+| ----------- | -------------------- | ------------- |
 | Super Admin | superadmin@lms.local | superadmin123 |
-| Admin | admin@lms.local | admin123 |
-| Instructor | instructor@lms.local | instructor123 |
-| Student | student@lms.local | student123 |
+| Admin       | admin@lms.local      | admin123      |
+| Instructor  | instructor@lms.local | instructor123 |
+| Student     | student@lms.local    | student123    |
 
 ## Monorepo Layout
 
@@ -138,19 +138,19 @@ MS_TENANT_ID=...
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start API + Web dev servers (Turbo) |
-| `pnpm build` | Build all packages |
-| `pnpm lint` | Lint all packages |
-| `pnpm typecheck` | TypeScript check |
-| `pnpm test` | Unit tests (Vitest) |
-| `pnpm test:e2e` | E2E tests (Playwright) |
-| `pnpm test:all` | All test suites |
-| `pnpm format` | Prettier format |
-| `pnpm prisma:reset` | Reset DB + seed |
-| `pnpm prisma:studio` | Open Prisma Studio |
-| `pnpm clean` | Clean build outputs |
+| Command              | Description                         |
+| -------------------- | ----------------------------------- |
+| `pnpm dev`           | Start API + Web dev servers (Turbo) |
+| `pnpm build`         | Build all packages                  |
+| `pnpm lint`          | Lint all packages                   |
+| `pnpm typecheck`     | TypeScript check                    |
+| `pnpm test`          | Unit tests (Vitest)                 |
+| `pnpm test:e2e`      | E2E tests (Playwright)              |
+| `pnpm test:all`      | All test suites                     |
+| `pnpm format`        | Prettier format                     |
+| `pnpm prisma:reset`  | Reset DB + seed                     |
+| `pnpm prisma:studio` | Open Prisma Studio                  |
+| `pnpm clean`         | Clean build outputs                 |
 
 ## Prisma Schema — 46 Models
 

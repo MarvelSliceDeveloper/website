@@ -87,7 +87,9 @@ export default function AddAssignmentForm({
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-medium">Google Drive PDF Link (optional)</label>
+        <label className="text-xs font-medium">
+          Google Drive PDF Link (optional)
+        </label>
         <input
           type="url"
           value={questionPdfUrl}

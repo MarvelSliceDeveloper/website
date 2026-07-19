@@ -46,14 +46,14 @@ export default function SentryProvider({
         }
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const value = sentry ?? { captureError: () => {} };
 
   return (
-    <SentryContext.Provider value={value}>
-      {children}
-    </SentryContext.Provider>
+    <SentryContext.Provider value={value}>{children}</SentryContext.Provider>
   );
 }

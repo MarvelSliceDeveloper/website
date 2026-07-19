@@ -113,11 +113,11 @@ export default function AdminUsersPage() {
   // Batches for edit modal's selected package
   const [editBatches, setEditBatches] = useState<
     {
-      id: string
-      name: string
-      courseTitle: string
-      filledCount: number
-      maxStudents: number | null
+      id: string;
+      name: string;
+      courseTitle: string;
+      filledCount: number;
+      maxStudents: number | null;
     }[]
   >([]);
 
@@ -133,11 +133,11 @@ export default function AdminUsersPage() {
   // Batches for the selected package (flat list)
   const [packageBatches, setPackageBatches] = useState<
     {
-      id: string
-      name: string
-      courseTitle: string
-      filledCount: number
-      maxStudents: number | null
+      id: string;
+      name: string;
+      courseTitle: string;
+      filledCount: number;
+      maxStudents: number | null;
     }[]
   >([]);
 
@@ -213,7 +213,9 @@ export default function AdminUsersPage() {
       return;
     }
     api
-      .get<BatchResponse[]>("/api/admin/batches", { packageId: editForm.packageId })
+      .get<BatchResponse[]>("/api/admin/batches", {
+        packageId: editForm.packageId,
+      })
       .then((res) => {
         const batches = Array.isArray(res) ? res : [];
         setEditBatches(

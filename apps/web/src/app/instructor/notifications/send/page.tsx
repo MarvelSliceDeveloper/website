@@ -57,7 +57,9 @@ export default function InstructorSendNotificationPage() {
       setSelectedBatchIds(new Set());
       setConfirmShow(false);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to send notification");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to send notification",
+      );
     } finally {
       setSending(false);
     }

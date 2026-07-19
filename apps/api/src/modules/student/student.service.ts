@@ -31,7 +31,11 @@ export const studentService = {
       where: { userId, status: "APPROVED" },
       include: {
         courses: {
-          select: { courseId: true, batchId: true, course: { select: { title: true } } },
+          select: {
+            courseId: true,
+            batchId: true,
+            course: { select: { title: true } },
+          },
         },
       },
     });
@@ -128,7 +132,9 @@ export const studentService = {
 
       for (const assignment of courseAssignments) {
         if (seenAssignmentIds.has(assignment.id)) continue;
-        const mod = assignment.moduleId ? moduleMap.get(assignment.moduleId) : null;
+        const mod = assignment.moduleId
+          ? moduleMap.get(assignment.moduleId)
+          : null;
         const courseId = assignment.courseId;
         const submission = (assignment as any).submissions?.[0];
         result.push({
@@ -169,7 +175,9 @@ export const studentService = {
         result.push({
           id: quiz.id,
           courseId: moduleMap.get(quiz.moduleId)?.courseId ?? "",
-          courseName: courseNameMap.get(moduleMap.get(quiz.moduleId)?.courseId ?? "") ?? "—",
+          courseName:
+            courseNameMap.get(moduleMap.get(quiz.moduleId)?.courseId ?? "") ??
+            "—",
           moduleName: quiz.module?.title ?? "—",
           unitName: "Quiz",
           assignmentName: quiz.title,

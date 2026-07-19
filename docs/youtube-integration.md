@@ -24,19 +24,19 @@ YOUTUBE_API_KEY=your_api_key_here
 
 ### Backend
 
-| File | Purpose |
-|------|---------|
-| `apps/api/src/services/youtube.service.ts` | Fetches video info from YouTube API, parses ISO 8601 duration |
+| File                                             | Purpose                                                                                        |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `apps/api/src/services/youtube.service.ts`       | Fetches video info from YouTube API, parses ISO 8601 duration                                  |
 | `apps/api/src/modules/youtube/youtube.routes.ts` | `GET /api/youtube/video-info?url=...` returns `{ videoId, title, durationSeconds, thumbnail }` |
 
 The route is mounted in `app.ts` at `/api/youtube`.
 
 ### Frontend
 
-| File | Change |
-|------|--------|
+| File                | Change                                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ |
 | `AddLessonForm.tsx` | On `onBlur` of video URL input, calls `/api/youtube/video-info`, sets `durationSeconds` and auto-fills title |
-| `LessonCard.tsx` | Same on blur in edit mode; includes `durationSeconds` in save payload |
+| `LessonCard.tsx`    | Same on blur in edit mode; includes `durationSeconds` in save payload                                        |
 
 ### Endpoint Response
 

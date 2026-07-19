@@ -125,7 +125,9 @@ export const emailService = {
     }
 
     try {
-      const html = await render(WelcomeEmail({ userName: user.name, credentials: user.credentials }));
+      const html = await render(
+        WelcomeEmail({ userName: user.name, credentials: user.credentials }),
+      );
 
       const credsText = user.credentials
         ? `\n\nYour login credentials:\nEmail: ${user.credentials.email}\nPassword: ${user.credentials.password}\n\nPlease change your password after logging in.`
@@ -150,12 +152,16 @@ export const emailService = {
     resetLink: string;
   }): Promise<boolean> {
     if (!isConfigured()) {
-      console.warn("[email] BREVO_API_KEY not set — skipping reset password email");
+      console.warn(
+        "[email] BREVO_API_KEY not set — skipping reset password email",
+      );
       return false;
     }
 
     try {
-      const html = await render(ResetPasswordEmail({ userName: user.name, resetLink: user.resetLink }));
+      const html = await render(
+        ResetPasswordEmail({ userName: user.name, resetLink: user.resetLink }),
+      );
 
       return this.sendEmail({
         to: [{ email: user.email, name: user.name }],

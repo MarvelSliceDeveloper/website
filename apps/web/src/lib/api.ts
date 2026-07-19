@@ -10,9 +10,7 @@ function describeIssues(issues: unknown): string {
   return (issues as Array<{ path?: (string | number)[]; message?: string }>)
     .map((i) => {
       const field =
-        Array.isArray(i?.path) && i.path.length
-          ? i.path.join(".")
-          : "field";
+        Array.isArray(i?.path) && i.path.length ? i.path.join(".") : "field";
       return `${field}: ${i?.message ?? "invalid"}`;
     })
     .join("; ");
@@ -106,7 +104,10 @@ async function request<T>(
       const err = new Error(message) as Error & {
         response?: { data: unknown; status: number };
       };
-      err.response = { data: errorBody ?? { error: retryRes.statusText }, status: retryRes.status };
+      err.response = {
+        data: errorBody ?? { error: retryRes.statusText },
+        status: retryRes.status,
+      };
       throw err;
     }
     if (retryRes.status === 204) return null as T;
@@ -119,7 +120,10 @@ async function request<T>(
     const err = new Error(message) as Error & {
       response?: { data: unknown; status: number };
     };
-    err.response = { data: errorBody ?? { error: res.statusText }, status: res.status };
+    err.response = {
+      data: errorBody ?? { error: res.statusText },
+      status: res.status,
+    };
     throw err;
   }
 

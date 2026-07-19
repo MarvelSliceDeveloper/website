@@ -2,7 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { IconEye, IconEyeOff, IconLock, IconShieldCheck } from "@tabler/icons-react";
+import {
+  IconEye,
+  IconEyeOff,
+  IconLock,
+  IconShieldCheck,
+} from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -17,7 +22,9 @@ export default function SetPasswordPage() {
 
   useEffect(() => {
     api
-      .get<{ user: { role: string; mustChangePassword: boolean } }>("/api/auth/me")
+      .get<{ user: { role: string; mustChangePassword: boolean } }>(
+        "/api/auth/me",
+      )
       .then((res) => {
         if (!res?.user) {
           router.replace("/login");
@@ -25,8 +32,10 @@ export default function SetPasswordPage() {
         }
         if (!res.user.mustChangePassword) {
           const role = res.user.role;
-          if (role === "ADMIN" || role === "SUPER_ADMIN") router.replace("/admin/dashboard");
-          else if (role === "INSTRUCTOR") router.replace("/instructor/dashboard");
+          if (role === "ADMIN" || role === "SUPER_ADMIN")
+            router.replace("/admin/dashboard");
+          else if (role === "INSTRUCTOR")
+            router.replace("/instructor/dashboard");
           else router.replace("/student");
           return;
         }
@@ -46,7 +55,12 @@ export default function SetPasswordPage() {
     match: newPassword === confirmPassword && confirmPassword.length > 0,
   };
 
-  const allPassed = passwordChecks.min && passwordChecks.upper && passwordChecks.lower && passwordChecks.digit && passwordChecks.match;
+  const allPassed =
+    passwordChecks.min &&
+    passwordChecks.upper &&
+    passwordChecks.lower &&
+    passwordChecks.digit &&
+    passwordChecks.match;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,14 +72,18 @@ export default function SetPasswordPage() {
     setLoading(true);
 
     try {
-      const res = await api.post<{ message: string; user: { role: string } }>("/api/auth/me/set-password", {
-        newPassword,
-      });
+      const res = await api.post<{ message: string; user: { role: string } }>(
+        "/api/auth/me/set-password",
+        {
+          newPassword,
+        },
+      );
 
       toast.success(res.message || "Password set successfully!");
 
       const role = res.user?.role;
-      if (role === "ADMIN" || role === "SUPER_ADMIN") router.push("/admin/dashboard");
+      if (role === "ADMIN" || role === "SUPER_ADMIN")
+        router.push("/admin/dashboard");
       else if (role === "INSTRUCTOR") router.push("/instructor/dashboard");
       else router.push("/student");
     } catch (err) {
@@ -98,18 +116,30 @@ export default function SetPasswordPage() {
         />
         <div
           className="relative z-10 pt-14"
-          style={{ animation: "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both" }}
+          style={{
+            animation:
+              "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both",
+          }}
         >
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-lg shadow-black/10">
-              <img src="/images/logo.svg" alt="Marvel Slice" className="h-7 w-auto object-contain" />
+              <img
+                src="/images/logo.svg"
+                alt="Marvel Slice"
+                className="h-7 w-auto object-contain"
+              />
             </div>
-            <span className="text-2xl font-extrabold tracking-tight text-white">Marvel Slice</span>
+            <span className="text-2xl font-extrabold tracking-tight text-white">
+              Marvel Slice
+            </span>
           </div>
         </div>
         <div
           className="relative z-10 mt-20 max-w-lg"
-          style={{ animation: "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both" }}
+          style={{
+            animation:
+              "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both",
+          }}
         >
           <h1 className="text-[2.6rem] font-bold leading-[1.15] text-white">
             Set Your Password
@@ -121,28 +151,37 @@ export default function SetPasswordPage() {
         </div>
         <div
           className="relative z-10 mt-16 grid grid-cols-3 gap-4 pb-14 max-w-lg"
-          style={{ animation: "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both" }}
+          style={{
+            animation:
+              "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both",
+          }}
         >
           <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/15 px-4 py-4 backdrop-blur-sm ring-1 ring-white/20">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
               <IconShieldCheck size={20} stroke={2} className="text-white" />
             </div>
             <span className="text-lg font-extrabold text-white">Secure</span>
-            <span className="text-[11px] font-medium text-white/70">Encrypted</span>
+            <span className="text-[11px] font-medium text-white/70">
+              Encrypted
+            </span>
           </div>
           <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/15 px-4 py-4 backdrop-blur-sm ring-1 ring-white/20">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
               <IconLock size={20} stroke={2} className="text-white" />
             </div>
             <span className="text-lg font-extrabold text-white">Private</span>
-            <span className="text-[11px] font-medium text-white/70">Your data</span>
+            <span className="text-[11px] font-medium text-white/70">
+              Your data
+            </span>
           </div>
           <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/15 px-4 py-4 backdrop-blur-sm ring-1 ring-white/20">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
               <IconShieldCheck size={20} stroke={2} className="text-white" />
             </div>
             <span className="text-lg font-extrabold text-white">Quick</span>
-            <span className="text-[11px] font-medium text-white/70">1-minute</span>
+            <span className="text-[11px] font-medium text-white/70">
+              1-minute
+            </span>
           </div>
         </div>
       </section>
@@ -151,7 +190,9 @@ export default function SetPasswordPage() {
       <section className="flex flex-1 items-center justify-center px-4 py-10 sm:px-8">
         <div
           className="w-full max-w-[420px]"
-          style={{ animation: "login-card-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both" }}
+          style={{
+            animation: "login-card-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both",
+          }}
         >
           <div className="rounded-2xl bg-card/80 p-1 shadow-[0_8px_60px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-border/60">
             <div className="rounded-[14px] bg-card px-8 py-10">
@@ -159,7 +200,11 @@ export default function SetPasswordPage() {
                 className="flex items-center justify-center gap-2.5 lg:hidden"
                 style={{ animation: "logo-pulse 4s ease-in-out infinite" }}
               >
-                <img src="/images/logo.svg" alt="Marvel Slice" className="h-11 w-auto object-contain" />
+                <img
+                  src="/images/logo.svg"
+                  alt="Marvel Slice"
+                  className="h-11 w-auto object-contain"
+                />
                 <span className="text-2xl font-extrabold tracking-tight">
                   <span className="text-blue-600">Marvel</span>{" "}
                   <span className="text-blue-500">Slice</span>
@@ -168,12 +213,17 @@ export default function SetPasswordPage() {
 
               <div
                 className="mt-6 text-center lg:mt-0"
-                style={{ animation: "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both" }}
+                style={{
+                  animation:
+                    "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both",
+                }}
               >
                 <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-600/15">
                   <IconLock size={22} stroke={1.5} className="text-blue-600" />
                 </div>
-                <h2 className="text-[22px] font-bold text-foreground">Set Your Password</h2>
+                <h2 className="text-[22px] font-bold text-foreground">
+                  Set Your Password
+                </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Choose a strong password for your account
                 </p>
@@ -182,7 +232,10 @@ export default function SetPasswordPage() {
               <form
                 onSubmit={handleSubmit}
                 className="mt-7 space-y-4"
-                style={{ animation: "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both" }}
+                style={{
+                  animation:
+                    "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both",
+                }}
               >
                 <div className="relative">
                   <input
@@ -197,9 +250,15 @@ export default function SetPasswordPage() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-all duration-200 hover:bg-muted/10 hover:text-foreground"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                   >
-                    {showPassword ? <IconEyeOff size={18} stroke={1.5} /> : <IconEye size={18} stroke={1.5} />}
+                    {showPassword ? (
+                      <IconEyeOff size={18} stroke={1.5} />
+                    ) : (
+                      <IconEye size={18} stroke={1.5} />
+                    )}
                   </button>
                 </div>
 
@@ -218,40 +277,58 @@ export default function SetPasswordPage() {
                     Requirements
                   </p>
                   <div className="flex items-center gap-2">
-                    <div className={`h-1.5 w-1.5 rounded-full ${passwordChecks.min ? "bg-success" : "bg-muted/30"}`} />
-                    <span className={`text-xs ${passwordChecks.min ? "text-success" : "text-muted-foreground"}`}>
+                    <div
+                      className={`h-1.5 w-1.5 rounded-full ${passwordChecks.min ? "bg-success" : "bg-muted/30"}`}
+                    />
+                    <span
+                      className={`text-xs ${passwordChecks.min ? "text-success" : "text-muted-foreground"}`}
+                    >
                       At least 8 characters
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className={`h-1.5 w-1.5 rounded-full ${passwordChecks.upper ? "bg-success" : "bg-muted/30"}`} />
-                    <span className={`text-xs ${passwordChecks.upper ? "text-success" : "text-muted-foreground"}`}>
+                    <div
+                      className={`h-1.5 w-1.5 rounded-full ${passwordChecks.upper ? "bg-success" : "bg-muted/30"}`}
+                    />
+                    <span
+                      className={`text-xs ${passwordChecks.upper ? "text-success" : "text-muted-foreground"}`}
+                    >
                       One uppercase letter
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className={`h-1.5 w-1.5 rounded-full ${passwordChecks.lower ? "bg-success" : "bg-muted/30"}`} />
-                    <span className={`text-xs ${passwordChecks.lower ? "text-success" : "text-muted-foreground"}`}>
+                    <div
+                      className={`h-1.5 w-1.5 rounded-full ${passwordChecks.lower ? "bg-success" : "bg-muted/30"}`}
+                    />
+                    <span
+                      className={`text-xs ${passwordChecks.lower ? "text-success" : "text-muted-foreground"}`}
+                    >
                       One lowercase letter
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className={`h-1.5 w-1.5 rounded-full ${passwordChecks.digit ? "bg-success" : "bg-muted/30"}`} />
-                    <span className={`text-xs ${passwordChecks.digit ? "text-success" : "text-muted-foreground"}`}>
+                    <div
+                      className={`h-1.5 w-1.5 rounded-full ${passwordChecks.digit ? "bg-success" : "bg-muted/30"}`}
+                    />
+                    <span
+                      className={`text-xs ${passwordChecks.digit ? "text-success" : "text-muted-foreground"}`}
+                    >
                       One number
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className={`h-1.5 w-1.5 rounded-full ${passwordChecks.match ? "bg-success" : "bg-muted/30"}`} />
-                    <span className={`text-xs ${passwordChecks.match ? "text-success" : "text-muted-foreground"}`}>
+                    <div
+                      className={`h-1.5 w-1.5 rounded-full ${passwordChecks.match ? "bg-success" : "bg-muted/30"}`}
+                    />
+                    <span
+                      className={`text-xs ${passwordChecks.match ? "text-success" : "text-muted-foreground"}`}
+                    >
                       Passwords match
                     </span>
                   </div>
                 </div>
 
-                {error && (
-                  <p className="text-sm text-danger">{error}</p>
-                )}
+                {error && <p className="text-sm text-danger">{error}</p>}
 
                 <button
                   type="submit"

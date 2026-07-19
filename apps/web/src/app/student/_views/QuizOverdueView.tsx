@@ -71,7 +71,10 @@ type SubView =
   | { type: "QUIZ"; assignmentId: string; data: AssignmentQuestions }
   | { type: "RESULT"; data: SubmissionResult };
 
-export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewProps) {
+export default function QuizOverdueView({
+  quizzes,
+  navigate,
+}: QuizOverdueViewProps) {
   const [subView, setSubView] = useState<SubView>({ type: "LIST" });
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -79,7 +82,9 @@ export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewPr
     Record<string, string>
   >({});
   const [locallySubmittedIds, setLocallySubmittedIds] = useState<string[]>([]);
-  const [listFilter, setListFilter] = useState<"all" | "pending" | "completed">("all");
+  const [listFilter, setListFilter] = useState<"all" | "pending" | "completed">(
+    "all",
+  );
 
   const overdueItems = quizzes.filter(
     (q) => q.status === "PENDING" && !locallySubmittedIds.includes(q.id),
@@ -117,7 +122,11 @@ export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewPr
         score: number;
         total: number;
         percentage: number;
-        answers: Array<{ questionId: string; selectedOptionId: string; isCorrect: boolean }>;
+        answers: Array<{
+          questionId: string;
+          selectedOptionId: string;
+          isCorrect: boolean;
+        }>;
       }>(`/api/courses/quizzes/${quizId}/attempt`);
 
       const questionsRes = await api.get<AssignmentQuestions>(
@@ -181,7 +190,11 @@ export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewPr
         score: number;
         total: number;
         percentage: number;
-        answers: Array<{ questionId: string; selectedOptionId: string; isCorrect: boolean }>;
+        answers: Array<{
+          questionId: string;
+          selectedOptionId: string;
+          isCorrect: boolean;
+        }>;
       }>(`/api/courses/quizzes/${assignmentId}/submit`, { answers });
 
       const result: SubmissionResult = {
@@ -485,16 +498,14 @@ export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewPr
     );
   }
 
-  const allItems = [
-    ...overdueItems,
-    ...completedItems,
-  ];
+  const allItems = [...overdueItems, ...completedItems];
 
-  const filteredItems = listFilter === "all"
-    ? allItems
-    : listFilter === "pending"
-      ? overdueItems
-      : completedItems;
+  const filteredItems =
+    listFilter === "all"
+      ? allItems
+      : listFilter === "pending"
+        ? overdueItems
+        : completedItems;
 
   // ── LIST VIEW (DEFAULT) ──
   return (
@@ -562,7 +573,8 @@ export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewPr
                   const isPending = quiz.status === "PENDING";
                   const daysOverdue = isPending
                     ? Math.floor(
-                        (new Date().getTime() - new Date(quiz.dueDate).getTime()) /
+                        (new Date().getTime() -
+                          new Date(quiz.dueDate).getTime()) /
                           (1000 * 60 * 60 * 24),
                       )
                     : 0;
@@ -577,13 +589,21 @@ export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewPr
                         <div className="flex items-center gap-2">
                           <span
                             className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${
-                              isPending ? "bg-amber-500/15" : "bg-emerald-500/15"
+                              isPending
+                                ? "bg-amber-500/15"
+                                : "bg-emerald-500/15"
                             }`}
                           >
                             {isPending ? (
-                              <IconAlertCircle size={13} className="text-amber-500" />
+                              <IconAlertCircle
+                                size={13}
+                                className="text-amber-500"
+                              />
                             ) : (
-                              <IconCheck size={13} className="text-emerald-400" />
+                              <IconCheck
+                                size={13}
+                                className="text-emerald-400"
+                              />
                             )}
                           </span>
                           <span className="text-sm font-medium text-foreground truncate max-w-[200px]">
@@ -601,7 +621,13 @@ export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewPr
                         <div className="flex items-center gap-1.5">
                           <IconClock
                             size={13}
-                            className={isOverdue ? "text-danger" : isPending ? "text-amber-400" : "text-emerald-400"}
+                            className={
+                              isOverdue
+                                ? "text-danger"
+                                : isPending
+                                  ? "text-amber-400"
+                                  : "text-emerald-400"
+                            }
                           />
                           <span
                             className={`text-xs font-medium ${
@@ -615,7 +641,10 @@ export default function QuizOverdueView({ quizzes, navigate }: QuizOverdueViewPr
                             {isPending
                               ? isOverdue
                                 ? `${daysOverdue}d overdue`
-                                : new Date(quiz.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
+                                : new Date(quiz.dueDate).toLocaleDateString(
+                                    "en-IN",
+                                    { day: "numeric", month: "short" },
+                                  )
                               : "—"}
                           </span>
                         </div>

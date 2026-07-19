@@ -66,7 +66,9 @@ export function CataloguePageClient({ packages }: CataloguePageClientProps) {
 
     // Check if already logged in
     try {
-      const me = await api.get<{ user: { name: string; email: string } }>("/api/auth/me");
+      const me = await api.get<{ user: { name: string; email: string } }>(
+        "/api/auth/me",
+      );
       if (me?.user) {
         setName(me.user.name);
         setEmail(me.user.email);
@@ -80,13 +82,20 @@ export function CataloguePageClient({ packages }: CataloguePageClientProps) {
     setStep("collecting_info");
   }, []);
 
-  const handleInfoSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedPkg) return;
-    await createOrder(selectedPkg, name, email);
-  }, [selectedPkg, name, email]);
+  const handleInfoSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!selectedPkg) return;
+      await createOrder(selectedPkg, name, email);
+    },
+    [selectedPkg, name, email],
+  );
 
-  const createOrder = async (pkg: CataloguePackage, userName: string, userEmail: string) => {
+  const createOrder = async (
+    pkg: CataloguePackage,
+    userName: string,
+    userEmail: string,
+  ) => {
     setStep("creating_order");
     setLoading(true);
     setErrorMsg("");
@@ -120,7 +129,12 @@ export function CataloguePageClient({ packages }: CataloguePageClientProps) {
   };
 
   const openRazorpayCheckout = (
-    orderData: { orderId: string; amount: number; currency: string; keyId: string },
+    orderData: {
+      orderId: string;
+      amount: number;
+      currency: string;
+      keyId: string;
+    },
     pkg: CataloguePackage,
   ): Promise<void> => {
     return new Promise((resolve, reject) => {
@@ -148,9 +162,12 @@ export function CataloguePageClient({ packages }: CataloguePageClientProps) {
               });
 
               // Fetch available batches for post-payment selection
-              const batchData = await api.get<BatchOption[]>("/api/payments/batches", {
-                packageId: pkg.id,
-              });
+              const batchData = await api.get<BatchOption[]>(
+                "/api/payments/batches",
+                {
+                  packageId: pkg.id,
+                },
+              );
               setBatches(batchData || []);
 
               if (batchData && batchData.length > 0) {
@@ -201,12 +218,15 @@ export function CataloguePageClient({ packages }: CataloguePageClientProps) {
     setLoading(true);
 
     try {
-      const result = await api.post<{ isNewUser: boolean; email: string }>("/api/payments/enroll", {
-        paymentId,
-        batchId: selectedBatchId,
-        name,
-        email,
-      });
+      const result = await api.post<{ isNewUser: boolean; email: string }>(
+        "/api/payments/enroll",
+        {
+          paymentId,
+          batchId: selectedBatchId,
+          name,
+          email,
+        },
+      );
 
       if (result.isNewUser && result.email) {
         toast.success(
@@ -231,7 +251,9 @@ export function CataloguePageClient({ packages }: CataloguePageClientProps) {
     try {
       await api.post("/api/payments/consent", { paymentId, name, email });
       setStep("complete");
-      toast.success("Payment successful! An admin will contact you to complete enrollment.");
+      toast.success(
+        "Payment successful! An admin will contact you to complete enrollment.",
+      );
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -242,7 +264,9 @@ export function CataloguePageClient({ packages }: CataloguePageClientProps) {
   if (!packages || packages.length === 0) {
     return (
       <div className="text-center py-20">
-        <p className="text-muted-foreground">No packages available at the moment.</p>
+        <p className="text-muted-foreground">
+          No packages available at the moment.
+        </p>
       </div>
     );
   }
@@ -265,15 +289,28 @@ export function CataloguePageClient({ packages }: CataloguePageClientProps) {
                 {step === "collecting_info" && "Your Information"}
                 {step === "selecting_batch" && "Select a Batch"}
                 {step === "complete" && "Enrollment Complete!"}
-                {(step === "creating_order" || step === "processing_payment" || step === "verifying") && "Processing..."}
+                {(step === "creating_order" ||
+                  step === "processing_payment" ||
+                  step === "verifying") &&
+                  "Processing..."}
                 {step === "error" && "Error"}
               </h3>
               <button
                 onClick={closeModal}
                 className="text-muted hover:text-foreground transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -285,7 +322,9 @@ export function CataloguePageClient({ packages }: CataloguePageClientProps) {
                   Enter your details to continue with the purchase.
                 </p>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">Name</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    Name
+                  </label>
                   <input
                     type="text"
                     required
@@ -296,7 +335,9 @@ export function CataloguePageClient({ packages }: CataloguePageClientProps) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">Email</label>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    Email
+                  </label>
                   <input
                     type="email"
                     required
@@ -306,15 +347,15 @@ export function CataloguePageClient({ packages }: CataloguePageClientProps) {
                     placeholder="your@email.com"
                   />
                 </div>
-                {errorMsg && (
-                  <p className="text-sm text-danger">{errorMsg}</p>
-                )}
+                {errorMsg && <p className="text-sm text-danger">{errorMsg}</p>}
                 <button
                   type="submit"
                   disabled={loading}
                   className="w-full py-2.5 rounded-lg bg-primary text-white font-medium hover:bg-primary-hover transition-colors disabled:opacity-50"
                 >
-                  {loading ? "Please wait..." : `Pay ₹${(selectedPkg.price! / 100).toLocaleString("en-IN")}`}
+                  {loading
+                    ? "Please wait..."
+                    : `Pay ₹${(selectedPkg.price! / 100).toLocaleString("en-IN")}`}
                 </button>
               </form>
             )}
@@ -345,12 +386,19 @@ export function CataloguePageClient({ packages }: CataloguePageClientProps) {
                           className="accent-primary"
                         />
                         <div>
-                          <p className="text-sm font-medium text-foreground">{batch.name}</p>
+                          <p className="text-sm font-medium text-foreground">
+                            {batch.name}
+                          </p>
                           <p className="text-xs text-muted">
-                            {batch.course?.title}{batch.startDate ? ` · Starts ${new Date(batch.startDate).toLocaleDateString()}` : ""}
+                            {batch.course?.title}
+                            {batch.startDate
+                              ? ` · Starts ${new Date(batch.startDate).toLocaleDateString()}`
+                              : ""}
                           </p>
                           {batch.seatsAvailable != null && (
-                            <p className="text-xs text-muted">{batch.seatsAvailable} seats left</p>
+                            <p className="text-xs text-muted">
+                              {batch.seatsAvailable} seats left
+                            </p>
                           )}
                         </div>
                       </label>
@@ -381,12 +429,23 @@ export function CataloguePageClient({ packages }: CataloguePageClientProps) {
             {step === "complete" && (
               <div className="text-center py-4 space-y-4">
                 <div className="w-16 h-16 rounded-full bg-success/20 flex items-center justify-center mx-auto">
-                  <svg className="w-8 h-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-8 h-8 text-success"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
                 <p className="text-foreground">
-                  Welcome aboard! {isNewUser && "Check your email for login credentials."}
+                  Welcome aboard!{" "}
+                  {isNewUser && "Check your email for login credentials."}
                 </p>
                 <button
                   onClick={closeModal}
@@ -401,11 +460,23 @@ export function CataloguePageClient({ packages }: CataloguePageClientProps) {
             {step === "error" && (
               <div className="text-center py-4 space-y-4">
                 <div className="w-16 h-16 rounded-full bg-danger/20 flex items-center justify-center mx-auto">
-                  <svg className="w-8 h-8 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-8 h-8 text-danger"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </div>
-                <p className="text-danger text-sm">{errorMsg || "Something went wrong."}</p>
+                <p className="text-danger text-sm">
+                  {errorMsg || "Something went wrong."}
+                </p>
                 <button
                   onClick={closeModal}
                   className="px-6 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary-hover transition-colors"
@@ -416,7 +487,9 @@ export function CataloguePageClient({ packages }: CataloguePageClientProps) {
             )}
 
             {/* Loading state for creating_order / processing_payment / verifying */}
-            {(step === "creating_order" || step === "processing_payment" || step === "verifying") && (
+            {(step === "creating_order" ||
+              step === "processing_payment" ||
+              step === "verifying") && (
               <div className="text-center py-8">
                 <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                 <p className="text-sm text-muted-foreground">
@@ -428,10 +501,12 @@ export function CataloguePageClient({ packages }: CataloguePageClientProps) {
             )}
 
             {/* Price display for all pre-payment steps */}
-            {(step === "collecting_info") && (
+            {step === "collecting_info" && (
               <div className="mt-4 pt-4 border-t border-border">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{selectedPkg.name}</span>
+                  <span className="text-muted-foreground">
+                    {selectedPkg.name}
+                  </span>
                   <span className="font-semibold text-foreground">
                     ₹{(selectedPkg.price! / 100).toLocaleString("en-IN")}
                   </span>

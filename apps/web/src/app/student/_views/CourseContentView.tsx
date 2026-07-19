@@ -10,10 +10,10 @@ import {
   IconNotes,
   IconVideo,
   IconChevronDown,
-  IconPlayerPlay,
   IconClipboardCheck,
   IconFileSpreadsheet,
   IconFile,
+  IconDownload,
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
@@ -77,7 +77,11 @@ function buildUnifiedList(mod: CourseModule): UnifiedItem[] {
       }
     }
     for (const assignment of mod.assignments) {
-      if (!items.some((i) => i.type === "ASSIGNMENT" && i.data.id === assignment.id)) {
+      if (
+        !items.some(
+          (i) => i.type === "ASSIGNMENT" && i.data.id === assignment.id,
+        )
+      ) {
         items.push({ type: "ASSIGNMENT", data: assignment });
       }
     }
@@ -86,9 +90,11 @@ function buildUnifiedList(mod: CourseModule): UnifiedItem[] {
 
   // Fallback: lessons first, then quizzes, then assignments
   const items: UnifiedItem[] = [];
-  for (const lesson of mod.lessons) items.push({ type: "LESSON", data: lesson });
+  for (const lesson of mod.lessons)
+    items.push({ type: "LESSON", data: lesson });
   for (const quiz of mod.quizzes) items.push({ type: "QUIZ", data: quiz });
-  for (const assignment of mod.assignments) items.push({ type: "ASSIGNMENT", data: assignment });
+  for (const assignment of mod.assignments)
+    items.push({ type: "ASSIGNMENT", data: assignment });
   return items;
 }
 
@@ -135,22 +141,32 @@ export default function CourseContentView({
       options: Array<{ id: string; optionText: string; isCorrect: boolean }>;
     }>;
   } | null>(null);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
+  const [selectedAnswers, setSelectedAnswers] = useState<
+    Record<string, string>
+  >({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [quizSubmitting, setQuizSubmitting] = useState(false);
   const [quizResult, setQuizResult] = useState<{
     score: number;
     total: number;
     percentage: number;
-    answers: Array<{ questionId: string; selectedOptionId: string; isCorrect: boolean }>;
+    answers: Array<{
+      questionId: string;
+      selectedOptionId: string;
+      isCorrect: boolean;
+    }>;
   } | null>(null);
 
-  const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | null>(null);
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState<
+    string | null
+  >(null);
 
   const [selectedResource, setSelectedResource] = useState<{
     name: string;
     url: string;
   } | null>(null);
+
+  const [joiningSessionId, setJoiningSessionId] = useState<string | null>(null);
 
   // ── Data fetching ──────────────────────────────────────────────────────
 
@@ -265,12 +281,18 @@ export default function CourseContentView({
             options: Array<{ id: string; optionText: string }>;
           }>;
         }>(`/api/courses/quizzes/${quizId}/questions`),
-        api.get<{
-          score: number;
-          total: number;
-          percentage: number;
-          answers: Array<{ questionId: string; selectedOptionId: string; isCorrect: boolean }>;
-        }>(`/api/courses/quizzes/${quizId}/attempt`).catch(() => null),
+        api
+          .get<{
+            score: number;
+            total: number;
+            percentage: number;
+            answers: Array<{
+              questionId: string;
+              selectedOptionId: string;
+              isCorrect: boolean;
+            }>;
+          }>(`/api/courses/quizzes/${quizId}/attempt`)
+          .catch(() => null),
       ]);
       setQuizData({
         ...res,
@@ -335,7 +357,9 @@ export default function CourseContentView({
   useEffect(() => {
     if (initialAssignmentId && data) {
       for (const mod of data.modules) {
-        const assignment = mod.assignments.find((a) => a.id === initialAssignmentId);
+        const assignment = mod.assignments.find(
+          (a) => a.id === initialAssignmentId,
+        );
         if (assignment) {
           selectAssignment(assignment);
           if (!expandedModules.has(mod.id)) {
@@ -363,15 +387,21 @@ export default function CourseContentView({
     if (!quizData) return;
     setQuizSubmitting(true);
     try {
-      const answers = Object.entries(selectedAnswers).map(([questionId, selectedOptionId]) => ({
-        questionId,
-        selectedOptionId,
-      }));
+      const answers = Object.entries(selectedAnswers).map(
+        ([questionId, selectedOptionId]) => ({
+          questionId,
+          selectedOptionId,
+        }),
+      );
       const res = await api.post<{
         score: number;
         total: number;
         percentage: number;
-        answers: Array<{ questionId: string; selectedOptionId: string; isCorrect: boolean }>;
+        answers: Array<{
+          questionId: string;
+          selectedOptionId: string;
+          isCorrect: boolean;
+        }>;
       }>(`/api/courses/quizzes/${quizData.id}/submit`, { answers });
       setQuizResult({
         score: res.score,
@@ -472,7 +502,9 @@ export default function CourseContentView({
 
     if (selectedAssignmentId) {
       const allModules = data.modules;
-      let foundAssignment: (typeof data.modules)[number]["assignments"][number] | null = null;
+      let foundAssignment:
+        | (typeof data.modules)[number]["assignments"][number]
+        | null = null;
       let foundModule: string | null = null;
       for (const mod of allModules) {
         const a = mod.assignments.find((a) => a.id === selectedAssignmentId);
@@ -496,13 +528,13 @@ export default function CourseContentView({
     if (selectedResource) {
       return (
         <>
-          {/* Study material header — mirrors the "About this lesson" pattern below */}
+          {/* Study material header — Udemy-style with download */}
           <div className="bg-white border border-border/60 rounded-xl p-4 mb-4 shadow-sm">
             <div className="flex items-center gap-2.5">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
                 <IconFile size={17} />
               </span>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600">
                   Study Material
                 </p>
@@ -510,6 +542,16 @@ export default function CourseContentView({
                   {selectedResource.name}
                 </p>
               </div>
+              <a
+                href={selectedResource.url}
+                target="_blank"
+                rel="noreferrer"
+                download
+                className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-600 transition-colors hover:bg-emerald-500/20 hover:border-emerald-500/50"
+              >
+                <IconDownload size={14} />
+                Download
+              </a>
             </div>
           </div>
           <StudyMaterialContent
@@ -606,8 +648,9 @@ export default function CourseContentView({
           <li key={module.id} className="border-b border-border/50">
             <button
               onClick={() => toggleModule(module.id)}
-              className={`w-full flex items-start justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/50 ${isActiveModule ? "bg-muted/30" : ""
-                }`}
+              className={`w-full flex items-start justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/50 ${
+                isActiveModule ? "bg-muted/30" : ""
+              }`}
             >
               <span className="min-w-0">
                 <span className="block text-[13px] font-semibold leading-snug text-foreground">
@@ -620,8 +663,9 @@ export default function CourseContentView({
               </span>
               <IconChevronDown
                 size={16}
-                className={`flex-shrink-0 mt-0.5 text-muted-foreground transition-transform duration-200 ${isExpanded ? "rotate-180" : ""
-                  }`}
+                className={`flex-shrink-0 mt-0.5 text-muted-foreground transition-transform duration-200 ${
+                  isExpanded ? "rotate-180" : ""
+                }`}
               />
             </button>
 
@@ -637,14 +681,16 @@ export default function CourseContentView({
                       <li key={lesson.id} className="px-2">
                         <button
                           onClick={() => selectLesson(lesson, module.id)}
-                          className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${active ? "bg-primary/15" : "hover:bg-muted/30"
-                            }`}
+                          className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
+                            active ? "bg-primary/15" : "hover:bg-primary/8"
+                          }`}
                         >
                           <span
-                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${active ? "bg-primary" : "bg-muted"
-                              }`}
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+                              active ? "bg-primary" : "bg-muted"
+                            }`}
                           >
-                            <IconPlayerPlay
+                            <IconVideo
                               size={11}
                               className={
                                 active
@@ -655,10 +701,11 @@ export default function CourseContentView({
                           </span>
                           <span className="min-w-0 flex-1">
                             <span
-                              className={`block text-xs truncate ${active
-                                ? "text-foreground font-medium"
-                                : "text-muted-foreground"
-                                }`}
+                              className={`block text-xs truncate ${
+                                active
+                                  ? "text-foreground font-medium"
+                                  : "text-muted-foreground"
+                              }`}
                             >
                               {idx + 1}. {lesson.title}
                             </span>
@@ -674,8 +721,9 @@ export default function CourseContentView({
                               e.stopPropagation();
                               toggleBookmark(lesson.id);
                             }}
-                            className={`text-[10px] flex-shrink-0 ${isBookmarked ? "text-primary" : "text-transparent"
-                              }`}
+                            className={`text-[10px] flex-shrink-0 ${
+                              isBookmarked ? "text-primary" : "text-transparent"
+                            }`}
                           >
                             ●
                           </span>
@@ -691,28 +739,29 @@ export default function CourseContentView({
                       <li key={quiz.id} className="px-2">
                         <button
                           onClick={() => selectQuiz(quiz.id)}
-                          className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${isActive ? "bg-amber-500/15" : "hover:bg-muted/30"
-                            }`}
+                          className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
+                            isActive ? "bg-amber-500/15" : "hover:bg-primary/8"
+                          }`}
                         >
                           <span
-                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${isActive ? "bg-amber-500" : "bg-amber-500/15"
-                              }`}
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+                              isActive ? "bg-amber-500" : "bg-amber-500/15"
+                            }`}
                           >
                             <IconClipboardCheck
                               size={12}
                               className={
-                                isActive
-                                  ? "text-white"
-                                  : "text-amber-500"
+                                isActive ? "text-white" : "text-amber-500"
                               }
                             />
                           </span>
                           <span className="min-w-0 flex-1">
                             <span
-                              className={`block text-xs truncate ${isActive
-                                ? "text-foreground font-medium"
-                                : "text-muted-foreground"
-                                }`}
+                              className={`block text-xs truncate ${
+                                isActive
+                                  ? "text-foreground font-medium"
+                                  : "text-muted-foreground"
+                              }`}
                             >
                               {idx + 1}. {quiz.title}
                             </span>
@@ -731,28 +780,29 @@ export default function CourseContentView({
                     <li key={assignment.id} className="px-2">
                       <button
                         onClick={() => selectAssignment(assignment)}
-                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${isActive ? "bg-blue-500/15" : "hover:bg-muted/30"
-                          }`}
+                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
+                          isActive ? "bg-blue-500/15" : "hover:bg-primary/8"
+                        }`}
                       >
                         <span
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${isActive ? "bg-blue-500" : "bg-blue-500/15"
-                            }`}
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+                            isActive ? "bg-blue-500" : "bg-blue-500/15"
+                          }`}
                         >
                           <IconFileSpreadsheet
                             size={12}
                             className={
-                              isActive
-                                ? "text-white"
-                                : "text-blue-500"
+                              isActive ? "text-white" : "text-blue-500"
                             }
                           />
                         </span>
                         <span className="min-w-0 flex-1">
                           <span
-                            className={`block text-xs truncate ${isActive
-                              ? "text-foreground font-medium"
-                              : "text-muted-foreground"
-                              }`}
+                            className={`block text-xs truncate ${
+                              isActive
+                                ? "text-foreground font-medium"
+                                : "text-muted-foreground"
+                            }`}
                           >
                             {idx + 1}. {assignment.title}
                           </span>
@@ -768,28 +818,34 @@ export default function CourseContentView({
                   );
                 })}
 
-                {module.lessons.some((l) => l.resources && l.resources.length > 0) && (
+                {module.lessons.some(
+                  (l) => l.resources && l.resources.length > 0,
+                ) && (
                   <>
                     {module.lessons
                       .filter((l) => l.resources && l.resources.length > 0)
                       .flatMap((l) =>
                         l.resources.map((r) => {
-                          const isActive =
-                            selectedResource?.url === r.url;
+                          const isActive = selectedResource?.url === r.url;
                           return (
-                            <li key={`${l.id}-resource-${r.url}`} className="px-2">
+                            <li
+                              key={`${l.id}-resource-${r.url}`}
+                              className="px-2"
+                            >
                               <button
                                 onClick={() => selectResource(r.name, r.url)}
-                                className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${isActive
-                                  ? "bg-emerald-500/15"
-                                  : "hover:bg-muted/30"
-                                  }`}
+                                className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
+                                  isActive
+                                    ? "bg-emerald-500/15"
+                                    : "hover:bg-primary/8"
+                                }`}
                               >
                                 <span
-                                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${isActive
-                                    ? "bg-emerald-500"
-                                    : "bg-emerald-500/15"
-                                    }`}
+                                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+                                    isActive
+                                      ? "bg-emerald-500"
+                                      : "bg-emerald-500/15"
+                                  }`}
                                 >
                                   <IconFile
                                     size={12}
@@ -802,10 +858,11 @@ export default function CourseContentView({
                                 </span>
                                 <span className="min-w-0 flex-1">
                                   <span
-                                    className={`block text-xs truncate ${isActive
-                                      ? "text-foreground font-medium"
-                                      : "text-muted-foreground"
-                                      }`}
+                                    className={`block text-xs truncate ${
+                                      isActive
+                                        ? "text-foreground font-medium"
+                                        : "text-muted-foreground"
+                                    }`}
                                   >
                                     {r.name}
                                   </span>
@@ -830,20 +887,22 @@ export default function CourseContentView({
       <div className="flex items-center border-b border-border flex-shrink-0">
         <button
           onClick={() => setContentPanel("content")}
-          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-3.5 border-b-2 transition-colors ${contentPanel === "content"
-            ? "border-foreground text-foreground"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
+          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-3.5 border-b-2 transition-colors ${
+            contentPanel === "content"
+              ? "border-foreground text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
         >
           <IconBook2 size={14} />
           Course content
         </button>
         <button
           onClick={() => setContentPanel("live")}
-          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-3.5 border-b-2 transition-colors ${contentPanel === "live"
-            ? "border-danger text-foreground"
-            : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
+          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-3.5 border-b-2 transition-colors ${
+            contentPanel === "live"
+              ? "border-danger text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
         >
           <IconCalendarEvent
             size={14}
@@ -877,14 +936,31 @@ export default function CourseContentView({
                         </p>
                       </div>
                       {session.joinUrl && (
-                        <a
-                          href={session.joinUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-[10px] px-2 py-1 rounded-md bg-danger text-white shrink-0 font-medium"
+                        <button
+                          onClick={async () => {
+                            setJoiningSessionId(session.id);
+                            try {
+                              await api.post(
+                                `/api/attendance/${session.id}/join`,
+                              );
+                            } catch (err) {
+                              console.error("Failed to log attendance:", err);
+                            } finally {
+                              setJoiningSessionId(null);
+                              window.open(
+                                session.joinUrl,
+                                "_blank",
+                                "noopener,noreferrer",
+                              );
+                            }
+                          }}
+                          disabled={joiningSessionId === session.id}
+                          className="text-[10px] px-2 py-1 rounded-md bg-danger text-white shrink-0 font-medium disabled:opacity-60"
                         >
-                          Join
-                        </a>
+                          {joiningSessionId === session.id
+                            ? "Joining..."
+                            : "Join"}
+                        </button>
                       )}
                     </div>
                   ))}
@@ -907,28 +983,30 @@ export default function CourseContentView({
                       <li key={rec.id} className="px-2">
                         <button
                           onClick={() => selectRecording(rec.id)}
-                          className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${active ? "bg-primary/15" : "hover:bg-muted/30"
-                            }`}
+                          className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
+                            active ? "bg-primary/15" : "hover:bg-primary/8"
+                          }`}
                         >
                           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
                             <IconVideo size={16} />
                           </span>
                           <span className="min-w-0 flex-1">
                             <span
-                              className={`block text-xs font-medium truncate ${active ? "text-foreground" : "text-foreground"
-                                }`}
+                              className={`block text-xs font-medium truncate ${
+                                active ? "text-foreground" : "text-foreground"
+                              }`}
                             >
                               {rec.title}
                             </span>
                             <span className="block text-[11px] text-muted-foreground">
                               {rec.scheduledAt
                                 ? new Date(rec.scheduledAt).toLocaleDateString(
-                                  "en-IN",
-                                  {
-                                    day: "numeric",
-                                    month: "short",
-                                  },
-                                )
+                                    "en-IN",
+                                    {
+                                      day: "numeric",
+                                      month: "short",
+                                    },
+                                  )
                                 : "Recorded session"}
                             </span>
                           </span>
@@ -962,26 +1040,36 @@ export default function CourseContentView({
               const unified = buildUnifiedList(selectedModule);
               const curIdx = unified.findIndex(
                 (item) =>
-                  (item.type === "LESSON" && item.data.id === selectedLessonId) ||
+                  (item.type === "LESSON" &&
+                    item.data.id === selectedLessonId) ||
                   (item.type === "QUIZ" && item.data.id === selectedQuizId) ||
-                  (item.type === "ASSIGNMENT" && item.data.id === selectedAssignmentId),
+                  (item.type === "ASSIGNMENT" &&
+                    item.data.id === selectedAssignmentId),
               );
               if (curIdx > 0) {
                 const prev = unified[curIdx - 1];
-                if (prev.type === "LESSON") selectLesson(prev.data, selectedModule.id);
+                if (prev.type === "LESSON")
+                  selectLesson(prev.data, selectedModule.id);
                 else if (prev.type === "QUIZ") selectQuiz(prev.data.id);
-                else if (prev.type === "ASSIGNMENT") selectAssignment(prev.data);
+                else if (prev.type === "ASSIGNMENT")
+                  selectAssignment(prev.data);
               } else {
-                const modIdx = data.modules.findIndex((m) => m.id === selectedModuleId);
+                const modIdx = data.modules.findIndex(
+                  (m) => m.id === selectedModuleId,
+                );
                 if (modIdx > 0) {
                   const prevMod = data.modules[modIdx - 1];
                   const prevUnified = buildUnifiedList(prevMod);
                   if (prevUnified.length > 0) {
                     const last = prevUnified[prevUnified.length - 1];
-                    setExpandedModules((prevSet) => new Set([...prevSet, prevMod.id]));
-                    if (last.type === "LESSON") selectLesson(last.data, prevMod.id);
+                    setExpandedModules(
+                      (prevSet) => new Set([...prevSet, prevMod.id]),
+                    );
+                    if (last.type === "LESSON")
+                      selectLesson(last.data, prevMod.id);
                     else if (last.type === "QUIZ") selectQuiz(last.data.id);
-                    else if (last.type === "ASSIGNMENT") selectAssignment(last.data);
+                    else if (last.type === "ASSIGNMENT")
+                      selectAssignment(last.data);
                   }
                 }
               }
@@ -991,12 +1079,16 @@ export default function CourseContentView({
               const unified = buildUnifiedList(selectedModule);
               const curIdx = unified.findIndex(
                 (item) =>
-                  (item.type === "LESSON" && item.data.id === selectedLessonId) ||
+                  (item.type === "LESSON" &&
+                    item.data.id === selectedLessonId) ||
                   (item.type === "QUIZ" && item.data.id === selectedQuizId) ||
-                  (item.type === "ASSIGNMENT" && item.data.id === selectedAssignmentId),
+                  (item.type === "ASSIGNMENT" &&
+                    item.data.id === selectedAssignmentId),
               );
               const isAtFirstInModule = curIdx <= 0;
-              const modIdx = data.modules.findIndex((m) => m.id === selectedModuleId);
+              const modIdx = data.modules.findIndex(
+                (m) => m.id === selectedModuleId,
+              );
               return isAtFirstInModule && modIdx <= 0;
             })()}
             className="flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 disabled:opacity-40 disabled:hover:text-muted-foreground disabled:hover:border-border transition-colors"
@@ -1005,26 +1097,31 @@ export default function CourseContentView({
           </button>
           <div className="flex-1" />
           <span className="text-xs text-muted-foreground">
-            {selectedModule && !selectedResource && (() => {
-              const unified = buildUnifiedList(selectedModule);
-              const curIdx = unified.findIndex(
-                (item) =>
-                  (item.type === "LESSON" && item.data.id === selectedLessonId) ||
-                  (item.type === "QUIZ" && item.data.id === selectedQuizId) ||
-                  (item.type === "ASSIGNMENT" && item.data.id === selectedAssignmentId),
-              );
-              return curIdx >= 0
-                ? `Item ${curIdx + 1} of ${unified.length}`
-                : "";
-            })()}
+            {selectedModule &&
+              !selectedResource &&
+              (() => {
+                const unified = buildUnifiedList(selectedModule);
+                const curIdx = unified.findIndex(
+                  (item) =>
+                    (item.type === "LESSON" &&
+                      item.data.id === selectedLessonId) ||
+                    (item.type === "QUIZ" && item.data.id === selectedQuizId) ||
+                    (item.type === "ASSIGNMENT" &&
+                      item.data.id === selectedAssignmentId),
+                );
+                return curIdx >= 0
+                  ? `Item ${curIdx + 1} of ${unified.length}`
+                  : "";
+              })()}
           </span>
           <div className="flex-1" />
           <button
             onClick={() => setShowStickyWidget((v) => !v)}
-            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border transition-colors ${showStickyWidget
-              ? "border-primary/50 bg-primary/15 text-primary"
-              : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
-              }`}
+            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border transition-colors ${
+              showStickyWidget
+                ? "border-primary/50 bg-primary/15 text-primary"
+                : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
+            }`}
           >
             <IconPencil size={13} />{" "}
             {showStickyWidget ? "Close Notes" : "Take Note"}
@@ -1035,26 +1132,36 @@ export default function CourseContentView({
               const unified = buildUnifiedList(selectedModule);
               const curIdx = unified.findIndex(
                 (item) =>
-                  (item.type === "LESSON" && item.data.id === selectedLessonId) ||
+                  (item.type === "LESSON" &&
+                    item.data.id === selectedLessonId) ||
                   (item.type === "QUIZ" && item.data.id === selectedQuizId) ||
-                  (item.type === "ASSIGNMENT" && item.data.id === selectedAssignmentId),
+                  (item.type === "ASSIGNMENT" &&
+                    item.data.id === selectedAssignmentId),
               );
               if (curIdx >= 0 && curIdx < unified.length - 1) {
                 const next = unified[curIdx + 1];
-                if (next.type === "LESSON") selectLesson(next.data, selectedModule.id);
+                if (next.type === "LESSON")
+                  selectLesson(next.data, selectedModule.id);
                 else if (next.type === "QUIZ") selectQuiz(next.data.id);
-                else if (next.type === "ASSIGNMENT") selectAssignment(next.data);
+                else if (next.type === "ASSIGNMENT")
+                  selectAssignment(next.data);
               } else {
-                const modIdx = data.modules.findIndex((m) => m.id === selectedModuleId);
+                const modIdx = data.modules.findIndex(
+                  (m) => m.id === selectedModuleId,
+                );
                 if (modIdx >= 0 && modIdx < data.modules.length - 1) {
                   const nextMod = data.modules[modIdx + 1];
                   const nextUnified = buildUnifiedList(nextMod);
                   if (nextUnified.length > 0) {
                     const first = nextUnified[0];
-                    setExpandedModules((prevSet) => new Set([...prevSet, nextMod.id]));
-                    if (first.type === "LESSON") selectLesson(first.data, nextMod.id);
+                    setExpandedModules(
+                      (prevSet) => new Set([...prevSet, nextMod.id]),
+                    );
+                    if (first.type === "LESSON")
+                      selectLesson(first.data, nextMod.id);
                     else if (first.type === "QUIZ") selectQuiz(first.data.id);
-                    else if (first.type === "ASSIGNMENT") selectAssignment(first.data);
+                    else if (first.type === "ASSIGNMENT")
+                      selectAssignment(first.data);
                   }
                 }
               }
@@ -1064,12 +1171,17 @@ export default function CourseContentView({
               const unified = buildUnifiedList(selectedModule);
               const curIdx = unified.findIndex(
                 (item) =>
-                  (item.type === "LESSON" && item.data.id === selectedLessonId) ||
+                  (item.type === "LESSON" &&
+                    item.data.id === selectedLessonId) ||
                   (item.type === "QUIZ" && item.data.id === selectedQuizId) ||
-                  (item.type === "ASSIGNMENT" && item.data.id === selectedAssignmentId),
+                  (item.type === "ASSIGNMENT" &&
+                    item.data.id === selectedAssignmentId),
               );
-              const isAtLastInModule = curIdx >= 0 && curIdx >= unified.length - 1;
-              const modIdx = data.modules.findIndex((m) => m.id === selectedModuleId);
+              const isAtLastInModule =
+                curIdx >= 0 && curIdx >= unified.length - 1;
+              const modIdx = data.modules.findIndex(
+                (m) => m.id === selectedModuleId,
+              );
               return isAtLastInModule && modIdx >= data.modules.length - 1;
             })()}
             className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg text-primary-foreground bg-primary hover:opacity-90 disabled:opacity-40 transition-opacity"

@@ -1,5 +1,14 @@
 import React from "react";
-import { Html, Head, Body, Container, Text, Hr, Link, Section } from "@react-email/components";
+import {
+  Html,
+  Head,
+  Body,
+  Container,
+  Text,
+  Hr,
+  Link,
+  Section,
+} from "@react-email/components";
 
 const WEB_URL = process.env.WEB_URL || "http://localhost:3000";
 const COMPANY_NAME = process.env.EMAIL_FROM_NAME || "LMS Portal";
@@ -9,7 +18,10 @@ interface ResetPasswordEmailProps {
   resetLink: string;
 }
 
-export default function ResetPasswordEmail({ userName, resetLink }: ResetPasswordEmailProps) {
+export default function ResetPasswordEmail({
+  userName,
+  resetLink,
+}: ResetPasswordEmailProps) {
   return (
     <Html lang="en">
       <Head />
@@ -42,7 +54,8 @@ export default function ResetPasswordEmail({ userName, resetLink }: ResetPasswor
 
 const bodyStyle: React.CSSProperties = {
   backgroundColor: "#f4f6f9",
-  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  fontFamily:
+    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
   padding: "40px 0",
 };
 

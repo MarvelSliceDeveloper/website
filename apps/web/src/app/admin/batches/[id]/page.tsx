@@ -69,7 +69,9 @@ export default function BatchDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [batch, setBatch] = useState<Batch | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"students" | "sessions" | "courses">("students");
+  const [tab, setTab] = useState<"students" | "sessions" | "courses">(
+    "students",
+  );
   const [courses, setCourses] = useState<BatchCourse[]>([]);
   const [toggling, setToggling] = useState<string | null>(null);
 
@@ -113,7 +115,9 @@ export default function BatchDetailPage() {
       );
       setCourses((prev) =>
         prev.map((c) =>
-          c.courseId === result.courseId ? { ...c, isVisible: result.isVisible } : c,
+          c.courseId === result.courseId
+            ? { ...c, isVisible: result.isVisible }
+            : c,
         ),
       );
       toast.success(
@@ -401,10 +405,18 @@ export default function BatchDetailPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border text-left">
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted w-12">#</th>
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Course</th>
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Status</th>
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted text-right">Actions</th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted w-12">
+                      #
+                    </th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                      Course
+                    </th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                      Status
+                    </th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted text-right">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">

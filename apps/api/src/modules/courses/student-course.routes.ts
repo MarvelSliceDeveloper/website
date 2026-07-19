@@ -140,71 +140,75 @@ router.get("/enrolled", async (req: AuthRequest, res: Response) => {
     });
 
     const packageCourses = packageEnrollments.flatMap((pe) =>
-      pe.courses.filter((pec) => {
-        if (!pec.batch) return true;
-        return pec.batch.courseVisibility.some((bc) => bc.courseId === pec.course.id);
-      }).map((pec) => {
-        if (!pec.batch) {
+      pe.courses
+        .filter((pec) => {
+          if (!pec.batch) return true;
+          return pec.batch.courseVisibility.some(
+            (bc) => bc.courseId === pec.course.id,
+          );
+        })
+        .map((pec) => {
+          if (!pec.batch) {
+            return {
+              id: pec.course.id,
+              title: pec.course.title,
+              thumbnail: pec.course.thumbnailUrl || "📚",
+              batchId: "",
+              batchLabel: "—",
+              instructor: "—",
+              progress: 0,
+              status: pe.status,
+              source: "package" as const,
+            };
+          }
+
+          const batch = pec.batch;
+          // Filter sessions: only show sessions for this course + package-wide sessions (courseId=null)
+          const sessions = batch.sessions.filter(
+            (s) => !s.courseId || s.courseId === pec.course.id,
+          );
+          const totalRecordings = sessions.filter((s) => s.recording).length;
+          let progress = 0;
+
+          if (totalRecordings > 0) {
+            let totalWatchedPercent = 0;
+            for (const session of sessions) {
+              if (session.recording) {
+                const watchProgress = session.recording.progress[0];
+                if (watchProgress) {
+                  if (watchProgress.completedAt) {
+                    totalWatchedPercent += 100;
+                  } else {
+                    const percent = Math.min(
+                      100,
+                      Math.round(
+                        (watchProgress.watchedSeconds /
+                          session.recording.duration) *
+                          100,
+                      ),
+                    );
+                    totalWatchedPercent += percent;
+                  }
+                }
+              }
+            }
+            progress = Math.round(totalWatchedPercent / totalRecordings);
+          }
+
+          const status = batch.status === "COMPLETED" ? "COMPLETED" : "ACTIVE";
+
           return {
             id: pec.course.id,
             title: pec.course.title,
             thumbnail: pec.course.thumbnailUrl || "📚",
-            batchId: "",
-            batchLabel: "—",
-            instructor: "—",
-            progress: 0,
-            status: pe.status,
+            batchId: batch.id,
+            batchLabel: batch.name,
+            instructor: batch.instructor?.name || "—",
+            progress,
+            status,
             source: "package" as const,
           };
-        }
-
-        const batch = pec.batch;
-        // Filter sessions: only show sessions for this course + package-wide sessions (courseId=null)
-        const sessions = batch.sessions.filter(
-          (s) => !s.courseId || s.courseId === pec.course.id,
-        );
-        const totalRecordings = sessions.filter((s) => s.recording).length;
-        let progress = 0;
-
-        if (totalRecordings > 0) {
-          let totalWatchedPercent = 0;
-          for (const session of sessions) {
-            if (session.recording) {
-              const watchProgress = session.recording.progress[0];
-              if (watchProgress) {
-                if (watchProgress.completedAt) {
-                  totalWatchedPercent += 100;
-                } else {
-                  const percent = Math.min(
-                    100,
-                    Math.round(
-                      (watchProgress.watchedSeconds /
-                        session.recording.duration) *
-                        100,
-                    ),
-                  );
-                  totalWatchedPercent += percent;
-                }
-              }
-            }
-          }
-          progress = Math.round(totalWatchedPercent / totalRecordings);
-        }
-
-        const status = batch.status === "COMPLETED" ? "COMPLETED" : "ACTIVE";
-
-        return {
-          id: pec.course.id,
-          title: pec.course.title,
-          thumbnail: pec.course.thumbnailUrl || "📚",
-          batchId: batch.id,
-          batchLabel: batch.name,
-          instructor: batch.instructor?.name || "—",
-          progress,
-          status,
-          source: "package" as const,
-        };
-      }),
+        }),
     );
 
     // Merge and deduplicate (prefer individual enrollment if both exist)
@@ -358,7 +362,9 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
         where: { batchId_courseId: { batchId: batch.id, courseId } },
       });
       if (bc && !bc.isVisible) {
-        return res.status(403).json({ error: "This course is not yet available" });
+        return res
+          .status(403)
+          .json({ error: "This course is not yet available" });
       }
     }
 
@@ -605,100 +611,128 @@ router.post("/enroll", async (req: AuthRequest, res: Response) => {
 router.get("/quizzes/:quizId/questions", quizController.getQuestions);
 
 // POST /api/courses/quizzes/:quizId/submit — submit quiz answers and get score
-router.post("/quizzes/:quizId/submit", async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user!.userId;
-    const { quizId } = req.params;
-    const { answers } = req.body; // [{ questionId, selectedOptionId }]
+router.post(
+  "/quizzes/:quizId/submit",
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+      const { quizId } = req.params;
+      const { answers } = req.body; // [{ questionId, selectedOptionId }]
 
-    if (!Array.isArray(answers) || answers.length === 0) {
-      return res.status(400).json({ error: "answers must be a non-empty array" });
-    }
+      if (!Array.isArray(answers) || answers.length === 0) {
+        return res
+          .status(400)
+          .json({ error: "answers must be a non-empty array" });
+      }
 
-    const quiz = await prisma.quiz.findUnique({
-      where: { id: quizId },
-      include: { questions: true },
-    });
+      const quiz = await prisma.quiz.findUnique({
+        where: { id: quizId },
+        include: { questions: true },
+      });
 
-    if (!quiz) {
-      return res.status(404).json({ error: "Quiz not found" });
-    }
+      if (!quiz) {
+        return res.status(404).json({ error: "Quiz not found" });
+      }
 
-    // Check for existing attempt
-    const existing = await prisma.quizAttempt.findFirst({
-      where: { quizId, userId },
-    });
+      // Check for existing attempt
+      const existing = await prisma.quizAttempt.findFirst({
+        where: { quizId, userId },
+      });
 
-    if (existing) {
-      return res.status(400).json({ error: "Quiz already submitted", attempt: existing });
-    }
+      if (existing) {
+        return res
+          .status(400)
+          .json({ error: "Quiz already submitted", attempt: existing });
+      }
 
-    // Score the answers
-    let score = 0;
-    const enrichedAnswers = answers.map((a: { questionId: string; selectedOptionId: string }) => {
-      const question = quiz.questions.find((q) => q.id === a.questionId);
-      if (!question) return { questionId: a.questionId, selectedOptionId: a.selectedOptionId, isCorrect: false };
+      // Score the answers
+      let score = 0;
+      const enrichedAnswers = answers.map(
+        (a: { questionId: string; selectedOptionId: string }) => {
+          const question = quiz.questions.find((q) => q.id === a.questionId);
+          if (!question)
+            return {
+              questionId: a.questionId,
+              selectedOptionId: a.selectedOptionId,
+              isCorrect: false,
+            };
 
-      const options = question.options as Array<{ label: string; isCorrect: boolean }>;
-      const selectedIdx = parseInt(a.selectedOptionId, 10);
-      const isCorrect = !isNaN(selectedIdx) && options[selectedIdx]?.isCorrect === true;
-      if (isCorrect) score++;
-      return { questionId: a.questionId, selectedOptionId: a.selectedOptionId, isCorrect };
-    });
+          const options = question.options as Array<{
+            label: string;
+            isCorrect: boolean;
+          }>;
+          const selectedIdx = parseInt(a.selectedOptionId, 10);
+          const isCorrect =
+            !isNaN(selectedIdx) && options[selectedIdx]?.isCorrect === true;
+          if (isCorrect) score++;
+          return {
+            questionId: a.questionId,
+            selectedOptionId: a.selectedOptionId,
+            isCorrect,
+          };
+        },
+      );
 
-    const total = quiz.questions.length;
+      const total = quiz.questions.length;
 
-    const attempt = await prisma.quizAttempt.create({
-      data: {
-        quizId,
-        userId,
-        answers: enrichedAnswers,
+      const attempt = await prisma.quizAttempt.create({
+        data: {
+          quizId,
+          userId,
+          answers: enrichedAnswers,
+          score,
+          total,
+          status: "SUBMITTED",
+        },
+      });
+
+      return res.status(201).json({
+        attemptId: attempt.id,
         score,
         total,
-        status: "SUBMITTED",
-      },
-    });
-
-    return res.status(201).json({
-      attemptId: attempt.id,
-      score,
-      total,
-      percentage: total > 0 ? Math.round((score / total) * 100) : 0,
-      answers: enrichedAnswers,
-      submittedAt: attempt.createdAt,
-    });
-  } catch (error: any) {
-    console.error("Error submitting quiz:", error);
-    return res.status(500).json({ error: "Failed to submit quiz" });
-  }
-});
+        percentage: total > 0 ? Math.round((score / total) * 100) : 0,
+        answers: enrichedAnswers,
+        submittedAt: attempt.createdAt,
+      });
+    } catch (error: any) {
+      console.error("Error submitting quiz:", error);
+      return res.status(500).json({ error: "Failed to submit quiz" });
+    }
+  },
+);
 
 // GET /api/courses/quizzes/:quizId/attempt — get user's existing attempt for this quiz
-router.get("/quizzes/:quizId/attempt", async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user!.userId;
-    const { quizId } = req.params;
+router.get(
+  "/quizzes/:quizId/attempt",
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+      const { quizId } = req.params;
 
-    const attempt = await prisma.quizAttempt.findFirst({
-      where: { quizId, userId },
-    });
+      const attempt = await prisma.quizAttempt.findFirst({
+        where: { quizId, userId },
+      });
 
-    if (!attempt) {
-      return res.status(404).json({ error: "No attempt found" });
+      if (!attempt) {
+        return res.status(404).json({ error: "No attempt found" });
+      }
+
+      return res.json({
+        attemptId: attempt.id,
+        score: attempt.score,
+        total: attempt.total,
+        percentage:
+          attempt.total > 0
+            ? Math.round((attempt.score / attempt.total) * 100)
+            : 0,
+        answers: attempt.answers,
+        submittedAt: attempt.createdAt,
+      });
+    } catch (error: any) {
+      console.error("Error fetching quiz attempt:", error);
+      return res.status(500).json({ error: "Failed to fetch quiz attempt" });
     }
-
-    return res.json({
-      attemptId: attempt.id,
-      score: attempt.score,
-      total: attempt.total,
-      percentage: attempt.total > 0 ? Math.round((attempt.score / attempt.total) * 100) : 0,
-      answers: attempt.answers,
-      submittedAt: attempt.createdAt,
-    });
-  } catch (error: any) {
-    console.error("Error fetching quiz attempt:", error);
-    return res.status(500).json({ error: "Failed to fetch quiz attempt" });
-  }
-});
+  },
+);
 
 export const studentCourseRouter = router;

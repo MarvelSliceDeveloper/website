@@ -111,6 +111,13 @@ export const authService = {
       expiresIn: JWT_EXPIRY as any,
     });
 
-    return { accessToken, user: { ...payload, name: user.name, mustChangePassword: user.mustChangePassword ?? false } };
+    return {
+      accessToken,
+      user: {
+        ...payload,
+        name: user.name,
+        mustChangePassword: user.mustChangePassword ?? false,
+      },
+    };
   },
 };

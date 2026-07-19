@@ -43,7 +43,9 @@ export default function AssignmentCard({
       : "",
   );
   const [maxPoints, setMaxPoints] = useState(assignment.maxPoints);
-  const [questionPdfUrl, setQuestionPdfUrl] = useState(assignment.questionPdfUrl || "");
+  const [questionPdfUrl, setQuestionPdfUrl] = useState(
+    assignment.questionPdfUrl || "",
+  );
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -75,9 +77,7 @@ export default function AssignmentCard({
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await api.delete(
-        `/admin/courses/modules/assignments/${assignment.id}`,
-      );
+      await api.delete(`/admin/courses/modules/assignments/${assignment.id}`);
       toast.success("Assignment deleted successfully");
       onUpdate();
     } catch (error) {

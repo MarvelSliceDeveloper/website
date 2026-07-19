@@ -295,7 +295,7 @@ export default function StudentNotesPage() {
               placeholder="Search notes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="field w-full pl-9 pr-9 text-sm"
+              className="field w-full pl-10 pr-9 text-sm"
             />
             {searchQuery && (
               <button

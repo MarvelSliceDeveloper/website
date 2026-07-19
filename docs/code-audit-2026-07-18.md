@@ -6,10 +6,10 @@
 
 ## 🛠 Fixed During Audit
 
-| File | Error | Fix |
-|------|-------|-----|
+| File                                                 | Error                                                    | Fix                         |
+| ---------------------------------------------------- | -------------------------------------------------------- | --------------------------- |
 | `apps/api/src/modules/courses/lesson.service.ts:211` | `(JsonValue\|undefined)[]` not assignable to Prisma JSON | Added type predicate filter |
-| `apps/api/src/modules/courses/module.service.ts:39` | `null` not assignable to Prisma JSON | Changed to `Prisma.DbNull` |
+| `apps/api/src/modules/courses/module.service.ts:39`  | `null` not assignable to Prisma JSON                     | Changed to `Prisma.DbNull`  |
 
 ---
 
@@ -33,11 +33,11 @@
 
 Using `key={index}` for lists that can be reordered/added/removed causes React to reuse DOM nodes incorrectly.
 
-| File | Lines | Description |
-|------|-------|-------------|
+| File                                                              | Lines    | Description                                                                  |
+| ----------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------- |
 | `apps/web/src/app/admin/courses/[id]/_components/AddQuizForm.tsx` | 157, 193 | `key={qIndex}`, `key={oIndex}` — questions/options dynamically added/removed |
-| `apps/web/src/app/admin/courses/[id]/_components/QuizCard.tsx` | 192, 228 | Same pattern in edit mode |
-| `apps/web/src/components/admin/DataTable.tsx` | 147, 168 | `key={i}` — rows reorder when sort column/direction changes |
+| `apps/web/src/app/admin/courses/[id]/_components/QuizCard.tsx`    | 192, 228 | Same pattern in edit mode                                                    |
+| `apps/web/src/components/admin/DataTable.tsx`                     | 147, 168 | `key={i}` — rows reorder when sort column/direction changes                  |
 
 **Fix:** Use a stable unique ID instead of index. For questions/options, generate a temp ID (e.g., `crypto.randomUUID()` or incrementing counter).
 
@@ -70,6 +70,7 @@ Only the root `/` and `/student` have co-located error + loading boundaries. All
 AGENTS.md requires `catch (err: unknown)` + `instanceof Error` narrowing. Most files use bare `catch (err)` (implicit `any`).
 
 Affected files include:
+
 - `apps/web/src/app/student/notes/page.tsx`
 - `apps/web/src/app/admin/batches/[id]/page.tsx`
 - `apps/web/src/app/admin/batches/new/page.tsx`
@@ -150,9 +151,9 @@ In `auth.controller.ts:35-38` and `:69-72`, cookies are set with `secure: proces
 
 ## Stats
 
-| Metric | Value |
-|--------|-------|
-| TS compilation (API) | 0 errors (2 fixed) |
-| TS compilation (Web) | 0 errors |
-| Lint errors (Web) | 0 |
-| Lint warnings (Web) | 103 (all pre-existing) |
+| Metric               | Value                  |
+| -------------------- | ---------------------- |
+| TS compilation (API) | 0 errors (2 fixed)     |
+| TS compilation (Web) | 0 errors               |
+| Lint errors (Web)    | 0                      |
+| Lint warnings (Web)  | 103 (all pre-existing) |

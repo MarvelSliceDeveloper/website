@@ -125,8 +125,7 @@ export default function MentorshipView({
               1-on-1 Mentorship
             </h1>
             <p className="mt-1 text-sm text-muted-foreground max-w-md">
-              Need focused help? Request a private session with your
-              instructor.
+              Need focused help? Request a private session with your instructor.
             </p>
           </div>
         </div>
@@ -194,9 +193,7 @@ export default function MentorshipView({
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
               <IconMessageCircle size={16} stroke={1.8} />
             </div>
-            <p className="font-semibold text-foreground">
-              New Session Request
-            </p>
+            <p className="font-semibold text-foreground">New Session Request</p>
           </div>
 
           <div>

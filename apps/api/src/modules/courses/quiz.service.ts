@@ -53,7 +53,10 @@ export const quizService = {
     if (!quiz) throw new Error("Quiz not found");
 
     const questions = quiz.questions.map((q, qIdx) => {
-      const rawOptions = q.options as Array<{ label: string; isCorrect: boolean }>;
+      const rawOptions = q.options as Array<{
+        label: string;
+        isCorrect: boolean;
+      }>;
       const options = rawOptions.map((opt, oIdx) => ({
         id: `${oIdx}`,
         optionText: opt.label,
@@ -115,7 +118,9 @@ export const quizService = {
       where: { id: quizId },
       data: {
         ...(data.title && { title: data.title }),
-        ...(data.dueDate !== undefined && { dueDate: data.dueDate ? new Date(data.dueDate) : null }),
+        ...(data.dueDate !== undefined && {
+          dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        }),
         ...(data.questions && {
           questions: {
             create: data.questions.map((q) => ({

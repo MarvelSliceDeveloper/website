@@ -36,7 +36,9 @@ function generateDummyPassword(): string {
 export const paymentService = {
   async createGuestUser(name: string, email: string) {
     const normalizedEmail = email.trim().toLowerCase();
-    let user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    let user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
 
     if (user) {
       // Existing user — just generate a new JWT
@@ -48,7 +50,15 @@ export const paymentService = {
         mustChangePassword: user.mustChangePassword,
         sessionTimeoutMin: user.sessionTimeoutMin,
       });
-      return { user: { id: user.id, name: user.name, email: user.email, role: user.role }, accessToken: tokens.accessToken };
+      return {
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+        accessToken: tokens.accessToken,
+      };
     }
 
     // New user — create with dummy password
@@ -84,7 +94,15 @@ export const paymentService = {
         console.error("[payment] Failed to send welcome email:", err),
       );
 
-    return { user: { id: user.id, name: user.name, email: user.email, role: user.role }, accessToken: tokens.accessToken };
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+      accessToken: tokens.accessToken,
+    };
   },
 
   async createOrder(userId: string, packageId: string) {
@@ -131,9 +149,14 @@ export const paymentService = {
       include: { package: true },
     });
     if (!payment) throw new Error("Payment record not found");
-    if (payment.status !== "PENDING") throw new Error("Payment already processed");
+    if (payment.status !== "PENDING")
+      throw new Error("Payment already processed");
 
-    const isValid = verifySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
+    const isValid = verifySignature(
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
+    );
     if (!isValid) {
       await prisma.payment.update({
         where: { id: payment.id },
@@ -174,7 +197,9 @@ export const paymentService = {
       startDate: b.startDate,
       endDate: b.endDate,
       course: b.course,
-      seatsAvailable: b.maxStudents ? b.maxStudents - b._count.enrollments : null,
+      seatsAvailable: b.maxStudents
+        ? b.maxStudents - b._count.enrollments
+        : null,
       status: b.status,
     }));
   },
@@ -189,9 +214,12 @@ export const paymentService = {
       where: { id: paymentId },
       include: { package: { include: { courses: true } } },
     });
-    if (!payment || payment.status !== "PAID") throw new Error("Payment not completed");
+    if (!payment || payment.status !== "PAID")
+      throw new Error("Payment not completed");
 
-    let user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    let user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
 
     const isNewUser = !user;
     const dummyPassword = isNewUser ? generateDummyPassword() : undefined;
@@ -260,9 +288,12 @@ export const paymentService = {
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },
     });
-    if (!payment || payment.status !== "PAID") throw new Error("Payment not completed");
+    if (!payment || payment.status !== "PAID")
+      throw new Error("Payment not completed");
 
-    let user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    let user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
 
     const isNewUser = !user;
     const dummyPassword = isNewUser ? generateDummyPassword() : undefined;
@@ -301,7 +332,11 @@ export const paymentService = {
         );
     }
 
-    return { enrollmentId: enrollment.id, isNewUser, email: email.toLowerCase() };
+    return {
+      enrollmentId: enrollment.id,
+      isNewUser,
+      email: email.toLowerCase(),
+    };
   },
 
   async getAdminPayments() {
@@ -316,8 +351,8 @@ export const paymentService = {
 
     return payments.map((p) => ({
       id: p.id,
-      userName: p.user.name,
-      userEmail: p.user.email,
+      studentName: p.user.name,
+      studentEmail: p.user.email,
       packageName: p.package.name,
       amount: p.amount,
       currency: p.currency,
@@ -328,43 +363,30 @@ export const paymentService = {
   },
 
   async getRevenueStats() {
-    const payments = await prisma.payment.findMany({
-      where: { status: "PAID" },
+    const allPayments = await prisma.payment.findMany({
       orderBy: { createdAt: "asc" },
     });
 
-    const totalRevenue = payments.reduce((sum, p) => sum + p.amount, 0);
+    const totalRevenue = allPayments
+      .filter((p) => p.status === "PAID")
+      .reduce((sum, p) => sum + p.amount, 0);
+    const totalPayments = allPayments.length;
+    const successful = allPayments.filter((p) => p.status === "PAID").length;
+    const failed = allPayments.filter((p) => p.status === "FAILED").length;
+    const refunded = allPayments.filter((p) => p.status === "REFUNDED").length;
 
     const monthlyMap = new Map<string, number>();
-    for (const p of payments) {
+    for (const p of allPayments.filter((p) => p.status === "PAID")) {
       const key = `${p.createdAt.getFullYear()}-${String(p.createdAt.getMonth() + 1).padStart(2, "0")}`;
       monthlyMap.set(key, (monthlyMap.get(key) || 0) + p.amount);
     }
-    const monthlyRevenue = Array.from(monthlyMap.entries()).map(([month, amount]) => ({
-      month,
-      amount,
-    }));
+    const monthlyRevenue = Array.from(monthlyMap.entries()).map(
+      ([month, amount]) => ({
+        month,
+        amount,
+      }),
+    );
 
-    const recent = await prisma.payment.findMany({
-      where: { status: "PAID" },
-      include: {
-        user: { select: { id: true, name: true, email: true } },
-        package: { select: { id: true, name: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-    });
-
-    const recentPurchases = recent.map((p) => ({
-      id: p.id,
-      userName: p.user.name,
-      userEmail: p.user.email,
-      packageName: p.package.name,
-      amount: p.amount,
-      razorpayPaymentId: p.razorpayPaymentId,
-      createdAt: p.createdAt,
-    }));
-
-    return { totalRevenue, monthlyRevenue, recentPurchases };
+    return { totalRevenue, totalPayments, successful, failed, refunded, monthlyRevenue };
   },
 };

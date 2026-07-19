@@ -46,7 +46,9 @@
   },
   "packageManager": "pnpm@11.1.1",
   "pnpm": {
-    "onlyBuiltDependencies": ["core-js"]
+    "onlyBuiltDependencies": [
+      "core-js"
+    ]
   },
   "engines": {
     "node": ">=20.0.0",

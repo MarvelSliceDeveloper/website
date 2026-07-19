@@ -28,28 +28,31 @@ export default function AddLessonForm({
     if (show) inputRef.current?.focus();
   }, [show]);
 
-  const handleFetchVideoInfo = useCallback(async (url: string) => {
-    if (!url.trim()) {
-      setDurationSeconds(null);
-      return;
-    }
-    setFetchingInfo(true);
-    try {
-      const data = await api.get<{
-        videoId: string;
-        title: string;
-        durationSeconds: number;
-        thumbnail: string;
-      }>(`/api/youtube/video-info?url=${encodeURIComponent(url)}`);
-      setDurationSeconds(data.durationSeconds);
-      if (data.title && !title) setTitle(data.title);
-    } catch {
-      setDurationSeconds(null);
-      toast.error("Failed to fetch video info. Check the URL or API key.");
-    } finally {
-      setFetchingInfo(false);
-    }
-  }, [title]);
+  const handleFetchVideoInfo = useCallback(
+    async (url: string) => {
+      if (!url.trim()) {
+        setDurationSeconds(null);
+        return;
+      }
+      setFetchingInfo(true);
+      try {
+        const data = await api.get<{
+          videoId: string;
+          title: string;
+          durationSeconds: number;
+          thumbnail: string;
+        }>(`/api/youtube/video-info?url=${encodeURIComponent(url)}`);
+        setDurationSeconds(data.durationSeconds);
+        if (data.title && !title) setTitle(data.title);
+      } catch {
+        setDurationSeconds(null);
+        toast.error("Failed to fetch video info. Check the URL or API key.");
+      } finally {
+        setFetchingInfo(false);
+      }
+    },
+    [title],
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

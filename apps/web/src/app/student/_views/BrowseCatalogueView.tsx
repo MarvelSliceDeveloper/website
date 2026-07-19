@@ -62,7 +62,7 @@ export default function BrowseCatalogueView({
             placeholder="Search courses…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="field pl-9"
+            className="field pl-10"
           />
         </div>
         <div className="flex gap-1.5 overflow-x-auto pb-0.5">

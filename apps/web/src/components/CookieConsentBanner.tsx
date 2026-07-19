@@ -33,11 +33,18 @@ export default function CookieConsentBanner() {
     <div className="fixed bottom-0 left-0 right-0 z-[9999] border-t border-border bg-card/95 p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur-xl">
       <div className="mx-auto flex max-w-5xl flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          <IconCookie size={24} stroke={1.5} className="mt-0.5 shrink-0 text-primary" />
+          <IconCookie
+            size={24}
+            stroke={1.5}
+            className="mt-0.5 shrink-0 text-primary"
+          />
           <div>
-            <p className="text-sm font-semibold text-foreground">We use cookies</p>
+            <p className="text-sm font-semibold text-foreground">
+              We use cookies
+            </p>
             <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-              This site uses essential and analytics cookies to improve your experience. You can accept or decline non-essential cookies.
+              This site uses essential and analytics cookies to improve your
+              experience. You can accept or decline non-essential cookies.
             </p>
           </div>
         </div>

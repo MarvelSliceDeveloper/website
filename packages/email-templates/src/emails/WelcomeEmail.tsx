@@ -15,7 +15,10 @@ interface WelcomeEmailProps {
   credentials?: { email: string; password: string };
 }
 
-export default function WelcomeEmail({ userName, credentials }: WelcomeEmailProps) {
+export default function WelcomeEmail({
+  userName,
+  credentials,
+}: WelcomeEmailProps) {
   return (
     <BaseLayout previewText={`Welcome to LMS Portal, ${userName}!`}>
       <Section style={bodyStyle}>

@@ -2,7 +2,11 @@
 
 import { useRef, useEffect, useState } from "react";
 import "plyr/dist/plyr.css";
-import { IconVideo, IconPlayerPlay, IconAlertTriangle } from "@tabler/icons-react";
+import {
+  IconVideo,
+  IconPlayerPlay,
+  IconAlertTriangle,
+} from "@tabler/icons-react";
 import type { CourseLesson, CourseRecording } from "./types";
 
 type PlyrSource = import("plyr").default.SourceInfo;
@@ -71,7 +75,9 @@ function SafePlyr({ source, options }: SafePlyrProps) {
   // and letting React manage only the stable outer div avoids that entirely.
   const containerRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<{ destroy: () => void } | null>(null);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "ready" | "error">(
+    "loading",
+  );
 
   useEffect(() => {
     let cancelled = false;
