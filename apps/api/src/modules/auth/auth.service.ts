@@ -87,6 +87,7 @@ export const authService = {
       email: user.email,
       name: user.name,
       mustChangePassword: user.mustChangePassword,
+      onboardingComplete: user.onboardingComplete,
       sessionTimeoutMin: user.sessionTimeoutMin,
     });
   },
@@ -98,6 +99,7 @@ export const authService = {
     email: string;
     name: string;
     mustChangePassword?: boolean;
+    onboardingComplete?: boolean;
     sessionTimeoutMin?: number;
   }) {
     const payload = {
@@ -117,6 +119,7 @@ export const authService = {
         ...payload,
         name: user.name,
         mustChangePassword: user.mustChangePassword ?? false,
+        onboardingComplete: user.onboardingComplete ?? false,
       },
     };
   },

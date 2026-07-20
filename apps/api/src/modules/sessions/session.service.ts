@@ -293,8 +293,17 @@ export const sessionService = {
     const session = await prisma.liveSession.findUnique({
       where: { id: sessionId },
       include: {
-        batch: { select: { id: true, name: true, instructorId: true } },
+        batch: {
+          select: {
+            id: true,
+            name: true,
+            instructorId: true,
+            courseId: true,
+            course: { select: { id: true, title: true } },
+          },
+        },
         module: { select: { id: true, title: true } },
+        instructor: { select: { id: true, name: true, email: true } },
         recording: true,
         calendarEvent: true,
       },

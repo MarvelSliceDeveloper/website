@@ -19,6 +19,7 @@ export default function SetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [agreed, setAgreed] = useState(false);
 
   useEffect(() => {
     api
@@ -330,9 +331,39 @@ export default function SetPasswordPage() {
 
                 {error && <p className="text-sm text-danger">{error}</p>}
 
+                {/* Terms agreement */}
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-primary"
+                  />
+                  <span className="text-xs leading-relaxed text-muted-foreground">
+                    I agree to the{" "}
+                    <a
+                      href="/pages/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
+                    >
+                      Terms &amp; Conditions
+                    </a>{" "}
+                    and{" "}
+                    <a
+                      href="/pages/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
+                    >
+                      Privacy Policy
+                    </a>
+                  </span>
+                </label>
+
                 <button
                   type="submit"
-                  disabled={!allPassed || loading}
+                  disabled={!allPassed || !agreed || loading}
                   className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition-all duration-300 hover:from-blue-700 hover:to-blue-600 hover:shadow-xl hover:shadow-blue-600/30 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0"
                 >
                   {loading ? "Setting password..." : "Set Password"}

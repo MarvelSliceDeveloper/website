@@ -39,6 +39,7 @@ import CourseContentView from "./_views/CourseContentView";
 import AssignmentOverdueView from "./_views/AssignmentOverdueView";
 import QuizOverdueView from "./_views/QuizOverdueView";
 import CourseCompletedView from "./_views/CourseCompletedView";
+import OnboardingWizardView from "./_views/OnboardingWizardView";
 
 // ─── Portal data store ────────────────────────────────────────────────────────
 
@@ -434,6 +435,7 @@ function StudentPortalContent() {
   const [error, setError] = useState("");
   const [studentName, setStudentName] = useState("Demo Student");
   const [studentEmail, setStudentEmail] = useState("demo@student.example.com");
+  const [onboardingComplete, setOnboardingComplete] = useState(true);
 
   // Derive current view from URL search params
   const currentView: ViewState = (() => {
@@ -603,13 +605,21 @@ function StudentPortalContent() {
   useEffect(() => {
     let active = true;
     api
-      .get<{ user: { id: string; name: string; email: string; role: string } }>(
-        "/api/auth/me",
-      )
+      .get<{
+        user: {
+          id: string;
+          name: string;
+          email: string;
+          role: string;
+          mustChangePassword: boolean;
+          onboardingComplete: boolean;
+        };
+      }>("/api/auth/me")
       .then((res) => {
         if (!active || !res || !res.user) return;
         setStudentName(res.user.name || "");
         setStudentEmail(res.user.email || "");
+        setOnboardingComplete(res.user.onboardingComplete);
       })
       .catch(() => {
         // ignore — keep demo values if unauthenticated
@@ -691,12 +701,31 @@ function StudentPortalContent() {
     }
   }
 
+  async function handleOnboardingComplete() {
+    try {
+      await api.patch("/api/onboarding/complete");
+      setOnboardingComplete(true);
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to complete onboarding",
+      );
+    }
+  }
+
   // ── Loading / Error states ────────────────────────────────────────────────
 
   if (isLoading) {
     return (
       <StudentPortalShell>
         <HomeSkeleton />
+      </StudentPortalShell>
+    );
+  }
+
+  if (!onboardingComplete) {
+    return (
+      <StudentPortalShell hideLogo={false}>
+        <OnboardingWizardView onComplete={handleOnboardingComplete} />
       </StudentPortalShell>
     );
   }

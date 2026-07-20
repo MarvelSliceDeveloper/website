@@ -64,15 +64,6 @@ interface SafePlyrProps {
  * per video sidesteps that race entirely.
  */
 function SafePlyr({ source, options }: SafePlyrProps) {
-  // React owns this container div and NEVER renders children into it via
-  // JSX. Plyr mutates the DOM inside it directly (wrapping the <video>,
-  // and for YouTube/Vimeo replacing it with an <iframe>). If React also
-  // tried to manage that inner node, React's reconciler and Plyr's direct
-  // DOM manipulation fight over the same nodes, and on unmount React can
-  // try to removeChild a node Plyr already moved/replaced elsewhere,
-  // throwing "Failed to execute 'removeChild' on 'Node': the node to be
-  // removed is not a child of this node." Creating the <video> imperatively
-  // and letting React manage only the stable outer div avoids that entirely.
   const containerRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<{ destroy: () => void } | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
@@ -86,7 +77,6 @@ function SafePlyr({ source, options }: SafePlyrProps) {
     const container = containerRef.current;
     if (!container) return;
 
-    // Clean slate: remove anything left over from a previous run.
     container.innerHTML = "";
     const video = document.createElement("video");
     video.className = "plyr-react plyr";
@@ -103,14 +93,16 @@ function SafePlyr({ source, options }: SafePlyrProps) {
           ...DEFAULT_OPTIONS,
           ...options,
         });
-        plyr.source = source;
+        try {
+          plyr.source = source;
+        } catch {
+          // Plyr's source setter can race with internal element setup
+          // in StrictMode double-mount. Ignore — Plyr still works.
+        }
         instanceRef.current = plyr;
 
         if (!cancelled) setStatus("ready");
       } catch (err) {
-        // Plyr's YouTube iframe API callback can fire after the element is
-        // unmounted (e.g. when switching to quiz/resource preview), or the
-        // embed can fail to load (blocked script, bad video ID, etc).
         console.error("Failed to initialize video player:", err);
         if (!cancelled) setStatus("error");
       }
@@ -126,13 +118,8 @@ function SafePlyr({ source, options }: SafePlyrProps) {
         }
         instanceRef.current = null;
       }
-      // Manually clear whatever Plyr left behind. Since this div is never
-      // touched by React's JSX, it's always safe to wipe it directly.
       if (container) container.innerHTML = "";
     };
-    // `source`/`options` are intentionally not deps here — this component is
-    // remounted wholesale via `key` when the video changes, so this effect
-    // only ever needs to run once per mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -245,7 +232,7 @@ export function VideoPlayer({ lesson, recording }: Props) {
             <IconPlayerPlay size={24} className="text-white ml-0.5" />
           </div>
         </div>
-        <div className="absolute top-10 left-90 rounded-lg bg-black/50 backdrop-blur-sm px-2.5 py-1 text-xs font-medium text-white/90">
+        <div className="absolute top-100 left-90 rounded-lg bg-black/50 backdrop-blur-sm px-2.5 py-1 text-xs font-medium text-white/90">
           {recording.title}
         </div>
         <div className="absolute bottom-0 left-0 right-0 p-3">

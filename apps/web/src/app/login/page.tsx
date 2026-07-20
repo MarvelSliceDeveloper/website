@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState } from "react";
 import {
   IconEye,
@@ -389,12 +390,42 @@ export default function LoginPage() {
                     "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both",
                 }}
               >
-                <a
+                <Link
                   href="/catalogue"
                   className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700"
                 >
                   Browse our course packages
-                </a>
+                </Link>
+              </div>
+
+              {/* Footer Links */}
+              <div
+                className="mt-4 flex items-center justify-center gap-3 text-xs text-muted-foreground"
+                style={{
+                  animation:
+                    "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both",
+                }}
+              >
+                <Link
+                  href="/pages/about"
+                  className="transition-colors hover:text-foreground"
+                >
+                  About Us
+                </Link>
+                <span>·</span>
+                <Link
+                  href="/pages/terms"
+                  className="transition-colors hover:text-foreground"
+                >
+                  Terms &amp; Conditions
+                </Link>
+                <span>·</span>
+                <Link
+                  href="/pages/privacy"
+                  className="transition-colors hover:text-foreground"
+                >
+                  Privacy Policy
+                </Link>
               </div>
 
               {/* Demo Accounts */}

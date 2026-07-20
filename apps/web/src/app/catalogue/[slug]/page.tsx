@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PackageDetailClient } from "./_components/PackageDetailClient";
 import type { PackageDetail } from "@/lib/api-types";
 
@@ -33,12 +34,12 @@ export default async function PackageDetailPage({
           <p className="text-muted-foreground mb-4">
             The package you&apos;re looking for doesn&apos;t exist.
           </p>
-          <a
+          <Link
             href="/catalogue"
             className="text-sm text-primary hover:underline"
           >
             &larr; Back to Catalogue
-          </a>
+          </Link>
         </div>
       </div>
     );

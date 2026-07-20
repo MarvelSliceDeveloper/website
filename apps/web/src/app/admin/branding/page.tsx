@@ -26,6 +26,39 @@ const defaultConfig: BrandingConfig = {
   companyName: "",
 };
 
+function ColorField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <label className="text-sm font-medium text-foreground w-36 shrink-0">
+        {label}
+      </label>
+      <div className="flex items-center gap-2">
+        <input
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-9 w-9 cursor-pointer rounded border border-border p-0.5"
+        />
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="field font-mono text-sm w-28"
+          placeholder="#000000"
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function BrandingPage() {
   const [config, setConfig] = useState<BrandingConfig>(defaultConfig);
   const [loading, setLoading] = useState(true);
@@ -92,39 +125,6 @@ export default function BrandingPage() {
       setUploadingFavicon(false);
     }
   };
-
-  function ColorField({
-    label,
-    value,
-    onChange,
-  }: {
-    label: string;
-    value: string;
-    onChange: (v: string) => void;
-  }) {
-    return (
-      <div className="flex items-center gap-3">
-        <label className="text-sm font-medium text-foreground w-36 shrink-0">
-          {label}
-        </label>
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="h-9 w-9 cursor-pointer rounded border border-border p-0.5"
-          />
-          <input
-            type="text"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="field font-mono text-sm w-28"
-            placeholder="#000000"
-          />
-        </div>
-      </div>
-    );
-  }
 
   if (loading) {
     return (

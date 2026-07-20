@@ -395,14 +395,23 @@ function SessionCard({
         </button>
 
         {/* Join / View */}
-        <a
-          href={session.joinUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-secondary text-xs shrink-0"
-        >
-          {upcoming ? "Join →" : "View Details"}
-        </a>
+        {upcoming ? (
+          <a
+            href={session.joinUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-secondary text-xs shrink-0"
+          >
+            Join &rarr;
+          </a>
+        ) : (
+          <Link
+            href={`/admin/sessions/${session.id}`}
+            className="btn-secondary text-xs shrink-0"
+          >
+            View Details
+          </Link>
+        )}
       </div>
     </div>
   );

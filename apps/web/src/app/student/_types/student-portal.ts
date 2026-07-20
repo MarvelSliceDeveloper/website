@@ -1,6 +1,7 @@
 // Shared view state types for the student single-page portal
 
 export type ViewName =
+  | "ONBOARDING"
   | "HOME"
   | "COURSES"
   | "BATCH_DETAIL"

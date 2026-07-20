@@ -69,6 +69,7 @@ import { bulkUsersRouter } from "./modules/admin/users/bulk.routes";
 import { brandingRouter, publicBrandingRouter } from "./modules/admin/branding/branding.routes";
 import { i18nRouter } from "./modules/admin/i18n/i18n.routes";
 import { cacheRouter } from "./modules/admin/cache/cache.routes";
+import { onboardingRouter } from "./modules/onboarding/onboarding.routes";
 
 const logger = pino({
   level: process.env.LOG_LEVEL || "info",
@@ -242,6 +243,7 @@ app.use("/api/messages", messageRouter);
 app.use("/api/support", supportRouter);
 app.use("/api/tickets", ticketRouter);
 app.use("/api/notes", noteRouter);
+app.use("/api/onboarding", onboardingRouter);
 
 // ── Super Admin routes ──
 app.use("/api/admin/users", superAdminRouter);

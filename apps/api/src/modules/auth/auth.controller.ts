@@ -102,6 +102,7 @@ export const authController = {
           email: true,
           role: true,
           mustChangePassword: true,
+          onboardingComplete: true,
         },
       });
       if (!user) return res.status(404).json({ error: "User not found" });

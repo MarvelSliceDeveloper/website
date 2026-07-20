@@ -864,10 +864,10 @@ export default function ReportsPage() {
       doc.rect(0, 0, pageWidth, pageHeight, "F");
       // Decorative accent shape
       doc.setFillColor(255, 255, 255);
-      doc.setGState(new (doc as any).GState({ opacity: 0.08 }));
+      doc.setGState(new doc.GState({ opacity: 0.08 }));
       doc.circle(pageWidth - 20, 40, 70, "F");
       doc.circle(10, pageHeight - 30, 50, "F");
-      doc.setGState(new (doc as any).GState({ opacity: 1 }));
+      doc.setGState(new doc.GState({ opacity: 1 }));
 
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(11);

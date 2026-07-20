@@ -59,8 +59,108 @@ export function useRazorpayPayment() {
     setLoading(false);
   }, []);
 
+  const submitConsent = useCallback(async () => {
+    if (!paymentId) return;
+    setLoading(true);
+
+    try {
+      await api.post("/api/payments/consent", { paymentId, name, email });
+      setStep("complete");
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err);
+      setErrorMsg(msg);
+      setStep("error");
+    } finally {
+      setLoading(false);
+    }
+  }, [paymentId, name, email]);
+
+  const openRazorpayCheckout = useCallback(
+    (
+      orderData: {
+        orderId: string;
+        amount: number;
+        currency: string;
+        keyId: string;
+      },
+      pkgName: string,
+      pkgId: string,
+    ): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        setStep("processing_payment");
+
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.async = true;
+
+        script.onload = () => {
+          const options = {
+            key: orderData.keyId,
+            amount: orderData.amount,
+            currency: orderData.currency,
+            name: "LMS Portal",
+            description: pkgName,
+            order_id: orderData.orderId,
+            handler: async function (response: RazorpayResponse) {
+              setStep("verifying");
+              try {
+                await api.post("/api/payments/verify", {
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                });
+
+                const batchData = await api.get<BatchOption[]>(
+                  "/api/payments/batches",
+                  { packageId: pkgId },
+                );
+                setBatches(batchData || []);
+
+                if (batchData && batchData.length > 0) {
+                  setStep("selecting_batch");
+                } else {
+                  await submitConsent();
+                }
+                resolve();
+              } catch (err: unknown) {
+                const msg = getErrorMessage(err);
+                setErrorMsg(msg);
+                setStep("error");
+                reject(err);
+              }
+            },
+            modal: {
+              ondismiss: () => {
+                setStep("idle");
+                reject(new Error("Payment cancelled"));
+              },
+            },
+            prefill: {
+              name,
+              email,
+            },
+            theme: { color: "#6d7dff" },
+          };
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const rzp = new (window as any).Razorpay(options);
+          rzp.open();
+        };
+
+        script.onerror = () => {
+          setErrorMsg("Failed to load payment gateway. Please try again.");
+          setStep("error");
+          reject(new Error("Failed to load Razorpay SDK"));
+        };
+
+        document.body.appendChild(script);
+      });
+    },
+    [name, email, submitConsent],
+  );
+
   const createOrder = useCallback(
-    async (pkgId: string, pkgName: string, pkgPrice: number) => {
+    async (pkgId: string, pkgName: string, _pkgPrice: number) => {
       setStep("creating_order");
       setLoading(true);
       setErrorMsg("");
@@ -68,7 +168,7 @@ export function useRazorpayPayment() {
       try {
         const result = await api.post<CreateOrderResult>(
           "/api/payments/create-order",
-          { packageId: pkgId, name, email }
+          { packageId: pkgId, name, email },
         );
 
         setIsNewUser(result.isNewUser ?? false);
@@ -83,88 +183,8 @@ export function useRazorpayPayment() {
         setLoading(false);
       }
     },
-    [name, email]
+    [name, email, openRazorpayCheckout],
   );
-
-  const openRazorpayCheckout = (
-    orderData: {
-      orderId: string;
-      amount: number;
-      currency: string;
-      keyId: string;
-    },
-    pkgName: string,
-    pkgId: string
-  ): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      setStep("processing_payment");
-
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.async = true;
-
-      script.onload = () => {
-        const options = {
-          key: orderData.keyId,
-          amount: orderData.amount,
-          currency: orderData.currency,
-          name: "LMS Portal",
-          description: pkgName,
-          order_id: orderData.orderId,
-          handler: async function (response: RazorpayResponse) {
-            setStep("verifying");
-            try {
-              await api.post("/api/payments/verify", {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              });
-
-              const batchData = await api.get<BatchOption[]>(
-                "/api/payments/batches",
-                { packageId: pkgId }
-              );
-              setBatches(batchData || []);
-
-              if (batchData && batchData.length > 0) {
-                setStep("selecting_batch");
-              } else {
-                await submitConsent();
-              }
-              resolve();
-            } catch (err: unknown) {
-              const msg = getErrorMessage(err);
-              setErrorMsg(msg);
-              setStep("error");
-              reject(err);
-            }
-          },
-          modal: {
-            ondismiss: () => {
-              setStep("idle");
-              reject(new Error("Payment cancelled"));
-            },
-          },
-          prefill: {
-            name,
-            email,
-          },
-          theme: { color: "#6d7dff" },
-        };
-
-        const rzp = new (window as any).Razorpay(options);
-        rzp.open();
-      };
-
-      script.onerror = () => {
-        setErrorMsg("Failed to load payment gateway. Please try again.");
-        setStep("error");
-        reject(new Error("Failed to load Razorpay SDK"));
-      };
-
-      document.body.appendChild(script);
-    });
-  };
 
   const submitEnroll = useCallback(async () => {
     if (!paymentId || !selectedBatchId) return;
@@ -189,22 +209,6 @@ export function useRazorpayPayment() {
       setLoading(false);
     }
   }, [paymentId, selectedBatchId, name, email]);
-
-  const submitConsent = useCallback(async () => {
-    if (!paymentId) return;
-    setLoading(true);
-
-    try {
-      await api.post("/api/payments/consent", { paymentId, name, email });
-      setStep("complete");
-    } catch (err: unknown) {
-      const msg = getErrorMessage(err);
-      setErrorMsg(msg);
-      setStep("error");
-    } finally {
-      setLoading(false);
-    }
-  }, [paymentId, name, email]);
 
   const startCheckout = useCallback(
     async (pkg: { id: string; name: string; price: number | null }) => {

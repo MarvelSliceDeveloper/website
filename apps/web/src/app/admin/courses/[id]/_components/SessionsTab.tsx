@@ -121,16 +121,23 @@ export default function SessionsTab({ courseId }: { courseId: string }) {
                       {syncingId === session.id ? "Syncing..." : "Sync"}
                     </button>
                   )}
-                <a
-                  href={session.joinUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-secondary text-xs shrink-0"
-                >
-                  {new Date(session.scheduledAt) > new Date()
-                    ? "Join \u2192"
-                    : "View"}
-                </a>
+                {new Date(session.scheduledAt) > new Date() ? (
+                  <a
+                    href={session.joinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-secondary text-xs shrink-0"
+                  >
+                    Join &rarr;
+                  </a>
+                ) : (
+                  <Link
+                    href={`/admin/sessions/${session.id}`}
+                    className="btn-secondary text-xs shrink-0"
+                  >
+                    View
+                  </Link>
+                )}
               </div>
             </div>
           ))}

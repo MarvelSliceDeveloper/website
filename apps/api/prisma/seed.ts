@@ -152,6 +152,314 @@ async function main() {
 
   console.log("✅ Courses created");
 
+  // ─── Categories ─────────────────────────────────────────────────────────────
+  const dataScienceCategory = await prisma.category.upsert({
+    where: { slug: "data-science" },
+    update: {},
+    create: {
+      name: "Data Science",
+      slug: "data-science",
+      description: "Courses on data analysis, visualization, and machine learning",
+      order: 0,
+    },
+  });
+  console.log("✅ Category: Data Science");
+
+  // Wire courses to category
+  await prisma.course.updateMany({
+    where: { slug: { in: ["python-for-data-science", "sql-for-data-analysis", "machine-learning-basics"] } },
+    data: { categoryId: dataScienceCategory.id },
+  });
+  console.log("✅ Courses wired to category");
+
+  // ─── Tags ────────────────────────────────────────────────────────────────────
+  const tagDefinitions = [
+    { name: "Python", slug: "python" },
+    { name: "SQL", slug: "sql" },
+    { name: "Machine Learning", slug: "machine-learning" },
+    { name: "Data Analysis", slug: "data-analysis" },
+    { name: "Pandas", slug: "pandas" },
+    { name: "NumPy", slug: "numpy" },
+    { name: "Scikit-learn", slug: "scikit-learn" },
+    { name: "AI", slug: "ai" },
+  ];
+
+  const tags = [];
+  for (const t of tagDefinitions) {
+    const tag = await prisma.tag.upsert({
+      where: { slug: t.slug },
+      update: {},
+      create: t,
+    });
+    tags.push(tag);
+  }
+  console.log(`✅ ${tags.length} tags seeded`);
+
+  // Wire tags to courses
+  const tagMap: Record<string, string[]> = {
+    "python-for-data-science": ["python", "data-analysis", "pandas", "numpy", "scikit-learn"],
+    "sql-for-data-analysis": ["sql", "data-analysis"],
+    "machine-learning-basics": ["machine-learning", "ai", "data-analysis"],
+  };
+
+  for (const [courseSlug, tagSlugs] of Object.entries(tagMap)) {
+    const course = await prisma.course.findUnique({ where: { slug: courseSlug }, select: { id: true } });
+    if (!course) continue;
+    const courseTags = tags.filter((t) => tagSlugs.includes(t.slug));
+    for (const tag of courseTags) {
+      await prisma.courseTag.upsert({
+        where: { courseId_tagId: { courseId: course.id, tagId: tag.id } },
+        update: {},
+        create: { courseId: course.id, tagId: tag.id },
+      });
+    }
+  }
+  console.log("✅ Courses wired to tags");
+
+  // ─── Branding (SystemSetting) ────────────────────────────────────────────────
+  const brandingValue = JSON.stringify({
+    primaryColor: "#4F46E5",
+    logoUrl: "/images/logo.png",
+    faviconUrl: "/images/favicon.ico",
+    companyName: "Marvel Slice LMS",
+  });
+
+  await prisma.systemSetting.upsert({
+    where: { key: "branding" },
+    update: { value: brandingValue },
+    create: {
+      key: "branding",
+      value: brandingValue,
+      type: "json",
+      description: "Platform branding configuration",
+    },
+  });
+  console.log("✅ Branding config seeded");
+
+  // ─── Static Pages ────────────────────────────────────────────────────────────
+  await prisma.staticPage.upsert({
+    where: { slug: "about" },
+    update: {},
+    create: {
+      title: "About Us",
+      slug: "about",
+      content: `
+<h1>About Marvel Slice LMS</h1>
+<p>We are an innovative learning platform dedicated to empowering students with cutting-edge data science and technology skills.</p>
+
+<h2>Our Mission</h2>
+<p>To make high-quality technical education accessible and engaging for everyone. We believe in hands-on learning through live sessions, real-world projects, and expert mentorship.</p>
+
+<h2>What We Offer</h2>
+<ul>
+<li><strong>Live Interactive Classes</strong> — Learn directly from industry experts via Microsoft Teams</li>
+<li><strong>Structured Courses</strong> — Comprehensive modules covering Python, SQL, Machine Learning, Data Analysis, and more</li>
+<li><strong>Hands-on Assignments</strong> — Practice with real datasets and coding challenges</li>
+<li><strong>Mentorship</strong> — 1-on-1 guidance sessions with your instructors</li>
+<li><strong>Certificates</strong> — Earn verified certificates upon course completion</li>
+</ul>
+
+<h2>Our Team</h2>
+<p>Our instructors are industry professionals with years of experience in data science, machine learning, and software engineering. They are passionate about teaching and committed to your success.</p>
+
+<h2>Get Started</h2>
+<p>Browse our <a href="/catalogue">course packages</a> to find the right program for you, or reach out to our support team if you have any questions.</p>`,
+      isPublished: true,
+      createdBy: admin.id,
+    },
+  });
+
+  await prisma.staticPage.upsert({
+    where: { slug: "terms" },
+    update: {},
+    create: {
+      title: "Terms & Conditions",
+      slug: "terms",
+      content: `
+<h1>Terms &amp; Conditions</h1>
+<p><em>Last updated: July 2026</em></p>
+
+<h2>1. Acceptance of Terms</h2>
+<p>By accessing or using the Marvel Slice Learning Platform ("Platform"), you agree to be bound by these Terms &amp; Conditions. If you do not agree, please do not use the Platform.</p>
+
+<h2>2. Account Registration</h2>
+<p>You must provide accurate and complete information when creating an account. You are responsible for maintaining the confidentiality of your login credentials and for all activities under your account.</p>
+
+<h2>3. Use of the Platform</h2>
+<p>The Platform is intended for educational purposes. You may use it to access courses, attend live sessions, complete assignments, and earn certificates. Any misuse — including sharing accounts, redistributing content, or disrupting sessions — may result in suspension.</p>
+
+<h2>4. Course Content</h2>
+<p>All course materials, videos, quizzes, and resources are the intellectual property of the respective instructors and Marvel Slice. You are granted a limited, non-transferable license to access content for personal learning only.</p>
+
+<h2>5. Payments &amp; Refunds</h2>
+<p>Course package fees are non-refundable once access has been granted, unless otherwise stated. Pricing and availability are subject to change without notice.</p>
+
+<h2>6. Certificates</h2>
+<p>Certificates are issued upon successful completion of a course, including meeting attendance and assignment requirements. Certificates are digital and can be shared via unique verification URLs.</p>
+
+<h2>7. Live Sessions</h2>
+<p>Live sessions are conducted via Microsoft Teams. Recording and attendance policies are set by individual instructors. Sessions may be recorded for quality and review purposes.</p>
+
+<h2>8. Limitation of Liability</h2>
+<p>Marvel Slice shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Platform. We strive for uptime but do not guarantee uninterrupted access.</p>
+
+<h2>9. Modifications</h2>
+<p>We reserve the right to update these Terms at any material time. Continued use of the Platform after changes constitutes acceptance of the revised Terms.</p>
+
+<h2>10. Contact</h2>
+<p>For questions about these Terms, contact us through the support portal or email support@marvelslice.com.</p>`,
+      isPublished: true,
+      createdBy: admin.id,
+    },
+  });
+
+  await prisma.staticPage.upsert({
+    where: { slug: "privacy" },
+    update: {},
+    create: {
+      title: "Privacy Policy",
+      slug: "privacy",
+      content: `
+<h1>Privacy Policy</h1>
+<p><em>Last updated: July 2026</em></p>
+
+<h2>1. Information We Collect</h2>
+<p>We collect information you provide directly, including your name, email address, and payment details when you register or purchase a course package. We also collect usage data such as session attendance, video progress, and quiz scores.</p>
+
+<h2>2. How We Use Your Information</h2>
+<ul>
+<li>To provide and improve the Platform and its educational services</li>
+<li>To track your learning progress and issue certificates</li>
+<li>To communicate with you about courses, sessions, and account updates</li>
+<li>To process payments and manage enrollments</li>
+<li>To ensure platform security and prevent fraud</li>
+</ul>
+
+<h2>3. Microsoft Teams Integration</h2>
+<p>Live sessions are conducted through Microsoft Teams. When you join a session, Microsoft may collect usage data per their own privacy policy. We do not control Microsoft's data practices.</p>
+
+<h2>4. Data Sharing</h2>
+<p>We do not sell your personal data. We may share information with:</p>
+<ul>
+<li>Instructors — limited to your name, email, and course progress for the courses you are enrolled in</li>
+<li>Payment processors — to handle transactions securely</li>
+<li>Legal authorities — when required by law</li>
+</ul>
+
+<h2>5. Data Security</h2>
+<p>We implement industry-standard security measures including encrypted passwords, HTTPS, and role-based access controls. However, no method of transmission is 100% secure.</p>
+
+<h2>6. Your Rights</h2>
+<p>You may request access to, correction of, or deletion of your personal data by contacting our support team. Account deletion will remove your personal information but may retain anonymized learning analytics.</p>
+
+<h2>7. Cookies</h2>
+<p>We use essential cookies for authentication and session management. Analytics cookies may be used to improve the Platform. You can manage cookie preferences through your browser settings.</p>
+
+<h2>8. Changes to This Policy</h2>
+<p>We may update this Privacy Policy from time to time. Material changes will be communicated via email or Platform notification.</p>
+
+<h2>9. Contact</h2>
+<p>For privacy-related inquiries, contact us through the support portal or email privacy@marvelslice.com.</p>`,
+      isPublished: true,
+      createdBy: admin.id,
+    },
+  });
+  console.log("✅ Static pages seeded (about, terms, privacy)");
+
+  // ─── Email Templates ──────────────────────────────────────────────────────
+  const emailTemplates = [
+    {
+      name: "welcome",
+      subject: "Welcome to Marvel Slice LMS!",
+      isActive: true,
+      variables: JSON.stringify(["userName", "email", "password"]),
+      body: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:40px 20px;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center">
+      <table style="max-width:600px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+        <tr><td style="background:#4F46E5;padding:24px;text-align:center;">
+          <h1 style="color:#fff;margin:0;font-size:22px;">Welcome to Marvel Slice LMS!</h1>
+        </td></tr>
+        <tr><td style="padding:32px 24px;">
+          <p style="font-size:15px;color:#333;">Hi {{userName}},</p>
+          <p style="font-size:14px;color:#555;line-height:1.6;">
+            We&apos;re excited to have you on board! Your account has been created and you&apos;re ready to start your learning journey.
+          </p>
+          <p style="font-size:14px;color:#555;line-height:1.6;">
+            <strong>Your login credentials:</strong><br/>
+            Email: {{email}}<br/>
+            Password: {{password}}
+          </p>
+          <div style="text-align:center;margin:28px 0;">
+            <a href="{{loginUrl}}" style="display:inline-block;background:#4F46E5;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:bold;">
+              Log In to Your Account
+            </a>
+          </div>
+          <p style="font-size:13px;color:#888;line-height:1.5;">
+            For security reasons, please change your password after your first login.
+          </p>
+        </td></tr>
+        <tr><td style="background:#f8f8f8;padding:16px 24px;text-align:center;font-size:11px;color:#aaa;">
+          &copy; 2026 Marvel Slice LMS. All rights reserved.
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+    },
+    {
+      name: "reset-password",
+      subject: "Reset Your Password - Marvel Slice LMS",
+      isActive: true,
+      variables: JSON.stringify(["userName", "resetLink"]),
+      body: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:40px 20px;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center">
+      <table style="max-width:600px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+        <tr><td style="background:#4F46E5;padding:24px;text-align:center;">
+          <h1 style="color:#fff;margin:0;font-size:22px;">Reset Your Password</h1>
+        </td></tr>
+        <tr><td style="padding:32px 24px;">
+          <p style="font-size:15px;color:#333;">Hi {{userName}},</p>
+          <p style="font-size:14px;color:#555;line-height:1.6;">
+            We received a request to reset your password. Click the button below to choose a new one.
+          </p>
+          <div style="text-align:center;margin:28px 0;">
+            <a href="{{resetLink}}" style="display:inline-block;background:#4F46E5;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:bold;">
+              Reset Password
+            </a>
+          </div>
+          <p style="font-size:13px;color:#888;line-height:1.5;">
+            This link will expire in 15 minutes. If you did not request a password reset, please ignore this email.
+          </p>
+        </td></tr>
+        <tr><td style="background:#f8f8f8;padding:16px 24px;text-align:center;font-size:11px;color:#aaa;">
+          &copy; 2026 Marvel Slice LMS. All rights reserved.
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+    },
+  ];
+
+  for (const tpl of emailTemplates) {
+    await prisma.emailTemplate.upsert({
+      where: { name: tpl.name },
+      update: { subject: tpl.subject, body: tpl.body, variables: tpl.variables, isActive: tpl.isActive },
+      create: tpl,
+    });
+  }
+  console.log("✅ Email templates seeded (welcome, reset-password)");
+
   // ─── Package (needed before batch) ───────────────────────────────────────────
   const dataSciencePkg = await prisma.coursePackage.upsert({
     where: { id: "pkg-datascience" },
@@ -319,39 +627,6 @@ async function main() {
     pkgBatch.id,
     "Python Basics Assignment",
     0,
-    [
-      {
-        questionText: "What is the correct way to create a variable in Python?",
-        marks: 1,
-        options: [
-          { optionText: "var x = 10", isCorrect: false },
-          { optionText: "x = 10", isCorrect: true },
-          { optionText: "int x = 10", isCorrect: false },
-          { optionText: "x := 10", isCorrect: false },
-        ],
-      },
-      {
-        questionText:
-          "Which loop is used when the number of iterations is known?",
-        marks: 1,
-        options: [
-          { optionText: "while loop", isCorrect: false },
-          { optionText: "for loop", isCorrect: true },
-          { optionText: "do-while loop", isCorrect: false },
-          { optionText: "repeat loop", isCorrect: false },
-        ],
-      },
-      {
-        questionText: "What does the `return` statement do?",
-        marks: 1,
-        options: [
-          { optionText: "Exits the program", isCorrect: false },
-          { optionText: "Sends a value back to the caller", isCorrect: true },
-          { optionText: "Prints a value", isCorrect: false },
-          { optionText: "Restarts the function", isCorrect: false },
-        ],
-      },
-    ],
   );
 
   // ─── Module 2: NumPy & Pandas ───────────────────────────────────────────────
@@ -457,42 +732,6 @@ async function main() {
     pkgBatch.id,
     "Data Manipulation Task",
     1,
-    [
-      {
-        questionText:
-          "What method is used to select a single column in a Pandas DataFrame?",
-        marks: 1,
-        options: [
-          { optionText: "df['column']", isCorrect: true },
-          { optionText: "df.column()", isCorrect: false },
-          { optionText: "df.get('column')", isCorrect: false },
-          { optionText: "df.select('column')", isCorrect: false },
-        ],
-      },
-      {
-        questionText: "Which NumPy function computes the mean of an array?",
-        marks: 1,
-        options: [
-          { optionText: "np.average()", isCorrect: false },
-          { optionText: "np.mean()", isCorrect: true },
-          { optionText: "np.median()", isCorrect: false },
-          { optionText: "np.central()", isCorrect: false },
-        ],
-      },
-      {
-        questionText: "What does `df.groupby('col').sum()` do?",
-        marks: 1,
-        options: [
-          {
-            optionText: "Groups by column and sums each group",
-            isCorrect: true,
-          },
-          { optionText: "Sums all rows", isCorrect: false },
-          { optionText: "Creates a pivot table", isCorrect: false },
-          { optionText: "Merges two DataFrames", isCorrect: false },
-        ],
-      },
-    ],
   );
 
   // ─── Module 3: Data Visualization ────────────────────────────────────────────
@@ -583,38 +822,6 @@ async function main() {
     pkgBatch.id,
     "Visualization Challenge",
     2,
-    [
-      {
-        questionText: "How do you create a 2x2 grid of subplots?",
-        marks: 1,
-        options: [
-          { optionText: "plt.subplot(2, 2)", isCorrect: false },
-          { optionText: "plt.subplots(2, 2)", isCorrect: true },
-          { optionText: "plt.grid(2, 2)", isCorrect: false },
-          { optionText: "plt.figure(2, 2)", isCorrect: false },
-        ],
-      },
-      {
-        questionText: "Which Seaborn function creates a scatter plot?",
-        marks: 1,
-        options: [
-          { optionText: "sns.lineplot()", isCorrect: false },
-          { optionText: "sns.barplot()", isCorrect: false },
-          { optionText: "sns.scatterplot()", isCorrect: true },
-          { optionText: "sns.pointplot()", isCorrect: false },
-        ],
-      },
-      {
-        questionText: "What does `plt.savefig('chart.png')` do?",
-        marks: 1,
-        options: [
-          { optionText: "Saves the figure to a file", isCorrect: true },
-          { optionText: "Opens the figure in a viewer", isCorrect: false },
-          { optionText: "Prints the figure", isCorrect: false },
-          { optionText: "Closes the figure", isCorrect: false },
-        ],
-      },
-    ],
   );
 
   // ─── Module 4: Intro to Machine Learning ──────────────────────────────────────
@@ -711,45 +918,6 @@ async function main() {
     pkgBatch.id,
     "ML Model Building",
     3,
-    [
-      {
-        questionText: "What is the purpose of `StandardScaler`?",
-        marks: 1,
-        options: [
-          {
-            optionText:
-              "Standardizes features by removing mean and scaling to unit variance",
-            isCorrect: true,
-          },
-          { optionText: "Scales data to a fixed range", isCorrect: false },
-          { optionText: "Normalizes rows to unit norm", isCorrect: false },
-          { optionText: "Fills missing values", isCorrect: false },
-        ],
-      },
-      {
-        questionText: "Which method trains a Scikit-learn model?",
-        marks: 1,
-        options: [
-          { optionText: "model.train()", isCorrect: false },
-          { optionText: "model.fit()", isCorrect: true },
-          { optionText: "model.learn()", isCorrect: false },
-          { optionText: "model.run()", isCorrect: false },
-        ],
-      },
-      {
-        questionText: "What does `cross_val_score` evaluate?",
-        marks: 1,
-        options: [
-          {
-            optionText: "Single train/test split performance",
-            isCorrect: false,
-          },
-          { optionText: "Cross-validated model performance", isCorrect: true },
-          { optionText: "Feature importance scores", isCorrect: false },
-          { optionText: "Model training time", isCorrect: false },
-        ],
-      },
-    ],
   );
 
   console.log(
@@ -1051,11 +1219,6 @@ async function createAssignment(
   batchId: string,
   title: string,
   order: number,
-  questions: {
-    questionText: string;
-    marks: number;
-    options: { optionText: string; isCorrect: boolean }[];
-  }[],
 ) {
   const existing = await prisma.assignment.findFirst({
     where: { moduleId, title, courseId },
@@ -1069,20 +1232,10 @@ async function createAssignment(
       moduleId,
       title,
       description: `Assignment: ${title}`,
-      type: "QUIZ",
+      type: "ASSIGNMENT",
       order,
       dueDate: new Date("2025-12-31"),
-      maxPoints: questions.reduce((sum, q) => sum + q.marks, 0),
-      questions: {
-        create: questions.map((q, idx) => ({
-          questionText: q.questionText,
-          marks: q.marks,
-          orderIndex: idx,
-          options: {
-            create: q.options,
-          },
-        })),
-      },
+      maxPoints: 100,
     },
   });
 }
