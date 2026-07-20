@@ -121,14 +121,16 @@ export const assignmentService = {
               },
             }
           : undefined,
-        _count: { select: { submissions: true, questions: true } },
+        _count: { select: { submissions: true } },
       },
       orderBy: { createdAt: "desc" },
     });
 
     return assignments.map((a) => {
-      const submission = filters.studentId ? a.submissions[0] || null : null;
-      const { submissions, ...rest } = a;
+      const submission = filters.studentId
+        ? (a as any).submissions?.[0] || null
+        : null;
+      const { submissions: _sub, ...rest } = a as any;
       return {
         ...rest,
         submission,
@@ -148,18 +150,11 @@ export const assignmentService = {
         assignment: {
           include: {
             batch: true,
-            questions: {
-              orderBy: { orderIndex: "asc" },
-              include: {
-                options: true,
-              },
-            },
           },
         },
         student: {
           select: { id: true, name: true, email: true },
         },
-        questionResponses: true,
       },
     });
 
@@ -170,7 +165,7 @@ export const assignmentService = {
     }
     if (
       role === "INSTRUCTOR" &&
-      submission.assignment.batch.instructorId !== userId
+      (submission as any).assignment?.batch?.instructorId !== userId
     ) {
       throw new Error("Access denied");
     }

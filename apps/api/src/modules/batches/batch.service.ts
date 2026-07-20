@@ -323,8 +323,8 @@ export const batchService = {
     });
   },
 
-  // Hard-deletes a batch if no enrollments exist
-  async deleteBatch(batchId: string) {
+  // Soft-deletes a batch
+  async deleteBatch(batchId: string, deletedBy?: string) {
     const batch = await prisma.batch.findUnique({
       where: { id: batchId },
       include: { _count: { select: { enrollments: true } } },
@@ -337,7 +337,13 @@ export const batchService = {
       );
     }
 
-    await prisma.batch.delete({ where: { id: batchId } });
+    await prisma.batch.update({
+      where: { id: batchId },
+      data: {
+        deletedAt: new Date(),
+        deletedBy: deletedBy ?? null,
+      },
+    });
     return { deleted: true };
   },
 

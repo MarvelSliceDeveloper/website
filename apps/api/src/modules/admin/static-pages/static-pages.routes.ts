@@ -7,9 +7,7 @@ import {
 } from "../../../middleware/auth.middleware";
 
 const router = Router();
-
-router.use(requireAuth);
-router.use(requireSuperAdmin);
+const publicRouter = Router();
 
 function slugify(title: string): string {
   return title
@@ -17,6 +15,29 @@ function slugify(title: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 }
+
+// Public endpoint — no auth required
+publicRouter.get("/by-slug/:slug", async (req, res: Response) => {
+  try {
+    const { slug } = req.params;
+    const page = await prisma.staticPage.findUnique({
+      where: { slug, isPublished: true },
+      select: { id: true, title: true, slug: true, content: true },
+    });
+    if (!page) {
+      return res.status(404).json({ error: "Page not found" });
+    }
+    return res.json({ page });
+  } catch (error: unknown) {
+    return res.status(500).json({
+      error: error instanceof Error ? error.message : "Failed to fetch page",
+    });
+  }
+});
+
+// ── Admin routes (require auth) ──
+router.use(requireAuth);
+router.use(requireSuperAdmin);
 
 // GET / — List all static pages
 router.get("/", async (_req: AuthRequest, res: Response) => {
@@ -176,4 +197,4 @@ router.delete("/:id", async (req: AuthRequest, res: Response) => {
   }
 });
 
-export default router;
+export { router as default, publicRouter as publicStaticPagesRouter };

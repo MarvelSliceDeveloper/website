@@ -105,6 +105,11 @@ model User {
   packageEnrollments      PackageEnrollment[]
   payments                Payment[]
   auditLogs               AuditLog[]
+  graphApiLogs            GraphApiLog[]
+  loginLogs               LoginLog[]
+  createdApiKeys          ApiKey[]
+  createdAnnouncements    Announcement[]
+  createdStaticPages      StaticPage[]
 }
 
 model Course {
@@ -229,6 +234,8 @@ model EnrollmentRequest {
   reviewedAt DateTime?
   user       User             @relation(fields: [userId], references: [id])
   batch      Batch?           @relation(fields: [batchId], references: [id])
+
+  @@index([userId])
 }
 
 // Admin creates Teams meeting → assigns to a batch
@@ -259,6 +266,8 @@ model LiveSession {
   attendance         Attendance[]
   instructorId       String?
   instructor         User?             @relation("SessionInstructor", fields: [instructorId], references: [id])
+
+  @@index([scheduledAt])
 }
 
 model Recording {
@@ -366,9 +375,9 @@ model MentorshipTicket {
   mentor      User?        @relation("TicketMentor", fields: [mentorId], references: [id])
   course      Course?      @relation(fields: [courseId], references: [id])
   liveSession LiveSession?
-}
 
-// Support tickets — users (students/instructors) raise issues to admin
+  @@index([studentId])
+}
 model SupportTicket {
   id          String              @id @default(cuid())
   userId      String
@@ -381,6 +390,8 @@ model SupportTicket {
 
   user     User             @relation("UserSupportTickets", fields: [userId], references: [id])
   messages SupportMessage[]
+
+  @@index([userId])
 }
 
 model SupportMessage {
@@ -481,28 +492,7 @@ model Assignment {
   deletedBy      String?
   restoredAt     DateTime?
   restoredBy     String?
-  questions      AssignmentQuestion[]
   submissions    AssignmentSubmission[]
-}
-
-model AssignmentQuestion {
-  id           String                    @id @default(cuid())
-  assignmentId String
-  questionText String                    @db.Text
-  marks        Int                       @default(1)
-  orderIndex   Int                       @default(0)
-  assignment   Assignment                @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  options      AssignmentMcqOption[]
-  responses    StudentQuestionResponse[]
-}
-
-model AssignmentMcqOption {
-  id         String                    @id @default(cuid())
-  questionId String
-  optionText String
-  isCorrect  Boolean                   @default(false)
-  question   AssignmentQuestion        @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  responses  StudentQuestionResponse[]
 }
 
 model AssignmentSubmission {
@@ -518,22 +508,8 @@ model AssignmentSubmission {
   answerFileUrl     String? // File uploaded by student (for ASSIGNMENT type)
   assignment        Assignment                @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   student           User                      @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  questionResponses StudentQuestionResponse[]
 
   @@unique([assignmentId, studentId])
-}
-
-model StudentQuestionResponse {
-  id               String               @id @default(cuid())
-  submissionId     String
-  questionId       String
-  selectedOptionId String
-  isCorrect        Boolean              @default(false)
-  submission       AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  question         AssignmentQuestion   @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  selectedOption   AssignmentMcqOption  @relation(fields: [selectedOptionId], references: [id], onDelete: Cascade)
-
-  @@unique([submissionId, questionId])
 }
 
 model GraphApiLog {
@@ -546,6 +522,7 @@ model GraphApiLog {
   errorMsg   String? // Error message if failed
   durationMs Int? // How long the request took
   createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([userId])
   @@index([createdAt])
@@ -588,8 +565,9 @@ model ApiKey {
   permissions Json      @default("[]") // string[]
   lastUsedAt  DateTime?
   active      Boolean   @default(true)
-  createdBy   String
+  createdBy   String?
   createdAt   DateTime  @default(now())
+  creator     User?     @relation(fields: [createdBy], references: [id], onDelete: SetNull)
 }
 
 model LoginLog {
@@ -600,6 +578,9 @@ model LoginLog {
   deviceInfo String?
   loginAt    DateTime  @default(now())
   logoutAt   DateTime?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
 }
 
 model PermissionOverride {
@@ -615,10 +596,11 @@ model Announcement {
   id         String   @id @default(cuid())
   title      String
   body       String
-  createdBy  String
+  createdBy  String?
   targetRole Role // ADMIN | INSTRUCTOR
   createdAt  DateTime @default(now())
   readBy     Json     @default("[]") // userId[]
+  creator    User?    @relation(fields: [createdBy], references: [id], onDelete: SetNull)
 }
 
 model ConsentLog {
@@ -743,6 +725,8 @@ model Payment {
   user       User               @relation(fields: [userId], references: [id])
   package    CoursePackage      @relation(fields: [packageId], references: [id])
   enrollment PackageEnrollment?
+
+  @@index([userId])
 }
 
 model PackageEnrollment {
@@ -758,6 +742,8 @@ model PackageEnrollment {
   package CoursePackage             @relation(fields: [packageId], references: [id])
   courses PackageEnrollmentCourse[]
   payment Payment?                  @relation(fields: [paymentId], references: [id])
+
+  @@index([userId])
 }
 
 model PackageEnrollmentCourse {
@@ -773,16 +759,16 @@ model PackageEnrollmentCourse {
 // === AUDIT LOG ===
 
 model AuditLog {
-  id         String   @id @default(cuid())
-  userId     String
+  id         String    @id @default(cuid())
+  userId     String?
   action     String // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, BULK_IMPORT, etc.
   entityType String // User, Course, Batch, Certificate, etc.
   entityId   String?
   details    Json? // Before/after diff, metadata
   ipAddress  String?
   userAgent  String?
-  createdAt  DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime  @default(now())
+  user       User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([entityType, entityId])
@@ -832,9 +818,10 @@ model StaticPage {
   slug        String   @unique
   content     String   @db.Text
   isPublished Boolean  @default(false)
-  createdBy   String
+  createdBy   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  creator     User?    @relation(fields: [createdBy], references: [id], onDelete: SetNull)
 }
 
 // === EMAIL TEMPLATES ===

@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(process.cwd(), "../.."),
   },
-  allowedDevOrigins: ["automaker-speed-unroasted.ngrok-free.dev"],
+  allowedDevOrigins: ["automaker-speed-unroasted.ngrok-free.dev", '10.147.116.33'],
   async rewrites() {
     return [
       {

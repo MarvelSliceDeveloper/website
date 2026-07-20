@@ -7,7 +7,9 @@ export const CreateCourseSchema = z.object({
   title: z.string().min(3).max(200),
   description: z.string().min(10),
   category: z.string().max(100).optional(),
+  categoryId: z.string().uuid().optional(),
   tags: z.array(z.string()).optional(),
+  tagIds: z.array(z.string().uuid()).optional(),
   learningObjectives: z.array(z.string()).optional(),
   thumbnailUrl: z.string().url().optional(),
   coverImageUrl: z.string().url().optional(),
@@ -17,7 +19,9 @@ export const UpdateCourseSchema = z.object({
   title: z.string().min(3).max(200).optional(),
   description: z.string().min(10).optional(),
   category: z.string().max(100).nullable().optional(),
+  categoryId: z.string().uuid().nullable().optional(),
   tags: z.array(z.string()).optional(),
+  tagIds: z.array(z.string().uuid()).optional(),
   learningObjectives: z.array(z.string()).optional(),
   thumbnailUrl: z.string().url().nullable().optional(),
   coverImageUrl: z.string().url().nullable().optional(),
@@ -69,12 +73,13 @@ export const courseService = {
   ) {
     const slug = await ensureUniqueSlug(generateSlug(data.title));
 
-    return prisma.course.create({
+    const course = await prisma.course.create({
       data: {
         title: data.title,
         slug,
         description: data.description,
         category: data.category,
+        categoryId: data.categoryId,
         tags: data.tags ?? [],
         learningObjectives: data.learningObjectives ?? [],
         thumbnailUrl: data.thumbnailUrl,
@@ -83,6 +88,14 @@ export const courseService = {
         status: "DRAFT",
       },
     });
+
+    if (data.tagIds?.length) {
+      await prisma.courseTag.createMany({
+        data: data.tagIds.map((tagId) => ({ courseId: course.id, tagId })),
+      });
+    }
+
+    return course;
   },
 
   // Lists courses with optional filters
@@ -152,6 +165,8 @@ export const courseService = {
             },
           },
         },
+        courseTags: { include: { tag: true } },
+        categoryRelation: true,
         _count: { select: { batches: true } },
       },
     });
@@ -170,21 +185,34 @@ export const courseService = {
     });
     if (!existing) throw new Error("Course not found");
 
-    const updateData: any = { ...data };
+    const { tagIds, ...restData } = data;
+    const updateData: any = { ...restData };
 
-    // If title changed, regenerate slug
     if (data.title && data.title !== existing.title) {
       updateData.slug = await ensureUniqueSlug(generateSlug(data.title));
     }
 
-    return prisma.course.update({
-      where: { id: courseId },
-      data: updateData,
+    return prisma.$transaction(async (tx) => {
+      const course = await tx.course.update({
+        where: { id: courseId },
+        data: updateData,
+      });
+
+      if (tagIds !== undefined) {
+        await tx.courseTag.deleteMany({ where: { courseId } });
+        if (tagIds.length) {
+          await tx.courseTag.createMany({
+            data: tagIds.map((tagId) => ({ courseId, tagId })),
+          });
+        }
+      }
+
+      return course;
     });
   },
 
   // Soft-deletes a course (sets status to ARCHIVED)
-  async deleteCourse(courseId: string) {
+  async deleteCourse(courseId: string, deletedBy?: string) {
     const existing = await prisma.course.findUnique({
       where: { id: courseId },
     });
@@ -192,7 +220,11 @@ export const courseService = {
 
     return prisma.course.update({
       where: { id: courseId },
-      data: { status: "ARCHIVED" },
+      data: {
+        status: "ARCHIVED",
+        deletedAt: new Date(),
+        deletedBy: deletedBy ?? null,
+      },
     });
   },
 
@@ -265,7 +297,7 @@ export const courseService = {
     });
   },
 
-  async recoverCourse(courseId: string) {
+  async recoverCourse(courseId: string, restoredBy?: string) {
     const existing = await prisma.course.findUnique({
       where: { id: courseId },
     });
@@ -275,7 +307,13 @@ export const courseService = {
 
     return prisma.course.update({
       where: { id: courseId },
-      data: { status: "DRAFT" },
+      data: {
+        status: "DRAFT",
+        deletedAt: null,
+        deletedBy: null,
+        restoredAt: new Date(),
+        restoredBy: restoredBy ?? null,
+      },
     });
   },
 
@@ -342,31 +380,12 @@ export const courseService = {
       ).map((a: { id: string }) => a.id);
 
       if (assignmentIds.length) {
-        const questionIds = (
-          await tx.assignmentQuestion.findMany({
-            where: { assignmentId: { in: assignmentIds } },
-            select: { id: true },
-          })
-        ).map((q: { id: string }) => q.id);
-        await tx.assignmentMcqOption.deleteMany({
-          where: { questionId: { in: questionIds } },
-        });
-        await tx.studentQuestionResponse.deleteMany({
-          where: { questionId: { in: questionIds } },
-        });
-        await tx.assignmentQuestion.deleteMany({
-          where: { assignmentId: { in: assignmentIds } },
-        });
-
         const submissionIds = (
           await tx.assignmentSubmission.findMany({
             where: { assignmentId: { in: assignmentIds } },
             select: { id: true },
           })
         ).map((s: { id: string }) => s.id);
-        await tx.studentQuestionResponse.deleteMany({
-          where: { submissionId: { in: submissionIds } },
-        });
         await tx.assignmentSubmission.deleteMany({
           where: { assignmentId: { in: assignmentIds } },
         });

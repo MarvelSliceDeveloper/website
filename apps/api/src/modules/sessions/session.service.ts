@@ -400,7 +400,13 @@ export const sessionService = {
           });
           await tx.recording.delete({ where: { sessionId } });
         }
-        return tx.liveSession.delete({ where: { id: sessionId } });
+        return tx.liveSession.update({
+          where: { id: sessionId },
+          data: {
+            deletedAt: new Date(),
+            deletedBy: userId,
+          },
+        });
       });
     }
 

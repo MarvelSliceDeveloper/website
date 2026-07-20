@@ -96,7 +96,7 @@ export const courseController = {
   // Archives (soft-deletes) a course
   async delete(req: AuthRequest, res: Response) {
     try {
-      await courseService.deleteCourse(req.params.id);
+      await courseService.deleteCourse(req.params.id, req.user?.userId);
       return res.status(200).json({ message: "Course archived successfully" });
     } catch (error: any) {
       if (error.message === "Course not found") {
@@ -145,7 +145,7 @@ export const courseController = {
   // Recovers an archived course back to DRAFT
   async recover(req: AuthRequest, res: Response) {
     try {
-      const course = await courseService.recoverCourse(req.params.id);
+      const course = await courseService.recoverCourse(req.params.id, req.user?.userId);
       return res.json({ message: "Course recovered", course });
     } catch (error: any) {
       if (error.message === "Course not found") {

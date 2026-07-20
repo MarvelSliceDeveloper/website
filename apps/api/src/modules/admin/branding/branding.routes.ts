@@ -24,8 +24,7 @@ const upload = multer({
 
 const router = Router();
 
-router.use(requireAuth);
-router.use(requireSuperAdmin);
+const publicRouter = Router();
 
 const uploadsDir = path.resolve(__dirname, "..", "..", "..", "..", "uploads");
 fs.mkdirSync(uploadsDir, { recursive: true });
@@ -57,6 +56,26 @@ function parseBranding(value: string): BrandingConfig {
     };
   }
 }
+
+// Public endpoint — no auth required
+publicRouter.get("/", async (_req, res: Response) => {
+  try {
+    const setting = await prisma.systemSetting.findUnique({
+      where: { key: BRAND_KEY },
+    });
+    const config = setting ? parseBranding(setting.value) : parseBranding("{}");
+    return res.json({ data: config });
+  } catch (error: unknown) {
+    return res.status(500).json({
+      error:
+        error instanceof Error ? error.message : "Failed to fetch branding",
+    });
+  }
+});
+
+// ── Admin routes (require auth) ──
+router.use(requireAuth);
+router.use(requireSuperAdmin);
 
 // GET / — Get current branding config
 router.get("/", async (_req: AuthRequest, res: Response) => {
@@ -226,4 +245,4 @@ router.post(
   },
 );
 
-export { router as brandingRouter };
+export { router as brandingRouter, publicRouter as publicBrandingRouter };

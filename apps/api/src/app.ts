@@ -61,12 +61,12 @@ import {
 import categoriesRouter from "./modules/admin/categories/categories.routes";
 import tagsRouter from "./modules/admin/tags/tags.routes";
 import adminCertificatesRouter from "./modules/admin/certificates/certificates.routes";
-import staticPagesRouter from "./modules/admin/static-pages/static-pages.routes";
+import staticPagesRouter, { publicStaticPagesRouter } from "./modules/admin/static-pages/static-pages.routes";
 import emailTemplatesRouter from "./modules/admin/email-templates/email-templates.routes";
 import auditLogsRouter from "./modules/admin/audit-logs/audit-logs.routes";
 import announcementsRouter from "./modules/admin/announcements/announcements.routes";
 import { bulkUsersRouter } from "./modules/admin/users/bulk.routes";
-import { brandingRouter } from "./modules/admin/branding/branding.routes";
+import { brandingRouter, publicBrandingRouter } from "./modules/admin/branding/branding.routes";
 import { i18nRouter } from "./modules/admin/i18n/i18n.routes";
 import { cacheRouter } from "./modules/admin/cache/cache.routes";
 
@@ -213,6 +213,10 @@ app.get("/api/csrf-token", (req: Request, res: Response) => {
 app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
+
+// ── Public routes (no auth) ──
+app.use("/api/public/branding", publicBrandingRouter);
+app.use("/api/pages", publicStaticPagesRouter);
 
 // ── Protected routes ──
 app.use("/api/calendar", calendarRouter);

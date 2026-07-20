@@ -75,13 +75,19 @@ export const assignmentService = {
     });
   },
 
-  async deleteAssignment(assignmentId: string) {
+  async deleteAssignment(assignmentId: string, deletedBy?: string) {
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId },
     });
     if (!assignment) throw new Error("Assignment not found");
 
-    await prisma.assignment.delete({ where: { id: assignmentId } });
+    await prisma.assignment.update({
+      where: { id: assignmentId },
+      data: {
+        deletedAt: new Date(),
+        deletedBy: deletedBy ?? null,
+      },
+    });
     if (assignment.moduleId) {
       await removeFromContentOrder(assignment.moduleId, assignmentId);
     }
