@@ -193,9 +193,20 @@ export default function CourseDetailPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
+          <div className="flex items-center gap-2 mb-2">
+            <img
+              src="/images/logo.svg"
+              alt="Marvel Slice"
+              className="h-5 w-auto"
+            />
+            <span className="text-xs font-bold tracking-tight">
+              <span className="text-blue-600">Marvel</span>{" "}
+              <span className="text-blue-500">Slice</span>
+            </span>
+          </div>
           <Link
             href="/admin/courses"
-            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors mb-2 inline-flex items-center gap-1"
+            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
           >
             ← Back to Courses
           </Link>

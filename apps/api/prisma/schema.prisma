@@ -703,6 +703,7 @@ model CourseAssignmentTemplate {
 model CoursePackage {
   id          String        @id @default(cuid())
   name        String
+  slug        String        @unique // URL-safe slug for public page (/catalogue/:slug)
   description String?
   price       Int? // price in paise (₹500 = 50000); null = free/private
   status      PackageStatus @default(DRAFT)

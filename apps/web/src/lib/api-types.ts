@@ -158,6 +158,7 @@ export interface DashboardChartData {
 
 export interface CataloguePackage {
   id: string;
+  slug: string;
   name: string;
   description: string | null;
   price: number | null;
@@ -170,6 +171,36 @@ export interface CataloguePackage {
       slug: string;
       description: string | null;
       thumbnailUrl: string | null;
+    };
+  }[];
+  batches: {
+    id: string;
+    name: string;
+    startDate: string;
+    maxStudents: number | null;
+  }[];
+  _count: { enrollments: number };
+}
+
+// Extended package detail returned by GET /api/packages/public/:slug
+export interface PackageDetail {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  price: number | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  courses: {
+    course: {
+      id: string;
+      title: string;
+      slug: string;
+      description: string | null;
+      thumbnailUrl: string | null;
+      learningObjectives: string[] | null;
+      modules: { id: string; title: string; order: number }[];
     };
   }[];
   batches: {

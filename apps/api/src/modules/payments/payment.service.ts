@@ -237,6 +237,10 @@ export const paymentService = {
       });
     }
 
+    if (!user) {
+      throw new Error("User could not be found or created");
+    }
+
     const enrollment = await prisma.packageEnrollment.create({
       data: {
         userId: user.id,
@@ -309,6 +313,10 @@ export const paymentService = {
           role: "STUDENT",
         },
       });
+    }
+
+    if (!user) {
+      throw new Error("User could not be found or created");
     }
 
     const enrollment = await prisma.packageEnrollment.create({

@@ -151,6 +151,18 @@ export const packageController = {
     }
   },
 
+  // Get a single ACTIVE package by slug
+  async getPublicPackage(req: AuthRequest, res: Response) {
+    try {
+      const pkg = await packageService.getPublicPackageBySlug(req.params.slug);
+      return res.json({ package: pkg });
+    } catch (error: any) {
+      if (error.message === "Package not found")
+        return res.status(404).json({ error: error.message });
+      return res.status(500).json({ error: error.message });
+    }
+  },
+
   // Get public catalogue of ACTIVE packages
   async getPublicCatalogue(_req: AuthRequest, res: Response) {
     try {

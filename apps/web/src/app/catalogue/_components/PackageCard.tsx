@@ -1,13 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import type { CataloguePackage } from "@/lib/api-types";
 
 interface PackageCardProps {
   pkg: CataloguePackage;
-  onBuyNow: (pkg: CataloguePackage) => void;
 }
 
-export function PackageCard({ pkg, onBuyNow }: PackageCardProps) {
+export function PackageCard({ pkg }: PackageCardProps) {
   const courseCount = pkg.courses?.length || 0;
   const batchCount = pkg.batches?.length || 0;
   const hasPrice = pkg.price != null && pkg.price > 0;
@@ -79,13 +79,12 @@ export function PackageCard({ pkg, onBuyNow }: PackageCardProps) {
           )}
         </div>
 
-        <button
-          onClick={() => onBuyNow(pkg)}
-          className="px-5 py-2 rounded-lg bg-primary text-white font-medium text-sm hover:bg-primary-hover transition-colors disabled:opacity-50"
-          disabled={!hasPrice}
+        <Link
+          href={`/catalogue/${pkg.slug}`}
+          className={`px-5 py-2 rounded-lg bg-primary text-white font-medium text-sm hover:bg-primary-hover transition-colors inline-flex items-center justify-center ${!hasPrice ? "pointer-events-none opacity-50" : ""}`}
         >
           {hasPrice ? "Buy Now" : "Contact Us"}
-        </button>
+        </Link>
       </div>
     </div>
   );

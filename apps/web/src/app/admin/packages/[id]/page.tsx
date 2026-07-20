@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
@@ -15,6 +15,7 @@ import {
   IconBook,
   IconCheck,
   IconX,
+  IconLink,
 } from "@tabler/icons-react";
 import {
   Select,
@@ -63,6 +64,7 @@ type Batch = {
 type PackageDetail = {
   id: string;
   name: string;
+  slug: string;
   description: string | null;
   status: "DRAFT" | "ACTIVE" | "ARCHIVED";
   createdAt: string;
@@ -239,6 +241,15 @@ export default function PackageDetailPage({
     }
   };
 
+  const handleCopyLink = useCallback(() => {
+    if (!pkg?.slug) return;
+    const url = `${window.location.origin}/catalogue/${pkg.slug}`;
+    navigator.clipboard.writeText(url).then(
+      () => toast.success("Link copied!"),
+      () => toast.error("Failed to copy link"),
+    );
+  }, [pkg?.slug]);
+
   const handleReject = async (enrollmentId: string) => {
     if (!confirm("Reject this enrollment?")) return;
     try {
@@ -294,6 +305,15 @@ export default function PackageDetailPage({
               <IconArrowLeft size={16} stroke={1.5} />
               Back
             </Link>
+            {pkg.slug && (
+              <button
+                onClick={handleCopyLink}
+                className="btn-secondary text-sm flex items-center gap-1.5"
+              >
+                <IconLink size={16} stroke={1.5} />
+                Copy Link
+              </button>
+            )}
             {pkg.status === "DRAFT" && (
               <button
                 onClick={() => handleStatusChange("ACTIVE")}

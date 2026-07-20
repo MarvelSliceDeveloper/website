@@ -607,7 +607,7 @@ export const authController = {
           .json({ error: "Password must contain at least one number" });
       }
 
-      let payload: { userId: string };
+      let payload: { userId: string; purpose: string };
       try {
         payload = jwt.verify(token, process.env.JWT_SECRET!) as {
           userId: string;

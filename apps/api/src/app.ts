@@ -3,7 +3,6 @@ import * as path from "path";
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 import * as Sentry from "@sentry/node";
-import { expressMiddleware } from "@sentry/integrations";
 
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
@@ -88,10 +87,7 @@ if (sentryDsn) {
 
 const app = express();
 
-if (sentryDsn) {
-  app.use(Sentry.Handlers.requestHandler());
-  app.use(Sentry.Handlers.tracingHandler());
-}
+// Sentry v10+ auto-instruments Express — no manual request/tracing handlers needed
 
 const uploadsRoot = path.resolve(__dirname, "..", "uploads");
 fs.mkdirSync(uploadsRoot, { recursive: true });
@@ -116,15 +112,16 @@ app.use(
       res: () => undefined,
     },
     customLogLevel: (res, err) => {
-      if (res.statusCode >= 500) return "error";
-      if (res.statusCode >= 400) return "warn";
+      const statusCode = (res as any).statusCode ?? 200;
+      if (statusCode >= 500) return "error";
+      if (statusCode >= 400) return "warn";
       return "info";
     },
     customSuccessMessage: (req, res) =>
-      `${req.method} ${req.url} ${res.statusCode} ${res.responseTime}ms`,
+      `${req.method} ${req.url} ${(res as any).statusCode ?? 200} ${(res as any).responseTime ?? 0}ms`,
     customErrorMessage: (req, res, err) =>
-      `${req.method} ${req.url} ${res.statusCode} - ${err.message} ${res.responseTime}ms`,
-  }),
+      `${req.method} ${req.url} ${(res as any).statusCode ?? 500} - ${err.message} ${(res as any).responseTime ?? 0}ms`,
+  } as any),
 );
 
 // ── CSRF protection — applied BEFORE body parser so invalid requests
@@ -279,7 +276,7 @@ app.use("/api/admin/payments", adminPaymentRouter);
 
 // Sentry error handler (must come before generic error handler)
 if (process.env.SENTRY_DSN) {
-  app.use(Sentry.Handlers.errorHandler());
+  Sentry.setupExpressErrorHandler(app);
 }
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

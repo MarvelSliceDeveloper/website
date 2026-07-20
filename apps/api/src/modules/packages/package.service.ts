@@ -49,9 +49,15 @@ export const packageService = {
       throw new Error("One or more courses not found");
     }
 
+    const slug = data.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
     return prisma.coursePackage.create({
       data: {
         name: data.name,
+        slug,
         description: data.description,
         price: data.price,
         courses: {
@@ -444,6 +450,41 @@ export const packageService = {
     });
 
     return updated;
+  },
+
+  // Get a single ACTIVE package by slug with full course detail (no auth required)
+  async getPublicPackageBySlug(slug: string) {
+    const pkg = await prisma.coursePackage.findUnique({
+      where: { slug, status: "ACTIVE" },
+      include: {
+        courses: {
+          include: {
+            course: {
+              select: {
+                id: true,
+                title: true,
+                slug: true,
+                description: true,
+                thumbnailUrl: true,
+                learningObjectives: true,
+                modules: {
+                  select: { id: true, title: true, order: true },
+                  orderBy: { order: "asc" },
+                },
+              },
+            },
+          },
+          orderBy: { order: "asc" },
+        },
+        batches: {
+          where: { isActive: true },
+          select: { id: true, name: true, startDate: true, maxStudents: true },
+        },
+        _count: { select: { enrollments: true } },
+      },
+    });
+    if (!pkg) throw new Error("Package not found");
+    return pkg;
   },
 
   // Get public catalogue of ACTIVE packages (no auth required)

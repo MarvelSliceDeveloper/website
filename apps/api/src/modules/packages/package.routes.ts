@@ -84,3 +84,6 @@ export const publicPackageRouter = Router();
 
 // GET /api/packages/public — public catalogue of ACTIVE packages with prices
 publicPackageRouter.get("/public", packageController.getPublicCatalogue);
+
+// GET /api/packages/public/:slug — single ACTIVE package with full detail
+publicPackageRouter.get("/public/:slug", packageController.getPublicPackage);

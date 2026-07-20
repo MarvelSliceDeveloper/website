@@ -16,12 +16,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // ── i18n ──────────────────────────────────────────────────────────────
-  i18n: {
-    locales: ["en"],
-    defaultLocale: "en",
-    localeDetection: false,
-  },
 };
 
 export default nextConfig;
