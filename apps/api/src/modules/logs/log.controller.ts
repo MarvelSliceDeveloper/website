@@ -6,7 +6,10 @@ export const logController = {
   async list(req: AuthRequest, res: Response) {
     try {
       const page = Math.max(1, parseInt(req.query.page as string) || 1);
-      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+      const limit = Math.min(
+        100,
+        Math.max(1, parseInt(req.query.limit as string) || 50),
+      );
       const skip = (page - 1) * limit;
       const { userId, action, status, from, to } = req.query;
 
@@ -17,8 +20,14 @@ export const logController = {
       if (status) where.statusCode = parseInt(status as string);
       if (from || to) {
         where.createdAt = {};
-        if (from) (where.createdAt as Record<string, unknown>).gte = new Date(from as string);
-        if (to) (where.createdAt as Record<string, unknown>).lte = new Date(to as string);
+        if (from)
+          (where.createdAt as Record<string, unknown>).gte = new Date(
+            from as string,
+          );
+        if (to)
+          (where.createdAt as Record<string, unknown>).lte = new Date(
+            to as string,
+          );
       }
 
       const [logs, total] = await Promise.all([
@@ -33,7 +42,12 @@ export const logController = {
 
       return res.json({
         logs,
-        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
       });
     } catch (error: unknown) {
       return res.status(500).json({ error: (error as Error).message });
@@ -68,7 +82,8 @@ export const logController = {
         stats: {
           totalLogs,
           failedLogs,
-          errorRate: totalLogs > 0 ? ((failedLogs / totalLogs) * 100).toFixed(2) : "0",
+          errorRate:
+            totalLogs > 0 ? ((failedLogs / totalLogs) * 100).toFixed(2) : "0",
           topErrors: topErrors
             .filter((e) => e.errorMsg)
             .map((e) => ({ error: e.errorMsg, count: e._count.id })),

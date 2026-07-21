@@ -1,12 +1,21 @@
+/**
+ * Batch service — manages course batches (class groups), student enrollment,
+ * course visibility toggling, and capacity enforcement.
+ *
+ * A batch links to either a single course (courseId) or a package (packageId).
+ * Students are enrolled via userIds with automatic capacity checks.
+ * Instructors can only manage their own batches.
+ */
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
 import { UserRole } from "@lms/types";
 
 // --- Zod Schemas ---
 
-// NOTE: IDs are validated as non-empty strings rather than `z.string().cuid()`.
-// The DB uses `@default(cuid())` but does not enforce the format (seed data uses
-// fixed IDs like "pkg-fullstack"), so strict cuid checks reject valid IDs.
+/**
+ * Schema for creating a batch. Requires either courseId or packageId.
+ * Uses .refine() to enforce the either/or constraint at the schema level.
+ */
 export const CreateBatchSchema = z
   .object({
     courseId: z.string().optional(),

@@ -5,7 +5,10 @@ interface BrandLogoProps {
   className?: string;
 }
 
-export default function BrandLogo({ size = "md", className = "" }: BrandLogoProps) {
+export default function BrandLogo({
+  size = "md",
+  className = "",
+}: BrandLogoProps) {
   const sizes = {
     sm: { box: "h-8 w-8", img: "h-5 w-auto", text: "text-lg" },
     md: { box: "h-10 w-10", img: "h-6 w-auto", text: "text-xl" },
@@ -15,7 +18,9 @@ export default function BrandLogo({ size = "md", className = "" }: BrandLogoProp
 
   return (
     <Link href="/" className={`flex items-center gap-2.5 ${className}`}>
-      <div className={`${s.box} flex items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/10`}>
+      <div
+        className={`${s.box} flex items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/10`}
+      >
         <img
           src="/images/logo.svg"
           alt="Marvel Slice"

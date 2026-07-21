@@ -145,7 +145,10 @@ export const courseController = {
   // Recovers an archived course back to DRAFT
   async recover(req: AuthRequest, res: Response) {
     try {
-      const course = await courseService.recoverCourse(req.params.id, req.user?.userId);
+      const course = await courseService.recoverCourse(
+        req.params.id,
+        req.user?.userId,
+      );
       return res.json({ message: "Course recovered", course });
     } catch (error: any) {
       if (error.message === "Course not found") {

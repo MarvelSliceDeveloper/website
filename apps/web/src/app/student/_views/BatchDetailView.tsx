@@ -263,12 +263,12 @@ export default function BatchDetailView({
                       <button
                         className="btn-secondary flex items-center gap-2 text-sm"
                         onClick={() =>
-                          downloadIcs({
-                            title: session.title,
-                            start: session.scheduledAt,
-                            end: session.endDateTime ?? session.scheduledAt,
-                            joinUrl: session.joinUrl,
-                          })
+                        downloadIcs({
+                          title: session.title,
+                          start: session.scheduledAt,
+                          end: session.endDateTime,
+                          joinUrl: session.joinUrl,
+                        })
                         }
                       >
                         <IconCalendarPlus size={15} /> Add to Calendar

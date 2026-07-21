@@ -234,8 +234,7 @@ export default function SessionDetailPage() {
               <span className="text-muted ml-2">
                 &middot; Created{" "}
                 {new Date(
-                  parseInt(session.id.substring(0, 8), 36) * 1000 ||
-                    Date.now(),
+                  parseInt(session.id.substring(0, 8), 36) * 1000 || Date.now(),
                 ).toLocaleDateString("en-IN")}
               </span>
             </p>
@@ -296,9 +295,7 @@ export default function SessionDetailPage() {
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Batch</span>
                 <span className="text-foreground font-medium">
-                  {session.batch?.name ?? (
-                    <span className="text-muted">—</span>
-                  )}
+                  {session.batch?.name ?? <span className="text-muted">—</span>}
                 </span>
               </div>
               {session.batch?.course && (
@@ -429,9 +426,9 @@ export default function SessionDetailPage() {
                     </span>
                     <span>
                       Synced{" "}
-                      {new Date(
-                        session.recording.syncedAt,
-                      ).toLocaleDateString("en-IN")}
+                      {new Date(session.recording.syncedAt).toLocaleDateString(
+                        "en-IN",
+                      )}
                     </span>
                   </div>
                 </div>

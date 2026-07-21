@@ -124,7 +124,7 @@ async function handleEventCreatedOrUpdated(userId: string, msEventId: string) {
   const scheduledAt = new Date(event.start.dateTime + "Z");
   const scheduledEndAt = event.end?.dateTime
     ? new Date(event.end.dateTime + "Z")
-    : undefined;
+    : new Date(scheduledAt.getTime() + 60 * 60 * 1000);
   const title = event.subject || "Teams Meeting";
 
   // Check if this meeting is already tracked
@@ -141,11 +141,9 @@ async function handleEventCreatedOrUpdated(userId: string, msEventId: string) {
       scheduledAt,
       scheduledEndAt: event.end?.dateTime
         ? new Date(event.end.dateTime + "Z")
-        : undefined,
+        : new Date(scheduledAt.getTime() + 60 * 60 * 1000),
       joinUrl,
     };
-    // Only include scheduledEndAt if we have a valid date
-    if (!updateData.scheduledEndAt) delete updateData.scheduledEndAt;
 
     await prisma.liveSession.update({
       where: { id: existingSession.id },

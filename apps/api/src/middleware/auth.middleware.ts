@@ -1,7 +1,20 @@
+/**
+ * Authentication and authorization middleware for Express.
+ *
+ * Provides four middleware layers:
+ * - requireAuth: Verifies JWT from Authorization header or cookie, attaches user to request
+ * - optionalAuth: Same as requireAuth but silently continues for unauthenticated requests
+ * - requireRole: Checks user role against allowed roles (SUPER_ADMIN inherits ADMIN access)
+ * - requireSuperAdmin: Restricts endpoint to SUPER_ADMIN role only
+ *
+ * Tokens are verified with HS256 algorithm only (prevents algorithm confusion attacks).
+ * Per-user session timeout is enforced via sessionTimeoutMin claim.
+ */
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { UserRole } from "@lms/types";
 
+/** Resolves required env var or throws at middleware init time */
 function assertEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -14,6 +27,7 @@ function getJwtSecret(): string {
   return assertEnv("JWT_SECRET");
 }
 
+/** Extended Request type with authenticated user payload */
 export interface AuthRequest extends Request {
   user?: {
     userId: string;

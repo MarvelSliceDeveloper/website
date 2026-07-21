@@ -1,3 +1,13 @@
+/**
+ * Email service — sends transactional emails via Brevo (Sendinblue) API.
+ *
+ * Handles welcome emails (with optional credentials), password reset links,
+ * and notification emails for 15+ event types (sessions, enrollments,
+ * assignments, mentorship, support tickets).
+ *
+ * Uses @react-email/render for HTML templates. Gracefully skips sending
+ * when BREVO_API_KEY is not configured (logs warning, returns false).
+ */
 import { BrevoClient } from "@getbrevo/brevo";
 import { render } from "@react-email/render";
 import {

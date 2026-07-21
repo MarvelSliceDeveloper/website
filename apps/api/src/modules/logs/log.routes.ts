@@ -1,5 +1,8 @@
 import { Router, Request, Response } from "express";
-import { requireAuth, requireSuperAdmin } from "../../middleware/auth.middleware";
+import {
+  requireAuth,
+  requireSuperAdmin,
+} from "../../middleware/auth.middleware";
 import { prisma } from "../../utils/prisma";
 
 const router = Router();
@@ -19,8 +22,10 @@ router.get("/", async (_req: Request, res: Response) => {
       ...loginLogs.map((l) => ({ ...l, source: "login" })),
       ...consentLogs.map((c) => ({ ...c, source: "consent" })),
     ].sort((a, b) => {
-      const dateA = "loginAt" in a ? (a.loginAt as Date) : (a.createdAt as Date);
-      const dateB = "loginAt" in b ? (b.loginAt as Date) : (b.createdAt as Date);
+      const dateA =
+        "loginAt" in a ? (a.loginAt as Date) : (a.createdAt as Date);
+      const dateB =
+        "loginAt" in b ? (b.loginAt as Date) : (b.createdAt as Date);
       return dateB.getTime() - dateA.getTime();
     });
 

@@ -20,7 +20,10 @@ router.get("/", async (_req: AuthRequest, res: Response) => {
     return res.json({ announcements });
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to fetch announcements",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch announcements",
     });
   }
 });
@@ -49,7 +52,10 @@ router.post("/", async (req: AuthRequest, res: Response) => {
     return res.status(201).json({ announcement });
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to create announcement",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to create announcement",
     });
   }
 });
@@ -68,7 +74,10 @@ router.delete("/:id", async (req: AuthRequest, res: Response) => {
     return res.json({ message: "Announcement deleted" });
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to delete announcement",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to delete announcement",
     });
   }
 });

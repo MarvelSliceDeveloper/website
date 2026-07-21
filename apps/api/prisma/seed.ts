@@ -159,7 +159,8 @@ async function main() {
     create: {
       name: "Data Science",
       slug: "data-science",
-      description: "Courses on data analysis, visualization, and machine learning",
+      description:
+        "Courses on data analysis, visualization, and machine learning",
       order: 0,
     },
   });
@@ -167,7 +168,15 @@ async function main() {
 
   // Wire courses to category
   await prisma.course.updateMany({
-    where: { slug: { in: ["python-for-data-science", "sql-for-data-analysis", "machine-learning-basics"] } },
+    where: {
+      slug: {
+        in: [
+          "python-for-data-science",
+          "sql-for-data-analysis",
+          "machine-learning-basics",
+        ],
+      },
+    },
     data: { categoryId: dataScienceCategory.id },
   });
   console.log("✅ Courses wired to category");
@@ -197,13 +206,22 @@ async function main() {
 
   // Wire tags to courses
   const tagMap: Record<string, string[]> = {
-    "python-for-data-science": ["python", "data-analysis", "pandas", "numpy", "scikit-learn"],
+    "python-for-data-science": [
+      "python",
+      "data-analysis",
+      "pandas",
+      "numpy",
+      "scikit-learn",
+    ],
     "sql-for-data-analysis": ["sql", "data-analysis"],
     "machine-learning-basics": ["machine-learning", "ai", "data-analysis"],
   };
 
   for (const [courseSlug, tagSlugs] of Object.entries(tagMap)) {
-    const course = await prisma.course.findUnique({ where: { slug: courseSlug }, select: { id: true } });
+    const course = await prisma.course.findUnique({
+      where: { slug: courseSlug },
+      select: { id: true },
+    });
     if (!course) continue;
     const courseTags = tags.filter((t) => tagSlugs.includes(t.slug));
     for (const tag of courseTags) {
@@ -454,7 +472,12 @@ async function main() {
   for (const tpl of emailTemplates) {
     await prisma.emailTemplate.upsert({
       where: { name: tpl.name },
-      update: { subject: tpl.subject, body: tpl.body, variables: tpl.variables, isActive: tpl.isActive },
+      update: {
+        subject: tpl.subject,
+        body: tpl.body,
+        variables: tpl.variables,
+        isActive: tpl.isActive,
+      },
       create: tpl,
     });
   }

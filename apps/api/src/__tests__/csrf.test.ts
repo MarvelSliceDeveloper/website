@@ -30,7 +30,7 @@ describe("CSRF Protection", () => {
     expect(res.body).toHaveProperty("error");
   });
 
-  it("passes POST to protected route with valid CSRF token (but fails auth)", async () => {
+  it("rejects POST with valid CSRF token but no auth (CSRF session mismatch)", async () => {
     const agent = request.agent(app);
 
     const csrfRes = await agent.get("/api/csrf-token");
@@ -41,7 +41,12 @@ describe("CSRF Protection", () => {
       .set("X-CSRF-Token", csrfToken)
       .send({ courseId: "test", title: "x", body: "y" });
 
-    expect(res.status).toBe(401);
+    // Unauthenticated requests get a random session ID per request,
+    // so the CSRF token issued on GET is bound to a different session
+    // than the one used on POST. This results in 403 (CSRF rejection)
+    // rather than 401 (auth rejection).
+    expect(res.status).toBe(403);
+    expect(res.body).toHaveProperty("error");
   });
 
   it("skips CSRF for GET requests", async () => {

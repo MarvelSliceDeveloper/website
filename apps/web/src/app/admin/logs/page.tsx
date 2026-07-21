@@ -74,7 +74,10 @@ export default function ActivityLogsPage() {
       <div className="flex items-center gap-3 flex-wrap">
         <select
           value={actionFilter}
-          onChange={(e) => { setActionFilter(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setActionFilter(e.target.value);
+            setPage(1);
+          }}
           className="input text-xs w-48"
         >
           <option value="">All Actions</option>
@@ -82,7 +85,10 @@ export default function ActivityLogsPage() {
           <option value="getCalendarView">getCalendarView</option>
           <option value="syncRecording">syncRecording</option>
         </select>
-        <button onClick={fetchLogs} className="btn-secondary text-xs py-2 flex items-center gap-1.5">
+        <button
+          onClick={fetchLogs}
+          className="btn-secondary text-xs py-2 flex items-center gap-1.5"
+        >
           <IconRefresh size={14} /> Refresh
         </button>
         <span className="text-xs text-muted-foreground">
@@ -142,9 +148,13 @@ export default function ActivityLogsPage() {
                         }`}
                       >
                         {log.success ? (
-                          <><IconCheck size={10} /> {log.statusCode}</>
+                          <>
+                            <IconCheck size={10} /> {log.statusCode}
+                          </>
                         ) : (
-                          <><IconX size={10} /> {log.statusCode || "—"}</>
+                          <>
+                            <IconX size={10} /> {log.statusCode || "—"}
+                          </>
                         )}
                       </span>
                     </td>

@@ -127,13 +127,11 @@ interface ApiRecordingResponse {
 
 function computeSessionStatus(
   scheduledAt: string,
-  endDateTime?: string,
+  endDateTime: string,
 ): "LIVE" | "UPCOMING" | "PAST" {
   const now = Date.now();
   const start = new Date(scheduledAt).getTime();
-  const end = endDateTime
-    ? new Date(endDateTime).getTime()
-    : start + 60 * 60 * 1000; // fallback to 1hr
+  const end = new Date(endDateTime).getTime();
 
   if (now >= start && now < end) return "LIVE";
   if (now >= end) return "PAST";
@@ -195,9 +193,7 @@ async function fetchPortalData(): Promise<PortalData> {
       endDateTime: s.scheduledEndAt,
       joinUrl: s.joinUrl,
       recordingSyncingIn:
-        s.scheduledEndAt &&
-        new Date(s.scheduledEndAt) <= new Date() &&
-        !s.recording
+        new Date(s.scheduledEndAt) <= new Date() && !s.recording
           ? "~20 min"
           : undefined,
     }),

@@ -2,10 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import {
-  IconChartBar,
-  IconRefresh,
-} from "@tabler/icons-react";
+import { IconChartBar, IconRefresh } from "@tabler/icons-react";
 
 type StatsData = {
   stats: {
@@ -51,7 +48,10 @@ export default function LogStatsPage() {
             Graph API error analytics for the last 30 days.
           </p>
         </div>
-        <button onClick={fetchStats} className="btn-secondary text-xs py-2 flex items-center gap-1.5">
+        <button
+          onClick={fetchStats}
+          className="btn-secondary text-xs py-2 flex items-center gap-1.5"
+        >
           <IconRefresh size={14} /> Refresh
         </button>
       </div>

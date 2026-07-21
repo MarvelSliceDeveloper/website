@@ -425,7 +425,8 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
         joinUrl: s.joinUrl,
         isLive:
           new Date(s.scheduledAt) <= new Date() &&
-          (!s.endedAt || new Date(s.endedAt) > new Date()),
+          (!s.endedAt || new Date(s.endedAt) > new Date()) &&
+          new Date(s.scheduledEndAt) > new Date(),
         isUpcoming: new Date(s.scheduledAt) > new Date(),
         hasRecording: !!s.recording,
       }));

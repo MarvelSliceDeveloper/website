@@ -1,3 +1,11 @@
+/**
+ * Notification service — manages in-app notifications, email dispatch,
+ * and user notification preferences.
+ *
+ * Supports role-based targeting (STUDENT, INSTRUCTOR, ADMIN, ALL),
+ * per-type email opt-in preferences, and batch email sending to avoid
+ * DB parameter limits.
+ */
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../utils/prisma";
 import { UserRole } from "@lms/types";
@@ -11,8 +19,15 @@ interface NotificationCreateData {
   metadata?: Prisma.InputJsonValue;
 }
 
-// Chunk array into smaller batches to avoid DB parameter limits
-function chunkArray<T>(arr: T[], size: number): T[][] {
+/**
+ * Splits an array into smaller chunks of a given size.
+ * Used to batch DB queries and avoid parameter limit errors.
+ *
+ * @param arr - Array to chunk
+ * @param size - Maximum chunk size
+ * @returns Array of chunks
+ */
+export function chunkArray<T>(arr: T[], size: number): T[][] {
   const res: T[][] = [];
   for (let i = 0; i < arr.length; i += size) res.push(arr.slice(i, i + size));
   return res;

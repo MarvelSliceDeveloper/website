@@ -42,7 +42,7 @@ export interface BatchSession {
   title: string;
   status: SessionStatus;
   scheduledAt: string;
-  endDateTime?: string;
+  endDateTime: string;
   joinUrl?: string;
   instructor: string;
 }

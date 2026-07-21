@@ -1,3 +1,10 @@
+/**
+ * Auth controller — handles registration, login, password management,
+ * forgot/reset password flow, and OAuth callback (Microsoft Teams).
+ *
+ * All endpoints use Zod schema validation for request bodies.
+ * Tokens are set as httpOnly cookies for XSS protection.
+ */
 import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -7,8 +14,13 @@ import { prisma } from "../../utils/prisma";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { emailService } from "../../services/email.service";
 
-// Parse a JWT expiry string like "7d", "15m", "1h" into milliseconds
-function parseExpiryToMs(expiry: string): number {
+/**
+ * Parses a JWT expiry string (e.g. "7d", "15m", "1h") into milliseconds.
+ *
+ * @param expiry - Expiry string with unit suffix (d=days, h=hours, m=minutes)
+ * @returns Duration in milliseconds, defaults to 7 days for invalid input
+ */
+export function parseExpiryToMs(expiry: string): number {
   const match = expiry.match(/^(\d+)([dhm])$/);
   if (!match) return 7 * 24 * 60 * 60 * 1000; // default 7 days
   const num = parseInt(match[1], 10);
@@ -456,18 +468,14 @@ export const authController = {
           .json({ error: "Password must be at least 8 characters" });
       }
       if (!/[A-Z]/.test(newPassword)) {
-        return res
-          .status(400)
-          .json({
-            error: "Password must contain at least one uppercase letter",
-          });
+        return res.status(400).json({
+          error: "Password must contain at least one uppercase letter",
+        });
       }
       if (!/[a-z]/.test(newPassword)) {
-        return res
-          .status(400)
-          .json({
-            error: "Password must contain at least one lowercase letter",
-          });
+        return res.status(400).json({
+          error: "Password must contain at least one lowercase letter",
+        });
       }
       if (!/\d/.test(newPassword)) {
         return res
@@ -481,19 +489,15 @@ export const authController = {
       if (!user) return res.status(404).json({ error: "User not found" });
 
       if (!user.mustChangePassword) {
-        return res
-          .status(400)
-          .json({
-            error: "Password already set. Use the settings page to change it.",
-          });
+        return res.status(400).json({
+          error: "Password already set. Use the settings page to change it.",
+        });
       }
 
       if (!user.passwordHash) {
-        return res
-          .status(400)
-          .json({
-            error: "Cannot set password. Account uses SSO authentication.",
-          });
+        return res.status(400).json({
+          error: "Cannot set password. Account uses SSO authentication.",
+        });
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 12);
@@ -589,18 +593,14 @@ export const authController = {
           .json({ error: "Password must be at least 8 characters" });
       }
       if (!/[A-Z]/.test(newPassword)) {
-        return res
-          .status(400)
-          .json({
-            error: "Password must contain at least one uppercase letter",
-          });
+        return res.status(400).json({
+          error: "Password must contain at least one uppercase letter",
+        });
       }
       if (!/[a-z]/.test(newPassword)) {
-        return res
-          .status(400)
-          .json({
-            error: "Password must contain at least one lowercase letter",
-          });
+        return res.status(400).json({
+          error: "Password must contain at least one lowercase letter",
+        });
       }
       if (!/\d/.test(newPassword)) {
         return res

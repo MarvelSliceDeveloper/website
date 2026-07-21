@@ -1,3 +1,10 @@
+/**
+ * Payment service — handles Razorpay integration, guest user creation,
+ * order/payment verification, and batch enrollment after successful payment.
+ *
+ * Guest users are created with a dummy password and mustChangePassword=true.
+ * Welcome email with credentials is sent after successful enrollment.
+ */
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { prisma } from "../../utils/prisma";
@@ -12,7 +19,15 @@ function getRazorpayInstance() {
   });
 }
 
-function verifySignature(
+/**
+ * Verifies Razorpay payment signature using HMAC-SHA256.
+ *
+ * @param orderId - Razorpay order ID
+ * @param paymentId - Razorpay payment ID
+ * @param signature - Signature from Razorpay callback
+ * @returns true if signature matches expected HMAC
+ */
+export function verifySignature(
   orderId: string,
   paymentId: string,
   signature: string,
@@ -24,7 +39,15 @@ function verifySignature(
   return expected === signature;
 }
 
-function generateDummyPassword(): string {
+/**
+ * Generates a 10-character random password for guest accounts.
+ *
+ * Excludes ambiguous characters (i, l, o, I, L, O, 0, 1) for readability.
+ * Uses only alphanumeric characters from a safe subset.
+ *
+ * @returns Random 10-character password string
+ */
+export function generateDummyPassword(): string {
   const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
   let pw = "";
   for (let i = 0; i < 10; i++) {
@@ -395,6 +418,13 @@ export const paymentService = {
       }),
     );
 
-    return { totalRevenue, totalPayments, successful, failed, refunded, monthlyRevenue };
+    return {
+      totalRevenue,
+      totalPayments,
+      successful,
+      failed,
+      refunded,
+      monthlyRevenue,
+    };
   },
 };

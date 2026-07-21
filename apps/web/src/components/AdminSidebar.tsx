@@ -345,39 +345,39 @@ export default function AdminSidebar({
                 className?: string;
               }>,
             },
-          {
-            label: "Announcements",
-            href: "/admin/announcements",
-            icon: IconBellRinging as React.ComponentType<{
-              size?: number | string;
-              stroke?: number | string;
-              className?: string;
-            }>,
-          },
-          {
-            label: "Content",
-            href: "/admin/categories",
-            icon: IconBook as React.ComponentType<{
-              size?: number | string;
-              stroke?: number | string;
-              className?: string;
-            }>,
-            children: [
-              { label: "Categories", href: "/admin/categories" },
-              { label: "Tags", href: "/admin/tags" },
-              { label: "Static Pages", href: "/admin/static-pages" },
-              { label: "Certificates", href: "/admin/certificates" },
-            ],
-          },
-          {
-            label: "Audit Logs",
-            href: "/admin/audit-logs",
-            icon: IconFileDescription as React.ComponentType<{
-              size?: number | string;
-              stroke?: number | string;
-              className?: string;
-            }>,
-          },
+            {
+              label: "Announcements",
+              href: "/admin/announcements",
+              icon: IconBellRinging as React.ComponentType<{
+                size?: number | string;
+                stroke?: number | string;
+                className?: string;
+              }>,
+            },
+            {
+              label: "Content",
+              href: "/admin/categories",
+              icon: IconBook as React.ComponentType<{
+                size?: number | string;
+                stroke?: number | string;
+                className?: string;
+              }>,
+              children: [
+                { label: "Categories", href: "/admin/categories" },
+                { label: "Tags", href: "/admin/tags" },
+                { label: "Static Pages", href: "/admin/static-pages" },
+                { label: "Certificates", href: "/admin/certificates" },
+              ],
+            },
+            {
+              label: "Audit Logs",
+              href: "/admin/audit-logs",
+              icon: IconFileDescription as React.ComponentType<{
+                size?: number | string;
+                stroke?: number | string;
+                className?: string;
+              }>,
+            },
           ],
           {
             label: "Approvals",
@@ -529,7 +529,11 @@ export default function AdminSidebar({
               { label: "Import Users", href: "/admin/users/import" },
             ],
           },
-          { label: "Certificates", href: "/admin/certificates", icon: IconClipboardCheck },
+          {
+            label: "Certificates",
+            href: "/admin/certificates",
+            icon: IconClipboardCheck,
+          },
           { label: "Payments", href: "/admin/payments", icon: IconPackage },
           {
             label: "Mentorship",

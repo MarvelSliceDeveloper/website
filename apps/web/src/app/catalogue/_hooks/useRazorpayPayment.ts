@@ -193,7 +193,7 @@ export function useRazorpayPayment() {
     try {
       const result = await api.post<{ isNewUser: boolean; email: string }>(
         "/api/payments/enroll",
-        { paymentId, batchId: selectedBatchId, name, email }
+        { paymentId, batchId: selectedBatchId, name, email },
       );
 
       if (result.isNewUser && result.email) {
@@ -217,7 +217,7 @@ export function useRazorpayPayment() {
 
       try {
         const me = await api.get<{ user: { name: string; email: string } }>(
-          "/api/auth/me"
+          "/api/auth/me",
         );
         if (me?.user) {
           setName(me.user.name);
@@ -231,7 +231,7 @@ export function useRazorpayPayment() {
 
       setStep("collecting_info");
     },
-    [createOrder]
+    [createOrder],
   );
 
   const infoSubmit = useCallback(
@@ -239,7 +239,7 @@ export function useRazorpayPayment() {
       if (!pkg.price) return;
       await createOrder(pkg.id, pkg.name, pkg.price);
     },
-    [createOrder]
+    [createOrder],
   );
 
   return {
