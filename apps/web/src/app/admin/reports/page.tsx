@@ -412,6 +412,20 @@ export default function ReportsPage() {
         ? drawDonut(roleLabels, roleVals, CANVAS_COLORS)
         : null;
 
+      // Revenue chart images
+      const revenueLabels = (data.monthlyRevenue ?? []).map((d) => d.month);
+      const revenueVals = (data.monthlyRevenue ?? []).map((d) => d.amount);
+      const imgRevenue = revenueVals.length
+        ? drawArea(revenueLabels, revenueVals, CANVAS_COLORS[3])
+        : null;
+      const revPkgLabels = (data.revenueByPackage ?? []).map(
+        (d) => d.packageName,
+      );
+      const revPkgVals = (data.revenueByPackage ?? []).map((d) => d.total);
+      const imgRevPkg = revPkgVals.length
+        ? drawBarChart(revPkgLabels, revPkgVals, CANVAS_COLORS[4])
+        : null;
+
       const totalStudents =
         (data.userRoleDistribution ?? []).find((u) => u.role === "STUDENT")
           ?.count ?? 0;
@@ -795,17 +809,79 @@ export default function ReportsPage() {
       }
 
       // ══════════════════════════════════════════════
-      // SECTION 7 — Recent Enrollments
+      // SECTION 7 — Monthly Revenue Trend
+      // ══════════════════════════════════════════════
+      if (imgRevenue) {
+        if (y > SECTION_TABLE_BREAK_Y) {
+          doc.addPage();
+          y = 20;
+        }
+        recordSection("7. Monthly Revenue Trend");
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(20, 24, 40);
+        doc.text("7. Monthly Revenue Trend", 20, y);
+        y += 6;
+        const hRev = (170 * 300) / 700;
+        if (y + hRev > PAGE_BREAK_Y) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.addImage(imgRevenue, "PNG", 20, y, 170, hRev);
+        y += hRev + 10;
+      }
+
+      // ══════════════════════════════════════════════
+      // SECTION 8 — Revenue by Package
       // ══════════════════════════════════════════════
       if (y > SECTION_TABLE_BREAK_Y) {
         doc.addPage();
         y = 20;
       }
-      recordSection("7. Recent Enrollments");
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(20, 24, 40);
-      doc.text("7. Recent Enrollments", 20, y);
+      if (imgRevPkg) {
+        recordSection("8. Revenue by Package");
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(20, 24, 40);
+        doc.text("8. Revenue by Package", 20, y);
+        y += 6;
+        const hRevPkg = (170 * 340) / 700;
+        if (y + hRevPkg > PAGE_BREAK_Y) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.addImage(imgRevPkg, "PNG", 20, y, 170, hRevPkg);
+        y += hRevPkg + 6;
+      }
+
+      if (data.revenueByPackage?.length) {
+        autoTable(doc, {
+          startY: y,
+          head: [["Package", "Revenue (INR)"]],
+          body: data.revenueByPackage.map((d) => [
+            d.packageName,
+            `₹${(d.total / 100).toLocaleString("en-IN")}`,
+          ]),
+          theme: "grid",
+          headStyles: { fillColor: [109, 125, 255] },
+          styles: { fontSize: 9, cellPadding: 3 },
+          margin: { left: 20, right: 20 },
+        });
+        y = doc.lastAutoTable!.finalY + 10;
+      }
+
+      // ══════════════════════════════════════════════
+      // SECTION 9 — Recent Enrollments
+      // ══════════════════════════════════════════════
+      if (y > SECTION_TABLE_BREAK_Y) {
+        doc.addPage();
+        y = 20;
+      }
+        recordSection("9. Recent Enrollments");
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(20, 24, 40);
+        doc.text("9. Recent Enrollments", 20, y);
       y += 6;
       if (data.recentEnrollments?.length) {
         doc.setFontSize(8.5);
@@ -1262,6 +1338,128 @@ export default function ReportsPage() {
           ) : (
             <div className="h-72 flex items-center justify-center text-muted-foreground">
               No data
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Row 3 — Payment Charts */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* Monthly Revenue Trend */}
+        <div className="border border-border bg-card p-5">
+          <h3 className="text-base font-semibold text-foreground mb-4">
+            Monthly Revenue Trend
+          </h3>
+          {data?.monthlyRevenue?.length ? (
+            <Chart
+              options={{
+                chart: {
+                  type: "area",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
+                colors: [COLORS.success],
+                fill: {
+                  type: "gradient",
+                  gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.3,
+                    opacityTo: 0,
+                  },
+                },
+                xaxis: {
+                  categories: data.monthlyRevenue.map((d) => d.month),
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
+                },
+                yaxis: {
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                    formatter: (val: number) =>
+                      `₹${(val / 100).toLocaleString("en-IN")}`,
+                  },
+                },
+                grid: { borderColor: "var(--border)" },
+                tooltip: {
+                  theme: "light",
+                  y: {
+                    formatter: (val: number) =>
+                      `₹${(val / 100).toLocaleString("en-IN")}`,
+                  },
+                },
+                dataLabels: { enabled: false },
+                stroke: { width: 2 },
+              }}
+              series={[
+                {
+                  name: "Revenue",
+                  data: data.monthlyRevenue.map((d) => d.amount),
+                },
+              ]}
+              type="area"
+              height={320}
+            />
+          ) : (
+            <div className="h-80 flex items-center justify-center text-muted-foreground">
+              No payment data
+            </div>
+          )}
+        </div>
+
+        {/* Revenue by Package */}
+        <div className="border border-border bg-card p-5">
+          <h3 className="text-base font-semibold text-foreground mb-4">
+            Revenue by Package
+          </h3>
+          {data?.revenueByPackage?.length ? (
+            <Chart
+              options={{
+                chart: {
+                  type: "bar",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
+                colors: [COLORS.warning],
+                plotOptions: { bar: { borderRadius: 4, columnWidth: "60%" } },
+                xaxis: {
+                  categories: data.revenueByPackage.map(
+                    (d) => d.packageName,
+                  ),
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                    rotate: -20,
+                  },
+                },
+                yaxis: {
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                    formatter: (val: number) =>
+                      `₹${(val / 100).toLocaleString("en-IN")}`,
+                  },
+                },
+                grid: { borderColor: "var(--border)" },
+                tooltip: {
+                  theme: "light",
+                  y: {
+                    formatter: (val: number) =>
+                      `₹${(val / 100).toLocaleString("en-IN")}`,
+                  },
+                },
+                dataLabels: { enabled: false },
+              }}
+              series={[
+                {
+                  name: "Revenue",
+                  data: data.revenueByPackage.map((d) => d.total),
+                },
+              ]}
+              type="bar"
+              height={320}
+            />
+          ) : (
+            <div className="h-80 flex items-center justify-center text-muted-foreground">
+              No payment data
             </div>
           )}
         </div>

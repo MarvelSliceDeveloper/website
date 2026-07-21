@@ -61,6 +61,7 @@ import {
 import categoriesRouter from "./modules/admin/categories/categories.routes";
 import tagsRouter from "./modules/admin/tags/tags.routes";
 import adminCertificatesRouter from "./modules/admin/certificates/certificates.routes";
+import certificateTemplateRouter from "./modules/admin/certificates/template.routes";
 import staticPagesRouter, {
   publicStaticPagesRouter,
 } from "./modules/admin/static-pages/static-pages.routes";
@@ -267,6 +268,7 @@ app.use("/api/admin/trash", trashRouter);
 app.use("/api/admin/categories", categoriesRouter);
 app.use("/api/admin/tags", tagsRouter);
 app.use("/api/admin/admin-certificates", adminCertificatesRouter);
+app.use("/api/admin/certificate-templates", certificateTemplateRouter);
 app.use("/api/admin/static-pages", staticPagesRouter);
 app.use("/api/admin/email-templates", emailTemplatesRouter);
 app.use("/api/admin/audit-logs", auditLogsRouter);

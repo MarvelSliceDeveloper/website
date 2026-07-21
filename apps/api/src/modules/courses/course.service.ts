@@ -182,6 +182,7 @@ export const courseService = {
             assignments: {
               orderBy: { dueDate: "asc" },
             },
+            practicals: { orderBy: { order: "asc" } },
           },
         },
         courseTags: { include: { tag: true } },

@@ -24,6 +24,7 @@ import {
   IconChevronRight,
   IconPalette,
   IconEdit,
+  IconCreditCard,
 } from "@tabler/icons-react";
 
 const NOTIFICATION_TYPES = [
@@ -89,7 +90,7 @@ const TYPE_CONFIG: Record<
   },
 };
 
-type SettingsSection = "notifications" | "appearance";
+type SettingsSection = "notifications" | "appearance" | "payments";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -101,6 +102,20 @@ export default function SettingsPage() {
   const [studentRole, setStudentRole] = useState("STUDENT");
   const [activeSection, setActiveSection] =
     useState<SettingsSection>("notifications");
+
+  const [payments, setPayments] = useState<
+    Array<{
+      id: string;
+      amount: number;
+      currency: string;
+      status: string;
+      method: string | null;
+      razorpayPaymentId: string | null;
+      createdAt: string;
+      package: { name: string } | null;
+    }>
+  >([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(true);
 
   useEffect(() => {
     api
@@ -132,6 +147,27 @@ export default function SettingsPage() {
         }
       })
       .catch(() => {});
+  }, []);
+
+  // Load payment history
+  useEffect(() => {
+    setPaymentsLoading(true);
+    api
+      .get<{
+        payments: Array<{
+          id: string;
+          amount: number;
+          currency: string;
+          status: string;
+          method: string | null;
+          razorpayPaymentId: string | null;
+          createdAt: string;
+          package: { name: string } | null;
+        }>;
+      }>("/api/student/payments")
+      .then((res) => setPayments(res.payments || []))
+      .catch(() => {})
+      .finally(() => setPaymentsLoading(false));
   }, []);
 
   async function toggle(type: string) {
@@ -180,6 +216,12 @@ export default function SettingsPage() {
       label: "Appearance",
       icon: <IconPalette size={18} />,
       description: "Theme and display",
+    },
+    {
+      id: "payments",
+      label: "Payment History",
+      icon: <IconCreditCard size={18} />,
+      description: "View your transactions",
     },
   ];
 
@@ -323,6 +365,93 @@ export default function SettingsPage() {
     );
   }
 
+  // ── Payment history panel ──────────────────────────────────────────
+
+  function renderPayments() {
+    return (
+      <>
+        <div className="flex items-center gap-3 border-b border-border px-6 py-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+            <IconCreditCard size={20} />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-foreground">Payment History</p>
+            <p className="text-sm text-muted-foreground">
+              View all your past transactions and receipts.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-6">
+          {paymentsLoading ? (
+            <div className="animate-pulse space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-14 rounded-xl bg-card-hover/60" />
+              ))}
+            </div>
+          ) : payments.length === 0 ? (
+            <div className="text-center py-10">
+              <IconCreditCard
+                size={36}
+                className="mx-auto text-muted-foreground/40 mb-3"
+              />
+              <p className="text-sm text-muted-foreground">
+                No payments yet. Browse the catalogue to get started!
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {payments.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex items-center gap-4 rounded-xl border border-border/60 bg-card-hover/40 px-4 py-3"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <IconCreditCard size={18} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {p.package?.name ?? "Package"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(p.createdAt).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                      {p.razorpayPaymentId && (
+                        <span className="ml-2 text-[10px] text-muted">
+                          {p.razorpayPaymentId}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-semibold text-foreground">
+                      {p.currency === "INR" ? "₹" : p.currency}{" "}
+                      {(p.amount / 100).toLocaleString("en-IN")}
+                    </p>
+                    <span
+                      className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                        p.status === "PAID"
+                          ? "bg-emerald-500/10 text-emerald-600"
+                          : p.status === "FAILED"
+                            ? "bg-red-500/10 text-red-600"
+                            : "bg-amber-500/10 text-amber-600"
+                      }`}
+                    >
+                      {p.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </>
+    );
+  }
+
   // ── Main render ────────────────────────────────────────────────────
 
   return (
@@ -446,6 +575,7 @@ export default function SettingsPage() {
           <div className="lg:col-span-8 xl:col-span-9 rounded-xl border border-border/60 bg-card overflow-hidden">
             {activeSection === "notifications" && renderNotifications()}
             {activeSection === "appearance" && renderAppearance()}
+            {activeSection === "payments" && renderPayments()}
           </div>
         </div>
       </div>

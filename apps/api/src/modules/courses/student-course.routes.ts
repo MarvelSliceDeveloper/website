@@ -384,6 +384,9 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
             assignments: {
               orderBy: { dueDate: "asc" },
             },
+            practicals: {
+              orderBy: { order: "asc" },
+            },
           },
         },
       },
@@ -507,6 +510,17 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
           title: a.title,
           type: a.type,
           dueDate: a.dueDate.toISOString(),
+        })),
+        practicals: m.practicals.map((p) => ({
+          id: p.id,
+          title: p.title,
+          description: p.description,
+          order: p.order,
+          videoType: p.videoType,
+          videoUrl: p.videoUrl,
+          videoEmbedId: p.videoEmbedId,
+          pdfUrl: p.pdfUrl,
+          resources: p.resources,
         })),
       };
     });

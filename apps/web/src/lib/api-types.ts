@@ -154,6 +154,8 @@ export interface DashboardChartData {
     amount: number | null;
     appliedAt: string;
   }[];
+  monthlyRevenue: { month: string; amount: number }[];
+  revenueByPackage: { packageName: string; total: number }[];
 }
 
 export interface CataloguePackage {
@@ -210,6 +212,10 @@ export interface PackageDetail {
     maxStudents: number | null;
   }[];
   _count: { enrollments: number };
+  totalLessons: number;
+  totalQuizzes: number;
+  totalAssignments: number;
+  totalPracticals: number;
 }
 
 export interface OverdueAssignment {

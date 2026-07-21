@@ -4,8 +4,9 @@ import { moduleController } from "./module.controller";
 import { lessonController } from "./lesson.controller";
 import { quizController } from "./quiz.controller";
 import { assignmentController } from "./assignment.controller";
+import { practicalController } from "./practical.controller";
 import { uploadCourseThumbnail } from "./course.upload";
-import { uploadLessonResource } from "./modules.upload";
+import { uploadLessonResource, uploadPracticalPdf } from "./modules.upload";
 import { requireAuth, requireRole } from "../../middleware/auth.middleware";
 import { UserRole } from "@lms/types";
 
@@ -260,6 +261,60 @@ router.patch(
   "/modules/:moduleId/assignments/reorder",
   requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
   assignmentController.reorderAssignments,
+);
+
+// --- Practical Routes ---
+
+// POST /api/admin/courses/modules/:moduleId/practicals — add a practical to a module
+router.post(
+  "/modules/:moduleId/practicals",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  practicalController.addPractical,
+);
+
+// PUT /api/admin/courses/modules/practicals/:id — update a practical
+router.put(
+  "/modules/practicals/:id",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  practicalController.updatePractical,
+);
+
+// DELETE /api/admin/courses/modules/practicals/:id — delete a practical
+router.delete(
+  "/modules/practicals/:id",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  practicalController.deletePractical,
+);
+
+// POST /api/admin/courses/:courseId/practicals/pdf — upload a PDF for a practical
+router.post(
+  "/:courseId/practicals/pdf",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  (req: Request, res: Response, next: NextFunction) =>
+    uploadPracticalPdf(req, res, (err) => {
+      if (err) return res.status(400).json({ error: err.message });
+      return next();
+    }),
+  practicalController.uploadPdf,
+);
+
+// POST /api/admin/courses/:courseId/practicals/:practicalId/resources — upload resource to a practical
+router.post(
+  "/:courseId/practicals/:practicalId/resources",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  (req: Request, res: Response, next: NextFunction) =>
+    uploadLessonResource(req, res, (err) => {
+      if (err) return res.status(400).json({ error: err.message });
+      return next();
+    }),
+  practicalController.uploadResource,
+);
+
+// DELETE /api/admin/courses/practicals/:practicalId/resources/:resourceId — delete resource from practical
+router.delete(
+  "/practicals/:practicalId/resources/:resourceId",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  practicalController.deleteResource,
 );
 
 export const courseRouter = router;

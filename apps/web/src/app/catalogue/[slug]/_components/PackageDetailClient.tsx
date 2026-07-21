@@ -13,8 +13,9 @@ function WhyBuySection({ pkg }: { pkg: PackageDetail }) {
     (sum, c) => sum + (c.course.modules?.length ?? 0),
     0,
   );
-  const totalLessons = 0; // lessons count not included in PackageDetail response
-  const totalQuizzes = 0; // quizzes count not included in PackageDetail response
+  const totalLessons = pkg.totalLessons ?? 0;
+  const totalQuizzes = pkg.totalQuizzes ?? 0;
+  const totalPracticals = pkg.totalPracticals ?? 0;
 
   const highlights = [
     {
@@ -22,7 +23,10 @@ function WhyBuySection({ pkg }: { pkg: PackageDetail }) {
       value: `${pkg.courses.length} courses`,
     },
     { label: "Deep Dive", value: `${totalModules} modules` },
-    { label: "Hands-on Learning", value: `${totalLessons} lessons` },
+    {
+      label: "Hands-on Learning",
+      value: `${totalPracticals} practicals, ${totalLessons} lessons`,
+    },
     {
       label: "Knowledge Check",
       value: `${totalQuizzes} quizzes & assessments`,

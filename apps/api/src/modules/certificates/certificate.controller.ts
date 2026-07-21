@@ -30,4 +30,27 @@ export const certificateController = {
       return res.status(400).json({ error: error.message });
     }
   },
+
+  // Downloads certificate PDF
+  async download(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { pdfBuffer, fileName } = await certificateService.generatePdf(
+        req.user!.userId,
+        id,
+      );
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${fileName}"`,
+      );
+      return res.send(pdfBuffer);
+    } catch (error: any) {
+      if (error.message === "Certificate not found") {
+        return res.status(404).json({ error: error.message });
+      }
+      return res.status(500).json({ error: error.message });
+    }
+  },
 };

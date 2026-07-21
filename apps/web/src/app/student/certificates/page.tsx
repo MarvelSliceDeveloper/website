@@ -40,6 +40,7 @@ export default function CertificatesPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [claimingCourseId, setClaimingCourseId] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const loadCertificates = async () => {
     try {
@@ -90,6 +91,38 @@ export default function CertificatesPage() {
       );
     } finally {
       setClaimingCourseId(null);
+    }
+  };
+
+  const downloadCertificate = async (certId: string) => {
+    setDownloadingId(certId);
+    try {
+      const response = await fetch(`/api/certificates/${certId}/download`, {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to download certificate");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `certificate-${certId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Certificate downloaded!");
+    } catch (downloadError: unknown) {
+      toast.error(
+        downloadError instanceof Error
+          ? downloadError.message
+          : "Failed to download certificate",
+      );
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -181,10 +214,18 @@ export default function CertificatesPage() {
                       {certificate.totalRecordings} recordings completed
                     </p>
                     <button
-                      className="btn-secondary text-xs"
-                      onClick={() => window.print()}
+                      className="btn-primary text-xs disabled:opacity-60"
+                      disabled={downloadingId === certificate.id}
+                      onClick={() => downloadCertificate(certificate.id)}
                     >
-                      Print
+                      {downloadingId === certificate.id ? (
+                        <span className="flex items-center gap-1">
+                          <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
+                          Downloading...
+                        </span>
+                      ) : (
+                        "Download PDF"
+                      )}
                     </button>
                   </div>
                 </div>

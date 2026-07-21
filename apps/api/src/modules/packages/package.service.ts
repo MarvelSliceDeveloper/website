@@ -468,7 +468,19 @@ export const packageService = {
                 thumbnailUrl: true,
                 learningObjectives: true,
                 modules: {
-                  select: { id: true, title: true, order: true },
+                  select: {
+                    id: true,
+                    title: true,
+                    order: true,
+                    _count: {
+                      select: {
+                        lessons: true,
+                        quizzes: true,
+                        assignments: true,
+                        practicals: true,
+                      },
+                    },
+                  },
                   orderBy: { order: "asc" },
                 },
               },
@@ -484,7 +496,28 @@ export const packageService = {
       },
     });
     if (!pkg) throw new Error("Package not found");
-    return pkg;
+
+    // Aggregate content counts across all courses/modules
+    let totalLessons = 0;
+    let totalQuizzes = 0;
+    let totalAssignments = 0;
+    let totalPracticals = 0;
+    for (const pc of pkg.courses) {
+      for (const mod of pc.course.modules) {
+        totalLessons += (mod as any)._count?.lessons ?? 0;
+        totalQuizzes += (mod as any)._count?.quizzes ?? 0;
+        totalAssignments += (mod as any)._count?.assignments ?? 0;
+        totalPracticals += (mod as any)._count?.practicals ?? 0;
+      }
+    }
+
+    return {
+      ...pkg,
+      totalLessons,
+      totalQuizzes,
+      totalAssignments,
+      totalPracticals,
+    };
   },
 
   // Get public catalogue of ACTIVE packages (no auth required)

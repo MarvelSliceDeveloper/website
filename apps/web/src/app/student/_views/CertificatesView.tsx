@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import type { Certificate } from "@/lib/api-types";
+import { api } from "@/lib/api";
+import { toast } from "@/lib/toast";
 
 interface CertificatesViewProps {
   certificates: Certificate[];
@@ -11,6 +14,37 @@ export default function CertificatesView({
 }: CertificatesViewProps) {
   const earned = certificates.filter((c) => c.earned);
   const inProgress = certificates.filter((c) => !c.earned);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  async function handleDownload(certId: string) {
+    setDownloadingId(certId);
+    try {
+      const response = await fetch(`/api/certificates/${certId}/download`, {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to download certificate");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `certificate-${certId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Certificate downloaded!");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to download certificate",
+      );
+    } finally {
+      setDownloadingId(null);
+    }
+  }
 
   return (
     <div className="sp-view-enter space-y-6">
@@ -69,8 +103,19 @@ export default function CertificatesView({
                   </div>
                 </div>
                 <div className="mt-4 flex gap-2">
-                  <button className="btn-primary flex-1 text-xs">
-                    Download PDF
+                  <button
+                    onClick={() => handleDownload(cert.id)}
+                    disabled={downloadingId === cert.id}
+                    className="btn-primary flex-1 text-xs disabled:opacity-60"
+                  >
+                    {downloadingId === cert.id ? (
+                      <span className="flex items-center justify-center gap-1">
+                        <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
+                        Downloading...
+                      </span>
+                    ) : (
+                      "Download PDF"
+                    )}
                   </button>
                   <button className="btn-secondary flex-1 text-xs">
                     Share

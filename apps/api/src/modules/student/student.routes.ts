@@ -12,5 +12,6 @@ router.use(requireRole([UserRole.STUDENT]));
 router.get("/assignments/overdue", studentController.listOverdueAssignments);
 router.get("/continue-learning", studentController.getContinueLearning);
 router.get("/packages", packageController.getStudentPackages);
+router.get("/payments", studentController.getPaymentHistory);
 
 export const studentRouter = router;
