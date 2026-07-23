@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../utils/prisma";
 import { jsPDF } from "jspdf";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
@@ -193,17 +194,28 @@ export const certificateService = {
       throw new Error("Certificate is not available to claim yet");
     }
 
+    // Fast path: already exists
     const existing = await prisma.certificate.findFirst({
       where: { userId, courseId },
     });
-
     if (existing) {
       return existing;
     }
 
-    return prisma.certificate.create({
-      data: { userId, courseId },
-    });
+    // Create atomically — @@unique constraint handles concurrent duplicates
+    try {
+      return await prisma.certificate.create({
+        data: { userId, courseId },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+        // Concurrent create won — return what the other request created
+        return prisma.certificate.findFirstOrThrow({
+          where: { userId, courseId },
+        });
+      }
+      throw err;
+    }
   },
 
   // Generates a PDF certificate — supports two methods:

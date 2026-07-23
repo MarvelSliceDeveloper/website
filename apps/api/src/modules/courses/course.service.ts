@@ -7,6 +7,7 @@
  */
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
+import { AppError } from "../../utils/errors";
 
 // --- Zod Schemas ---
 
@@ -182,7 +183,7 @@ export const courseService = {
             assignments: {
               orderBy: { dueDate: "asc" },
             },
-            practicals: { orderBy: { order: "asc" } },
+            // practicals removed — model not yet in Prisma schema
           },
         },
         courseTags: { include: { tag: true } },
@@ -191,7 +192,7 @@ export const courseService = {
       },
     });
 
-    if (!course) throw new Error("Course not found");
+    if (!course) throw new AppError(404, "Course not found");
     return course;
   },
 
@@ -203,7 +204,7 @@ export const courseService = {
     const existing = await prisma.course.findUnique({
       where: { id: courseId },
     });
-    if (!existing) throw new Error("Course not found");
+    if (!existing) throw new AppError(404, "Course not found");
 
     const { tagIds, ...restData } = data;
     const updateData: any = { ...restData };
@@ -236,7 +237,7 @@ export const courseService = {
     const existing = await prisma.course.findUnique({
       where: { id: courseId },
     });
-    if (!existing) throw new Error("Course not found");
+    if (!existing) throw new AppError(404, "Course not found");
 
     return prisma.course.update({
       where: { id: courseId },
@@ -259,7 +260,7 @@ export const courseService = {
       },
     });
 
-    if (!course) throw new Error("Course not found");
+    if (!course) throw new AppError(404, "Course not found");
 
     const allLessons = course.modules.flatMap((m) => m.lessons);
 
@@ -307,9 +308,9 @@ export const courseService = {
     const existing = await prisma.course.findUnique({
       where: { id: courseId },
     });
-    if (!existing) throw new Error("Course not found");
+    if (!existing) throw new AppError(404, "Course not found");
     if (existing.status !== "PUBLISHED")
-      throw new Error("Course is not published");
+      throw new AppError(400, "Course is not published");
 
     return prisma.course.update({
       where: { id: courseId },
@@ -321,9 +322,9 @@ export const courseService = {
     const existing = await prisma.course.findUnique({
       where: { id: courseId },
     });
-    if (!existing) throw new Error("Course not found");
+    if (!existing) throw new AppError(404, "Course not found");
     if (existing.status !== "ARCHIVED")
-      throw new Error("Only archived courses can be recovered");
+      throw new AppError(400, "Only archived courses can be recovered");
 
     return prisma.course.update({
       where: { id: courseId },
@@ -342,7 +343,7 @@ export const courseService = {
     const existing = await prisma.course.findUnique({
       where: { id: courseId },
     });
-    if (!existing) throw new Error("Course not found");
+    if (!existing) throw new AppError(404, "Course not found");
 
     await prisma.$transaction(async (tx) => {
       // Gather batch & module IDs for cascading cleanups

@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../utils/prisma";
 
 interface CourseProgress {
@@ -149,30 +150,36 @@ export async function checkAndIssueCertificate(
   userId: string,
   courseId: string,
 ): Promise<{ issued: boolean; reason?: string }> {
+  // Fast path: already exists
   const existing = await prisma.certificate.findUnique({
     where: { userId_courseId: { userId, courseId } },
   });
-
   if (existing) {
     return { issued: false, reason: "Certificate already exists" };
   }
 
   const progress = await getCourseContentProgress(courseId, userId);
-
   if (!progress.isComplete) {
     return { issued: false, reason: "Course not yet completed" };
   }
 
-  await prisma.certificate.create({
-    data: {
-      userId,
-      courseId,
-      autoIssued: true,
-      status: "ISSUED",
-    },
-  });
-
-  return { issued: true };
+  // Create atomically — the @@unique constraint handles concurrent duplicates
+  try {
+    await prisma.certificate.create({
+      data: {
+        userId,
+        courseId,
+        autoIssued: true,
+        status: "ISSUED",
+      },
+    });
+    return { issued: true };
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return { issued: false, reason: "Certificate already exists" };
+    }
+    throw err;
+  }
 }
 
 export async function checkAndIssueForQuiz(

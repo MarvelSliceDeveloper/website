@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
+import { AppError } from "../../utils/errors";
 import { appendToContentOrder, removeFromContentOrder } from "./module.service";
 
 export const CreateQuizSchema = z.object({
@@ -50,7 +51,7 @@ export const quizService = {
       include: { questions: true },
     });
 
-    if (!quiz) throw new Error("Quiz not found");
+    if (!quiz) throw new AppError(404, "Quiz not found");
 
     const questions = quiz.questions.map((q, qIdx) => {
       const rawOptions = q.options as Array<{
@@ -84,7 +85,7 @@ export const quizService = {
   },
   async addQuiz(moduleId: string, data: z.infer<typeof CreateQuizSchema>) {
     const module = await prisma.module.findUnique({ where: { id: moduleId } });
-    if (!module) throw new Error("Module not found");
+    if (!module) throw new AppError(404, "Module not found");
 
     const quiz = await prisma.quiz.create({
       data: {
@@ -108,7 +109,7 @@ export const quizService = {
 
   async updateQuiz(quizId: string, data: z.infer<typeof UpdateQuizSchema>) {
     const existing = await prisma.quiz.findUnique({ where: { id: quizId } });
-    if (!existing) throw new Error("Quiz not found");
+    if (!existing) throw new AppError(404, "Quiz not found");
 
     if (data.questions) {
       await prisma.question.deleteMany({ where: { quizId } });
@@ -136,7 +137,7 @@ export const quizService = {
 
   async deleteQuiz(quizId: string) {
     const quiz = await prisma.quiz.findUnique({ where: { id: quizId } });
-    if (!quiz) throw new Error("Quiz not found");
+    if (!quiz) throw new AppError(404, "Quiz not found");
 
     await prisma.question.deleteMany({ where: { quizId } });
     await prisma.quiz.delete({ where: { id: quizId } });
@@ -146,7 +147,7 @@ export const quizService = {
 
   async reorderQuizzes(moduleId: string, quizIds: string[]) {
     const module = await prisma.module.findUnique({ where: { id: moduleId } });
-    if (!module) throw new Error("Module not found");
+    if (!module) throw new AppError(404, "Module not found");
 
     const quizzes = await prisma.quiz.findMany({
       where: { moduleId },
@@ -154,7 +155,7 @@ export const quizService = {
     });
     const existingIds = new Set(quizzes.map((q) => q.id));
     if (!quizIds.every((id) => existingIds.has(id)))
-      throw new Error("Some quiz IDs do not belong to this module");
+      throw new AppError(400, "Some quiz IDs do not belong to this module");
 
     await Promise.all(
       quizIds.map((id, index) =>

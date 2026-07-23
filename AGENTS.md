@@ -533,3 +533,19 @@ model Certificate {
   uploadedTemplate   CertificateTemplate? @relation
 }
 ```
+
+## Test Status
+
+### Latest Run: 250/250 passing (23 test files)
+
+All 250 tests pass consistently across 23 test files. Suite completes in ~17s.
+
+### Pre-existing Bug Fixes (2026-07-23)
+
+| Bug | File(s) | Fix |
+|-----|---------|-----|
+| `practicals` field in module include | `course.service.ts` | Removed `practicals` from Prisma `include` (non-existent relation) |
+| `throw new Error()` → 500 responses | `course.service.ts`, `quiz.service.ts`, `auth.service.ts` | Replaced 15+ `throw new Error()` with `throw new AppError(statusCode, ...)` — 404 for not-found, 409 for duplicate, 401 for invalid creds, 403 for suspended |
+| `notes` vs `items` in test | `notes.test.ts` | Changed `res.body.notes` → `res.body.items` (API uses `paginate()` which returns `items`) |
+| `loginAs("STUDENT")` race condition | `notes.test.ts`, `auth-extended.test.ts` | Used fresh registered students instead of shared `student@lms.local` for password-change and notes tests |
+| Duplicate email test expected wrong status | `auth-extended.test.ts` | Updated expectation from `[400,500]` to `409` (now `AppError` returns correct status) |

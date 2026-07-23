@@ -968,8 +968,8 @@ export default function CourseContentView({
                           <span className="min-w-0 flex-1">
                             <span
                               className={`block text-xs truncate ${isActive
-                                  ? "text-foreground font-medium"
-                                  : "text-muted-foreground"
+                                ? "text-foreground font-medium"
+                                : "text-muted-foreground"
                                 }`}
                             >
                               {idx + 1}. {assignment.title}
@@ -994,8 +994,8 @@ export default function CourseContentView({
                         <button
                           onClick={() => selectPractical(practical.id)}
                           className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${isActive
-                              ? "bg-violet-500/15"
-                              : "hover:bg-primary/8"
+                            ? "bg-violet-500/15"
+                            : "hover:bg-primary/8"
                             }`}
                         >
                           <span
@@ -1012,8 +1012,8 @@ export default function CourseContentView({
                           <span className="min-w-0 flex-1">
                             <span
                               className={`block text-xs truncate ${isActive
-                                  ? "text-foreground font-medium"
-                                  : "text-muted-foreground"
+                                ? "text-foreground font-medium"
+                                : "text-muted-foreground"
                                 }`}
                             >
                               {idx + 1}. {practical.title}
@@ -1412,7 +1412,9 @@ export default function CourseContentView({
             Continue <IconArrowRight size={13} />
           </button>
         </div>
-        text-blue-600
+      </div>
+
+      <div className="w-115 shrink-0 border-l border-border bg-card overflow-hidden">
         {renderContentPanel()}
       </div>
 
