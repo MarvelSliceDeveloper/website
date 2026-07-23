@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -352,9 +353,11 @@ export default function InstructorSidebar({
           className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer select-none"
           onClick={() => router.push("/instructor/dashboard")}
         >
-          <img
+          <Image
             src="/images/logo.svg"
             alt="Marvel Slice"
+            width={36}
+            height={36}
             className="h-9 w-auto object-contain transition-transform duration-300 hover:scale-105"
           />
           <span

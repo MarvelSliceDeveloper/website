@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  IconArrowRight,
-  IconTrendingUp,
-  IconTrendingDown,
-} from "@tabler/icons-react";
+import { IconArrowRight, IconTrendingUp } from "@tabler/icons-react";
 
 export interface StudentStatTile {
   id: string;

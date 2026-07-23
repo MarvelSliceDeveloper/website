@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 interface BrandLogoProps {
@@ -21,9 +22,11 @@ export default function BrandLogo({
       <div
         className={`${s.box} flex items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/10`}
       >
-        <img
+        <Image
           src="/images/logo.svg"
           alt="Marvel Slice"
+          width={32}
+          height={32}
           className={`${s.img} object-contain`}
         />
       </div>

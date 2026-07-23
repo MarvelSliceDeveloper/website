@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import type { PackageDetail } from "@/lib/api-types";
 import { RazorpayCheckoutWidget } from "./RazorpayCheckoutWidget";
@@ -131,9 +132,11 @@ export function PackageDetailClient({ pkg }: Props) {
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
           <Link href="/catalogue" className="flex items-center gap-2">
-            <img
+            <Image
               src="/images/logo.svg"
               alt="Marvel Slice"
+              width={32}
+              height={32}
               className="h-8 w-auto"
             />
             <span className="text-base font-extrabold tracking-tight">

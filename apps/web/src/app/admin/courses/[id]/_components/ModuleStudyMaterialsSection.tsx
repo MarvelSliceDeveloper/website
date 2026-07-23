@@ -91,10 +91,6 @@ export default function ModuleStudyMaterialsSection({
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const selectedModule = modules.find((m) => m.id === selectedModuleId);
-  const selectedLesson =
-    selectedModule?.lessons.find((l) => l.id === selectedLessonId) ??
-    selectedModule?.lessons[0] ??
-    null;
 
   useEffect(() => {
     const lesson = selectedModule?.lessons[0] ?? null;

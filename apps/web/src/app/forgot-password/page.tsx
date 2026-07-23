@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import Link from "next/link";
 import { IconMail, IconArrowLeft, IconCheck } from "@tabler/icons-react";
@@ -42,9 +43,11 @@ export default function ForgotPasswordPage() {
         >
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-lg shadow-black/10">
-              <img
+              <Image
                 src="/images/logo.svg"
                 alt="Marvel Slice"
+                width={28}
+                height={28}
                 className="h-7 w-auto object-contain"
               />
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -19,34 +19,30 @@ type TranslationData = Record<string, unknown>;
 export default function I18nPage() {
   usePageTitle("Localization");
   const [locales, setLocales] = useState<LocaleInfo[]>([]);
-  const [enKeys, setEnKeys] = useState(0);
   const [loading, setLoading] = useState(true);
-
   const [activeLocale, setActiveLocale] = useState<string | null>(null);
   const [translations, setTranslations] = useState<TranslationData>({});
+  const [search, setSearch] = useState("");
   const [loadingLocale, setLoadingLocale] = useState(false);
   const [savingLocale, setSavingLocale] = useState(false);
-  const [search, setSearch] = useState("");
-
   const [showCreate, setShowCreate] = useState(false);
   const [newLocale, setNewLocale] = useState("");
   const [creating, setCreating] = useState(false);
 
-  const fetchLocales = () => {
+  const fetchLocales = useCallback(() => {
     setLoading(true);
     api
       .get<{ data: LocaleInfo[]; enKeys: number }>("/api/admin/i18n/locales")
       .then((res) => {
         setLocales(res.data);
-        setEnKeys(res.enKeys);
       })
       .catch(() => toast.error("Failed to load locales"))
       .finally(() => setLoading(false));
-  };
+  }, []);
 
   useEffect(() => {
     fetchLocales();
-  }, []);
+  }, [fetchLocales]);
 
   const openLocale = async (locale: string) => {
     setActiveLocale(locale);
@@ -298,7 +294,7 @@ export default function I18nPage() {
           </div>
           <p className="text-xs text-muted-foreground">
             Creates a copy of en.json as a starting template. Format: 2-letter
-            code (e.g. "hi") or language-region (e.g. "fr-FR").
+            code (e.g. &quot;hi&quot;) or language-region (e.g. &quot;fr-FR&quot;).
           </p>
         </div>
       )}

@@ -180,7 +180,7 @@ export const batchService = {
     page?: number;
     limit?: number;
   }) {
-    const where: any = {};
+    const where: any = { deletedAt: null };
 
     if (filters.courseId) {
       // Also include package-only batches whose package contains this course

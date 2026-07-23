@@ -46,7 +46,7 @@ export default function AddAssignmentForm({
       });
       toast.success("Assignment added successfully");
       onSuccess();
-    } catch (error) {
+    } catch {
       toast.error("Failed to add assignment");
     } finally {
       setLoading(false);

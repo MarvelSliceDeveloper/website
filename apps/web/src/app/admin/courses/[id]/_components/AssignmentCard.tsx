@@ -67,7 +67,7 @@ export default function AssignmentCard({
       toast.success("Assignment updated successfully");
       setEditing(false);
       onUpdate();
-    } catch (error) {
+    } catch {
       toast.error("Failed to update assignment");
     } finally {
       setLoading(false);
@@ -80,7 +80,7 @@ export default function AssignmentCard({
       await api.delete(`/admin/courses/modules/assignments/${assignment.id}`);
       toast.success("Assignment deleted successfully");
       onUpdate();
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete assignment");
     } finally {
       setDeleting(false);

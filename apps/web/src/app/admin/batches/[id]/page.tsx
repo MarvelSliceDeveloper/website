@@ -132,17 +132,6 @@ export default function BatchDetailPage() {
     }
   };
 
-  const handleRemoveStudent = async (userId: string, name: string) => {
-    if (!confirm(`Remove ${name} from this batch?`)) return;
-    try {
-      await api.delete(`/api/admin/batches/${id}/students/${userId}`);
-      toast.success(`${name} removed from batch`);
-      fetchBatch();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">

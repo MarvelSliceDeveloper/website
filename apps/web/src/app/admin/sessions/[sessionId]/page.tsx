@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -72,7 +72,6 @@ type SessionDetail = {
 export default function SessionDetailPage() {
   usePageTitle("Session Details");
   const params = useParams();
-  const router = useRouter();
   const sessionId = params.sessionId as string;
 
   const [session, setSession] = useState<SessionDetail | null>(null);
@@ -81,8 +80,9 @@ export default function SessionDetailPage() {
   const [loadingUrl, setLoadingUrl] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState(false);
+  const [nowMs] = useState(() => Date.now());
 
-  const fetchSession = async () => {
+  const fetchSession = useCallback(async () => {
     setLoading(true);
     setError(false);
     try {
@@ -96,11 +96,11 @@ export default function SessionDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sessionId]);
 
   useEffect(() => {
     fetchSession();
-  }, [sessionId]);
+  }, [fetchSession]);
 
   const recordingId = session?.recording?.id;
 
@@ -167,10 +167,8 @@ export default function SessionDetailPage() {
 
   const startMs = new Date(session.scheduledAt).getTime();
   const endMs = new Date(session.scheduledEndAt).getTime();
-  const nowMs = Date.now();
   const isUpcoming = startMs > nowMs;
   const isLive = startMs <= nowMs && endMs >= nowMs && !session.endedAt;
-  const isPast = endMs < nowMs || !!session.endedAt;
 
   const statusLabel = session.endedAt
     ? "Cancelled"
@@ -236,7 +234,7 @@ export default function SessionDetailPage() {
               <span className="text-muted ml-2">
                 &middot; Created{" "}
                 {new Date(
-                  parseInt(session.id.substring(0, 8), 36) * 1000 || Date.now(),
+                  parseInt(session.id.substring(0, 8), 36) * 1000 || nowMs,
                 ).toLocaleDateString("en-IN")}
               </span>
             </p>

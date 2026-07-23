@@ -17,6 +17,7 @@
  */
 "use client";
 
+import Image from "next/image";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -34,6 +35,7 @@ import { api } from "@/lib/api";
 import { timeAgo } from "@/lib/time-ago";
 import type { NotificationItem } from "@/lib/notifications";
 import { NotificationIcon } from "@/lib/notifications";
+import { useSocket, RealtimeNotification } from "@/lib/use-socket";
 
 export interface Breadcrumb {
   label: string;
@@ -105,6 +107,21 @@ export default function StudentPortalShell({
       document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [fetchNotifications]);
+
+  useSocket(
+    useCallback((newNotif: RealtimeNotification) => {
+      const item: NotificationItem = {
+        id: newNotif.id || `rt-${Date.now()}`,
+        title: newNotif.title,
+        message: newNotif.message,
+        type: newNotif.type,
+        read: false,
+        createdAt: newNotif.createdAt || new Date().toISOString(),
+      };
+      setNotifications((prev) => [item, ...prev]);
+      setUnreadCount((prev) => prev + 1);
+    }, []),
+  );
 
   useEffect(() => {
     const saved = window.localStorage.getItem("lms-theme");
@@ -189,9 +206,11 @@ export default function StudentPortalShell({
                   className="flex items-center gap-2 cursor-pointer select-none group"
                   onClick={() => router.push("/student")}
                 >
-                  <img
+                  <Image
                     src="/images/logo.svg"
                     alt="Marvel Slice"
+                    width={40}
+                    height={40}
                     className="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
                   />
                   <span className="text-base font-extrabold tracking-tight text-foreground sm:text-lg">

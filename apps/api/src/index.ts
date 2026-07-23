@@ -25,6 +25,8 @@ import { app } from "./app";
 import { recordingSyncJob } from "./jobs/recording-sync.job";
 import { prisma } from "./utils/prisma";
 
+import { socketService } from "./services/socket.service";
+
 const logger = pino({
   level: process.env.LOG_LEVEL || "info",
 });
@@ -33,6 +35,7 @@ const PORT = process.env.PORT || 4000;
 
 const server = app.listen(PORT, () => {
   logger.info(`API Server running on port ${PORT}`);
+  socketService.init(server);
   recordingSyncJob.start();
 });
 

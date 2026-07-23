@@ -263,6 +263,7 @@ export default function BrandingPage() {
           <div className="flex items-center gap-4">
             {config.logoUrl && (
               <div className="h-16 w-32 shrink-0 overflow-hidden rounded border border-border bg-card flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={config.logoUrl}
                   alt="Logo"
@@ -307,6 +308,7 @@ export default function BrandingPage() {
           <div className="flex items-center gap-4">
             {config.faviconUrl && (
               <div className="h-8 w-8 shrink-0 overflow-hidden rounded border border-border bg-card flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={config.faviconUrl}
                   alt="Favicon"

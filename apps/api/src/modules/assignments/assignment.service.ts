@@ -68,7 +68,7 @@ export const assignmentService = {
       data.courseId,
     );
 
-    return prisma.assignment.create({
+    const assignment = await prisma.assignment.create({
       data: {
         courseId: data.courseId,
         batchId: data.batchId,
@@ -80,6 +80,28 @@ export const assignmentService = {
         maxPoints: data.maxPoints,
       },
     });
+
+    try {
+      const enrollments = await prisma.enrollmentRequest.findMany({
+        where: { batchId: data.batchId, status: "APPROVED" },
+        select: { userId: true },
+      });
+      if (enrollments.length > 0) {
+        await notificationService.createMany(
+          enrollments.map((e) => ({
+            userId: e.userId,
+            title: "New Assignment Posted",
+            message: `A new assignment "${data.title}" has been posted.`,
+            type: "ASSIGNMENT_CREATED",
+            metadata: { assignmentId: assignment.id, batchId: data.batchId },
+          })),
+        );
+      }
+    } catch (e) {
+      console.error("Failed to send assignment notification:", e);
+    }
+
+    return assignment;
   },
 
   // Lists assignments filtered by role and batch
@@ -91,7 +113,7 @@ export const assignmentService = {
     page?: number;
     limit?: number;
   }) {
-    const where: any = {};
+    const where: any = { deletedAt: null };
     if (filters.batchId) where.batchId = filters.batchId;
     if (filters.courseId) where.courseId = filters.courseId;
     if (filters.instructorId) {

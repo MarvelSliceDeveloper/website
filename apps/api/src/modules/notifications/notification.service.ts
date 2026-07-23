@@ -10,6 +10,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../../utils/prisma";
 import { UserRole } from "@lms/types";
 import { emailService } from "../../services/email.service";
+import { socketService } from "../../services/socket.service";
 
 interface NotificationCreateData {
   userId: string;
@@ -102,7 +103,7 @@ export const notificationService = {
     }
 
     try {
-      return await prisma.notification.create({
+      const created = await prisma.notification.create({
         data: {
           userId: data.userId,
           title: data.title,
@@ -111,6 +112,10 @@ export const notificationService = {
           metadata: data.metadata ?? undefined,
         },
       });
+      if (created) {
+        socketService.emitToUser(data.userId, "notification:new", created);
+      }
+      return created;
     } catch (err: unknown) {
       console.error(
         "Error creating notification:",
@@ -151,6 +156,10 @@ export const notificationService = {
         });
         totalInserted += result.count ?? 0;
       }
+      // Emit socket notification to each target user
+      notifications.forEach((n) => {
+        socketService.emitToUser(n.userId, "notification:new", n);
+      });
       return totalInserted;
     } catch (err: unknown) {
       console.error(

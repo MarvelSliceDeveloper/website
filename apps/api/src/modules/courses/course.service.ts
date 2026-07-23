@@ -126,7 +126,7 @@ export const courseService = {
     page?: number;
     limit?: number;
   }) {
-    const where: any = {};
+    const where: any = { deletedAt: null };
 
     if (filters.status) {
       where.status = filters.status;

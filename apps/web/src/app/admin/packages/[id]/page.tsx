@@ -15,7 +15,6 @@ import {
   IconUsers,
   IconBook,
   IconCheck,
-  IconX,
   IconLink,
 } from "@tabler/icons-react";
 import {
@@ -219,7 +218,7 @@ export default function PackageDetailPage({
   const handleApprove = async () => {
     if (!approveModal) return;
     const assignments = Object.entries(batchAssignments)
-      .filter(([_, batchId]) => batchId)
+      .filter(([, batchId]) => batchId)
       .map(([courseId, batchId]) => ({ courseId, batchId }));
 
     if (assignments.length !== (pkg?.courses.length || 0)) {
@@ -243,14 +242,15 @@ export default function PackageDetailPage({
     }
   };
 
+  const pkgSlug = pkg?.slug;
   const handleCopyLink = useCallback(() => {
-    if (!pkg?.slug) return;
-    const url = `${window.location.origin}/catalogue/${pkg.slug}`;
+    if (!pkgSlug) return;
+    const url = `${window.location.origin}/catalogue/${pkgSlug}`;
     navigator.clipboard.writeText(url).then(
       () => toast.success("Link copied!"),
       () => toast.error("Failed to copy link"),
     );
-  }, [pkg?.slug]);
+  }, [pkgSlug]);
 
   const handleReject = async (enrollmentId: string) => {
     if (!confirm("Reject this enrollment?")) return;

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -12,26 +12,9 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { toast, getErrorMessage } from "@/lib/toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { usePageTitle } from "@/lib/use-page-title";
 
-type Batch = {
-  id: string;
-  name: string;
-  course: { id: string; title: string };
-};
 
-type Module = {
-  id: string;
-  title: string;
-  order: number;
-};
 
 type Session = {
   id: string;
@@ -83,11 +66,7 @@ function SessionsPageContent() {
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
 
-  // CRUD states
-  const [batches, setBatches] = useState<Batch[]>([]);
-  const [modules, setModules] = useState<Module[]>([]);
-  const [loadingBatches, setLoadingBatches] = useState(false);
-  const [loadingModules, setLoadingModules] = useState(false);
+
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
@@ -145,29 +124,7 @@ function SessionsPageContent() {
       });
   }, []);
 
-  // Fetch batches & modules when course selection changes
-  useEffect(() => {
-    if (!form.courseId) return;
 
-    api
-      .get<Batch[]>(`/api/admin/batches?courseId=${form.courseId}`)
-      .then((batchData) => {
-        setBatches(Array.isArray(batchData) ? batchData : []);
-        return api.get<{ modules: Module[] }>(
-          `/api/admin/courses/${form.courseId}`,
-        );
-      })
-      .then((courseData) => {
-        setModules(courseData.modules || []);
-      })
-      .catch((err) => {
-        console.error(err);
-      })
-      .finally(() => {
-        setLoadingBatches(false);
-        setLoadingModules(false);
-      });
-  }, [form.courseId]);
 
   const openEditModal = (session: Session) => {
     setEditingSession(session);

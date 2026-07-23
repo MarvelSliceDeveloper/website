@@ -77,17 +77,7 @@ export default function HomeView({
   navigate,
   onMentorshipSubmit,
 }: HomeViewProps) {
-  const now = new Date();
   const router = useRouter();
-  const hour = now.getHours();
-  const greeting =
-    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-  const dateStr = now.toLocaleDateString("en-IN", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
 
   const [activeTab, setActiveTab] = useState<
     "courses" | "calendar" | "sessions" | "notifications" | "support"
@@ -207,79 +197,6 @@ export default function HomeView({
 
   return (
     <div className="sp-view-enter space-y-6 motion-reduce:animate-none">
-      {/* ── Hero Greeting ────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-accent/5 to-violet-500/10 p-6 sm:p-8 shadow-lg shadow-primary/5 hover:border-primary/35 transition-colors duration-300">
-        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute -bottom-8 left-1/4 h-32 w-32 rounded-full bg-accent/8 blur-3xl" />
-
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-2xl font-bold text-white shadow-xl shadow-blue-500/25 ring-4 ring-blue-500/10 transition-transform duration-300 hover:scale-105">
-            {studentName.charAt(0).toUpperCase()}
-          </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
-              {greeting}, {studentName}
-            </h1>
-            <p className="mt-1 text-sm font-medium text-muted-foreground">
-              {dateStr}
-            </p>
-            <p className="mt-2 flex items-center gap-1.5 text-xs text-muted">
-              <IconSparkles size={13} className="text-warning animate-pulse" />
-              Ready to continue your learning journey?
-            </p>
-          </div>
-          <div className="hidden items-center gap-4 sm:flex">
-            {liveCount > 0 && (
-              <div className="flex items-center gap-3 rounded-xl border border-danger/25 bg-danger/10 px-4 py-2.5">
-                <span className="live-pulse h-2.5 w-2.5 rounded-full bg-danger shrink-0" />
-                <div className="min-w-0">
-                  {liveCount === 1 ? (
-                    <p className="text-xs font-semibold text-danger truncate max-w-[180px]">
-                      {liveSessions[0].title}
-                    </p>
-                  ) : (
-                    <p className="text-xs font-semibold text-danger">
-                      {liveCount} sessions live
-                    </p>
-                  )}
-                </div>
-                {liveCount === 1 && liveSessions[0].joinUrl ? (
-                  <button
-                    onClick={() => handleJoinSession(liveSessions[0])}
-                    disabled={joiningSessionId === liveSessions[0].id}
-                    className="shrink-0 rounded-lg bg-danger px-3 py-1 text-[11px] font-bold text-white transition-colors hover:bg-danger/90 disabled:opacity-60"
-                  >
-                    {joiningSessionId === liveSessions[0].id ? (
-                      <span className="flex items-center gap-1">
-                        <span className="h-2.5 w-2.5 animate-spin rounded-full border border-white border-t-transparent" />
-                        Joining
-                      </span>
-                    ) : (
-                      "Join Now"
-                    )}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => navigate({ view: "LIVE_SESSIONS" })}
-                    className="shrink-0 rounded-lg bg-danger px-3 py-1 text-[11px] font-bold text-white transition-colors hover:bg-danger/90"
-                  >
-                    <IconUsers size={12} className="inline mr-1" />
-                    View All
-                  </button>
-                )}
-              </div>
-            )}
-            <div className="text-right border-l border-border/60 pl-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Enrolled
-              </p>
-              <p className="text-lg font-bold text-foreground">
-                {enrolledCourses.length} courses
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* ── Stat Tiles (full width) ──────────────────────────────────────── */}
       <StudentStatTiles tiles={statTiles} />

@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
-import { IconPlus, IconGripVertical } from "@tabler/icons-react";
+import { IconPlus } from "@tabler/icons-react";
 import type { Module } from "./types";
 import ModuleCard from "./ModuleCard";
 import AddModuleForm from "./AddModuleForm";

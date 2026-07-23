@@ -28,7 +28,7 @@ router.get("/", async (req: Request, res: Response) => {
   try {
     const { packageId, page, limit } = req.query;
 
-    const where: any = {};
+    const where: any = { deletedAt: null };
 
     // If packageId is provided, filter users who have a PackageEnrollment for that package
     if (packageId && typeof packageId === "string") {

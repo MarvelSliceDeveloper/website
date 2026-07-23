@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -196,9 +197,11 @@ export default function CourseDetailPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <img
+            <Image
               src="/images/logo.svg"
               alt="Marvel Slice"
+              width={20}
+              height={20}
               className="h-5 w-auto"
             />
             <span className="text-xs font-bold tracking-tight">

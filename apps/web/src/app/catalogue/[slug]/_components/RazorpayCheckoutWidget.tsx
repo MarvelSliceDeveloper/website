@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRazorpayPayment } from "../../_hooks/useRazorpayPayment";
 import { toast } from "sonner";
 import type { PackageDetail } from "@/lib/api-types";
@@ -77,9 +78,11 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
       <div className="rounded-xl border border-border bg-card p-6 sticky top-24">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <img
+            <Image
               src="/images/logo.svg"
               alt="Marvel Slice"
+              width={28}
+              height={28}
               className="h-7 w-auto"
             />
             <span className="text-sm font-extrabold tracking-tight">

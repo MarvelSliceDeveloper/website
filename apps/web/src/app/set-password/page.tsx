@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -126,9 +127,11 @@ export default function SetPasswordPage() {
         >
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-lg shadow-black/10">
-              <img
+              <Image
                 src="/images/logo.svg"
                 alt="Marvel Slice"
+                width={28}
+                height={28}
                 className="h-7 w-auto object-contain"
               />
             </div>
@@ -203,9 +206,11 @@ export default function SetPasswordPage() {
                 className="flex items-center justify-center gap-2.5 lg:hidden"
                 style={{ animation: "logo-pulse 4s ease-in-out infinite" }}
               >
-                <img
+                <Image
                   src="/images/logo.svg"
                   alt="Marvel Slice"
+                  width={44}
+                  height={44}
                   className="h-11 w-auto object-contain"
                 />
                 <span className="text-2xl font-extrabold tracking-tight">
