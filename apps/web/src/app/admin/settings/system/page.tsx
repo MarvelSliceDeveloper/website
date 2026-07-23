@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
+import { usePageTitle } from "@/lib/use-page-title";
 import { IconSettings, IconRefresh } from "@tabler/icons-react";
 
 type Setting = {
@@ -14,6 +15,7 @@ type Setting = {
 };
 
 export default function SystemSettingsPage() {
+  usePageTitle("System Settings");
   const [settings, setSettings] = useState<Setting[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Record<string, string>>({});

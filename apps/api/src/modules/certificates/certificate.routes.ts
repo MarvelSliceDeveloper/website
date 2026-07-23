@@ -12,4 +12,7 @@ router.get("/", certificateController.listMyCertificates);
 // POST /api/certificates/claim — claim a certificate for a completed course
 router.post("/claim", certificateController.claim);
 
+// GET /api/certificates/:id/download — download certificate PDF
+router.get("/:id/download", certificateController.download);
+
 export const certificateRouter = router;

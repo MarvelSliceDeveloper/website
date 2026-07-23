@@ -11,6 +11,7 @@ import {
   IconMovie,
   IconVideo,
 } from "@tabler/icons-react";
+import { usePageTitle } from "@/lib/use-page-title";
 import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FormModal } from "@/components/admin/FormModal";
@@ -35,6 +36,7 @@ type SessionsResponse = {
 };
 
 export default function AdminSessionsPage() {
+  usePageTitle("Sessions");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -67,12 +69,12 @@ export default function AdminSessionsPage() {
   const now = Date.now();
 
   const upcoming = sessions.filter((s) => {
-    const end = s.scheduledEndAt ? new Date(s.scheduledEndAt).getTime() : NaN;
-    return !s.endedAt && (isNaN(end) || end > now);
+    const end = new Date(s.scheduledEndAt).getTime();
+    return !s.endedAt && end > now;
   });
   const past = sessions.filter((s) => {
-    const end = s.scheduledEndAt ? new Date(s.scheduledEndAt).getTime() : NaN;
-    return s.endedAt || (!isNaN(end) && end <= now);
+    const end = new Date(s.scheduledEndAt).getTime();
+    return s.endedAt || end <= now;
   });
 
   const openEdit = (session: Session) => {
@@ -86,11 +88,7 @@ export default function AdminSessionsPage() {
     );
     setEditStart(new Date(session.scheduledAt).toISOString().slice(0, 16));
     setEditEnd(
-      session.scheduledEndAt
-        ? new Date(session.scheduledEndAt).toISOString().slice(0, 16)
-        : new Date(new Date(session.scheduledAt).getTime() + 3600000)
-            .toISOString()
-            .slice(0, 16),
+      new Date(session.scheduledEndAt).toISOString().slice(0, 16),
     );
   };
 

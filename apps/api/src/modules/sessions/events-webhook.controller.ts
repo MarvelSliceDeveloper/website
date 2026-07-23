@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../../utils/prisma";
 import { sessionService } from "../sessions/session.service";
 import { GraphClient } from "../graph";
+import { handleControllerError } from "../../utils/errors";
 
 function getWebhookClientState(): string {
   const value = process.env.MS_WEBHOOK_CLIENT_STATE;
@@ -85,15 +86,12 @@ export const eventsWebhookController = {
           } else if (changeType === "deleted") {
             await handleEventDeleted(msEventId);
           }
-        } catch (notifError: any) {
-          console.error(
-            "[EventsWebhook] Error processing notification:",
-            notifError.message,
-          );
+        } catch (err: unknown) {
+          handleControllerError(err, (req as any).log);
         }
       }
-    } catch (error: any) {
-      console.error("[EventsWebhook] Error handling webhook:", error.message);
+    } catch (err: unknown) {
+      handleControllerError(err, (req as any).log);
     }
   },
 };
@@ -124,7 +122,7 @@ async function handleEventCreatedOrUpdated(userId: string, msEventId: string) {
   const scheduledAt = new Date(event.start.dateTime + "Z");
   const scheduledEndAt = event.end?.dateTime
     ? new Date(event.end.dateTime + "Z")
-    : undefined;
+    : new Date(scheduledAt.getTime() + 60 * 60 * 1000);
   const title = event.subject || "Teams Meeting";
 
   // Check if this meeting is already tracked
@@ -141,11 +139,9 @@ async function handleEventCreatedOrUpdated(userId: string, msEventId: string) {
       scheduledAt,
       scheduledEndAt: event.end?.dateTime
         ? new Date(event.end.dateTime + "Z")
-        : undefined,
+        : new Date(scheduledAt.getTime() + 60 * 60 * 1000),
       joinUrl,
     };
-    // Only include scheduledEndAt if we have a valid date
-    if (!updateData.scheduledEndAt) delete updateData.scheduledEndAt;
 
     await prisma.liveSession.update({
       where: { id: existingSession.id },

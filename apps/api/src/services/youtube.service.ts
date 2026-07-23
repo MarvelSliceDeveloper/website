@@ -1,3 +1,11 @@
+/**
+ * YouTube Data API v3 integration for fetching video metadata.
+ *
+ * Used by the admin course builder to auto-fill lesson title and duration
+ * when an instructor pastes a YouTube URL.
+ *
+ * Requires YOUTUBE_API_KEY env var. Free tier: 10,000 quota units/day.
+ */
 export interface YouTubeVideoInfo {
   videoId: string;
   title: string;
@@ -5,7 +13,15 @@ export interface YouTubeVideoInfo {
   thumbnail: string;
 }
 
-function extractVideoId(url: string): string | null {
+/**
+ * Extracts the 11-character video ID from various YouTube URL formats.
+ *
+ * Supports: watch?v=, youtu.be/, embed/, v/, and bare 11-char IDs.
+ *
+ * @param url - YouTube URL or bare video ID
+ * @returns 11-character video ID, or null if no match
+ */
+export function extractVideoId(url: string): string | null {
   const patterns = [
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
     /^([a-zA-Z0-9_-]{11})$/,
@@ -17,7 +33,13 @@ function extractVideoId(url: string): string | null {
   return null;
 }
 
-function parseISO8601Duration(duration: string): number {
+/**
+ * Converts ISO 8601 duration (e.g. "PT1H30M15S") to total seconds.
+ *
+ * @param duration - ISO 8601 duration string
+ * @returns Total seconds, or 0 for invalid input
+ */
+export function parseISO8601Duration(duration: string): number {
   const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
   if (!match) return 0;
   const hours = parseInt(match[1]?.replace("H", "") ?? "0", 10);
@@ -26,6 +48,12 @@ function parseISO8601Duration(duration: string): number {
   return hours * 3600 + minutes * 60 + seconds;
 }
 
+/**
+ * Fetches video metadata (title, duration, thumbnail) from YouTube Data API.
+ *
+ * @param urlOrId - YouTube URL or bare video ID
+ * @returns Video metadata, or null if API key not set, video not found, or fetch fails
+ */
 export async function fetchYouTubeVideoInfo(
   urlOrId: string,
 ): Promise<YouTubeVideoInfo | null> {

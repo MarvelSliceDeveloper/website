@@ -1,6 +1,6 @@
 import { Response } from "express";
-import { ZodError } from "zod";
 import { AuthRequest } from "../../middleware/auth.middleware";
+import { handleControllerError } from "../../utils/errors";
 import {
   sessionService,
   CreateSessionSchema,
@@ -18,21 +18,9 @@ export const sessionController = {
       const session = await sessionService.createSession(req.user.userId, data);
 
       return res.status(201).json({ session });
-    } catch (error: any) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      if (
-        error.message.includes("not the instructor") ||
-        error.message.includes("not found")
-      ) {
-        return res.status(403).json({ error: error.message });
-      }
-      if (error.message.includes("already scheduled")) {
-        return res.status(409).json({ error: error.message });
-      }
-      console.error("Error creating session:", error.message);
-      return res.status(500).json({ error: "Failed to create session" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -62,9 +50,9 @@ export const sessionController = {
       });
 
       return res.status(200).json({ sessions });
-    } catch (error: any) {
-      console.error("Error listing sessions:", error.message);
-      return res.status(500).json({ error: "Failed to list sessions" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -73,12 +61,9 @@ export const sessionController = {
     try {
       const session = await sessionService.getSession(req.params.id);
       return res.status(200).json({ session });
-    } catch (error: any) {
-      if (error.message === "Session not found") {
-        return res.status(404).json({ error: "Session not found" });
-      }
-      console.error("Error getting session:", error.message);
-      return res.status(500).json({ error: "Failed to get session" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -96,18 +81,9 @@ export const sessionController = {
       );
 
       return res.status(200).json({ session });
-    } catch (error: any) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      if (error.message.includes("not found")) {
-        return res.status(404).json({ error: error.message });
-      }
-      if (error.message.includes("Only the instructor")) {
-        return res.status(403).json({ error: error.message });
-      }
-      console.error("Error updating session:", error.message);
-      return res.status(500).json({ error: "Failed to update session" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -127,17 +103,9 @@ export const sessionController = {
         message: isDeleted ? "Session deleted" : "Session cancelled",
         session,
       });
-    } catch (error: any) {
-      if (error.message.includes("not found")) {
-        return res.status(404).json({ error: error.message });
-      }
-      if (error.message.includes("Only the instructor")) {
-        return res.status(403).json({ error: error.message });
-      }
-      console.error("Error cancelling/deleting session:", error.message);
-      return res
-        .status(500)
-        .json({ error: "Failed to cancel or delete session" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

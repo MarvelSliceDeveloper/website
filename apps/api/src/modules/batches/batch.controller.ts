@@ -1,6 +1,6 @@
 import { Response } from "express";
-import { ZodError } from "zod";
 import { AuthRequest } from "../../middleware/auth.middleware";
+import { handleControllerError } from "../../utils/errors";
 import {
   batchService,
   CreateBatchSchema,
@@ -23,29 +23,31 @@ export const batchController = {
         const batch = await batchService.createBatchesForPackage(data);
         return res.status(201).json(batch);
       }
-    } catch (error: any) {
-      if (error instanceof ZodError)
-        return res.status(400).json({ error: error.errors });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
   // Lists batches with filters
   async list(req: AuthRequest, res: Response) {
     try {
-      const { courseId, status, search, packageId } = req.query;
+      const { courseId, status, search, packageId, page, limit } = req.query;
       const instructorId =
         req.user?.role === "INSTRUCTOR" ? req.user.userId : undefined;
-      const batches = await batchService.listBatches({
+      const result = await batchService.listBatches({
         courseId: courseId as string,
         status: status as string,
         search: search as string,
         instructorId,
         packageId: packageId as string,
+        page: page ? Number(page) : undefined,
+        limit: limit ? Number(limit) : undefined,
       });
-      return res.json(batches);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+      return res.json(result);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -60,10 +62,9 @@ export const batchController = {
         return res.status(403).json({ error: "Insufficient permissions" });
       }
       return res.json(batch);
-    } catch (error: any) {
-      if (error.message === "Batch not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -73,12 +74,9 @@ export const batchController = {
       const data = UpdateBatchSchema.parse(req.body);
       const batch = await batchService.updateBatch(req.params.id, data);
       return res.json(batch);
-    } catch (error: any) {
-      if (error instanceof ZodError)
-        return res.status(400).json({ error: error.errors });
-      if (error.message === "Batch not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -87,10 +85,9 @@ export const batchController = {
     try {
       await batchService.deleteBatch(req.params.id);
       return res.json({ message: "Batch deleted" });
-    } catch (error: any) {
-      if (error.message === "Batch not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -103,12 +100,15 @@ export const batchController = {
           return res.status(403).json({ error: "Insufficient permissions" });
         }
       }
-      const students = await batchService.listStudents(req.params.id);
-      return res.json(students);
-    } catch (error: any) {
-      if (error.message === "Batch not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(500).json({ error: error.message });
+      const { page, limit } = req.query;
+      const result = await batchService.listStudents(req.params.id, {
+        page: page ? Number(page) : undefined,
+        limit: limit ? Number(limit) : undefined,
+      });
+      return res.json(result);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -118,10 +118,9 @@ export const batchController = {
       const { userIds } = AddStudentsSchema.parse(req.body);
       const result = await batchService.addStudents(req.params.id, userIds);
       return res.json(result);
-    } catch (error: any) {
-      if (error instanceof ZodError)
-        return res.status(400).json({ error: error.errors });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -132,8 +131,9 @@ export const batchController = {
         return res.status(401).json({ error: "Authentication required" });
       await batchService.removeStudent(req.params.id, req.params.uid, req.user);
       return res.json({ message: "Student removed from batch" });
-    } catch (error: any) {
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -142,8 +142,9 @@ export const batchController = {
     try {
       const instructors = await batchService.getInstructors();
       return res.json(instructors);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -153,8 +154,9 @@ export const batchController = {
       const { packageId } = req.params;
       const result = await batchService.getBatchesByPackage(packageId);
       return res.json(result);
-    } catch (error: any) {
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -163,8 +165,9 @@ export const batchController = {
     try {
       const courses = await batchService.getCoursesForBatch();
       return res.json(courses);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -173,10 +176,9 @@ export const batchController = {
     try {
       const courses = await batchService.getBatchCourses(req.params.id);
       return res.json({ courses });
-    } catch (error: any) {
-      if (error.message === "Batch not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -186,10 +188,9 @@ export const batchController = {
       const { id, courseId } = req.params;
       const result = await batchService.toggleCourseVisibility(id, courseId);
       return res.json(result);
-    } catch (error: any) {
-      if (error.message === "Course not found in this batch")
-        return res.status(404).json({ error: error.message });
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -207,10 +208,9 @@ export const batchController = {
           .json({ error: "You are not enrolled in this batch" });
       }
       return res.json({ batch });
-    } catch (error: any) {
-      if (error.message === "Batch not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

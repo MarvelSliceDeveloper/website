@@ -1,3 +1,10 @@
+/**
+ * Course service — manages course CRUD, publishing, content ordering,
+ * and permanent deletion with cascade cleanup.
+ *
+ * Uses Zod schemas for input validation on all write operations.
+ * Slugs are auto-generated from titles and made unique with counter suffix.
+ */
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
 
@@ -29,8 +36,14 @@ export const UpdateCourseSchema = z.object({
 
 // --- Helpers ---
 
-// Generates a URL-safe slug from a title string
-function generateSlug(title: string): string {
+/**
+ * Generates a URL-safe slug from a course title.
+ * Strips special characters, collapses whitespace/hyphens, and lowercases.
+ *
+ * @param title - The course title to slugify
+ * @returns URL-safe slug string
+ */
+export function generateSlug(title: string): string {
   return title
     .toLowerCase()
     .trim()
@@ -40,7 +53,13 @@ function generateSlug(title: string): string {
     .replace(/^-|-$/g, "");
 }
 
-// Ensures a slug is unique by appending a counter if needed
+/**
+ * Ensures a slug is unique by appending -1, -2, etc. if it already exists.
+ * Falls back to base slug if DB schema is outdated (no slug column).
+ *
+ * @param baseSlug - The initial slug to check
+ * @returns Unique slug string
+ */
 async function ensureUniqueSlug(baseSlug: string): Promise<string> {
   let slug = baseSlug;
   let counter = 1;
@@ -163,6 +182,7 @@ export const courseService = {
             assignments: {
               orderBy: { dueDate: "asc" },
             },
+            practicals: { orderBy: { order: "asc" } },
           },
         },
         courseTags: { include: { tag: true } },

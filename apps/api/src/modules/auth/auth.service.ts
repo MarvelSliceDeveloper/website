@@ -1,3 +1,12 @@
+/**
+ * Auth service — handles user registration, login, and JWT token generation.
+ *
+ * Passwords are hashed with bcrypt (12 rounds). JWT tokens include userId,
+ * role, email, and optional sessionTimeoutMin claim for per-user timeouts.
+ *
+ * Registration requires name (2-100 chars), valid email, and a strong
+ * password (8+ chars, uppercase, lowercase, digit).
+ */
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "../../utils/prisma";
@@ -15,6 +24,7 @@ function getJwtSecret(): string {
   return secret;
 }
 
+/** Zod schema for user registration — enforces name length, email format, and password strength */
 export const RegisterSchema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email(),
@@ -27,6 +37,7 @@ export const RegisterSchema = z.object({
     ),
 });
 
+/** Zod schema for user login — requires valid email and password string */
 export const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string(),

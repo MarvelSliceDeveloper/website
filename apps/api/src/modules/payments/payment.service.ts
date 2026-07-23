@@ -1,6 +1,14 @@
+/**
+ * Payment service — handles Razorpay integration, guest user creation,
+ * order/payment verification, and batch enrollment after successful payment.
+ *
+ * Guest users are created with a dummy password and mustChangePassword=true.
+ * Welcome email with credentials is sent after successful enrollment.
+ */
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { prisma } from "../../utils/prisma";
+import { paginate, PaginationParams } from "../../utils/paginate";
 import { emailService } from "../../services/email.service";
 import { authService } from "../auth/auth.service";
 
@@ -12,7 +20,15 @@ function getRazorpayInstance() {
   });
 }
 
-function verifySignature(
+/**
+ * Verifies Razorpay payment signature using HMAC-SHA256.
+ *
+ * @param orderId - Razorpay order ID
+ * @param paymentId - Razorpay payment ID
+ * @param signature - Signature from Razorpay callback
+ * @returns true if signature matches expected HMAC
+ */
+export function verifySignature(
   orderId: string,
   paymentId: string,
   signature: string,
@@ -24,7 +40,15 @@ function verifySignature(
   return expected === signature;
 }
 
-function generateDummyPassword(): string {
+/**
+ * Generates a 10-character random password for guest accounts.
+ *
+ * Excludes ambiguous characters (i, l, o, I, L, O, 0, 1) for readability.
+ * Uses only alphanumeric characters from a safe subset.
+ *
+ * @returns Random 10-character password string
+ */
+export function generateDummyPassword(): string {
   const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
   let pw = "";
   for (let i = 0; i < 10; i++) {
@@ -347,17 +371,27 @@ export const paymentService = {
     };
   },
 
-  async getAdminPayments() {
-    const payments = await prisma.payment.findMany({
-      where: { status: { not: "PENDING" } },
-      include: {
-        user: { select: { id: true, name: true, email: true } },
-        package: { select: { id: true, name: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+  async getAdminPayments(params?: PaginationParams) {
+    const { page, limit } = params || {};
+    const { skip, take, page: currentPage, limit: currentLimit } = paginate({ page, limit });
 
-    return payments.map((p) => ({
+    const where = { status: { not: "PENDING" as const } };
+
+    const [payments, total] = await Promise.all([
+      prisma.payment.findMany({
+        where,
+        skip,
+        take,
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+          package: { select: { id: true, name: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.payment.count({ where }),
+    ]);
+
+    const items = payments.map((p) => ({
       id: p.id,
       studentName: p.user.name,
       studentEmail: p.user.email,
@@ -368,6 +402,8 @@ export const paymentService = {
       razorpayPaymentId: p.razorpayPaymentId,
       createdAt: p.createdAt,
     }));
+
+    return { items, total, page: currentPage, limit: currentLimit };
   },
 
   async getRevenueStats() {
@@ -395,6 +431,13 @@ export const paymentService = {
       }),
     );
 
-    return { totalRevenue, totalPayments, successful, failed, refunded, monthlyRevenue };
+    return {
+      totalRevenue,
+      totalPayments,
+      successful,
+      failed,
+      refunded,
+      monthlyRevenue,
+    };
   },
 };

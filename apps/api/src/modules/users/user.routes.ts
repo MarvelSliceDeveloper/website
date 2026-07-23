@@ -9,6 +9,7 @@ import { UserRole } from "@lms/types";
 import bcrypt from "bcryptjs";
 import { emailService } from "../../services/email.service";
 import { notificationService } from "../notifications/notification.service";
+import { paginate } from "../../utils/paginate";
 
 const router = Router();
 
@@ -25,7 +26,7 @@ function handleError(res: Response, error: unknown) {
 // Lists STUDENT and INSTRUCTOR users only
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const { packageId } = req.query;
+    const { packageId, page, limit } = req.query;
 
     const where: any = {};
 
@@ -36,25 +37,35 @@ router.get("/", async (req: Request, res: Response) => {
       };
     }
 
-    const users = await prisma.user.findMany({
-      where,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        isSuspended: true,
-        packageEnrollments: {
-          select: {
-            id: true,
-            status: true,
-            package: { select: { id: true, name: true } },
-            courses: { select: { courseId: true, batchId: true } },
+    const { skip, take, page: currentPage, limit: currentLimit } = paginate({
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    });
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        skip,
+        take,
+        where,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          isSuspended: true,
+          packageEnrollments: {
+            select: {
+              id: true,
+              status: true,
+              package: { select: { id: true, name: true } },
+              courses: { select: { courseId: true, batchId: true } },
+            },
           },
         },
-      },
-      orderBy: [{ role: "asc" }, { name: "asc" }],
-    });
+        orderBy: [{ role: "asc" }, { name: "asc" }],
+      }),
+      prisma.user.count({ where }),
+    ]);
 
     // Build unique packages list with counts
     const packageMap = new Map<
@@ -80,6 +91,9 @@ router.get("/", async (req: Request, res: Response) => {
 
     return res.json({
       users,
+      total,
+      page: currentPage,
+      limit: currentLimit,
       packages: Array.from(packageMap.values()),
     });
   } catch (error) {

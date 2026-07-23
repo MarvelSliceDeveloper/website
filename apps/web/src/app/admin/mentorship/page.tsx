@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   Select,
   SelectContent,
@@ -59,6 +60,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function AdminMentorshipPage() {
+  usePageTitle("Mentorship");
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [stats, setStats] = useState({

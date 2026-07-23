@@ -8,6 +8,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FormModal } from "@/components/admin/FormModal";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconClock,
   IconCircleCheck,
@@ -66,6 +67,7 @@ const statusIcons: Record<
 };
 
 export default function PackageEnrollmentsPage() {
+  usePageTitle("Package Enrollments");
   const [enrollments, setEnrollments] = useState<PackageEnrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("PENDING");

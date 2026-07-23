@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconClipboardData,
   IconRefresh,
@@ -33,6 +34,7 @@ const ACTION_OPTIONS = [
 ] as const;
 
 export default function AdminAuditLogsPage() {
+  usePageTitle("Audit Logs");
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);

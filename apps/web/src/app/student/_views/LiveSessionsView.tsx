@@ -55,14 +55,7 @@ const FILTERS: { label: string; value: Filter }[] = [
 function getComputedStatus(session: LiveSession): ComputedStatus {
   const now = Date.now();
   const start = new Date(session.scheduledAt).getTime();
-
-  const rawEnd =
-    session.endDateTime ?? (session as LiveSession & { endAt?: string }).endAt;
-  let end = new Date(rawEnd).getTime();
-
-  if (isNaN(end)) {
-    end = start + 60 * 60 * 1000;
-  }
+  const end = new Date(session.endDateTime).getTime();
 
   if (isNaN(start)) return "UPCOMING";
   if (now >= start && now < end) return "LIVE";

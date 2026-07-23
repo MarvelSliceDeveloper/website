@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconFileText,
   IconPlus,
@@ -22,6 +23,7 @@ type StaticPage = {
 };
 
 export default function AdminStaticPagesPage() {
+  usePageTitle("Static Pages");
   const [pages, setPages] = useState<StaticPage[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);

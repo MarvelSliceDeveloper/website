@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { IconPalette, IconUpload, IconCheck } from "@tabler/icons-react";
 
@@ -60,6 +61,7 @@ function ColorField({
 }
 
 export default function BrandingPage() {
+  usePageTitle("Branding");
   const [config, setConfig] = useState<BrandingConfig>(defaultConfig);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

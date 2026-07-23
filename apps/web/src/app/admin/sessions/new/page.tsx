@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconCalendar,
   IconVideo,
@@ -52,6 +53,7 @@ interface Instructor {
 }
 
 export default function ScheduleSessionPage() {
+  usePageTitle("New Session");
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
 

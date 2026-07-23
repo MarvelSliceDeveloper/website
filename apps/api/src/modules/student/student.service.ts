@@ -157,7 +157,6 @@ export const studentService = {
       const quizModelQuizzes = await prisma.quiz.findMany({
         where: {
           moduleId: { in: moduleIds },
-          dueDate: { not: null },
         },
         include: {
           module: { select: { title: true } },
@@ -181,7 +180,7 @@ export const studentService = {
           moduleName: quiz.module?.title ?? "—",
           unitName: "Quiz",
           assignmentName: quiz.title,
-          dueDate: (quiz.dueDate as Date).toISOString(),
+          dueDate: quiz.dueDate ? quiz.dueDate.toISOString() : "",
           status: attempt ? "SUBMITTED" : "PENDING",
           type: "QUIZ",
           submissionId: attempt?.id ?? null,
@@ -190,7 +189,7 @@ export const studentService = {
     }
 
     result.sort(
-      (a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime(),
+      (a, b) => new Date(b.dueDate || 0).getTime() - new Date(a.dueDate || 0).getTime(),
     );
 
     return result;

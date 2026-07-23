@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePageTitle } from "@/lib/use-page-title";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { IconBellRinging, IconSend, IconRefresh } from "@tabler/icons-react";
@@ -14,6 +15,7 @@ type Announcement = {
 };
 
 export default function AnnouncementsPage() {
+  usePageTitle("Announcements");
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);

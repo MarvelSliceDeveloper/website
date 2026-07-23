@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import { IconHistory, IconRefresh } from "@tabler/icons-react";
 
 type LoginEntry = {
@@ -14,6 +15,7 @@ type LoginEntry = {
 };
 
 export default function LoginHistoryPage() {
+  usePageTitle("Login History");
   const [logs, setLogs] = useState<LoginEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);

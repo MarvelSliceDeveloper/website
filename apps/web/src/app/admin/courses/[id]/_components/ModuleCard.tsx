@@ -18,7 +18,7 @@ import type {
   Lesson,
   Quiz,
   Assignment,
-  ContentOrderItem,
+  Practical,
 } from "./types";
 import LessonCard from "./LessonCard";
 import AddLessonForm from "./AddLessonForm";
@@ -26,6 +26,8 @@ import QuizCard from "./QuizCard";
 import AddQuizForm from "./AddQuizForm";
 import AssignmentCard from "./AssignmentCard";
 import AddAssignmentForm from "./AddAssignmentForm";
+import PracticalCard from "./PracticalCard";
+import AddPracticalForm from "./AddPracticalForm";
 
 const ALLOWED_RESOURCE_TYPES = new Set([
   "application/pdf",
@@ -45,12 +47,14 @@ const MAX_RESOURCE_SIZE = 50 * 1024 * 1024;
 type UnifiedItem =
   | { type: "LESSON"; data: Lesson }
   | { type: "QUIZ"; data: Quiz }
-  | { type: "ASSIGNMENT"; data: Assignment };
+  | { type: "ASSIGNMENT"; data: Assignment }
+  | { type: "PRACTICAL"; data: Practical };
 
 function buildUnifiedList(mod: Module): UnifiedItem[] {
   const lessonMap = new Map(mod.lessons.map((l) => [l.id, l]));
   const quizMap = new Map(mod.quizzes.map((q) => [q.id, q]));
   const assignmentMap = new Map(mod.assignments.map((a) => [a.id, a]));
+  const practicalMap = new Map((mod.practicals || []).map((p) => [p.id, p]));
 
   if (mod.contentOrder && mod.contentOrder.length > 0) {
     const items: UnifiedItem[] = [];
@@ -61,6 +65,8 @@ function buildUnifiedList(mod: Module): UnifiedItem[] {
         items.push({ type: "QUIZ", data: quizMap.get(entry.id)! });
       } else if (entry.type === "ASSIGNMENT" && assignmentMap.has(entry.id)) {
         items.push({ type: "ASSIGNMENT", data: assignmentMap.get(entry.id)! });
+      } else if (entry.type === "PRACTICAL" && practicalMap.has(entry.id)) {
+        items.push({ type: "PRACTICAL", data: practicalMap.get(entry.id)! });
       }
     }
     for (const lesson of mod.lessons) {
@@ -82,6 +88,15 @@ function buildUnifiedList(mod: Module): UnifiedItem[] {
         items.push({ type: "ASSIGNMENT", data: assignment });
       }
     }
+    for (const practical of mod.practicals || []) {
+      if (
+        !items.some(
+          (i) => i.type === "PRACTICAL" && i.data.id === practical.id,
+        )
+      ) {
+        items.push({ type: "PRACTICAL", data: practical });
+      }
+    }
     return items;
   }
 
@@ -91,6 +106,8 @@ function buildUnifiedList(mod: Module): UnifiedItem[] {
   for (const quiz of mod.quizzes) items.push({ type: "QUIZ", data: quiz });
   for (const assignment of mod.assignments)
     items.push({ type: "ASSIGNMENT", data: assignment });
+  for (const practical of mod.practicals || [])
+    items.push({ type: "PRACTICAL", data: practical });
   return items;
 }
 
@@ -127,6 +144,7 @@ export default function ModuleCard({
   const [resourceOverIdx, setResourceOverIdx] = useState<number | null>(null);
   const [showAddQuiz, setShowAddQuiz] = useState(false);
   const [showAddAssignment, setShowAddAssignment] = useState(false);
+  const [showAddPractical, setShowAddPractical] = useState(false);
   const [showStudyMaterialUpload, setShowStudyMaterialUpload] = useState(false);
   const [resourceLessonId, setResourceLessonId] = useState<string>(
     mod.lessons[0]?.id || "",
@@ -300,7 +318,10 @@ export default function ModuleCard({
   };
 
   const itemCount =
-    mod.lessons.length + mod.quizzes.length + mod.assignments.length;
+    mod.lessons.length +
+    mod.quizzes.length +
+    mod.assignments.length +
+    (mod.practicals?.length ?? 0);
 
   return (
     <div
@@ -488,6 +509,28 @@ export default function ModuleCard({
                       />
                     </div>
                   )}
+                  {item.type === "PRACTICAL" && (
+                    <div
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setContentOverIdx(idx);
+                      }}
+                      onDragLeave={() => setContentOverIdx(null)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        handleContentDrop(idx);
+                      }}
+                    >
+                      <PracticalCard
+                        practical={item.data}
+                        index={idx}
+                        courseId={courseId}
+                        onUpdate={onChanged}
+                        onDragStart={() => setContentDragIdx(idx)}
+                        isDragging={contentDragIdx === idx}
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -582,6 +625,16 @@ export default function ModuleCard({
                 }}
                 onCancel={() => setShowAddAssignment(false)}
               />
+            ) : showAddPractical ? (
+              <AddPracticalForm
+                moduleId={mod.id}
+                courseId={courseId}
+                onSuccess={() => {
+                  setShowAddPractical(false);
+                  onChanged();
+                }}
+                onCancel={() => setShowAddPractical(false)}
+              />
             ) : showStudyMaterialUpload ? (
               <div className="rounded-lg border border-success/20 bg-success/5 p-3 space-y-3">
                 <div className="flex items-center justify-between">
@@ -665,6 +718,13 @@ export default function ModuleCard({
                 >
                   <IconPlus size={12} />
                   Add Assignment
+                </button>
+                <button
+                  onClick={() => setShowAddPractical(true)}
+                  className="text-xs font-medium text-violet-600 hover:text-violet-700 transition-colors px-2 py-1 rounded-md hover:bg-violet-50 flex items-center gap-1"
+                >
+                  <IconPlus size={12} />
+                  Practical
                 </button>
                 <button
                   onClick={() => setShowStudyMaterialUpload(true)}

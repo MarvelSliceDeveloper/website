@@ -43,8 +43,20 @@ export type Assignment = {
   questionPdfUrl: string | null;
 };
 
+export type Practical = {
+  id: string;
+  title: string;
+  description: string | null;
+  order: number;
+  videoType: string | null;
+  videoUrl: string | null;
+  videoEmbedId: string | null;
+  pdfUrl: string | null;
+  resources: Resource[];
+};
+
 export type ContentOrderItem = {
-  type: "LESSON" | "QUIZ" | "ASSIGNMENT";
+  type: "LESSON" | "QUIZ" | "ASSIGNMENT" | "PRACTICAL";
   id: string;
 };
 
@@ -58,6 +70,7 @@ export type Module = {
   lessons: Lesson[];
   quizzes: Quiz[];
   assignments: Assignment[];
+  practicals: Practical[];
 };
 
 export type Course = {

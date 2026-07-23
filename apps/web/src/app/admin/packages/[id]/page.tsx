@@ -9,6 +9,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FormModal } from "@/components/admin/FormModal";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconArrowLeft,
   IconUsers,
@@ -111,6 +112,7 @@ export default function PackageDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  usePageTitle("Package Details");
   const { id } = use(params);
   const router = useRouter();
   const [pkg, setPkg] = useState<PackageDetail | null>(null);

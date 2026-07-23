@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconArrowLeft,
   IconCalendar,
@@ -69,6 +70,7 @@ type SessionDetail = {
 };
 
 export default function SessionDetailPage() {
+  usePageTitle("Session Details");
   const params = useParams();
   const router = useRouter();
   const sessionId = params.sessionId as string;
@@ -234,8 +236,7 @@ export default function SessionDetailPage() {
               <span className="text-muted ml-2">
                 &middot; Created{" "}
                 {new Date(
-                  parseInt(session.id.substring(0, 8), 36) * 1000 ||
-                    Date.now(),
+                  parseInt(session.id.substring(0, 8), 36) * 1000 || Date.now(),
                 ).toLocaleDateString("en-IN")}
               </span>
             </p>
@@ -296,9 +297,7 @@ export default function SessionDetailPage() {
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Batch</span>
                 <span className="text-foreground font-medium">
-                  {session.batch?.name ?? (
-                    <span className="text-muted">—</span>
-                  )}
+                  {session.batch?.name ?? <span className="text-muted">—</span>}
                 </span>
               </div>
               {session.batch?.course && (
@@ -429,9 +428,9 @@ export default function SessionDetailPage() {
                     </span>
                     <span>
                       Synced{" "}
-                      {new Date(
-                        session.recording.syncedAt,
-                      ).toLocaleDateString("en-IN")}
+                      {new Date(session.recording.syncedAt).toLocaleDateString(
+                        "en-IN",
+                      )}
                     </span>
                   </div>
                 </div>

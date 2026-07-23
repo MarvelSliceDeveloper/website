@@ -13,14 +13,24 @@ function WhyBuySection({ pkg }: { pkg: PackageDetail }) {
     (sum, c) => sum + (c.course.modules?.length ?? 0),
     0,
   );
-  const totalLessons = 0; // lessons count not included in PackageDetail response
-  const totalQuizzes = 0; // quizzes count not included in PackageDetail response
+  const totalLessons = pkg.totalLessons ?? 0;
+  const totalQuizzes = pkg.totalQuizzes ?? 0;
+  const totalPracticals = pkg.totalPracticals ?? 0;
 
   const highlights = [
-    { label: "Comprehensive Curriculum", value: `${pkg.courses.length} courses` },
+    {
+      label: "Comprehensive Curriculum",
+      value: `${pkg.courses.length} courses`,
+    },
     { label: "Deep Dive", value: `${totalModules} modules` },
-    { label: "Hands-on Learning", value: `${totalLessons} lessons` },
-    { label: "Knowledge Check", value: `${totalQuizzes} quizzes & assessments` },
+    {
+      label: "Hands-on Learning",
+      value: `${totalPracticals} practicals, ${totalLessons} lessons`,
+    },
+    {
+      label: "Knowledge Check",
+      value: `${totalQuizzes} quizzes & assessments`,
+    },
   ];
 
   const features = [
@@ -54,7 +64,10 @@ function WhyBuySection({ pkg }: { pkg: PackageDetail }) {
 
       <ul className="space-y-2 mb-6">
         {features.map((f) => (
-          <li key={f} className="flex items-start gap-2 text-sm text-foreground">
+          <li
+            key={f}
+            className="flex items-start gap-2 text-sm text-foreground"
+          >
             <svg
               className="w-4 h-4 text-primary mt-0.5 shrink-0"
               fill="none"

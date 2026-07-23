@@ -9,6 +9,7 @@ import {
   IconFileDescription,
   IconUsers,
 } from "@tabler/icons-react";
+import { usePageTitle } from "@/lib/use-page-title";
 
 type Course = {
   id: string;
@@ -21,6 +22,7 @@ type Course = {
 };
 
 export default function InstructorCoursesPage() {
+  usePageTitle("Courses");
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
 

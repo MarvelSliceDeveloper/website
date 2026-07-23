@@ -89,6 +89,32 @@ export const uploadLessonResource = multer({
   limits: { fileSize: MAX_RESOURCE_BYTES },
 }).single(MODULE_RESOURCE_FIELD);
 
+const practicalPdfStorage = multer.diskStorage({
+  destination: (req, _file, cb) => {
+    const courseId = req.params.courseId || "unknown";
+    const dir = path.join(uploadsRoot, "courses", courseId, "practicals", "pdfs");
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (_req, file, cb) => {
+    const ext = extensionByMime[file.mimetype] || ".pdf";
+    cb(null, `${crypto.randomUUID()}${ext}`);
+  },
+});
+
+const pdfFilter: multer.Options["fileFilter"] = (_req, file, cb) => {
+  if (file.mimetype !== "application/pdf") {
+    return cb(new Error("Only PDF files are allowed."));
+  }
+  return cb(null, true);
+};
+
+export const uploadPracticalPdf = multer({
+  storage: practicalPdfStorage,
+  fileFilter: pdfFilter,
+  limits: { fileSize: MAX_RESOURCE_BYTES },
+}).single("pdf");
+
 export function buildLessonResourceUrl(
   req: Request,
   courseId: string,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import { timeAgo } from "@/lib/time-ago";
 
 interface Ticket {
@@ -14,6 +15,7 @@ interface Ticket {
 }
 
 export default function AdminInboxTicketsPage() {
+  usePageTitle("Tickets");
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
 

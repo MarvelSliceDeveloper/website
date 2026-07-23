@@ -1,6 +1,6 @@
 import { Response } from "express";
-import { ZodError } from "zod";
 import { AuthRequest } from "../../middleware/auth.middleware";
+import { handleControllerError } from "../../utils/errors";
 import {
   moduleService,
   CreateModuleSchema,
@@ -16,14 +16,9 @@ export const moduleController = {
       const data = CreateModuleSchema.parse(req.body);
       const module = await moduleService.addModule(req.params.id, data);
       return res.status(201).json(module);
-    } catch (error: any) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      if (error.message === "Course not found") {
-        return res.status(404).json({ error: error.message });
-      }
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -33,14 +28,9 @@ export const moduleController = {
       const data = UpdateModuleSchema.parse(req.body);
       const module = await moduleService.updateModule(req.params.id, data);
       return res.json(module);
-    } catch (error: any) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      if (error.message === "Module not found") {
-        return res.status(404).json({ error: error.message });
-      }
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -49,11 +39,9 @@ export const moduleController = {
     try {
       await moduleService.deleteModule(req.params.id);
       return res.json({ message: "Module deleted" });
-    } catch (error: any) {
-      if (error.message === "Module not found") {
-        return res.status(404).json({ error: error.message });
-      }
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -63,14 +51,9 @@ export const moduleController = {
       const { moduleIds } = ReorderModulesSchema.parse(req.body);
       await moduleService.reorderModules(req.params.id, moduleIds);
       return res.json({ message: "Modules reordered" });
-    } catch (error: any) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      if (error.message === "Course not found") {
-        return res.status(404).json({ error: error.message });
-      }
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -80,14 +63,9 @@ export const moduleController = {
       const { contentOrder } = ReorderContentSchema.parse(req.body);
       await moduleService.reorderContent(req.params.moduleId, contentOrder);
       return res.json({ message: "Content reordered" });
-    } catch (error: any) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      if (error.message === "Module not found") {
-        return res.status(404).json({ error: error.message });
-      }
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

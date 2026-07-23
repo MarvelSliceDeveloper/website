@@ -1,6 +1,6 @@
 import { Response } from "express";
-import { ZodError } from "zod";
 import { AuthRequest } from "../../middleware/auth.middleware";
+import { handleControllerError } from "../../utils/errors";
 import {
   packageService,
   CreatePackageSchema,
@@ -16,24 +16,26 @@ export const packageController = {
       const data = CreatePackageSchema.parse(req.body);
       const pkg = await packageService.createPackage(data);
       return res.status(201).json(pkg);
-    } catch (error: any) {
-      if (error instanceof ZodError)
-        return res.status(400).json({ error: error.errors });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
   // List all packages
   async list(req: AuthRequest, res: Response) {
     try {
-      const { status, search } = req.query;
-      const packages = await packageService.listPackages({
+      const { status, search, page, limit } = req.query;
+      const result = await packageService.listPackages({
         status: status as string,
         search: search as string,
+        page: page ? Number(page) : undefined,
+        limit: limit ? Number(limit) : undefined,
       });
-      return res.json({ packages });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+      return res.json(result);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -42,10 +44,9 @@ export const packageController = {
     try {
       const pkg = await packageService.getPackageById(req.params.id);
       return res.json(pkg);
-    } catch (error: any) {
-      if (error.message === "Package not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -55,12 +56,9 @@ export const packageController = {
       const data = UpdatePackageSchema.parse(req.body);
       const pkg = await packageService.updatePackage(req.params.id, data);
       return res.json(pkg);
-    } catch (error: any) {
-      if (error instanceof ZodError)
-        return res.status(400).json({ error: error.errors });
-      if (error.message === "Package not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -69,10 +67,9 @@ export const packageController = {
     try {
       await packageService.deletePackage(req.params.id);
       return res.json({ message: "Package deleted" });
-    } catch (error: any) {
-      if (error.message === "Package not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -88,10 +85,9 @@ export const packageController = {
         status,
       );
       return res.json(pkg);
-    } catch (error: any) {
-      if (error.message === "Package not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -104,24 +100,26 @@ export const packageController = {
         data,
       );
       return res.status(201).json(enrollment);
-    } catch (error: any) {
-      if (error instanceof ZodError)
-        return res.status(400).json({ error: error.errors });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
   // List package enrollments
   async listEnrollments(req: AuthRequest, res: Response) {
     try {
-      const { status, packageId } = req.query;
-      const enrollments = await packageService.listEnrollments({
+      const { status, packageId, page, limit } = req.query;
+      const result = await packageService.listEnrollments({
         status: status as string,
         packageId: packageId as string,
+        page: page ? Number(page) : undefined,
+        limit: limit ? Number(limit) : undefined,
       });
-      return res.json({ enrollments });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+      return res.json(result);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -134,10 +132,9 @@ export const packageController = {
         data,
       );
       return res.json({ message: "Enrollment approved", enrollment });
-    } catch (error: any) {
-      if (error instanceof ZodError)
-        return res.status(400).json({ error: error.errors });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -146,8 +143,9 @@ export const packageController = {
     try {
       const enrollment = await packageService.rejectEnrollment(req.params.id);
       return res.json({ message: "Enrollment rejected", enrollment });
-    } catch (error: any) {
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -156,10 +154,9 @@ export const packageController = {
     try {
       const pkg = await packageService.getPublicPackageBySlug(req.params.slug);
       return res.json({ package: pkg });
-    } catch (error: any) {
-      if (error.message === "Package not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -168,8 +165,9 @@ export const packageController = {
     try {
       const packages = await packageService.getPublicCatalogue();
       return res.json({ packages });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, ((_req as any).log));
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -180,8 +178,9 @@ export const packageController = {
         return res.status(401).json({ error: "Authentication required" });
       const packages = await packageService.getStudentPackages(req.user.userId);
       return res.json({ packages });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -195,8 +194,9 @@ export const packageController = {
         orderBy: { title: "asc" },
       });
       return res.json({ courses });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

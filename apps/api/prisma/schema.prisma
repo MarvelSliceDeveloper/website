@@ -157,12 +157,13 @@ model Module {
   description   String?
   order         Int
   isFreePreview Boolean       @default(false)
-  contentOrder  Json? // [{type: "LESSON"|"QUIZ"|"ASSIGNMENT", id: string}]
+  contentOrder  Json? // [{type: "LESSON"|"QUIZ"|"ASSIGNMENT"|"PRACTICAL", id: string}]
   course        Course        @relation(fields: [courseId], references: [id])
   lessons       Lesson[]
   sessions      LiveSession[]
   quizzes       Quiz[]
   assignments   Assignment[]
+  practicals    Practical[]
 }
 
 model Lesson {
@@ -178,6 +179,20 @@ model Lesson {
   isFreePreview   Boolean @default(false)
   resources       Json? // [{name, url}]
   module          Module  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+}
+
+model Practical {
+  id           String  @id @default(cuid())
+  moduleId     String
+  title        String
+  description  String?
+  order        Int     @default(0)
+  videoUrl     String?
+  videoType    String? // youtube | upload | vimeo | loom | url
+  videoEmbedId String?
+  pdfUrl       String?
+  resources    Json?   // [{name, url}]
+  module       Module  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 }
 
 // A Batch is a course cohort — e.g. "Python Batch Jan 2025"
@@ -306,18 +321,53 @@ model Progress {
 }
 
 model Certificate {
-  id                String            @id @default(cuid())
-  userId            String
-  courseId          String
-  certificateNumber String            @unique @default(cuid())
-  pdfUrl            String?
-  status            CertificateStatus @default(ISSUED)
-  issuedAt          DateTime          @default(now())
-  claimedAt         DateTime?
-  user              User              @relation(fields: [userId], references: [id])
-  course            Course            @relation(fields: [courseId], references: [id])
+  id                  String            @id @default(cuid())
+  userId              String
+  courseId            String
+  certificateNumber   String            @unique @default(cuid())
+  pdfUrl              String?
+  status              CertificateStatus @default(ISSUED)
+  issuedAt            DateTime          @default(now())
+  claimedAt           DateTime?
+  autoIssued          Boolean           @default(false)
+  uploadedTemplateId  String?
+  user                User              @relation(fields: [userId], references: [id])
+  course              Course            @relation(fields: [courseId], references: [id])
+  uploadedTemplate    CertificateTemplate? @relation(fields: [uploadedTemplateId], references: [id])
 
   @@unique([userId, courseId])
+}
+
+model CertificateTemplate {
+  id              String   @id @default(cuid())
+  name            String
+  isDefault       Boolean  @default(false)
+  primaryColor    String   @default("#3b82f6")
+  secondaryColor  String   @default("#93c5fd")
+  backgroundColor String   @default("#f8fafc")
+  textColor       String   @default("#1e293b")
+  borderColor     String   @default("#3b82f6")
+  accentColor     String   @default("#93c5fd")
+  title           String   @default("CERTIFICATE OF COMPLETION")
+  subtitle        String   @default("This certifies that")
+  footerText      String?
+  logoUrl         String?
+  backgroundPattern String? @default("none")
+  layout          String   @default("classic")
+  borderWidth     Float    @default(2)
+  borderRadius    Float    @default(5)
+  showBorder      Boolean  @default(true)
+  showSignatureLine Boolean @default(true)
+  showVerificationUrl Boolean @default(true)
+  fontFamily      String   @default("helvetica")
+  titleFontSize   Int      @default(28)
+  nameFontSize    Int      @default(22)
+  pdfTemplateType String   @default("jsPdf") // "jsPdf" | "uploadedPdf"
+  pdfTemplateUrl  String? // URL of uploaded PDF template
+  pdfTemplateFields Json? // [{key:"studentName",x:100,y:150,fontSize:22,color:"#1e293b",align:"center"}]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  certificates    Certificate[]
 }
 
 model Quiz {

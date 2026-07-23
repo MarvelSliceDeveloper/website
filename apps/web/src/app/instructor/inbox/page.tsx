@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { timeAgo } from "@/lib/time-ago";
 import type { NotificationItem } from "@/lib/notifications";
 import { NotificationIcon } from "@/lib/notifications";
+import { usePageTitle } from "@/lib/use-page-title";
 
 interface MessageRecord {
   id: string;
@@ -36,6 +37,7 @@ interface Conversation {
 type Tab = "notifications" | "messages";
 
 export default function InstructorInboxPage() {
+  usePageTitle("Inbox");
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("notifications");
 

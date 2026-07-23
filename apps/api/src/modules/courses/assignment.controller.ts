@@ -1,7 +1,7 @@
 import { prisma } from "../../utils/prisma";
 import { Response } from "express";
-import { ZodError } from "zod";
 import { AuthRequest } from "../../middleware/auth.middleware";
+import { handleControllerError } from "../../utils/errors";
 import {
   assignmentService,
   CreateAssignmentSchema,
@@ -40,12 +40,9 @@ export const assignmentController = {
         data,
       );
       return res.status(201).json(assignment);
-    } catch (error: any) {
-      if (error instanceof ZodError)
-        return res.status(400).json({ error: error.errors });
-      if (error.message === "Module not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -57,12 +54,9 @@ export const assignmentController = {
         data,
       );
       return res.json(assignment);
-    } catch (error: any) {
-      if (error instanceof ZodError)
-        return res.status(400).json({ error: error.errors });
-      if (error.message === "Assignment not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -70,10 +64,9 @@ export const assignmentController = {
     try {
       await assignmentService.deleteAssignment(req.params.id);
       return res.json({ message: "Assignment deleted" });
-    } catch (error: any) {
-      if (error.message === "Assignment not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -89,10 +82,9 @@ export const assignmentController = {
         assignmentIds,
       );
       return res.json(result);
-    } catch (error: any) {
-      if (error.message === "Module not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

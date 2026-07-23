@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "@/lib/toast";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconCalendarEvent,
   IconCalendarPlus,
@@ -64,6 +65,7 @@ const STATUS_CONFIG: Record<
 };
 
 export default function StudentMentorshipPage() {
+  usePageTitle("Mentorship");
   const [tickets, setTickets] = useState<MentorshipTicket[]>([]);
   const [courses, setCourses] = useState<{ id: string; title: string }[]>([]);
   const [loading, setLoading] = useState(true);

@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconLanguage,
   IconSearch,
@@ -16,6 +17,7 @@ type LocaleInfo = { locale: string; keyCount: number; completion: number };
 type TranslationData = Record<string, unknown>;
 
 export default function I18nPage() {
+  usePageTitle("Localization");
   const [locales, setLocales] = useState<LocaleInfo[]>([]);
   const [enKeys, setEnKeys] = useState(0);
   const [loading, setLoading] = useState(true);

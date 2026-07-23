@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import { toast } from "@/lib/toast";
 import {
   Select,
@@ -21,6 +22,7 @@ type BatchOption = {
 };
 
 export default function AdminSendNotificationPage() {
+  usePageTitle("Send Notification");
   const router = useRouter();
 
   const [targetType, setTargetType] = useState<TargetType>("ALL_USERS");

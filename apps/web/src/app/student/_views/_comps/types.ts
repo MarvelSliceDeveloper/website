@@ -27,8 +27,20 @@ export interface AssignmentInfo {
   dueDate: string;
 }
 
+export interface PracticalInfo {
+  id: string;
+  title: string;
+  description: string | null;
+  order: number;
+  videoType: string | null;
+  videoUrl: string | null;
+  videoEmbedId: string | null;
+  pdfUrl: string | null;
+  resources: Array<{ name: string; url: string }>;
+}
+
 export interface ContentOrderItem {
-  type: "LESSON" | "QUIZ" | "ASSIGNMENT";
+  type: "LESSON" | "QUIZ" | "ASSIGNMENT" | "PRACTICAL";
   id: string;
 }
 
@@ -45,6 +57,7 @@ export interface CourseModule {
   sessionsCount: number;
   quizzes: QuizInfo[];
   assignments: AssignmentInfo[];
+  practicals: PracticalInfo[];
 }
 
 export interface CourseSession {

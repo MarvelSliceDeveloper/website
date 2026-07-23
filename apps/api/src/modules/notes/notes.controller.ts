@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { notesService } from "./notes.service";
+import { handleControllerError } from "../../utils/errors";
 
 export const notesController = {
   async list(req: AuthRequest, res: Response) {
@@ -10,16 +11,20 @@ export const notesController = {
       const courseId = req.query.courseId as string | undefined;
       const moduleId = req.query.moduleId as string | undefined;
       const isSticky = req.query.isSticky === "true" ? true : undefined;
-      const notes = await notesService.list(
+      const page = req.query.page ? Number(req.query.page) : undefined;
+      const limit = req.query.limit ? Number(req.query.limit) : undefined;
+      const result = await notesService.list(
         req.user.userId,
         courseId,
         moduleId,
         isSticky,
+        page,
+        limit,
       );
-      return res.status(200).json({ notes });
-    } catch (error: any) {
-      console.error("Error listing notes:", error.message);
-      return res.status(500).json({ error: "Failed to list notes" });
+      return res.status(200).json(result);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -30,9 +35,9 @@ export const notesController = {
       const note = await notesService.get(req.params.id, req.user.userId);
       if (!note) return res.status(404).json({ error: "Note not found" });
       return res.status(200).json({ note });
-    } catch (error: any) {
-      console.error("Error getting note:", error.message);
-      return res.status(500).json({ error: "Failed to get note" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -52,9 +57,9 @@ export const notesController = {
         isSticky: isSticky || false,
       });
       return res.status(201).json({ note });
-    } catch (error: any) {
-      console.error("Error creating note:", error.message);
-      return res.status(500).json({ error: "Failed to create note" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -71,9 +76,9 @@ export const notesController = {
       if (result.count === 0)
         return res.status(404).json({ error: "Note not found" });
       return res.status(200).json({ message: "Note updated" });
-    } catch (error: any) {
-      console.error("Error updating note:", error.message);
-      return res.status(500).json({ error: "Failed to update note" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -85,9 +90,9 @@ export const notesController = {
       if (result.count === 0)
         return res.status(404).json({ error: "Note not found" });
       return res.status(200).json({ message: "Note deleted" });
-    } catch (error: any) {
-      console.error("Error deleting note:", error.message);
-      return res.status(500).json({ error: "Failed to delete note" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

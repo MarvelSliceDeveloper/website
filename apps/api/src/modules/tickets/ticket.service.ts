@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { TicketStatus, SupportTicketStatus } from "@prisma/client";
 import { prisma } from "../../utils/prisma";
+import { paginate } from "../../utils/paginate";
 
 // Shared schemas
 export const CreateTicketSchema = z.object({
@@ -96,7 +97,14 @@ export const ticketService = {
     type?: "MENTORSHIP" | "SUPPORT";
     status?: string;
     mentorId?: string;
+    page?: number;
+    limit?: number;
   }) {
+    const { skip, take, page: currentPage, limit: currentLimit } = paginate({
+      page: params.page,
+      limit: params.limit,
+    });
+
     if (
       params.type === "SUPPORT" ||
       (!params.type && params.role === "ADMIN" && !params.mentorId)
@@ -105,15 +113,25 @@ export const ticketService = {
       if (params.userId) where.userId = params.userId;
       if (params.status) where.status = params.status;
 
-      const tickets = await prisma.supportTicket.findMany({
-        where,
-        include: {
-          user: { select: userWithRoleSelect },
-          _count: { select: { messages: true } },
-        },
-        orderBy: { createdAt: "desc" },
-      });
-      return tickets.map((t) => ({ ...t, type: "SUPPORT" as const }));
+      const [tickets, total] = await Promise.all([
+        prisma.supportTicket.findMany({
+          where,
+          include: {
+            user: { select: userWithRoleSelect },
+            _count: { select: { messages: true } },
+          },
+          orderBy: { createdAt: "desc" },
+          skip,
+          take,
+        }),
+        prisma.supportTicket.count({ where }),
+      ]);
+      return {
+        items: tickets.map((t) => ({ ...t, type: "SUPPORT" as const })),
+        total,
+        page: currentPage,
+        limit: currentLimit,
+      };
     }
 
     const where: Record<string, unknown> = {};
@@ -121,16 +139,26 @@ export const ticketService = {
     if (params.mentorId) where.mentorId = params.mentorId;
     if (params.status) where.status = params.status;
 
-    const tickets = await prisma.mentorshipTicket.findMany({
-      where,
-      include: {
-        student: { select: userSelect },
-        mentor: { select: userSelect },
-        course: { select: { id: true, title: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-    return tickets.map((t) => ({ ...t, type: "MENTORSHIP" as const }));
+    const [tickets, total] = await Promise.all([
+      prisma.mentorshipTicket.findMany({
+        where,
+        include: {
+          student: { select: userSelect },
+          mentor: { select: userSelect },
+          course: { select: { id: true, title: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take,
+      }),
+      prisma.mentorshipTicket.count({ where }),
+    ]);
+    return {
+      items: tickets.map((t) => ({ ...t, type: "MENTORSHIP" as const })),
+      total,
+      page: currentPage,
+      limit: currentLimit,
+    };
   },
 
   // ─── GET ───

@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
 
-type ContentItemType = "LESSON" | "QUIZ" | "ASSIGNMENT";
+type ContentItemType = "LESSON" | "QUIZ" | "ASSIGNMENT" | "PRACTICAL";
 
 export async function appendToContentOrder(
   moduleId: string,
@@ -63,7 +63,7 @@ export const ReorderModulesSchema = z.object({
 export const ReorderContentSchema = z.object({
   contentOrder: z.array(
     z.object({
-      type: z.enum(["LESSON", "QUIZ", "ASSIGNMENT"]),
+      type: z.enum(["LESSON", "QUIZ", "ASSIGNMENT", "PRACTICAL"]),
       id: z.string().cuid(),
     }),
   ),
@@ -173,7 +173,7 @@ export const moduleService = {
     if (!mod) throw new Error("Module not found");
 
     // Verify all item IDs belong to this module
-    const [lessons, quizzes, assignments] = await Promise.all([
+    const [lessons, quizzes, assignments, practicals] = await Promise.all([
       prisma.lesson.findMany({
         where: { moduleId },
         select: { id: true },
@@ -186,12 +186,17 @@ export const moduleService = {
         where: { moduleId },
         select: { id: true },
       }),
+      prisma.practical.findMany({
+        where: { moduleId },
+        select: { id: true },
+      }),
     ]);
 
     const validIds = new Set([
       ...lessons.map((l) => l.id),
       ...quizzes.map((q) => q.id),
       ...assignments.map((a) => a.id),
+      ...practicals.map((p) => p.id),
     ]);
 
     for (const item of contentOrder) {

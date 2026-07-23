@@ -12,6 +12,7 @@ import {
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { usePageTitle } from "@/lib/use-page-title";
 
 // ── Floating Shape (ambient decoration for left panel) ─────────────────────
 
@@ -66,6 +67,7 @@ function StatCard({
 // ── Main Login Page ────────────────────────────────────────────────────────
 
 export default function LoginPage() {
+  usePageTitle("Login");
   const router = useRouter();
 
   const [email, setEmail] = useState("");

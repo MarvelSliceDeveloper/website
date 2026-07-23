@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconFileDescription,
   IconRefresh,
@@ -28,6 +29,7 @@ type QuizTemplate = {
 };
 
 export default function QuizTemplatesPage() {
+  usePageTitle("Quiz Templates");
   const router = useRouter();
   const [templates, setTemplates] = useState<QuizTemplate[]>([]);
   const [loading, setLoading] = useState(true);

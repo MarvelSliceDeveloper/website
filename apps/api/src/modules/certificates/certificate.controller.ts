@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { certificateService } from "./certificate.service";
+import { handleControllerError } from "../../utils/errors";
 
 export const certificateController = {
   // Lists all certificates and claimable ones for the user
@@ -8,8 +9,9 @@ export const certificateController = {
     try {
       const data = await certificateService.getMyCertificates(req.user!.userId);
       return res.json(data);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -26,8 +28,30 @@ export const certificateController = {
         courseId,
       );
       return res.status(201).json({ certificate });
-    } catch (error: any) {
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
+  // Downloads certificate PDF
+  async download(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { pdfBuffer, fileName } = await certificateService.generatePdf(
+        req.user!.userId,
+        id,
+      );
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${fileName}"`,
+      );
+      return res.send(pdfBuffer);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

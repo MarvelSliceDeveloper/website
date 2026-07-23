@@ -14,6 +14,7 @@ import {
   IconFileSpreadsheet,
   IconFile,
   IconDownload,
+  IconDeviceSpeaker,
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
@@ -29,6 +30,7 @@ import type {
   CourseContentViewProps,
   CourseLesson,
   CourseModule,
+  PracticalInfo,
   QuizInfo,
 } from "./_comps/types";
 
@@ -47,12 +49,14 @@ function formatMinutes(totalSeconds: number) {
 type UnifiedItem =
   | { type: "LESSON"; data: CourseLesson }
   | { type: "QUIZ"; data: QuizInfo }
-  | { type: "ASSIGNMENT"; data: AssignmentInfo };
+  | { type: "ASSIGNMENT"; data: AssignmentInfo }
+  | { type: "PRACTICAL"; data: PracticalInfo };
 
 function buildUnifiedList(mod: CourseModule): UnifiedItem[] {
   const lessonMap = new Map(mod.lessons.map((l) => [l.id, l]));
   const quizMap = new Map(mod.quizzes.map((q) => [q.id, q]));
   const assignmentMap = new Map(mod.assignments.map((a) => [a.id, a]));
+  const practicalMap = new Map((mod.practicals || []).map((p) => [p.id, p]));
 
   if (mod.contentOrder && mod.contentOrder.length > 0) {
     const items: UnifiedItem[] = [];
@@ -63,6 +67,8 @@ function buildUnifiedList(mod: CourseModule): UnifiedItem[] {
         items.push({ type: "QUIZ", data: quizMap.get(entry.id)! });
       } else if (entry.type === "ASSIGNMENT" && assignmentMap.has(entry.id)) {
         items.push({ type: "ASSIGNMENT", data: assignmentMap.get(entry.id)! });
+      } else if (entry.type === "PRACTICAL" && practicalMap.has(entry.id)) {
+        items.push({ type: "PRACTICAL", data: practicalMap.get(entry.id)! });
       }
     }
     // Append any items not in contentOrder (backward compat)
@@ -85,16 +91,27 @@ function buildUnifiedList(mod: CourseModule): UnifiedItem[] {
         items.push({ type: "ASSIGNMENT", data: assignment });
       }
     }
+    for (const practical of mod.practicals || []) {
+      if (
+        !items.some(
+          (i) => i.type === "PRACTICAL" && i.data.id === practical.id,
+        )
+      ) {
+        items.push({ type: "PRACTICAL", data: practical });
+      }
+    }
     return items;
   }
 
-  // Fallback: lessons first, then quizzes, then assignments
+  // Fallback: lessons first, then quizzes, then assignments, then practicals
   const items: UnifiedItem[] = [];
   for (const lesson of mod.lessons)
     items.push({ type: "LESSON", data: lesson });
   for (const quiz of mod.quizzes) items.push({ type: "QUIZ", data: quiz });
   for (const assignment of mod.assignments)
     items.push({ type: "ASSIGNMENT", data: assignment });
+  for (const practical of mod.practicals || [])
+    items.push({ type: "PRACTICAL", data: practical });
   return items;
 }
 
@@ -161,6 +178,10 @@ export default function CourseContentView({
     string | null
   >(null);
 
+  const [selectedPracticalId, setSelectedPracticalId] = useState<
+    string | null
+  >(null);
+
   const [selectedResource, setSelectedResource] = useState<{
     name: string;
     url: string;
@@ -223,6 +244,7 @@ export default function CourseContentView({
     setSelectedQuizId(null);
     setQuizData(null);
     setSelectedAssignmentId(null);
+    setSelectedPracticalId(null);
 
     if (!expandedModules.has(moduleId)) {
       setExpandedModules((prev) => new Set([...prev, moduleId]));
@@ -239,6 +261,7 @@ export default function CourseContentView({
     setSelectedQuizId(null);
     setQuizData(null);
     setSelectedAssignmentId(null);
+    setSelectedPracticalId(null);
 
     if (!expandedModules.has(moduleId)) {
       setExpandedModules((prev) => new Set([...prev, moduleId]));
@@ -251,6 +274,7 @@ export default function CourseContentView({
     setSelectedQuizId(null);
     setQuizData(null);
     setSelectedAssignmentId(null);
+    setSelectedPracticalId(null);
   };
 
   const clearRecording = () => setSelectedRecordingId(null);
@@ -260,6 +284,7 @@ export default function CourseContentView({
     setSelectedResource(null);
     setSelectedLessonId(null);
     setSelectedRecordingId(null);
+    setSelectedPracticalId(null);
     setQuizLoading(true);
     setQuizData(null);
     setSelectedAnswers({});
@@ -337,6 +362,7 @@ export default function CourseContentView({
     setSelectedLessonId(null);
     setSelectedRecordingId(null);
     setSelectedResource(null);
+    setSelectedPracticalId(null);
   };
 
   const selectResource = (name: string, url: string) => {
@@ -345,6 +371,17 @@ export default function CourseContentView({
     setQuizData(null);
     setSelectedLessonId(null);
     setSelectedRecordingId(null);
+    setSelectedAssignmentId(null);
+    setSelectedPracticalId(null);
+  };
+
+  const selectPractical = (practicalId: string) => {
+    setSelectedPracticalId(practicalId);
+    setSelectedLessonId(null);
+    setSelectedQuizId(null);
+    setQuizData(null);
+    setSelectedRecordingId(null);
+    setSelectedResource(null);
     setSelectedAssignmentId(null);
   };
 
@@ -525,6 +562,147 @@ export default function CourseContentView({
       }
     }
 
+    if (selectedPracticalId) {
+      const allModules = data.modules;
+      let foundPractical: PracticalInfo | null = null;
+      for (const mod of allModules) {
+        const p = (mod.practicals || []).find(
+          (pr) => pr.id === selectedPracticalId,
+        );
+        if (p) {
+          foundPractical = p;
+          break;
+        }
+      }
+      if (foundPractical) {
+        return (
+          <div className="space-y-4">
+            <div className="bg-white border border-border/60 rounded-xl p-4 shadow-sm">
+              <div className="flex items-center gap-2.5 mb-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+                  <IconDeviceSpeaker size={17} />
+                </span>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-violet-600">
+                    Hands-On / Practical
+                  </p>
+                  <p className="text-sm font-medium text-foreground">
+                    {foundPractical.title}
+                  </p>
+                </div>
+              </div>
+              {foundPractical.description && (
+                <p className="text-xs text-muted-foreground leading-relaxed pl-[46px]">
+                  {foundPractical.description}
+                </p>
+              )}
+            </div>
+            {foundPractical.videoUrl && (
+              <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-white border border-border/60 shadow-sm">
+                {foundPractical.videoType === "youtube" &&
+                  foundPractical.videoEmbedId ? (
+                  <iframe
+                    src={`https://www.youtube.com/embed/${foundPractical.videoEmbedId}`}
+                    className="absolute inset-0 w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : foundPractical.videoType === "vimeo" &&
+                  foundPractical.videoEmbedId ? (
+                  <iframe
+                    src={`https://player.vimeo.com/video/${foundPractical.videoEmbedId}`}
+                    className="absolute inset-0 w-full h-full"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : foundPractical.videoUrl.includes("loom.com/embed/") ||
+                  foundPractical.videoUrl.includes("loom.com/share/") ? (
+                  <iframe
+                    src={foundPractical.videoUrl.replace(
+                      /\/share\//,
+                      "/embed/",
+                    )}
+                    className="absolute inset-0 w-full h-full"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <video
+                    src={foundPractical.videoUrl}
+                    controls
+                    className="absolute inset-0 w-full h-full object-contain"
+                  />
+                )}
+              </div>
+            )}
+            {foundPractical.pdfUrl && (
+              <div className="bg-white border border-border/60 rounded-xl p-4 shadow-sm">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                    <IconFile size={17} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600">
+                      PDF Document
+                    </p>
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {foundPractical.title}
+                    </p>
+                  </div>
+                  <a
+                    href={foundPractical.pdfUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-600 transition-colors hover:bg-emerald-500/20"
+                  >
+                    <IconDownload size={14} />
+                    Open PDF
+                  </a>
+                </div>
+              </div>
+            )}
+            {foundPractical.resources &&
+              foundPractical.resources.length > 0 && (
+                <div className="bg-white border border-border/60 rounded-xl p-4 shadow-sm">
+                  <p className="text-xs font-semibold text-foreground mb-3">
+                    Resources
+                  </p>
+                  <ul className="space-y-2">
+                    {foundPractical.resources.map((r) => (
+                      <li key={r.url}>
+                        <a
+                          href={r.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted/50"
+                        >
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                            <IconFile size={14} />
+                          </span>
+                          <span className="min-w-0 flex-1 text-xs font-medium text-foreground truncate">
+                            {r.name}
+                          </span>
+                          <IconDownload
+                            size={13}
+                            className="shrink-0 text-muted-foreground"
+                          />
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            <button
+              onClick={() => setSelectedPracticalId(null)}
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              Back to content
+            </button>
+          </div>
+        );
+      }
+    }
+
     if (selectedResource) {
       return (
         <>
@@ -642,7 +820,8 @@ export default function CourseContentView({
         const itemCount =
           module.lessons.length +
           module.quizzes.length +
-          module.assignments.length;
+          module.assignments.length +
+          (module.practicals?.length ?? 0);
 
         return (
           <li key={module.id} className="border-b border-border/50">
@@ -765,45 +944,90 @@ export default function CourseContentView({
                     );
                   }
 
-                  const assignment = item.data;
-                  const isActive = selectedAssignmentId === assignment.id;
-                  return (
-                    <li key={assignment.id} className="px-2">
-                      <button
-                        onClick={() => selectAssignment(assignment)}
-                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${isActive ? "bg-blue-500/15" : "hover:bg-primary/8"
-                          }`}
-                      >
-                        <span
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${isActive ? "bg-blue-500" : "bg-blue-500/15"
+                  if (item.type === "ASSIGNMENT") {
+                    const assignment = item.data;
+                    const isActive = selectedAssignmentId === assignment.id;
+                    return (
+                      <li key={assignment.id} className="px-2">
+                        <button
+                          onClick={() => selectAssignment(assignment)}
+                          className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${isActive ? "bg-blue-500/15" : "hover:bg-primary/8"
                             }`}
                         >
-                          <IconFileSpreadsheet
-                            size={12}
-                            className={
-                              isActive ? "text-white" : "text-blue-500"
-                            }
-                          />
-                        </span>
-                        <span className="min-w-0 flex-1">
                           <span
-                            className={`block text-xs truncate ${isActive
-                              ? "text-foreground font-medium"
-                              : "text-muted-foreground"
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${isActive ? "bg-blue-500" : "bg-blue-500/15"
                               }`}
                           >
-                            {idx + 1}. {assignment.title}
+                            <IconFileSpreadsheet
+                              size={12}
+                              className={
+                                isActive ? "text-white" : "text-blue-500"
+                              }
+                            />
                           </span>
-                        </span>
-                        <span className="text-[10px] shrink-0 text-muted-foreground/70">
-                          {new Date(assignment.dueDate).toLocaleDateString(
-                            "en-IN",
-                            { day: "numeric", month: "short" },
-                          )}
-                        </span>
-                      </button>
-                    </li>
-                  );
+                          <span className="min-w-0 flex-1">
+                            <span
+                              className={`block text-xs truncate ${isActive
+                                  ? "text-foreground font-medium"
+                                  : "text-muted-foreground"
+                                }`}
+                            >
+                              {idx + 1}. {assignment.title}
+                            </span>
+                          </span>
+                          <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
+                            {new Date(assignment.dueDate).toLocaleDateString(
+                              "en-IN",
+                              { day: "numeric", month: "short" },
+                            )}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  }
+
+                  if (item.type === "PRACTICAL") {
+                    const practical = item.data;
+                    const isActive = selectedPracticalId === practical.id;
+                    return (
+                      <li key={practical.id} className="px-2">
+                        <button
+                          onClick={() => selectPractical(practical.id)}
+                          className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${isActive
+                              ? "bg-violet-500/15"
+                              : "hover:bg-primary/8"
+                            }`}
+                        >
+                          <span
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${isActive ? "bg-violet-500" : "bg-violet-500/15"
+                              }`}
+                          >
+                            <IconDeviceSpeaker
+                              size={12}
+                              className={
+                                isActive ? "text-white" : "text-violet-500"
+                              }
+                            />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span
+                              className={`block text-xs truncate ${isActive
+                                  ? "text-foreground font-medium"
+                                  : "text-muted-foreground"
+                                }`}
+                            >
+                              {idx + 1}. {practical.title}
+                            </span>
+                          </span>
+                          <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
+                            Practical
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  }
+
+                  return null;
                 })}
 
                 {module.lessons.some(
@@ -1025,7 +1249,9 @@ export default function CourseContentView({
                     item.data.id === selectedLessonId) ||
                   (item.type === "QUIZ" && item.data.id === selectedQuizId) ||
                   (item.type === "ASSIGNMENT" &&
-                    item.data.id === selectedAssignmentId),
+                    item.data.id === selectedAssignmentId) ||
+                  (item.type === "PRACTICAL" &&
+                    item.data.id === selectedPracticalId),
               );
               if (curIdx > 0) {
                 const prev = unified[curIdx - 1];
@@ -1034,6 +1260,8 @@ export default function CourseContentView({
                 else if (prev.type === "QUIZ") selectQuiz(prev.data.id);
                 else if (prev.type === "ASSIGNMENT")
                   selectAssignment(prev.data);
+                else if (prev.type === "PRACTICAL")
+                  selectPractical(prev.data.id);
               } else {
                 const modIdx = data.modules.findIndex(
                   (m) => m.id === selectedModuleId,
@@ -1051,6 +1279,8 @@ export default function CourseContentView({
                     else if (last.type === "QUIZ") selectQuiz(last.data.id);
                     else if (last.type === "ASSIGNMENT")
                       selectAssignment(last.data);
+                    else if (last.type === "PRACTICAL")
+                      selectPractical(last.data.id);
                   }
                 }
               }
@@ -1064,7 +1294,9 @@ export default function CourseContentView({
                     item.data.id === selectedLessonId) ||
                   (item.type === "QUIZ" && item.data.id === selectedQuizId) ||
                   (item.type === "ASSIGNMENT" &&
-                    item.data.id === selectedAssignmentId),
+                    item.data.id === selectedAssignmentId) ||
+                  (item.type === "PRACTICAL" &&
+                    item.data.id === selectedPracticalId),
               );
               const isAtFirstInModule = curIdx <= 0;
               const modIdx = data.modules.findIndex(
@@ -1086,9 +1318,12 @@ export default function CourseContentView({
                   (item) =>
                     (item.type === "LESSON" &&
                       item.data.id === selectedLessonId) ||
-                    (item.type === "QUIZ" && item.data.id === selectedQuizId) ||
+                    (item.type === "QUIZ" &&
+                      item.data.id === selectedQuizId) ||
                     (item.type === "ASSIGNMENT" &&
-                      item.data.id === selectedAssignmentId),
+                      item.data.id === selectedAssignmentId) ||
+                    (item.type === "PRACTICAL" &&
+                      item.data.id === selectedPracticalId),
                 );
                 return curIdx >= 0
                   ? `Item ${curIdx + 1} of ${unified.length}`
@@ -1116,7 +1351,9 @@ export default function CourseContentView({
                     item.data.id === selectedLessonId) ||
                   (item.type === "QUIZ" && item.data.id === selectedQuizId) ||
                   (item.type === "ASSIGNMENT" &&
-                    item.data.id === selectedAssignmentId),
+                    item.data.id === selectedAssignmentId) ||
+                  (item.type === "PRACTICAL" &&
+                    item.data.id === selectedPracticalId),
               );
               if (curIdx >= 0 && curIdx < unified.length - 1) {
                 const next = unified[curIdx + 1];
@@ -1125,6 +1362,8 @@ export default function CourseContentView({
                 else if (next.type === "QUIZ") selectQuiz(next.data.id);
                 else if (next.type === "ASSIGNMENT")
                   selectAssignment(next.data);
+                else if (next.type === "PRACTICAL")
+                  selectPractical(next.data.id);
               } else {
                 const modIdx = data.modules.findIndex(
                   (m) => m.id === selectedModuleId,
@@ -1142,6 +1381,8 @@ export default function CourseContentView({
                     else if (first.type === "QUIZ") selectQuiz(first.data.id);
                     else if (first.type === "ASSIGNMENT")
                       selectAssignment(first.data);
+                    else if (first.type === "PRACTICAL")
+                      selectPractical(first.data.id);
                   }
                 }
               }
@@ -1155,7 +1396,9 @@ export default function CourseContentView({
                     item.data.id === selectedLessonId) ||
                   (item.type === "QUIZ" && item.data.id === selectedQuizId) ||
                   (item.type === "ASSIGNMENT" &&
-                    item.data.id === selectedAssignmentId),
+                    item.data.id === selectedAssignmentId) ||
+                  (item.type === "PRACTICAL" &&
+                    item.data.id === selectedPracticalId),
               );
               const isAtLastInModule =
                 curIdx >= 0 && curIdx >= unified.length - 1;

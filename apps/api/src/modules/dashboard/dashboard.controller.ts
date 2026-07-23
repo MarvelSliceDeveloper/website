@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { prisma } from "../../utils/prisma";
+import { handleControllerError } from "../../utils/errors";
 
 export const dashboardController = {
   async getStats(req: AuthRequest, res: Response) {
@@ -139,6 +140,44 @@ export const dashboardController = {
         enrollmentCount: t._count.id,
       }));
 
+      // ── Revenue data (PAID payments only) ──
+      const paidPayments = await prisma.payment.findMany({
+        where: { status: "PAID" },
+        select: { amount: true, createdAt: true, packageId: true },
+        orderBy: { createdAt: "asc" },
+      });
+
+      // Monthly revenue
+      const revenueMonthMap = new Map<string, number>();
+      for (const p of paidPayments) {
+        const key = p.createdAt.toISOString().slice(0, 7);
+        revenueMonthMap.set(key, (revenueMonthMap.get(key) || 0) + p.amount);
+      }
+      const monthlyRevenue = Array.from(revenueMonthMap.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([month, amount]) => ({ month, amount }));
+
+      // Revenue by package
+      const revenuePkgMap = new Map<string, number>();
+      for (const p of paidPayments) {
+        revenuePkgMap.set(
+          p.packageId,
+          (revenuePkgMap.get(p.packageId) || 0) + p.amount,
+        );
+      }
+      const revPkgIds = [...revenuePkgMap.keys()];
+      const revPkgs = await prisma.coursePackage.findMany({
+        where: { id: { in: revPkgIds } },
+        select: { id: true, name: true },
+      });
+      const revPkgNameMap = new Map(revPkgs.map((p) => [p.id, p.name]));
+      const revenueByPackage = Array.from(revenuePkgMap.entries())
+        .map(([packageId, total]) => ({
+          packageName: revPkgNameMap.get(packageId) || "Unknown",
+          total,
+        }))
+        .sort((a, b) => b.total - a.total);
+
       res.json({
         studentsPerCourse: studentsPerCourseResolved,
         studentsPerPackage: studentsPerPackageResolved,
@@ -153,10 +192,12 @@ export const dashboardController = {
         })),
         topCourses: topCoursesResolved,
         recentEnrollments: recentEnrollmentsResolved,
+        monthlyRevenue,
+        revenueByPackage,
       });
-    } catch (error: any) {
-      console.error("Dashboard stats error:", error);
-      res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 };

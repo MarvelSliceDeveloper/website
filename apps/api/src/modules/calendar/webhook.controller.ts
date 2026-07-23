@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { syncCalendarForUser } from "./calendar.service";
 import { prisma } from "../../utils/prisma";
+import { handleControllerError } from "../../utils/errors";
 
 function getWebhookClientState(): string {
   const value = process.env.MS_WEBHOOK_CLIENT_STATE;
@@ -91,20 +92,12 @@ export const webhookController = {
           );
 
           console.log(`[Webhook] Calendar re-synced for user ${user.id}`);
-        } catch (notifError: any) {
-          // Log but don't fail — process remaining notifications
-          console.error(
-            "[Webhook] Error processing notification:",
-            notifError.message,
-          );
+        } catch (err: unknown) {
+          handleControllerError(err, (req as any).log);
         }
       }
-    } catch (error: any) {
-      console.error(
-        "[Webhook] Error handling calendar webhook:",
-        error.message,
-      );
-      // Still return 202 since we already sent the response
+    } catch (err: unknown) {
+      handleControllerError(err, (req as any).log);
     }
   },
 };

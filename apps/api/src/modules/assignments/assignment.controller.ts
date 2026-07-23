@@ -1,6 +1,6 @@
 import { Response } from "express";
-import { ZodError } from "zod";
 import { AuthRequest } from "../../middleware/auth.middleware";
+import { handleControllerError } from "../../utils/errors";
 import {
   assignmentService,
   CreateFileAssignmentSchema,
@@ -22,18 +22,9 @@ export const assignmentController = {
         data.questionPdfUrl,
       );
       return res.status(201).json({ assignment });
-    } catch (error: any) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      if (
-        error.message.includes("not the instructor") ||
-        error.message.includes("not found")
-      ) {
-        return res.status(403).json({ error: error.message });
-      }
-      console.error("Error creating assignment:", error.message);
-      return res.status(500).json({ error: "Failed to create assignment" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -44,19 +35,23 @@ export const assignmentController = {
         return res.status(401).json({ error: "Authentication required" });
 
       const { batchId, courseId } = req.query;
+      const page = req.query.page ? Number(req.query.page) : undefined;
+      const limit = req.query.limit ? Number(req.query.limit) : undefined;
 
-      const assignments = await assignmentService.listAssignments({
+      const result = await assignmentService.listAssignments({
         batchId: batchId as string | undefined,
         courseId: courseId as string | undefined,
         instructorId:
           req.user.role === "INSTRUCTOR" ? req.user.userId : undefined,
         studentId: req.user.role === "STUDENT" ? req.user.userId : undefined,
+        page,
+        limit,
       });
 
-      return res.status(200).json({ assignments });
-    } catch (error: any) {
-      console.error("Error listing assignments:", error.message);
-      return res.status(500).json({ error: "Failed to list assignments" });
+      return res.status(200).json(result);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -73,15 +68,9 @@ export const assignmentController = {
       );
 
       return res.status(200).json({ result });
-    } catch (error: any) {
-      if (error.message.includes("Access denied")) {
-        return res.status(403).json({ error: error.message });
-      }
-      if (error.message.includes("not found")) {
-        return res.status(404).json({ error: error.message });
-      }
-      console.error("Error getting submission result:", error.message);
-      return res.status(500).json({ error: "Failed to get submission result" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -94,24 +83,20 @@ export const assignmentController = {
         return res.status(403).json({ error: "Access denied" });
       }
 
-      const submissions = await assignmentService.listSubmissionsForAssignment(
+      const page = req.query.page ? Number(req.query.page) : undefined;
+      const limit = req.query.limit ? Number(req.query.limit) : undefined;
+
+      const result = await assignmentService.listSubmissionsForAssignment(
         req.params.id,
         req.user.userId,
+        page,
+        limit,
       );
 
-      return res.status(200).json({ submissions });
-    } catch (error: any) {
-      if (
-        error.message.includes("not the instructor") ||
-        error.message.includes("Access denied")
-      ) {
-        return res.status(403).json({ error: error.message });
-      }
-      if (error.message.includes("not found")) {
-        return res.status(404).json({ error: error.message });
-      }
-      console.error("Error listing submissions:", error.message);
-      return res.status(500).json({ error: "Failed to list submissions" });
+      return res.status(200).json(result);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -132,22 +117,17 @@ export const assignmentController = {
         feedback,
       );
 
+      if (process.env.AUTO_CERTIFICATE !== "false" && submission.studentId) {
+        const { checkAndIssueForAssignment } = await import("../certificates/certificate-completion.service");
+        checkAndIssueForAssignment(submission.assignmentId, submission.studentId).catch((err: unknown) =>
+          (req as any).log?.error?.("[certificate] Auto-issue failed:", err),
+        );
+      }
+
       return res.status(200).json({ submission });
-    } catch (error: any) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      if (
-        error.message.includes("not the instructor") ||
-        error.message.includes("Access denied")
-      ) {
-        return res.status(403).json({ error: error.message });
-      }
-      if (error.message.includes("not found")) {
-        return res.status(404).json({ error: error.message });
-      }
-      console.error("Error grading submission:", error.message);
-      return res.status(500).json({ error: "Failed to grade submission" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -159,9 +139,9 @@ export const assignmentController = {
       }
       const fileUrl = buildAssignmentFileUrl(req, req.file.filename);
       return res.status(200).json({ fileUrl });
-    } catch (error: any) {
-      console.error("Error uploading question PDF:", error.message);
-      return res.status(500).json({ error: "Failed to upload question PDF" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -187,19 +167,9 @@ export const assignmentController = {
       );
 
       return res.status(200).json({ submission });
-    } catch (error: any) {
-      if (
-        error.message.includes("due date has passed") ||
-        error.message.includes("not enrolled") ||
-        error.message.includes("not a file-upload assignment")
-      ) {
-        return res.status(400).json({ error: error.message });
-      }
-      if (error.message.includes("not found")) {
-        return res.status(404).json({ error: error.message });
-      }
-      console.error("Error submitting file answer:", error.message);
-      return res.status(500).json({ error: "Failed to submit file answer" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

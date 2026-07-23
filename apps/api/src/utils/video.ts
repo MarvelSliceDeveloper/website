@@ -1,3 +1,12 @@
+/**
+ * Parses a video URL and returns its platform type and embed ID.
+ *
+ * Supports YouTube (watch, embed, shorts, youtu.be), Vimeo, and Loom URLs.
+ * Returns null for unrecognized or unsupported URLs.
+ *
+ * @param url - The video URL to parse
+ * @returns Object with `type` and `embedId`, or null if unsupported
+ */
 export function parseVideoUrl(
   url: string,
 ): { type: string; embedId: string } | null {

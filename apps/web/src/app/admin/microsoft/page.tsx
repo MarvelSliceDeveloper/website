@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconBrandWindows,
   IconCheck,
@@ -36,6 +37,7 @@ type StatusData = {
 };
 
 export default function MicrosoftIntegrationPage() {
+  usePageTitle("Microsoft Integration");
   const [status, setStatus] = useState<StatusData | null>(null);
   const [loading, setLoading] = useState(true);
   const [linking, setLinking] = useState(false);

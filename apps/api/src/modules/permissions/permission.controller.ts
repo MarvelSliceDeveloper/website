@@ -1,6 +1,7 @@
 import type { Response } from "express";
 import { prisma } from "../../utils/prisma";
 import type { AuthRequest } from "../../middleware/auth.middleware";
+import { handleControllerError } from "../../utils/errors";
 
 export const permissionController = {
   async list(req: AuthRequest, res: Response) {
@@ -9,8 +10,9 @@ export const permissionController = {
         orderBy: [{ role: "asc" }, { permission: "asc" }],
       });
       return res.json({ overrides });
-    } catch (error: unknown) {
-      return res.status(500).json({ error: (error as Error).message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -48,8 +50,9 @@ export const permissionController = {
       }
 
       return res.json({ overrides: results });
-    } catch (error: unknown) {
-      return res.status(500).json({ error: (error as Error).message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

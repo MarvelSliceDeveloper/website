@@ -16,6 +16,7 @@ import {
   IconRefresh,
   IconTrash,
 } from "@tabler/icons-react";
+import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import DataTable from "@/components/admin/DataTable";
 import type { DataTableColumn } from "@/components/admin/DataTable";
@@ -49,6 +50,7 @@ const statusStyles: Record<string, string> = {
 };
 
 export default function AdminCoursesPage() {
+  usePageTitle("Courses");
   return (
     <Suspense
       fallback={

@@ -20,6 +20,7 @@ import {
   IconTicket,
 } from "@tabler/icons-react";
 import { toast } from "@/lib/toast";
+import { usePageTitle } from "@/lib/use-page-title";
 
 interface SupportMessage {
   id: string;
@@ -63,6 +64,7 @@ const STATUS_CONFIG: Record<string, { label: string; classes: string }> = {
 };
 
 export default function StudentSupportPage() {
+  usePageTitle("Support");
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { ZodError } from "zod";
 import { AuthRequest } from "../../middleware/auth.middleware";
+import { handleControllerError } from "../../utils/errors";
 import {
   courseService,
   CreateCourseSchema,
@@ -16,11 +16,9 @@ export const courseController = {
       const data = CreateCourseSchema.parse(req.body);
       const course = await courseService.createCourse(req.user!.userId, data);
       return res.status(201).json(course);
-    } catch (error: any) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -36,8 +34,9 @@ export const courseController = {
         limit: limit ? parseInt(limit as string) : undefined,
       });
       return res.json(result);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -46,11 +45,9 @@ export const courseController = {
     try {
       const course = await courseService.getCourseById(req.params.id);
       return res.json(course);
-    } catch (error: any) {
-      if (error.message === "Course not found") {
-        return res.status(404).json({ error: error.message });
-      }
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -60,14 +57,9 @@ export const courseController = {
       const data = UpdateCourseSchema.parse(req.body);
       const course = await courseService.updateCourse(req.params.id, data);
       return res.json(course);
-    } catch (error: any) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      if (error.message === "Course not found") {
-        return res.status(404).json({ error: error.message });
-      }
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -82,14 +74,9 @@ export const courseController = {
       const data = UpdateCourseSchema.parse({ thumbnailUrl });
       const course = await courseService.updateCourse(req.params.id, data);
       return res.json({ thumbnailUrl: course.thumbnailUrl });
-    } catch (error: any) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      if (error.message === "Course not found") {
-        return res.status(404).json({ error: error.message });
-      }
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -98,11 +85,9 @@ export const courseController = {
     try {
       await courseService.deleteCourse(req.params.id, req.user?.userId);
       return res.status(200).json({ message: "Course archived successfully" });
-    } catch (error: any) {
-      if (error.message === "Course not found") {
-        return res.status(404).json({ error: error.message });
-      }
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -111,11 +96,9 @@ export const courseController = {
     try {
       await courseService.permanentDeleteCourse(req.params.id);
       return res.status(200).json({ message: "Course permanently deleted" });
-    } catch (error: any) {
-      if (error.message === "Course not found") {
-        return res.status(404).json({ error: error.message });
-      }
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -134,24 +117,23 @@ export const courseController = {
         published: true,
         checklist: result.checklist,
       });
-    } catch (error: any) {
-      if (error.message === "Course not found") {
-        return res.status(404).json({ error: error.message });
-      }
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
   // Recovers an archived course back to DRAFT
   async recover(req: AuthRequest, res: Response) {
     try {
-      const course = await courseService.recoverCourse(req.params.id, req.user?.userId);
+      const course = await courseService.recoverCourse(
+        req.params.id,
+        req.user?.userId,
+      );
       return res.json({ message: "Course recovered", course });
-    } catch (error: any) {
-      if (error.message === "Course not found") {
-        return res.status(404).json({ error: error.message });
-      }
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -160,11 +142,9 @@ export const courseController = {
     try {
       const course = await courseService.unpublishCourse(req.params.id);
       return res.json({ message: "Course unpublished", course });
-    } catch (error: any) {
-      if (error.message === "Course not found") {
-        return res.status(404).json({ error: error.message });
-      }
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -183,8 +163,9 @@ export const courseController = {
         orderBy: { scheduledAt: "desc" },
       });
       return res.json({ sessions });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -209,8 +190,9 @@ export const courseController = {
         orderBy: { syncedAt: "desc" },
       });
       return res.json({ recordings });
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

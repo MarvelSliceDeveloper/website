@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { requireAuth, type AuthRequest } from "../../middleware/auth.middleware";
+import {
+  requireAuth,
+  type AuthRequest,
+} from "../../middleware/auth.middleware";
 import { prisma } from "../../utils/prisma";
 
 export const onboardingRouter = Router();

@@ -20,6 +20,7 @@ import {
   IconBell,
   IconNotes,
   IconHelp,
+  IconUsers,
 } from "@tabler/icons-react";
 import type { ViewState } from "../_types/student-portal";
 import type {
@@ -31,6 +32,7 @@ import type {
   EnrolledCourse,
   CalendarEvent,
 } from "@/lib/api-types";
+import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import StudentStatTiles from "@/components/student/StudentStatTiles";
 
@@ -105,7 +107,10 @@ export default function HomeView({
   const [mentorDateTime, setMentorDateTime] = useState("");
   const [mentorSubmitting, setMentorSubmitting] = useState(false);
 
-  const liveCount = liveSessionsToday.filter((s) => s.status === "LIVE").length;
+  const [joiningSessionId, setJoiningSessionId] = useState<string | null>(null);
+
+  const liveSessions = liveSessionsToday.filter((s) => s.status === "LIVE");
+  const liveCount = liveSessions.length;
   const openTicketCount = openTickets.filter(
     (t) => t.status === "OPEN" || t.status === "ASSIGNED",
   ).length;
@@ -114,7 +119,11 @@ export default function HomeView({
     (item) => item.status === "PENDING" && item.type === "ASSIGNMENT",
   ).length;
   const pendingQuizzes = overdueAssignments.filter(
-    (item) => item.status === "PENDING" && item.type === "QUIZ",
+    (item) =>
+      item.status === "PENDING" &&
+      item.type === "QUIZ" &&
+      item.dueDate &&
+      new Date(item.dueDate).getTime() < Date.now(),
   ).length;
   const overdueTotal = pendingAssignments + pendingQuizzes;
 
@@ -183,6 +192,19 @@ export default function HomeView({
     setReferralPhone("");
   }
 
+  async function handleJoinSession(session: LiveSession) {
+    if (!session.joinUrl) return;
+    setJoiningSessionId(session.id);
+    try {
+      await api.post(`/api/attendance/${session.id}/join`);
+    } catch (err) {
+      console.error("Failed to log attendance:", err);
+    } finally {
+      setJoiningSessionId(null);
+      window.open(session.joinUrl, "_blank", "noopener,noreferrer");
+    }
+  }
+
   return (
     <div className="sp-view-enter space-y-6 motion-reduce:animate-none">
       {/* ── Hero Greeting ────────────────────────────────────────────────── */}
@@ -208,11 +230,43 @@ export default function HomeView({
           </div>
           <div className="hidden items-center gap-4 sm:flex">
             {liveCount > 0 && (
-              <div className="flex items-center gap-2 rounded-xl border border-danger/25 bg-danger/10 px-3.5 py-2">
-                <span className="live-pulse h-2.5 w-2.5 rounded-full bg-danger" />
-                <span className="text-sm font-semibold text-danger">
-                  {liveCount} Live Now
-                </span>
+              <div className="flex items-center gap-3 rounded-xl border border-danger/25 bg-danger/10 px-4 py-2.5">
+                <span className="live-pulse h-2.5 w-2.5 rounded-full bg-danger shrink-0" />
+                <div className="min-w-0">
+                  {liveCount === 1 ? (
+                    <p className="text-xs font-semibold text-danger truncate max-w-[180px]">
+                      {liveSessions[0].title}
+                    </p>
+                  ) : (
+                    <p className="text-xs font-semibold text-danger">
+                      {liveCount} sessions live
+                    </p>
+                  )}
+                </div>
+                {liveCount === 1 && liveSessions[0].joinUrl ? (
+                  <button
+                    onClick={() => handleJoinSession(liveSessions[0])}
+                    disabled={joiningSessionId === liveSessions[0].id}
+                    className="shrink-0 rounded-lg bg-danger px-3 py-1 text-[11px] font-bold text-white transition-colors hover:bg-danger/90 disabled:opacity-60"
+                  >
+                    {joiningSessionId === liveSessions[0].id ? (
+                      <span className="flex items-center gap-1">
+                        <span className="h-2.5 w-2.5 animate-spin rounded-full border border-white border-t-transparent" />
+                        Joining
+                      </span>
+                    ) : (
+                      "Join Now"
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => navigate({ view: "LIVE_SESSIONS" })}
+                    className="shrink-0 rounded-lg bg-danger px-3 py-1 text-[11px] font-bold text-white transition-colors hover:bg-danger/90"
+                  >
+                    <IconUsers size={12} className="inline mr-1" />
+                    View All
+                  </button>
+                )}
               </div>
             )}
             <div className="text-right border-l border-border/60 pl-4">

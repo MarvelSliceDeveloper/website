@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import { IconShield, IconRefresh } from "@tabler/icons-react";
 
 type ConsentEntry = {
@@ -14,6 +15,7 @@ type ConsentEntry = {
 };
 
 export default function ConsentLogsPage() {
+  usePageTitle("Consent Logs");
   const [logs, setLogs] = useState<ConsentEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);

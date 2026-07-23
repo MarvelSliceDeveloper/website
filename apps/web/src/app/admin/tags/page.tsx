@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconTag,
   IconPlus,
@@ -20,6 +21,7 @@ type Tag = {
 };
 
 export default function AdminTagsPage() {
+  usePageTitle("Tags");
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);

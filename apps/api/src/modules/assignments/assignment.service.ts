@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
 import { notificationService } from "../notifications/notification.service";
+import { paginate } from "../../utils/paginate";
 
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
 
@@ -87,6 +88,8 @@ export const assignmentService = {
     courseId?: string;
     instructorId?: string;
     studentId?: string;
+    page?: number;
+    limit?: number;
   }) {
     const where: any = {};
     if (filters.batchId) where.batchId = filters.batchId;
@@ -105,28 +108,38 @@ export const assignmentService = {
       };
     }
 
-    const assignments = await prisma.assignment.findMany({
-      where,
-      include: {
-        course: { select: { id: true, title: true } },
-        batch: { select: { id: true, name: true } },
-        submissions: filters.studentId
-          ? {
-              where: { studentId: filters.studentId },
-              select: {
-                id: true,
-                status: true,
-                totalScore: true,
-                submittedAt: true,
-              },
-            }
-          : undefined,
-        _count: { select: { submissions: true } },
-      },
-      orderBy: { createdAt: "desc" },
+    const { skip, take, page: currentPage, limit: currentLimit } = paginate({
+      page: filters.page,
+      limit: filters.limit,
     });
 
-    return assignments.map((a) => {
+    const [assignments, total] = await Promise.all([
+      prisma.assignment.findMany({
+        where,
+        include: {
+          course: { select: { id: true, title: true } },
+          batch: { select: { id: true, name: true } },
+          submissions: filters.studentId
+            ? {
+                where: { studentId: filters.studentId },
+                select: {
+                  id: true,
+                  status: true,
+                  totalScore: true,
+                  submittedAt: true,
+                },
+              }
+            : undefined,
+          _count: { select: { submissions: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take,
+      }),
+      prisma.assignment.count({ where }),
+    ]);
+
+    const items = assignments.map((a) => {
       const submission = filters.studentId
         ? (a as any).submissions?.[0] || null
         : null;
@@ -136,6 +149,8 @@ export const assignmentService = {
         submission,
       };
     });
+
+    return { items, total, page: currentPage, limit: currentLimit };
   },
 
   // Gets a submission result with score breakdown
@@ -177,6 +192,8 @@ export const assignmentService = {
   async listSubmissionsForAssignment(
     assignmentId: string,
     instructorId: string,
+    page?: number,
+    limit?: number,
   ) {
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId },
@@ -187,15 +204,24 @@ export const assignmentService = {
       throw new Error("You are not the instructor of this batch");
     }
 
-    return prisma.assignmentSubmission.findMany({
-      where: { assignmentId },
-      include: {
-        student: {
-          select: { id: true, name: true, email: true },
+    const { skip, take, page: currentPage, limit: currentLimit } = paginate({ page, limit });
+
+    const [submissions, total] = await Promise.all([
+      prisma.assignmentSubmission.findMany({
+        where: { assignmentId },
+        include: {
+          student: {
+            select: { id: true, name: true, email: true },
+          },
         },
-      },
-      orderBy: { submittedAt: "desc" },
-    });
+        orderBy: { submittedAt: "desc" },
+        skip,
+        take,
+      }),
+      prisma.assignmentSubmission.count({ where: { assignmentId } }),
+    ]);
+
+    return { items: submissions, total, page: currentPage, limit: currentLimit };
   },
 
   // Manually grades a submission with score and feedback

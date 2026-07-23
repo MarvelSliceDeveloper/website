@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconCreditCard,
   IconRefresh,
@@ -65,6 +66,7 @@ function formatCurrency(amount: number, currency: string = "INR") {
 }
 
 export default function AdminPaymentsPage() {
+  usePageTitle("Payments");
   const [payments, setPayments] = useState<Payment[]>([]);
   const [stats, setStats] = useState<RevenueStats | null>(null);
   const [loading, setLoading] = useState(true);

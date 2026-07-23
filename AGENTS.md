@@ -423,3 +423,113 @@ Both endpoints are CSRF-exempt (line 93 of `app.ts`). Email template at `package
 ### Database Backup Docs
 
 - `docs/database-backup.md` — pg_dump commands, Docker backup, cron job example, retention policy
+
+## Error Handling Patterns
+
+### API Controllers — Unified Error Handling
+
+All controllers use `handleControllerError(err, (req as any).log)` from `apps/api/src/utils/errors.ts`. This function:
+- Handles `ZodError` → returns `{ error: "field: message" }` (400)
+- Handles `AppError` → returns `{ error: message }` with the error's statusCode
+- Handles unknown errors → logs via pino, returns `{ error: message }` (500)
+
+```ts
+import { handleControllerError } from "../../utils/errors";
+
+try {
+  // ...
+} catch (err: unknown) {
+  const { statusCode, body } = handleControllerError(err, (req as any).log);
+  return res.status(statusCode).json(body);
+}
+```
+
+Use `throw new AppError(400, "message")` in services for expected error cases.
+
+### API Pagination
+
+Use `paginate()` from `apps/api/src/utils/paginate.ts` for all list endpoints:
+
+```ts
+import { paginate } from "../../utils/paginate";
+
+const { skip, take, page, limit } = paginate({ page, limit });
+const [items, total] = await Promise.all([
+  prisma.model.findMany({ where, skip, take }),
+  prisma.model.count({ where }),
+]);
+return { items, total, page, limit };
+```
+
+Default: page=1, limit=20 (max 100).
+
+### Frontend Page Titles
+
+- **Server Components**: Add `export const metadata: Metadata = { title: "Name" }` 
+- **Client Components**: Add `usePageTitle("Name")` from `@/lib/use-page-title` (sets `document.title` using the root layout template "%s · LMS Portal")
+
+### Frontend error.tsx / loading.tsx
+
+Each route segment should have both files, using shared components:
+
+**error.tsx** (`"use client"`):
+```tsx
+"use client";
+import ErrorPage from "@/components/ErrorPage";
+export default function RouteError({
+  error, reset,
+}: { error: Error & { digest?: string }; reset: () => void }) {
+  return <ErrorPage error={error} reset={reset} />;
+}
+```
+
+**loading.tsx**:
+```tsx
+import LoadingPage from "@/components/LoadingPage";
+export default function RouteLoading() { return <LoadingPage />; }
+```
+
+## Certification System
+
+### Auto-Issue Flow
+When a student completes all content in a course (quizzes + assignments + recordings), a certificate is auto-issued. Triggered on:
+- Quiz submission: `POST /api/courses/quizzes/:quizId/submit` → calls `checkAndIssueForQuiz()`
+- Assignment grading: `POST /api/assignments/submissions/:submissionId/grade` → calls `checkAndIssueForAssignment()`
+
+Disable auto-issue with `AUTO_CERTIFICATE=false` env var.
+
+### Completion Check
+`apps/api/src/modules/certificates/certificate-completion.service.ts`:
+
+- `getCourseContentProgress(userId, courseId)` — returns `{ isComplete, totalItems, completedItems, details }`
+- Checks quizzes (any non-PENDING QuizAttempt) and module-level assignments (GRADED AssignmentSubmission)
+- `checkAndIssueCertificate(userId, courseId)` — creates Certificate if all content complete
+- Lessons with `videoUrl` are auto-counted as present (no watch tracking exists for standalone lessons)
+
+### Two PDF Generation Options
+
+| Option | Template Type | Description |
+|--------|--------------|-------------|
+| **jsPDF** (default) | `jsPdf` | Dynamically generated using jsPDF with customizable colors, fonts, patterns from `CertificateTemplate` |
+| **Uploaded PDF** | `uploadedPdf` | Pre-designed PDF uploaded by admin. Text is overlaid at defined coordinates using pdf-lib |
+
+### Admin PDF Upload
+- `POST /api/admin/certificate-templates/:id/upload-pdf` — upload PDF + JSON placeholder field definitions
+- `DELETE /api/admin/certificate-templates/:id/pdf-template` — remove uploaded PDF template
+- Placeholder fields are defined as `[{ key, x, y, fontSize, color, align }]` overlaid on the uploaded PDF
+- Available placeholder keys: `studentName`, `courseName`, `date`, `certificateNumber`, `verifyUrl`
+
+### Schema Fields Added
+```prisma
+model CertificateTemplate {
+  pdfTemplateType   String   @default("jsPdf")  // "jsPdf" | "uploadedPdf"
+  pdfTemplateUrl    String?  // Relative path to uploaded PDF
+  pdfTemplateFields Json?    // [{key:"studentName",x:100,y:150,fontSize:22,color:"#1e293b",align:"center"}]
+}
+
+model Certificate {
+  autoIssued         Boolean  @default(false)
+  uploadedTemplateId String?
+  uploadedTemplate   CertificateTemplate? @relation
+}
+```

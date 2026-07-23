@@ -29,7 +29,7 @@ export const CreateSessionSchema = z
 export const UpdateSessionSchema = z.object({
   title: z.string().min(3).max(200).optional(),
   startDateTime: z.string().datetime().optional(),
-  endDateTime: z.string().datetime().optional(),
+  endDateTime: z.string().datetime(),
 });
 
 // --- Service ---
@@ -435,7 +435,7 @@ export const sessionService = {
     batchId: string;
     moduleId?: string;
     scheduledAt: Date;
-    scheduledEndAt?: Date;
+    scheduledEndAt: Date;
     title: string;
   }) {
     // Idempotency: check if already exists
@@ -455,7 +455,7 @@ export const sessionService = {
         teamsMeetingId: data.teamsMeetingId,
         joinUrl: data.joinUrl,
         scheduledAt: data.scheduledAt,
-        scheduledEndAt: data.scheduledEndAt ?? data.scheduledAt,
+        scheduledEndAt: data.scheduledEndAt,
         createdFrom: "TEAMS",
         createdBy: "SYSTEM", // System webhook created this
       },
@@ -467,7 +467,7 @@ export const sessionService = {
         msEventId: `teams-${data.teamsMeetingId}`,
         title: data.title,
         startAt: data.scheduledAt,
-        endAt: data.scheduledEndAt ?? data.scheduledAt,
+        endAt: data.scheduledEndAt,
         joinUrl: data.joinUrl,
         sessionId: session.id,
       },

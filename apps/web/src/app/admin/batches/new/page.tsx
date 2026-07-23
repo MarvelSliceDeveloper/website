@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { usePageTitle } from "@/lib/use-page-title";
 import { api } from "@/lib/api";
 import {
   Select,
@@ -31,6 +32,7 @@ type FormState = {
 };
 
 export default function CreateBatchPage() {
+  usePageTitle("New Batch");
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [attempted, setAttempted] = useState(false);

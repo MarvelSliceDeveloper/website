@@ -61,12 +61,18 @@ import {
 import categoriesRouter from "./modules/admin/categories/categories.routes";
 import tagsRouter from "./modules/admin/tags/tags.routes";
 import adminCertificatesRouter from "./modules/admin/certificates/certificates.routes";
-import staticPagesRouter, { publicStaticPagesRouter } from "./modules/admin/static-pages/static-pages.routes";
+import certificateTemplateRouter from "./modules/admin/certificates/template.routes";
+import staticPagesRouter, {
+  publicStaticPagesRouter,
+} from "./modules/admin/static-pages/static-pages.routes";
 import emailTemplatesRouter from "./modules/admin/email-templates/email-templates.routes";
 import auditLogsRouter from "./modules/admin/audit-logs/audit-logs.routes";
 import announcementsRouter from "./modules/admin/announcements/announcements.routes";
 import { bulkUsersRouter } from "./modules/admin/users/bulk.routes";
-import { brandingRouter, publicBrandingRouter } from "./modules/admin/branding/branding.routes";
+import {
+  brandingRouter,
+  publicBrandingRouter,
+} from "./modules/admin/branding/branding.routes";
 import { i18nRouter } from "./modules/admin/i18n/i18n.routes";
 import { cacheRouter } from "./modules/admin/cache/cache.routes";
 import { onboardingRouter } from "./modules/onboarding/onboarding.routes";
@@ -262,6 +268,7 @@ app.use("/api/admin/trash", trashRouter);
 app.use("/api/admin/categories", categoriesRouter);
 app.use("/api/admin/tags", tagsRouter);
 app.use("/api/admin/admin-certificates", adminCertificatesRouter);
+app.use("/api/admin/certificate-templates", certificateTemplateRouter);
 app.use("/api/admin/static-pages", staticPagesRouter);
 app.use("/api/admin/email-templates", emailTemplatesRouter);
 app.use("/api/admin/audit-logs", auditLogsRouter);
@@ -280,17 +287,21 @@ app.use("/api/youtube", youtubeRouter);
 app.use("/api/payments", paymentRouter);
 app.use("/api/admin/payments", adminPaymentRouter);
 
+import { AppError } from "./utils/errors";
+
 // Sentry error handler (must come before generic error handler)
 if (process.env.SENTRY_DSN) {
   Sentry.setupExpressErrorHandler(app);
 }
 
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  const status = err.statusCode || err.status || 500;
-  if (status >= 500) {
-    logger.error(err);
+app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
+  const statusCode =
+    err instanceof AppError ? err.statusCode : (err as any)?.statusCode || (err as any)?.status || 500;
+  const message = err instanceof Error ? err.message : "Internal Server Error";
+  if (statusCode >= 500) {
+    req.log?.error?.(err, message);
   }
-  res.status(status).json({ error: err.message || "Internal Server Error" });
+  res.status(statusCode).json({ error: message });
 });
 
 export { app };

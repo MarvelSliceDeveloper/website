@@ -384,6 +384,9 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
             assignments: {
               orderBy: { dueDate: "asc" },
             },
+            practicals: {
+              orderBy: { order: "asc" },
+            },
           },
         },
       },
@@ -425,7 +428,8 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
         joinUrl: s.joinUrl,
         isLive:
           new Date(s.scheduledAt) <= new Date() &&
-          (!s.endedAt || new Date(s.endedAt) > new Date()),
+          (!s.endedAt || new Date(s.endedAt) > new Date()) &&
+          new Date(s.scheduledEndAt) > new Date(),
         isUpcoming: new Date(s.scheduledAt) > new Date(),
         hasRecording: !!s.recording,
       }));
@@ -506,6 +510,17 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
           title: a.title,
           type: a.type,
           dueDate: a.dueDate.toISOString(),
+        })),
+        practicals: m.practicals.map((p) => ({
+          id: p.id,
+          title: p.title,
+          description: p.description,
+          order: p.order,
+          videoType: p.videoType,
+          videoUrl: p.videoUrl,
+          videoEmbedId: p.videoEmbedId,
+          pdfUrl: p.pdfUrl,
+          resources: p.resources,
         })),
       };
     });
@@ -686,6 +701,13 @@ router.post(
         },
       });
 
+      if (process.env.AUTO_CERTIFICATE !== "false") {
+        const { checkAndIssueForQuiz } = await import("../certificates/certificate-completion.service");
+        checkAndIssueForQuiz(quizId, userId).catch((err: unknown) =>
+          (req as any).log?.error?.("[certificate] Auto-issue failed:", err),
+        );
+      }
+
       return res.status(201).json({
         attemptId: attempt.id,
         score,
@@ -694,8 +716,8 @@ router.post(
         answers: enrichedAnswers,
         submittedAt: attempt.createdAt,
       });
-    } catch (error: any) {
-      console.error("Error submitting quiz:", error);
+    } catch (err: unknown) {
+      (req as any).log?.error?.("[quiz] Submit failed:", err);
       return res.status(500).json({ error: "Failed to submit quiz" });
     }
   },

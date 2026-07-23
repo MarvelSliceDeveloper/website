@@ -115,7 +115,7 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
           </button>
         </div>
 
-        <div className="space-y-3 mb-6">
+          <div className="space-y-3 mb-6">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{pkg.name}</span>
             <span className="font-semibold text-foreground">
@@ -125,6 +125,10 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Courses included</span>
             <span className="text-foreground">{pkg.courses.length}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Lessons &amp; Quizzes</span>
+            <span className="text-foreground">{pkg.totalLessons ?? 0} lessons · {pkg.totalQuizzes ?? 0} quizzes</span>
           </div>
         </div>
 

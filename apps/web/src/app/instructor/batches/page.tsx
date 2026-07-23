@@ -9,6 +9,7 @@ import {
   IconVideo,
   IconClock,
 } from "@tabler/icons-react";
+import { usePageTitle } from "@/lib/use-page-title";
 
 type Batch = {
   id: string;
@@ -22,6 +23,7 @@ type Batch = {
 };
 
 export default function InstructorBatchesPage() {
+  usePageTitle("Batches");
   return (
     <Suspense
       fallback={

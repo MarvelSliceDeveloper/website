@@ -14,6 +14,7 @@ import {
   IconClipboardList,
   IconExternalLink,
 } from "@tabler/icons-react";
+import { usePageTitle } from "@/lib/use-page-title";
 
 type DashboardStats = {
   totalSessions: number;
@@ -70,6 +71,7 @@ const iconBg: Record<string, string> = {
 };
 
 export default function InstructorDashboardPage() {
+  usePageTitle("Dashboard");
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [submissions, setSubmissions] = useState<AssignmentSubmission[]>([

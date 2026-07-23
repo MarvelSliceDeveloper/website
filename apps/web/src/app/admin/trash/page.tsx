@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
+import { usePageTitle } from "@/lib/use-page-title";
 import { IconTrash, IconRefresh, IconRestore } from "@tabler/icons-react";
 
 type TrashEntity = {
@@ -15,6 +16,7 @@ type TrashEntity = {
 };
 
 export default function TrashPage() {
+  usePageTitle("Trash");
   const [trash, setTrash] = useState<Record<string, TrashEntity[]>>({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("users");

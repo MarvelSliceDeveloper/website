@@ -1,3 +1,20 @@
+/**
+ * StudentPortalShell — the main layout wrapper for all student-facing views.
+ *
+ * Renders a sticky header with logo, breadcrumbs, notifications, and user controls,
+ * plus a scrollable <main> content area. Child views are passed via `children`.
+ *
+ * Key features:
+ * - Sticky header with --shell-header-height CSS variable for child height calculations
+ * - Notification bell with real-time polling (30s interval), mark read individually/all
+ * - Theme toggle (light/dark) with localStorage persistence
+ * - Responsive: email hidden on mobile, breadcrumbs hidden below md breakpoint
+ *
+ * @example
+ * <StudentPortalShell breadcrumbs={[{ label: "Courses" }]} showBack onBack={() => ...}>
+ *   <CoursesView />
+ * </StudentPortalShell>
+ */
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -155,19 +172,6 @@ export default function StudentPortalShell({
         >
           <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-6">
             <div className="flex min-w-0 flex-1 items-center gap-3">
-              <button
-                onClick={onBack}
-                className={`sp-back-btn flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-muted transition-all hover:border-primary/40 hover:text-foreground ${
-                  showBack
-                    ? "opacity-100 pointer-events-auto"
-                    : "opacity-0 pointer-events-none"
-                }`}
-                aria-label="Go back"
-              >
-                <IconArrowLeft size={15} stroke={2} />
-                <span className="hidden sm:inline">Previous</span>
-              </button>
-
               {!hideLogo && (
                 <div
                   className="flex items-center gap-2 cursor-pointer select-none group"
@@ -186,6 +190,19 @@ export default function StudentPortalShell({
                   </span>
                 </div>
               )}
+
+              <button
+                onClick={onBack}
+                className={`sp-back-btn flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-muted transition-all hover:border-primary/40 hover:text-foreground ${
+                  showBack
+                    ? "opacity-100 pointer-events-auto"
+                    : "opacity-0 pointer-events-none"
+                }`}
+                aria-label="Go back"
+              >
+                <IconArrowLeft size={15} stroke={2} />
+                <span className="hidden sm:inline">Previous</span>
+              </button>
 
               {breadcrumbs.length > 0 && (
                 <nav className="hidden min-w-0 items-center gap-1 overflow-hidden text-xs text-muted md:flex">

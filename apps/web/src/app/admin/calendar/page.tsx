@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -53,6 +54,7 @@ const COURSE_COLORS = [
 ];
 
 export default function AdminCalendarPage() {
+  usePageTitle("Calendar");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [instructors, setInstructors] = useState<Instructor[]>([]);
   const [selectedInstructor, setSelectedInstructor] = useState("");
