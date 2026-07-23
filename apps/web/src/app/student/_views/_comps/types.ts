@@ -25,6 +25,7 @@ export interface AssignmentInfo {
   title: string;
   type: string;
   dueDate: string;
+  questionPdfUrl: string | null;
 }
 
 export interface PracticalInfo {

@@ -164,6 +164,8 @@ model Module {
   quizzes       Quiz[]
   assignments   Assignment[]
   practicals    Practical[]
+
+  @@index([courseId])
 }
 
 model Lesson {
@@ -179,6 +181,8 @@ model Lesson {
   isFreePreview   Boolean @default(false)
   resources       Json? // [{name, url}]
   module          Module  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId])
 }
 
 model Practical {
@@ -193,6 +197,8 @@ model Practical {
   pdfUrl       String?
   resources    Json?   // [{name, url}]
   module       Module  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId])
 }
 
 // A Batch is a course cohort — e.g. "Python Batch Jan 2025"
@@ -222,6 +228,7 @@ model Batch {
   courseVisibility         BatchCourseVisibility[]
 
   @@index([packageId])
+  @@index([courseId])
 }
 
 // Tracks which courses are visible to batch members (manual toggle per batch)
@@ -252,6 +259,8 @@ model EnrollmentRequest {
   batch      Batch?           @relation(fields: [batchId], references: [id])
 
   @@index([userId])
+  @@index([courseId])
+  @@index([batchId])
 }
 
 // Admin creates Teams meeting → assigns to a batch
@@ -284,6 +293,9 @@ model LiveSession {
   instructor         User?             @relation("SessionInstructor", fields: [instructorId], references: [id])
 
   @@index([scheduledAt])
+  @@index([batchId])
+  @@index([courseId])
+  @@index([moduleId])
 }
 
 model Recording {
@@ -297,17 +309,6 @@ model Recording {
   session          LiveSession @relation(fields: [sessionId], references: [id])
 }
 
-model CalendarEvent {
-  id        String       @id @default(cuid())
-  msEventId String       @unique
-  title     String
-  startAt   DateTime
-  endAt     DateTime
-  joinUrl   String?
-  sessionId String?      @unique
-  session   LiveSession? @relation(fields: [sessionId], references: [id])
-}
-
 model Progress {
   id             String    @id @default(cuid())
   userId         String
@@ -318,6 +319,19 @@ model Progress {
   recording      Recording @relation(fields: [recordingId], references: [id])
 
   @@unique([userId, recordingId])
+  @@index([userId])
+  @@index([recordingId])
+}
+
+model CalendarEvent {
+  id        String       @id @default(cuid())
+  msEventId String       @unique
+  title     String
+  startAt   DateTime
+  endAt     DateTime
+  joinUrl   String?
+  sessionId String?      @unique
+  session   LiveSession? @relation(fields: [sessionId], references: [id])
 }
 
 model Certificate {
@@ -379,6 +393,8 @@ model Quiz {
   questions Question[]
   module    Module        @relation(fields: [moduleId], references: [id])
   attempts  QuizAttempt[]
+
+  @@index([moduleId])
 }
 
 model Question {
@@ -387,6 +403,8 @@ model Question {
   text    String
   options Json // [{label, isCorrect}]
   quiz    Quiz   @relation(fields: [quizId], references: [id])
+
+  @@index([quizId])
 }
 
 // Stores student quiz submissions for course-content quizzes
@@ -401,6 +419,9 @@ model QuizAttempt {
   createdAt DateTime          @default(now())
   quiz      Quiz              @relation(fields: [quizId], references: [id], onDelete: Cascade)
   user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+  @@index([userId])
 }
 
 // One-on-one mentorship ticket - student requests, admin assigns mentor
@@ -539,6 +560,10 @@ model Assignment {
   course         Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
   batch          Batch                  @relation(fields: [batchId], references: [id], onDelete: Cascade)
   module         Module?                @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+
+  @@index([courseId])
+  @@index([batchId])
+  @@index([moduleId])
   deletedAt      DateTime?
   deletedBy      String?
   restoredAt     DateTime?
@@ -805,6 +830,10 @@ model PackageEnrollmentCourse {
   enrollment   PackageEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
   course       Course            @relation(fields: [courseId], references: [id])
   batch        Batch?            @relation(fields: [batchId], references: [id])
+
+  @@index([enrollmentId])
+  @@index([courseId])
+  @@index([batchId])
 }
 
 // === AUDIT LOG ===

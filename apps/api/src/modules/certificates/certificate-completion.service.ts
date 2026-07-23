@@ -17,46 +17,26 @@ interface CourseProgress {
   };
 }
 
-async function getModuleContentProgress(
-  moduleId: string,
+export async function getCourseContentProgress(
+  courseId: string,
   userId: string,
-): Promise<{
-  totalLessons: number;
-  completedLessons: number;
-  totalQuizzes: number;
-  completedQuizzes: number;
-  totalAssignments: number;
-  completedAssignments: number;
-}> {
-  const module = await prisma.module.findUnique({
-    where: { id: moduleId },
-    include: {
-      lessons: { select: { id: true, videoUrl: true } },
-    },
+): Promise<CourseProgress> {
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    select: { id: true, title: true, modules: { select: { id: true, lessons: { select: { id: true, videoUrl: true } } } } },
   });
 
-  if (!module) {
-    return {
-      totalLessons: 0, completedLessons: 0,
-      totalQuizzes: 0, completedQuizzes: 0,
-      totalAssignments: 0, completedAssignments: 0,
-    };
+  if (!course) {
+    throw new Error("Course not found");
   }
 
-  const lessons = module.lessons;
-  const totalLessons = lessons.length;
+  const moduleIds = course.modules.map((m) => m.id);
+  const totalLessons = course.modules.reduce((s, m) => s + m.lessons.length, 0);
 
-  const quizzes = await prisma.quiz.findMany({
-    where: { moduleId },
-    select: { id: true },
-  });
-  const totalQuizzes = quizzes.length;
-
-  const assignments = await prisma.assignment.findMany({
-    where: { moduleId },
-    select: { id: true },
-  });
-  const totalAssignments = assignments.length;
+  const [quizzes, assignments] = await Promise.all([
+    prisma.quiz.findMany({ where: { moduleId: { in: moduleIds } }, select: { id: true, moduleId: true } }),
+    prisma.assignment.findMany({ where: { moduleId: { in: moduleIds } }, select: { id: true, moduleId: true } }),
+  ]);
 
   const quizIds = quizzes.map((q) => q.id);
   const assignmentIds = assignments.map((a) => a.id);
@@ -79,57 +59,14 @@ async function getModuleContentProgress(
   const completedQuizIds = new Set(quizAttempts.map((a) => a.quizId));
   const completedAssignmentIds = new Set(assignmentSubmissions.map((s) => s.assignmentId));
 
-  return {
-    totalLessons,
-    completedLessons: totalLessons, // lessons with videoUrl are considered "completed" if they exist
-    totalQuizzes,
-    completedQuizzes: quizIds.filter((id) => completedQuizIds.has(id)).length,
-    totalAssignments,
-    completedAssignments: assignmentIds.filter((id) => completedAssignmentIds.has(id)).length,
-  };
-}
-
-export async function getCourseContentProgress(
-  courseId: string,
-  userId: string,
-): Promise<CourseProgress> {
-  const course = await prisma.course.findUnique({
-    where: { id: courseId },
-    select: { id: true, title: true },
-  });
-
-  if (!course) {
-    throw new Error("Course not found");
-  }
-
-  const modules = await prisma.module.findMany({
-    where: { courseId },
-    select: { id: true },
-  });
-
-  const moduleProgresses = await Promise.all(
-    modules.map((m) => getModuleContentProgress(m.id, userId)),
-  );
-
-  const totals = moduleProgresses.reduce(
-    (acc, mp) => ({
-      totalLessons: acc.totalLessons + mp.totalLessons,
-      completedLessons: acc.completedLessons + mp.completedLessons,
-      totalQuizzes: acc.totalQuizzes + mp.totalQuizzes,
-      completedQuizzes: acc.completedQuizzes + mp.completedQuizzes,
-      totalAssignments: acc.totalAssignments + mp.totalAssignments,
-      completedAssignments: acc.completedAssignments + mp.completedAssignments,
-    }),
-    {
-      totalLessons: 0, completedLessons: 0,
-      totalQuizzes: 0, completedQuizzes: 0,
-      totalAssignments: 0, completedAssignments: 0,
-    },
-  );
+  const totalQuizzes = quizzes.length;
+  const totalAssignments = assignments.length;
+  const completedQuizzes = quizIds.filter((id) => completedQuizIds.has(id)).length;
+  const completedAssignments = assignmentIds.filter((id) => completedAssignmentIds.has(id)).length;
 
   const contentItems = [
-    ...(totals.totalQuizzes > 0 ? [{ completed: totals.completedQuizzes, total: totals.totalQuizzes }] : []),
-    ...(totals.totalAssignments > 0 ? [{ completed: totals.completedAssignments, total: totals.totalAssignments }] : []),
+    ...(totalQuizzes > 0 ? [{ completed: completedQuizzes, total: totalQuizzes }] : []),
+    ...(totalAssignments > 0 ? [{ completed: completedAssignments, total: totalAssignments }] : []),
   ];
 
   const totalItems = contentItems.reduce((s, c) => s + c.total, 0);
@@ -142,7 +79,14 @@ export async function getCourseContentProgress(
     totalItems,
     completedItems,
     isComplete,
-    details: totals,
+    details: {
+      totalLessons,
+      completedLessons: totalLessons,
+      totalQuizzes,
+      completedQuizzes,
+      totalAssignments,
+      completedAssignments,
+    },
   };
 }
 

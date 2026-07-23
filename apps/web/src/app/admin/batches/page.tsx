@@ -29,6 +29,13 @@ type Batch = {
   };
 };
 
+type PaginatedResponse<T> = {
+  batches: T[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
 const statusStyles: Record<string, string> = {
   UPCOMING: "bg-accent/15 text-accent border-accent/25",
   ACTIVE: "bg-success/15 text-success border-success/25",
@@ -56,8 +63,8 @@ function BatchesPageContent() {
     try {
       const params: Record<string, string> = {};
       if (status) params.status = status;
-      const data = await api.get<Batch[]>("/api/admin/batches", params);
-      setBatches(data);
+      const data = await api.get<PaginatedResponse<Batch>>("/api/admin/batches", params);
+      setBatches(data.batches);
     } catch {
       setBatches([]);
     } finally {
@@ -67,11 +74,11 @@ function BatchesPageContent() {
 
   useEffect(() => {
     api
-      .get<Batch[]>(
+      .get<PaginatedResponse<Batch>>(
         "/api/admin/batches",
         statusFilter ? { status: statusFilter } : {},
       )
-      .then(setBatches)
+      .then((data) => setBatches(data.batches))
       .catch(() => setBatches([]))
       .finally(() => setLoading(false));
   }, [statusFilter]);

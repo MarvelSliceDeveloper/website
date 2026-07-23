@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import { requireAuth, AuthRequest } from "../../middleware/auth.middleware";
 import { prisma } from "../../utils/prisma";
 import { quizController } from "./quiz.controller";
+import { getCached, setCache } from "../../utils/memory-cache";
 
 const router = Router();
 
@@ -315,6 +316,10 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
     const { courseId } = req.params;
 
+    const cacheKey = `content:${courseId}:${userId}`;
+    const cached = getCached<object>(cacheKey);
+    if (cached) return res.json(cached);
+
     // Verify user is enrolled (check both individual and package enrollments)
     let batchId: string | null = null;
     let batch: any = null;
@@ -371,21 +376,69 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
     // Fetch course with modules and lessons
     const course = await prisma.course.findUnique({
       where: { id: courseId },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        thumbnailUrl: true,
+        status: true,
         modules: {
           orderBy: { order: "asc" },
-          include: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            order: true,
+            isFreePreview: true,
+            contentOrder: true,
             lessons: {
               orderBy: { order: "asc" },
+              select: {
+                id: true,
+                title: true,
+                description: true,
+                order: true,
+                videoType: true,
+                videoUrl: true,
+                videoEmbedId: true,
+                durationSeconds: true,
+                isFreePreview: true,
+                resources: true,
+              },
             },
             quizzes: {
-              include: { questions: true },
+              select: {
+                id: true,
+                title: true,
+                order: true,
+                dueDate: true,
+                _count: { select: { questions: true } },
+              },
+              orderBy: { order: "asc" },
             },
             assignments: {
+              select: {
+                id: true,
+                title: true,
+                type: true,
+                dueDate: true,
+                questionPdfUrl: true,
+              },
               orderBy: { dueDate: "asc" },
             },
             practicals: {
               orderBy: { order: "asc" },
+              select: {
+                id: true,
+                title: true,
+                description: true,
+                order: true,
+                videoType: true,
+                videoUrl: true,
+                videoEmbedId: true,
+                pdfUrl: true,
+                resources: true,
+              },
             },
           },
         },
@@ -502,7 +555,7 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
         quizzes: m.quizzes.map((q) => ({
           id: q.id,
           title: q.title,
-          questionCount: q.questions.length,
+          questionCount: q._count.questions,
           dueDate: q.dueDate ? q.dueDate.toISOString() : null,
         })),
         assignments: m.assignments.map((a) => ({
@@ -510,6 +563,7 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
           title: a.title,
           type: a.type,
           dueDate: a.dueDate.toISOString(),
+          questionPdfUrl: a.questionPdfUrl,
         })),
         practicals: m.practicals.map((p) => ({
           id: p.id,
@@ -535,7 +589,7 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
           )
         : 0;
 
-    return res.status(200).json({
+    const body = {
       course: {
         id: course.id,
         title: course.title,
@@ -557,7 +611,9 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
       sessions,
       recordings,
       overallProgress,
-    });
+    };
+    setCache(cacheKey, body);
+    return res.status(200).json(body);
   } catch (error: any) {
     console.error("Error fetching course content:", error);
     return res.status(500).json({ error: "Failed to fetch course content" });

@@ -1,5 +1,45 @@
 # Changelog
 
+## 2026-07-23 — Performance Optimization (All Tiers)
+
+### Tier 1: Database & API (High Impact)
+
+**Missing FK indexes added** — Added `@@index(...)` annotations to 15+ model fields:
+- `Module.courseId`, `Lesson.moduleId`, `Practical.moduleId`
+- `Quiz.moduleId`, `Question.quizId`, `QuizAttempt.quizId`, `QuizAttempt.userId`
+- `Assignment.courseId`, `Assignment.batchId`, `Assignment.moduleId`
+- `EnrollmentRequest.courseId`, `EnrollmentRequest.batchId`
+- `LiveSession.batchId`, `LiveSession.courseId`, `LiveSession.moduleId`
+- `Batch.courseId`, `PackageEnrollmentCourse.*`
+- `Progress.userId`, `Progress.recordingId`
+
+**Over-fetching reduced in `GET /api/courses/:courseId/content`**:
+- Replaced bare `include` with explicit `select` on Course, Module, Lesson, Quiz, Assignment, Practical
+- Quiz questions no longer loaded just for counting — uses `_count: { select: { questions: true } }` instead
+- Eliminated transfer of unused fields (`slug`, `coverImageUrl`, `tags`, `deletedAt`, etc.)
+
+**N+1 fixed in `certificate-completion.service.ts`**: Replaced per-module loop (5N queries) with batch queries (5 total). 10-module course: 51→5 queries.
+
+**N+1 fixed in `student.service.ts` `getContinueLearning()`**: Replaced per-batch `findUnique` loop with single `batch.findMany`.
+
+### Tier 2: Frontend Bundles & Rendering
+
+**Code splitting via `next/dynamic`** in `CourseContentView.tsx`:
+- `QuizContent`, `AssignmentContent`, `StudyMaterialContent`, `StickyNoteWidget` now lazy-loaded with `ssr: false`
+- Reduces initial JS bundle by ~150KB (Tiptap/RichEditor + Plyr CSS + quiz logic)
+
+**In-memory response caching** for `GET /api/courses/:courseId/content`:
+- Created `apps/api/src/utils/memory-cache.ts` — Map-based cache with 30s TTL, auto-eviction at 500 entries
+- Cached per `courseId:userId`, serves from memory on repeat requests within TTL window
+
+### Tier 3: Background Optimizations
+
+**Notification polling pauses on tab hidden** (`StudentPortalShell.tsx`):
+- Listens to `visibilitychange`, clears interval when tab hidden, restarts on return
+- Reduces background network requests
+
+**Files modified:** `schema.prisma`, `student-course.routes.ts`, `certificate-completion.service.ts`, `student.service.ts`, `CourseContentView.tsx`, `StudentPortalShell.tsx`, `memory-cache.ts` (new)
+
 ## 2026-07-23 — Error Handling Refactor, Pagination, SEO, & Certification System
 
 ### Phase 1: Error Handling (Critical)

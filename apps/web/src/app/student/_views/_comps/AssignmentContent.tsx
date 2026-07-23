@@ -1,16 +1,10 @@
 "use client";
 
-import { IconFileSpreadsheet } from "@tabler/icons-react";
-
-interface Assignment {
-  id: string;
-  title: string;
-  type: string;
-  dueDate: string;
-}
+import { IconFileSpreadsheet, IconFileDownload } from "@tabler/icons-react";
+import { AssignmentInfo } from "./types";
 
 interface AssignmentContentProps {
-  assignment: Assignment;
+  assignment: AssignmentInfo;
   moduleName: string | null;
   onBack: () => void;
 }
@@ -39,27 +33,42 @@ export default function AssignmentContent({
         )}
         <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
           <span>
-            📅 Due: {new Date(assignment.dueDate).toLocaleDateString("en-IN")}
+            Due: {new Date(assignment.dueDate).toLocaleDateString("en-IN")}
           </span>
-          <span>📋 Type: {assignment.type}</span>
+          <span>Type: {assignment.type}</span>
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-xl p-6 flex flex-col items-center justify-center gap-3 text-center">
-        <IconFileSpreadsheet size={40} className="text-blue-500/60" />
-        <p className="text-sm text-muted-foreground max-w-md">
-          Submit your assignment from the{" "}
-          <button
-            onClick={() => {
-              /* Navigate to assignments overdue view - handled by parent */
-            }}
-            className="text-primary font-medium hover:underline"
-          >
-            Assignments
-          </button>{" "}
-          page.
-        </p>
-      </div>
+      {assignment.questionPdfUrl ? (
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
+            <span className="text-xs font-medium text-muted-foreground">
+              Question Paper
+            </span>
+            <a
+              href={assignment.questionPdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary text-xs inline-flex items-center gap-1.5"
+            >
+              <IconFileDownload size={14} />
+              Download
+            </a>
+          </div>
+          <iframe
+            src={assignment.questionPdfUrl}
+            className="w-full h-[70vh] bg-white"
+            title="Assignment Question PDF"
+          />
+        </div>
+      ) : (
+        <div className="bg-card border border-border rounded-xl p-6 flex flex-col items-center justify-center gap-3 text-center">
+          <IconFileSpreadsheet size={40} className="text-blue-500/60" />
+          <p className="text-sm text-muted-foreground max-w-md">
+            No question paper attached to this assignment.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

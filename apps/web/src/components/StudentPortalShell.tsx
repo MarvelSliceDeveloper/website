@@ -90,8 +90,20 @@ export default function StudentPortalShell({
 
   useEffect(() => {
     Promise.resolve().then(() => fetchNotifications());
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
+    let interval = setInterval(fetchNotifications, 30000);
+    function handleVisibility() {
+      if (document.hidden) {
+        clearInterval(interval);
+      } else {
+        fetchNotifications();
+        interval = setInterval(fetchNotifications, 30000);
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [fetchNotifications]);
 
   useEffect(() => {

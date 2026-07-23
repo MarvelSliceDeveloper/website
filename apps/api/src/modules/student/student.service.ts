@@ -211,39 +211,47 @@ export const studentService = {
       },
     });
 
-    const items: ContinueLearningItem[] = [];
-    const seenBatchIds = new Set<string>();
+    const uniqueBatchIds = [
+      ...new Set(
+        packageEnrollments.flatMap((pe) =>
+          pe.courses.map((c) => c.batchId).filter(Boolean),
+        ),
+      ),
+    ] as string[];
 
-    for (const pe of packageEnrollments) {
-      for (const pec of pe.courses) {
-        if (!pec.batchId || seenBatchIds.has(pec.batchId)) continue;
-        seenBatchIds.add(pec.batchId);
-
-        const batch = await prisma.batch.findUnique({
-          where: { id: pec.batchId },
+    const batchData = await prisma.batch.findMany({
+      where: { id: { in: uniqueBatchIds } },
+      select: {
+        id: true,
+        sessions: {
+          orderBy: { scheduledAt: "desc" },
+          take: 5,
           select: {
             id: true,
-            sessions: {
-              orderBy: { scheduledAt: "desc" },
-              take: 5,
+            scheduledAt: true,
+            recording: {
               select: {
                 id: true,
-                scheduledAt: true,
-                recording: {
-                  select: {
-                    id: true,
-                    duration: true,
-                    progress: {
-                      where: { userId },
-                      select: { watchedSeconds: true },
-                    },
-                  },
+                duration: true,
+                progress: {
+                  where: { userId },
+                  select: { watchedSeconds: true },
                 },
               },
             },
           },
-        });
+        },
+      },
+    });
 
+    const batchMap = new Map(batchData.map((b) => [b.id, b]));
+
+    const items: ContinueLearningItem[] = [];
+
+    for (const pe of packageEnrollments) {
+      for (const pec of pe.courses) {
+        if (!pec.batchId) continue;
+        const batch = batchMap.get(pec.batchId);
         if (!batch) continue;
 
         for (const session of batch.sessions) {

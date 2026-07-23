@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   IconBook2,
   IconCalendarEvent,
@@ -20,10 +21,6 @@ import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 
 import { VideoPlayer } from "./_comps/VideoPlayer";
-import StickyNoteWidget from "@/components/StickyNoteWidget";
-import QuizContent from "./_comps/QuizContent";
-import AssignmentContent from "./_comps/AssignmentContent";
-import StudyMaterialContent from "./_comps/StudyMaterialContent";
 import type {
   AssignmentInfo,
   CourseContentData,
@@ -33,6 +30,11 @@ import type {
   PracticalInfo,
   QuizInfo,
 } from "./_comps/types";
+
+const QuizContent = dynamic(() => import("./_comps/QuizContent"), { ssr: false });
+const AssignmentContent = dynamic(() => import("./_comps/AssignmentContent"), { ssr: false });
+const StudyMaterialContent = dynamic(() => import("./_comps/StudyMaterialContent"), { ssr: false });
+const StickyNoteWidget = dynamic(() => import("@/components/StickyNoteWidget"), { ssr: false });
 
 type ContentPanel = "content" | "live";
 
