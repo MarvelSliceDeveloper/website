@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { CataloguePageClient } from "./_components/CataloguePageClient";
 import PublicFooter from "@/components/PublicFooter";
+
+export const metadata: Metadata = {
+  title: "Catalogue",
+};
 
 const API_URL = process.env.API_URL || "http://localhost:4000";
 

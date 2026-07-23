@@ -2,6 +2,7 @@ import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { studentService } from "./student.service";
 import { prisma } from "../../utils/prisma";
+import { handleControllerError } from "../../utils/errors";
 
 export const studentController = {
   async listOverdueAssignments(req: AuthRequest, res: Response) {
@@ -11,14 +12,9 @@ export const studentController = {
 
       const items = await studentService.getOverdueAssignments(req.user.userId);
       return res.status(200).json({ items });
-    } catch (error: unknown) {
-      console.error(
-        "Error listing overdue assignments:",
-        error instanceof Error ? error.message : error,
-      );
-      return res
-        .status(500)
-        .json({ error: "Failed to list overdue assignments" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -29,14 +25,9 @@ export const studentController = {
 
       const items = await studentService.getContinueLearning(req.user.userId);
       return res.status(200).json({ items: items.continueLearning });
-    } catch (error: unknown) {
-      console.error(
-        "Error getting continue learning items:",
-        error instanceof Error ? error.message : error,
-      );
-      return res
-        .status(500)
-        .json({ error: "Failed to get continue learning items" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -64,14 +55,9 @@ export const studentController = {
           createdAt: p.createdAt,
         })),
       });
-    } catch (error: unknown) {
-      console.error(
-        "Error getting payment history:",
-        error instanceof Error ? error.message : error,
-      );
-      return res
-        .status(500)
-        .json({ error: "Failed to get payment history" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

@@ -250,7 +250,7 @@ export default function QuizOverdueView({
           </p>
 
           <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
-            <span>📅 Due: {new Date(data.dueDate).toLocaleDateString()}</span>
+            {data.dueDate && <span>📅 Due: {new Date(data.dueDate).toLocaleDateString()}</span>}
             <span>💯 Max Points: {data.maxPoints}</span>
             <span>📝 Questions: {totalCount}</span>
           </div>
@@ -571,10 +571,10 @@ export default function QuizOverdueView({
               <tbody>
                 {filteredItems.map((quiz) => {
                   const isPending = quiz.status === "PENDING";
-                  const daysOverdue = isPending
+                  const dueDateTime = quiz.dueDate ? new Date(quiz.dueDate).getTime() : NaN;
+                  const daysOverdue = isPending && !isNaN(dueDateTime)
                     ? Math.floor(
-                        (new Date().getTime() -
-                          new Date(quiz.dueDate).getTime()) /
+                        (new Date().getTime() - dueDateTime) /
                           (1000 * 60 * 60 * 24),
                       )
                     : 0;
@@ -641,10 +641,12 @@ export default function QuizOverdueView({
                             {isPending
                               ? isOverdue
                                 ? `${daysOverdue}d overdue`
-                                : new Date(quiz.dueDate).toLocaleDateString(
-                                    "en-IN",
-                                    { day: "numeric", month: "short" },
-                                  )
+                                : quiz.dueDate
+                                  ? new Date(quiz.dueDate).toLocaleDateString(
+                                      "en-IN",
+                                      { day: "numeric", month: "short" },
+                                    )
+                                  : "No due date"
                               : "—"}
                           </span>
                         </div>

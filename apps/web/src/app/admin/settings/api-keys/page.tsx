@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import { toast } from "@/lib/toast";
 import { IconKey, IconRefresh, IconCopy, IconTrash } from "@tabler/icons-react";
 
@@ -16,6 +17,7 @@ type ApiKeyEntry = {
 };
 
 export default function ApiKeysPage() {
+  usePageTitle("API Keys");
   const [keys, setKeys] = useState<ApiKeyEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);

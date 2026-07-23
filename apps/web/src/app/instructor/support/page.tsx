@@ -5,8 +5,10 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import SupportTicketList from "./_comps/SupportTicketList";
 import SupportTicketDetail from "./_comps/SupportTicketDetail";
 import CreateTicketForm from "./_comps/CreateTicketForm";
+import { usePageTitle } from "@/lib/use-page-title";
 
 export default function InstructorSupportPage() {
+  usePageTitle("Support");
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
 

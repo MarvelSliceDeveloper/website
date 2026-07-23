@@ -5,9 +5,11 @@ import { api } from "@/lib/api";
 import { IconTrash, IconCheck, IconEye } from "@tabler/icons-react";
 import { timeAgo } from "@/lib/time-ago";
 import type { NotificationItem } from "@/lib/notifications";
+import { usePageTitle } from "@/lib/use-page-title";
 import { NotificationIcon } from "@/lib/notifications";
 
 export default function AdminInboxPage() {
+  usePageTitle("Inbox");
   return (
     <div className="space-y-6">
       {/* Header */}

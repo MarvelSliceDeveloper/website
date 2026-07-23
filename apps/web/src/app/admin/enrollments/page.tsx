@@ -7,6 +7,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FormModal } from "@/components/admin/FormModal";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { usePageTitle } from "@/lib/use-page-title";
 import { IconClock, IconCircleCheck, IconCircleX } from "@tabler/icons-react";
 import {
   Select,
@@ -53,6 +54,7 @@ const statusIcons: Record<
 };
 
 export default function AdminEnrollmentsPage() {
+  usePageTitle("Enrollments");
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("PENDING");

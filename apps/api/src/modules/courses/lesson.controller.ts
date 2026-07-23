@@ -1,6 +1,6 @@
 import { Response } from "express";
-import { ZodError } from "zod";
 import { AuthRequest } from "../../middleware/auth.middleware";
+import { handleControllerError } from "../../utils/errors";
 import {
   lessonService,
   CreateLessonSchema,
@@ -15,12 +15,9 @@ export const lessonController = {
       const data = CreateLessonSchema.parse(req.body);
       const lesson = await lessonService.addLesson(req.params.moduleId, data);
       return res.status(201).json(lesson);
-    } catch (error: any) {
-      if (error instanceof ZodError)
-        return res.status(400).json({ error: error.errors });
-      if (error.message === "Module not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -29,12 +26,9 @@ export const lessonController = {
       const data = UpdateLessonSchema.parse(req.body);
       const lesson = await lessonService.updateLesson(req.params.id, data);
       return res.json(lesson);
-    } catch (error: any) {
-      if (error instanceof ZodError)
-        return res.status(400).json({ error: error.errors });
-      if (error.message === "Lesson not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -42,10 +36,9 @@ export const lessonController = {
     try {
       await lessonService.deleteLesson(req.params.id);
       return res.json({ message: "Lesson deleted" });
-    } catch (error: any) {
-      if (error.message === "Lesson not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -54,12 +47,9 @@ export const lessonController = {
       const { lessonIds } = ReorderLessonsSchema.parse(req.body);
       await lessonService.reorderLessons(req.params.moduleId, lessonIds);
       return res.json({ message: "Lessons reordered" });
-    } catch (error: any) {
-      if (error instanceof ZodError)
-        return res.status(400).json({ error: error.errors });
-      if (error.message === "Module not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -86,10 +76,9 @@ export const lessonController = {
         url,
       );
       return res.status(201).json(resource);
-    } catch (error: any) {
-      if (error.message === "Lesson not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -98,13 +87,9 @@ export const lessonController = {
       const { lessonId, resourceId } = req.params;
       await lessonService.deleteResource(lessonId, resourceId);
       return res.json({ message: "Resource deleted successfully" });
-    } catch (error: any) {
-      if (
-        error.message === "Lesson not found" ||
-        error.message === "Resource not found"
-      )
-        return res.status(404).json({ error: error.message });
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -115,10 +100,9 @@ export const lessonController = {
         return res.status(400).json({ error: "resourceIds must be an array" });
       await lessonService.reorderResources(req.params.lessonId, resourceIds);
       return res.json({ message: "Resources reordered" });
-    } catch (error: any) {
-      if (error.message === "Lesson not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

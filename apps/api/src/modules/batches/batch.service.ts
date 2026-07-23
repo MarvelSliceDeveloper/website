@@ -9,6 +9,7 @@
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
 import { UserRole } from "@lms/types";
+import { paginate } from "../../utils/paginate";
 
 // --- Zod Schemas ---
 
@@ -176,6 +177,8 @@ export const batchService = {
     search?: string;
     instructorId?: string;
     packageId?: string;
+    page?: number;
+    limit?: number;
   }) {
     const where: any = {};
 
@@ -201,22 +204,31 @@ export const batchService = {
       where.name = { contains: filters.search, mode: "insensitive" };
     }
 
-    return prisma.batch.findMany({
-      where,
-      include: {
-        course: { select: { id: true, title: true } },
-        instructor: { select: { id: true, name: true, email: true } },
-        package: { select: { id: true, name: true } },
-        _count: {
-          select: {
-            enrollments: { where: { status: "APPROVED" } },
-            packageEnrollmentCourses: true,
-            sessions: true,
+    const { skip, take, page: currentPage, limit: currentLimit } = paginate({ page: filters.page, limit: filters.limit });
+
+    const [batches, total] = await Promise.all([
+      prisma.batch.findMany({
+        where,
+        skip,
+        take,
+        include: {
+          course: { select: { id: true, title: true } },
+          instructor: { select: { id: true, name: true, email: true } },
+          package: { select: { id: true, name: true } },
+          _count: {
+            select: {
+              enrollments: { where: { status: "APPROVED" } },
+              packageEnrollmentCourses: true,
+              sessions: true,
+            },
           },
         },
-      },
-      orderBy: { startDate: "desc" },
-    });
+        orderBy: { startDate: "desc" },
+      }),
+      prisma.batch.count({ where }),
+    ]);
+
+    return { batches, total, page: currentPage, limit: currentLimit };
   },
 
   // Gets all batches grouped by course for a given package
@@ -357,17 +369,31 @@ export const batchService = {
   },
 
   // Lists enrolled students in a batch
-  async listStudents(batchId: string) {
+  async listStudents(
+    batchId: string,
+    options?: { page?: number; limit?: number },
+  ) {
     const batch = await prisma.batch.findUnique({ where: { id: batchId } });
     if (!batch) throw new Error("Batch not found");
 
-    return prisma.enrollmentRequest.findMany({
-      where: { batchId, status: "APPROVED" },
-      include: {
-        user: { select: { id: true, name: true, email: true, role: true } },
-      },
-      orderBy: { appliedAt: "desc" },
-    });
+    const { skip, take, page: currentPage, limit: currentLimit } = paginate({ page: options?.page, limit: options?.limit });
+
+    const where = { batchId, status: "APPROVED" as const };
+
+    const [students, total] = await Promise.all([
+      prisma.enrollmentRequest.findMany({
+        where,
+        skip,
+        take,
+        include: {
+          user: { select: { id: true, name: true, email: true, role: true } },
+        },
+        orderBy: { appliedAt: "desc" },
+      }),
+      prisma.enrollmentRequest.count({ where }),
+    ]);
+
+    return { students, total, page: currentPage, limit: currentLimit };
   },
 
   // Adds students to a batch via approved enrollments

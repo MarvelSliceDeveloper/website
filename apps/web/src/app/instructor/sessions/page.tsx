@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { usePageTitle } from "@/lib/use-page-title";
 
 type Batch = {
   id: string;
@@ -56,6 +57,7 @@ type AttendanceRecord = {
 };
 
 export default function InstructorSessionsPage() {
+  usePageTitle("Sessions");
   return (
     <Suspense
       fallback={

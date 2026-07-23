@@ -10,20 +10,7 @@ import {
   UpdateStatusSchema,
 } from "./ticket.service";
 import { notificationService } from "../notifications/notification.service";
-import { ZodError } from "zod";
-
-function handleError(res: Response, error: unknown, fallback: string) {
-  if (error instanceof ZodError) {
-    return res.status(400).json({ error: error.errors });
-  }
-  const message = error instanceof Error ? error.message : fallback;
-  if (message.includes("not found"))
-    return res.status(404).json({ error: message });
-  if (message.includes("Cannot assign"))
-    return res.status(400).json({ error: message });
-  console.error(`${fallback}:`, message);
-  return res.status(500).json({ error: fallback });
-}
+import { handleControllerError } from "../../utils/errors";
 
 export const ticketController = {
   // POST /api/tickets
@@ -40,8 +27,9 @@ export const ticketController = {
       }
 
       res.status(201).json({ ticket });
-    } catch (error) {
-      handleError(res, error, "Failed to create ticket");
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 
@@ -52,41 +40,52 @@ export const ticketController = {
       const role = req.user!.role;
       const type = req.query.type as "MENTORSHIP" | "SUPPORT" | undefined;
       const status = req.query.status as string | undefined;
+      const page = req.query.page ? Number(req.query.page) : undefined;
+      const limit = req.query.limit ? Number(req.query.limit) : undefined;
 
-      let tickets;
+      let result;
       if (role === "ADMIN" || role === "SUPER_ADMIN") {
         const mentorId = type === "MENTORSHIP" ? undefined : undefined;
-        tickets = await ticketService.listTickets({
+        result = await ticketService.listTickets({
           role,
           type,
           status,
           mentorId,
+          page,
+          limit,
         });
       } else if (role === "INSTRUCTOR") {
         if (type === "SUPPORT") {
-          tickets = await ticketService.listTickets({
+          result = await ticketService.listTickets({
             userId: req.user!.userId,
             type: "SUPPORT",
             status,
+            page,
+            limit,
           });
         } else {
-          tickets = await ticketService.listTickets({
+          result = await ticketService.listTickets({
             mentorId: req.user!.userId,
             type: "MENTORSHIP",
             status,
+            page,
+            limit,
           });
         }
       } else {
-        tickets = await ticketService.listTickets({
+        result = await ticketService.listTickets({
           userId: req.user!.userId,
           type,
           status,
+          page,
+          limit,
         });
       }
 
-      res.json({ tickets });
-    } catch (error) {
-      handleError(res, error, "Failed to list tickets");
+      res.json(result);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 
@@ -118,8 +117,9 @@ export const ticketController = {
       }
 
       res.json({ ticket });
-    } catch (error) {
-      handleError(res, error, "Failed to get ticket");
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 
@@ -138,8 +138,9 @@ export const ticketController = {
         "ASSIGNED",
       );
       res.json({ ticket });
-    } catch (error) {
-      handleError(res, error, "Failed to assign mentor");
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 
@@ -158,8 +159,9 @@ export const ticketController = {
         "SCHEDULED",
       );
       res.json({ ticket });
-    } catch (error) {
-      handleError(res, error, "Failed to schedule session");
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 
@@ -174,8 +176,9 @@ export const ticketController = {
         "COMPLETED",
       );
       res.json({ ticket });
-    } catch (error) {
-      handleError(res, error, "Failed to complete ticket");
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 
@@ -189,8 +192,9 @@ export const ticketController = {
         "CANCELLED",
       );
       res.json({ ticket });
-    } catch (error) {
-      handleError(res, error, "Failed to cancel ticket");
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 
@@ -224,8 +228,9 @@ export const ticketController = {
       );
 
       res.status(201).json({ message });
-    } catch (error) {
-      handleError(res, error, "Failed to add message");
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 
@@ -247,8 +252,9 @@ export const ticketController = {
       );
 
       res.json({ ticket });
-    } catch (error) {
-      handleError(res, error, "Failed to update status");
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 
@@ -258,8 +264,9 @@ export const ticketController = {
     try {
       const mentors = await ticketService.getAvailableMentors();
       res.json({ mentors });
-    } catch (error) {
-      handleError(res, error, "Failed to get mentors");
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 
@@ -270,8 +277,9 @@ export const ticketController = {
       const type = (req.query.type as "MENTORSHIP" | "SUPPORT") || "MENTORSHIP";
       const stats = await ticketService.getStats(type);
       res.json({ stats });
-    } catch (error) {
-      handleError(res, error, "Failed to get stats");
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 };

@@ -1,6 +1,6 @@
 import { Response } from "express";
-import { ZodError } from "zod";
 import { AuthRequest } from "../../middleware/auth.middleware";
+import { handleControllerError } from "../../utils/errors";
 import {
   quizService,
   CreateQuizSchema,
@@ -12,10 +12,9 @@ export const quizController = {
     try {
       const quiz = await quizService.getQuizQuestions(req.params.quizId);
       return res.status(200).json(quiz);
-    } catch (error: any) {
-      if (error.message === "Quiz not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(500).json({ error: "Failed to get quiz questions" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
   async addQuiz(req: AuthRequest, res: Response) {
@@ -23,12 +22,9 @@ export const quizController = {
       const data = CreateQuizSchema.parse(req.body);
       const quiz = await quizService.addQuiz(req.params.moduleId, data);
       return res.status(201).json(quiz);
-    } catch (error: any) {
-      if (error instanceof ZodError)
-        return res.status(400).json({ error: error.errors });
-      if (error.message === "Module not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -37,12 +33,9 @@ export const quizController = {
       const data = UpdateQuizSchema.parse(req.body);
       const quiz = await quizService.updateQuiz(req.params.id, data);
       return res.json(quiz);
-    } catch (error: any) {
-      if (error instanceof ZodError)
-        return res.status(400).json({ error: error.errors });
-      if (error.message === "Quiz not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -50,10 +43,9 @@ export const quizController = {
     try {
       await quizService.deleteQuiz(req.params.id);
       return res.json({ message: "Quiz deleted" });
-    } catch (error: any) {
-      if (error.message === "Quiz not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -64,10 +56,9 @@ export const quizController = {
         return res.status(400).json({ error: "quizIds must be an array" });
       await quizService.reorderQuizzes(req.params.moduleId, quizIds);
       return res.json({ message: "Quizzes reordered" });
-    } catch (error: any) {
-      if (error.message === "Module not found")
-        return res.status(404).json({ error: error.message });
-      return res.status(400).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

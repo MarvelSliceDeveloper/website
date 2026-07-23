@@ -1,5 +1,54 @@
 # Changelog
 
+## 2026-07-23 — Error Handling Refactor, Pagination, SEO, & Certification System
+
+### Phase 1: Error Handling (Critical)
+- Created `apps/api/src/utils/errors.ts` — `AppError` class, `getErrorMessage`, `handleControllerError`
+- Unified error handler in `app.ts` — uses pino per-request logger
+- Refactored 30+ controllers from `catch(error: any)` → `catch(err: unknown)` + `handleControllerError`
+- Zod errors now return `{ error: "field: message" }` instead of raw array
+
+### Phase 2: Pagination
+- Created `apps/api/src/utils/paginate.ts` — page=1, limit=20, max=100
+- Added pagination to 15+ endpoints: users, batches, packages, payments, enrollments, tickets, assignments, notes, messages
+
+### Phase 2b: Error/Loading Pages
+- Created shared `ErrorPage.tsx` and `LoadingPage.tsx` components
+- Added error.tsx + loading.tsx to 61 route segments across admin/student/instructor
+
+### Phase 2c: SEO Page Titles
+- Created `usePageTitle` hook in `@/lib/use-page-title`
+- Added titles to 53 admin + 21 student/instructor/root pages
+
+### Phase 3: Certification System
+- Added `pdfTemplateType`, `pdfTemplateUrl`, `pdfTemplateFields` to `CertificateTemplate` model
+- Added `autoIssued`, `uploadedTemplateId` to `Certificate` model
+- Created `certificate-completion.service.ts` — checks quizzes + assignments + recordings for auto-issue
+- Auto-issue triggers on quiz submit and assignment grade (configurable via `AUTO_CERTIFICATE` env var)
+- Two PDF generation options: jsPDF generated vs uploaded PDF with placeholder overlay (studentName, courseName, date, certificateNumber)
+- Upload endpoint: `POST /api/admin/certificate-templates/:id/upload-pdf`
+- Updated student certificates page — auto-displayed, removed manual claim flow
+- Updated admin template editor — PDF upload with placeholder field editor
+
+### Files created:
+- `apps/api/src/utils/errors.ts`, `apps/api/src/utils/paginate.ts`
+- `apps/api/src/modules/certificates/certificate-completion.service.ts`
+- `apps/web/src/components/ErrorPage.tsx`, `LoadingPage.tsx`
+- `apps/web/src/lib/use-page-title.ts`
+- 65+ error.tsx/loading.tsx files across route segments
+
+### Files modified:
+- `apps/api/src/modules/admin/certificates/template.routes.ts` — added PDF upload endpoints
+- `apps/api/src/modules/certificates/certificate.service.ts` — two PDF rendering methods
+- `apps/api/src/modules/courses/student-course.routes.ts` — auto-issue on quiz submit
+- `apps/api/src/modules/assignments/assignment.controller.ts` — auto-issue on grade
+- `apps/web/src/app/student/certificates/page.tsx` — auto-display, no claim
+- `apps/web/src/app/admin/certificates/page.tsx` — PDF upload + placeholder editor
+- `apps/web/src/lib/api-types.ts` — updated Certificate types
+- `apps/api/prisma/schema.prisma` — new model fields
+
+---
+
 ## 2026-07-21 — Shell Layout Fix, Unit Tests, and Code Documentation
 
 ### UI Fix

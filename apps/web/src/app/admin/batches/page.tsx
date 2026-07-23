@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { IconUsersGroup } from "@tabler/icons-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -35,6 +36,7 @@ const statusStyles: Record<string, string> = {
 };
 
 export default function AdminBatchesPage() {
+  usePageTitle("Batches");
   return (
     <Suspense fallback={<CardSkeleton count={6} />}>
       <BatchesPageContent />

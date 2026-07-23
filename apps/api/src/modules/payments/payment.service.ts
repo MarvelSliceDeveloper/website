@@ -8,6 +8,7 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { prisma } from "../../utils/prisma";
+import { paginate, PaginationParams } from "../../utils/paginate";
 import { emailService } from "../../services/email.service";
 import { authService } from "../auth/auth.service";
 
@@ -370,17 +371,27 @@ export const paymentService = {
     };
   },
 
-  async getAdminPayments() {
-    const payments = await prisma.payment.findMany({
-      where: { status: { not: "PENDING" } },
-      include: {
-        user: { select: { id: true, name: true, email: true } },
-        package: { select: { id: true, name: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+  async getAdminPayments(params?: PaginationParams) {
+    const { page, limit } = params || {};
+    const { skip, take, page: currentPage, limit: currentLimit } = paginate({ page, limit });
 
-    return payments.map((p) => ({
+    const where = { status: { not: "PENDING" as const } };
+
+    const [payments, total] = await Promise.all([
+      prisma.payment.findMany({
+        where,
+        skip,
+        take,
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+          package: { select: { id: true, name: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.payment.count({ where }),
+    ]);
+
+    const items = payments.map((p) => ({
       id: p.id,
       studentName: p.user.name,
       studentEmail: p.user.email,
@@ -391,6 +402,8 @@ export const paymentService = {
       razorpayPaymentId: p.razorpayPaymentId,
       createdAt: p.createdAt,
     }));
+
+    return { items, total, page: currentPage, limit: currentLimit };
   },
 
   async getRevenueStats() {

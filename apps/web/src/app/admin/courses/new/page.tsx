@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import { toast } from "sonner";
 
 const MAX_THUMBNAIL_BYTES = 5 * 1024 * 1024;
@@ -14,6 +15,7 @@ const ALLOWED_THUMBNAIL_TYPES = new Set([
 ]);
 
 export default function CreateCoursePage() {
+  usePageTitle("New Course");
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);

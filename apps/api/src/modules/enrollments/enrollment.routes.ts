@@ -6,6 +6,7 @@ import {
 } from "../../middleware/auth.middleware";
 import { UserRole } from "@lms/types";
 import { prisma } from "../../utils/prisma";
+import { paginate } from "../../utils/paginate";
 import {
   notificationService,
   dispatchEmailsForNotification,
@@ -20,20 +21,29 @@ router.use(requireRole([UserRole.ADMIN]));
 // Lists all enrollment requests with optional filters
 router.get("/", async (req: AuthRequest, res: Response) => {
   try {
-    const { status, courseId } = req.query;
+    const { status, courseId, page, limit } = req.query;
+    const { skip, take, page: currentPage, limit: currentLimit } = paginate({
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    });
 
     const where: any = {};
     if (status) where.status = status;
     if (courseId) where.courseId = courseId;
 
-    const enrollments = await prisma.enrollmentRequest.findMany({
-      where,
-      include: {
-        user: { select: { id: true, name: true, email: true } },
-        batch: { select: { id: true, name: true } },
-      },
-      orderBy: { appliedAt: "desc" },
-    });
+    const [enrollments, total] = await Promise.all([
+      prisma.enrollmentRequest.findMany({
+        where,
+        skip,
+        take,
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+          batch: { select: { id: true, name: true } },
+        },
+        orderBy: { appliedAt: "desc" },
+      }),
+      prisma.enrollmentRequest.count({ where }),
+    ]);
 
     // Fetch course titles separately since enrollmentRequest doesn't have a direct course relation
     const courseIds = [...new Set(enrollments.map((e) => e.courseId))];
@@ -43,7 +53,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
     });
     const courseMap = new Map(courses.map((c) => [c.id, c.title]));
 
-    const result = enrollments.map((e) => ({
+    const items = enrollments.map((e) => ({
       id: e.id,
       userId: e.userId,
       courseId: e.courseId,
@@ -56,7 +66,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       user: e.user,
     }));
 
-    return res.json({ enrollments: result });
+    return res.json({ items, total, page: currentPage, limit: currentLimit });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }

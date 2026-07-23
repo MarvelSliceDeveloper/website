@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { notificationService } from "./notification.service";
+import { handleControllerError } from "../../utils/errors";
 
 export const notificationController = {
   async list(req: AuthRequest, res: Response) {
@@ -14,9 +15,9 @@ export const notificationController = {
         req.user.userId,
       );
       return res.status(200).json({ notifications, unreadCount });
-    } catch (error: any) {
-      console.error("Error listing notifications:", error.message);
-      return res.status(500).json({ error: "Failed to list notifications" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -26,11 +27,9 @@ export const notificationController = {
         return res.status(401).json({ error: "Authentication required" });
       await notificationService.markAsRead(req.params.id, req.user.userId);
       return res.status(200).json({ message: "Notification marked as read" });
-    } catch (error: any) {
-      console.error("Error marking notification as read:", error.message);
-      return res
-        .status(500)
-        .json({ error: "Failed to mark notification as read" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -42,11 +41,9 @@ export const notificationController = {
       return res
         .status(200)
         .json({ message: "All notifications marked as read" });
-    } catch (error: any) {
-      console.error("Error marking all notifications as read:", error.message);
-      return res
-        .status(500)
-        .json({ error: "Failed to mark all notifications as read" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -56,9 +53,9 @@ export const notificationController = {
         return res.status(401).json({ error: "Authentication required" });
       await notificationService.delete(req.params.id, req.user.userId);
       return res.status(200).json({ message: "Notification deleted" });
-    } catch (error: any) {
-      console.error("Error deleting notification:", error.message);
-      return res.status(500).json({ error: "Failed to delete notification" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -70,11 +67,9 @@ export const notificationController = {
       return res
         .status(200)
         .json({ message: `Cleared ${count} read notifications` });
-    } catch (error: any) {
-      console.error("Error clearing read notifications:", error.message);
-      return res
-        .status(500)
-        .json({ error: "Failed to clear read notifications" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -84,9 +79,9 @@ export const notificationController = {
         return res.status(401).json({ error: "Authentication required" });
       const prefs = await notificationService.getPreferences(req.user.userId);
       return res.status(200).json({ preferences: prefs });
-    } catch (error: any) {
-      console.error("Error getting preferences:", error.message);
-      return res.status(500).json({ error: "Failed to get preferences" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -102,9 +97,9 @@ export const notificationController = {
         { enabled, email },
       );
       return res.status(200).json({ preference: pref });
-    } catch (error: any) {
-      console.error("Error updating preference:", error.message);
-      return res.status(500).json({ error: "Failed to update preference" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -159,9 +154,9 @@ export const notificationController = {
         message: `Notification sent to ${result.count} users`,
         count: result.count,
       });
-    } catch (error: any) {
-      console.error("Error sending notification:", error.message);
-      return res.status(500).json({ error: "Failed to send notification" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

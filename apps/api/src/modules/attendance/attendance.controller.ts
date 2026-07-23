@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { attendanceService } from "./attendance.service";
+import { handleControllerError } from "../../utils/errors";
 
 export const attendanceController = {
   // POST /api/attendance/:sessionId/join — records student joining a session
@@ -18,15 +19,9 @@ export const attendanceController = {
       return res
         .status(200)
         .json({ message: "Attendance recorded", attendance });
-    } catch (error: any) {
-      if (
-        error.message.includes("not found") ||
-        error.message.includes("not enrolled")
-      ) {
-        return res.status(403).json({ error: error.message });
-      }
-      console.error("Error recording attendance:", error.message);
-      return res.status(500).json({ error: "Failed to record attendance" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -40,11 +35,9 @@ export const attendanceController = {
       const list = await attendanceService.listForSession(sessionId);
 
       return res.status(200).json({ attendance: list });
-    } catch (error: any) {
-      console.error("Error getting session attendance:", error.message);
-      return res
-        .status(500)
-        .json({ error: "Failed to get attendance records" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconUpload,
   IconTableImport,
@@ -16,6 +17,7 @@ type ImportRow = { name: string; email: string; role: string };
 type ImportResult = { imported: number; skipped: number; errors: string[] };
 
 export default function ImportUsersPage() {
+  usePageTitle("Import Users");
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [csvText, setCsvText] = useState("");

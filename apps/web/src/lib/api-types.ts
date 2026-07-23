@@ -182,6 +182,10 @@ export interface CataloguePackage {
     maxStudents: number | null;
   }[];
   _count: { enrollments: number };
+  totalLessons: number;
+  totalQuizzes: number;
+  totalAssignments: number;
+  totalPracticals: number;
 }
 
 // Extended package detail returned by GET /api/packages/public/:slug

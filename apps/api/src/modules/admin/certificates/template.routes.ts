@@ -1,4 +1,7 @@
 import { Router, type Response } from "express";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import { prisma } from "../../../utils/prisma";
 import {
   requireAuth,
@@ -11,6 +14,24 @@ const router = Router();
 
 router.use(requireAuth);
 router.use(requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]));
+
+const certificateUploadsDir = path.resolve(
+  __dirname, "..", "..", "..", "..", "uploads", "certificate-templates",
+);
+fs.mkdirSync(certificateUploadsDir, { recursive: true });
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, certificateUploadsDir),
+    filename: (_req, file, cb) =>
+      cb(null, `template-${Date.now()}-${file.originalname}`),
+  }),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) =>
+    file.mimetype === "application/pdf"
+      ? cb(null, true)
+      : cb(new Error("Only PDF files are allowed")),
+});
 
 // GET / — List all templates
 router.get("/", async (_req: AuthRequest, res: Response) => {
@@ -69,6 +90,8 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       fontFamily,
       titleFontSize,
       nameFontSize,
+      pdfTemplateType,
+      pdfTemplateFields,
     } = req.body;
 
     if (!name || typeof name !== "string") {
@@ -107,6 +130,8 @@ router.post("/", async (req: AuthRequest, res: Response) => {
         fontFamily: fontFamily || "helvetica",
         titleFontSize: titleFontSize ?? 28,
         nameFontSize: nameFontSize ?? 22,
+        pdfTemplateType: pdfTemplateType || "jsPdf",
+        pdfTemplateFields: pdfTemplateFields || null,
       },
     });
 
@@ -214,6 +239,76 @@ router.delete("/:id", async (req: AuthRequest, res: Response) => {
   } catch (error: unknown) {
     return res.status(500).json({
       error: error instanceof Error ? error.message : "Failed to delete template",
+    });
+  }
+});
+
+// POST /:id/upload-pdf — Upload a PDF certificate template with placeholder fields
+router.post(
+  "/:id/upload-pdf",
+  upload.single("pdf"),
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      const existing = await prisma.certificateTemplate.findUnique({ where: { id } });
+      if (!existing) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: "PDF file is required" });
+      }
+
+      const relativePath = path.join("certificate-templates", req.file.filename);
+      const pdfTemplateFields = req.body.pdfTemplateFields
+        ? JSON.parse(req.body.pdfTemplateFields)
+        : [
+            { key: "studentName", x: 0, y: 130, fontSize: 22, color: "#1e293b", align: "center" },
+            { key: "courseName", x: 0, y: 170, fontSize: 18, color: "#1e293b", align: "center" },
+            { key: "date", x: 0, y: 200, fontSize: 10, color: "#64748b", align: "center" },
+            { key: "certificateNumber", x: 120, y: 240, fontSize: 10, color: "#64748b", align: "left" },
+          ];
+
+      const template = await prisma.certificateTemplate.update({
+        where: { id },
+        data: {
+          pdfTemplateType: "uploadedPdf",
+          pdfTemplateUrl: relativePath,
+          pdfTemplateFields,
+        },
+      });
+
+      return res.json({ template });
+    } catch (error: unknown) {
+      return res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to upload PDF template",
+      });
+    }
+  },
+);
+
+// DELETE /:id/pdf-template — Remove the uploaded PDF template, revert to jsPDF
+router.delete("/:id/pdf-template", async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const existing = await prisma.certificateTemplate.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: "Template not found" });
+    }
+
+    const template = await prisma.certificateTemplate.update({
+      where: { id },
+      data: {
+        pdfTemplateType: "jsPdf",
+        pdfTemplateUrl: null,
+        pdfTemplateFields: null,
+      },
+    });
+
+    return res.json({ template });
+  } catch (error: unknown) {
+    return res.status(500).json({
+      error: error instanceof Error ? error.message : "Failed to remove PDF template",
     });
   }
 });

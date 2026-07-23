@@ -17,6 +17,7 @@ import {
 import { toast, getErrorMessage } from "@/lib/toast";
 import StudentPortalShell from "@/components/StudentPortalShell";
 import RichEditor from "@/components/editor/RichEditor";
+import { usePageTitle } from "@/lib/use-page-title";
 
 interface CourseInfo {
   id: string;
@@ -41,6 +42,7 @@ function stripHtml(html: string): string {
 }
 
 export default function StudentNotesPage() {
+  usePageTitle("Notes");
   const router = useRouter();
   const [notes, setNotes] = useState<NoteItem[]>([]);
   const [courses, setCourses] = useState<CourseInfo[]>([]);

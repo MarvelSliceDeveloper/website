@@ -2,14 +2,16 @@ import type { Response } from "express";
 import { prisma } from "../../utils/prisma";
 import { apiKeyService } from "./api-key.service";
 import type { AuthRequest } from "../../middleware/auth.middleware";
+import { handleControllerError } from "../../utils/errors";
 
 export const apiKeyController = {
   async list(req: AuthRequest, res: Response) {
     try {
       const keys = await apiKeyService.list();
       return res.json({ keys });
-    } catch (error: unknown) {
-      return res.status(500).json({ error: (error as Error).message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -28,8 +30,9 @@ export const apiKeyController = {
       );
 
       return res.status(201).json(result);
-    } catch (error: unknown) {
-      return res.status(500).json({ error: (error as Error).message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -44,8 +47,9 @@ export const apiKeyController = {
 
       await apiKeyService.revoke(id);
       return res.json({ message: "API key revoked" });
-    } catch (error: unknown) {
-      return res.status(500).json({ error: (error as Error).message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

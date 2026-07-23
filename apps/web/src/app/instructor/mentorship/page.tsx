@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { usePageTitle } from "@/lib/use-page-title";
 
 type TicketStatus =
   | "OPEN"
@@ -60,6 +61,7 @@ const statusFilterOrder: (TicketStatus | "all")[] = [
 ];
 
 export default function InstructorMentorshipPage() {
+  usePageTitle("Mentorship");
   return (
     <Suspense
       fallback={

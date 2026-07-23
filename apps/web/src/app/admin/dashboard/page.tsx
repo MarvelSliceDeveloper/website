@@ -1,5 +1,6 @@
 "use client";
 
+import { usePageTitle } from "@/lib/use-page-title";
 import StatCard from "@/components/admin/StatCard";
 import { ChartSkeleton } from "@/components/admin/LoadingSkeleton";
 import { useEffect, useState } from "react";
@@ -866,6 +867,7 @@ function AdminDashboard() {
 
 // --- Root: role-aware dispatcher ---
 export default function AdminDashboardPage() {
+  usePageTitle("Dashboard");
   const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 

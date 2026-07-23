@@ -26,6 +26,7 @@ import {
   IconEdit,
   IconCreditCard,
 } from "@tabler/icons-react";
+import { usePageTitle } from "@/lib/use-page-title";
 
 const NOTIFICATION_TYPES = [
   "SESSION_SCHEDULED",
@@ -93,6 +94,7 @@ const TYPE_CONFIG: Record<
 type SettingsSection = "notifications" | "appearance" | "payments";
 
 export default function SettingsPage() {
+  usePageTitle("Settings");
   const router = useRouter();
   const [preferences, setPreferences] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState<string | null>(null);

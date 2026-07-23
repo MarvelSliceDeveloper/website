@@ -9,6 +9,7 @@ import StudentPortalShell, {
 import { Spinner } from "@/components/shared/Spinner";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
+import { usePageTitle } from "@/lib/use-page-title";
 
 // Types
 import type { ViewState } from "./_types/student-portal";
@@ -404,6 +405,7 @@ function buildBreadcrumbs(
 // ─── Main Portal Page ─────────────────────────────────────────────────────────
 
 export default function StudentPortalPage() {
+  usePageTitle("Student Dashboard");
   return (
     <Suspense
       fallback={

@@ -10,8 +10,10 @@ import {
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { usePageTitle } from "@/lib/use-page-title";
 
 export default function SetPasswordPage() {
+  usePageTitle("Set Password");
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(true);

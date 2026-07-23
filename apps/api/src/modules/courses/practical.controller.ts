@@ -1,6 +1,6 @@
 import { Response } from "express";
-import { ZodError } from "zod";
 import { AuthRequest } from "../../middleware/auth.middleware";
+import { handleControllerError } from "../../utils/errors";
 import {
   practicalService,
   CreatePracticalSchema,
@@ -16,13 +16,9 @@ export const practicalController = {
         data,
       );
       return res.status(201).json(practical);
-    } catch (error: unknown) {
-      if (error instanceof ZodError)
-        return res.status(400).json({ error: error.errors });
-      const msg = error instanceof Error ? error.message : "Unknown error";
-      if (msg === "Module not found")
-        return res.status(404).json({ error: msg });
-      return res.status(400).json({ error: msg });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -34,13 +30,9 @@ export const practicalController = {
         data,
       );
       return res.json(practical);
-    } catch (error: unknown) {
-      if (error instanceof ZodError)
-        return res.status(400).json({ error: error.errors });
-      const msg = error instanceof Error ? error.message : "Unknown error";
-      if (msg === "Practical not found")
-        return res.status(404).json({ error: msg });
-      return res.status(400).json({ error: msg });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -48,11 +40,9 @@ export const practicalController = {
     try {
       await practicalService.deletePractical(req.params.id);
       return res.json({ message: "Practical deleted" });
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Unknown error";
-      if (msg === "Practical not found")
-        return res.status(404).json({ error: msg });
-      return res.status(500).json({ error: msg });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -65,9 +55,9 @@ export const practicalController = {
       const url = `/uploads/courses/${courseId}/practicals/pdfs/${req.file.filename}`;
 
       return res.status(201).json({ url, filename: req.file.filename });
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Unknown error";
-      return res.status(400).json({ error: msg });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -89,11 +79,9 @@ export const practicalController = {
         url,
       );
       return res.status(201).json(resource);
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Unknown error";
-      if (msg === "Practical not found")
-        return res.status(404).json({ error: msg });
-      return res.status(400).json({ error: msg });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -102,14 +90,9 @@ export const practicalController = {
       const { practicalId, resourceId } = req.params;
       await practicalService.deleteResource(practicalId, resourceId);
       return res.json({ message: "Resource deleted successfully" });
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Unknown error";
-      if (
-        msg === "Practical not found" ||
-        msg === "Resource not found"
-      )
-        return res.status(404).json({ error: msg });
-      return res.status(500).json({ error: msg });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

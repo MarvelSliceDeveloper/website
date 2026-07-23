@@ -1,4 +1,5 @@
 import { prisma } from "../../utils/prisma";
+import { paginate } from "../../utils/paginate";
 
 export const notesService = {
   async list(
@@ -6,16 +7,28 @@ export const notesService = {
     courseId?: string,
     moduleId?: string,
     isSticky?: boolean,
+    page?: number,
+    limit?: number,
   ) {
     const where: any = { userId };
     if (courseId) where.courseId = courseId;
     if (moduleId) where.moduleId = moduleId;
     if (isSticky !== undefined) where.isSticky = isSticky;
-    return prisma.note.findMany({
-      where,
-      orderBy: [{ isSticky: "desc" }, { updatedAt: "desc" }],
-      include: { course: { select: { id: true, title: true } } },
-    });
+
+    const { skip, take, page: currentPage, limit: currentLimit } = paginate({ page, limit });
+
+    const [items, total] = await Promise.all([
+      prisma.note.findMany({
+        where,
+        orderBy: [{ isSticky: "desc" }, { updatedAt: "desc" }],
+        include: { course: { select: { id: true, title: true } } },
+        skip,
+        take,
+      }),
+      prisma.note.count({ where }),
+    ]);
+
+    return { items, total, page: currentPage, limit: currentLimit };
   },
 
   async get(id: string, userId: string) {

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../../utils/prisma";
 import { sessionService } from "../sessions/session.service";
 import { GraphClient } from "../graph";
+import { handleControllerError } from "../../utils/errors";
 
 function getWebhookClientState(): string {
   const value = process.env.MS_WEBHOOK_CLIENT_STATE;
@@ -85,15 +86,12 @@ export const eventsWebhookController = {
           } else if (changeType === "deleted") {
             await handleEventDeleted(msEventId);
           }
-        } catch (notifError: any) {
-          console.error(
-            "[EventsWebhook] Error processing notification:",
-            notifError.message,
-          );
+        } catch (err: unknown) {
+          handleControllerError(err, (req as any).log);
         }
       }
-    } catch (error: any) {
-      console.error("[EventsWebhook] Error handling webhook:", error.message);
+    } catch (err: unknown) {
+      handleControllerError(err, (req as any).log);
     }
   },
 };

@@ -287,17 +287,21 @@ app.use("/api/youtube", youtubeRouter);
 app.use("/api/payments", paymentRouter);
 app.use("/api/admin/payments", adminPaymentRouter);
 
+import { AppError } from "./utils/errors";
+
 // Sentry error handler (must come before generic error handler)
 if (process.env.SENTRY_DSN) {
   Sentry.setupExpressErrorHandler(app);
 }
 
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  const status = err.statusCode || err.status || 500;
-  if (status >= 500) {
-    logger.error(err);
+app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
+  const statusCode =
+    err instanceof AppError ? err.statusCode : (err as any)?.statusCode || (err as any)?.status || 500;
+  const message = err instanceof Error ? err.message : "Internal Server Error";
+  if (statusCode >= 500) {
+    req.log?.error?.(err, message);
   }
-  res.status(status).json({ error: err.message || "Internal Server Error" });
+  res.status(statusCode).json({ error: message });
 });
 
 export { app };

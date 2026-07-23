@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconServer,
   IconDatabase,
@@ -41,6 +42,7 @@ function formatBytes(bytes: number) {
 }
 
 export default function AdminHealthPage() {
+  usePageTitle("Health");
   const [health, setHealth] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState(true);
   const [services, setServices] = useState<ServiceStatus[]>([]);

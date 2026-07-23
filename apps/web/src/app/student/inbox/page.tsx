@@ -15,8 +15,10 @@ import type { NotificationItem } from "@/lib/notifications";
 import { NotificationIcon } from "@/lib/notifications";
 import StudentPortalShell from "@/components/StudentPortalShell";
 import { toast } from "@/lib/toast";
+import { usePageTitle } from "@/lib/use-page-title";
 
 export default function StudentInboxPage() {
+  usePageTitle("Inbox");
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [filter, setFilter] = useState<"all" | "unread">("all");
   const [loading, setLoading] = useState(true);

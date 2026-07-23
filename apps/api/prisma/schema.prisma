@@ -321,16 +321,19 @@ model Progress {
 }
 
 model Certificate {
-  id                String            @id @default(cuid())
-  userId            String
-  courseId          String
-  certificateNumber String            @unique @default(cuid())
-  pdfUrl            String?
-  status            CertificateStatus @default(ISSUED)
-  issuedAt          DateTime          @default(now())
-  claimedAt         DateTime?
-  user              User              @relation(fields: [userId], references: [id])
-  course            Course            @relation(fields: [courseId], references: [id])
+  id                  String            @id @default(cuid())
+  userId              String
+  courseId            String
+  certificateNumber   String            @unique @default(cuid())
+  pdfUrl              String?
+  status              CertificateStatus @default(ISSUED)
+  issuedAt            DateTime          @default(now())
+  claimedAt           DateTime?
+  autoIssued          Boolean           @default(false)
+  uploadedTemplateId  String?
+  user                User              @relation(fields: [userId], references: [id])
+  course              Course            @relation(fields: [courseId], references: [id])
+  uploadedTemplate    CertificateTemplate? @relation(fields: [uploadedTemplateId], references: [id])
 
   @@unique([userId, courseId])
 }
@@ -359,8 +362,12 @@ model CertificateTemplate {
   fontFamily      String   @default("helvetica")
   titleFontSize   Int      @default(28)
   nameFontSize    Int      @default(22)
+  pdfTemplateType String   @default("jsPdf") // "jsPdf" | "uploadedPdf"
+  pdfTemplateUrl  String? // URL of uploaded PDF template
+  pdfTemplateFields Json? // [{key:"studentName",x:100,y:150,fontSize:22,color:"#1e293b",align:"center"}]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  certificates    Certificate[]
 }
 
 model Quiz {

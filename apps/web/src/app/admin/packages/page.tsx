@@ -8,6 +8,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { usePageTitle } from "@/lib/use-page-title";
 import { IconPackage, IconPlus, IconEye, IconTrash } from "@tabler/icons-react";
 
 type Package = {
@@ -40,6 +41,7 @@ const statusConfig: Record<string, { label: string; classes: string }> = {
 };
 
 export default function AdminPackagesPage() {
+  usePageTitle("Packages");
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("");

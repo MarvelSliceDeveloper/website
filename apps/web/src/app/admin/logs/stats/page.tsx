@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import { IconChartBar, IconRefresh } from "@tabler/icons-react";
 
 type StatsData = {
@@ -14,6 +15,7 @@ type StatsData = {
 };
 
 export default function LogStatsPage() {
+  usePageTitle("Log Stats");
   const [stats, setStats] = useState<StatsData["stats"] | null>(null);
   const [loading, setLoading] = useState(true);
 

@@ -9,6 +9,7 @@ import DataTable from "@/components/admin/DataTable";
 import type { DataTableColumn } from "@/components/admin/DataTable";
 import { FormModal } from "@/components/admin/FormModal";
 import { ConfirmModal } from "@/components/admin/ConfirmModal";
+import { usePageTitle } from "@/lib/use-page-title";
 import { EmptyState } from "@/components/shared/EmptyState";
 import {
   IconShield,
@@ -76,6 +77,7 @@ const roleIcons: Record<string, React.ReactNode> = {
 };
 
 export default function AdminUsersPage() {
+  usePageTitle("Users");
   const searchParams = useSearchParams();
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);

@@ -701,6 +701,13 @@ router.post(
         },
       });
 
+      if (process.env.AUTO_CERTIFICATE !== "false") {
+        const { checkAndIssueForQuiz } = await import("../certificates/certificate-completion.service");
+        checkAndIssueForQuiz(quizId, userId).catch((err: unknown) =>
+          (req as any).log?.error?.("[certificate] Auto-issue failed:", err),
+        );
+      }
+
       return res.status(201).json({
         attemptId: attempt.id,
         score,
@@ -709,8 +716,8 @@ router.post(
         answers: enrichedAnswers,
         submittedAt: attempt.createdAt,
       });
-    } catch (error: any) {
-      console.error("Error submitting quiz:", error);
+    } catch (err: unknown) {
+      (req as any).log?.error?.("[quiz] Submit failed:", err);
       return res.status(500).json({ error: "Failed to submit quiz" });
     }
   },

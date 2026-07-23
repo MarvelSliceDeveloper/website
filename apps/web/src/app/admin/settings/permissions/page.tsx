@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
+import { usePageTitle } from "@/lib/use-page-title";
 import { IconLock, IconRefresh } from "@tabler/icons-react";
 
 type Override = {
@@ -33,6 +34,7 @@ const DEFAULT_PERMISSIONS = [
 const ROLES = ["SUPER_ADMIN", "ADMIN", "INSTRUCTOR"];
 
 export default function PermissionsPage() {
+  usePageTitle("Permissions");
   const [overrides, setOverrides] = useState<Override[]>([]);
   const [loading, setLoading] = useState(true);
   const [dirty, setDirty] = useState(false);

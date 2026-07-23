@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
+import { usePageTitle } from "@/lib/use-page-title";
 
 type BatchOption = {
   id: string;
@@ -12,6 +13,7 @@ type BatchOption = {
 };
 
 export default function InstructorSendNotificationPage() {
+  usePageTitle("Send Notification");
   const router = useRouter();
 
   const [batches, setBatches] = useState<BatchOption[]>([]);

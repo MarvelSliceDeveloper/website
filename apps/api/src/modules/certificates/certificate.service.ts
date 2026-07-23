@@ -1,5 +1,8 @@
 import { prisma } from "../../utils/prisma";
 import { jsPDF } from "jspdf";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import path from "path";
+import fs from "fs/promises";
 
 type CertificateSummary = {
   id: string;
@@ -203,13 +206,16 @@ export const certificateService = {
     });
   },
 
-  // Generates a PDF certificate on-demand
+  // Generates a PDF certificate — supports two methods:
+  // 1. jsPDF generated (default) — dynamically renders with template styling
+  // 2. Uploaded PDF with overlay — loads a pre-designed PDF and overlays text at defined coordinates
   async generatePdf(userId: string, certificateId: string) {
     const certificate = await prisma.certificate.findFirst({
       where: { id: certificateId, userId },
       include: {
         course: { select: { title: true, description: true } },
         user: { select: { name: true, email: true } },
+        uploadedTemplate: true,
       },
     });
 
@@ -217,25 +223,110 @@ export const certificateService = {
       throw new Error("Certificate not found");
     }
 
-    // Fetch default template (fallback to hardcoded defaults)
+    if (certificate.uploadedTemplate?.pdfTemplateUrl && certificate.uploadedTemplate.pdfTemplateType === "uploadedPdf") {
+      return this.generateFromUploadedTemplate(certificate);
+    }
+
+    return this.generateFromJsPdf(certificate);
+  },
+
+  // Uses uploaded PDF as background and overlays text at defined field positions
+  async generateFromUploadedTemplate(certificate: any) {
+    const template = certificate.uploadedTemplate;
+    const templatePath = template.pdfTemplateUrl;
+
+    if (!templatePath) {
+      return this.generateFromJsPdf(certificate);
+    }
+
+    let pdfBytes: Uint8Array;
+    try {
+      const absolutePath = path.isAbsolute(templatePath)
+        ? templatePath
+        : path.resolve(__dirname, "../../../uploads", templatePath);
+      pdfBytes = await fs.readFile(absolutePath);
+    } catch {
+      return this.generateFromJsPdf(certificate);
+    }
+
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+    const pages = pdfDoc.getPages();
+    const firstPage = pages[0];
+    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    const fields = (template.pdfTemplateFields || []) as Array<{
+      key: string;
+      x: number;
+      y: number;
+      fontSize: number;
+      color: string;
+      align: string;
+    }>;
+
+    const values: Record<string, string> = {
+      studentName: certificate.user.name || "Student",
+      courseName: certificate.course.title,
+      date: new Date(certificate.issuedAt).toLocaleDateString("en-IN", {
+        day: "numeric", month: "long", year: "numeric",
+      }),
+      certificateNumber: certificate.certificateNumber,
+      verifyUrl: `${process.env.WEB_URL || "https://lms.local"}/verify/${certificate.id}`,
+    };
+
+    for (const field of fields) {
+      const text = values[field.key] || "";
+      if (!text) continue;
+
+      const font = field.key === "studentName" || field.key === "courseName" || field.key === "certificateNumber"
+        ? helveticaBold : helveticaFont;
+
+      const hexColor = field.color || "#1e293b";
+      const r = parseInt(hexColor.slice(1, 3), 16) / 255;
+      const g = parseInt(hexColor.slice(3, 5), 16) / 255;
+      const b = parseInt(hexColor.slice(5, 7), 16) / 255;
+
+      const { width } = helveticaFont.widthOfTextAtSize(text, field.fontSize || 22);
+      const pageWidth = firstPage.getWidth();
+      let xPos = field.x;
+
+      if (field.align === "center") {
+        xPos = pageWidth / 2 - width / 2 + field.x;
+      } else if (field.align === "right") {
+        xPos = pageWidth - width - field.x;
+      }
+
+      firstPage.drawText(text, {
+        x: xPos,
+        y: firstPage.getHeight() - field.y,
+        size: field.fontSize || 22,
+        font,
+        color: rgb(r, g, b),
+      });
+    }
+
+    const modifiedPdfBytes = await pdfDoc.save();
+
+    return {
+      pdfBuffer: Buffer.from(modifiedPdfBytes),
+      fileName: `certificate-${certificate.certificateNumber}.pdf`,
+    };
+  },
+
+  // Generates a styled certificate using jsPDF with template colors/fonts
+  async generateFromJsPdf(certificate: any) {
     const template = await prisma.certificateTemplate.findFirst({
       where: { isDefault: true },
     });
 
-    // Convert hex to RGB for jsPDF
     const hexToRgb = (hex: string) => {
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
       return result
-        ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16),
-          }
+        ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
         : { r: 0, g: 0, b: 0 };
     };
 
     const primaryRgb = hexToRgb(template?.primaryColor || "#3b82f6");
-    const secondaryRgb = hexToRgb(template?.secondaryColor || "#93c5fd");
     const bgRgb = hexToRgb(template?.backgroundColor || "#f8fafc");
     const textRgb = hexToRgb(template?.textColor || "#1e293b");
     const borderRgb = hexToRgb(template?.borderColor || template?.primaryColor || "#3b82f6");
@@ -249,192 +340,114 @@ export const certificateService = {
     const showBorder = template?.showBorder ?? true;
     const showSignatureLine = template?.showSignatureLine ?? true;
     const showVerificationUrl = template?.showVerificationUrl ?? true;
-    const layout = template?.layout || "classic";
     const backgroundPattern = template?.backgroundPattern || "none";
 
-    const doc = new jsPDF({
-      orientation: "landscape",
-      unit: "mm",
-      format: "a4",
-    });
-
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
-    // Background
     doc.setFillColor(bgRgb.r, bgRgb.g, bgRgb.b);
     doc.rect(0, 0, pageWidth, pageHeight, "F");
 
-    // Background pattern
     if (backgroundPattern === "dots") {
       doc.setFillColor(accentRgb.r, accentRgb.g, accentRgb.b);
-      for (let x = 20; x < pageWidth - 10; x += 15) {
-        for (let y = 20; y < pageHeight - 10; y += 15) {
-          doc.circle(x, y, 0.5, "F");
-        }
-      }
+      for (let x = 20; x < pageWidth - 10; x += 15)
+        for (let y = 20; y < pageHeight - 10; y += 15) doc.circle(x, y, 0.5, "F");
     } else if (backgroundPattern === "lines") {
       doc.setDrawColor(accentRgb.r, accentRgb.g, accentRgb.b);
       doc.setLineWidth(0.2);
-      for (let y = 20; y < pageHeight - 10; y += 12) {
-        doc.line(15, y, pageWidth - 15, y);
-      }
+      for (let y = 20; y < pageHeight - 10; y += 12) doc.line(15, y, pageWidth - 15, y);
     } else if (backgroundPattern === "corners") {
       doc.setDrawColor(accentRgb.r, accentRgb.g, accentRgb.b);
       doc.setLineWidth(0.8);
-      // Top-left corner
-      doc.line(15, 15, 15, 35);
-      doc.line(15, 15, 35, 15);
-      // Top-right corner
-      doc.line(pageWidth - 15, 15, pageWidth - 15, 35);
-      doc.line(pageWidth - 15, 15, pageWidth - 35, 15);
-      // Bottom-left corner
-      doc.line(15, pageHeight - 15, 15, pageHeight - 35);
-      doc.line(15, pageHeight - 15, 35, pageHeight - 15);
-      // Bottom-right corner
+      doc.line(15, 15, 15, 35); doc.line(15, 15, 35, 15);
+      doc.line(pageWidth - 15, 15, pageWidth - 15, 35); doc.line(pageWidth - 15, 15, pageWidth - 35, 15);
+      doc.line(15, pageHeight - 15, 15, pageHeight - 35); doc.line(15, pageHeight - 15, 35, pageHeight - 15);
       doc.line(pageWidth - 15, pageHeight - 15, pageWidth - 15, pageHeight - 35);
       doc.line(pageWidth - 15, pageHeight - 15, pageWidth - 35, pageHeight - 15);
     }
 
-    // Borders
     if (showBorder) {
-      // Outer border
       doc.setDrawColor(borderRgb.r, borderRgb.g, borderRgb.b);
       doc.setLineWidth(borderWidth);
       doc.roundedRect(10, 10, pageWidth - 20, pageHeight - 20, borderRadius, borderRadius);
-
-      // Inner border (accent color, thinner)
       doc.setDrawColor(accentRgb.r, accentRgb.g, accentRgb.b);
       doc.setLineWidth(0.5);
       doc.roundedRect(14, 14, pageWidth - 28, pageHeight - 28, Math.max(borderRadius - 1, 1), Math.max(borderRadius - 1, 1));
     }
 
-    // Logo (if provided)
     let contentStartY = 35;
     if (template?.logoUrl) {
-      try {
-        doc.addImage(template.logoUrl, "PNG", pageWidth / 2 - 15, 18, 30, 30);
-        contentStartY = 55;
-      } catch {
-        // Logo failed to load, skip it
-      }
+      try { doc.addImage(template.logoUrl, "PNG", pageWidth / 2 - 15, 18, 30, 30); contentStartY = 55; } catch { }
     }
 
-    // Header line accent
     doc.setFillColor(primaryRgb.r, primaryRgb.g, primaryRgb.b);
     doc.rect(pageWidth / 2 - 40, contentStartY - 8, 80, 1, "F");
 
-    // Title
     doc.setFont(fontFamily, "bold");
     doc.setFontSize(titleFontSize);
     doc.setTextColor(textRgb.r, textRgb.g, textRgb.b);
-    doc.text(template?.title || "CERTIFICATE OF COMPLETION", pageWidth / 2, contentStartY + 5, {
-      align: "center",
-    });
+    doc.text(template?.title || "CERTIFICATE OF COMPLETION", pageWidth / 2, contentStartY + 5, { align: "center" });
 
-    // Subtitle line
     doc.setFillColor(primaryRgb.r, primaryRgb.g, primaryRgb.b);
     doc.rect(pageWidth / 2 - 40, contentStartY + 10, 80, 0.5, "F");
 
-    // "This certifies that"
     doc.setFont(fontFamily, "normal");
     doc.setFontSize(12);
     doc.setTextColor(100, 116, 139);
-    doc.text(template?.subtitle || "This certifies that", pageWidth / 2, contentStartY + 22, {
-      align: "center",
-    });
+    doc.text(template?.subtitle || "This certifies that", pageWidth / 2, contentStartY + 22, { align: "center" });
 
-    // Student name
     doc.setFont(fontFamily, "bold");
     doc.setFontSize(nameFontSize);
     doc.setTextColor(textRgb.r, textRgb.g, textRgb.b);
-    doc.text(certificate.user.name || "Student", pageWidth / 2, contentStartY + 35, {
-      align: "center",
-    });
+    doc.text(certificate.user.name || "Student", pageWidth / 2, contentStartY + 35, { align: "center" });
 
-    // Name underline
     const nameWidth = doc.getTextWidth(certificate.user.name || "Student");
     doc.setDrawColor(primaryRgb.r, primaryRgb.g, primaryRgb.b);
     doc.setLineWidth(0.3);
-    doc.line(
-      pageWidth / 2 - nameWidth / 2 - 10,
-      contentStartY + 38,
-      pageWidth / 2 + nameWidth / 2 + 10,
-      contentStartY + 38,
-    );
+    doc.line(pageWidth / 2 - nameWidth / 2 - 10, contentStartY + 38, pageWidth / 2 + nameWidth / 2 + 10, contentStartY + 38);
 
-    // "has successfully completed"
     doc.setFont(fontFamily, "normal");
     doc.setFontSize(12);
     doc.setTextColor(100, 116, 139);
-    doc.text(
-      "has successfully completed the course",
-      pageWidth / 2,
-      contentStartY + 48,
-      { align: "center" },
-    );
+    doc.text("has successfully completed the course", pageWidth / 2, contentStartY + 48, { align: "center" });
 
-    // Course title
     doc.setFont(fontFamily, "bold");
     doc.setFontSize(18);
     doc.setTextColor(textRgb.r, textRgb.g, textRgb.b);
-    const courseTitle = certificate.course.title;
-    const maxWidth = pageWidth - 80;
-    const splitTitle = doc.splitTextToSize(courseTitle, maxWidth);
+    const splitTitle = doc.splitTextToSize(certificate.course.title, pageWidth - 80);
     doc.text(splitTitle, pageWidth / 2, contentStartY + 60, { align: "center" });
 
-    // Issued date and certificate number
-    const issuedDate = new Date(certificate.issuedAt).toLocaleDateString(
-      "en-IN",
-      {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      },
-    );
+    const issuedDate = new Date(certificate.issuedAt).toLocaleDateString("en-IN", {
+      day: "numeric", month: "long", year: "numeric",
+    });
 
     doc.setFont(fontFamily, "normal");
     doc.setFontSize(10);
     doc.setTextColor(100, 116, 139);
 
     const bottomY = pageHeight - 35;
+    doc.text(`Issued: ${issuedDate}`, pageWidth / 2 - 60, bottomY, { align: "center" });
+    doc.text(`Certificate #: ${certificate.certificateNumber}`, pageWidth / 2 + 60, bottomY, { align: "center" });
 
-    // Left side - Date
-    doc.text(`Issued: ${issuedDate}`, pageWidth / 2 - 60, bottomY, {
-      align: "center",
-    });
-
-    // Right side - Certificate number
-    doc.text(
-      `Certificate #: ${certificate.certificateNumber}`,
-      pageWidth / 2 + 60,
-      bottomY,
-      { align: "center" },
-    );
-
-    // Signature line
     if (showSignatureLine) {
       doc.setDrawColor(203, 213, 225);
       doc.setLineWidth(0.3);
       doc.line(pageWidth / 2 - 50, bottomY + 12, pageWidth / 2 + 50, bottomY + 12);
-
       doc.setFont(fontFamily, "normal");
       doc.setFontSize(9);
       doc.setTextColor(148, 163, 184);
-      doc.text("Authorized Signature", pageWidth / 2, bottomY + 17, {
-        align: "center",
-      });
+      doc.text("Authorized Signature", pageWidth / 2, bottomY + 17, { align: "center" });
     }
 
-    // Footer
     if (showVerificationUrl) {
       doc.setFontSize(8);
       doc.setTextColor(148, 163, 184);
       const verifyUrl = `${process.env.WEB_URL || "https://lms.local"}/verify/${certificate.id}`;
-      const footerContent = template?.footerText
-        ? `${template.footerText} | Verify: ${verifyUrl}`
-        : `Verify at: ${verifyUrl}`;
-      doc.text(footerContent, pageWidth / 2, pageHeight - 18, { align: "center" });
+      doc.text(
+        template?.footerText ? `${template.footerText} | Verify: ${verifyUrl}` : `Verify at: ${verifyUrl}`,
+        pageWidth / 2, pageHeight - 18, { align: "center" },
+      );
     } else if (template?.footerText) {
       doc.setFontSize(8);
       doc.setTextColor(148, 163, 184);

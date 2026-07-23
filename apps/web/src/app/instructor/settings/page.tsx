@@ -24,6 +24,7 @@ import {
   IconPalette,
   IconCheck,
 } from "@tabler/icons-react";
+import { usePageTitle } from "@/lib/use-page-title";
 
 const NOTIFICATION_TYPES = [
   "SESSION_SCHEDULED",
@@ -91,6 +92,7 @@ const TYPE_CONFIG: Record<
 type SettingsSection = "profile" | "notifications" | "appearance";
 
 export default function InstructorSettingsPage() {
+  usePageTitle("Settings");
   const router = useRouter();
   const [preferences, setPreferences] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState<string | null>(null);

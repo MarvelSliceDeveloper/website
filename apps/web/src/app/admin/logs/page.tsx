@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconFileDescription,
   IconRefresh,
@@ -22,6 +23,7 @@ type LogEntry = {
 };
 
 export default function ActivityLogsPage() {
+  usePageTitle("Logs");
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
+import { usePageTitle } from "@/lib/use-page-title";
 import { IconArrowLeft, IconTrash } from "@tabler/icons-react";
 
 type QuestionForm = {
@@ -13,6 +14,7 @@ type QuestionForm = {
 };
 
 export default function QuizTemplateEditorPage() {
+  usePageTitle("Quiz Template Details");
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;

@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { prisma } from "../../utils/prisma";
+import { handleControllerError } from "../../utils/errors";
 
 export const dashboardController = {
   async getStats(req: AuthRequest, res: Response) {
@@ -194,9 +195,9 @@ export const dashboardController = {
         monthlyRevenue,
         revenueByPackage,
       });
-    } catch (error: any) {
-      console.error("Dashboard stats error:", error);
-      res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 };

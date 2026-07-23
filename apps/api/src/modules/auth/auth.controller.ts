@@ -9,8 +9,8 @@ import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { authService, RegisterSchema, LoginSchema } from "./auth.service";
-import { ZodError } from "zod";
 import { prisma } from "../../utils/prisma";
+import { handleControllerError } from "../../utils/errors";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { emailService } from "../../services/email.service";
 
@@ -53,11 +53,9 @@ export const authController = {
       });
 
       return res.status(201).json(result);
-    } catch (error: unknown) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      return res.status(400).json({ error: (error as Error).message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -87,11 +85,9 @@ export const authController = {
       });
 
       return res.status(200).json(result);
-    } catch (error: unknown) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      return res.status(401).json({ error: (error as Error).message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -119,8 +115,9 @@ export const authController = {
       });
       if (!user) return res.status(404).json({ error: "User not found" });
       return res.json({ user });
-    } catch (error: unknown) {
-      return res.status(500).json({ error: (error as Error).message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -156,8 +153,9 @@ export const authController = {
         },
         logs: recentLogs,
       });
-    } catch (error: unknown) {
-      return res.status(500).json({ error: (error as Error).message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -204,8 +202,9 @@ export const authController = {
       const authUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&response_mode=query&scope=${encodeURIComponent(scopes)}&state=${encodeURIComponent(state)}`;
 
       return res.redirect(authUrl);
-    } catch (error: unknown) {
-      return res.status(500).json({ error: (error as Error).message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -214,8 +213,8 @@ export const authController = {
     const { code, state, error, error_description } = req.query;
 
     if (error) {
-      console.error(
-        "[AzureOAuth] Microsoft callback error:",
+      (req as any).log?.error?.(
+        "[AzureOAuth] Microsoft callback error: %s %s",
         error,
         error_description,
       );
@@ -288,7 +287,7 @@ export const authController = {
 
       if (!response.ok) {
         const errText = await response.text();
-        console.error("[AzureOAuth] Token exchange failed:", errText);
+        (req as any).log?.error?.("[AzureOAuth] Token exchange failed: %s", errText);
         return res
           .status(response.status)
           .send(`Token exchange failed: ${response.statusText}`);
@@ -321,8 +320,8 @@ export const authController = {
           });
         }
       } catch (err: unknown) {
-        console.error(
-          "[AzureOAuth] Failed to retrieve Microsoft user profile:",
+        (req as any).log?.error?.(
+          "[AzureOAuth] Failed to retrieve Microsoft user profile: %s",
           (err as Error).message,
         );
       }
@@ -341,13 +340,9 @@ export const authController = {
 
       const redirectDashboard = `${process.env.WEB_URL || "http://localhost:3000"}/admin/dashboard`;
       return res.redirect(redirectDashboard);
-    } catch (error: unknown) {
-      console.error("[AzureOAuth] Fatal callback error:", error);
-      return res
-        .status(500)
-        .send(
-          `Internal server error during authentication: ${(error as Error).message}`,
-        );
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -376,8 +371,9 @@ export const authController = {
       });
 
       return res.json({ user: updated });
-    } catch (error: unknown) {
-      return res.status(500).json({ error: (error as Error).message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -445,8 +441,9 @@ export const authController = {
         message: "Password changed successfully",
         user: tokens.user,
       });
-    } catch (error: unknown) {
-      return res.status(500).json({ error: (error as Error).message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -526,8 +523,9 @@ export const authController = {
         message: "Password set successfully",
         user: tokens.user,
       });
-    } catch (error: unknown) {
-      return res.status(500).json({ error: (error as Error).message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -571,8 +569,9 @@ export const authController = {
       return res.json({
         message: "If the account exists, a reset link has been sent.",
       });
-    } catch (error: unknown) {
-      return res.status(500).json({ error: (error as Error).message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -639,8 +638,9 @@ export const authController = {
       return res.json({
         message: "Password reset successfully. You can now log in.",
       });
-    } catch (error: unknown) {
-      return res.status(500).json({ error: (error as Error).message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

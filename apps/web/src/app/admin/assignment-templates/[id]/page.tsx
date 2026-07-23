@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
+import { usePageTitle } from "@/lib/use-page-title";
 import { IconArrowLeft, IconTrash } from "@tabler/icons-react";
 
 export default function AssignmentTemplateEditorPage() {
+  usePageTitle("Assignment Template Details");
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;

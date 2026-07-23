@@ -1,4 +1,5 @@
 import { prisma } from "../../utils/prisma";
+import { paginate } from "../../utils/paginate";
 
 export const messageService = {
   // Sends a direct message between users
@@ -23,8 +24,11 @@ export const messageService = {
   },
 
   // Lists conversations with the latest message per user
-  async listConversations(userId: string) {
-    if (!prisma || !("message" in prisma)) return [];
+  async listConversations(userId: string, page?: number, limit?: number) {
+    if (!prisma || !("message" in prisma)) return { items: [], total: 0, page: 1, limit: 20 };
+
+    const { skip, take, page: currentPage, limit: currentLimit } = paginate({ page, limit });
+
     try {
       const messages = await prisma.message.findMany({
         where: {
@@ -48,13 +52,16 @@ export const messageService = {
         seen.add(otherId);
         conversations.push(msg);
       }
-      return conversations;
+
+      const total = conversations.length;
+      const items = conversations.slice(skip, skip + take);
+      return { items, total, page: currentPage, limit: currentLimit };
     } catch (err: unknown) {
       console.error(
         "Error listing conversations:",
         (err as Error)?.message ?? err,
       );
-      return [];
+      return { items: [], total: 0, page: 1, limit: 20 };
     }
   },
 

@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconEye,
   IconEyeOff,
@@ -66,6 +67,7 @@ const statusStyles: Record<string, string> = {
 };
 
 export default function BatchDetailPage() {
+  usePageTitle("Batch Details");
   const { id } = useParams<{ id: string }>();
   const [batch, setBatch] = useState<Batch | null>(null);
   const [loading, setLoading] = useState(true);

@@ -6,6 +6,7 @@ import {
   getTodayEvents,
   getLiveSessions,
 } from "./calendar.service";
+import { handleControllerError } from "../../utils/errors";
 
 export const calendarController = {
   /**
@@ -29,9 +30,9 @@ export const calendarController = {
 
       const events = await getEventsForUser(startDate, endDate);
       return res.status(200).json({ events });
-    } catch (error: any) {
-      console.error("Error fetching calendar events:", error.message);
-      return res.status(500).json({ error: "Failed to fetch calendar events" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -43,9 +44,9 @@ export const calendarController = {
     try {
       const events = await getTodayEvents();
       return res.status(200).json({ events });
-    } catch (error: any) {
-      console.error("Error fetching today events:", error.message);
-      return res.status(500).json({ error: "Failed to fetch today's events" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -57,9 +58,9 @@ export const calendarController = {
     try {
       const sessions = await getLiveSessions();
       return res.status(200).json({ sessions });
-    } catch (error: any) {
-      console.error("Error fetching live sessions:", error.message);
-      return res.status(500).json({ error: "Failed to fetch live sessions" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -92,15 +93,9 @@ export const calendarController = {
         message: "Calendar sync completed",
         ...result,
       });
-    } catch (error: any) {
-      console.error("Error syncing calendar:", error.message);
-      if (error.message.includes("Microsoft account not linked")) {
-        return res.status(400).json({
-          error:
-            "Microsoft account not linked. Please connect your Microsoft account first.",
-        });
-      }
-      return res.status(500).json({ error: "Failed to sync calendar" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

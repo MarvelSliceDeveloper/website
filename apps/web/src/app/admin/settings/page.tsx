@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconBell,
   IconCalendarEvent,
@@ -91,6 +92,7 @@ const TYPE_CONFIG: Record<
 type SettingsSection = "profile" | "notifications" | "appearance";
 
 export default function AdminSettingsPage() {
+  usePageTitle("Settings");
   const router = useRouter();
   const [preferences, setPreferences] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState<string | null>(null);

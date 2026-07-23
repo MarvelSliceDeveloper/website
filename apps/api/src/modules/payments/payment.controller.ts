@@ -2,20 +2,7 @@ import type { Request, Response } from "express";
 import { paymentService } from "./payment.service";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { authService } from "../auth/auth.service";
-
-function extractErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "object" && error !== null) {
-    const err = error as Record<string, unknown>;
-    if (typeof err.error === "object" && err.error !== null) {
-      const inner = err.error as Record<string, unknown>;
-      if (typeof inner.description === "string") return inner.description;
-      if (typeof inner.code === "string") return inner.code;
-    }
-    return JSON.stringify(error);
-  }
-  return String(error);
-}
+import { handleControllerError } from "../../utils/errors";
 
 function parseExpiryToMs(expiry: string): number {
   const match = expiry.match(/^(\d+)([dhms])$/);
@@ -71,8 +58,9 @@ export const paymentController = {
         ...orderResult,
         isNewUser: !req.user?.userId,
       });
-    } catch (error: unknown) {
-      return res.status(400).json({ error: extractErrorMessage(error) });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -91,8 +79,9 @@ export const paymentController = {
         razorpay_signature,
       );
       return res.status(200).json(result);
-    } catch (error: unknown) {
-      return res.status(400).json({ error: extractErrorMessage(error) });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -106,8 +95,9 @@ export const paymentController = {
       }
       const batches = await paymentService.getAvailableBatches(packageId);
       return res.status(200).json(batches);
-    } catch (error: unknown) {
-      return res.status(400).json({ error: extractErrorMessage(error) });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -126,8 +116,9 @@ export const paymentController = {
         email || "",
       );
       return res.status(200).json(result);
-    } catch (error: unknown) {
-      return res.status(400).json({ error: extractErrorMessage(error) });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -143,17 +134,23 @@ export const paymentController = {
         email || "",
       );
       return res.status(200).json(result);
-    } catch (error: unknown) {
-      return res.status(400).json({ error: extractErrorMessage(error) });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
   async getAdminPayments(req: AuthRequest, res: Response) {
     try {
-      const payments = await paymentService.getAdminPayments();
-      return res.status(200).json({ payments });
-    } catch (error: unknown) {
-      return res.status(500).json({ error: "Failed to fetch payments" });
+      const { page, limit } = req.query;
+      const result = await paymentService.getAdminPayments({
+        page: page ? Number(page) : undefined,
+        limit: limit ? Number(limit) : undefined,
+      });
+      return res.status(200).json(result);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 
@@ -161,8 +158,9 @@ export const paymentController = {
     try {
       const stats = await paymentService.getRevenueStats();
       return res.status(200).json(stats);
-    } catch (error: unknown) {
-      return res.status(500).json({ error: "Failed to fetch revenue stats" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
   },
 };

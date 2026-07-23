@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { usePageTitle } from "@/lib/use-page-title";
 import { IconArrowLeft, IconPackage, IconX } from "@tabler/icons-react";
 import {
   Select,
@@ -23,6 +24,7 @@ type Course = {
 };
 
 export default function CreatePackagePage() {
+  usePageTitle("New Package");
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");

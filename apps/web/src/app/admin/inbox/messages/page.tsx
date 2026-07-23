@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { IconMessage } from "@tabler/icons-react";
+import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { timeAgo } from "@/lib/time-ago";
 
@@ -24,6 +25,7 @@ interface Conversation {
 }
 
 export default function AdminInboxMessagesPage() {
+  usePageTitle("Messages");
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);

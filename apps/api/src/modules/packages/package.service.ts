@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
+import { paginate, PaginationParams } from "../../utils/paginate";
 import {
   notificationService,
   dispatchEmailsForNotification,
@@ -82,26 +83,38 @@ export const packageService = {
   },
 
   // List all packages with filters
-  async listPackages(filters: { status?: string; search?: string }) {
+  async listPackages(
+    filters: { status?: string; search?: string } & PaginationParams,
+  ) {
+    const { page, limit } = filters;
+    const { skip, take, page: currentPage, limit: currentLimit } = paginate({ page, limit });
+
     const where: any = {};
     if (filters.status) where.status = filters.status;
     if (filters.search) {
       where.name = { contains: filters.search, mode: "insensitive" };
     }
 
-    return prisma.coursePackage.findMany({
-      where,
-      include: {
-        courses: {
-          include: {
-            course: { select: { id: true, title: true, slug: true } },
+    const [items, total] = await Promise.all([
+      prisma.coursePackage.findMany({
+        where,
+        skip,
+        take,
+        include: {
+          courses: {
+            include: {
+              course: { select: { id: true, title: true, slug: true } },
+            },
+            orderBy: { order: "asc" },
           },
-          orderBy: { order: "asc" },
+          _count: { select: { enrollments: true } },
         },
-        _count: { select: { enrollments: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.coursePackage.count({ where }),
+    ]);
+
+    return { items, total, page: currentPage, limit: currentLimit };
   },
 
   // Get a single package by ID
@@ -286,31 +299,43 @@ export const packageService = {
   },
 
   // List package enrollments with filters
-  async listEnrollments(filters: { status?: string; packageId?: string }) {
+  async listEnrollments(
+    filters: { status?: string; packageId?: string } & PaginationParams,
+  ) {
+    const { page, limit } = filters;
+    const { skip, take, page: currentPage, limit: currentLimit } = paginate({ page, limit });
+
     const where: any = {};
     if (filters.status) where.status = filters.status;
     if (filters.packageId) where.packageId = filters.packageId;
 
-    return prisma.packageEnrollment.findMany({
-      where,
-      include: {
-        user: { select: { id: true, name: true, email: true } },
-        package: {
-          select: {
-            id: true,
-            name: true,
-            _count: { select: { courses: true } },
+    const [items, total] = await Promise.all([
+      prisma.packageEnrollment.findMany({
+        where,
+        skip,
+        take,
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+          package: {
+            select: {
+              id: true,
+              name: true,
+              _count: { select: { courses: true } },
+            },
+          },
+          courses: {
+            include: {
+              course: { select: { id: true, title: true } },
+              batch: { select: { id: true, name: true } },
+            },
           },
         },
-        courses: {
-          include: {
-            course: { select: { id: true, title: true } },
-            batch: { select: { id: true, name: true } },
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.packageEnrollment.count({ where }),
+    ]);
+
+    return { items, total, page: currentPage, limit: currentLimit };
   },
 
   // Approve a package enrollment
@@ -522,7 +547,7 @@ export const packageService = {
 
   // Get public catalogue of ACTIVE packages (no auth required)
   async getPublicCatalogue() {
-    return prisma.coursePackage.findMany({
+    const packages = await prisma.coursePackage.findMany({
       where: { status: "ACTIVE" },
       include: {
         courses: {
@@ -534,6 +559,18 @@ export const packageService = {
                 slug: true,
                 description: true,
                 thumbnailUrl: true,
+                modules: {
+                  select: {
+                    _count: {
+                      select: {
+                        lessons: true,
+                        quizzes: true,
+                        assignments: true,
+                        practicals: true,
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -546,6 +583,28 @@ export const packageService = {
         _count: { select: { enrollments: true } },
       },
       orderBy: { createdAt: "desc" },
+    });
+
+    return packages.map((pkg) => {
+      let totalLessons = 0;
+      let totalQuizzes = 0;
+      let totalAssignments = 0;
+      let totalPracticals = 0;
+      for (const pc of pkg.courses) {
+        for (const mod of pc.course.modules) {
+          totalLessons += (mod as any)._count?.lessons ?? 0;
+          totalQuizzes += (mod as any)._count?.quizzes ?? 0;
+          totalAssignments += (mod as any)._count?.assignments ?? 0;
+          totalPracticals += (mod as any)._count?.practicals ?? 0;
+        }
+      }
+      return {
+        ...pkg,
+        totalLessons,
+        totalQuizzes,
+        totalAssignments,
+        totalPracticals,
+      };
     });
   },
 

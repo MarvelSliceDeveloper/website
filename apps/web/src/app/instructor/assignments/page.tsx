@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 
 type Assignment = {
   id: string;
@@ -13,6 +14,7 @@ type Assignment = {
 };
 
 export default function InstructorAssignmentsPage() {
+  usePageTitle("Assignments");
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
 

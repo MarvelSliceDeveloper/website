@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
 import {
   IconCertificate,
@@ -29,6 +30,15 @@ type CertificateStats = {
   revoked: number;
 };
 
+type PlaceholderField = {
+  key: string;
+  x: number;
+  y: number;
+  fontSize: number;
+  color: string;
+  align: "left" | "center" | "right";
+};
+
 type CertificateTemplate = {
   id: string;
   name: string;
@@ -54,6 +64,9 @@ type CertificateTemplate = {
   titleFontSize: number;
   nameFontSize: number;
   createdAt: string;
+  pdfTemplateType?: "jsPdf" | "uploadedPdf";
+  pdfTemplateFields?: PlaceholderField[];
+  hasPdfUpload?: boolean;
 };
 
 const defaultTemplateValues = {
@@ -78,9 +91,18 @@ const defaultTemplateValues = {
   fontFamily: "helvetica",
   titleFontSize: 28,
   nameFontSize: 22,
+  pdfTemplateType: "jsPdf",
 };
 
+const defaultPdfFields: PlaceholderField[] = [
+  { key: "studentName", x: 0, y: 130, fontSize: 22, color: "#1e293b", align: "center" },
+  { key: "courseName", x: 0, y: 170, fontSize: 18, color: "#1e293b", align: "center" },
+  { key: "date", x: 0, y: 200, fontSize: 10, color: "#64748b", align: "center" },
+  { key: "certificateNumber", x: 120, y: 240, fontSize: 10, color: "#64748b", align: "left" },
+];
+
 export default function AdminCertificatesPage() {
+  usePageTitle("Certificates");
   const [activeTab, setActiveTab] = useState<"certificates" | "templates">(
     "certificates",
   );
@@ -354,6 +376,9 @@ function TemplatesTab() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(defaultTemplateValues);
   const [saving, setSaving] = useState(false);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [pdfTemplateFields, setPdfTemplateFields] = useState<PlaceholderField[]>([]);
 
   async function fetchTemplates() {
     setLoading(true);
@@ -377,6 +402,8 @@ function TemplatesTab() {
     setForm(defaultTemplateValues);
     setEditingId(null);
     setShowForm(true);
+    setPdfTemplateFields([]);
+    setPdfFile(null);
   }
 
   function openEditForm(template: CertificateTemplate) {
@@ -402,9 +429,12 @@ function TemplatesTab() {
       fontFamily: template.fontFamily,
       titleFontSize: template.titleFontSize,
       nameFontSize: template.nameFontSize,
+      pdfTemplateType: template.pdfTemplateType || "jsPdf",
     });
     setEditingId(template.id);
     setShowForm(true);
+    setPdfTemplateFields(template.pdfTemplateFields || []);
+    setPdfFile(null);
   }
 
   async function handleSave() {
@@ -418,6 +448,8 @@ function TemplatesTab() {
         ...form,
         footerText: form.footerText || null,
         logoUrl: form.logoUrl || null,
+        pdfTemplateType: form.pdfTemplateType || "jsPdf",
+        pdfTemplateFields: form.pdfTemplateType === "uploadedPdf" ? pdfTemplateFields : [],
       };
 
       if (editingId) {
@@ -451,6 +483,35 @@ function TemplatesTab() {
     try {
       await api.delete(`/api/admin/certificate-templates/${id}`);
       toast.success("Template deleted");
+      fetchTemplates();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  }
+
+  async function handleUploadPdf() {
+    if (!pdfFile || !editingId) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("pdf", pdfFile);
+      formData.append("pdfTemplateFields", JSON.stringify(pdfTemplateFields));
+      await api.post(`/api/admin/certificate-templates/${editingId}/upload-pdf`, formData);
+      toast.success("PDF template uploaded");
+      setPdfFile(null);
+      fetchTemplates();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleRemovePdf(templateId: string) {
+    if (!confirm("Remove the uploaded PDF template?")) return;
+    try {
+      await api.delete(`/api/admin/certificate-templates/${templateId}/pdf-template`);
+      toast.success("PDF template removed");
       fetchTemplates();
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -517,6 +578,16 @@ function TemplatesTab() {
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {template.title}
                   </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full border border-border bg-background text-muted-foreground">
+                      {template.pdfTemplateType === "uploadedPdf" ? "Uploaded PDF" : "jsPDF"}
+                    </span>
+                    {template.hasPdfUpload && (
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
+                        PDF Ready
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-1">
                   <button
@@ -933,6 +1004,241 @@ function TemplatesTab() {
                 </div>
               </div>
 
+              {/* PDF Template */}
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-3">
+                  PDF Template
+                </p>
+                <div className="flex gap-4">
+                  {[
+                    { value: "jsPdf", label: "Built-in (jsPDF)" },
+                    { value: "uploadedPdf", label: "Uploaded PDF" },
+                  ].map((opt) => (
+                    <label
+                      key={opt.value}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer transition-colors ${
+                        form.pdfTemplateType === opt.value
+                          ? "border-primary bg-primary/5 text-foreground"
+                          : "border-border bg-background text-muted-foreground hover:border-border-hover"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="pdfTemplateType"
+                        value={opt.value}
+                        checked={form.pdfTemplateType === opt.value}
+                        onChange={(e) => {
+                          setForm((f) => ({ ...f, pdfTemplateType: e.target.value }));
+                          if (e.target.value === "uploadedPdf" && pdfTemplateFields.length === 0) {
+                            setPdfTemplateFields(defaultPdfFields);
+                          }
+                        }}
+                        className="sr-only"
+                      />
+                      <div
+                        className={`w-3 h-3 rounded-full border-2 ${
+                          form.pdfTemplateType === opt.value
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground"
+                        }`}
+                      />
+                      <span className="text-sm">{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+
+                {form.pdfTemplateType === "uploadedPdf" && (
+                  <div className="mt-4 space-y-4">
+                    {/* Has PDF uploaded indicator */}
+                    {editingId && templates.find((t) => t.id === editingId)?.hasPdfUpload && (
+                      <div className="flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <IconCheck size={16} className="text-emerald-500" />
+                          <span className="text-sm text-foreground">PDF template uploaded</span>
+                        </div>
+                        <button
+                          onClick={() => handleRemovePdf(editingId!)}
+                          className="text-xs text-danger hover:text-danger-hover font-semibold"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+
+                    {/* File upload */}
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Upload PDF File
+                      </label>
+                      <div className="mt-1 flex items-center gap-2">
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                          className="flex-1 text-sm text-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-border file:text-xs file:font-semibold file:bg-background file:text-foreground hover:file:bg-card-hover"
+                        />
+                        <button
+                          onClick={handleUploadPdf}
+                          disabled={!pdfFile || uploading}
+                          className="btn-primary text-xs py-2 px-4 disabled:opacity-60"
+                        >
+                          {uploading ? "Uploading..." : "Upload"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Placeholder Fields Editor */}
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Placeholder Fields
+                      </label>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 mb-2">
+                        Configure position and style for each placeholder on the PDF.
+                      </p>
+                      <div className="space-y-3">
+                        {pdfTemplateFields.map((field, i) => (
+                          <div
+                            key={field.key}
+                            className="rounded-xl border border-border bg-background p-3"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-mono font-bold text-foreground">
+                                {field.key}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-6 gap-2">
+                              <div>
+                                <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+                                  X
+                                </label>
+                                <input
+                                  type="number"
+                                  value={field.x}
+                                  onChange={(e) =>
+                                    setPdfTemplateFields((prev) =>
+                                      prev.map((f, j) =>
+                                        j === i ? { ...f, x: parseInt(e.target.value) || 0 } : f,
+                                      ),
+                                    )
+                                  }
+                                  className="mt-0.5 w-full rounded-lg border border-border bg-background px-1.5 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+                                  Y
+                                </label>
+                                <input
+                                  type="number"
+                                  value={field.y}
+                                  onChange={(e) =>
+                                    setPdfTemplateFields((prev) =>
+                                      prev.map((f, j) =>
+                                        j === i ? { ...f, y: parseInt(e.target.value) || 0 } : f,
+                                      ),
+                                    )
+                                  }
+                                  className="mt-0.5 w-full rounded-lg border border-border bg-background px-1.5 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+                                  Font Size
+                                </label>
+                                <input
+                                  type="number"
+                                  min="6"
+                                  max="48"
+                                  value={field.fontSize}
+                                  onChange={(e) =>
+                                    setPdfTemplateFields((prev) =>
+                                      prev.map((f, j) =>
+                                        j === i ? { ...f, fontSize: parseInt(e.target.value) || 10 } : f,
+                                      ),
+                                    )
+                                  }
+                                  className="mt-0.5 w-full rounded-lg border border-border bg-background px-1.5 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+                                  Color
+                                </label>
+                                <div className="mt-0.5 flex items-center gap-1">
+                                  <input
+                                    type="color"
+                                    value={field.color}
+                                    onChange={(e) =>
+                                      setPdfTemplateFields((prev) =>
+                                        prev.map((f, j) =>
+                                          j === i ? { ...f, color: e.target.value } : f,
+                                        ),
+                                      )
+                                    }
+                                    className="h-6 w-6 rounded border border-border cursor-pointer"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={field.color}
+                                    onChange={(e) =>
+                                      setPdfTemplateFields((prev) =>
+                                        prev.map((f, j) =>
+                                          j === i ? { ...f, color: e.target.value } : f,
+                                        ),
+                                      )
+                                    }
+                                    className="flex-1 rounded-lg border border-border bg-background px-1.5 py-1 text-[10px] font-mono text-foreground focus:border-primary focus:outline-none"
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+                                  Align
+                                </label>
+                                <select
+                                  value={field.align}
+                                  onChange={(e) =>
+                                    setPdfTemplateFields((prev) =>
+                                      prev.map((f, j) =>
+                                        j === i
+                                          ? { ...f, align: e.target.value as "left" | "center" | "right" }
+                                          : f,
+                                      ),
+                                    )
+                                  }
+                                  className="mt-0.5 w-full rounded-lg border border-border bg-background px-1.5 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
+                                >
+                                  <option value="left">Left</option>
+                                  <option value="center">Center</option>
+                                  <option value="right">Right</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+                                  Key
+                                </label>
+                                <input
+                                  type="text"
+                                  value={field.key}
+                                  onChange={(e) =>
+                                    setPdfTemplateFields((prev) =>
+                                      prev.map((f, j) =>
+                                        j === i ? { ...f, key: e.target.value } : f,
+                                      ),
+                                    )
+                                  }
+                                  className="mt-0.5 w-full rounded-lg border border-border bg-background px-1.5 py-1 text-xs font-mono text-foreground focus:border-primary focus:outline-none"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Live Preview */}
               <div className="rounded-xl border border-border/60 p-4">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
@@ -1016,7 +1322,11 @@ function TemplatesTab() {
             </div>
             <div className="p-6 border-t border-border flex gap-3">
               <button
-                onClick={() => setShowForm(false)}
+                onClick={() => {
+                  setShowForm(false);
+                  setPdfTemplateFields([]);
+                  setPdfFile(null);
+                }}
                 className="btn-secondary flex-1 text-sm"
               >
                 Cancel

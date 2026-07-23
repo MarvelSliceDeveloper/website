@@ -119,7 +119,11 @@ export default function HomeView({
     (item) => item.status === "PENDING" && item.type === "ASSIGNMENT",
   ).length;
   const pendingQuizzes = overdueAssignments.filter(
-    (item) => item.status === "PENDING" && item.type === "QUIZ",
+    (item) =>
+      item.status === "PENDING" &&
+      item.type === "QUIZ" &&
+      item.dueDate &&
+      new Date(item.dueDate).getTime() < Date.now(),
   ).length;
   const overdueTotal = pendingAssignments + pendingQuizzes;
 

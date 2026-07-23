@@ -14,6 +14,7 @@ import CourseDetailsTab from "./_components/CourseDetailsTab";
 import ContentTab from "./_components/ContentTab";
 import SessionsTab from "./_components/SessionsTab";
 import RecordingsTab from "./_components/RecordingsTab";
+import { usePageTitle } from "@/lib/use-page-title";
 import TabButton from "./_components/TabButton";
 
 const MAX_THUMBNAIL_BYTES = 5 * 1024 * 1024;
@@ -30,6 +31,7 @@ const statusStyles: Record<string, string> = {
 };
 
 export default function CourseDetailPage() {
+  usePageTitle("Course Details");
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 

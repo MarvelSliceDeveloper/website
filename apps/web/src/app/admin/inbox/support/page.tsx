@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { IconArrowLeft, IconSend } from "@tabler/icons-react";
+import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { timeAgo } from "@/lib/time-ago";
 
@@ -50,6 +51,7 @@ const SUPPORT_STATUS_CONFIG: Record<
 };
 
 export default function AdminInboxSupportPage() {
+  usePageTitle("Support");
   const [tickets, setTickets] = useState<SupportTicketItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] =

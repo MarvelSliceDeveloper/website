@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconArrowLeft,
   IconCalendar,
@@ -69,6 +70,7 @@ type SessionDetail = {
 };
 
 export default function SessionDetailPage() {
+  usePageTitle("Session Details");
   const params = useParams();
   const router = useRouter();
   const sessionId = params.sessionId as string;

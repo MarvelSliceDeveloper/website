@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -41,6 +42,7 @@ function StatCard({ label, value, status }: StatCardProps) {
 }
 
 export default function SuperAdminPage() {
+  usePageTitle("Super Admin");
   const [health, setHealth] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState(true);
 

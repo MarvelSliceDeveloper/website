@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { recordingService } from "./recording.service";
+import { handleControllerError } from "../../utils/errors";
 
 export const recordingController = {
   // GET /api/recordings?batchId= — lists recordings for a batch
@@ -15,8 +16,9 @@ export const recordingController = {
         req.user!.userId,
       );
       res.json({ recordings });
-    } catch (error: any) {
-      res.status(403).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 
@@ -28,8 +30,9 @@ export const recordingController = {
         req.user!.userId,
       );
       res.json({ recording });
-    } catch (error: any) {
-      res.status(404).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 
@@ -41,8 +44,9 @@ export const recordingController = {
         req.user!.userId,
       );
       res.json(data);
-    } catch (error: any) {
-      res.status(500).json({ error: "Failed to fetch recording URL" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 
@@ -62,8 +66,9 @@ export const recordingController = {
         watchedSeconds,
       );
       res.json({ progress });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 
@@ -79,8 +84,9 @@ export const recordingController = {
           .json({ error: "Recording not found in Microsoft Teams yet" });
       }
       res.json({ message: "Recording synced successfully", recording });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
   },
 };

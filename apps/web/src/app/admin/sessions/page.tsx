@@ -11,6 +11,7 @@ import {
   IconMovie,
   IconVideo,
 } from "@tabler/icons-react";
+import { usePageTitle } from "@/lib/use-page-title";
 import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FormModal } from "@/components/admin/FormModal";
@@ -35,6 +36,7 @@ type SessionsResponse = {
 };
 
 export default function AdminSessionsPage() {
+  usePageTitle("Sessions");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
 

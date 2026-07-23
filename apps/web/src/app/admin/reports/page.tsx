@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import type { DashboardChartData } from "@/lib/api-types";
 import dynamic from "next/dynamic";
+import { usePageTitle } from "@/lib/use-page-title";
 import { IconDownload, IconCalendar, IconRefresh } from "@tabler/icons-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -295,6 +296,7 @@ const SECTION_TABLE_BREAK_Y = 240;
 const FOOTER_Y_OFFSET = 10;
 
 export default function ReportsPage() {
+  usePageTitle("Reports");
   const [data, setData] = useState<DashboardChartData | null>(null);
   const [prevData, setPrevData] = useState<DashboardChartData | null>(null);
   const [loading, setLoading] = useState(true);

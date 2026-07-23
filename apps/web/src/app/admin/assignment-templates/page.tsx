@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
 import { toast } from "@/lib/toast";
 import { IconFileText, IconRefresh, IconPlus } from "@tabler/icons-react";
 
@@ -16,6 +17,7 @@ type AssignmentTemplate = {
 };
 
 export default function AssignmentTemplatesPage() {
+  usePageTitle("Assignment Templates");
   const router = useRouter();
   const [templates, setTemplates] = useState<AssignmentTemplate[]>([]);
   const [loading, setLoading] = useState(true);
