@@ -547,7 +547,7 @@ export default function CourseContentView({
                 target="_blank"
                 rel="noreferrer"
                 download
-                className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-600 transition-colors hover:bg-emerald-500/20 hover:border-emerald-500/50"
+                className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-zinc-500/10 px-3 py-1.5 text-xs font-medium text-emerald-600 transition-colors hover:bg-emerald-500/20 hover:border-emerald-500/50"
               >
                 <IconDownload size={14} />
                 Download
@@ -648,9 +648,8 @@ export default function CourseContentView({
           <li key={module.id} className="border-b border-border/50">
             <button
               onClick={() => toggleModule(module.id)}
-              className={`w-full flex items-start justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/50 ${
-                isActiveModule ? "bg-muted/30" : ""
-              }`}
+              className={`w-full flex items-start justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/50 ${isActiveModule ? "bg-muted/30" : ""
+                }`}
             >
               <span className="min-w-0">
                 <span className="block text-[13px] font-semibold leading-snug text-foreground">
@@ -663,9 +662,8 @@ export default function CourseContentView({
               </span>
               <IconChevronDown
                 size={16}
-                className={`flex-shrink-0 mt-0.5 text-muted-foreground transition-transform duration-200 ${
-                  isExpanded ? "rotate-180" : ""
-                }`}
+                className={`shrink-0 mt-0.5 text-muted-foreground transition-transform duration-200 ${isExpanded ? "rotate-180" : ""
+                  }`}
               />
             </button>
 
@@ -681,37 +679,34 @@ export default function CourseContentView({
                       <li key={lesson.id} className="px-2">
                         <button
                           onClick={() => selectLesson(lesson, module.id)}
-                          className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
-                            active ? "bg-primary/15" : "hover:bg-primary/8"
-                          }`}
+                          className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${active ? "bg-primary/15" : "hover:bg-primary/8"
+                            }`}
                         >
                           <span
-                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                              active ? "bg-primary" : "bg-muted"
-                            }`}
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${active ? "bg-primary" : "bg-muted"
+                              }`}
                           >
                             <IconVideo
                               size={11}
                               className={
                                 active
-                                  ? "text-primary-foreground ml-[1px]"
+                                  ? "text-primary-foreground ml-px"
                                   : "text-muted-foreground"
                               }
                             />
                           </span>
                           <span className="min-w-0 flex-1">
                             <span
-                              className={`block text-xs truncate ${
-                                active
-                                  ? "text-foreground font-medium"
-                                  : "text-muted-foreground"
-                              }`}
+                              className={`block text-xs truncate ${active
+                                ? "text-foreground font-medium"
+                                : "text-muted-foreground"
+                                }`}
                             >
                               {idx + 1}. {lesson.title}
                             </span>
                           </span>
                           {lesson.durationSeconds ? (
-                            <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
+                            <span className="text-[10px] shrink-0 text-muted-foreground/70">
                               {formatMinutes(lesson.durationSeconds)}
                             </span>
                           ) : null}
@@ -721,9 +716,8 @@ export default function CourseContentView({
                               e.stopPropagation();
                               toggleBookmark(lesson.id);
                             }}
-                            className={`text-[10px] flex-shrink-0 ${
-                              isBookmarked ? "text-primary" : "text-transparent"
-                            }`}
+                            className={`text-[10px] shrink-0 ${isBookmarked ? "text-primary" : "text-transparent"
+                              }`}
                           >
                             ●
                           </span>
@@ -739,14 +733,12 @@ export default function CourseContentView({
                       <li key={quiz.id} className="px-2">
                         <button
                           onClick={() => selectQuiz(quiz.id)}
-                          className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
-                            isActive ? "bg-amber-500/15" : "hover:bg-primary/8"
-                          }`}
+                          className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${isActive ? "bg-amber-500/15" : "hover:bg-primary/8"
+                            }`}
                         >
                           <span
-                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                              isActive ? "bg-amber-500" : "bg-amber-500/15"
-                            }`}
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${isActive ? "bg-amber-500" : "bg-amber-500/15"
+                              }`}
                           >
                             <IconClipboardCheck
                               size={12}
@@ -757,16 +749,15 @@ export default function CourseContentView({
                           </span>
                           <span className="min-w-0 flex-1">
                             <span
-                              className={`block text-xs truncate ${
-                                isActive
-                                  ? "text-foreground font-medium"
-                                  : "text-muted-foreground"
-                              }`}
+                              className={`block text-xs truncate ${isActive
+                                ? "text-foreground font-medium"
+                                : "text-muted-foreground"
+                                }`}
                             >
                               {idx + 1}. {quiz.title}
                             </span>
                           </span>
-                          <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
+                          <span className="text-[10px] shrink-0 text-muted-foreground/70">
                             {quiz.questionCount}Q
                           </span>
                         </button>
@@ -780,14 +771,12 @@ export default function CourseContentView({
                     <li key={assignment.id} className="px-2">
                       <button
                         onClick={() => selectAssignment(assignment)}
-                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
-                          isActive ? "bg-blue-500/15" : "hover:bg-primary/8"
-                        }`}
+                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${isActive ? "bg-blue-500/15" : "hover:bg-primary/8"
+                          }`}
                       >
                         <span
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                            isActive ? "bg-blue-500" : "bg-blue-500/15"
-                          }`}
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${isActive ? "bg-blue-500" : "bg-blue-500/15"
+                            }`}
                         >
                           <IconFileSpreadsheet
                             size={12}
@@ -798,16 +787,15 @@ export default function CourseContentView({
                         </span>
                         <span className="min-w-0 flex-1">
                           <span
-                            className={`block text-xs truncate ${
-                              isActive
-                                ? "text-foreground font-medium"
-                                : "text-muted-foreground"
-                            }`}
+                            className={`block text-xs truncate ${isActive
+                              ? "text-foreground font-medium"
+                              : "text-muted-foreground"
+                              }`}
                           >
                             {idx + 1}. {assignment.title}
                           </span>
                         </span>
-                        <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
+                        <span className="text-[10px] shrink-0 text-muted-foreground/70">
                           {new Date(assignment.dueDate).toLocaleDateString(
                             "en-IN",
                             { day: "numeric", month: "short" },
@@ -821,59 +809,56 @@ export default function CourseContentView({
                 {module.lessons.some(
                   (l) => l.resources && l.resources.length > 0,
                 ) && (
-                  <>
-                    {module.lessons
-                      .filter((l) => l.resources && l.resources.length > 0)
-                      .flatMap((l) =>
-                        l.resources.map((r) => {
-                          const isActive = selectedResource?.url === r.url;
-                          return (
-                            <li
-                              key={`${l.id}-resource-${r.url}`}
-                              className="px-2"
-                            >
-                              <button
-                                onClick={() => selectResource(r.name, r.url)}
-                                className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
-                                  isActive
+                    <>
+                      {module.lessons
+                        .filter((l) => l.resources && l.resources.length > 0)
+                        .flatMap((l) =>
+                          l.resources.map((r) => {
+                            const isActive = selectedResource?.url === r.url;
+                            return (
+                              <li
+                                key={`${l.id}-resource-${r.url}`}
+                                className="px-2"
+                              >
+                                <button
+                                  onClick={() => selectResource(r.name, r.url)}
+                                  className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${isActive
                                     ? "bg-emerald-500/15"
                                     : "hover:bg-primary/8"
-                                }`}
-                              >
-                                <span
-                                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                                    isActive
+                                    }`}
+                                >
+                                  <span
+                                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${isActive
                                       ? "bg-emerald-500"
                                       : "bg-emerald-500/15"
-                                  }`}
-                                >
-                                  <IconFile
-                                    size={12}
-                                    className={
-                                      isActive
-                                        ? "text-white"
-                                        : "text-emerald-500"
-                                    }
-                                  />
-                                </span>
-                                <span className="min-w-0 flex-1">
-                                  <span
-                                    className={`block text-xs truncate ${
-                                      isActive
+                                      }`}
+                                  >
+                                    <IconFile
+                                      size={12}
+                                      className={
+                                        isActive
+                                          ? "text-white"
+                                          : "text-emerald-500"
+                                      }
+                                    />
+                                  </span>
+                                  <span className="min-w-0 flex-1">
+                                    <span
+                                      className={`block text-xs truncate ${isActive
                                         ? "text-foreground font-medium"
                                         : "text-muted-foreground"
-                                    }`}
-                                  >
-                                    {r.name}
+                                        }`}
+                                    >
+                                      {r.name}
+                                    </span>
                                   </span>
-                                </span>
-                              </button>
-                            </li>
-                          );
-                        }),
-                      )}
-                  </>
-                )}
+                                </button>
+                              </li>
+                            );
+                          }),
+                        )}
+                    </>
+                  )}
               </ul>
             )}
           </li>
@@ -884,25 +869,23 @@ export default function CourseContentView({
 
   const renderContentPanel = () => (
     <div className="flex flex-col h-full">
-      <div className="flex items-center border-b border-border flex-shrink-0">
+      <div className="flex items-center border-b border-border shrink-0">
         <button
           onClick={() => setContentPanel("content")}
-          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-3.5 border-b-2 transition-colors ${
-            contentPanel === "content"
-              ? "border-foreground text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
+          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-3.5 border-b-2 transition-colors ${contentPanel === "content"
+            ? "border-foreground text-foreground"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
         >
           <IconBook2 size={14} />
           Course content
         </button>
         <button
           onClick={() => setContentPanel("live")}
-          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-3.5 border-b-2 transition-colors ${
-            contentPanel === "live"
-              ? "border-danger text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
+          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-3.5 border-b-2 transition-colors ${contentPanel === "live"
+            ? "border-danger text-foreground"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
         >
           <IconCalendarEvent
             size={14}
@@ -983,30 +966,28 @@ export default function CourseContentView({
                       <li key={rec.id} className="px-2">
                         <button
                           onClick={() => selectRecording(rec.id)}
-                          className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
-                            active ? "bg-primary/15" : "hover:bg-primary/8"
-                          }`}
+                          className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${active ? "bg-primary/15" : "hover:bg-primary/8"
+                            }`}
                         >
                           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
                             <IconVideo size={16} />
                           </span>
                           <span className="min-w-0 flex-1">
                             <span
-                              className={`block text-xs font-medium truncate ${
-                                active ? "text-foreground" : "text-foreground"
-                              }`}
+                              className={`block text-xs font-medium truncate ${active ? "text-foreground" : "text-foreground"
+                                }`}
                             >
                               {rec.title}
                             </span>
                             <span className="block text-[11px] text-muted-foreground">
                               {rec.scheduledAt
                                 ? new Date(rec.scheduledAt).toLocaleDateString(
-                                    "en-IN",
-                                    {
-                                      day: "numeric",
-                                      month: "short",
-                                    },
-                                  )
+                                  "en-IN",
+                                  {
+                                    day: "numeric",
+                                    month: "short",
+                                  },
+                                )
                                 : "Recorded session"}
                             </span>
                           </span>
@@ -1030,7 +1011,7 @@ export default function CourseContentView({
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <div className="flex-1 overflow-y-auto p-5">{renderMain()}</div>
 
-        <div className="flex items-center gap-3 px-5 py-2.5 bg-card border-t border-border flex-shrink-0">
+        <div className="flex items-center gap-3 px-5 py-2.5 bg-card border-t border-border shrink-0">
           <button
             onClick={() => {
               // Guard: navigation position isn't tracked while a study
@@ -1117,11 +1098,10 @@ export default function CourseContentView({
           <div className="flex-1" />
           <button
             onClick={() => setShowStickyWidget((v) => !v)}
-            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border transition-colors ${
-              showStickyWidget
-                ? "border-primary/50 bg-primary/15 text-primary"
-                : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
-            }`}
+            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border transition-colors ${showStickyWidget
+              ? "border-primary/50 bg-primary/15 text-primary"
+              : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
+              }`}
           >
             <IconPencil size={13} />{" "}
             {showStickyWidget ? "Close Notes" : "Take Note"}
@@ -1189,9 +1169,7 @@ export default function CourseContentView({
             Continue <IconArrowRight size={13} />
           </button>
         </div>
-      </div>
-
-      <div className="w-[380px] flex-shrink-0 bg-card border-l border-border flex flex-col overflow-hidden">
+        text-blue-600
         {renderContentPanel()}
       </div>
 
