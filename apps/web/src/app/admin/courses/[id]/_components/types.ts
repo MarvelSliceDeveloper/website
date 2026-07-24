@@ -27,9 +27,27 @@ export type QuizQuestion = {
   options: Array<{ label: string; isCorrect: boolean }>;
 };
 
+export type TestCase = {
+  input: string;
+  expectedOutput: string;
+  isHidden?: boolean;
+};
+
 export type Quiz = {
   id: string;
   title: string;
+  isSpecialExam?: boolean;
+  passingScore?: number;
+  timeLimitMin?: number | null;
+  maxAttempts?: number | null;
+  examType?: string;
+  hasMcq?: boolean;
+  hasAssignment?: boolean;
+  hasCoding?: boolean;
+  assignmentInstructions?: string | null;
+  assignmentPdfUrl?: string | null;
+  codingPrompt?: string | null;
+  testCases?: TestCase[] | null;
   questions: QuizQuestion[];
 };
 

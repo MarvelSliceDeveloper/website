@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
@@ -18,6 +18,7 @@ type BatchCourse = {
   courseId: string;
   order: number;
   isVisible: boolean;
+  isExamRequired?: boolean;
   course: { id: string; title: string; slug: string };
 };
 
@@ -76,6 +77,7 @@ export default function BatchDetailPage() {
   );
   const [courses, setCourses] = useState<BatchCourse[]>([]);
   const [toggling, setToggling] = useState<string | null>(null);
+  const [togglingExam, setTogglingExam] = useState<string | null>(null);
 
   const fetchBatch = useCallback(async () => {
     try {
@@ -132,6 +134,68 @@ export default function BatchDetailPage() {
     }
   };
 
+  const handleToggleExamRequired = async (courseId: string) => {
+    setTogglingExam(courseId);
+    try {
+      const result = await api.put<BatchCourse>(
+        `/api/admin/batches/${id}/courses/${courseId}/exam-required`,
+      );
+      setCourses((prev) =>
+        prev.map((c) =>
+          c.courseId === result.courseId
+            ? { ...c, isExamRequired: result.isExamRequired }
+            : c,
+        ),
+      );
+      toast.success(
+        result.isExamRequired
+          ? "Special Exam is now required for certificate"
+          : "Special Exam is now optional for certificate",
+      );
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setTogglingExam(null);
+    }
+  };
+
+  const uniqueStudents = useMemo(() => {
+    if (!batch) return [];
+    const map = new Map<
+      string,
+      {
+        id: string;
+        user: { id: string; name: string; email: string };
+        appliedAt?: string;
+        type: "Course" | "Package";
+      }
+    >();
+
+    for (const e of batch.enrollments || []) {
+      if (e.user?.id && !map.has(e.user.id)) {
+        map.set(e.user.id, {
+          id: e.id,
+          user: e.user,
+          appliedAt: e.appliedAt,
+          type: "Course",
+        });
+      }
+    }
+
+    for (const pec of batch.packageEnrollmentCourses || []) {
+      const u = pec.enrollment?.user;
+      if (u?.id && !map.has(u.id)) {
+        map.set(u.id, {
+          id: u.id,
+          user: u,
+          type: "Package",
+        });
+      }
+    }
+
+    return Array.from(map.values());
+  }, [batch]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -180,7 +244,7 @@ export default function BatchDetailPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="glass-card p-4 text-center">
           <p className="text-2xl font-bold text-foreground">
-            {batch._count.enrollments + batch._count.packageEnrollmentCourses}
+            {uniqueStudents.length}
           </p>
           <p className="text-xs text-muted">Students</p>
         </div>
@@ -217,7 +281,7 @@ export default function BatchDetailPage() {
             }`}
           >
             {t === "students"
-              ? `Students (${batch.enrollments.length + batch.packageEnrollmentCourses.length})`
+              ? `Students (${uniqueStudents.length})`
               : t === "sessions"
                 ? `Sessions (${batch.sessions.length})`
                 : `Courses (${courses.length || 0})`}
@@ -228,8 +292,7 @@ export default function BatchDetailPage() {
       {/* Tab Content */}
       {tab === "students" && (
         <div className="space-y-4">
-          {batch.enrollments.length === 0 &&
-          batch.packageEnrollmentCourses.length === 0 ? (
+          {uniqueStudents.length === 0 ? (
             <div className="glass-card p-8 text-center">
               <p className="text-muted-foreground text-sm">
                 No students enrolled yet.
@@ -255,59 +318,47 @@ export default function BatchDetailPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
-                  {batch.enrollments.map((enrollment) => (
+                  {uniqueStudents.map((item) => (
                     <tr
-                      key={enrollment.id}
+                      key={item.user.id}
                       className="hover:bg-card-hover/50 transition-colors"
                     >
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary-hover">
-                            {enrollment.user.name.charAt(0).toUpperCase()}
+                          <div
+                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                              item.type === "Package"
+                                ? "bg-accent/20 text-accent"
+                                : "bg-primary/20 text-primary-hover"
+                            }`}
+                          >
+                            {item.user.name.charAt(0).toUpperCase()}
                           </div>
                           <span className="text-sm font-medium text-foreground">
-                            {enrollment.user.name}
+                            {item.user.name}
                           </span>
                         </div>
                       </td>
                       <td className="px-5 py-3 text-sm text-muted-foreground">
-                        {enrollment.user.email}
+                        {item.user.email}
                       </td>
                       <td className="px-5 py-3 text-xs text-muted">
-                        {new Date(enrollment.appliedAt).toLocaleDateString(
-                          "en-IN",
-                          { day: "numeric", month: "short", year: "numeric" },
-                        )}
+                        {item.appliedAt
+                          ? new Date(item.appliedAt).toLocaleDateString(
+                              "en-IN",
+                              { day: "numeric", month: "short", year: "numeric" },
+                            )
+                          : item.type}
                       </td>
                       <td className="px-5 py-3 text-xs">
-                        <span className="rounded bg-primary/10 px-2 py-0.5 text-[10px] text-primary">
-                          Course
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {batch.packageEnrollmentCourses.map((pec, idx) => (
-                    <tr
-                      key={`pkg-${idx}`}
-                      className="hover:bg-card-hover/50 transition-colors"
-                    >
-                      <td className="px-5 py-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/20 text-xs font-semibold text-accent">
-                            {pec.enrollment.user.name.charAt(0).toUpperCase()}
-                          </div>
-                          <span className="text-sm font-medium text-foreground">
-                            {pec.enrollment.user.name}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-5 py-3 text-sm text-muted-foreground">
-                        {pec.enrollment.user.email}
-                      </td>
-                      <td className="px-5 py-3 text-xs text-muted">Package</td>
-                      <td className="px-5 py-3 text-xs">
-                        <span className="rounded bg-accent/10 px-2 py-0.5 text-[10px] text-accent">
-                          Package
+                        <span
+                          className={`rounded px-2 py-0.5 text-[10px] ${
+                            item.type === "Package"
+                              ? "bg-accent/10 text-accent"
+                              : "bg-primary/10 text-primary"
+                          }`}
+                        >
+                          {item.type}
                         </span>
                       </td>
                     </tr>
@@ -403,7 +454,10 @@ export default function BatchDetailPage() {
                       Course
                     </th>
                     <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
-                      Status
+                      Course Visibility
+                    </th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                      Special Exam Status
                     </th>
                     <th className="px-5 py-3 text-xs font-medium uppercase text-muted text-right">
                       Actions
@@ -439,28 +493,58 @@ export default function BatchDetailPage() {
                           </span>
                         )}
                       </td>
+                      <td className="px-5 py-3">
+                        {bc.isExamRequired !== false ? (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-medium text-amber-400">
+                            Required
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-muted/30 bg-muted/10 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                            Exempt / Optional
+                          </span>
+                        )}
+                      </td>
                       <td className="px-5 py-3 text-right">
-                        <button
-                          onClick={() => handleToggleVisibility(bc.courseId)}
-                          disabled={toggling === bc.courseId}
-                          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-                            bc.isVisible
-                              ? "border-warning/30 text-warning hover:bg-warning/10"
-                              : "border-primary/30 text-primary hover:bg-primary/10"
-                          } disabled:opacity-50`}
-                        >
-                          {toggling === bc.courseId ? (
-                            <span className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
-                          ) : bc.isVisible ? (
-                            <>
-                              <IconLockOpen size={13} /> Hide
-                            </>
-                          ) : (
-                            <>
-                              <IconLock size={13} /> Show
-                            </>
-                          )}
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleToggleExamRequired(bc.courseId)}
+                            disabled={togglingExam === bc.courseId}
+                            className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${
+                              bc.isExamRequired !== false
+                                ? "border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                                : "border-border text-muted-foreground hover:bg-card-hover"
+                            } disabled:opacity-50`}
+                          >
+                            {togglingExam === bc.courseId ? (
+                              <span className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
+                            ) : bc.isExamRequired !== false ? (
+                              "Exempt Exam"
+                            ) : (
+                              "Require Exam"
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleToggleVisibility(bc.courseId)}
+                            disabled={toggling === bc.courseId}
+                            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+                              bc.isVisible
+                                ? "border-warning/30 text-warning hover:bg-warning/10"
+                                : "border-primary/30 text-primary hover:bg-primary/10"
+                            } disabled:opacity-50`}
+                          >
+                            {toggling === bc.courseId ? (
+                              <span className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
+                            ) : bc.isVisible ? (
+                              <>
+                                <IconLockOpen size={13} /> Hide
+                              </>
+                            ) : (
+                              <>
+                                <IconLock size={13} /> Show
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -226,6 +226,7 @@ model Batch {
   assignments              Assignment[]
   packageEnrollmentCourses PackageEnrollmentCourse[]
   courseVisibility         BatchCourseVisibility[]
+  certificates             Certificate[]
 
   @@index([packageId])
   @@index([courseId])
@@ -234,10 +235,11 @@ model Batch {
 // Tracks which courses are visible to batch members (manual toggle per batch)
 // Course data is derived from PackageCourse at query time — this just stores the visibility state
 model BatchCourseVisibility {
-  id        String  @id @default(cuid())
-  batchId   String
-  courseId  String
-  isVisible Boolean @default(false)
+  id             String  @id @default(cuid())
+  batchId        String
+  courseId       String
+  isVisible      Boolean @default(false)
+  isExamRequired Boolean @default(true)
 
   batch  Batch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -337,7 +339,9 @@ model CalendarEvent {
 model Certificate {
   id                  String            @id @default(cuid())
   userId              String
-  courseId            String
+  courseId            String?
+  packageId           String?
+  batchId             String?
   certificateNumber   String            @unique @default(cuid())
   pdfUrl              String?
   status              CertificateStatus @default(ISSUED)
@@ -346,10 +350,13 @@ model Certificate {
   autoIssued          Boolean           @default(false)
   uploadedTemplateId  String?
   user                User              @relation(fields: [userId], references: [id])
-  course              Course            @relation(fields: [courseId], references: [id])
+  course              Course?           @relation(fields: [courseId], references: [id])
+  package             CoursePackage?    @relation(fields: [packageId], references: [id])
+  batch               Batch?            @relation(fields: [batchId], references: [id])
   uploadedTemplate    CertificateTemplate? @relation(fields: [uploadedTemplateId], references: [id])
 
   @@unique([userId, courseId])
+  @@unique([userId, packageId])
 }
 
 model CertificateTemplate {
@@ -385,14 +392,26 @@ model CertificateTemplate {
 }
 
 model Quiz {
-  id        String        @id @default(cuid())
-  moduleId  String
-  title     String
-  order     Int           @default(0)
-  dueDate   DateTime?
-  questions Question[]
-  module    Module        @relation(fields: [moduleId], references: [id])
-  attempts  QuizAttempt[]
+  id            String        @id @default(cuid())
+  moduleId      String
+  title         String
+  order         Int           @default(0)
+  dueDate       DateTime?
+  isSpecialExam Boolean       @default(false)
+  passingScore  Int           @default(65)
+  timeLimitMin  Int?
+  maxAttempts   Int?
+  examType      String        @default("MCQ") // MCQ | ASSIGNMENT | CODING_TESTCASE | ALL_IN_ONE
+  hasMcq        Boolean       @default(true)
+  hasAssignment Boolean       @default(false)
+  hasCoding     Boolean       @default(false)
+  assignmentInstructions String? @db.Text
+  assignmentPdfUrl       String?
+  codingPrompt           String? @db.Text
+  testCases              Json? // [{ input: string, expectedOutput: string, isHidden?: boolean }]
+  questions     Question[]
+  module        Module        @relation(fields: [moduleId], references: [id])
+  attempts      QuizAttempt[]
 
   @@index([moduleId])
 }
@@ -409,16 +428,18 @@ model Question {
 
 // Stores student quiz submissions for course-content quizzes
 model QuizAttempt {
-  id        String            @id @default(cuid())
-  quizId    String
-  userId    String
-  answers   Json // [{ questionId, selectedOptionId }]
-  score     Int               @default(0) // number of correct answers
-  total     Int               @default(0) // total questions
-  status    QuizAttemptStatus @default(PENDING)
-  createdAt DateTime          @default(now())
-  quiz      Quiz              @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String            @id @default(cuid())
+  quizId     String
+  userId     String
+  answers    Json // [{ questionId, selectedOptionId }]
+  score      Int               @default(0) // number of correct answers
+  total      Int               @default(0) // total questions
+  percentage Float             @default(0)
+  isPassed   Boolean           @default(false)
+  status     QuizAttemptStatus @default(PENDING)
+  createdAt  DateTime          @default(now())
+  quiz       Quiz              @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([quizId])
   @@index([userId])
@@ -772,6 +793,7 @@ model CoursePackage {
   enrollments PackageEnrollment[]
   batches     Batch[]
   payments    Payment[]
+  certificates Certificate[]
 }
 
 model PackageCourse {
@@ -789,7 +811,9 @@ model Payment {
   id                String        @id @default(cuid())
   userId            String
   packageId         String
-  amount            Int // in paise
+  couponId          String?
+  discountAmount    Int           @default(0) // in paise
+  amount            Int // in paise (final paid amount)
   currency          String        @default("INR")
   razorpayOrderId   String?       @unique
   razorpayPaymentId String?       @unique
@@ -800,9 +824,33 @@ model Payment {
 
   user       User               @relation(fields: [userId], references: [id])
   package    CoursePackage      @relation(fields: [packageId], references: [id])
+  coupon     Coupon?            @relation(fields: [couponId], references: [id])
   enrollment PackageEnrollment?
 
   @@index([userId])
+  @@index([couponId])
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+model Coupon {
+  id                String       @id @default(cuid())
+  code              String       @unique
+  title             String
+  discountType      DiscountType @default(PERCENTAGE)
+  discountValue     Float        // Percentage (e.g. 20 for 20%) or Fixed amount in rupees (e.g. 500)
+  minOrderAmount    Int          @default(0) // in paise
+  maxDiscountAmount Int?         // in paise
+  usageLimit        Int?         // null = unlimited
+  usedCount         Int          @default(0)
+  expiresAt         DateTime?
+  isActive          Boolean      @default(true)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  payments          Payment[]
 }
 
 model PackageEnrollment {

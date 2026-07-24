@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { api } from "@/lib/api";
+import { toast, getErrorMessage } from "@/lib/toast";
 import {
   IconClipboardCheck,
   IconCheck,
@@ -8,6 +10,10 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconRotateClockwise,
+  IconFileDownload,
+  IconUpload,
+  IconFile,
+  IconFileSpreadsheet,
 } from "@tabler/icons-react";
 
 interface QuizOption {
@@ -30,6 +36,11 @@ export interface QuizData {
   dueDate: string;
   maxPoints: number;
   questionCount: number;
+  hasAssignment?: boolean;
+  hasCoding?: boolean;
+  assignmentInstructions?: string | null;
+  assignmentPdfUrl?: string | null;
+  codingPrompt?: string | null;
   questions: QuizQuestion[];
 }
 
@@ -178,6 +189,42 @@ export default function QuizContent({
     quizSubmitted ? "results" : "intro",
   );
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Assignment file upload state
+  const [assignmentFile, setAssignmentFile] = useState<File | null>(null);
+  const [assignmentUploading, setAssignmentUploading] = useState(false);
+  const [assignmentSubmitted, setAssignmentSubmitted] = useState(false);
+  const assignmentFileRef = useRef<HTMLInputElement>(null);
+
+  function handleAssignmentFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 25 * 1024 * 1024) {
+      toast.error("File size must be less than 25 MB.");
+      return;
+    }
+    setAssignmentFile(file);
+  }
+
+  async function handleAssignmentSubmit() {
+    if (!assignmentFile) {
+      toast.error("Please select a file to upload.");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("answerFile", assignmentFile);
+    try {
+      setAssignmentUploading(true);
+      // Use the quiz ID as a pseudo-assignment for the submission endpoint
+      await api.post(`/api/assignments/${quizData.id}/submit/file`, formData);
+      setAssignmentSubmitted(true);
+      toast.success("Assignment file submitted successfully!");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setAssignmentUploading(false);
+    }
+  }
 
   // Once the parent confirms the submission landed, jump to the results screen.
   useEffect(() => {
@@ -548,6 +595,118 @@ export default function QuizContent({
                 Next <IconChevronRight size={14} />
               </button>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Assignment PDF & File Upload (Special Exam) ──────────────── */}
+      {quizData.hasAssignment && (
+        <div className="space-y-4 mt-6 pt-6 border-t border-border">
+          <div className="flex items-center gap-2">
+            <IconFileSpreadsheet size={18} className="text-blue-500" />
+            <h3 className="text-sm font-bold text-foreground">
+              Assignment / Practical Task
+            </h3>
+          </div>
+
+          {quizData.assignmentInstructions && (
+            <div className="bg-muted/40 border border-border rounded-xl p-4">
+              <p className="text-xs font-semibold text-foreground mb-1">Instructions</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                {quizData.assignmentInstructions}
+              </p>
+            </div>
+          )}
+
+          {quizData.assignmentPdfUrl ? (
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Question Paper
+                </span>
+                <a
+                  href={quizData.assignmentPdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary text-xs inline-flex items-center gap-1.5"
+                >
+                  <IconFileDownload size={14} />
+                  Download PDF
+                </a>
+              </div>
+              <iframe
+                src={quizData.assignmentPdfUrl}
+                className="w-full h-[55vh] bg-white"
+                title="Assignment Question PDF"
+              />
+            </div>
+          ) : null}
+
+          {/* File Upload Submission */}
+          <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+            <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <IconUpload size={16} className="text-blue-500" />
+              Submit Solution (Code / Project ZIP / Document)
+            </h4>
+
+            <input
+              ref={assignmentFileRef}
+              type="file"
+              className="hidden"
+              accept=".py,.java,.cpp,.c,.js,.ts,.html,.css,.zip,.rar,.tar.gz,.pdf,.docx,.txt"
+              onChange={handleAssignmentFileSelect}
+            />
+
+            {assignmentFile ? (
+              <div className="flex items-center justify-between gap-3 rounded-lg border border-border/80 bg-muted/30 p-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <IconFile size={24} className="text-primary shrink-0" />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {assignmentFile.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {(assignmentFile.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setAssignmentFile(null)}
+                  className="text-muted-foreground hover:text-danger p-1 transition-colors"
+                >
+                  <IconX size={16} />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => assignmentFileRef.current?.click()}
+                className="w-full rounded-xl border border-dashed border-primary/30 bg-primary/5 p-6 text-center transition-all hover:bg-primary/10 hover:border-primary/50"
+              >
+                <IconUpload size={28} className="mx-auto text-primary mb-2" />
+                <p className="text-sm font-semibold text-foreground">
+                  Click to select programming file or ZIP package
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Supports .py, .java, .cpp, .js, .ts, .zip, .pdf — max 25 MB
+                </p>
+              </button>
+            )}
+
+            <div className="flex justify-end pt-1">
+              <button
+                onClick={handleAssignmentSubmit}
+                disabled={!assignmentFile || assignmentUploading}
+                className="btn-primary text-sm px-6 py-2.5 flex items-center gap-2"
+              >
+                {assignmentUploading ? (
+                  "Uploading..."
+                ) : assignmentSubmitted ? (
+                  <><IconCheck size={16} /> Resubmit</>
+                ) : (
+                  "Submit Assignment"
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

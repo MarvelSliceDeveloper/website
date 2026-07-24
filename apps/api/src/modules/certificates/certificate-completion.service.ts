@@ -160,3 +160,129 @@ export async function checkAndIssueForAssignment(
     courseId: assignment.module.courseId,
   };
 }
+
+export async function getPackageSpecialExamProgress(
+  userId: string,
+  packageId: string,
+  batchId?: string,
+) {
+  const pkg = await prisma.coursePackage.findUnique({
+    where: { id: packageId },
+    include: {
+      courses: {
+        include: {
+          course: {
+            select: {
+              id: true,
+              title: true,
+              modules: {
+                select: {
+                  id: true,
+                  quizzes: {
+                    where: { isSpecialExam: true },
+                    select: {
+                      id: true,
+                      title: true,
+                      passingScore: true,
+                      attempts: {
+                        where: { userId },
+                        orderBy: { percentage: "desc" },
+                        take: 1,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!pkg) throw new Error("Package not found");
+
+  let batchVisibilityMap = new Map<string, boolean>();
+  if (batchId) {
+    const records = await prisma.batchCourseVisibility.findMany({
+      where: { batchId },
+      select: { courseId: true, isExamRequired: true },
+    });
+    for (const r of records) {
+      batchVisibilityMap.set(r.courseId, r.isExamRequired);
+    }
+  }
+
+  const courseStatuses = pkg.courses.map((pc) => {
+    const c = pc.course;
+    const isExamRequired = batchVisibilityMap.get(c.id) ?? true;
+    const specialExams = c.modules.flatMap((m) => m.quizzes);
+    const primaryExam = specialExams[0] || null;
+    const bestAttempt = primaryExam?.attempts[0] || null;
+    const isPassed = bestAttempt ? bestAttempt.isPassed || (bestAttempt.percentage >= (primaryExam?.passingScore ?? 65)) : false;
+
+    return {
+      courseId: c.id,
+      courseTitle: c.title,
+      isExamRequired,
+      specialExamId: primaryExam?.id || null,
+      specialExamTitle: primaryExam?.title || null,
+      passingScore: primaryExam?.passingScore ?? 65,
+      isPassed,
+      scorePercentage: bestAttempt?.percentage ?? 0,
+      attempted: !!bestAttempt,
+    };
+  });
+
+  const requiredCourses = courseStatuses.filter((cs) => cs.isExamRequired);
+  const allPassed = requiredCourses.length > 0 && requiredCourses.every((cs) => cs.isPassed);
+
+  return {
+    packageId: pkg.id,
+    packageName: pkg.name,
+    courses: courseStatuses,
+    totalRequired: requiredCourses.length,
+    passedCount: requiredCourses.filter((cs) => cs.isPassed).length,
+    allPassed,
+  };
+}
+
+export async function checkAndIssuePackageCertificate(
+  userId: string,
+  packageId: string,
+  batchId?: string,
+): Promise<{ issued: boolean; certificate?: any; reason?: string }> {
+  const existing = await prisma.certificate.findUnique({
+    where: { userId_packageId: { userId, packageId } },
+  });
+
+  if (existing) {
+    return { issued: false, certificate: existing, reason: "Certificate already claimed" };
+  }
+
+  const progress = await getPackageSpecialExamProgress(userId, packageId, batchId);
+  if (!progress.allPassed) {
+    return { issued: false, reason: "Not all required Special Exams have been passed" };
+  }
+
+  try {
+    const certificate = await prisma.certificate.create({
+      data: {
+        userId,
+        packageId,
+        batchId: batchId || null,
+        autoIssued: true,
+        status: "ISSUED",
+      },
+    });
+    return { issued: true, certificate };
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      const found = await prisma.certificate.findUnique({
+        where: { userId_packageId: { userId, packageId } },
+      });
+      return { issued: false, certificate: found, reason: "Certificate already claimed" };
+    }
+    throw err;
+  }
+}

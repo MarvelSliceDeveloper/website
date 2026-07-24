@@ -49,6 +49,7 @@ import { loginHistoryRouter } from "./modules/logs/login-history.routes";
 import { consentLogRouter } from "./modules/logs/consent-log.routes";
 import { trashRouter } from "./modules/super-admin/trash.routes";
 import { youtubeRouter } from "./modules/youtube/youtube.routes";
+import { couponRouter } from "./modules/coupons/coupon.routes";
 import {
   paymentRouter,
   adminPaymentRouter,
@@ -147,6 +148,7 @@ const csrfExemptPaths = [
   "/api/payments/create-order",
   "/api/payments/verify",
   "/api/payments/batches",
+  "/api/coupons/validate",
 ];
 
 const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
@@ -283,7 +285,8 @@ app.use("/api/admin/cache", cacheRouter);
 // ── YouTube API (authenticated) ──
 app.use("/api/youtube", youtubeRouter);
 
-// ── Payments ──
+// ── Payments & Coupons ──
+app.use("/api/coupons", couponRouter);
 app.use("/api/payments", paymentRouter);
 app.use("/api/admin/payments", adminPaymentRouter);
 

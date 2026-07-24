@@ -215,10 +215,13 @@ export const batchService = {
           course: { select: { id: true, title: true } },
           instructor: { select: { id: true, name: true, email: true } },
           package: { select: { id: true, name: true } },
+          packageEnrollmentCourses: {
+            distinct: ["enrollmentId"],
+            select: { enrollmentId: true },
+          },
           _count: {
             select: {
               enrollments: { where: { status: "APPROVED" } },
-              packageEnrollmentCourses: true,
               sessions: true,
             },
           },
@@ -228,7 +231,18 @@ export const batchService = {
       prisma.batch.count({ where }),
     ]);
 
-    return { batches, total, page: currentPage, limit: currentLimit };
+    const formattedBatches = batches.map((b) => {
+      const { packageEnrollmentCourses, ...rest } = b;
+      return {
+        ...rest,
+        _count: {
+          ...rest._count,
+          packageEnrollmentCourses: packageEnrollmentCourses.length,
+        },
+      };
+    });
+
+    return { batches: formattedBatches, total, page: currentPage, limit: currentLimit };
   },
 
   // Gets all batches grouped by course for a given package
@@ -255,10 +269,13 @@ export const batchService = {
                 status: true,
                 maxStudents: true,
                 instructor: { select: { id: true, name: true } },
+                packageEnrollmentCourses: {
+                  distinct: ["enrollmentId"],
+                  select: { enrollmentId: true },
+                },
                 _count: {
                   select: {
                     enrollments: { where: { status: "APPROVED" } },
-                    packageEnrollmentCourses: true,
                   },
                 },
               },
@@ -277,7 +294,7 @@ export const batchService = {
         batches: pc.course.batches.map((b) => ({
           ...b,
           totalStudents:
-            b._count.enrollments + b._count.packageEnrollmentCourses,
+            b._count.enrollments + b.packageEnrollmentCourses.length,
         })),
       })),
     };
@@ -297,6 +314,7 @@ export const batchService = {
           },
         },
         packageEnrollmentCourses: {
+          distinct: ["enrollmentId"],
           include: {
             enrollment: {
               include: {
@@ -314,7 +332,6 @@ export const batchService = {
         _count: {
           select: {
             enrollments: { where: { status: "APPROVED" } },
-            packageEnrollmentCourses: true,
             sessions: true,
           },
         },
@@ -322,7 +339,13 @@ export const batchService = {
     });
 
     if (!batch) throw new Error("Batch not found");
-    return batch;
+    return {
+      ...batch,
+      _count: {
+        ...batch._count,
+        packageEnrollmentCourses: batch.packageEnrollmentCourses.length,
+      },
+    };
   },
 
   // Updates batch details
@@ -492,8 +515,7 @@ export const batchService = {
     });
   },
 
-  // Lists all courses for a batch with their visibility state
-  // Course data is derived from PackageCourse (the batch's package), not stored separately
+  // Lists all courses for a batch with their visibility state and exam requirement state
   async getBatchCourses(batchId: string) {
     const batch = await prisma.batch.findUnique({
       where: { id: batchId },
@@ -517,19 +539,23 @@ export const batchService = {
     // Fetch existing visibility records for this batch
     const visibilityRecords = await prisma.batchCourseVisibility.findMany({
       where: { batchId },
-      select: { courseId: true, isVisible: true },
+      select: { courseId: true, isVisible: true, isExamRequired: true },
     });
     const visibilityMap = new Map(
-      visibilityRecords.map((v) => [v.courseId, v.isVisible]),
+      visibilityRecords.map((v) => [v.courseId, { isVisible: v.isVisible, isExamRequired: v.isExamRequired }]),
     );
 
-    return packageCourses.map((pc) => ({
-      id: pc.id,
-      courseId: pc.course.id,
-      order: pc.order,
-      isVisible: visibilityMap.get(pc.course.id) ?? false,
-      course: pc.course,
-    }));
+    return packageCourses.map((pc) => {
+      const rec = visibilityMap.get(pc.course.id);
+      return {
+        id: pc.id,
+        courseId: pc.course.id,
+        order: pc.order,
+        isVisible: rec?.isVisible ?? false,
+        isExamRequired: rec?.isExamRequired ?? true,
+        course: pc.course,
+      };
+    });
   },
 
   // Toggles isVisible for a course in a batch (upserts visibility record)
@@ -543,7 +569,7 @@ export const batchService = {
     const result = await prisma.batchCourseVisibility.upsert({
       where: { batchId_courseId: { batchId, courseId } },
       update: { isVisible: newIsVisible },
-      create: { batchId, courseId, isVisible: newIsVisible },
+      create: { batchId, courseId, isVisible: newIsVisible, isExamRequired: true },
     });
 
     const course = await prisma.course.findUnique({
@@ -556,6 +582,36 @@ export const batchService = {
       courseId: result.courseId,
       order: 0,
       isVisible: result.isVisible,
+      isExamRequired: result.isExamRequired,
+      course: course!,
+    };
+  },
+
+  // Toggles isExamRequired for a course in a batch
+  async toggleCourseExamRequired(batchId: string, courseId: string) {
+    const existing = await prisma.batchCourseVisibility.findUnique({
+      where: { batchId_courseId: { batchId, courseId } },
+    });
+
+    const newIsExamRequired = existing ? !existing.isExamRequired : false;
+
+    const result = await prisma.batchCourseVisibility.upsert({
+      where: { batchId_courseId: { batchId, courseId } },
+      update: { isExamRequired: newIsExamRequired },
+      create: { batchId, courseId, isVisible: false, isExamRequired: newIsExamRequired },
+    });
+
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: { id: true, title: true, slug: true },
+    });
+
+    return {
+      id: result.id,
+      courseId: result.courseId,
+      order: 0,
+      isVisible: result.isVisible,
+      isExamRequired: result.isExamRequired,
       course: course!,
     };
   },

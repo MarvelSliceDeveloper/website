@@ -27,7 +27,7 @@ const ACCESS_TOKEN_MAX_AGE = parseExpiryToMs(process.env.JWT_EXPIRY || "7d");
 export const paymentController = {
   async createOrder(req: AuthRequest, res: Response) {
     try {
-      const { packageId, name, email } = req.body;
+      const { packageId, name, email, couponCode } = req.body;
       if (!packageId) {
         return res.status(400).json({ error: "packageId is required" });
       }
@@ -53,7 +53,7 @@ export const paymentController = {
         });
       }
 
-      const orderResult = await paymentService.createOrder(userId, packageId);
+      const orderResult = await paymentService.createOrder(userId, packageId, couponCode);
       return res.status(200).json({
         ...orderResult,
         isNewUser: !req.user?.userId,

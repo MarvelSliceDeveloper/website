@@ -194,6 +194,18 @@ export const batchController = {
     }
   },
 
+  // Toggles isExamRequired of a course in a batch
+  async toggleExamRequired(req: AuthRequest, res: Response) {
+    try {
+      const { id, courseId } = req.params;
+      const result = await batchService.toggleCourseExamRequired(id, courseId);
+      return res.json(result);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
   // Gets batch details for an enrolled student
   async getByIdForStudent(req: AuthRequest, res: Response) {
     try {

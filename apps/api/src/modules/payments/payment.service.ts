@@ -129,7 +129,7 @@ export const paymentService = {
     };
   },
 
-  async createOrder(userId: string, packageId: string) {
+  async createOrder(userId: string, packageId: string, couponCode?: string) {
     const pkg = await prisma.coursePackage.findUnique({
       where: { id: packageId },
     });
@@ -137,9 +137,21 @@ export const paymentService = {
     if (!pkg.price || pkg.price <= 0) throw new Error("Package is not priced");
     if (pkg.status !== "ACTIVE") throw new Error("Package is not available");
 
+    let finalAmount = pkg.price;
+    let discountAmount = 0;
+    let couponId: string | null = null;
+
+    if (couponCode && couponCode.trim()) {
+      const { couponService } = await import("../coupons/coupon.service");
+      const validation = await couponService.validateCoupon(couponCode, pkg.price);
+      finalAmount = validation.finalAmountPaise;
+      discountAmount = validation.discountAmountPaise;
+      couponId = validation.couponId;
+    }
+
     const razorpay = getRazorpayInstance();
     const order = await razorpay.orders.create({
-      amount: pkg.price,
+      amount: finalAmount,
       currency: "INR",
       receipt: `rcpt_${Date.now().toString(36)}_${userId.slice(-8)}`,
     });
@@ -148,7 +160,9 @@ export const paymentService = {
       data: {
         userId,
         packageId,
-        amount: pkg.price,
+        couponId,
+        discountAmount,
+        amount: finalAmount,
         razorpayOrderId: order.id,
         status: "PENDING",
       },
@@ -156,10 +170,11 @@ export const paymentService = {
 
     return {
       orderId: order.id,
-      amount: pkg.price,
+      amount: finalAmount,
       currency: "INR",
       keyId: process.env.RAZORPAY_KEY_ID,
       paymentId: payment.id,
+      discountAmount,
     };
   },
 
@@ -193,6 +208,15 @@ export const paymentService = {
       where: { id: payment.id },
       data: { status: "PAID", razorpayPaymentId, razorpaySignature },
     });
+
+    if (payment.couponId) {
+      await prisma.coupon.update({
+        where: { id: payment.couponId },
+        data: { usedCount: { increment: 1 } },
+      }).catch((err: unknown) =>
+        console.error("[payment] Failed to increment coupon count:", err),
+      );
+    }
 
     return {
       paymentId: payment.id,

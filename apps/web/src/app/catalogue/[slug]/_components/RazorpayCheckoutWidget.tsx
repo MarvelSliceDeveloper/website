@@ -26,13 +26,20 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
     selectedBatchId,
     errorMsg,
     loading,
+    couponCode,
+    couponApplied,
+    couponError,
+    couponLoading,
     setName,
     setEmail,
     setSelectedBatchId,
+    setCouponCode,
     startCheckout,
     infoSubmit,
     submitEnroll,
     submitConsent,
+    applyCoupon,
+    removeCoupon,
     reset,
   } = useRazorpayPayment();
 
@@ -118,7 +125,7 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
           </button>
         </div>
 
-          <div className="space-y-3 mb-6">
+          <div className="space-y-3 mb-4">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{pkg.name}</span>
             <span className="font-semibold text-foreground">
@@ -135,20 +142,84 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
           </div>
         </div>
 
+        {/* Coupon Section */}
+        <div className="border-t border-border pt-4 mb-4">
+          <p className="text-xs font-medium text-foreground mb-2">Have a coupon code?</p>
+          {couponApplied ? (
+            <div className="flex items-center justify-between bg-success/10 border border-success/25 rounded-lg px-3 py-2">
+              <div>
+                <span className="text-xs font-bold text-success">{couponApplied.code}</span>
+                <span className="text-xs text-success/80 ml-2">
+                  {couponApplied.discountType === "PERCENTAGE"
+                    ? `${couponApplied.discountValue}% off`
+                    : `₹${couponApplied.discountValue} off`}
+                </span>
+              </div>
+              <button
+                onClick={removeCoupon}
+                className="text-xs text-danger hover:text-danger/80 font-medium"
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Enter coupon code"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  className="field flex-1 text-xs font-mono"
+                />
+                <button
+                  onClick={() => applyCoupon(pkg.id)}
+                  disabled={couponLoading || !couponCode.trim()}
+                  className="px-3 py-1.5 rounded-lg border border-primary text-primary text-xs font-medium hover:bg-primary/5 transition-colors disabled:opacity-50"
+                >
+                  {couponLoading ? "..." : "Apply"}
+                </button>
+              </div>
+              {couponError && (
+                <p className="text-[11px] text-danger">{couponError}</p>
+              )}
+            </div>
+          )}
+        </div>
+
         <div className="border-t border-border pt-4 mb-6">
-          <div className="flex justify-between text-base">
-            <span className="font-semibold text-foreground">Total</span>
-            <span className="font-bold text-lg text-foreground">
-              {formatPrice(pkg.price!)}
-            </span>
-          </div>
+          {couponApplied ? (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-foreground">{formatPrice(pkg.price!)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-success font-medium">Discount ({couponApplied.code})</span>
+                <span className="text-success font-medium">−{formatPrice(couponApplied.discountAmountPaise)}</span>
+              </div>
+              <div className="flex justify-between text-base pt-1 border-t border-border/50">
+                <span className="font-semibold text-foreground">Total</span>
+                <span className="font-bold text-lg text-foreground">
+                  {formatPrice(couponApplied.finalAmountPaise)}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex justify-between text-base">
+              <span className="font-semibold text-foreground">Total</span>
+              <span className="font-bold text-lg text-foreground">
+                {formatPrice(pkg.price!)}
+              </span>
+            </div>
+          )}
         </div>
 
         <button
           onClick={handleBuyNow}
           className="w-full py-3 rounded-lg bg-primary text-white font-medium text-sm hover:bg-primary-hover transition-colors"
         >
-          Buy Now — {formatPrice(pkg.price!)}
+          Buy Now — {formatPrice(couponApplied ? couponApplied.finalAmountPaise : pkg.price!)}
         </button>
 
         <p className="text-xs text-muted-foreground text-center mt-3">
@@ -195,12 +266,78 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
           {errorMsg && <p className="text-sm text-danger">{errorMsg}</p>}
 
           <div className="border-t border-border pt-4">
-            <div className="flex justify-between text-sm mb-4">
-              <span className="text-muted-foreground">{pkg.name}</span>
-              <span className="font-semibold text-foreground">
-                {formatPrice(pkg.price!)}
-              </span>
+            {/* Coupon in collecting_info */}
+            <div className="mb-4">
+              <p className="text-xs font-medium text-foreground mb-2">Have a coupon code?</p>
+              {couponApplied ? (
+                <div className="flex items-center justify-between bg-success/10 border border-success/25 rounded-lg px-3 py-2">
+                  <div>
+                    <span className="text-xs font-bold text-success">{couponApplied.code}</span>
+                    <span className="text-xs text-success/80 ml-2">
+                      {couponApplied.discountType === "PERCENTAGE"
+                        ? `${couponApplied.discountValue}% off`
+                        : `₹${couponApplied.discountValue} off`}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removeCoupon}
+                    className="text-xs text-danger hover:text-danger/80 font-medium"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Enter coupon code"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      className="field flex-1 text-xs font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => applyCoupon(pkg.id)}
+                      disabled={couponLoading || !couponCode.trim()}
+                      className="px-3 py-1.5 rounded-lg border border-primary text-primary text-xs font-medium hover:bg-primary/5 transition-colors disabled:opacity-50"
+                    >
+                      {couponLoading ? "..." : "Apply"}
+                    </button>
+                  </div>
+                  {couponError && (
+                    <p className="text-[11px] text-danger">{couponError}</p>
+                  )}
+                </div>
+              )}
             </div>
+
+            {couponApplied ? (
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">{pkg.name}</span>
+                  <span className="text-foreground">{formatPrice(pkg.price!)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-success font-medium">Discount ({couponApplied.code})</span>
+                  <span className="text-success font-medium">−{formatPrice(couponApplied.discountAmountPaise)}</span>
+                </div>
+                <div className="flex justify-between text-base pt-1 border-t border-border/50">
+                  <span className="font-semibold text-foreground">Total</span>
+                  <span className="font-bold text-foreground">
+                    {formatPrice(couponApplied.finalAmountPaise)}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-between text-sm mb-4">
+                <span className="text-muted-foreground">{pkg.name}</span>
+                <span className="font-semibold text-foreground">
+                  {formatPrice(pkg.price!)}
+                </span>
+              </div>
+            )}
           </div>
 
           <button
@@ -208,7 +345,7 @@ export function RazorpayCheckoutWidget({ pkg }: Props) {
             disabled={loading}
             className="w-full py-3 rounded-lg bg-primary text-white font-medium text-sm hover:bg-primary-hover transition-colors disabled:opacity-50"
           >
-            {loading ? "Please wait..." : `Pay ${formatPrice(pkg.price!)}`}
+            {loading ? "Please wait..." : `Pay ${formatPrice(couponApplied ? couponApplied.finalAmountPaise : pkg.price!)}`}
           </button>
           <p className="text-xs text-muted-foreground text-center">
             🔒 Secure payment via Razorpay

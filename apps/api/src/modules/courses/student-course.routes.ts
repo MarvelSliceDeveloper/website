@@ -412,6 +412,11 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
                 title: true,
                 order: true,
                 dueDate: true,
+                isSpecialExam: true,
+                passingScore: true,
+                timeLimitMin: true,
+                maxAttempts: true,
+                examType: true,
                 _count: { select: { questions: true } },
               },
               orderBy: { order: "asc" },
@@ -557,6 +562,11 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
           title: q.title,
           questionCount: q._count.questions,
           dueDate: q.dueDate ? q.dueDate.toISOString() : null,
+          isSpecialExam: q.isSpecialExam,
+          passingScore: q.passingScore,
+          timeLimitMin: q.timeLimitMin,
+          maxAttempts: q.maxAttempts,
+          examType: q.examType,
         })),
         assignments: m.assignments.map((a) => ({
           id: a.id,
@@ -745,6 +755,9 @@ router.post(
       );
 
       const total = quiz.questions.length;
+      const passingScore = quiz.passingScore ?? 65;
+      const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+      const isPassed = percentage >= passingScore;
 
       const attempt = await prisma.quizAttempt.create({
         data: {
@@ -753,6 +766,8 @@ router.post(
           answers: enrichedAnswers,
           score,
           total,
+          percentage,
+          isPassed,
           status: "SUBMITTED",
         },
       });
@@ -768,7 +783,10 @@ router.post(
         attemptId: attempt.id,
         score,
         total,
-        percentage: total > 0 ? Math.round((score / total) * 100) : 0,
+        percentage,
+        isPassed,
+        passingScore,
+        isSpecialExam: quiz.isSpecialExam,
         answers: enrichedAnswers,
         submittedAt: attempt.createdAt,
       });

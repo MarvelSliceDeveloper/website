@@ -153,6 +153,11 @@ export default function CourseContentView({
     dueDate: string;
     maxPoints: number;
     questionCount: number;
+    hasAssignment?: boolean;
+    hasCoding?: boolean;
+    assignmentInstructions?: string | null;
+    assignmentPdfUrl?: string | null;
+    codingPrompt?: string | null;
     questions: Array<{
       id: string;
       questionText: string;
@@ -300,6 +305,11 @@ export default function CourseContentView({
           description: string;
           dueDate: string;
           maxPoints: number;
+          hasAssignment?: boolean;
+          hasCoding?: boolean;
+          assignmentInstructions?: string | null;
+          assignmentPdfUrl?: string | null;
+          codingPrompt?: string | null;
           questions: Array<{
             id: string;
             questionText: string;

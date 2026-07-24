@@ -379,6 +379,15 @@ export default function AdminSidebar({
                 className?: string;
               }>,
             },
+            {
+              label: "Coupons",
+              href: "/admin/coupons",
+              icon: IconClipboardCheck as React.ComponentType<{
+                size?: number | string;
+                stroke?: number | string;
+                className?: string;
+              }>,
+            },
           ],
           {
             label: "Approvals",

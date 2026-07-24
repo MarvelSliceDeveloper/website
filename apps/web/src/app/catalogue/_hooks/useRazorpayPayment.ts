@@ -37,6 +37,17 @@ interface CreateOrderResult {
   isNewUser?: boolean;
 }
 
+interface CouponValidation {
+  couponId: string;
+  code: string;
+  title: string;
+  discountType: string;
+  discountValue: number;
+  originalAmountPaise: number;
+  discountAmountPaise: number;
+  finalAmountPaise: number;
+}
+
 export function useRazorpayPayment() {
   const [step, setStep] = useState<CheckoutStep>("idle");
   const [name, setName] = useState("");
@@ -48,6 +59,12 @@ export function useRazorpayPayment() {
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [couponApplied, setCouponApplied] = useState<CouponValidation | null>(null);
+  const [couponError, setCouponError] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+
   const reset = useCallback(() => {
     setStep("idle");
     setName("");
@@ -57,6 +74,9 @@ export function useRazorpayPayment() {
     setBatches([]);
     setSelectedBatchId("");
     setLoading(false);
+    setCouponCode("");
+    setCouponApplied(null);
+    setCouponError("");
   }, []);
 
   const submitConsent = useCallback(async () => {
@@ -159,6 +179,38 @@ export function useRazorpayPayment() {
     [name, email, submitConsent],
   );
 
+  const applyCoupon = useCallback(
+    async (packageId: string) => {
+      if (!couponCode.trim()) {
+        setCouponError("Please enter a coupon code");
+        return;
+      }
+      setCouponLoading(true);
+      setCouponError("");
+      setCouponApplied(null);
+      try {
+        const result = await api.post<CouponValidation>(
+          "/api/coupons/validate",
+          { code: couponCode.trim(), packageId },
+        );
+        setCouponApplied(result);
+        setCouponCode(result.code);
+      } catch (err: unknown) {
+        setCouponError(getErrorMessage(err));
+        setCouponApplied(null);
+      } finally {
+        setCouponLoading(false);
+      }
+    },
+    [couponCode],
+  );
+
+  const removeCoupon = useCallback(() => {
+    setCouponApplied(null);
+    setCouponCode("");
+    setCouponError("");
+  }, []);
+
   const createOrder = useCallback(
     async (pkgId: string, pkgName: string, _pkgPrice: number) => {
       setStep("creating_order");
@@ -168,7 +220,12 @@ export function useRazorpayPayment() {
       try {
         const result = await api.post<CreateOrderResult>(
           "/api/payments/create-order",
-          { packageId: pkgId, name, email },
+          {
+            packageId: pkgId,
+            name,
+            email,
+            couponCode: couponApplied?.code || undefined,
+          },
         );
 
         setIsNewUser(result.isNewUser ?? false);
@@ -183,7 +240,7 @@ export function useRazorpayPayment() {
         setLoading(false);
       }
     },
-    [name, email, openRazorpayCheckout],
+    [name, email, couponApplied, openRazorpayCheckout],
   );
 
   const submitEnroll = useCallback(async () => {
@@ -253,16 +310,24 @@ export function useRazorpayPayment() {
     selectedBatchId,
     errorMsg,
     loading,
+    // Coupon state
+    couponCode,
+    couponApplied,
+    couponError,
+    couponLoading,
     // Setters
     setName,
     setEmail,
     setSelectedBatchId,
     setErrorMsg,
+    setCouponCode,
     // Actions
     startCheckout,
     infoSubmit,
     submitEnroll,
     submitConsent,
+    applyCoupon,
+    removeCoupon,
     reset,
   };
 }

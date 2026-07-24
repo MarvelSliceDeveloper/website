@@ -72,6 +72,13 @@ router.put(
   batchController.toggleVisibility,
 );
 
+// PUT /api/admin/batches/:id/courses/:courseId/exam-required — toggle course exam requirement
+router.put(
+  "/:id/courses/:courseId/exam-required",
+  requireRole([UserRole.ADMIN]),
+  batchController.toggleExamRequired,
+);
+
 // --- Student management ---
 
 // GET /api/admin/batches/:id/students — list students in batch
