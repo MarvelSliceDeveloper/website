@@ -37,7 +37,12 @@ router.get("/", async (req: Request, res: Response) => {
       };
     }
 
-    const { skip, take, page: currentPage, limit: currentLimit } = paginate({
+    const {
+      skip,
+      take,
+      page: currentPage,
+      limit: currentLimit,
+    } = paginate({
       page: page ? Number(page) : undefined,
       limit: limit ? Number(limit) : undefined,
     });

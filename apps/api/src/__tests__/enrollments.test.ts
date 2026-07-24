@@ -21,20 +21,20 @@ describe("Enrollments — Approve/Reject Workflow", () => {
     testCourseId = course.id;
 
     // Get the batch
-    const batchRes = await adminAgent.get("/api/payments/batches?packageId=pkg-datascience");
+    const batchRes = await adminAgent.get(
+      "/api/payments/batches?packageId=pkg-datascience",
+    );
     if (batchRes.body.length > 0) {
       testBatchId = batchRes.body[0].id;
     }
 
     // Create a fresh student for enrollment testing
     const uniqueEmail = `enroll-test-${Date.now()}@lms.local`;
-    const regRes = await request(app)
-      .post("/api/auth/register")
-      .send({
-        name: "Enrollment Test Student",
-        email: uniqueEmail,
-        password: "StrongPass1",
-      });
+    const regRes = await request(app).post("/api/auth/register").send({
+      name: "Enrollment Test Student",
+      email: uniqueEmail,
+      password: "StrongPass1",
+    });
     expect(regRes.status).toBe(201);
 
     // Login as this student
@@ -160,13 +160,11 @@ describe("Enrollments — Approve/Reject Workflow", () => {
     it("returns 400 for missing batchId", async () => {
       // Create a new enrollment to test this
       const uniqueEmail = `approve-test-${Date.now()}@lms.local`;
-      await request(app)
-        .post("/api/auth/register")
-        .send({
-          name: "Approve Test",
-          email: uniqueEmail,
-          password: "StrongPass1",
-        });
+      await request(app).post("/api/auth/register").send({
+        name: "Approve Test",
+        email: uniqueEmail,
+        password: "StrongPass1",
+      });
 
       const loginRes = await request(app)
         .post("/api/auth/login")
@@ -215,13 +213,11 @@ describe("Enrollments — Approve/Reject Workflow", () => {
     beforeAll(async () => {
       // Create a fresh enrollment to reject
       const uniqueEmail = `reject-test-${Date.now()}@lms.local`;
-      await request(app)
-        .post("/api/auth/register")
-        .send({
-          name: "Reject Test",
-          email: uniqueEmail,
-          password: "StrongPass1",
-        });
+      await request(app).post("/api/auth/register").send({
+        name: "Reject Test",
+        email: uniqueEmail,
+        password: "StrongPass1",
+      });
 
       const loginRes = await request(app)
         .post("/api/auth/login")

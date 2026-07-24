@@ -45,8 +45,8 @@ export default function AdminSendNotificationPage() {
       .then(setCourses)
       .catch(() => {});
     api
-      .get<BatchOption[]>("/api/admin/batches")
-      .then(setBatches)
+      .get<{ batches: BatchOption[] }>("/api/admin/batches")
+      .then((data) => setBatches(data.batches))
       .catch(() => {});
   }, []);
 

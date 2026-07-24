@@ -429,6 +429,7 @@ Both endpoints are CSRF-exempt (line 93 of `app.ts`). Email template at `package
 ### API Controllers — Unified Error Handling
 
 All controllers use `handleControllerError(err, (req as any).log)` from `apps/api/src/utils/errors.ts`. This function:
+
 - Handles `ZodError` → returns `{ error: "field: message" }` (400)
 - Handles `AppError` → returns `{ error: message }` with the error's statusCode
 - Handles unknown errors → logs via pino, returns `{ error: message }` (500)
@@ -465,7 +466,7 @@ Default: page=1, limit=20 (max 100).
 
 ### Frontend Page Titles
 
-- **Server Components**: Add `export const metadata: Metadata = { title: "Name" }` 
+- **Server Components**: Add `export const metadata: Metadata = { title: "Name" }`
 - **Client Components**: Add `usePageTitle("Name")` from `@/lib/use-page-title` (sets `document.title` using the root layout template "%s · LMS Portal")
 
 ### Frontend error.tsx / loading.tsx
@@ -473,32 +474,43 @@ Default: page=1, limit=20 (max 100).
 Each route segment should have both files, using shared components:
 
 **error.tsx** (`"use client"`):
+
 ```tsx
 "use client";
 import ErrorPage from "@/components/ErrorPage";
 export default function RouteError({
-  error, reset,
-}: { error: Error & { digest?: string }; reset: () => void }) {
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
   return <ErrorPage error={error} reset={reset} />;
 }
 ```
 
 **loading.tsx**:
+
 ```tsx
 import LoadingPage from "@/components/LoadingPage";
-export default function RouteLoading() { return <LoadingPage />; }
+export default function RouteLoading() {
+  return <LoadingPage />;
+}
 ```
 
 ## Certification System
 
 ### Auto-Issue Flow
+
 When a student completes all content in a course (quizzes + assignments + recordings), a certificate is auto-issued. Triggered on:
+
 - Quiz submission: `POST /api/courses/quizzes/:quizId/submit` → calls `checkAndIssueForQuiz()`
 - Assignment grading: `POST /api/assignments/submissions/:submissionId/grade` → calls `checkAndIssueForAssignment()`
 
 Disable auto-issue with `AUTO_CERTIFICATE=false` env var.
 
 ### Completion Check
+
 `apps/api/src/modules/certificates/certificate-completion.service.ts`:
 
 - `getCourseContentProgress(userId, courseId)` — returns `{ isComplete, totalItems, completedItems, details }`
@@ -508,18 +520,20 @@ Disable auto-issue with `AUTO_CERTIFICATE=false` env var.
 
 ### Two PDF Generation Options
 
-| Option | Template Type | Description |
-|--------|--------------|-------------|
-| **jsPDF** (default) | `jsPdf` | Dynamically generated using jsPDF with customizable colors, fonts, patterns from `CertificateTemplate` |
-| **Uploaded PDF** | `uploadedPdf` | Pre-designed PDF uploaded by admin. Text is overlaid at defined coordinates using pdf-lib |
+| Option              | Template Type | Description                                                                                            |
+| ------------------- | ------------- | ------------------------------------------------------------------------------------------------------ |
+| **jsPDF** (default) | `jsPdf`       | Dynamically generated using jsPDF with customizable colors, fonts, patterns from `CertificateTemplate` |
+| **Uploaded PDF**    | `uploadedPdf` | Pre-designed PDF uploaded by admin. Text is overlaid at defined coordinates using pdf-lib              |
 
 ### Admin PDF Upload
+
 - `POST /api/admin/certificate-templates/:id/upload-pdf` — upload PDF + JSON placeholder field definitions
 - `DELETE /api/admin/certificate-templates/:id/pdf-template` — remove uploaded PDF template
 - Placeholder fields are defined as `[{ key, x, y, fontSize, color, align }]` overlaid on the uploaded PDF
 - Available placeholder keys: `studentName`, `courseName`, `date`, `certificateNumber`, `verifyUrl`
 
 ### Schema Fields Added
+
 ```prisma
 model CertificateTemplate {
   pdfTemplateType   String   @default("jsPdf")  // "jsPdf" | "uploadedPdf"
@@ -542,10 +556,10 @@ All 250 tests pass consistently across 23 test files. Suite completes in ~17s.
 
 ### Pre-existing Bug Fixes (2026-07-23)
 
-| Bug | File(s) | Fix |
-|-----|---------|-----|
-| `practicals` field in module include | `course.service.ts` | Removed `practicals` from Prisma `include` (non-existent relation) |
-| `throw new Error()` → 500 responses | `course.service.ts`, `quiz.service.ts`, `auth.service.ts` | Replaced 15+ `throw new Error()` with `throw new AppError(statusCode, ...)` — 404 for not-found, 409 for duplicate, 401 for invalid creds, 403 for suspended |
-| `notes` vs `items` in test | `notes.test.ts` | Changed `res.body.notes` → `res.body.items` (API uses `paginate()` which returns `items`) |
-| `loginAs("STUDENT")` race condition | `notes.test.ts`, `auth-extended.test.ts` | Used fresh registered students instead of shared `student@lms.local` for password-change and notes tests |
-| Duplicate email test expected wrong status | `auth-extended.test.ts` | Updated expectation from `[400,500]` to `409` (now `AppError` returns correct status) |
+| Bug                                        | File(s)                                                   | Fix                                                                                                                                                          |
+| ------------------------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `practicals` field in module include       | `course.service.ts`                                       | Removed `practicals` from Prisma `include` (non-existent relation)                                                                                           |
+| `throw new Error()` → 500 responses        | `course.service.ts`, `quiz.service.ts`, `auth.service.ts` | Replaced 15+ `throw new Error()` with `throw new AppError(statusCode, ...)` — 404 for not-found, 409 for duplicate, 401 for invalid creds, 403 for suspended |
+| `notes` vs `items` in test                 | `notes.test.ts`                                           | Changed `res.body.notes` → `res.body.items` (API uses `paginate()` which returns `items`)                                                                    |
+| `loginAs("STUDENT")` race condition        | `notes.test.ts`, `auth-extended.test.ts`                  | Used fresh registered students instead of shared `student@lms.local` for password-change and notes tests                                                     |
+| Duplicate email test expected wrong status | `auth-extended.test.ts`                                   | Updated expectation from `[400,500]` to `409` (now `AppError` returns correct status)                                                                        |

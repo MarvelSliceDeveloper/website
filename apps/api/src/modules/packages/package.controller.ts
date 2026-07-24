@@ -166,7 +166,10 @@ export const packageController = {
       const packages = await packageService.getPublicCatalogue();
       return res.json({ packages });
     } catch (err: unknown) {
-      const { statusCode, body } = handleControllerError(err, ((_req as any).log));
+      const { statusCode, body } = handleControllerError(
+        err,
+        (_req as any).log,
+      );
       return res.status(statusCode).json(body);
     }
   },

@@ -90,9 +90,7 @@ function buildUnifiedList(mod: Module): UnifiedItem[] {
     }
     for (const practical of mod.practicals || []) {
       if (
-        !items.some(
-          (i) => i.type === "PRACTICAL" && i.data.id === practical.id,
-        )
+        !items.some((i) => i.type === "PRACTICAL" && i.data.id === practical.id)
       ) {
         items.push({ type: "PRACTICAL", data: practical });
       }

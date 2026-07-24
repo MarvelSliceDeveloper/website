@@ -41,16 +41,23 @@ class SocketService {
         const secret = process.env.JWT_SECRET;
         if (!secret) {
           if (process.env.NODE_ENV === "production") {
-            throw new Error("Missing required environment variable: JWT_SECRET");
+            throw new Error(
+              "Missing required environment variable: JWT_SECRET",
+            );
           }
           console.warn("[socket] Warning: JWT_SECRET is not set.");
-          return next(new Error("Authentication error: JWT_SECRET not configured"));
+          return next(
+            new Error("Authentication error: JWT_SECRET not configured"),
+          );
         }
         const decoded = jwt.verify(token, secret) as SocketUser;
         socket.user = decoded;
         next();
       } catch (err) {
-        console.warn("[socket] Authentication failed for socket:", (err as Error).message);
+        console.warn(
+          "[socket] Authentication failed for socket:",
+          (err as Error).message,
+        );
         next();
       }
     });
@@ -69,7 +76,9 @@ class SocketService {
       socket.on("join:batch", (batchId: string) => {
         if (batchId) {
           socket.join(`batch:${batchId}`);
-          console.log(`[socket] Socket ${socket.id} joined room batch:${batchId}`);
+          console.log(
+            `[socket] Socket ${socket.id} joined room batch:${batchId}`,
+          );
         }
       });
 
@@ -85,11 +94,14 @@ class SocketService {
 
   private parseCookieToken(cookieHeader?: string): string | null {
     if (!cookieHeader) return null;
-    const cookies = cookieHeader.split(";").reduce((acc, curr) => {
-      const [key, val] = curr.trim().split("=");
-      acc[key] = val;
-      return acc;
-    }, {} as Record<string, string>);
+    const cookies = cookieHeader.split(";").reduce(
+      (acc, curr) => {
+        const [key, val] = curr.trim().split("=");
+        acc[key] = val;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
     return cookies["token"] || cookies["access_token"] || null;
   }
 

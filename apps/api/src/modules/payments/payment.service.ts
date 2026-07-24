@@ -8,6 +8,7 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { prisma } from "../../utils/prisma";
+import { AppError } from "../../utils/errors";
 import { paginate, PaginationParams } from "../../utils/paginate";
 import { emailService } from "../../services/email.service";
 import { authService } from "../auth/auth.service";
@@ -108,16 +109,6 @@ export const paymentService = {
       sessionTimeoutMin: user.sessionTimeoutMin,
     });
 
-    emailService
-      .sendWelcomeEmail({
-        name,
-        email: normalizedEmail,
-        credentials: { email: normalizedEmail, password: dummyPassword },
-      })
-      .catch((err: Error) =>
-        console.error("[payment] Failed to send welcome email:", err),
-      );
-
     return {
       user: {
         id: user.id,
@@ -129,13 +120,54 @@ export const paymentService = {
     };
   },
 
+  async checkNotEnrolled(packageId: string, userId?: string, email?: string) {
+    const emailLower = email?.trim().toLowerCase();
+    let targetUserId = userId;
+
+    if (!targetUserId && emailLower) {
+      const user = await prisma.user.findUnique({
+        where: { email: emailLower },
+        select: { id: true },
+      });
+      targetUserId = user?.id;
+    }
+
+    if (!targetUserId) return;
+
+    const [existingEnrollment, existingPayment] = await Promise.all([
+      prisma.packageEnrollment.findFirst({
+        where: { packageId, userId: targetUserId, status: "APPROVED" },
+      }),
+      prisma.payment.findFirst({
+        where: {
+          packageId,
+          userId: targetUserId,
+          status: { in: ["PENDING", "PAID"] },
+        },
+      }),
+    ]);
+
+    if (existingEnrollment) {
+      throw new AppError(409, "You are already enrolled in this package");
+    }
+
+    if (existingPayment) {
+      throw new AppError(
+        409,
+        "A payment for this package is already being processed",
+      );
+    }
+  },
+
   async createOrder(userId: string, packageId: string, couponCode?: string) {
+    await this.checkNotEnrolled(packageId, userId);
+
     const pkg = await prisma.coursePackage.findUnique({
       where: { id: packageId },
     });
-    if (!pkg) throw new Error("Package not found");
-    if (!pkg.price || pkg.price <= 0) throw new Error("Package is not priced");
-    if (pkg.status !== "ACTIVE") throw new Error("Package is not available");
+    if (!pkg) throw new AppError(404, "Package not found");
+    if (!pkg.price || pkg.price <= 0) throw new AppError(400, "Package is not priced");
+    if (pkg.status !== "ACTIVE") throw new AppError(400, "Package is not available");
 
     let finalAmount = pkg.price;
     let discountAmount = 0;
@@ -143,7 +175,10 @@ export const paymentService = {
 
     if (couponCode && couponCode.trim()) {
       const { couponService } = await import("../coupons/coupon.service");
-      const validation = await couponService.validateCoupon(couponCode, pkg.price);
+      const validation = await couponService.validateCoupon(
+        couponCode,
+        pkg.price,
+      );
       finalAmount = validation.finalAmountPaise;
       discountAmount = validation.discountAmountPaise;
       couponId = validation.couponId;
@@ -187,9 +222,9 @@ export const paymentService = {
       where: { razorpayOrderId },
       include: { package: true },
     });
-    if (!payment) throw new Error("Payment record not found");
+    if (!payment) throw new AppError(404, "Payment record not found");
     if (payment.status !== "PENDING")
-      throw new Error("Payment already processed");
+      throw new AppError(400, "Payment already processed");
 
     const isValid = verifySignature(
       razorpayOrderId,
@@ -201,7 +236,7 @@ export const paymentService = {
         where: { id: payment.id },
         data: { status: "FAILED", razorpayPaymentId, razorpaySignature },
       });
-      throw new Error("Payment signature verification failed");
+      throw new AppError(400, "Payment signature verification failed");
     }
 
     await prisma.payment.update({
@@ -210,12 +245,14 @@ export const paymentService = {
     });
 
     if (payment.couponId) {
-      await prisma.coupon.update({
-        where: { id: payment.couponId },
-        data: { usedCount: { increment: 1 } },
-      }).catch((err: unknown) =>
-        console.error("[payment] Failed to increment coupon count:", err),
-      );
+      await prisma.coupon
+        .update({
+          where: { id: payment.couponId },
+          data: { usedCount: { increment: 1 } },
+        })
+        .catch((err: unknown) =>
+          console.error("[payment] Failed to increment coupon count:", err),
+        );
     }
 
     return {
@@ -263,7 +300,7 @@ export const paymentService = {
       include: { package: { include: { courses: true } } },
     });
     if (!payment || payment.status !== "PAID")
-      throw new Error("Payment not completed");
+      throw new AppError(400, "Payment not completed");
 
     let user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
@@ -286,7 +323,7 @@ export const paymentService = {
     }
 
     if (!user) {
-      throw new Error("User could not be found or created");
+      throw new AppError(500, "User could not be found or created");
     }
 
     const enrollment = await prisma.packageEnrollment.create({
@@ -317,12 +354,18 @@ export const paymentService = {
       });
     }
 
-    if (isNewUser && dummyPassword) {
+    if (dummyPassword) {
       emailService
         .sendWelcomeEmail({
           name,
           email: email.toLowerCase(),
           credentials: { email: email.toLowerCase(), password: dummyPassword },
+          invoice: {
+            paymentId: payment.id,
+            packageName: payment.package.name,
+            amount: payment.amount,
+            discountAmount: payment.discountAmount,
+          },
         })
         .catch((err: Error) =>
           console.error("[payment] Failed to send welcome email:", err),
@@ -339,9 +382,10 @@ export const paymentService = {
   ) {
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },
+      include: { package: true },
     });
     if (!payment || payment.status !== "PAID")
-      throw new Error("Payment not completed");
+      throw new AppError(400, "Payment not completed");
 
     let user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
@@ -364,7 +408,7 @@ export const paymentService = {
     }
 
     if (!user) {
-      throw new Error("User could not be found or created");
+      throw new AppError(500, "User could not be found or created");
     }
 
     const enrollment = await prisma.packageEnrollment.create({
@@ -376,12 +420,18 @@ export const paymentService = {
       },
     });
 
-    if (isNewUser && dummyPassword) {
+    if (dummyPassword) {
       emailService
         .sendWelcomeEmail({
           name,
           email: email.toLowerCase(),
           credentials: { email: email.toLowerCase(), password: dummyPassword },
+          invoice: {
+            paymentId: payment.id,
+            packageName: payment.package.name,
+            amount: payment.amount,
+            discountAmount: payment.discountAmount,
+          },
         })
         .catch((err: Error) =>
           console.error("[payment] Failed to send welcome email:", err),
@@ -397,7 +447,12 @@ export const paymentService = {
 
   async getAdminPayments(params?: PaginationParams) {
     const { page, limit } = params || {};
-    const { skip, take, page: currentPage, limit: currentLimit } = paginate({ page, limit });
+    const {
+      skip,
+      take,
+      page: currentPage,
+      limit: currentLimit,
+    } = paginate({ page, limit });
 
     const where = { status: { not: "PENDING" as const } };
 

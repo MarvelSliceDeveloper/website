@@ -299,7 +299,9 @@ if (process.env.SENTRY_DSN) {
 
 app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
   const statusCode =
-    err instanceof AppError ? err.statusCode : (err as any)?.statusCode || (err as any)?.status || 500;
+    err instanceof AppError
+      ? err.statusCode
+      : (err as any)?.statusCode || (err as any)?.status || 500;
   const message = err instanceof Error ? err.message : "Internal Server Error";
   if (statusCode >= 500) {
     req.log?.error?.(err, message);

@@ -420,7 +420,7 @@ function AdminDashboard() {
           dashboardRes,
         ] = await Promise.allSettled([
           api.get<{ total: number }>("/api/admin/courses", { limit: "1" }),
-          api.get<unknown[]>("/api/admin/batches", { status: "ACTIVE" }),
+          api.get<{ batches: unknown[] }>("/api/admin/batches", { status: "ACTIVE" }),
           api.get<{ sessions: unknown[] }>("/api/sessions", { status: "live" }),
           api.get<{ users: Array<{ role: string }>; packages: unknown[] }>(
             "/api/users",
@@ -433,7 +433,7 @@ function AdminDashboard() {
             coursesRes.status === "fulfilled" ? coursesRes.value.total : 0,
           activeBatches:
             activeBatchesRes.status === "fulfilled"
-              ? activeBatchesRes.value.length
+              ? activeBatchesRes.value.batches?.length ?? 0
               : 0,
           liveSessions:
             sessionsRes.status === "fulfilled"

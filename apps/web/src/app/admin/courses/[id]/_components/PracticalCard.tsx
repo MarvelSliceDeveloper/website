@@ -97,9 +97,7 @@ export default function PracticalCard({
   const handleDelete = async () => {
     if (!confirm(`Delete practical "${practical.title}"?`)) return;
     try {
-      await api.delete(
-        `/api/admin/courses/modules/practicals/${practical.id}`,
-      );
+      await api.delete(`/api/admin/courses/modules/practicals/${practical.id}`);
       toast.success("Practical deleted");
       onUpdate();
     } catch {

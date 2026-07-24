@@ -12,7 +12,11 @@ export function getCached<T>(key: string): T | null {
   return entry.data as T;
 }
 
-export function setCache<T>(key: string, data: T, ttlMs = DEFAULT_TTL_MS): void {
+export function setCache<T>(
+  key: string,
+  data: T,
+  ttlMs = DEFAULT_TTL_MS,
+): void {
   cache.set(key, { data, expiry: Date.now() + ttlMs });
   // Evict old entries if map grows too large
   if (cache.size > 500) {

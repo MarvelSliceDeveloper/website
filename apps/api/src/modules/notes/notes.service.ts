@@ -15,7 +15,12 @@ export const notesService = {
     if (moduleId) where.moduleId = moduleId;
     if (isSticky !== undefined) where.isSticky = isSticky;
 
-    const { skip, take, page: currentPage, limit: currentLimit } = paginate({ page, limit });
+    const {
+      skip,
+      take,
+      page: currentPage,
+      limit: currentLimit,
+    } = paginate({ page, limit });
 
     const [items, total] = await Promise.all([
       prisma.note.findMany({

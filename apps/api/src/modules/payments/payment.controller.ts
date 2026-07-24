@@ -34,6 +34,9 @@ export const paymentController = {
 
       let userId = req.user?.userId;
 
+      // Check for existing enrollment before proceeding
+      await paymentService.checkNotEnrolled(packageId, userId, email);
+
       // If not authenticated, create user account (guest checkout)
       if (!userId) {
         if (!name || !email) {
@@ -53,7 +56,11 @@ export const paymentController = {
         });
       }
 
-      const orderResult = await paymentService.createOrder(userId, packageId, couponCode);
+      const orderResult = await paymentService.createOrder(
+        userId,
+        packageId,
+        couponCode,
+      );
       return res.status(200).json({
         ...orderResult,
         isNewUser: !req.user?.userId,

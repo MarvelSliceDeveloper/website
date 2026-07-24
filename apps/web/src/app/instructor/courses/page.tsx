@@ -2,22 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import {
-  IconBook,
-  IconClipboardList,
-  IconFileDescription,
-  IconUsers,
-} from "@tabler/icons-react";
+import { IconBook, IconClipboardList, IconUsers } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
 
 type Course = {
   id: string;
   title: string;
   description: string | null;
-  thumbnail: string | null;
-  batches: { id: string; name: string; _count: { sessions: number } }[];
-  quizzes: { id: string; title: string }[];
-  assignments: { id: string; title: string; dueDate: string }[];
+  thumbnailUrl: string | null;
+  _count: { modules: number; batches: number };
 };
 
 export default function InstructorCoursesPage() {
@@ -97,7 +90,6 @@ export default function InstructorCoursesPage() {
             key={course.id}
             className="glass-card border border-border/80 overflow-hidden"
           >
-            {/* Course header */}
             <div className="p-5 border-b border-border/60">
               <h2 className="text-lg font-bold text-foreground">
                 {course.title}
@@ -109,71 +101,20 @@ export default function InstructorCoursesPage() {
               )}
             </div>
 
-            {/* Batches */}
-            {course.batches.length > 0 && (
-              <div className="px-5 py-3 border-b border-border/40">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted mb-2 flex items-center gap-1.5">
-                  <IconUsers size={14} /> Batches
-                </p>
-                <div className="space-y-1.5">
-                  {course.batches.map((batch) => (
-                    <div
-                      key={batch.id}
-                      className="text-sm text-foreground flex items-center justify-between"
-                    >
-                      <span>{batch.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {batch._count.sessions} sessions
-                      </span>
-                    </div>
-                  ))}
-                </div>
+            <div className="px-5 py-3">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <IconUsers size={14} />
+                  {course._count.batches}{" "}
+                  {course._count.batches === 1 ? "batch" : "batches"}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <IconClipboardList size={14} />
+                  {course._count.modules}{" "}
+                  {course._count.modules === 1 ? "module" : "modules"}
+                </span>
               </div>
-            )}
-
-            {/* Quizzes */}
-            {course.quizzes.length > 0 && (
-              <div className="px-5 py-3 border-b border-border/40">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted mb-2 flex items-center gap-1.5">
-                  <IconClipboardList size={14} /> Quizzes
-                </p>
-                <div className="space-y-1">
-                  {course.quizzes.map((quiz) => (
-                    <div key={quiz.id} className="text-sm text-foreground">
-                      {quiz.title}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Assignments */}
-            {course.assignments.length > 0 && (
-              <div className="px-5 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted mb-2 flex items-center gap-1.5">
-                  <IconFileDescription size={14} /> Assignments
-                </p>
-                <div className="space-y-1">
-                  {course.assignments.map((assignment) => (
-                    <div
-                      key={assignment.id}
-                      className="text-sm text-foreground flex items-center justify-between"
-                    >
-                      <span>{assignment.title}</span>
-                      <span className="text-xs text-muted-foreground">
-                        Due: {new Date(assignment.dueDate).toLocaleDateString()}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {course.quizzes.length === 0 && course.assignments.length === 0 && (
-              <div className="px-5 py-4 text-center text-sm text-muted-foreground">
-                No quizzes or assignments yet.
-              </div>
-            )}
+            </div>
           </div>
         ))}
       </div>

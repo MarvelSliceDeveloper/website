@@ -204,7 +204,12 @@ export const batchService = {
       where.name = { contains: filters.search, mode: "insensitive" };
     }
 
-    const { skip, take, page: currentPage, limit: currentLimit } = paginate({ page: filters.page, limit: filters.limit });
+    const {
+      skip,
+      take,
+      page: currentPage,
+      limit: currentLimit,
+    } = paginate({ page: filters.page, limit: filters.limit });
 
     const [batches, total] = await Promise.all([
       prisma.batch.findMany({
@@ -242,7 +247,12 @@ export const batchService = {
       };
     });
 
-    return { batches: formattedBatches, total, page: currentPage, limit: currentLimit };
+    return {
+      batches: formattedBatches,
+      total,
+      page: currentPage,
+      limit: currentLimit,
+    };
   },
 
   // Gets all batches grouped by course for a given package
@@ -399,7 +409,12 @@ export const batchService = {
     const batch = await prisma.batch.findUnique({ where: { id: batchId } });
     if (!batch) throw new Error("Batch not found");
 
-    const { skip, take, page: currentPage, limit: currentLimit } = paginate({ page: options?.page, limit: options?.limit });
+    const {
+      skip,
+      take,
+      page: currentPage,
+      limit: currentLimit,
+    } = paginate({ page: options?.page, limit: options?.limit });
 
     const where = { batchId, status: "APPROVED" as const };
 
@@ -542,7 +557,10 @@ export const batchService = {
       select: { courseId: true, isVisible: true, isExamRequired: true },
     });
     const visibilityMap = new Map(
-      visibilityRecords.map((v) => [v.courseId, { isVisible: v.isVisible, isExamRequired: v.isExamRequired }]),
+      visibilityRecords.map((v) => [
+        v.courseId,
+        { isVisible: v.isVisible, isExamRequired: v.isExamRequired },
+      ]),
     );
 
     return packageCourses.map((pc) => {
@@ -569,7 +587,12 @@ export const batchService = {
     const result = await prisma.batchCourseVisibility.upsert({
       where: { batchId_courseId: { batchId, courseId } },
       update: { isVisible: newIsVisible },
-      create: { batchId, courseId, isVisible: newIsVisible, isExamRequired: true },
+      create: {
+        batchId,
+        courseId,
+        isVisible: newIsVisible,
+        isExamRequired: true,
+      },
     });
 
     const course = await prisma.course.findUnique({
@@ -598,7 +621,12 @@ export const batchService = {
     const result = await prisma.batchCourseVisibility.upsert({
       where: { batchId_courseId: { batchId, courseId } },
       update: { isExamRequired: newIsExamRequired },
-      create: { batchId, courseId, isVisible: false, isExamRequired: newIsExamRequired },
+      create: {
+        batchId,
+        courseId,
+        isVisible: false,
+        isExamRequired: newIsExamRequired,
+      },
     });
 
     const course = await prisma.course.findUnique({

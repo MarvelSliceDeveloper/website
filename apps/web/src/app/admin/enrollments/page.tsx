@@ -69,10 +69,10 @@ export default function AdminEnrollmentsPage() {
   const fetchEnrollments = async () => {
     setLoading(true);
     try {
-      const data = await api.get<{ enrollments: Enrollment[] }>(
+      const data = await api.get<{ items: Enrollment[] }>(
         `/api/admin/enrollments?status=${statusFilter}`,
       );
-      setEnrollments(data.enrollments || []);
+      setEnrollments(data.items || []);
     } catch {
       setEnrollments([]);
     } finally {
@@ -92,10 +92,10 @@ export default function AdminEnrollmentsPage() {
 
     (async () => {
       try {
-        const data = await api.get<Batch[]>(
+        const data = await api.get<{ batches: Batch[] }>(
           `/api/admin/batches?courseId=${approveModal.courseId}`,
         );
-        setCourseBatches(Array.isArray(data) ? data : []);
+        setCourseBatches(data.batches || []);
       } catch {
         setCourseBatches([]);
       } finally {

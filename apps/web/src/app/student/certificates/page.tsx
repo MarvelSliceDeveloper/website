@@ -4,7 +4,13 @@ import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
-import { IconAward, IconCheck, IconX, IconClock, IconLock } from "@tabler/icons-react";
+import {
+  IconAward,
+  IconCheck,
+  IconX,
+  IconClock,
+  IconLock,
+} from "@tabler/icons-react";
 
 type CertificateItem = {
   id: string;
@@ -77,12 +83,17 @@ export default function CertificatesPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const [packageProgresses, setPackageProgresses] = useState<PackageExamProgress[]>([]);
-  const [claimingPackageId, setClaimingPackageId] = useState<string | null>(null);
+  const [packageProgresses, setPackageProgresses] = useState<
+    PackageExamProgress[]
+  >([]);
+  const [claimingPackageId, setClaimingPackageId] = useState<string | null>(
+    null,
+  );
 
   const fetchCertificates = useCallback(async () => {
     try {
-      const response = await api.get<CertificatesResponse>("/api/certificates/");
+      const response =
+        await api.get<CertificatesResponse>("/api/certificates/");
       setData(response);
     } catch (loadError: unknown) {
       toast.error(
@@ -95,18 +106,24 @@ export default function CertificatesPage() {
 
   const fetchPackageProgress = useCallback(async () => {
     try {
-      const res = await api.get<{ packages: StudentPackage[] }>("/api/student/packages");
+      const res = await api.get<{ packages: StudentPackage[] }>(
+        "/api/student/packages",
+      );
       const pkgs = res.packages || [];
       const progresses = await Promise.all(
         pkgs.map(async (pkg) => {
           try {
-            return await api.get<PackageExamProgress>(`/api/certificates/package/${pkg.id}/status`);
+            return await api.get<PackageExamProgress>(
+              `/api/certificates/package/${pkg.id}/status`,
+            );
           } catch {
             return null;
           }
-        })
+        }),
       );
-      setPackageProgresses(progresses.filter((p): p is PackageExamProgress => p !== null));
+      setPackageProgresses(
+        progresses.filter((p): p is PackageExamProgress => p !== null),
+      );
     } catch {
       // Ignore if student has no packages
     }
@@ -154,18 +171,25 @@ export default function CertificatesPage() {
   const claimPackageCert = async (packageId: string) => {
     setClaimingPackageId(packageId);
     try {
-      const result = await api.post<{ issued: boolean; certificate?: any; reason?: string }>(
-        "/api/certificates/claim-package",
-        { packageId },
-      );
+      const result = await api.post<{
+        issued: boolean;
+        certificate?: any;
+        reason?: string;
+      }>("/api/certificates/claim-package", { packageId });
       if (result.issued) {
-        toast.success("Congratulations! Package Certificate claimed successfully.");
+        toast.success(
+          "Congratulations! Package Certificate claimed successfully.",
+        );
         await fetchCertificates();
       } else {
         toast.info(result.reason || "Unable to claim certificate.");
       }
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to claim package certificate");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to claim package certificate",
+      );
     } finally {
       setClaimingPackageId(null);
     }
@@ -175,9 +199,12 @@ export default function CertificatesPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Certificates & Special Exams</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            Certificates & Special Exams
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Complete all required Special Exams in your enrolled program to unlock and claim your official Package Certification.
+            Complete all required Special Exams in your enrolled program to
+            unlock and claim your official Package Certification.
           </p>
         </div>
       </div>
@@ -212,15 +239,21 @@ export default function CertificatesPage() {
             >
               <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-4">
                 <div>
-                  <h3 className="text-xl font-bold text-foreground">{progress.packageName}</h3>
+                  <h3 className="text-xl font-bold text-foreground">
+                    {progress.packageName}
+                  </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Special Exam Progress: {progress.passedCount} of {progress.totalRequired} required exams passed
+                    Special Exam Progress: {progress.passedCount} of{" "}
+                    {progress.totalRequired} required exams passed
                   </p>
                 </div>
                 <div>
                   <button
                     onClick={() => claimPackageCert(progress.packageId)}
-                    disabled={!progress.allPassed || claimingPackageId === progress.packageId}
+                    disabled={
+                      !progress.allPassed ||
+                      claimingPackageId === progress.packageId
+                    }
                     className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all ${
                       progress.allPassed
                         ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-black shadow-lg shadow-amber-500/20 hover:scale-[1.02]"
@@ -245,11 +278,16 @@ export default function CertificatesPage() {
               {/* Progress bar */}
               <div className="mt-4 space-y-1.5">
                 <div className="flex justify-between text-xs font-medium">
-                  <span className="text-muted-foreground">Certification Readiness</span>
+                  <span className="text-muted-foreground">
+                    Certification Readiness
+                  </span>
                   <span className="text-amber-400 font-bold">
                     {progress.totalRequired > 0
-                      ? Math.round((progress.passedCount / progress.totalRequired) * 100)
-                      : 0}%
+                      ? Math.round(
+                          (progress.passedCount / progress.totalRequired) * 100,
+                        )
+                      : 0}
+                    %
                   </span>
                 </div>
                 <div className="h-2 w-full rounded-full bg-background/60 overflow-hidden">
@@ -258,7 +296,10 @@ export default function CertificatesPage() {
                     style={{
                       width: `${
                         progress.totalRequired > 0
-                          ? Math.round((progress.passedCount / progress.totalRequired) * 100)
+                          ? Math.round(
+                              (progress.passedCount / progress.totalRequired) *
+                                100,
+                            )
                           : 0
                       }%`,
                     }}
@@ -274,12 +315,22 @@ export default function CertificatesPage() {
                     className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/40 bg-background/50 p-3.5"
                   >
                     <div>
-                      <p className="text-sm font-medium text-foreground">{cs.courseTitle}</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {cs.courseTitle}
+                      </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {cs.specialExamTitle ? (
-                          <>Exam: <span className="font-semibold">{cs.specialExamTitle}</span> (Passing: {cs.passingScore}%)</>
+                          <>
+                            Exam:{" "}
+                            <span className="font-semibold">
+                              {cs.specialExamTitle}
+                            </span>{" "}
+                            (Passing: {cs.passingScore}%)
+                          </>
                         ) : (
-                          <span className="italic text-muted">No Special Exam configured</span>
+                          <span className="italic text-muted">
+                            No Special Exam configured
+                          </span>
                         )}
                       </p>
                     </div>
@@ -329,13 +380,21 @@ export default function CertificatesPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="text-xs uppercase tracking-[0.14em] text-primary-hover">
-                        {certificate.package ? "Package Certificate" : certificate.autoIssued ? "Auto-issued" : "Issued certificate"}
+                        {certificate.package
+                          ? "Package Certificate"
+                          : certificate.autoIssued
+                            ? "Auto-issued"
+                            : "Issued certificate"}
                       </p>
                       <h3 className="mt-1 text-lg font-semibold text-foreground">
-                        {certificate.package?.name || certificate.course?.title || "Certificate"}
+                        {certificate.package?.name ||
+                          certificate.course?.title ||
+                          "Certificate"}
                       </h3>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {certificate.package ? "Complete Program Certification" : certificate.course?.category || "General"}
+                        {certificate.package
+                          ? "Complete Program Certification"
+                          : certificate.course?.category || "General"}
                       </p>
                     </div>
                     <div className="flex gap-2">
@@ -413,7 +472,8 @@ export default function CertificatesPage() {
                     </span>
                   </div>
                   <p className="mt-4 text-sm text-muted-foreground">
-                    Complete all lessons and Special Exams to receive your certificate.
+                    Complete all lessons and Special Exams to receive your
+                    certificate.
                   </p>
                 </div>
               ))}

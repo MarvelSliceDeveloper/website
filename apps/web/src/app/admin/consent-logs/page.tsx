@@ -24,12 +24,12 @@ export default function ConsentLogsPage() {
   async function fetchLogs() {
     setLoading(true);
     try {
-      const data = await api.get<{
-        logs: ConsentEntry[];
-        pagination: { total: number };
-      }>("/api/admin/consent-logs", { page: String(page), limit: "50" });
+      const data = await api.get<{ logs: ConsentEntry[] }>(
+        "/api/admin/consent-logs",
+        { page: String(page), limit: "50" },
+      );
       setLogs(data.logs);
-      setTotal(data.pagination.total);
+      setTotal(data.logs.length);
     } catch {
       // silent
     } finally {

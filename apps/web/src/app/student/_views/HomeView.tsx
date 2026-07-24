@@ -197,82 +197,87 @@ export default function HomeView({
 
   return (
     <div className="sp-view-enter space-y-6 motion-reduce:animate-none">
-
       {/* ── Stat Tiles (full width) ──────────────────────────────────────── */}
       <StudentStatTiles tiles={statTiles} />
 
       {/* ── Quick Access Links ─────────────────────────────────────────── */}
       <div className="space-y-3">
-        <p className="text-[11.5px] font-bold uppercase tracking-wider text-foreground px-1">
+        <p className="text-[11.5px] font-bold uppercase tracking-wider text-muted-foreground px-1">
           Quick Access
         </p>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-5">
           {[
             {
               label: "Study Notes",
               sub: "Review saved notes",
               icon: <IconNotes size={20} />,
-              color: "blue",
+              color: "indigo",
               onClick: () => router.push("/student/notes"),
             },
             {
               label: "Certificates",
               sub: "View credentials",
               icon: <IconCertificate size={20} />,
-              color: "green",
+              color: "sky",
               onClick: () => navigate({ view: "CERTIFICATES" }),
             },
             {
               label: "Mentorship",
               sub: "Book 1-on-1 sessions",
               icon: <IconHeart size={20} />,
-              color: "orange",
+              color: "violet",
               onClick: () => navigate({ view: "MENTORSHIP" }),
             },
             {
               label: "Inbox Messages",
               sub: "Check alerts & mails",
               icon: <IconMail size={20} />,
-              color: "green",
+              color: "emerald",
               onClick: () => router.push("/student/inbox"),
             },
             {
               label: "Support Center",
               sub: "Get help from staff",
               icon: <IconHelp size={20} />,
-              color: "blue",
+              color: "rose",
               onClick: () => router.push("/student/support"),
             },
           ].map((action, idx) => {
             const colorClasses = {
-              blue: "border-blue-500/35 bg-blue-500/12 hover:bg-blue-500/20 hover:border-blue-500/55 text-blue-600 dark:text-blue-400 hover:shadow-blue-500/15",
-              orange:
-                "border-indigo-500/35 bg-indigo-500/12 hover:bg-indigo-500/20 hover:border-indigo-500/55 text-indigo-600 dark:text-indigo-400 hover:shadow-indigo-500/15",
-              green:
-                "border-emerald-500/35 bg-emerald-500/12 hover:bg-emerald-500/20 hover:border-emerald-500/55 text-emerald-600 dark:text-emerald-400 hover:shadow-emerald-500/15",
+              indigo:
+                "border-indigo-500/25 bg-indigo-500/8 hover:bg-indigo-500/15 hover:border-indigo-500/45 text-indigo-600 dark:text-indigo-400 hover:shadow-indigo-500/10",
+              sky: "border-sky-500/25 bg-sky-500/8 hover:bg-sky-500/15 hover:border-sky-500/45 text-sky-600 dark:text-sky-400 hover:shadow-sky-500/10",
+              violet:
+                "border-violet-500/25 bg-violet-500/8 hover:bg-violet-500/15 hover:border-violet-500/45 text-violet-600 dark:text-violet-400 hover:shadow-violet-500/10",
+              emerald:
+                "border-emerald-500/25 bg-emerald-500/8 hover:bg-emerald-500/15 hover:border-emerald-500/45 text-emerald-600 dark:text-emerald-400 hover:shadow-emerald-500/10",
+              rose: "border-rose-500/25 bg-rose-500/8 hover:bg-rose-500/15 hover:border-rose-500/45 text-rose-600 dark:text-rose-400 hover:shadow-rose-500/10",
             }[action.color];
 
             const iconBg = {
-              blue: "bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/25",
-              orange:
-                "bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25",
-              green:
-                "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25",
+              indigo:
+                "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20",
+              sky: "bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/20",
+              violet:
+                "bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-500/20",
+              emerald:
+                "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
+              rose: "bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20",
             }[action.color];
 
             return (
               <button
                 key={idx}
                 onClick={action.onClick}
-                className={`flex flex-col items-start p-4 sm:p-5 rounded-2xl border text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer ${colorClasses}`}
+                className={`flex flex-col items-start p-4 rounded-2xl border text-left transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md cursor-pointer ${colorClasses}`}
               >
-                <div className={`p-2 rounded-xl mb-3 ${iconBg}`}>
+                <div className={`p-2 rounded-xl mb-2.5 ${iconBg}`}>
                   {action.icon}
                 </div>
-                <p className="text-[13.5px] font-bold text-foreground leading-snug">
+                <p className="text-[13px] font-bold text-foreground leading-snug">
                   {action.label}
                 </p>
-                <p className="text-[11px] text-muted-foreground mt-1 leading-normal">
+                <p className="text-[11px] text-muted-foreground mt-0.5 leading-normal">
                   {action.sub}
                 </p>
               </button>

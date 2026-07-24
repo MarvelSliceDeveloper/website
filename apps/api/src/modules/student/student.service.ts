@@ -189,7 +189,8 @@ export const studentService = {
     }
 
     result.sort(
-      (a, b) => new Date(b.dueDate || 0).getTime() - new Date(a.dueDate || 0).getTime(),
+      (a, b) =>
+        new Date(b.dueDate || 0).getTime() - new Date(a.dueDate || 0).getTime(),
     );
 
     return result;

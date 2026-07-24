@@ -54,7 +54,9 @@ export default function InstructorAnalyticsPage() {
   useEffect(() => {
     async function loadAnalytics() {
       try {
-        const res = await api.get<AnalyticsData>("/api/admin/dashboard/analytics");
+        const res = await api.get<AnalyticsData>(
+          "/api/admin/dashboard/analytics",
+        );
         setData(res);
       } catch (err) {
         console.error("Failed to fetch analytics data:", err);
@@ -65,26 +67,23 @@ export default function InstructorAnalyticsPage() {
     loadAnalytics();
   }, []);
 
-  const avgCompletion =
-    data?.completionRates?.length
-      ? Math.round(
-          data.completionRates.reduce((acc, c) => acc + c.completionRate, 0) /
-            data.completionRates.length,
-        )
-      : 84;
+  const avgCompletion = data?.completionRates?.length
+    ? Math.round(
+        data.completionRates.reduce((acc, c) => acc + c.completionRate, 0) /
+          data.completionRates.length,
+      )
+    : 84;
 
-  const totalActiveNow =
-    data?.activeRetention?.length
-      ? data.activeRetention[data.activeRetention.length - 1].activeStudents
-      : 165;
+  const totalActiveNow = data?.activeRetention?.length
+    ? data.activeRetention[data.activeRetention.length - 1].activeStudents
+    : 165;
 
-  const avgQuizScore =
-    data?.quizScoreAverages?.length
-      ? Math.round(
-          data.quizScoreAverages.reduce((acc, q) => acc + q.averageScorePct, 0) /
-            data.quizScoreAverages.length,
-        )
-      : 84;
+  const avgQuizScore = data?.quizScoreAverages?.length
+    ? Math.round(
+        data.quizScoreAverages.reduce((acc, q) => acc + q.averageScorePct, 0) /
+          data.quizScoreAverages.length,
+      )
+    : 84;
 
   return (
     <div className="space-y-6 p-6">
@@ -93,7 +92,8 @@ export default function InstructorAnalyticsPage() {
           Instructor Course Analytics
         </h1>
         <p className="text-sm text-muted-foreground">
-          Track student engagement, course completion, video retention drop-off, and quiz scores.
+          Track student engagement, course completion, video retention drop-off,
+          and quiz scores.
         </p>
       </div>
 
@@ -142,15 +142,25 @@ export default function InstructorAnalyticsPage() {
           ) : data?.completionRates?.length ? (
             <Chart
               options={{
-                chart: { type: "bar", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "bar",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: [COLORS.primary],
                 plotOptions: { bar: { borderRadius: 6, horizontal: true } },
                 xaxis: {
                   categories: data.completionRates.map((c) => c.courseTitle),
                   max: 100,
-                  labels: { style: { colors: "var(--muted)", fontSize: "11px" } },
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
                 },
-                yaxis: { labels: { style: { colors: "var(--muted)", fontSize: "11px" } } },
+                yaxis: {
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
+                },
                 grid: { borderColor: "var(--border)" },
                 tooltip: { theme: "light" },
               }}
@@ -188,18 +198,32 @@ export default function InstructorAnalyticsPage() {
           ) : data?.activeRetention?.length ? (
             <Chart
               options={{
-                chart: { type: "area", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "area",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: [COLORS.accent],
                 fill: {
                   type: "gradient",
-                  gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05 },
+                  gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.4,
+                    opacityTo: 0.05,
+                  },
                 },
                 stroke: { curve: "smooth", width: 3 },
                 xaxis: {
                   categories: data.activeRetention.map((a) => a.month),
-                  labels: { style: { colors: "var(--muted)", fontSize: "11px" } },
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
                 },
-                yaxis: { labels: { style: { colors: "var(--muted)", fontSize: "11px" } } },
+                yaxis: {
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
+                },
                 grid: { borderColor: "var(--border)" },
                 tooltip: { theme: "light" },
               }}
@@ -237,11 +261,23 @@ export default function InstructorAnalyticsPage() {
           ) : data?.videoDropOff?.length ? (
             <Chart
               options={{
-                chart: { type: "donut", toolbar: { show: false }, fontFamily: "inherit" },
-                colors: [COLORS.danger, COLORS.warning, COLORS.violet, COLORS.success],
+                chart: {
+                  type: "donut",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
+                colors: [
+                  COLORS.danger,
+                  COLORS.warning,
+                  COLORS.violet,
+                  COLORS.success,
+                ],
                 labels: data.videoDropOff.map((v) => v.bucket),
                 plotOptions: { pie: { donut: { size: "65%" } } },
-                legend: { position: "bottom", labels: { colors: "var(--muted-foreground)" } },
+                legend: {
+                  position: "bottom",
+                  labels: { colors: "var(--muted-foreground)" },
+                },
                 tooltip: { theme: "light" },
               }}
               series={data.videoDropOff.map((v) => v.count)}
@@ -273,16 +309,24 @@ export default function InstructorAnalyticsPage() {
           ) : data?.quizScoreAverages?.length ? (
             <Chart
               options={{
-                chart: { type: "bar", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "bar",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: [COLORS.violet],
                 plotOptions: { bar: { borderRadius: 6, columnWidth: "50%" } },
                 xaxis: {
                   categories: data.quizScoreAverages.map((q) => q.quizTitle),
-                  labels: { style: { colors: "var(--muted)", fontSize: "11px" } },
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
                 },
                 yaxis: {
                   max: 100,
-                  labels: { style: { colors: "var(--muted)", fontSize: "11px" } },
+                  labels: {
+                    style: { colors: "var(--muted)", fontSize: "11px" },
+                  },
                 },
                 grid: { borderColor: "var(--border)" },
                 tooltip: { theme: "light" },

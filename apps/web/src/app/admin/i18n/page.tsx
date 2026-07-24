@@ -294,7 +294,8 @@ export default function I18nPage() {
           </div>
           <p className="text-xs text-muted-foreground">
             Creates a copy of en.json as a starting template. Format: 2-letter
-            code (e.g. &quot;hi&quot;) or language-region (e.g. &quot;fr-FR&quot;).
+            code (e.g. &quot;hi&quot;) or language-region (e.g.
+            &quot;fr-FR&quot;).
           </p>
         </div>
       )}

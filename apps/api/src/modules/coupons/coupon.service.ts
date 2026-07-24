@@ -22,7 +22,9 @@ export function generateCouponCode(prefix = "LMS"): string {
 export const couponService = {
   // Generates or validates code and creates new coupon
   async createCoupon(input: z.infer<typeof CreateCouponSchema>) {
-    let code = input.code ? input.code.trim().toUpperCase() : generateCouponCode();
+    let code = input.code
+      ? input.code.trim().toUpperCase()
+      : generateCouponCode();
 
     // Check code uniqueness
     const existing = await prisma.coupon.findUnique({ where: { code } });
@@ -120,8 +122,13 @@ export const couponService = {
     // Calculate discount in paise
     let discountPaise = 0;
     if (coupon.discountType === "PERCENTAGE") {
-      discountPaise = Math.round((originalAmountPaise * coupon.discountValue) / 100);
-      if (coupon.maxDiscountAmount && discountPaise > coupon.maxDiscountAmount) {
+      discountPaise = Math.round(
+        (originalAmountPaise * coupon.discountValue) / 100,
+      );
+      if (
+        coupon.maxDiscountAmount &&
+        discountPaise > coupon.maxDiscountAmount
+      ) {
         discountPaise = coupon.maxDiscountAmount;
       }
     } else {

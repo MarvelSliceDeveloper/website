@@ -96,10 +96,7 @@ export default function AdminCouponsPage() {
       toast.error("Discount value must be greater than 0");
       return;
     }
-    if (
-      formDiscountType === "PERCENTAGE" &&
-      Number(formDiscountValue) > 100
-    ) {
+    if (formDiscountType === "PERCENTAGE" && Number(formDiscountValue) > 100) {
       toast.error("Percentage discount cannot exceed 100%");
       return;
     }
@@ -285,9 +282,7 @@ export default function AdminCouponsPage() {
               <select
                 value={formDiscountType}
                 onChange={(e) =>
-                  setFormDiscountType(
-                    e.target.value as "PERCENTAGE" | "FIXED",
-                  )
+                  setFormDiscountType(e.target.value as "PERCENTAGE" | "FIXED")
                 }
                 className="input text-xs w-full"
               >
@@ -489,7 +484,11 @@ export default function AdminCouponsPage() {
                         {coupon.expiresAt
                           ? new Date(coupon.expiresAt).toLocaleDateString(
                               "en-IN",
-                              { day: "2-digit", month: "short", year: "numeric" },
+                              {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              },
                             )
                           : "No expiry"}
                       </td>
@@ -522,9 +521,7 @@ export default function AdminCouponsPage() {
                             )}
                           </button>
                           <button
-                            onClick={() =>
-                              handleDelete(coupon.id, coupon.code)
-                            }
+                            onClick={() => handleDelete(coupon.id, coupon.code)}
                             className="p-1.5 rounded-md hover:bg-danger/10 text-muted-foreground hover:text-danger transition-colors"
                             title="Delete"
                           >

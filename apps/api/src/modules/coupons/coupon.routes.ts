@@ -9,10 +9,7 @@ export const couponRouter = Router();
 couponRouter.post("/validate", couponController.validateCoupon);
 
 // Admin / SuperAdmin routes
-couponRouter.use(
-  requireAuth,
-  requireRole([UserRole.SUPER_ADMIN]),
-);
+couponRouter.use(requireAuth, requireRole([UserRole.SUPER_ADMIN]));
 
 couponRouter.get("/", couponController.listCoupons);
 couponRouter.post("/", couponController.createCoupon);

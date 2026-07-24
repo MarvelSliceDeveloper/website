@@ -118,8 +118,12 @@ export const assignmentController = {
       );
 
       if (process.env.AUTO_CERTIFICATE !== "false" && submission.studentId) {
-        const { checkAndIssueForAssignment } = await import("../certificates/certificate-completion.service");
-        checkAndIssueForAssignment(submission.assignmentId, submission.studentId).catch((err: unknown) =>
+        const { checkAndIssueForAssignment } =
+          await import("../certificates/certificate-completion.service");
+        checkAndIssueForAssignment(
+          submission.assignmentId,
+          submission.studentId,
+        ).catch((err: unknown) =>
           (req as any).log?.error?.("[certificate] Auto-issue failed:", err),
         );
       }

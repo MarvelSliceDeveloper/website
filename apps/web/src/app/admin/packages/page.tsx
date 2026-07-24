@@ -51,11 +51,11 @@ export default function AdminPackagesPage() {
     try {
       const params: Record<string, string> = {};
       if (statusFilter) params.status = statusFilter;
-      const data = await api.get<{ packages: Package[] }>(
+      const data = await api.get<{ items: Package[] }>(
         "/api/admin/packages",
         params,
       );
-      setPackages(data.packages || []);
+      setPackages(data.items || []);
     } catch {
       setPackages([]);
     } finally {

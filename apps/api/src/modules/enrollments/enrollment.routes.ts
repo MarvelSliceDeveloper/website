@@ -22,7 +22,12 @@ router.use(requireRole([UserRole.ADMIN]));
 router.get("/", async (req: AuthRequest, res: Response) => {
   try {
     const { status, courseId, page, limit } = req.query;
-    const { skip, take, page: currentPage, limit: currentLimit } = paginate({
+    const {
+      skip,
+      take,
+      page: currentPage,
+      limit: currentLimit,
+    } = paginate({
       page: page ? Number(page) : undefined,
       limit: limit ? Number(limit) : undefined,
     });

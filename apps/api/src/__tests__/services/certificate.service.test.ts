@@ -67,7 +67,9 @@ describe("certificateService", () => {
       mockPrisma.packageCourse.findMany.mockResolvedValue([]);
 
       // Mock batches
-      mockPrisma.batch.findMany.mockResolvedValue([{ id: "batch-1", courseId: "course-1" }]);
+      mockPrisma.batch.findMany.mockResolvedValue([
+        { id: "batch-1", courseId: "course-1" },
+      ]);
 
       // Mock recordings (all completed)
       mockPrisma.recording.findMany.mockResolvedValue([
@@ -129,7 +131,9 @@ describe("certificateService", () => {
       mockPrisma.packageCourse.findMany.mockResolvedValue([]);
 
       // Mock batches
-      mockPrisma.batch.findMany.mockResolvedValue([{ id: "batch-1", courseId: "course-1" }]);
+      mockPrisma.batch.findMany.mockResolvedValue([
+        { id: "batch-1", courseId: "course-1" },
+      ]);
 
       // Mock recordings (NOT all completed)
       mockPrisma.recording.findMany.mockResolvedValue([
@@ -173,7 +177,9 @@ describe("certificateService", () => {
       mockPrisma.packageCourse.findMany.mockResolvedValue([]);
 
       // Mock batches
-      mockPrisma.batch.findMany.mockResolvedValue([{ id: "batch-1", courseId: "course-1" }]);
+      mockPrisma.batch.findMany.mockResolvedValue([
+        { id: "batch-1", courseId: "course-1" },
+      ]);
 
       // Mock recordings (all completed)
       mockPrisma.recording.findMany.mockResolvedValue([

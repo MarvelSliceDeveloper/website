@@ -208,7 +208,10 @@ export const certificateService = {
         data: { userId, courseId },
       });
     } catch (err) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === "P2002"
+      ) {
         // Concurrent create won — return what the other request created
         return prisma.certificate.findFirstOrThrow({
           where: { userId, courseId },
@@ -235,7 +238,10 @@ export const certificateService = {
       throw new Error("Certificate not found");
     }
 
-    if (certificate.uploadedTemplate?.pdfTemplateUrl && certificate.uploadedTemplate.pdfTemplateType === "uploadedPdf") {
+    if (
+      certificate.uploadedTemplate?.pdfTemplateUrl &&
+      certificate.uploadedTemplate.pdfTemplateType === "uploadedPdf"
+    ) {
       return this.generateFromUploadedTemplate(certificate);
     }
 
@@ -280,7 +286,9 @@ export const certificateService = {
       studentName: certificate.user.name || "Student",
       courseName: certificate.course.title,
       date: new Date(certificate.issuedAt).toLocaleDateString("en-IN", {
-        day: "numeric", month: "long", year: "numeric",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
       }),
       certificateNumber: certificate.certificateNumber,
       verifyUrl: `${process.env.WEB_URL || "https://lms.local"}/verify/${certificate.id}`,
@@ -290,15 +298,22 @@ export const certificateService = {
       const text = values[field.key] || "";
       if (!text) continue;
 
-      const font = field.key === "studentName" || field.key === "courseName" || field.key === "certificateNumber"
-        ? helveticaBold : helveticaFont;
+      const font =
+        field.key === "studentName" ||
+        field.key === "courseName" ||
+        field.key === "certificateNumber"
+          ? helveticaBold
+          : helveticaFont;
 
       const hexColor = field.color || "#1e293b";
       const r = parseInt(hexColor.slice(1, 3), 16) / 255;
       const g = parseInt(hexColor.slice(3, 5), 16) / 255;
       const b = parseInt(hexColor.slice(5, 7), 16) / 255;
 
-      const { width } = helveticaFont.widthOfTextAtSize(text, field.fontSize || 22);
+      const { width } = helveticaFont.widthOfTextAtSize(
+        text,
+        field.fontSize || 22,
+      );
       const pageWidth = firstPage.getWidth();
       let xPos = field.x;
 
@@ -334,15 +349,23 @@ export const certificateService = {
     const hexToRgb = (hex: string) => {
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
       return result
-        ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
+        ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16),
+          }
         : { r: 0, g: 0, b: 0 };
     };
 
     const primaryRgb = hexToRgb(template?.primaryColor || "#3b82f6");
     const bgRgb = hexToRgb(template?.backgroundColor || "#f8fafc");
     const textRgb = hexToRgb(template?.textColor || "#1e293b");
-    const borderRgb = hexToRgb(template?.borderColor || template?.primaryColor || "#3b82f6");
-    const accentRgb = hexToRgb(template?.accentColor || template?.secondaryColor || "#93c5fd");
+    const borderRgb = hexToRgb(
+      template?.borderColor || template?.primaryColor || "#3b82f6",
+    );
+    const accentRgb = hexToRgb(
+      template?.accentColor || template?.secondaryColor || "#93c5fd",
+    );
 
     const fontFamily = template?.fontFamily || "helvetica";
     const titleFontSize = template?.titleFontSize || 28;
@@ -354,7 +377,11 @@ export const certificateService = {
     const showVerificationUrl = template?.showVerificationUrl ?? true;
     const backgroundPattern = template?.backgroundPattern || "none";
 
-    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4",
+    });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
@@ -364,33 +391,65 @@ export const certificateService = {
     if (backgroundPattern === "dots") {
       doc.setFillColor(accentRgb.r, accentRgb.g, accentRgb.b);
       for (let x = 20; x < pageWidth - 10; x += 15)
-        for (let y = 20; y < pageHeight - 10; y += 15) doc.circle(x, y, 0.5, "F");
+        for (let y = 20; y < pageHeight - 10; y += 15)
+          doc.circle(x, y, 0.5, "F");
     } else if (backgroundPattern === "lines") {
       doc.setDrawColor(accentRgb.r, accentRgb.g, accentRgb.b);
       doc.setLineWidth(0.2);
-      for (let y = 20; y < pageHeight - 10; y += 12) doc.line(15, y, pageWidth - 15, y);
+      for (let y = 20; y < pageHeight - 10; y += 12)
+        doc.line(15, y, pageWidth - 15, y);
     } else if (backgroundPattern === "corners") {
       doc.setDrawColor(accentRgb.r, accentRgb.g, accentRgb.b);
       doc.setLineWidth(0.8);
-      doc.line(15, 15, 15, 35); doc.line(15, 15, 35, 15);
-      doc.line(pageWidth - 15, 15, pageWidth - 15, 35); doc.line(pageWidth - 15, 15, pageWidth - 35, 15);
-      doc.line(15, pageHeight - 15, 15, pageHeight - 35); doc.line(15, pageHeight - 15, 35, pageHeight - 15);
-      doc.line(pageWidth - 15, pageHeight - 15, pageWidth - 15, pageHeight - 35);
-      doc.line(pageWidth - 15, pageHeight - 15, pageWidth - 35, pageHeight - 15);
+      doc.line(15, 15, 15, 35);
+      doc.line(15, 15, 35, 15);
+      doc.line(pageWidth - 15, 15, pageWidth - 15, 35);
+      doc.line(pageWidth - 15, 15, pageWidth - 35, 15);
+      doc.line(15, pageHeight - 15, 15, pageHeight - 35);
+      doc.line(15, pageHeight - 15, 35, pageHeight - 15);
+      doc.line(
+        pageWidth - 15,
+        pageHeight - 15,
+        pageWidth - 15,
+        pageHeight - 35,
+      );
+      doc.line(
+        pageWidth - 15,
+        pageHeight - 15,
+        pageWidth - 35,
+        pageHeight - 15,
+      );
     }
 
     if (showBorder) {
       doc.setDrawColor(borderRgb.r, borderRgb.g, borderRgb.b);
       doc.setLineWidth(borderWidth);
-      doc.roundedRect(10, 10, pageWidth - 20, pageHeight - 20, borderRadius, borderRadius);
+      doc.roundedRect(
+        10,
+        10,
+        pageWidth - 20,
+        pageHeight - 20,
+        borderRadius,
+        borderRadius,
+      );
       doc.setDrawColor(accentRgb.r, accentRgb.g, accentRgb.b);
       doc.setLineWidth(0.5);
-      doc.roundedRect(14, 14, pageWidth - 28, pageHeight - 28, Math.max(borderRadius - 1, 1), Math.max(borderRadius - 1, 1));
+      doc.roundedRect(
+        14,
+        14,
+        pageWidth - 28,
+        pageHeight - 28,
+        Math.max(borderRadius - 1, 1),
+        Math.max(borderRadius - 1, 1),
+      );
     }
 
     let contentStartY = 35;
     if (template?.logoUrl) {
-      try { doc.addImage(template.logoUrl, "PNG", pageWidth / 2 - 15, 18, 30, 30); contentStartY = 55; } catch { }
+      try {
+        doc.addImage(template.logoUrl, "PNG", pageWidth / 2 - 15, 18, 30, 30);
+        contentStartY = 55;
+      } catch {}
     }
 
     doc.setFillColor(primaryRgb.r, primaryRgb.g, primaryRgb.b);
@@ -399,7 +458,12 @@ export const certificateService = {
     doc.setFont(fontFamily, "bold");
     doc.setFontSize(titleFontSize);
     doc.setTextColor(textRgb.r, textRgb.g, textRgb.b);
-    doc.text(template?.title || "CERTIFICATE OF COMPLETION", pageWidth / 2, contentStartY + 5, { align: "center" });
+    doc.text(
+      template?.title || "CERTIFICATE OF COMPLETION",
+      pageWidth / 2,
+      contentStartY + 5,
+      { align: "center" },
+    );
 
     doc.setFillColor(primaryRgb.r, primaryRgb.g, primaryRgb.b);
     doc.rect(pageWidth / 2 - 40, contentStartY + 10, 80, 0.5, "F");
@@ -407,49 +471,93 @@ export const certificateService = {
     doc.setFont(fontFamily, "normal");
     doc.setFontSize(12);
     doc.setTextColor(100, 116, 139);
-    doc.text(template?.subtitle || "This certifies that", pageWidth / 2, contentStartY + 22, { align: "center" });
+    doc.text(
+      template?.subtitle || "This certifies that",
+      pageWidth / 2,
+      contentStartY + 22,
+      { align: "center" },
+    );
 
     doc.setFont(fontFamily, "bold");
     doc.setFontSize(nameFontSize);
     doc.setTextColor(textRgb.r, textRgb.g, textRgb.b);
-    doc.text(certificate.user.name || "Student", pageWidth / 2, contentStartY + 35, { align: "center" });
+    doc.text(
+      certificate.user.name || "Student",
+      pageWidth / 2,
+      contentStartY + 35,
+      { align: "center" },
+    );
 
     const nameWidth = doc.getTextWidth(certificate.user.name || "Student");
     doc.setDrawColor(primaryRgb.r, primaryRgb.g, primaryRgb.b);
     doc.setLineWidth(0.3);
-    doc.line(pageWidth / 2 - nameWidth / 2 - 10, contentStartY + 38, pageWidth / 2 + nameWidth / 2 + 10, contentStartY + 38);
+    doc.line(
+      pageWidth / 2 - nameWidth / 2 - 10,
+      contentStartY + 38,
+      pageWidth / 2 + nameWidth / 2 + 10,
+      contentStartY + 38,
+    );
 
     doc.setFont(fontFamily, "normal");
     doc.setFontSize(12);
     doc.setTextColor(100, 116, 139);
-    doc.text("has successfully completed the course", pageWidth / 2, contentStartY + 48, { align: "center" });
+    doc.text(
+      "has successfully completed the course",
+      pageWidth / 2,
+      contentStartY + 48,
+      { align: "center" },
+    );
 
     doc.setFont(fontFamily, "bold");
     doc.setFontSize(18);
     doc.setTextColor(textRgb.r, textRgb.g, textRgb.b);
-    const splitTitle = doc.splitTextToSize(certificate.course.title, pageWidth - 80);
-    doc.text(splitTitle, pageWidth / 2, contentStartY + 60, { align: "center" });
-
-    const issuedDate = new Date(certificate.issuedAt).toLocaleDateString("en-IN", {
-      day: "numeric", month: "long", year: "numeric",
+    const splitTitle = doc.splitTextToSize(
+      certificate.course.title,
+      pageWidth - 80,
+    );
+    doc.text(splitTitle, pageWidth / 2, contentStartY + 60, {
+      align: "center",
     });
+
+    const issuedDate = new Date(certificate.issuedAt).toLocaleDateString(
+      "en-IN",
+      {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      },
+    );
 
     doc.setFont(fontFamily, "normal");
     doc.setFontSize(10);
     doc.setTextColor(100, 116, 139);
 
     const bottomY = pageHeight - 35;
-    doc.text(`Issued: ${issuedDate}`, pageWidth / 2 - 60, bottomY, { align: "center" });
-    doc.text(`Certificate #: ${certificate.certificateNumber}`, pageWidth / 2 + 60, bottomY, { align: "center" });
+    doc.text(`Issued: ${issuedDate}`, pageWidth / 2 - 60, bottomY, {
+      align: "center",
+    });
+    doc.text(
+      `Certificate #: ${certificate.certificateNumber}`,
+      pageWidth / 2 + 60,
+      bottomY,
+      { align: "center" },
+    );
 
     if (showSignatureLine) {
       doc.setDrawColor(203, 213, 225);
       doc.setLineWidth(0.3);
-      doc.line(pageWidth / 2 - 50, bottomY + 12, pageWidth / 2 + 50, bottomY + 12);
+      doc.line(
+        pageWidth / 2 - 50,
+        bottomY + 12,
+        pageWidth / 2 + 50,
+        bottomY + 12,
+      );
       doc.setFont(fontFamily, "normal");
       doc.setFontSize(9);
       doc.setTextColor(148, 163, 184);
-      doc.text("Authorized Signature", pageWidth / 2, bottomY + 17, { align: "center" });
+      doc.text("Authorized Signature", pageWidth / 2, bottomY + 17, {
+        align: "center",
+      });
     }
 
     if (showVerificationUrl) {
@@ -457,13 +565,19 @@ export const certificateService = {
       doc.setTextColor(148, 163, 184);
       const verifyUrl = `${process.env.WEB_URL || "https://lms.local"}/verify/${certificate.id}`;
       doc.text(
-        template?.footerText ? `${template.footerText} | Verify: ${verifyUrl}` : `Verify at: ${verifyUrl}`,
-        pageWidth / 2, pageHeight - 18, { align: "center" },
+        template?.footerText
+          ? `${template.footerText} | Verify: ${verifyUrl}`
+          : `Verify at: ${verifyUrl}`,
+        pageWidth / 2,
+        pageHeight - 18,
+        { align: "center" },
       );
     } else if (template?.footerText) {
       doc.setFontSize(8);
       doc.setTextColor(148, 163, 184);
-      doc.text(template.footerText, pageWidth / 2, pageHeight - 18, { align: "center" });
+      doc.text(template.footerText, pageWidth / 2, pageHeight - 18, {
+        align: "center",
+      });
     }
 
     return {

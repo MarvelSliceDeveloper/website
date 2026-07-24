@@ -773,7 +773,8 @@ router.post(
       });
 
       if (process.env.AUTO_CERTIFICATE !== "false") {
-        const { checkAndIssueForQuiz } = await import("../certificates/certificate-completion.service");
+        const { checkAndIssueForQuiz } =
+          await import("../certificates/certificate-completion.service");
         checkAndIssueForQuiz(quizId, userId).catch((err: unknown) =>
           (req as any).log?.error?.("[certificate] Auto-issue failed:", err),
         );

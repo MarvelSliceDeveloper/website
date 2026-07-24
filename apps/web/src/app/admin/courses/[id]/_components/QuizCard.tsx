@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
-import { IconX, IconGripVertical, IconPlus, IconTrash } from "@tabler/icons-react";
+import {
+  IconX,
+  IconGripVertical,
+  IconPlus,
+  IconTrash,
+} from "@tabler/icons-react";
 
 interface QuizOption {
   id?: string;
@@ -61,13 +66,17 @@ export default function QuizCard({
 }: QuizCardProps) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(quiz.title);
-  const [isSpecialExam, setIsSpecialExam] = useState(quiz.isSpecialExam ?? false);
+  const [isSpecialExam, setIsSpecialExam] = useState(
+    quiz.isSpecialExam ?? false,
+  );
   const [passingScore, setPassingScore] = useState(quiz.passingScore ?? 65);
   const [examType, setExamType] = useState<string>(quiz.examType ?? "MCQ");
 
   // Feature Toggles & Contents
   const [hasMcq, setHasMcq] = useState(quiz.hasMcq ?? true);
-  const [hasAssignment, setHasAssignment] = useState(quiz.hasAssignment ?? false);
+  const [hasAssignment, setHasAssignment] = useState(
+    quiz.hasAssignment ?? false,
+  );
   const [hasCoding, setHasCoding] = useState(quiz.hasCoding ?? false);
   const [assignmentInstructions, setAssignmentInstructions] = useState(
     quiz.assignmentInstructions ?? "",
@@ -143,7 +152,10 @@ export default function QuizCard({
   };
 
   const addTestCase = () => {
-    setTestCases([...testCases, { input: "", expectedOutput: "", isHidden: false }]);
+    setTestCases([
+      ...testCases,
+      { input: "", expectedOutput: "", isHidden: false },
+    ]);
   };
 
   const removeTestCase = (index: number) => {
@@ -178,11 +190,14 @@ export default function QuizCard({
         title,
         isSpecialExam,
         passingScore: Number(passingScore),
-        examType: hasMcq && hasAssignment && hasCoding ? "ALL_IN_ONE" : examType,
+        examType:
+          hasMcq && hasAssignment && hasCoding ? "ALL_IN_ONE" : examType,
         hasMcq,
         hasAssignment,
         hasCoding,
-        assignmentInstructions: hasAssignment ? assignmentInstructions : undefined,
+        assignmentInstructions: hasAssignment
+          ? assignmentInstructions
+          : undefined,
         assignmentPdfUrl: hasAssignment ? assignmentPdfUrl : undefined,
         codingPrompt: hasCoding ? codingPrompt : undefined,
         testCases: hasCoding ? testCases : undefined,
@@ -209,9 +224,7 @@ export default function QuizCard({
       onUpdate();
     } catch (error) {
       console.error("Failed to delete:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to delete",
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to delete");
     } finally {
       setDeleting(false);
     }
@@ -285,7 +298,8 @@ export default function QuizCard({
             htmlFor={`edit-isSpecialExam-${quiz.id}`}
             className="text-xs font-medium cursor-pointer text-amber-300"
           >
-            Mark as Special / Certification Exam (Includes MCQ + Assignment + Coding Testcases)
+            Mark as Special / Certification Exam (Includes MCQ + Assignment +
+            Coding Testcases)
           </label>
         </div>
 
@@ -405,10 +419,11 @@ export default function QuizCard({
                               qi === qIndex
                                 ? {
                                     ...question,
-                                    options: question.options.map((option, oi) =>
-                                      oi === oIndex
-                                        ? { ...option, label: e.target.value }
-                                        : option,
+                                    options: question.options.map(
+                                      (option, oi) =>
+                                        oi === oIndex
+                                          ? { ...option, label: e.target.value }
+                                          : option,
                                     ),
                                   }
                                 : question,

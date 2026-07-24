@@ -61,7 +61,9 @@ export function useRazorpayPayment() {
 
   // Coupon state
   const [couponCode, setCouponCode] = useState("");
-  const [couponApplied, setCouponApplied] = useState<CouponValidation | null>(null);
+  const [couponApplied, setCouponApplied] = useState<CouponValidation | null>(
+    null,
+  );
   const [couponError, setCouponError] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
 

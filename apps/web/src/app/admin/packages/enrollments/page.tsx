@@ -86,10 +86,10 @@ export default function PackageEnrollmentsPage() {
   const fetchEnrollments = async () => {
     setLoading(true);
     try {
-      const data = await api.get<{ enrollments: PackageEnrollment[] }>(
+      const data = await api.get<{ items: PackageEnrollment[] }>(
         `/api/admin/package-enrollments?status=${statusFilter}`,
       );
-      setEnrollments(data.enrollments || []);
+      setEnrollments(data.items || []);
     } catch {
       setEnrollments([]);
     } finally {
@@ -115,10 +115,10 @@ export default function PackageEnrollmentsPage() {
       ];
       for (const courseId of courseIds) {
         try {
-          const data = await api.get<Batch[]>(
+          const data = await api.get<{ batches: Batch[] }>(
             `/api/admin/batches?courseId=${courseId}`,
           );
-          map[courseId] = Array.isArray(data) ? data : [];
+          map[courseId] = data.batches || [];
         } catch {
           map[courseId] = [];
         }

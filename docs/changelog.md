@@ -5,6 +5,7 @@
 ### Tier 1: Database & API (High Impact)
 
 **Missing FK indexes added** — Added `@@index(...)` annotations to 15+ model fields:
+
 - `Module.courseId`, `Lesson.moduleId`, `Practical.moduleId`
 - `Quiz.moduleId`, `Question.quizId`, `QuizAttempt.quizId`, `QuizAttempt.userId`
 - `Assignment.courseId`, `Assignment.batchId`, `Assignment.moduleId`
@@ -14,6 +15,7 @@
 - `Progress.userId`, `Progress.recordingId`
 
 **Over-fetching reduced in `GET /api/courses/:courseId/content`**:
+
 - Replaced bare `include` with explicit `select` on Course, Module, Lesson, Quiz, Assignment, Practical
 - Quiz questions no longer loaded just for counting — uses `_count: { select: { questions: true } }` instead
 - Eliminated transfer of unused fields (`slug`, `coverImageUrl`, `tags`, `deletedAt`, etc.)
@@ -25,16 +27,19 @@
 ### Tier 2: Frontend Bundles & Rendering
 
 **Code splitting via `next/dynamic`** in `CourseContentView.tsx`:
+
 - `QuizContent`, `AssignmentContent`, `StudyMaterialContent`, `StickyNoteWidget` now lazy-loaded with `ssr: false`
 - Reduces initial JS bundle by ~150KB (Tiptap/RichEditor + Plyr CSS + quiz logic)
 
 **In-memory response caching** for `GET /api/courses/:courseId/content`:
+
 - Created `apps/api/src/utils/memory-cache.ts` — Map-based cache with 30s TTL, auto-eviction at 500 entries
 - Cached per `courseId:userId`, serves from memory on repeat requests within TTL window
 
 ### Tier 3: Background Optimizations
 
 **Notification polling pauses on tab hidden** (`StudentPortalShell.tsx`):
+
 - Listens to `visibilitychange`, clears interval when tab hidden, restarts on return
 - Reduces background network requests
 
@@ -43,24 +48,29 @@
 ## 2026-07-23 — Error Handling Refactor, Pagination, SEO, & Certification System
 
 ### Phase 1: Error Handling (Critical)
+
 - Created `apps/api/src/utils/errors.ts` — `AppError` class, `getErrorMessage`, `handleControllerError`
 - Unified error handler in `app.ts` — uses pino per-request logger
 - Refactored 30+ controllers from `catch(error: any)` → `catch(err: unknown)` + `handleControllerError`
 - Zod errors now return `{ error: "field: message" }` instead of raw array
 
 ### Phase 2: Pagination
+
 - Created `apps/api/src/utils/paginate.ts` — page=1, limit=20, max=100
 - Added pagination to 15+ endpoints: users, batches, packages, payments, enrollments, tickets, assignments, notes, messages
 
 ### Phase 2b: Error/Loading Pages
+
 - Created shared `ErrorPage.tsx` and `LoadingPage.tsx` components
 - Added error.tsx + loading.tsx to 61 route segments across admin/student/instructor
 
 ### Phase 2c: SEO Page Titles
+
 - Created `usePageTitle` hook in `@/lib/use-page-title`
 - Added titles to 53 admin + 21 student/instructor/root pages
 
 ### Phase 3: Certification System
+
 - Added `pdfTemplateType`, `pdfTemplateUrl`, `pdfTemplateFields` to `CertificateTemplate` model
 - Added `autoIssued`, `uploadedTemplateId` to `Certificate` model
 - Created `certificate-completion.service.ts` — checks quizzes + assignments + recordings for auto-issue
@@ -71,6 +81,7 @@
 - Updated admin template editor — PDF upload with placeholder field editor
 
 ### Files created:
+
 - `apps/api/src/utils/errors.ts`, `apps/api/src/utils/paginate.ts`
 - `apps/api/src/modules/certificates/certificate-completion.service.ts`
 - `apps/web/src/components/ErrorPage.tsx`, `LoadingPage.tsx`
@@ -78,6 +89,7 @@
 - 65+ error.tsx/loading.tsx files across route segments
 
 ### Files modified:
+
 - `apps/api/src/modules/admin/certificates/template.routes.ts` — added PDF upload endpoints
 - `apps/api/src/modules/certificates/certificate.service.ts` — two PDF rendering methods
 - `apps/api/src/modules/courses/student-course.routes.ts` — auto-issue on quiz submit
@@ -92,11 +104,13 @@
 ## 2026-07-21 — Shell Layout Fix, Unit Tests, and Code Documentation
 
 ### UI Fix
+
 - **StudentPortalShell header reorder**: Moved logo before the "Previous" back button. Layout is now: Logo → Back Button → Breadcrumbs → Right controls.
 
 ### Unit Tests (145 new tests across 13 test files)
 
 **Phase 1 — Pure function unit tests (105 tests):**
+
 - `utils/video.test.ts` — `parseVideoUrl()` YouTube/Vimeo/Loom URL parsing (10 tests)
 - `utils/encryption.test.ts` — `encryptToken()`/`decryptToken()` roundtrip, tamper detection, error handling (8 tests)
 - `services/youtube.service.test.ts` — `extractVideoId()` + `parseISO8601Duration()` (16 tests)
@@ -107,15 +121,18 @@
 - `modules/notification.service.test.ts` — `chunkArray()` batch splitting (7 tests)
 
 **Phase 2 — Middleware tests (26 tests):**
+
 - `middleware/auth.middleware.test.ts` — `requireAuth`, `optionalAuth`, `requireRole`, `requireSuperAdmin` (18 tests)
 - `middleware/cache.middleware.test.ts` — `cacheMiddleware()` headers, ETag, 304, auth bypass (8 tests)
 
 **Phase 3 — Zod schema validation tests (40 tests):**
+
 - `schemas/auth.schema.test.ts` — `RegisterSchema`, `LoginSchema` (11 tests)
 - `schemas/course.schema.test.ts` — `CreateCourseSchema`, `UpdateCourseSchema`, `CreateQuizSchema`, `UpdateQuizSchema` (16 tests)
 - `schemas/batch.schema.test.ts` — `CreateBatchSchema`, `UpdateBatchSchema` (13 tests)
 
 **Exported functions for testability:**
+
 - `generateSlug` from `course.service.ts`
 - `chunkArray` from `notification.service.ts`
 - `parseExpiryToMs` from `auth.controller.ts`
@@ -123,7 +140,9 @@
 - `verifySignature`, `generateDummyPassword` from `payment.service.ts`
 
 ### Code Documentation
+
 Added JSDoc and inline comments to 12 key backend files:
+
 - `utils/video.ts`, `utils/encryption.ts`
 - `services/youtube.service.ts`, `services/email.service.ts`
 - `modules/auth/auth.controller.ts`, `modules/auth/auth.service.ts`
@@ -296,3 +315,20 @@ Fixed search icon text overlap in all student search inputs (`CoursesView`, `Hom
 Replaced the orange (`#f97316`) primary brand color with indigo (`#4F46E5`) across the entire UI. Updated CSS variables, btn-primary gradient, logo text, stat tile gradients, and action card colors. All loading spinners automatically updated via CSS variable cascade. All icons confirmed MIT open-source (Tabler Icons). Backgrounds already white — no changes needed.
 
 **Files modified:** `globals.css`, `StudentPortalShell.tsx`, `StudentStatTiles.tsx`, `HomeView.tsx`, `calendar/page.tsx`
+
+---
+
+## 2026-07-24 — Invoice PDF in Post-Purchase Welcome Email
+
+Added automatic invoice PDF generation and attachment to the welcome email sent after a course purchase.
+
+**Changes:**
+
+- Created `apps/api/src/services/invoice.service.ts` — Generates a professional A4 invoice PDF using jsPDF with company header, invoice number, date, bill-to section, package name, amount, discount, total, and login credentials
+- Updated `apps/api/src/services/email.service.ts` — Added `attachment` support to `SendEmailOptions` and Brevo API call. Updated `sendWelcomeEmail()` to accept optional `invoice` data, generate PDF, and attach as base64
+- Updated `apps/api/src/modules/payments/payment.service.ts` — Removed pre-payment welcome email from `createGuestUser()` (sent before payment). Now sends welcome email with invoice PDF only after successful enrollment/consent in `enrollInBatch()` and `createConsentEnrollment()`
+- Updated `packages/email-templates/src/emails/WelcomeEmail.tsx` — Updated body text to reference purchase and attached invoice
+- Email subject changed to "Welcome to LMS Portal — Purchase Confirmation" with additional "purchase" tag
+
+**Files created:** `apps/api/src/services/invoice.service.ts`
+**Files modified:** `email.service.ts`, `payment.service.ts`, `WelcomeEmail.tsx`

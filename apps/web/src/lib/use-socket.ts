@@ -15,7 +15,9 @@ export interface RealtimeNotification {
   createdAt?: string;
 }
 
-export function useSocket(onNotificationReceived?: (notification: RealtimeNotification) => void) {
+export function useSocket(
+  onNotificationReceived?: (notification: RealtimeNotification) => void,
+) {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -28,7 +30,10 @@ export function useSocket(onNotificationReceived?: (notification: RealtimeNotifi
     socketRef.current = socket;
 
     socket.on("connect", () => {
-      console.log("[socket] Connected to real-time notification gateway:", socket.id);
+      console.log(
+        "[socket] Connected to real-time notification gateway:",
+        socket.id,
+      );
     });
 
     socket.on("notification:new", (notification: RealtimeNotification) => {
@@ -38,10 +43,13 @@ export function useSocket(onNotificationReceived?: (notification: RealtimeNotifi
       toast(notification.title || "New Notification", {
         description: notification.message,
         duration: 5000,
-        action: notification.metadata?.joinUrl ? {
-          label: "Join Session",
-          onClick: () => window.open(notification.metadata?.joinUrl as string, "_blank"),
-        } : undefined,
+        action: notification.metadata?.joinUrl
+          ? {
+              label: "Join Session",
+              onClick: () =>
+                window.open(notification.metadata?.joinUrl as string, "_blank"),
+            }
+          : undefined,
       });
 
       if (onNotificationReceived) {

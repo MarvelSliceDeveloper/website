@@ -26,6 +26,7 @@ import {
   CustomNotification,
   ResetPasswordEmail,
 } from "@lms/email-templates";
+import { generateInvoicePdf } from "./invoice.service";
 
 type EmailTemplateComponent = (
   props: Record<string, unknown>,
@@ -85,12 +86,18 @@ function getBrevoClient(): BrevoClient | null {
   return brevoClient;
 }
 
+interface SendEmailAttachment {
+  content: string;
+  name: string;
+}
+
 interface SendEmailOptions {
   to: { email: string; name?: string }[];
   subject: string;
   html: string;
   text?: string;
   tags?: string[];
+  attachment?: SendEmailAttachment[];
 }
 
 export const emailService = {
@@ -111,6 +118,7 @@ export const emailService = {
         htmlContent: options.html,
         textContent: options.text,
         tags: options.tags,
+        attachment: options.attachment,
       });
 
       console.log("[email] Sent successfully, messageId:", result.messageId);
@@ -128,6 +136,13 @@ export const emailService = {
     name: string;
     email: string;
     credentials?: { email: string; password: string };
+    invoice?: {
+      paymentId: string;
+      packageName: string;
+      amount: number;
+      discountAmount: number;
+      orderId?: string;
+    };
   }): Promise<boolean> {
     if (!isConfigured()) {
       console.warn("[email] BREVO_API_KEY not set — skipping welcome email");
@@ -143,12 +158,35 @@ export const emailService = {
         ? `\n\nYour login credentials:\nEmail: ${user.credentials.email}\nPassword: ${user.credentials.password}\n\nPlease change your password after logging in.`
         : "";
 
+      const invoiceText = user.invoice
+        ? `\n\nPurchase Summary:\nPackage: ${user.invoice.packageName}\nAmount: ₹${(user.invoice.amount / 100).toLocaleString("en-IN")}${user.invoice.discountAmount > 0 ? `\nDiscount: -₹${(user.invoice.discountAmount / 100).toLocaleString("en-IN")}` : ""}\nTotal Paid: ₹${((user.invoice.amount - user.invoice.discountAmount) / 100).toLocaleString("en-IN")}\n\nInvoice PDF is attached to this email.`
+        : "";
+
+      const attachment = user.invoice
+        ? [
+            {
+              content: generateInvoicePdf({
+                invoiceNumber: `INV-${user.invoice.paymentId.slice(-8).toUpperCase()}`,
+                userName: user.name,
+                userEmail: user.email,
+                packageName: user.invoice.packageName,
+                amount: user.invoice.amount,
+                discountAmount: user.invoice.discountAmount,
+                date: new Date(),
+                password: user.credentials?.password,
+              }).toString("base64"),
+              name: `invoice-${user.invoice.paymentId.slice(-8)}.pdf`,
+            },
+          ]
+        : undefined;
+
       return this.sendEmail({
         to: [{ email: user.email, name: user.name }],
-        subject: "Welcome to LMS Portal!",
+        subject: "Welcome to LMS Portal — Purchase Confirmation",
         html,
-        text: `Hi ${user.name},\n\nWelcome to LMS Portal! Your account has been created successfully.${credsText}\n\nBest regards,\nLMS Portal Team`,
-        tags: ["welcome", "onboarding"],
+        text: `Hi ${user.name},\n\nWelcome to LMS Portal! Your account has been created successfully.${credsText}${invoiceText}\n\nBest regards,\nLMS Portal Team`,
+        tags: ["welcome", "onboarding", "purchase"],
+        attachment,
       });
     } catch (error: unknown) {
       console.error("[email] Failed to render/send welcome email:", error);

@@ -87,9 +87,7 @@ export default function AdminSessionsPage() {
           : "Mentorship Session",
     );
     setEditStart(new Date(session.scheduledAt).toISOString().slice(0, 16));
-    setEditEnd(
-      new Date(session.scheduledEndAt).toISOString().slice(0, 16),
-    );
+    setEditEnd(new Date(session.scheduledEndAt).toISOString().slice(0, 16));
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {

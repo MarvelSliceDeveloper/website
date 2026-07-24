@@ -36,7 +36,9 @@ export default function AddQuizForm({
   const [dueDate, setDueDate] = useState("");
   const [isSpecialExam, setIsSpecialExam] = useState(false);
   const [passingScore, setPassingScore] = useState(65);
-  const [examType, setExamType] = useState<"MCQ" | "ASSIGNMENT" | "CODING_TESTCASE" | "ALL_IN_ONE">("MCQ");
+  const [examType, setExamType] = useState<
+    "MCQ" | "ASSIGNMENT" | "CODING_TESTCASE" | "ALL_IN_ONE"
+  >("MCQ");
 
   // Section Toggles
   const [hasMcq, setHasMcq] = useState(true);
@@ -109,7 +111,10 @@ export default function AddQuizForm({
 
   // Test Case Handlers
   const addTestCase = () => {
-    setTestCases([...testCases, { input: "", expectedOutput: "", isHidden: false }]);
+    setTestCases([
+      ...testCases,
+      { input: "", expectedOutput: "", isHidden: false },
+    ]);
   };
 
   const removeTestCase = (index: number) => {
@@ -125,7 +130,9 @@ export default function AddQuizForm({
     }
 
     if (!hasMcq && !hasAssignment && !hasCoding) {
-      toast.error("Please enable at least one exam component (MCQ, Assignment, or Coding)");
+      toast.error(
+        "Please enable at least one exam component (MCQ, Assignment, or Coding)",
+      );
       return;
     }
 
@@ -160,17 +167,24 @@ export default function AddQuizForm({
         dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
         isSpecialExam,
         passingScore: Number(passingScore),
-        examType: hasMcq && hasAssignment && hasCoding ? "ALL_IN_ONE" : examType,
+        examType:
+          hasMcq && hasAssignment && hasCoding ? "ALL_IN_ONE" : examType,
         hasMcq,
         hasAssignment,
         hasCoding,
-        assignmentInstructions: hasAssignment ? assignmentInstructions : undefined,
+        assignmentInstructions: hasAssignment
+          ? assignmentInstructions
+          : undefined,
         assignmentPdfUrl: hasAssignment ? assignmentPdfUrl : undefined,
         codingPrompt: hasCoding ? codingPrompt : undefined,
         testCases: hasCoding ? testCases : undefined,
         questions: hasMcq ? questions : [],
       });
-      toast.success(isSpecialExam ? "Special Exam added successfully" : "Quiz added successfully");
+      toast.success(
+        isSpecialExam
+          ? "Special Exam added successfully"
+          : "Quiz added successfully",
+      );
       onSuccess();
     } catch (error) {
       console.error("Failed to add quiz:", error);
@@ -221,8 +235,12 @@ export default function AddQuizForm({
           }}
           className="h-4 w-4 rounded accent-amber-500"
         />
-        <label htmlFor="isSpecialExam" className="text-xs font-medium cursor-pointer text-amber-300">
-          Mark as Special / Certification Exam (Includes MCQ + Assignment + Coding Testcases)
+        <label
+          htmlFor="isSpecialExam"
+          className="text-xs font-medium cursor-pointer text-amber-300"
+        >
+          Mark as Special / Certification Exam (Includes MCQ + Assignment +
+          Coding Testcases)
         </label>
       </div>
 
@@ -412,7 +430,9 @@ export default function AddQuizForm({
             2. Assignment / Practical Task
           </h5>
           <div className="space-y-1">
-            <label className="text-xs font-medium">Assignment Instructions</label>
+            <label className="text-xs font-medium">
+              Assignment Instructions
+            </label>
             <textarea
               value={assignmentInstructions}
               onChange={(e) => setAssignmentInstructions(e.target.value)}
@@ -421,7 +441,9 @@ export default function AddQuizForm({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium">Question PDF URL (optional)</label>
+            <label className="text-xs font-medium">
+              Question PDF URL (optional)
+            </label>
             <input
               type="text"
               value={assignmentPdfUrl}
@@ -440,7 +462,9 @@ export default function AddQuizForm({
             3. Coding Problem & Testcases
           </h5>
           <div className="space-y-1">
-            <label className="text-xs font-medium">Coding Problem Description</label>
+            <label className="text-xs font-medium">
+              Coding Problem Description
+            </label>
             <textarea
               value={codingPrompt}
               onChange={(e) => setCodingPrompt(e.target.value)}
@@ -450,14 +474,18 @@ export default function AddQuizForm({
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-medium">Test Cases (Input & Output Pairs)</label>
+            <label className="text-xs font-medium">
+              Test Cases (Input & Output Pairs)
+            </label>
             {testCases.map((tc, tcIdx) => (
               <div
                 key={tcIdx}
                 className="grid grid-cols-1 md:grid-cols-2 gap-2 p-2.5 rounded border border-border/60 bg-muted/20 relative"
               >
                 <div>
-                  <label className="text-[10px] font-medium text-muted-foreground">Input</label>
+                  <label className="text-[10px] font-medium text-muted-foreground">
+                    Input
+                  </label>
                   <input
                     type="text"
                     value={tc.input}
@@ -474,7 +502,9 @@ export default function AddQuizForm({
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="flex-1">
-                    <label className="text-[10px] font-medium text-muted-foreground">Expected Output</label>
+                    <label className="text-[10px] font-medium text-muted-foreground">
+                      Expected Output
+                    </label>
                     <input
                       type="text"
                       value={tc.expectedOutput}

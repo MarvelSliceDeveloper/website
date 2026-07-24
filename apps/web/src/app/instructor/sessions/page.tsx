@@ -14,8 +14,6 @@ import {
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 
-
-
 type Session = {
   id: string;
   joinUrl: string;
@@ -65,8 +63,6 @@ function SessionsPageContent() {
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
-
-
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
@@ -123,8 +119,6 @@ function SessionsPageContent() {
         setLoading(false);
       });
   }, []);
-
-
 
   const openEditModal = (session: Session) => {
     setEditingSession(session);

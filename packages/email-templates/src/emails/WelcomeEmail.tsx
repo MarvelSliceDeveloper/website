@@ -24,8 +24,12 @@ export default function WelcomeEmail({
       <Section style={bodyStyle}>
         <Heading style={headingStyle}>Welcome, {userName}!</Heading>
         <Text style={textStyle}>
-          We're excited to have you on board. Your account is ready, and your
-          learning journey starts now.
+          Thank you for your purchase! We're excited to have you on board. Your
+          account is ready, and your learning journey starts now.
+        </Text>
+        <Text style={textStyle}>
+          An invoice for your purchase is attached to this email. Please keep it
+          for your records.
         </Text>
 
         {credentials && (

@@ -10,7 +10,10 @@ router.use(requireAuth);
 router.get("/", certificateController.listMyCertificates);
 
 // GET /api/certificates/package/:packageId/status — get package Special Exam status
-router.get("/package/:packageId/status", certificateController.getPackageStatus);
+router.get(
+  "/package/:packageId/status",
+  certificateController.getPackageStatus,
+);
 
 // POST /api/certificates/claim — claim a certificate for a completed course
 router.post("/claim", certificateController.claim);

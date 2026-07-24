@@ -9,12 +9,14 @@ async function registerFreshStudent() {
   const regRes = await request(app)
     .post("/api/auth/register")
     .send({ name: "Ext Test Student", email, password });
-  if (regRes.status !== 201) throw new Error(`Register failed: ${regRes.body.error}`);
+  if (regRes.status !== 201)
+    throw new Error(`Register failed: ${regRes.body.error}`);
   const agent = request.agent(app);
   const loginRes = await agent
     .post("/api/auth/login")
     .send({ email, password });
-  if (loginRes.status !== 200) throw new Error(`Login failed: ${loginRes.body.error}`);
+  if (loginRes.status !== 200)
+    throw new Error(`Login failed: ${loginRes.body.error}`);
   const csrfRes = await agent.get("/api/csrf-token");
   const csrfToken = csrfRes.body.csrfToken;
   return { agent, csrfToken, email, password };
@@ -39,13 +41,11 @@ describe("Auth — Extended Flows", () => {
     });
 
     it("returns 409 for duplicate email", async () => {
-      const res = await request(app)
-        .post("/api/auth/register")
-        .send({
-          name: "Duplicate",
-          email: "student@lms.local",
-          password: "StrongPass1",
-        });
+      const res = await request(app).post("/api/auth/register").send({
+        name: "Duplicate",
+        email: "student@lms.local",
+        password: "StrongPass1",
+      });
 
       expect(res.status).toBe(409);
       expect(res.body.error).toMatch(/already registered/i);
@@ -88,9 +88,7 @@ describe("Auth — Extended Flows", () => {
     });
 
     it("returns 400 for missing fields", async () => {
-      const res = await request(app)
-        .post("/api/auth/register")
-        .send({});
+      const res = await request(app).post("/api/auth/register").send({});
 
       expect(res.status).toBe(400);
     });
@@ -182,12 +180,10 @@ describe("Auth — Extended Flows", () => {
     });
 
     it("returns 403 without CSRF token (CSRF blocks first)", async () => {
-      const res = await studentAgent
-        .patch("/api/auth/me/password")
-        .send({
-          currentPassword: "StrongPass1",
-          newPassword: "NewStrongPass1",
-        });
+      const res = await studentAgent.patch("/api/auth/me/password").send({
+        currentPassword: "StrongPass1",
+        newPassword: "NewStrongPass1",
+      });
 
       expect(res.status).toBe(403);
     });
@@ -257,9 +253,7 @@ describe("Auth — Extended Flows", () => {
     });
 
     it("returns 400 for missing email", async () => {
-      const res = await request(app)
-        .post("/api/auth/forgot-password")
-        .send({});
+      const res = await request(app).post("/api/auth/forgot-password").send({});
 
       expect(res.status).toBe(400);
     });

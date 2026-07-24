@@ -63,7 +63,10 @@ function BatchesPageContent() {
     try {
       const params: Record<string, string> = {};
       if (status) params.status = status;
-      const data = await api.get<PaginatedResponse<Batch>>("/api/admin/batches", params);
+      const data = await api.get<PaginatedResponse<Batch>>(
+        "/api/admin/batches",
+        params,
+      );
       setBatches(data.batches);
     } catch {
       setBatches([]);

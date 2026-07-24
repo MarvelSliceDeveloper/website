@@ -95,10 +95,38 @@ const defaultTemplateValues = {
 };
 
 const defaultPdfFields: PlaceholderField[] = [
-  { key: "studentName", x: 0, y: 130, fontSize: 22, color: "#1e293b", align: "center" },
-  { key: "courseName", x: 0, y: 170, fontSize: 18, color: "#1e293b", align: "center" },
-  { key: "date", x: 0, y: 200, fontSize: 10, color: "#64748b", align: "center" },
-  { key: "certificateNumber", x: 120, y: 240, fontSize: 10, color: "#64748b", align: "left" },
+  {
+    key: "studentName",
+    x: 0,
+    y: 130,
+    fontSize: 22,
+    color: "#1e293b",
+    align: "center",
+  },
+  {
+    key: "courseName",
+    x: 0,
+    y: 170,
+    fontSize: 18,
+    color: "#1e293b",
+    align: "center",
+  },
+  {
+    key: "date",
+    x: 0,
+    y: 200,
+    fontSize: 10,
+    color: "#64748b",
+    align: "center",
+  },
+  {
+    key: "certificateNumber",
+    x: 120,
+    y: 240,
+    fontSize: 10,
+    color: "#64748b",
+    align: "left",
+  },
 ];
 
 export default function AdminCertificatesPage() {
@@ -155,11 +183,7 @@ export default function AdminCertificatesPage() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === "certificates" ? (
-        <CertificatesTab />
-      ) : (
-        <TemplatesTab />
-      )}
+      {activeTab === "certificates" ? <CertificatesTab /> : <TemplatesTab />}
     </div>
   );
 }
@@ -179,7 +203,7 @@ function CertificatesTab() {
       const [certsData, statsData] = await Promise.all([
         api.get<{
           certificates: Certificate[];
-          pagination: { total: number };
+          total: number;
         }>("/api/admin/certificates", {
           page: String(page),
           limit: String(limit),
@@ -187,7 +211,7 @@ function CertificatesTab() {
         api.get<CertificateStats>("/api/admin/certificates/stats"),
       ]);
       setCertificates(certsData.certificates);
-      setTotal(certsData.pagination.total);
+      setTotal(certsData.total);
       setStats(statsData);
     } catch {
       setCertificates([]);
@@ -378,7 +402,9 @@ function TemplatesTab() {
   const [saving, setSaving] = useState(false);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [pdfTemplateFields, setPdfTemplateFields] = useState<PlaceholderField[]>([]);
+  const [pdfTemplateFields, setPdfTemplateFields] = useState<
+    PlaceholderField[]
+  >([]);
 
   async function fetchTemplates() {
     setLoading(true);
@@ -449,7 +475,8 @@ function TemplatesTab() {
         footerText: form.footerText || null,
         logoUrl: form.logoUrl || null,
         pdfTemplateType: form.pdfTemplateType || "jsPdf",
-        pdfTemplateFields: form.pdfTemplateType === "uploadedPdf" ? pdfTemplateFields : [],
+        pdfTemplateFields:
+          form.pdfTemplateType === "uploadedPdf" ? pdfTemplateFields : [],
       };
 
       if (editingId) {
@@ -496,7 +523,10 @@ function TemplatesTab() {
       const formData = new FormData();
       formData.append("pdf", pdfFile);
       formData.append("pdfTemplateFields", JSON.stringify(pdfTemplateFields));
-      await api.post(`/api/admin/certificate-templates/${editingId}/upload-pdf`, formData);
+      await api.post(
+        `/api/admin/certificate-templates/${editingId}/upload-pdf`,
+        formData,
+      );
       toast.success("PDF template uploaded");
       setPdfFile(null);
       fetchTemplates();
@@ -510,7 +540,9 @@ function TemplatesTab() {
   async function handleRemovePdf(templateId: string) {
     if (!confirm("Remove the uploaded PDF template?")) return;
     try {
-      await api.delete(`/api/admin/certificate-templates/${templateId}/pdf-template`);
+      await api.delete(
+        `/api/admin/certificate-templates/${templateId}/pdf-template`,
+      );
       toast.success("PDF template removed");
       fetchTemplates();
     } catch (err) {
@@ -522,8 +554,8 @@ function TemplatesTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Customize the appearance of generated certificates. The default template
-          is used for all new certificates.
+          Customize the appearance of generated certificates. The default
+          template is used for all new certificates.
         </p>
         <button
           onClick={openCreateForm}
@@ -580,7 +612,9 @@ function TemplatesTab() {
                   </p>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full border border-border bg-background text-muted-foreground">
-                      {template.pdfTemplateType === "uploadedPdf" ? "Uploaded PDF" : "jsPDF"}
+                      {template.pdfTemplateType === "uploadedPdf"
+                        ? "Uploaded PDF"
+                        : "jsPDF"}
                     </span>
                     {template.hasPdfUpload && (
                       <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
@@ -1028,8 +1062,14 @@ function TemplatesTab() {
                         value={opt.value}
                         checked={form.pdfTemplateType === opt.value}
                         onChange={(e) => {
-                          setForm((f) => ({ ...f, pdfTemplateType: e.target.value }));
-                          if (e.target.value === "uploadedPdf" && pdfTemplateFields.length === 0) {
+                          setForm((f) => ({
+                            ...f,
+                            pdfTemplateType: e.target.value,
+                          }));
+                          if (
+                            e.target.value === "uploadedPdf" &&
+                            pdfTemplateFields.length === 0
+                          ) {
                             setPdfTemplateFields(defaultPdfFields);
                           }
                         }}
@@ -1050,20 +1090,24 @@ function TemplatesTab() {
                 {form.pdfTemplateType === "uploadedPdf" && (
                   <div className="mt-4 space-y-4">
                     {/* Has PDF uploaded indicator */}
-                    {editingId && templates.find((t) => t.id === editingId)?.hasPdfUpload && (
-                      <div className="flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <IconCheck size={16} className="text-emerald-500" />
-                          <span className="text-sm text-foreground">PDF template uploaded</span>
+                    {editingId &&
+                      templates.find((t) => t.id === editingId)
+                        ?.hasPdfUpload && (
+                        <div className="flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <IconCheck size={16} className="text-emerald-500" />
+                            <span className="text-sm text-foreground">
+                              PDF template uploaded
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleRemovePdf(editingId!)}
+                            className="text-xs text-danger hover:text-danger-hover font-semibold"
+                          >
+                            Remove
+                          </button>
                         </div>
-                        <button
-                          onClick={() => handleRemovePdf(editingId!)}
-                          className="text-xs text-danger hover:text-danger-hover font-semibold"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    )}
+                      )}
 
                     {/* File upload */}
                     <div>
@@ -1074,7 +1118,9 @@ function TemplatesTab() {
                         <input
                           type="file"
                           accept=".pdf"
-                          onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                          onChange={(e) =>
+                            setPdfFile(e.target.files?.[0] || null)
+                          }
                           className="flex-1 text-sm text-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-border file:text-xs file:font-semibold file:bg-background file:text-foreground hover:file:bg-card-hover"
                         />
                         <button
@@ -1093,7 +1139,8 @@ function TemplatesTab() {
                         Placeholder Fields
                       </label>
                       <p className="text-[10px] text-muted-foreground mt-0.5 mb-2">
-                        Configure position and style for each placeholder on the PDF.
+                        Configure position and style for each placeholder on the
+                        PDF.
                       </p>
                       <div className="space-y-3">
                         {pdfTemplateFields.map((field, i) => (
@@ -1117,7 +1164,12 @@ function TemplatesTab() {
                                   onChange={(e) =>
                                     setPdfTemplateFields((prev) =>
                                       prev.map((f, j) =>
-                                        j === i ? { ...f, x: parseInt(e.target.value) || 0 } : f,
+                                        j === i
+                                          ? {
+                                              ...f,
+                                              x: parseInt(e.target.value) || 0,
+                                            }
+                                          : f,
                                       ),
                                     )
                                   }
@@ -1134,7 +1186,12 @@ function TemplatesTab() {
                                   onChange={(e) =>
                                     setPdfTemplateFields((prev) =>
                                       prev.map((f, j) =>
-                                        j === i ? { ...f, y: parseInt(e.target.value) || 0 } : f,
+                                        j === i
+                                          ? {
+                                              ...f,
+                                              y: parseInt(e.target.value) || 0,
+                                            }
+                                          : f,
                                       ),
                                     )
                                   }
@@ -1153,7 +1210,13 @@ function TemplatesTab() {
                                   onChange={(e) =>
                                     setPdfTemplateFields((prev) =>
                                       prev.map((f, j) =>
-                                        j === i ? { ...f, fontSize: parseInt(e.target.value) || 10 } : f,
+                                        j === i
+                                          ? {
+                                              ...f,
+                                              fontSize:
+                                                parseInt(e.target.value) || 10,
+                                            }
+                                          : f,
                                       ),
                                     )
                                   }
@@ -1171,7 +1234,9 @@ function TemplatesTab() {
                                     onChange={(e) =>
                                       setPdfTemplateFields((prev) =>
                                         prev.map((f, j) =>
-                                          j === i ? { ...f, color: e.target.value } : f,
+                                          j === i
+                                            ? { ...f, color: e.target.value }
+                                            : f,
                                         ),
                                       )
                                     }
@@ -1183,7 +1248,9 @@ function TemplatesTab() {
                                     onChange={(e) =>
                                       setPdfTemplateFields((prev) =>
                                         prev.map((f, j) =>
-                                          j === i ? { ...f, color: e.target.value } : f,
+                                          j === i
+                                            ? { ...f, color: e.target.value }
+                                            : f,
                                         ),
                                       )
                                     }
@@ -1201,7 +1268,13 @@ function TemplatesTab() {
                                     setPdfTemplateFields((prev) =>
                                       prev.map((f, j) =>
                                         j === i
-                                          ? { ...f, align: e.target.value as "left" | "center" | "right" }
+                                          ? {
+                                              ...f,
+                                              align: e.target.value as
+                                                | "left"
+                                                | "center"
+                                                | "right",
+                                            }
                                           : f,
                                       ),
                                     )
@@ -1223,7 +1296,9 @@ function TemplatesTab() {
                                   onChange={(e) =>
                                     setPdfTemplateFields((prev) =>
                                       prev.map((f, j) =>
-                                        j === i ? { ...f, key: e.target.value } : f,
+                                        j === i
+                                          ? { ...f, key: e.target.value }
+                                          : f,
                                       ),
                                     )
                                   }

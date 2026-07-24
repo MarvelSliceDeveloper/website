@@ -176,9 +176,9 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     api
-      .get<{ packages: AdminPackage[] }>("/api/admin/packages")
+      .get<{ items: AdminPackage[] }>("/api/admin/packages")
       .then((res) => {
-        const active = (res.packages ?? []).filter(
+        const active = (res.items ?? []).filter(
           (p) => p.status === "ACTIVE",
         );
         setActivePackages(active.map((p) => ({ id: p.id, name: p.name })));
@@ -192,9 +192,9 @@ export default function AdminUsersPage() {
       return;
     }
     api
-      .get<BatchResponse[]>("/api/admin/batches", { packageId: form.packageId })
+      .get<{ batches: BatchResponse[] }>("/api/admin/batches", { packageId: form.packageId })
       .then((res) => {
-        const batches = Array.isArray(res) ? res : [];
+        const batches = res.batches ?? [];
         setPackageBatches(
           batches.map((b) => ({
             id: b.id,
@@ -215,11 +215,11 @@ export default function AdminUsersPage() {
       return;
     }
     api
-      .get<BatchResponse[]>("/api/admin/batches", {
+      .get<{ batches: BatchResponse[] }>("/api/admin/batches", {
         packageId: editForm.packageId,
       })
       .then((res) => {
-        const batches = Array.isArray(res) ? res : [];
+        const batches = res.batches ?? [];
         setEditBatches(
           batches.map((b) => ({
             id: b.id,
@@ -328,9 +328,9 @@ export default function AdminUsersPage() {
     // Load batches for the current package
     if (currentPkg) {
       api
-        .get<BatchResponse[]>("/api/admin/batches", { packageId: currentPkg })
+        .get<{ batches: BatchResponse[] }>("/api/admin/batches", { packageId: currentPkg })
         .then((res) => {
-          const batches = Array.isArray(res) ? res : [];
+          const batches = res.batches ?? [];
           setEditBatches(
             batches.map((b) => ({
               id: b.id,

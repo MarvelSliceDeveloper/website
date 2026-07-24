@@ -75,13 +75,20 @@ export default function AdminPaymentsPage() {
     setLoading(true);
     try {
       const [paymentsData, statsData] = await Promise.all([
-        api.get<{ payments: Payment[] }>("/api/admin/payments"),
+        api.get<{ items: Payment[] }>("/api/admin/payments"),
         api.get<RevenueStats>("/api/admin/payments/revenue"),
       ]);
-      setPayments(paymentsData.payments);
+      setPayments(paymentsData.items ?? []);
       setStats(statsData);
     } catch {
       setPayments([]);
+      setStats({
+        totalRevenue: 0,
+        totalPayments: 0,
+        successful: 0,
+        failed: 0,
+        refunded: 0,
+      });
     } finally {
       setLoading(false);
     }

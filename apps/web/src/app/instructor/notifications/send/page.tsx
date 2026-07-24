@@ -27,8 +27,8 @@ export default function InstructorSendNotificationPage() {
 
   useEffect(() => {
     api
-      .get<BatchOption[]>("/api/admin/batches")
-      .then(setBatches)
+      .get<{ batches: BatchOption[] }>("/api/admin/batches")
+      .then((res) => setBatches(res.batches ?? []))
       .catch(() => {});
   }, []);
 

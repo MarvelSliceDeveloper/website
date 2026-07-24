@@ -92,7 +92,13 @@ export const uploadLessonResource = multer({
 const practicalPdfStorage = multer.diskStorage({
   destination: (req, _file, cb) => {
     const courseId = req.params.courseId || "unknown";
-    const dir = path.join(uploadsRoot, "courses", courseId, "practicals", "pdfs");
+    const dir = path.join(
+      uploadsRoot,
+      "courses",
+      courseId,
+      "practicals",
+      "pdfs",
+    );
     fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },

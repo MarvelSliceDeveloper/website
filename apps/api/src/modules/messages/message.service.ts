@@ -25,9 +25,15 @@ export const messageService = {
 
   // Lists conversations with the latest message per user
   async listConversations(userId: string, page?: number, limit?: number) {
-    if (!prisma || !("message" in prisma)) return { items: [], total: 0, page: 1, limit: 20 };
+    if (!prisma || !("message" in prisma))
+      return { items: [], total: 0, page: 1, limit: 20 };
 
-    const { skip, take, page: currentPage, limit: currentLimit } = paginate({ page, limit });
+    const {
+      skip,
+      take,
+      page: currentPage,
+      limit: currentLimit,
+    } = paginate({ page, limit });
 
     try {
       const messages = await prisma.message.findMany({

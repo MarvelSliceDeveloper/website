@@ -131,8 +131,8 @@ export default function ScheduleSessionPage() {
     });
 
     api
-      .get<Batch[]>(`/api/admin/batches?courseId=${selectedCourseId}`)
-      .then((data) => setBatches(Array.isArray(data) ? data : []))
+      .get<{ batches: Batch[] }>(`/api/admin/batches?courseId=${selectedCourseId}`)
+      .then((data) => setBatches(data.batches || []))
       .catch((err: unknown) => {
         console.error("Failed to load course batches:", err);
         setBatches([]);

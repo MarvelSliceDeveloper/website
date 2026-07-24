@@ -18,26 +18,28 @@
 
 ### Comparison: In-Memory vs Redis
 
-| Aspect | In-Memory (Current) | Redis |
-|--------|-------------------|-------|
-| Persistence | Lost on restart | Disk-persisted (RDB/AOF) |
-| Multi-instance | Isolated per process | Shared across all instances |
-| Max cache size | ~500 entries (auto-evict) | Configurable, GB-scale |
-| TTL expiry | Map-based manual check | Native EXPIRE/TTL commands |
-| Invalidation | Not supported | PUB/SUB for cross-instance events |
-| Rate limiting | Not possible across instances | Atomic INCR + EXPIRE |
-| Data structures | Plain Map | Strings, Hashes, Sets, Sorted Sets |
+| Aspect          | In-Memory (Current)           | Redis                              |
+| --------------- | ----------------------------- | ---------------------------------- |
+| Persistence     | Lost on restart               | Disk-persisted (RDB/AOF)           |
+| Multi-instance  | Isolated per process          | Shared across all instances        |
+| Max cache size  | ~500 entries (auto-evict)     | Configurable, GB-scale             |
+| TTL expiry      | Map-based manual check        | Native EXPIRE/TTL commands         |
+| Invalidation    | Not supported                 | PUB/SUB for cross-instance events  |
+| Rate limiting   | Not possible across instances | Atomic INCR + EXPIRE               |
+| Data structures | Plain Map                     | Strings, Hashes, Sets, Sorted Sets |
 
 ## Integration Plan
 
 ### Phase 1: Redis Client Setup (1 day)
 
 1. **Install `ioredis`** — the de facto Redis client for Node.js:
+
    ```
    pnpm add ioredis -F @lms/api
    ```
 
 2. **Create Redis client module** at `apps/api/src/utils/redis.ts`:
+
    ```typescript
    import Redis from "ioredis";
 
@@ -47,11 +49,13 @@
      var redis: Redis | undefined;
    }
 
-   export const redis = global.redis || new Redis(REDIS_URL, {
-     maxRetriesPerRequest: 3,
-     retryStrategy: (times) => Math.min(times * 200, 3000),
-     lazyConnect: true, // don't block startup
-   });
+   export const redis =
+     global.redis ||
+     new Redis(REDIS_URL, {
+       maxRetriesPerRequest: 3,
+       retryStrategy: (times) => Math.min(times * 200, 3000),
+       lazyConnect: true, // don't block startup
+     });
 
    if (process.env.NODE_ENV !== "production") global.redis = redis;
    ```
@@ -63,6 +67,7 @@
 ### Phase 2: Replace In-Memory Cache With Redis (1-2 days)
 
 1. **Create Redis cache utility** at `apps/api/src/utils/redis-cache.ts`:
+
    ```typescript
    import { redis } from "./redis";
 
@@ -70,10 +75,14 @@
 
    export async function getCached<T>(key: string): Promise<T | null> {
      const raw = await redis.get(key);
-     return raw ? JSON.parse(raw) as T : null;
+     return raw ? (JSON.parse(raw) as T) : null;
    }
 
-   export async function setCache<T>(key: string, data: T, ttlSec = DEFAULT_TTL_SEC): Promise<void> {
+   export async function setCache<T>(
+     key: string,
+     data: T,
+     ttlSec = DEFAULT_TTL_SEC,
+   ): Promise<void> {
      await redis.setex(key, ttlSec, JSON.stringify(data));
    }
 
@@ -98,14 +107,19 @@
 ### Phase 3: Cache Invalidation (1 day)
 
 1. **PUB/SUB channel for invalidation** — When an admin modifies course structure, publish an invalidation event:
+
    ```typescript
    // After course update in course.service.ts
-   await redis.publish("cache:invalidate", JSON.stringify({
-     pattern: `content:*:${courseId}:*`
-   }));
+   await redis.publish(
+     "cache:invalidate",
+     JSON.stringify({
+       pattern: `content:*:${courseId}:*`,
+     }),
+   );
    ```
 
 2. **Subscribe in a background listener** — At API startup, subscribe to the invalidation channel:
+
    ```typescript
    const subscriber = redis.duplicate();
    subscriber.subscribe("cache:invalidate");
@@ -130,23 +144,27 @@
 1. **Replace `express-rate-limit`'s default memory store** with a Redis store.
 
 2. **Install `rate-limit-redis`**:
+
    ```
    pnpm add rate-limit-redis -F @lms/api
    ```
 
 3. **Update rate limiter in `app.ts`**:
+
    ```typescript
    import RedisStore from "rate-limit-redis";
    import { redis } from "./utils/redis";
 
    // Replace the default memory-based limiter
-   app.use(rateLimit({
-     store: new RedisStore({
-       sendCommand: (...args) => redis.call(...args),
+   app.use(
+     rateLimit({
+       store: new RedisStore({
+         sendCommand: (...args) => redis.call(...args),
+       }),
+       windowMs: 60 * 1000,
+       max: 100,
      }),
-     windowMs: 60 * 1000,
-     max: 100,
-   }));
+   );
    ```
 
 ### Phase 5: CSRF Token Storage (Optional, 0.5 day)
@@ -154,6 +172,7 @@
 Currently, CSRF tokens are fetched from `/api/csrf-token` and sent in headers, but there's no server-side verification that the token was actually issued. With Redis:
 
 1. On `GET /api/csrf-token` — store the token in Redis with a TTL:
+
    ```
    SET csrf:{token} {userId or "anonymous"} EX 3600
    ```
@@ -168,12 +187,12 @@ Currently, CSRF tokens are fetched from `/api/csrf-token` and sent in headers, b
 
 ### Performance Improvements
 
-| Metric | Before (In-Memory) | After (Redis) | Why |
-|--------|-------------------|---------------|-----|
-| Course content response time | ~50-200ms (DB) | ~1-5ms (cache hit) | 10-40x faster on cache hit |
-| Cache hit ratio | ~30% (per-instance, lost on restart) | ~70% (shared, persistent) | Cross-instance sharing + restart survival |
-| Rate limiting accuracy | ✗ Resets on restart | ✓ Atomic counters across instances | Redis INCR is atomic |
-| Cache invalidation | ✗ Not possible | ✓ Cross-instance PUB/SUB | Instant propagation |
+| Metric                       | Before (In-Memory)                   | After (Redis)                      | Why                                       |
+| ---------------------------- | ------------------------------------ | ---------------------------------- | ----------------------------------------- |
+| Course content response time | ~50-200ms (DB)                       | ~1-5ms (cache hit)                 | 10-40x faster on cache hit                |
+| Cache hit ratio              | ~30% (per-instance, lost on restart) | ~70% (shared, persistent)          | Cross-instance sharing + restart survival |
+| Rate limiting accuracy       | ✗ Resets on restart                  | ✓ Atomic counters across instances | Redis INCR is atomic                      |
+| Cache invalidation           | ✗ Not possible                       | ✓ Cross-instance PUB/SUB           | Instant propagation                       |
 
 ### Architectural Benefits
 
@@ -184,12 +203,12 @@ Currently, CSRF tokens are fetched from `/api/csrf-token` and sent in headers, b
 
 ### Estimated DB Query Reduction
 
-| Endpoint | Queries/Request | Cache TTL | Est. Daily Requests | DB Queries Saved/Day |
-|----------|----------------|-----------|---------------------|---------------------|
-| Course content | 5 queries | 30s | 10,000 | ~45,000 (90% hit rate) |
-| Course catalogue | 3 queries | 60s | 5,000 | ~14,700 (98% hit rate) |
-| Notifications | 2 queries | 10s | 50,000 | ~90,000 (90% hit rate) |
-| **Total** | | | | **~150,000 fewer DB queries/day** |
+| Endpoint         | Queries/Request | Cache TTL | Est. Daily Requests | DB Queries Saved/Day              |
+| ---------------- | --------------- | --------- | ------------------- | --------------------------------- |
+| Course content   | 5 queries       | 30s       | 10,000              | ~45,000 (90% hit rate)            |
+| Course catalogue | 3 queries       | 60s       | 5,000               | ~14,700 (98% hit rate)            |
+| Notifications    | 2 queries       | 10s       | 50,000              | ~90,000 (90% hit rate)            |
+| **Total**        |                 |           |                     | **~150,000 fewer DB queries/day** |
 
 ### Implementation Order (Priority)
 
@@ -201,10 +220,10 @@ Currently, CSRF tokens are fetched from `/api/csrf-token` and sent in headers, b
 
 ## Risk Assessment
 
-| Risk | Likelihood | Mitigation |
-|------|-----------|------------|
-| Redis connection failure | Low (local docker) | `lazyConnect: true`, graceful fallback to DB |
-| Memory leak from unbounded cache keys | Medium | Set TTL on every key; monitor `INFO keyspace` |
-| Cache stampede on key expiry | Low | Use `SET NX` + staggered TTL for hot keys |
-| Stale data served after edit | Low | PUB/SUB invalidation on admin actions |
-| Redis single point of failure | Medium | Docker restart policy; Redis Sentinel for HA |
+| Risk                                  | Likelihood         | Mitigation                                    |
+| ------------------------------------- | ------------------ | --------------------------------------------- |
+| Redis connection failure              | Low (local docker) | `lazyConnect: true`, graceful fallback to DB  |
+| Memory leak from unbounded cache keys | Medium             | Set TTL on every key; monitor `INFO keyspace` |
+| Cache stampede on key expiry          | Low                | Use `SET NX` + staggered TTL for hot keys     |
+| Stale data served after edit          | Low                | PUB/SUB invalidation on admin actions         |
+| Redis single point of failure         | Medium             | Docker restart policy; Redis Sentinel for HA  |

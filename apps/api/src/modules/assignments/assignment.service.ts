@@ -130,7 +130,12 @@ export const assignmentService = {
       };
     }
 
-    const { skip, take, page: currentPage, limit: currentLimit } = paginate({
+    const {
+      skip,
+      take,
+      page: currentPage,
+      limit: currentLimit,
+    } = paginate({
       page: filters.page,
       limit: filters.limit,
     });
@@ -226,7 +231,12 @@ export const assignmentService = {
       throw new Error("You are not the instructor of this batch");
     }
 
-    const { skip, take, page: currentPage, limit: currentLimit } = paginate({ page, limit });
+    const {
+      skip,
+      take,
+      page: currentPage,
+      limit: currentLimit,
+    } = paginate({ page, limit });
 
     const [submissions, total] = await Promise.all([
       prisma.assignmentSubmission.findMany({
@@ -243,7 +253,12 @@ export const assignmentService = {
       prisma.assignmentSubmission.count({ where: { assignmentId } }),
     ]);
 
-    return { items: submissions, total, page: currentPage, limit: currentLimit };
+    return {
+      items: submissions,
+      total,
+      page: currentPage,
+      limit: currentLimit,
+    };
   },
 
   // Manually grades a submission with score and feedback

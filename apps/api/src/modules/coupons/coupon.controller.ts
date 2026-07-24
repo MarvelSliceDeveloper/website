@@ -57,7 +57,9 @@ export const couponController = {
     try {
       const { code, packageId } = req.body;
       if (!code || !packageId) {
-        return res.status(400).json({ error: "code and packageId are required" });
+        return res
+          .status(400)
+          .json({ error: "code and packageId are required" });
       }
 
       const pkg = await prisma.coursePackage.findUnique({
@@ -66,7 +68,9 @@ export const couponController = {
       });
 
       if (!pkg || !pkg.price) {
-        return res.status(404).json({ error: "Package not found or not priced" });
+        return res
+          .status(404)
+          .json({ error: "Package not found or not priced" });
       }
 
       const result = await couponService.validateCoupon(code, pkg.price);

@@ -23,7 +23,13 @@ export async function getCourseContentProgress(
 ): Promise<CourseProgress> {
   const course = await prisma.course.findUnique({
     where: { id: courseId },
-    select: { id: true, title: true, modules: { select: { id: true, lessons: { select: { id: true, videoUrl: true } } } } },
+    select: {
+      id: true,
+      title: true,
+      modules: {
+        select: { id: true, lessons: { select: { id: true, videoUrl: true } } },
+      },
+    },
   });
 
   if (!course) {
@@ -34,8 +40,14 @@ export async function getCourseContentProgress(
   const totalLessons = course.modules.reduce((s, m) => s + m.lessons.length, 0);
 
   const [quizzes, assignments] = await Promise.all([
-    prisma.quiz.findMany({ where: { moduleId: { in: moduleIds } }, select: { id: true, moduleId: true } }),
-    prisma.assignment.findMany({ where: { moduleId: { in: moduleIds } }, select: { id: true, moduleId: true } }),
+    prisma.quiz.findMany({
+      where: { moduleId: { in: moduleIds } },
+      select: { id: true, moduleId: true },
+    }),
+    prisma.assignment.findMany({
+      where: { moduleId: { in: moduleIds } },
+      select: { id: true, moduleId: true },
+    }),
   ]);
 
   const quizIds = quizzes.map((q) => q.id);
@@ -44,34 +56,54 @@ export async function getCourseContentProgress(
   const [quizAttempts, assignmentSubmissions] = await Promise.all([
     quizIds.length
       ? prisma.quizAttempt.findMany({
-          where: { userId, quizId: { in: quizIds }, status: { not: "PENDING" } },
+          where: {
+            userId,
+            quizId: { in: quizIds },
+            status: { not: "PENDING" },
+          },
           select: { quizId: true },
         })
       : Promise.resolve([]),
     assignmentIds.length
       ? prisma.assignmentSubmission.findMany({
-          where: { studentId: userId, assignmentId: { in: assignmentIds }, status: "GRADED" },
+          where: {
+            studentId: userId,
+            assignmentId: { in: assignmentIds },
+            status: "GRADED",
+          },
           select: { assignmentId: true },
         })
       : Promise.resolve([]),
   ]);
 
   const completedQuizIds = new Set(quizAttempts.map((a) => a.quizId));
-  const completedAssignmentIds = new Set(assignmentSubmissions.map((s) => s.assignmentId));
+  const completedAssignmentIds = new Set(
+    assignmentSubmissions.map((s) => s.assignmentId),
+  );
 
   const totalQuizzes = quizzes.length;
   const totalAssignments = assignments.length;
-  const completedQuizzes = quizIds.filter((id) => completedQuizIds.has(id)).length;
-  const completedAssignments = assignmentIds.filter((id) => completedAssignmentIds.has(id)).length;
+  const completedQuizzes = quizIds.filter((id) =>
+    completedQuizIds.has(id),
+  ).length;
+  const completedAssignments = assignmentIds.filter((id) =>
+    completedAssignmentIds.has(id),
+  ).length;
 
   const contentItems = [
-    ...(totalQuizzes > 0 ? [{ completed: completedQuizzes, total: totalQuizzes }] : []),
-    ...(totalAssignments > 0 ? [{ completed: completedAssignments, total: totalAssignments }] : []),
+    ...(totalQuizzes > 0
+      ? [{ completed: completedQuizzes, total: totalQuizzes }]
+      : []),
+    ...(totalAssignments > 0
+      ? [{ completed: completedAssignments, total: totalAssignments }]
+      : []),
   ];
 
   const totalItems = contentItems.reduce((s, c) => s + c.total, 0);
   const completedItems = contentItems.reduce((s, c) => s + c.completed, 0);
-  const isComplete = contentItems.length > 0 && contentItems.every((c) => c.completed >= c.total);
+  const isComplete =
+    contentItems.length > 0 &&
+    contentItems.every((c) => c.completed >= c.total);
 
   return {
     courseId: course.id,
@@ -119,7 +151,10 @@ export async function checkAndIssueCertificate(
     });
     return { issued: true };
   } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
       return { issued: false, reason: "Certificate already exists" };
     }
     throw err;
@@ -153,7 +188,8 @@ export async function checkAndIssueForAssignment(
   });
 
   if (!assignment) return { issued: false, reason: "Assignment not found" };
-  if (!assignment.module) return { issued: false, reason: "Assignment not linked to a module" };
+  if (!assignment.module)
+    return { issued: false, reason: "Assignment not linked to a module" };
 
   return {
     ...(await checkAndIssueCertificate(studentId, assignment.module.courseId)),
@@ -219,7 +255,10 @@ export async function getPackageSpecialExamProgress(
     const specialExams = c.modules.flatMap((m) => m.quizzes);
     const primaryExam = specialExams[0] || null;
     const bestAttempt = primaryExam?.attempts[0] || null;
-    const isPassed = bestAttempt ? bestAttempt.isPassed || (bestAttempt.percentage >= (primaryExam?.passingScore ?? 65)) : false;
+    const isPassed = bestAttempt
+      ? bestAttempt.isPassed ||
+        bestAttempt.percentage >= (primaryExam?.passingScore ?? 65)
+      : false;
 
     return {
       courseId: c.id,
@@ -235,7 +274,8 @@ export async function getPackageSpecialExamProgress(
   });
 
   const requiredCourses = courseStatuses.filter((cs) => cs.isExamRequired);
-  const allPassed = requiredCourses.length > 0 && requiredCourses.every((cs) => cs.isPassed);
+  const allPassed =
+    requiredCourses.length > 0 && requiredCourses.every((cs) => cs.isPassed);
 
   return {
     packageId: pkg.id,
@@ -257,12 +297,23 @@ export async function checkAndIssuePackageCertificate(
   });
 
   if (existing) {
-    return { issued: false, certificate: existing, reason: "Certificate already claimed" };
+    return {
+      issued: false,
+      certificate: existing,
+      reason: "Certificate already claimed",
+    };
   }
 
-  const progress = await getPackageSpecialExamProgress(userId, packageId, batchId);
+  const progress = await getPackageSpecialExamProgress(
+    userId,
+    packageId,
+    batchId,
+  );
   if (!progress.allPassed) {
-    return { issued: false, reason: "Not all required Special Exams have been passed" };
+    return {
+      issued: false,
+      reason: "Not all required Special Exams have been passed",
+    };
   }
 
   try {
@@ -277,11 +328,18 @@ export async function checkAndIssuePackageCertificate(
     });
     return { issued: true, certificate };
   } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
       const found = await prisma.certificate.findUnique({
         where: { userId_packageId: { userId, packageId } },
       });
-      return { issued: false, certificate: found, reason: "Certificate already claimed" };
+      return {
+        issued: false,
+        certificate: found,
+        reason: "Certificate already claimed",
+      };
     }
     throw err;
   }

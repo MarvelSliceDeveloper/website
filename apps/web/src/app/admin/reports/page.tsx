@@ -879,11 +879,11 @@ export default function ReportsPage() {
         doc.addPage();
         y = 20;
       }
-        recordSection("9. Recent Enrollments");
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(20, 24, 40);
-        doc.text("9. Recent Enrollments", 20, y);
+      recordSection("9. Recent Enrollments");
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(20, 24, 40);
+      doc.text("9. Recent Enrollments", 20, y);
       y += 6;
       if (data.recentEnrollments?.length) {
         doc.setFontSize(8.5);
@@ -1425,9 +1425,7 @@ export default function ReportsPage() {
                 colors: [COLORS.warning],
                 plotOptions: { bar: { borderRadius: 4, columnWidth: "60%" } },
                 xaxis: {
-                  categories: data.revenueByPackage.map(
-                    (d) => d.packageName,
-                  ),
+                  categories: data.revenueByPackage.map((d) => d.packageName),
                   labels: {
                     style: { colors: "var(--muted)", fontSize: "11px" },
                     rotate: -20,

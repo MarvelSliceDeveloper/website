@@ -79,6 +79,7 @@ router.get("/user/:userId", async (req: AuthRequest, res: Response) => {
         id: l.id,
         userId: l.userId,
         userName: user.name,
+        userEmail: user.email,
         action: l.action,
         entityType: l.entityType,
         entityId: l.entityId,
@@ -99,7 +100,7 @@ router.get("/user/:userId", async (req: AuthRequest, res: Response) => {
 router.get("/", async (req: AuthRequest, res: Response) => {
   try {
     const {
-      userId,
+      email,
       action,
       entityType,
       page: pageParam,
@@ -117,8 +118,10 @@ router.get("/", async (req: AuthRequest, res: Response) => {
 
     const where: Record<string, unknown> = {};
 
-    if (userId && typeof userId === "string") {
-      where.userId = userId;
+    if (email && typeof email === "string") {
+      where.user = {
+        email: { contains: email, mode: "insensitive" },
+      };
     }
     if (action && typeof action === "string") {
       where.action = action;
@@ -155,6 +158,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
         id: l.id,
         userId: l.userId,
         userName: l.user?.name ?? null,
+        userEmail: l.user?.email ?? null,
         action: l.action,
         entityType: l.entityType,
         entityId: l.entityId,

@@ -100,7 +100,12 @@ export const ticketService = {
     page?: number;
     limit?: number;
   }) {
-    const { skip, take, page: currentPage, limit: currentLimit } = paginate({
+    const {
+      skip,
+      take,
+      page: currentPage,
+      limit: currentLimit,
+    } = paginate({
       page: params.page,
       limit: params.limit,
     });

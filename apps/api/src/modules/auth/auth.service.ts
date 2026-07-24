@@ -84,13 +84,17 @@ export const authService = {
       where: { email: { equals: email.trim(), mode: "insensitive" } },
     });
 
-    if (!user || !user.passwordHash) throw new AppError(401, "Invalid credentials");
+    if (!user || !user.passwordHash)
+      throw new AppError(401, "Invalid credentials");
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) throw new AppError(401, "Invalid credentials");
 
     if (user.isSuspended) {
-      throw new AppError(403, "Account is pending approval. Please contact support.");
+      throw new AppError(
+        403,
+        "Account is pending approval. Please contact support.",
+      );
     }
 
     return this.generateTokens({

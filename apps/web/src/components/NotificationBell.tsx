@@ -31,7 +31,10 @@ export default function NotificationBell() {
       if (listRes.status === "fulfilled" && Array.isArray(listRes.value)) {
         setNotifications(listRes.value);
       }
-      if (countRes.status === "fulfilled" && countRes.value?.count !== undefined) {
+      if (
+        countRes.status === "fulfilled" &&
+        countRes.value?.count !== undefined
+      ) {
         setUnreadCount(countRes.value.count);
       }
     } catch (e) {

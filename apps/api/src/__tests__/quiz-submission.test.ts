@@ -20,7 +20,9 @@ describe("Quiz Submission — Scoring & Attempt Tracking", () => {
     // `practicals` on modules which fails when the Practical model/relation is
     // missing from the Prisma schema — a pre-existing bug. We find quiz IDs
     // directly via Prisma for test setup, then test the actual API endpoints.
-    const user = await prisma.user.findFirst({ where: { email: "student@lms.local" } });
+    const user = await prisma.user.findFirst({
+      where: { email: "student@lms.local" },
+    });
     const quiz = await prisma.quiz.findFirst({
       where: {
         module: {
@@ -201,7 +203,15 @@ describe("Quiz Submission — Scoring & Attempt Tracking", () => {
             course: { slug: "python-for-data-science" },
           },
           questions: { some: {} },
-          attempts: { none: { userId: (await prisma.user.findFirst({ where: { email: "student@lms.local" } }))?.id } },
+          attempts: {
+            none: {
+              userId: (
+                await prisma.user.findFirst({
+                  where: { email: "student@lms.local" },
+                })
+              )?.id,
+            },
+          },
         },
       });
 

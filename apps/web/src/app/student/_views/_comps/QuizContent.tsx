@@ -611,7 +611,9 @@ export default function QuizContent({
 
           {quizData.assignmentInstructions && (
             <div className="bg-muted/40 border border-border rounded-xl p-4">
-              <p className="text-xs font-semibold text-foreground mb-1">Instructions</p>
+              <p className="text-xs font-semibold text-foreground mb-1">
+                Instructions
+              </p>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                 {quizData.assignmentInstructions}
               </p>
@@ -701,7 +703,9 @@ export default function QuizContent({
                 {assignmentUploading ? (
                   "Uploading..."
                 ) : assignmentSubmitted ? (
-                  <><IconCheck size={16} /> Resubmit</>
+                  <>
+                    <IconCheck size={16} /> Resubmit
+                  </>
                 ) : (
                   "Submit Assignment"
                 )}

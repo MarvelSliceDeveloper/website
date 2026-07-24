@@ -244,20 +244,31 @@ export default function QuizOverdueView({
         {/* Header */}
         <div>
           <button
-            onClick={() => { setSubView({ type: "LIST" }); setCurrentQuestionIdx(0); }}
+            onClick={() => {
+              setSubView({ type: "LIST" });
+              setCurrentQuestionIdx(0);
+            }}
             className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 mb-3 transition-colors"
           >
             <IconArrowLeft size={14} /> Back to Quizzes
           </button>
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-violet-500">MCQ Assessment</p>
-              <h1 className="text-xl font-bold text-foreground mt-0.5">{data.title}</h1>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-violet-500">
+                MCQ Assessment
+              </p>
+              <h1 className="text-xl font-bold text-foreground mt-0.5">
+                {data.title}
+              </h1>
             </div>
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
               {data.dueDate && (
                 <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-card border border-border/60">
-                  <IconClock size={12} /> {new Date(data.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                  <IconClock size={12} />{" "}
+                  {new Date(data.dueDate).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                  })}
                 </span>
               )}
               <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-card border border-border/60">
@@ -270,8 +281,14 @@ export default function QuizOverdueView({
         {/* Progress Bar */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-            <span>Question {currentIdx + 1} of {totalCount}</span>
-            <span className={answeredCount === totalCount ? "text-emerald-500" : ""}>{answeredCount}/{totalCount} answered</span>
+            <span>
+              Question {currentIdx + 1} of {totalCount}
+            </span>
+            <span
+              className={answeredCount === totalCount ? "text-emerald-500" : ""}
+            >
+              {answeredCount}/{totalCount} answered
+            </span>
           </div>
           <div className="h-1.5 rounded-full bg-border/40 overflow-hidden">
             <div
@@ -329,7 +346,10 @@ export default function QuizOverdueView({
                     key={opt.id}
                     type="button"
                     onClick={() =>
-                      setSelectedAnswers((prev) => ({ ...prev, [currentQ.id]: opt.id }))
+                      setSelectedAnswers((prev) => ({
+                        ...prev,
+                        [currentQ.id]: opt.id,
+                      }))
                     }
                     className={`group w-full flex items-center gap-3.5 p-4 rounded-xl border text-left text-sm transition-all duration-200 ${
                       isSelected
@@ -344,9 +364,15 @@ export default function QuizOverdueView({
                           : "border-border group-hover:border-violet-500/40 text-muted group-hover:text-violet-500"
                       }`}
                     >
-                      {isSelected ? <IconCheck size={14} /> : String.fromCharCode(65 + optIdx)}
+                      {isSelected ? (
+                        <IconCheck size={14} />
+                      ) : (
+                        String.fromCharCode(65 + optIdx)
+                      )}
                     </div>
-                    <span className="leading-snug flex-1">{opt.optionText}</span>
+                    <span className="leading-snug flex-1">
+                      {opt.optionText}
+                    </span>
                   </button>
                 );
               })}
@@ -378,9 +404,14 @@ export default function QuizOverdueView({
               className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-primary text-white shadow-lg shadow-violet-500/20 hover:shadow-xl hover:shadow-violet-500/30 hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0 transition-all duration-200"
             >
               {submitting ? (
-                <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" /> Submitting...</>
+                <>
+                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />{" "}
+                  Submitting...
+                </>
               ) : (
-                <><IconSend size={16} /> Submit Quiz</>
+                <>
+                  <IconSend size={16} /> Submit Quiz
+                </>
               )}
             </button>
           )}
@@ -431,20 +462,35 @@ export default function QuizOverdueView({
               {data.assignment.title}
             </h2>
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              {isPassed ? "🎉 Assessment Passed!" : isAverage ? "⚡ Keep Practicing!" : "📚 Needs Revision"}
+              {isPassed
+                ? "🎉 Assessment Passed!"
+                : isAverage
+                  ? "⚡ Keep Practicing!"
+                  : "📚 Needs Revision"}
             </p>
           </div>
 
           {/* Big Score Display */}
           <div className="relative inline-flex flex-col items-center justify-center p-4 rounded-2xl bg-muted/40 border border-border/60 min-w-[200px]">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Final Score</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Final Score
+            </span>
             <div className="text-4xl sm:text-5xl font-black text-foreground mt-1">
               {data.totalScore ?? 0}
-              <span className="text-xl font-normal text-muted-foreground"> / {data.assignment.maxPoints}</span>
+              <span className="text-xl font-normal text-muted-foreground">
+                {" "}
+                / {data.assignment.maxPoints}
+              </span>
             </div>
-            <span className={`inline-block mt-2 px-3 py-0.5 text-xs font-bold rounded-full ${
-              isPassed ? "bg-emerald-500/15 text-emerald-500" : isAverage ? "bg-amber-500/15 text-amber-500" : "bg-danger/15 text-danger"
-            }`}>
+            <span
+              className={`inline-block mt-2 px-3 py-0.5 text-xs font-bold rounded-full ${
+                isPassed
+                  ? "bg-emerald-500/15 text-emerald-500"
+                  : isAverage
+                    ? "bg-amber-500/15 text-amber-500"
+                    : "bg-danger/15 text-danger"
+              }`}
+            >
               {pct}% Accuracy
             </span>
           </div>
@@ -469,7 +515,10 @@ export default function QuizOverdueView({
             <div className="mx-auto max-w-md rounded-xl border border-violet-500/25 bg-violet-500/10 p-3.5 text-xs text-foreground text-left flex items-start gap-2">
               <span className="text-base">💡</span>
               <div>
-                <strong className="font-semibold text-violet-600 dark:text-violet-400">Feedback:</strong> {data.feedback}
+                <strong className="font-semibold text-violet-600 dark:text-violet-400">
+                  Feedback:
+                </strong>{" "}
+                {data.feedback}
               </div>
             </div>
           )}
@@ -493,12 +542,16 @@ export default function QuizOverdueView({
               <div
                 key={q.id}
                 className={`rounded-2xl p-5 border bg-card transition-all space-y-3 shadow-sm ${
-                  isCorrect ? "border-emerald-500/30 shadow-emerald-500/5" : "border-danger/30 shadow-danger/5"
+                  isCorrect
+                    ? "border-emerald-500/30 shadow-emerald-500/5"
+                    : "border-danger/30 shadow-danger/5"
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <p className="text-sm font-semibold text-foreground leading-snug">
-                    <span className="text-violet-500 font-bold mr-2">Q{idx + 1}.</span>
+                    <span className="text-violet-500 font-bold mr-2">
+                      Q{idx + 1}.
+                    </span>
                     {q.questionText}
                   </p>
                   {isCorrect ? (
@@ -553,7 +606,10 @@ export default function QuizOverdueView({
 
         <div className="flex justify-center pt-2">
           <button
-            onClick={() => { setSubView({ type: "LIST" }); setCurrentQuestionIdx(0); }}
+            onClick={() => {
+              setSubView({ type: "LIST" });
+              setCurrentQuestionIdx(0);
+            }}
             className="flex items-center gap-2 btn-secondary text-xs px-6 py-2.5 rounded-xl"
           >
             <IconArrowLeft size={14} /> Back to Quizzes
@@ -587,12 +643,20 @@ export default function QuizOverdueView({
         {/* Quick Stat Badges */}
         <div className="flex items-center gap-3">
           <div className="px-4 py-2 rounded-xl border border-amber-500/25 bg-amber-500/10 text-center min-w-[90px]">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-500">Pending</p>
-            <p className="text-lg font-bold text-amber-600 dark:text-amber-400">{overdueItems.length}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-500">
+              Pending
+            </p>
+            <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
+              {overdueItems.length}
+            </p>
           </div>
           <div className="px-4 py-2 rounded-xl border border-emerald-500/25 bg-emerald-500/10 text-center min-w-[90px]">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500">Completed</p>
-            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{completedItems.length}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500">
+              Completed
+            </p>
+            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+              {completedItems.length}
+            </p>
           </div>
         </div>
       </div>
@@ -648,13 +712,16 @@ export default function QuizOverdueView({
               <tbody className="divide-y divide-border/50">
                 {filteredItems.map((quiz) => {
                   const isPending = quiz.status === "PENDING";
-                  const dueDateTime = quiz.dueDate ? new Date(quiz.dueDate).getTime() : NaN;
-                  const daysOverdue = isPending && !isNaN(dueDateTime)
-                    ? Math.floor(
-                        (new Date().getTime() - dueDateTime) /
-                          (1000 * 60 * 60 * 24),
-                      )
-                    : 0;
+                  const dueDateTime = quiz.dueDate
+                    ? new Date(quiz.dueDate).getTime()
+                    : NaN;
+                  const daysOverdue =
+                    isPending && !isNaN(dueDateTime)
+                      ? Math.floor(
+                          (new Date().getTime() - dueDateTime) /
+                            (1000 * 60 * 60 * 24),
+                        )
+                      : 0;
                   const isOverdue = daysOverdue > 0;
 
                   return (
@@ -685,8 +752,12 @@ export default function QuizOverdueView({
                         </div>
                       </td>
                       <td className="px-5 py-4">
-                        <p className="text-xs font-medium text-foreground">{quiz.courseName}</p>
-                        <p className="text-[11px] text-muted-foreground">{quiz.moduleName}</p>
+                        <p className="text-xs font-medium text-foreground">
+                          {quiz.courseName}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {quiz.moduleName}
+                        </p>
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-1.5">

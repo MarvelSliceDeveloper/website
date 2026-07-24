@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import {
@@ -9,12 +9,15 @@ import {
   IconSearch,
   IconChevronDown,
   IconChevronUp,
+  IconPlayerPlay,
+  IconPlayerStop,
 } from "@tabler/icons-react";
 
 type AuditLog = {
   id: string;
   userId: string;
   userName: string | null;
+  userEmail: string | null;
   action: string;
   entityType: string;
   entityId: string | null;
@@ -41,12 +44,20 @@ export default function AdminAuditLogsPage() {
   const [total, setTotal] = useState(0);
   const limit = 50;
 
-  const [filterUserId, setFilterUserId] = useState("");
+  const [filterEmail, setFilterEmail] = useState("");
   const [filterAction, setFilterAction] = useState("ALL");
   const [filterEntityType, setFilterEntityType] = useState("");
   const [filterDateStart, setFilterDateStart] = useState("");
   const [filterDateEnd, setFilterDateEnd] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [live, setLive] = useState(true);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isFiltered =
+    filterEmail.trim() ||
+    filterAction !== "ALL" ||
+    filterEntityType.trim() ||
+    filterDateStart ||
+    filterDateEnd;
 
   async function fetchLogs() {
     setLoading(true);
@@ -55,7 +66,7 @@ export default function AdminAuditLogsPage() {
         page: String(page),
         limit: String(limit),
       };
-      if (filterUserId.trim()) params.userId = filterUserId.trim();
+      if (filterEmail.trim()) params.email = filterEmail.trim();
       if (filterAction !== "ALL") params.action = filterAction;
       if (filterEntityType.trim()) params.entityType = filterEntityType.trim();
       if (filterDateStart) params.startDate = filterDateStart;
@@ -63,10 +74,10 @@ export default function AdminAuditLogsPage() {
 
       const data = await api.get<{
         logs: AuditLog[];
-        pagination: { total: number };
+        total: number;
       }>("/api/admin/audit-logs", params);
       setLogs(data.logs);
-      setTotal(data.pagination.total);
+      setTotal(data.total);
     } catch {
       setLogs([]);
     } finally {
@@ -77,6 +88,19 @@ export default function AdminAuditLogsPage() {
   useEffect(() => {
     fetchLogs();
   }, [page]);
+
+  // Real-time polling — only when live and not actively filtering
+  useEffect(() => {
+    if (pollingRef.current) clearInterval(pollingRef.current);
+    if (live && !isFiltered) {
+      pollingRef.current = setInterval(() => {
+        fetchLogs();
+      }, 10000);
+    }
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [live, isFiltered, page]);
 
   function handleSearch() {
     setPage(1);
@@ -100,12 +124,25 @@ export default function AdminAuditLogsPage() {
             Track all user and system actions across the platform.
           </p>
         </div>
-        <button
-          onClick={fetchLogs}
-          className="btn-secondary text-xs py-2 flex items-center gap-1.5"
-        >
-          <IconRefresh size={14} /> Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setLive((p) => !p)}
+            className={`text-xs py-2 flex items-center gap-1.5 px-3 rounded-lg border transition-colors ${
+              live
+                ? "bg-green-50 border-green-300 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400"
+                : "bg-card border-border text-muted-foreground hover:bg-card-hover"
+            }`}
+          >
+            {live ? <IconPlayerPlay size={14} /> : <IconPlayerStop size={14} />}
+            {live ? "Live" : "Paused"}
+          </button>
+          <button
+            onClick={fetchLogs}
+            className="btn-secondary text-xs py-2 flex items-center gap-1.5"
+          >
+            <IconRefresh size={14} /> Refresh
+          </button>
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -113,9 +150,9 @@ export default function AdminAuditLogsPage() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <input
             type="text"
-            placeholder="User ID"
-            value={filterUserId}
-            onChange={(e) => setFilterUserId(e.target.value)}
+            placeholder="Search by email"
+            value={filterEmail}
+            onChange={(e) => setFilterEmail(e.target.value)}
             className="input text-xs"
           />
           <select
@@ -158,6 +195,11 @@ export default function AdminAuditLogsPage() {
           >
             <IconSearch size={14} /> Search
           </button>
+          {isFiltered && (
+            <span className="ml-3 text-[10px] text-muted-foreground">
+              Live updates paused while filtering
+            </span>
+          )}
         </div>
       </div>
 
@@ -198,10 +240,12 @@ export default function AdminAuditLogsPage() {
                       <span className="font-medium text-foreground">
                         {log.userName || "—"}
                       </span>
-                      <br />
-                      <span className="font-mono text-[10px] text-muted-foreground">
-                        {log.userId.slice(0, 8)}...
-                      </span>
+                      {log.userEmail && <br />}
+                      {log.userEmail && (
+                        <span className="text-[10px] text-muted-foreground">
+                          {log.userEmail}
+                        </span>
+                      )}
                     </td>
                     <td className="py-3 pr-3">
                       <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded">

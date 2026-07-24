@@ -16,7 +16,13 @@ router.use(requireAuth);
 router.use(requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]));
 
 const certificateUploadsDir = path.resolve(
-  __dirname, "..", "..", "..", "..", "uploads", "certificate-templates",
+  __dirname,
+  "..",
+  "..",
+  "..",
+  "..",
+  "uploads",
+  "certificate-templates",
 );
 fs.mkdirSync(certificateUploadsDir, { recursive: true });
 
@@ -42,7 +48,8 @@ router.get("/", async (_req: AuthRequest, res: Response) => {
     return res.json({ templates });
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to fetch templates",
+      error:
+        error instanceof Error ? error.message : "Failed to fetch templates",
     });
   }
 });
@@ -59,7 +66,8 @@ router.get("/:id", async (req: AuthRequest, res: Response) => {
     return res.json({ template });
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to fetch template",
+      error:
+        error instanceof Error ? error.message : "Failed to fetch template",
     });
   }
 });
@@ -138,7 +146,8 @@ router.post("/", async (req: AuthRequest, res: Response) => {
     return res.status(201).json({ template });
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to create template",
+      error:
+        error instanceof Error ? error.message : "Failed to create template",
     });
   }
 });
@@ -147,7 +156,9 @@ router.post("/", async (req: AuthRequest, res: Response) => {
 router.put("/:id", async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const existing = await prisma.certificateTemplate.findUnique({ where: { id } });
+    const existing = await prisma.certificateTemplate.findUnique({
+      where: { id },
+    });
     if (!existing) {
       return res.status(404).json({ error: "Template not found" });
     }
@@ -216,7 +227,8 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
     return res.json({ template });
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to update template",
+      error:
+        error instanceof Error ? error.message : "Failed to update template",
     });
   }
 });
@@ -225,20 +237,25 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
 router.delete("/:id", async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const existing = await prisma.certificateTemplate.findUnique({ where: { id } });
+    const existing = await prisma.certificateTemplate.findUnique({
+      where: { id },
+    });
     if (!existing) {
       return res.status(404).json({ error: "Template not found" });
     }
 
     if (existing.isDefault) {
-      return res.status(400).json({ error: "Cannot delete the default template" });
+      return res
+        .status(400)
+        .json({ error: "Cannot delete the default template" });
     }
 
     await prisma.certificateTemplate.delete({ where: { id } });
     return res.json({ message: "Template deleted" });
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to delete template",
+      error:
+        error instanceof Error ? error.message : "Failed to delete template",
     });
   }
 });
@@ -250,7 +267,9 @@ router.post(
   async (req: AuthRequest, res: Response) => {
     try {
       const { id } = req.params;
-      const existing = await prisma.certificateTemplate.findUnique({ where: { id } });
+      const existing = await prisma.certificateTemplate.findUnique({
+        where: { id },
+      });
       if (!existing) {
         return res.status(404).json({ error: "Template not found" });
       }
@@ -259,14 +278,45 @@ router.post(
         return res.status(400).json({ error: "PDF file is required" });
       }
 
-      const relativePath = path.join("certificate-templates", req.file.filename);
+      const relativePath = path.join(
+        "certificate-templates",
+        req.file.filename,
+      );
       const pdfTemplateFields = req.body.pdfTemplateFields
         ? JSON.parse(req.body.pdfTemplateFields)
         : [
-            { key: "studentName", x: 0, y: 130, fontSize: 22, color: "#1e293b", align: "center" },
-            { key: "courseName", x: 0, y: 170, fontSize: 18, color: "#1e293b", align: "center" },
-            { key: "date", x: 0, y: 200, fontSize: 10, color: "#64748b", align: "center" },
-            { key: "certificateNumber", x: 120, y: 240, fontSize: 10, color: "#64748b", align: "left" },
+            {
+              key: "studentName",
+              x: 0,
+              y: 130,
+              fontSize: 22,
+              color: "#1e293b",
+              align: "center",
+            },
+            {
+              key: "courseName",
+              x: 0,
+              y: 170,
+              fontSize: 18,
+              color: "#1e293b",
+              align: "center",
+            },
+            {
+              key: "date",
+              x: 0,
+              y: 200,
+              fontSize: 10,
+              color: "#64748b",
+              align: "center",
+            },
+            {
+              key: "certificateNumber",
+              x: 120,
+              y: 240,
+              fontSize: 10,
+              color: "#64748b",
+              align: "left",
+            },
           ];
 
       const template = await prisma.certificateTemplate.update({
@@ -281,7 +331,10 @@ router.post(
       return res.json({ template });
     } catch (error: unknown) {
       return res.status(500).json({
-        error: error instanceof Error ? error.message : "Failed to upload PDF template",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to upload PDF template",
       });
     }
   },
@@ -291,7 +344,9 @@ router.post(
 router.delete("/:id/pdf-template", async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const existing = await prisma.certificateTemplate.findUnique({ where: { id } });
+    const existing = await prisma.certificateTemplate.findUnique({
+      where: { id },
+    });
     if (!existing) {
       return res.status(404).json({ error: "Template not found" });
     }
@@ -308,7 +363,10 @@ router.delete("/:id/pdf-template", async (req: AuthRequest, res: Response) => {
     return res.json({ template });
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to remove PDF template",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to remove PDF template",
     });
   }
 });
@@ -317,7 +375,9 @@ router.delete("/:id/pdf-template", async (req: AuthRequest, res: Response) => {
 router.post("/:id/set-default", async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const existing = await prisma.certificateTemplate.findUnique({ where: { id } });
+    const existing = await prisma.certificateTemplate.findUnique({
+      where: { id },
+    });
     if (!existing) {
       return res.status(404).json({ error: "Template not found" });
     }
@@ -337,7 +397,10 @@ router.post("/:id/set-default", async (req: AuthRequest, res: Response) => {
     return res.json({ template });
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to set default template",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to set default template",
     });
   }
 });

@@ -346,7 +346,11 @@ export default function BatchDetailPage() {
                         {item.appliedAt
                           ? new Date(item.appliedAt).toLocaleDateString(
                               "en-IN",
-                              { day: "numeric", month: "short", year: "numeric" },
+                              {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              },
                             )
                           : item.type}
                       </td>
@@ -507,7 +511,9 @@ export default function BatchDetailPage() {
                       <td className="px-5 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => handleToggleExamRequired(bc.courseId)}
+                            onClick={() =>
+                              handleToggleExamRequired(bc.courseId)
+                            }
                             disabled={togglingExam === bc.courseId}
                             className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${
                               bc.isExamRequired !== false

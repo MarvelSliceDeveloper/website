@@ -10,7 +10,9 @@ export const CreateQuizSchema = z.object({
   passingScore: z.number().min(0).max(100).default(65),
   timeLimitMin: z.number().min(1).optional().nullable(),
   maxAttempts: z.number().min(1).optional().nullable(),
-  examType: z.enum(["MCQ", "ASSIGNMENT", "CODING_TESTCASE", "ALL_IN_ONE"]).default("MCQ"),
+  examType: z
+    .enum(["MCQ", "ASSIGNMENT", "CODING_TESTCASE", "ALL_IN_ONE"])
+    .default("MCQ"),
   hasMcq: z.boolean().default(true),
   hasAssignment: z.boolean().default(false),
   hasCoding: z.boolean().default(false),
@@ -52,7 +54,9 @@ export const UpdateQuizSchema = z.object({
   passingScore: z.number().min(0).max(100).optional(),
   timeLimitMin: z.number().min(1).optional().nullable(),
   maxAttempts: z.number().min(1).optional().nullable(),
-  examType: z.enum(["MCQ", "ASSIGNMENT", "CODING_TESTCASE", "ALL_IN_ONE"]).optional(),
+  examType: z
+    .enum(["MCQ", "ASSIGNMENT", "CODING_TESTCASE", "ALL_IN_ONE"])
+    .optional(),
   hasMcq: z.boolean().optional(),
   hasAssignment: z.boolean().optional(),
   hasCoding: z.boolean().optional(),
@@ -157,7 +161,9 @@ export const quizService = {
         assignmentInstructions: data.assignmentInstructions ?? null,
         assignmentPdfUrl: data.assignmentPdfUrl ?? null,
         codingPrompt: data.codingPrompt ?? null,
-        testCases: data.testCases ? JSON.parse(JSON.stringify(data.testCases)) : undefined,
+        testCases: data.testCases
+          ? JSON.parse(JSON.stringify(data.testCases))
+          : undefined,
         questions: {
           create: (data.questions || []).map((q) => ({
             text: q.text,
@@ -188,13 +194,23 @@ export const quizService = {
         ...(data.dueDate !== undefined && {
           dueDate: data.dueDate ? new Date(data.dueDate) : null,
         }),
-        ...(data.isSpecialExam !== undefined && { isSpecialExam: data.isSpecialExam }),
-        ...(data.passingScore !== undefined && { passingScore: data.passingScore }),
-        ...(data.timeLimitMin !== undefined && { timeLimitMin: data.timeLimitMin }),
-        ...(data.maxAttempts !== undefined && { maxAttempts: data.maxAttempts }),
+        ...(data.isSpecialExam !== undefined && {
+          isSpecialExam: data.isSpecialExam,
+        }),
+        ...(data.passingScore !== undefined && {
+          passingScore: data.passingScore,
+        }),
+        ...(data.timeLimitMin !== undefined && {
+          timeLimitMin: data.timeLimitMin,
+        }),
+        ...(data.maxAttempts !== undefined && {
+          maxAttempts: data.maxAttempts,
+        }),
         ...(data.examType && { examType: data.examType }),
         ...(data.hasMcq !== undefined && { hasMcq: data.hasMcq }),
-        ...(data.hasAssignment !== undefined && { hasAssignment: data.hasAssignment }),
+        ...(data.hasAssignment !== undefined && {
+          hasAssignment: data.hasAssignment,
+        }),
         ...(data.hasCoding !== undefined && { hasCoding: data.hasCoding }),
         ...(data.assignmentInstructions !== undefined && {
           assignmentInstructions: data.assignmentInstructions,
@@ -202,12 +218,18 @@ export const quizService = {
         ...(data.assignmentPdfUrl !== undefined && {
           assignmentPdfUrl: data.assignmentPdfUrl,
         }),
-        ...(data.codingPrompt !== undefined && { codingPrompt: data.codingPrompt }),
-        ...(data.testCases !== undefined && {
-          testCases: data.testCases ? JSON.parse(JSON.stringify(data.testCases)) : null,
+        ...(data.codingPrompt !== undefined && {
+          codingPrompt: data.codingPrompt,
         }),
         ...(data.testCases !== undefined && {
-          testCases: data.testCases ? JSON.parse(JSON.stringify(data.testCases)) : null,
+          testCases: data.testCases
+            ? JSON.parse(JSON.stringify(data.testCases))
+            : null,
+        }),
+        ...(data.testCases !== undefined && {
+          testCases: data.testCases
+            ? JSON.parse(JSON.stringify(data.testCases))
+            : null,
         }),
         ...(data.questions !== undefined && {
           questions: {

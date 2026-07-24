@@ -287,7 +287,10 @@ export const authController = {
 
       if (!response.ok) {
         const errText = await response.text();
-        (req as any).log?.error?.("[AzureOAuth] Token exchange failed: %s", errText);
+        (req as any).log?.error?.(
+          "[AzureOAuth] Token exchange failed: %s",
+          errText,
+        );
         return res
           .status(response.status)
           .send(`Token exchange failed: ${response.statusText}`);

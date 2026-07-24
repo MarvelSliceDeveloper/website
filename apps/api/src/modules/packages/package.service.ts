@@ -87,7 +87,12 @@ export const packageService = {
     filters: { status?: string; search?: string } & PaginationParams,
   ) {
     const { page, limit } = filters;
-    const { skip, take, page: currentPage, limit: currentLimit } = paginate({ page, limit });
+    const {
+      skip,
+      take,
+      page: currentPage,
+      limit: currentLimit,
+    } = paginate({ page, limit });
 
     const where: any = {};
     if (filters.status) where.status = filters.status;
@@ -303,7 +308,12 @@ export const packageService = {
     filters: { status?: string; packageId?: string } & PaginationParams,
   ) {
     const { page, limit } = filters;
-    const { skip, take, page: currentPage, limit: currentLimit } = paginate({ page, limit });
+    const {
+      skip,
+      take,
+      page: currentPage,
+      limit: currentLimit,
+    } = paginate({ page, limit });
 
     const where: any = {};
     if (filters.status) where.status = filters.status;
