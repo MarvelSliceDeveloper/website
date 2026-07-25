@@ -694,7 +694,9 @@ model Announcement {
   title      String
   body       String
   createdBy  String?
-  targetRole Role // ADMIN | INSTRUCTOR
+  targetRole Role // ADMIN | INSTRUCTOR | STUDENT | SUPER_ADMIN
+  targetType String  @default("ROLE") // ROLE | PACKAGE | BATCH | INSTRUCTOR_BATCH
+  targetIds  Json?   // ["id1","id2"] — package/batch IDs for non-ROLE targets
   createdAt  DateTime @default(now())
   readBy     Json     @default("[]") // userId[]
   creator    User?    @relation(fields: [createdBy], references: [id], onDelete: SetNull)

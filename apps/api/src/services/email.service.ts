@@ -194,6 +194,52 @@ export const emailService = {
     }
   },
 
+  async sendInvoiceEmail(user: {
+    name: string;
+    email: string;
+    invoice: {
+      paymentId: string;
+      packageName: string;
+      amount: number;
+      discountAmount: number;
+      orderId?: string;
+    };
+  }): Promise<boolean> {
+    if (!isConfigured()) {
+      console.warn("[email] BREVO_API_KEY not set — skipping invoice email");
+      return false;
+    }
+
+    try {
+      const attachment = [
+        {
+          content: generateInvoicePdf({
+            invoiceNumber: `INV-${user.invoice.paymentId.slice(-8).toUpperCase()}`,
+            userName: user.name,
+            userEmail: user.email,
+            packageName: user.invoice.packageName,
+            amount: user.invoice.amount,
+            discountAmount: user.invoice.discountAmount,
+            date: new Date(),
+          }).toString("base64"),
+          name: `invoice-${user.invoice.paymentId.slice(-8)}.pdf`,
+        },
+      ];
+
+      return this.sendEmail({
+        to: [{ email: user.email, name: user.name }],
+        subject: `Invoice — ${user.invoice.packageName}`,
+        html: `<p>Hi ${user.name},</p><p>Your payment for <strong>${user.invoice.packageName}</strong> has been received successfully.</p><p>Your invoice is attached to this email. Please keep it for your records.</p><p>You will receive your login credentials once your batch enrollment is confirmed.</p><p>Best regards,<br/>LMS Portal Team</p>`,
+        text: `Hi ${user.name},\n\nYour payment for ${user.invoice.packageName} has been received successfully.\n\nYour invoice is attached to this email. Please keep it for your records.\n\nYou will receive your login credentials once your batch enrollment is confirmed.\n\nBest regards,\nLMS Portal Team`,
+        tags: ["invoice", "payment"],
+        attachment,
+      });
+    } catch (error: unknown) {
+      console.error("[email] Failed to send invoice email:", error);
+      return false;
+    }
+  },
+
   async sendResetPasswordEmail(user: {
     name: string;
     email: string;

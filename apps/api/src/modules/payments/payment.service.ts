@@ -220,7 +220,7 @@ export const paymentService = {
   ) {
     const payment = await prisma.payment.findUnique({
       where: { razorpayOrderId },
-      include: { package: true },
+      include: { package: true, user: { select: { name: true, email: true } } },
     });
     if (!payment) throw new AppError(404, "Payment record not found");
     if (payment.status !== "PENDING")
@@ -243,6 +243,22 @@ export const paymentService = {
       where: { id: payment.id },
       data: { status: "PAID", razorpayPaymentId, razorpaySignature },
     });
+
+    emailService
+      .sendInvoiceEmail({
+        name: payment.user?.name || "Valued Customer",
+        email: payment.user?.email || "",
+        invoice: {
+          paymentId: payment.id,
+          packageName: payment.package.name,
+          amount: payment.amount,
+          discountAmount: payment.discountAmount,
+          orderId: razorpayOrderId,
+        },
+      })
+      .catch((err: Error) =>
+        console.error("[payment] Failed to send invoice email:", err),
+      );
 
     if (payment.couponId) {
       await prisma.coupon
@@ -307,10 +323,10 @@ export const paymentService = {
     });
 
     const isNewUser = !user;
-    const dummyPassword = isNewUser ? generateDummyPassword() : undefined;
 
     if (isNewUser) {
-      const hashed = await bcrypt.hash(dummyPassword!, 12);
+      const dummyPassword = generateDummyPassword();
+      const hashed = await bcrypt.hash(dummyPassword, 12);
       user = await prisma.user.create({
         data: {
           name,
@@ -320,6 +336,45 @@ export const paymentService = {
           role: "STUDENT",
         },
       });
+
+      emailService
+        .sendWelcomeEmail({
+          name,
+          email: email.toLowerCase(),
+          credentials: { email: email.toLowerCase(), password: dummyPassword },
+          invoice: {
+            paymentId: payment.id,
+            packageName: payment.package.name,
+            amount: payment.amount,
+            discountAmount: payment.discountAmount,
+          },
+        })
+        .catch((err: Error) =>
+          console.error("[payment] Failed to send welcome email:", err),
+        );
+    } else if (user.mustChangePassword) {
+      const dummyPassword = generateDummyPassword();
+      const hashed = await bcrypt.hash(dummyPassword, 12);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash: hashed },
+      });
+
+      emailService
+        .sendWelcomeEmail({
+          name,
+          email: email.toLowerCase(),
+          credentials: { email: email.toLowerCase(), password: dummyPassword },
+          invoice: {
+            paymentId: payment.id,
+            packageName: payment.package.name,
+            amount: payment.amount,
+            discountAmount: payment.discountAmount,
+          },
+        })
+        .catch((err: Error) =>
+          console.error("[payment] Failed to send welcome email:", err),
+        );
     }
 
     if (!user) {
@@ -354,24 +409,6 @@ export const paymentService = {
       });
     }
 
-    if (dummyPassword) {
-      emailService
-        .sendWelcomeEmail({
-          name,
-          email: email.toLowerCase(),
-          credentials: { email: email.toLowerCase(), password: dummyPassword },
-          invoice: {
-            paymentId: payment.id,
-            packageName: payment.package.name,
-            amount: payment.amount,
-            discountAmount: payment.discountAmount,
-          },
-        })
-        .catch((err: Error) =>
-          console.error("[payment] Failed to send welcome email:", err),
-        );
-    }
-
     return { isNewUser, email: email.toLowerCase() };
   },
 
@@ -392,10 +429,10 @@ export const paymentService = {
     });
 
     const isNewUser = !user;
-    const dummyPassword = isNewUser ? generateDummyPassword() : undefined;
 
     if (isNewUser) {
-      const hashed = await bcrypt.hash(dummyPassword!, 12);
+      const dummyPassword = generateDummyPassword();
+      const hashed = await bcrypt.hash(dummyPassword, 12);
       user = await prisma.user.create({
         data: {
           name,
@@ -405,22 +442,30 @@ export const paymentService = {
           role: "STUDENT",
         },
       });
-    }
 
-    if (!user) {
-      throw new AppError(500, "User could not be found or created");
-    }
+      emailService
+        .sendWelcomeEmail({
+          name,
+          email: email.toLowerCase(),
+          credentials: { email: email.toLowerCase(), password: dummyPassword },
+          invoice: {
+            paymentId: payment.id,
+            packageName: payment.package.name,
+            amount: payment.amount,
+            discountAmount: payment.discountAmount,
+          },
+        })
+        .catch((err: Error) =>
+          console.error("[payment] Failed to send welcome email:", err),
+        );
+    } else if (user.mustChangePassword) {
+      const dummyPassword = generateDummyPassword();
+      const hashed = await bcrypt.hash(dummyPassword, 12);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash: hashed },
+      });
 
-    const enrollment = await prisma.packageEnrollment.create({
-      data: {
-        userId: user.id,
-        packageId: payment.packageId,
-        paymentId: payment.id,
-        status: "PENDING",
-      },
-    });
-
-    if (dummyPassword) {
       emailService
         .sendWelcomeEmail({
           name,
@@ -437,6 +482,19 @@ export const paymentService = {
           console.error("[payment] Failed to send welcome email:", err),
         );
     }
+
+    if (!user) {
+      throw new AppError(500, "User could not be found or created");
+    }
+
+    const enrollment = await prisma.packageEnrollment.create({
+      data: {
+        userId: user.id,
+        packageId: payment.packageId,
+        paymentId: payment.id,
+        status: "PENDING",
+      },
+    });
 
     return {
       enrollmentId: enrollment.id,

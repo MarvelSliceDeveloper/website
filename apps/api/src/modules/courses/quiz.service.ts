@@ -43,8 +43,8 @@ export const CreateQuizSchema = z.object({
           .min(2),
       }),
     )
-    .optional()
-    .default([]),
+    .min(1)
+    .optional(),
 });
 
 export const UpdateQuizSchema = z.object({
