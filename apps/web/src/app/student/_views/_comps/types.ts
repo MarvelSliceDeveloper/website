@@ -18,12 +18,19 @@ export interface QuizInfo {
   title: string;
   questionCount: number;
   dueDate: string | null;
+  isSpecialExam?: boolean;
+  passingScore?: number;
+  timeLimitMin?: number | null;
+  maxAttempts?: number | null;
+  examType?: string;
 }
 
 export interface AssignmentInfo {
   id: string;
   title: string;
   type: string;
+  description: string;
+  maxPoints: number;
   dueDate: string;
   questionPdfUrl: string | null;
 }

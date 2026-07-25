@@ -56,7 +56,7 @@ export type Assignment = {
   title: string;
   type: string;
   description: string | null;
-  dueDate: string | null;
+  dueDate: string;
   maxPoints: number;
   questionPdfUrl: string | null;
 };
