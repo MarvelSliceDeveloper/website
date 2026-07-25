@@ -62,7 +62,7 @@ export default function RecordingsTab({ courseId }: { courseId: string }) {
                   })}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {rec.session.batch.name}
+                  {rec.session.batch?.name ?? "Unknown Batch"}
                   {rec.session.module && ` \u00B7 ${rec.session.module.title}`}
                 </p>
                 <div className="flex items-center gap-2 mt-1">

@@ -449,7 +449,7 @@ export const certificateService = {
       try {
         doc.addImage(template.logoUrl, "PNG", pageWidth / 2 - 15, 18, 30, 30);
         contentStartY = 55;
-      } catch {}
+      } catch { /* ignore logo load errors */ }
     }
 
     doc.setFillColor(primaryRgb.r, primaryRgb.g, primaryRgb.b);

@@ -91,7 +91,7 @@ export default function SessionsTab({ courseId }: { courseId: string }) {
                   })}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {session.batch.name}
+                  {session.batch?.name ?? "Unknown Batch"}
                   {session.module && ` \u00B7 ${session.module.title}`}
                 </p>
                 <div className="flex items-center gap-2 mt-1">

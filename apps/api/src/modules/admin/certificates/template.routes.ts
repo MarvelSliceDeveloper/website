@@ -282,42 +282,50 @@ router.post(
         "certificate-templates",
         req.file.filename,
       );
-      const pdfTemplateFields = req.body.pdfTemplateFields
-        ? JSON.parse(req.body.pdfTemplateFields)
-        : [
-            {
-              key: "studentName",
-              x: 0,
-              y: 130,
-              fontSize: 22,
-              color: "#1e293b",
-              align: "center",
-            },
-            {
-              key: "courseName",
-              x: 0,
-              y: 170,
-              fontSize: 18,
-              color: "#1e293b",
-              align: "center",
-            },
-            {
-              key: "date",
-              x: 0,
-              y: 200,
-              fontSize: 10,
-              color: "#64748b",
-              align: "center",
-            },
-            {
-              key: "certificateNumber",
-              x: 120,
-              y: 240,
-              fontSize: 10,
-              color: "#64748b",
-              align: "left",
-            },
-          ];
+      let pdfTemplateFields: Record<string, unknown>[] | null = null;
+      try {
+        pdfTemplateFields = req.body.pdfTemplateFields
+          ? JSON.parse(req.body.pdfTemplateFields)
+          : null;
+      } catch {
+        return res.status(400).json({ error: "Invalid PDF template fields JSON" });
+      }
+      if (!pdfTemplateFields) {
+        pdfTemplateFields = [
+          {
+            key: "studentName",
+            x: 0,
+            y: 130,
+            fontSize: 22,
+            color: "#1e293b",
+            align: "center",
+          },
+          {
+            key: "courseName",
+            x: 0,
+            y: 170,
+            fontSize: 18,
+            color: "#1e293b",
+            align: "center",
+          },
+          {
+            key: "date",
+            x: 0,
+            y: 200,
+            fontSize: 10,
+            color: "#64748b",
+            align: "center",
+          },
+          {
+            key: "certificateNumber",
+            x: 120,
+            y: 240,
+            fontSize: 10,
+            color: "#64748b",
+            align: "left",
+          },
+        ];
+      }
 
       const template = await prisma.certificateTemplate.update({
         where: { id },

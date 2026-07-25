@@ -15,13 +15,27 @@ function createMockReq(method = "GET", url = "/api/test", hasUser = false) {
 
 function createMockRes() {
   const headers: Record<string, string> = {};
+  let statusCode = 200;
   const res: any = {
+    write: vi.fn().mockReturnThis(),
     setHeader: vi.fn((key: string, value: string) => {
       headers[key] = value;
     }),
-    status: vi.fn().mockReturnThis(),
+    removeHeader: vi.fn((key: string) => {
+      delete headers[key];
+    }),
+    status: vi.fn((code: number) => {
+      statusCode = code;
+      return res;
+    }),
     end: vi.fn().mockReturnThis(),
     getHeaders: () => headers,
+    get statusCode() {
+      return statusCode;
+    },
+    set statusCode(v: number) {
+      statusCode = v;
+    },
   };
   return res;
 }
@@ -37,6 +51,7 @@ describe("cacheMiddleware", () => {
     const next = createMockNext();
 
     cacheMiddleware()(req, res, next);
+    res.end();
 
     expect(res.setHeader).toHaveBeenCalledWith(
       "Cache-Control",
@@ -78,6 +93,7 @@ describe("cacheMiddleware", () => {
 
     // First call to get the ETag
     cacheMiddleware()(req, res, next);
+    res.end();
     const etagCall = res.setHeader.mock.calls.find(
       (c: any[]) => c[0] === "ETag",
     );
@@ -90,10 +106,10 @@ describe("cacheMiddleware", () => {
     const next2 = createMockNext();
 
     cacheMiddleware()(req2, res2, next2);
+    res2.end();
 
-    expect(res2.status).toHaveBeenCalledWith(304);
-    expect(res2.end).toHaveBeenCalled();
-    expect(next2).not.toHaveBeenCalled();
+    expect(res2.statusCode).toBe(304);
+    expect(next2).toHaveBeenCalled();
   });
 
   it("respects custom maxAge option", () => {
@@ -102,6 +118,7 @@ describe("cacheMiddleware", () => {
     const next = createMockNext();
 
     cacheMiddleware({ maxAge: 600 })(req, res, next);
+    res.end();
 
     expect(res.setHeader).toHaveBeenCalledWith(
       "Cache-Control",
@@ -115,6 +132,7 @@ describe("cacheMiddleware", () => {
     const next = createMockNext();
 
     cacheMiddleware({ staleWhileRevalidate: true })(req, res, next);
+    res.end();
 
     expect(res.setHeader).toHaveBeenCalledWith(
       "Cache-Control",
@@ -128,6 +146,7 @@ describe("cacheMiddleware", () => {
     const next = createMockNext();
 
     cacheMiddleware({ scope: "private" })(req, res, next);
+    res.end();
 
     expect(res.setHeader).toHaveBeenCalledWith(
       "Cache-Control",
@@ -141,6 +160,7 @@ describe("cacheMiddleware", () => {
     const next = createMockNext();
 
     cacheMiddleware()(req, res, next);
+    res.end();
 
     expect(res.setHeader).toHaveBeenCalledWith("ETag", expect.any(String));
     expect(next).toHaveBeenCalled();

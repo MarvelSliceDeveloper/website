@@ -26,15 +26,15 @@ export default class SentryErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     if (SENTRY_DSN) {
-      try {
-        import("@sentry/react").then((Sentry) => {
+      import("@sentry/react")
+        .then((Sentry) => {
           Sentry.captureException(error, {
             extra: { componentStack: info.componentStack },
           });
+        })
+        .catch(() => {
+          // silent
         });
-      } catch {
-        // silent
-      }
     }
   }
 

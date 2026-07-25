@@ -401,8 +401,8 @@ function SessionsPageContent() {
                   Session Attendance
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {selectedSession.batch.course.title} ·{" "}
-                  {selectedSession.batch.name}
+                  {selectedSession.batch?.course?.title ?? "Course"} ·{" "}
+                  {selectedSession.batch?.name ?? "Batch"}
                 </p>
               </div>
               <button

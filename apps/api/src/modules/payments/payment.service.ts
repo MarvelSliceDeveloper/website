@@ -5,6 +5,7 @@
  * Guest users are created with a dummy password and mustChangePassword=true.
  * Welcome email with credentials is sent after successful enrollment.
  */
+import Razorpay from "razorpay";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { prisma } from "../../utils/prisma";
@@ -14,7 +15,6 @@ import { emailService } from "../../services/email.service";
 import { authService } from "../auth/auth.service";
 
 function getRazorpayInstance() {
-  const Razorpay = require("razorpay");
   return new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET,

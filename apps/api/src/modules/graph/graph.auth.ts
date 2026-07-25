@@ -68,8 +68,12 @@ export async function refreshMsTokenForUser(userId: string): Promise<string> {
   if (!response.ok) {
     const errorData = await response.text();
     console.error("[GraphAuth] Failed to refresh Microsoft token:", errorData);
-    const parsed = JSON.parse(errorData);
-    // Refresh token expired or revoked — user needs to re-link
+    let parsed: Record<string, unknown> | null = null;
+    try {
+      parsed = JSON.parse(errorData);
+    } catch {
+      parsed = null;
+    }
     if (parsed?.error === "invalid_grant") {
       throw new Error(
         "Your Microsoft account session has expired. Please re-link your account in Admin → Microsoft Settings.",
