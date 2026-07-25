@@ -40,6 +40,7 @@ interface Quiz {
   hasAssignment?: boolean;
   hasCoding?: boolean;
   assignmentInstructions?: string | null;
+  assignmentPdfUrl?: string | null;
   codingPrompt?: string | null;
   testCases?: TestCase[] | null;
   questions: QuizQuestion[];
