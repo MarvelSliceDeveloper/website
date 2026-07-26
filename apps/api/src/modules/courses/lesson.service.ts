@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
 import { parseVideoUrl } from "../../utils/video";
@@ -146,7 +147,7 @@ export const lessonService = {
     const lesson = await prisma.lesson.findUnique({ where: { id: lessonId } });
     if (!lesson) throw new Error("Lesson not found");
 
-    const resourceId = require("crypto").randomUUID();
+    const resourceId = crypto.randomUUID();
     const resources = Array.isArray(lesson.resources) ? lesson.resources : [];
 
     const newResource = {

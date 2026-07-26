@@ -183,7 +183,9 @@ export const courseService = {
             assignments: {
               orderBy: { dueDate: "asc" },
             },
-            // practicals removed — model not yet in Prisma schema
+            practicals: {
+              orderBy: { order: "asc" },
+            },
           },
         },
         courseTags: { include: { tag: true } },

@@ -238,7 +238,7 @@ export async function getPackageSpecialExamProgress(
 
   if (!pkg) throw new Error("Package not found");
 
-  let batchVisibilityMap = new Map<string, boolean>();
+  const batchVisibilityMap = new Map<string, boolean>();
   if (batchId) {
     const records = await prisma.batchCourseVisibility.findMany({
       where: { batchId },

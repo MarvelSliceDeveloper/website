@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
 import { parseVideoUrl } from "../../utils/video";
@@ -132,7 +133,7 @@ export const practicalService = {
     });
     if (!practical) throw new Error("Practical not found");
 
-    const resourceId = require("crypto").randomUUID();
+    const resourceId = crypto.randomUUID();
     const resources = Array.isArray(practical.resources)
       ? practical.resources
       : [];

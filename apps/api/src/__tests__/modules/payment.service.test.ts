@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { describe, it, expect } from "vitest";
 import {
   verifySignature,
@@ -11,7 +12,6 @@ describe("verifySignature", () => {
     const secret = "test_secret";
 
     // Generate expected HMAC
-    const crypto = require("crypto");
     const expected = crypto
       .createHmac("sha256", secret)
       .update(`${orderId}|${paymentId}`)

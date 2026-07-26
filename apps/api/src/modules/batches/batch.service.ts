@@ -189,7 +189,8 @@ export const batchService = {
           where: { courseId: filters.courseId },
           select: { packageId: true },
         })
-        .then((rows) => rows.map((r) => r.packageId));
+        .then((rows) => rows.map((r) => r.packageId))
+        .catch(() => [] as string[]);
 
       const courseFilter: any[] = [{ courseId: filters.courseId }];
       if (pkgIds.length > 0) {

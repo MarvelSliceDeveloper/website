@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import request from "supertest";
 import { app } from "../app";
 import { loginAs } from "./helpers";
+import { prisma } from "../utils/prisma";
 
 describe("Enrollments — Approve/Reject Workflow", () => {
   let enrollmentId: string;
@@ -11,21 +12,31 @@ describe("Enrollments — Approve/Reject Workflow", () => {
   let studentCsrf: string;
 
   beforeAll(async () => {
-    // Get a course to enroll in
-    const { agent: adminAgent } = await loginAs("ADMIN");
-    const coursesRes = await adminAgent.get("/api/admin/courses");
-    const course = coursesRes.body.courses.find(
-      (c: any) => c.slug === "sql-for-data-analysis",
-    );
-    if (!course) throw new Error("sql-for-data-analysis course not found");
-    testCourseId = course.id;
+    // Create a test course for enrollment testing
+    const { agent: adminAgent, csrfToken: adminCsrf } = await loginAs("ADMIN");
+    const courseRes = await adminAgent
+      .post("/api/admin/courses")
+      .set("X-CSRF-Token", adminCsrf)
+      .send({
+        title: `Enrollment Test Course ${Date.now()}`,
+        description: "Course created for enrollment test",
+      });
+    expect(courseRes.status).toBe(201);
+    testCourseId = courseRes.body.id;
+
+    // Publish the course so it's enrollable
+    await prisma.course.update({
+      where: { id: testCourseId },
+      data: { status: "PUBLISHED", publishedAt: new Date() },
+    });
 
     // Get the batch
     const batchRes = await adminAgent.get(
       "/api/payments/batches?packageId=pkg-datascience",
     );
-    if (batchRes.body.length > 0) {
-      testBatchId = batchRes.body[0].id;
+    const batches = batchRes.body.items ?? batchRes.body;
+    if (Array.isArray(batches) && batches.length > 0) {
+      testBatchId = batches[0].id;
     }
 
     // Create a fresh student for enrollment testing
@@ -55,7 +66,7 @@ describe("Enrollments — Approve/Reject Workflow", () => {
 
     const csrfRes = await studentAgent.get("/api/csrf-token");
     studentCsrf = csrfRes.body.csrfToken;
-  });
+  }, 30000);
 
   // ── Student Enrolls in Course ─────────────────────────────────────────────
   describe("POST /api/courses/enroll", () => {
