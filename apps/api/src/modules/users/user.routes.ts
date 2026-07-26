@@ -505,6 +505,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
         where: { enrollment: { userId: id } },
       });
       await tx.packageEnrollment.deleteMany({ where: { userId: id } });
+      await tx.loginLog.deleteMany({ where: { userId: id } });
 
       await tx.user.delete({ where: { id } });
     });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import {
@@ -9,8 +9,6 @@ import {
   IconSearch,
   IconChevronDown,
   IconChevronUp,
-  IconPlayerPlay,
-  IconPlayerStop,
 } from "@tabler/icons-react";
 
 type AuditLog = {
@@ -50,8 +48,6 @@ export default function AdminAuditLogsPage() {
   const [filterDateStart, setFilterDateStart] = useState("");
   const [filterDateEnd, setFilterDateEnd] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [live, setLive] = useState(true);
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isFiltered =
     filterEmail.trim() ||
     filterAction !== "ALL" ||
@@ -89,19 +85,6 @@ export default function AdminAuditLogsPage() {
     fetchLogs();
   }, [page]);
 
-  // Real-time polling — only when live and not actively filtering
-  useEffect(() => {
-    if (pollingRef.current) clearInterval(pollingRef.current);
-    if (live && !isFiltered) {
-      pollingRef.current = setInterval(() => {
-        fetchLogs();
-      }, 10000);
-    }
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-    };
-  }, [live, isFiltered, page]);
-
   function handleSearch() {
     setPage(1);
     fetchLogs();
@@ -125,17 +108,6 @@ export default function AdminAuditLogsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setLive((p) => !p)}
-            className={`text-xs py-2 flex items-center gap-1.5 px-3 rounded-lg border transition-colors ${
-              live
-                ? "bg-green-50 border-green-300 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400"
-                : "bg-card border-border text-muted-foreground hover:bg-card-hover"
-            }`}
-          >
-            {live ? <IconPlayerPlay size={14} /> : <IconPlayerStop size={14} />}
-            {live ? "Live" : "Paused"}
-          </button>
           <button
             onClick={fetchLogs}
             className="btn-secondary text-xs py-2 flex items-center gap-1.5"
@@ -195,11 +167,6 @@ export default function AdminAuditLogsPage() {
           >
             <IconSearch size={14} /> Search
           </button>
-          {isFiltered && (
-            <span className="ml-3 text-[10px] text-muted-foreground">
-              Live updates paused while filtering
-            </span>
-          )}
         </div>
       </div>
 

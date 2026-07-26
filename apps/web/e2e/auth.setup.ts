@@ -67,3 +67,14 @@ export async function loginViaUi(page: Page, role: Role) {
 
 export { CREDENTIALS };
 export type { Role };
+
+/**
+ * Fetch a CSRF token from the API. The token is needed as the
+ * `x-csrf-token` header on state-changing requests (POST/PUT/PATCH/DELETE).
+ */
+export async function getCsrfToken(page: Page): Promise<string> {
+  const res = await page.request.get(`${API_BASE}/api/csrf-token`);
+  expect(res.status()).toBe(200);
+  const body = await res.json();
+  return body.csrfToken;
+}

@@ -77,6 +77,7 @@ import {
 import { i18nRouter } from "./modules/admin/i18n/i18n.routes";
 import { cacheRouter } from "./modules/admin/cache/cache.routes";
 import { onboardingRouter } from "./modules/onboarding/onboarding.routes";
+import { auditMiddleware } from "./utils/audit";
 
 const logger = pino({
   level: process.env.LOG_LEVEL || "info",
@@ -281,6 +282,9 @@ app.use("/api/admin/users", bulkUsersRouter);
 app.use("/api/admin/branding", brandingRouter);
 app.use("/api/admin/i18n", i18nRouter);
 app.use("/api/admin/cache", cacheRouter);
+
+// ── Auto-audit: log all mutations on admin routes ──
+app.use(auditMiddleware);
 
 // ── YouTube API (authenticated) ──
 app.use("/api/youtube", youtubeRouter);

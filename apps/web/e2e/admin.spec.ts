@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { loginAs } from "./auth.setup";
+import { loginAs, getCsrfToken } from "./auth.setup";
 
 const API_BASE = process.env.API_URL || "http://localhost:4000";
 
@@ -89,9 +89,11 @@ test.describe("Admin Portal — Workflows", () => {
   test("TC-ADM-D1: Create course via API and verify it appears in the UI list", async ({
     page,
   }) => {
+    const csrfToken = await getCsrfToken(page);
     const courseTitle = `E2E Course ${Date.now()}`;
 
     const createRes = await page.request.post(`${API_BASE}/api/admin/courses`, {
+      headers: { "x-csrf-token": csrfToken },
       data: {
         title: courseTitle,
         description: "Created by Playwright E2E test",
@@ -112,9 +114,11 @@ test.describe("Admin Portal — Workflows", () => {
   test("TC-ADM-D2: Publish a course via API and verify status badge", async ({
     page,
   }) => {
+    const csrfToken = await getCsrfToken(page);
     const courseTitle = `E2E Publish Test ${Date.now()}`;
 
     const createRes = await page.request.post(`${API_BASE}/api/admin/courses`, {
+      headers: { "x-csrf-token": csrfToken },
       data: {
         title: courseTitle,
         description: "Test publish flow",
@@ -129,6 +133,7 @@ test.describe("Admin Portal — Workflows", () => {
     const moduleRes = await page.request.post(
       `${API_BASE}/api/admin/courses/${courseId}/modules`,
       {
+        headers: { "x-csrf-token": csrfToken },
         data: {
           title: "E2E Test Module",
           description: "Auto-created for publish test",
@@ -142,6 +147,7 @@ test.describe("Admin Portal — Workflows", () => {
     const updateRes = await page.request.put(
       `${API_BASE}/api/admin/courses/${courseId}`,
       {
+        headers: { "x-csrf-token": csrfToken },
         data: {
           thumbnailUrl: "https://via.placeholder.com/400x225.png",
         },
@@ -151,6 +157,7 @@ test.describe("Admin Portal — Workflows", () => {
 
     const publishRes = await page.request.post(
       `${API_BASE}/api/admin/courses/${courseId}/publish`,
+      { headers: { "x-csrf-token": csrfToken } },
     );
     expect(publishRes.status()).toBe(200);
 
@@ -161,6 +168,7 @@ test.describe("Admin Portal — Workflows", () => {
   test("TC-ADM-D3: Create a batch via API and verify in the list", async ({
     page,
   }) => {
+    const csrfToken = await getCsrfToken(page);
     const batchName = `E2E Batch ${Date.now()}`;
 
     const coursesRes = await page.request.get(
@@ -180,6 +188,7 @@ test.describe("Admin Portal — Workflows", () => {
     expect(instructors.length).toBeGreaterThan(0);
 
     const createRes = await page.request.post(`${API_BASE}/api/admin/batches`, {
+      headers: { "x-csrf-token": csrfToken },
       data: {
         courseId: courses[0].id,
         instructorId: instructors[0].id,
@@ -202,6 +211,7 @@ test.describe("Admin Portal — Workflows", () => {
   test("TC-ADM-D4: Navigate to batch detail and verify info renders", async ({
     page,
   }) => {
+    const csrfToken = await getCsrfToken(page);
     const batchName = `E2E Detail Batch ${Date.now()}`;
 
     const coursesRes = await page.request.get(
@@ -217,6 +227,7 @@ test.describe("Admin Portal — Workflows", () => {
     const instructors = instructorsData.instructors || instructorsData;
 
     const createRes = await page.request.post(`${API_BASE}/api/admin/batches`, {
+      headers: { "x-csrf-token": csrfToken },
       data: {
         courseId: courses[0].id,
         instructorId: instructors[0].id,
@@ -240,9 +251,11 @@ test.describe("Admin Portal — Workflows", () => {
   test("TC-ADM-D5: Course detail page loads with modules and tabs", async ({
     page,
   }) => {
+    const csrfToken = await getCsrfToken(page);
     const courseTitle = `E2E Detail ${Date.now()}`;
 
     const createRes = await page.request.post(`${API_BASE}/api/admin/courses`, {
+      headers: { "x-csrf-token": csrfToken },
       data: {
         title: courseTitle,
         description: "Detail view test",
@@ -262,9 +275,11 @@ test.describe("Admin Portal — Workflows", () => {
   });
 
   test("TC-ADM-D6: Package detail page loads", async ({ page }) => {
+    const csrfToken = await getCsrfToken(page);
     const pkgName = `E2E Package ${Date.now()}`;
 
     const createRes = await page.request.post(`${API_BASE}/api/admin/packages`, {
+      headers: { "x-csrf-token": csrfToken },
       data: {
         name: pkgName,
         slug: `e2e-pkg-${Date.now()}`,
@@ -321,11 +336,13 @@ test.describe("Admin Portal — Workflows", () => {
   });
 
   test("TC-ADM-D9: Quiz template detail page loads", async ({ page }) => {
+    const csrfToken = await getCsrfToken(page);
     const quizTitle = `E2E Quiz Template ${Date.now()}`;
 
     const createRes = await page.request.post(
       `${API_BASE}/api/admin/quiz-templates`,
       {
+        headers: { "x-csrf-token": csrfToken },
         data: {
           title: quizTitle,
           description: "E2E test quiz template",
@@ -344,11 +361,13 @@ test.describe("Admin Portal — Workflows", () => {
   test("TC-ADM-D10: Assignment template detail page loads", async ({
     page,
   }) => {
+    const csrfToken = await getCsrfToken(page);
     const assignmentTitle = `E2E Assignment Template ${Date.now()}`;
 
     const createRes = await page.request.post(
       `${API_BASE}/api/admin/assignment-templates`,
       {
+        headers: { "x-csrf-token": csrfToken },
         data: {
           title: assignmentTitle,
           description: "E2E test assignment template",
