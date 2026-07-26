@@ -8,7 +8,6 @@ import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import {
   IconBook,
-  IconSearch,
   IconEdit,
   IconPhoto,
   IconUpload,
@@ -22,6 +21,7 @@ import DataTable from "@/components/admin/DataTable";
 import type { DataTableColumn } from "@/components/admin/DataTable";
 import { TableSkeleton } from "@/components/admin/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { SearchInput } from "@/components/ui/SearchInput";
 
 type Course = {
   id: string;
@@ -104,11 +104,6 @@ function CoursesPageContent() {
   useEffect(() => {
     Promise.resolve().then(() => fetchCourses());
   }, [statusFilter, search]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchCourses();
-  };
 
   const handleDelete = async (id: string, title: string) => {
     if (!confirm(`Archive "${title}"? Students will lose access.`)) return;
@@ -353,31 +348,13 @@ function CoursesPageContent() {
       />
 
       <div className="flex flex-wrap items-center gap-3">
-        <form
-          onSubmit={handleSearch}
-          className="flex-1 min-w-[200px] flex items-center gap-2 max-w-sm"
-        >
-          <div className="relative flex-1">
-            <IconSearch
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search courses..."
-              className="field field-search w-full"
-            />
-          </div>
-          <button
-            type="submit"
-            className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
-            title="Search"
-          >
-            <IconSearch size={16} />
-          </button>
-        </form>
+        <div className="flex-1 min-w-[200px] max-w-sm">
+          <SearchInput
+            placeholder="Search courses..."
+            value={search}
+            onChange={setSearch}
+          />
+        </div>
 
         <div className="flex gap-1.5">
           {["", "DRAFT", "PUBLISHED", "ARCHIVED"].map((s) => (

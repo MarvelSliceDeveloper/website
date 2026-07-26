@@ -11,6 +11,7 @@ import { FormModal } from "@/components/admin/FormModal";
 import { ConfirmModal } from "@/components/admin/ConfirmModal";
 import { usePageTitle } from "@/lib/use-page-title";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { SearchInput } from "@/components/ui/SearchInput";
 import {
   IconShield,
   IconChalkboardTeacher,
@@ -19,7 +20,6 @@ import {
   IconEdit,
   IconTrash,
   IconCheck,
-  IconSearch,
 } from "@tabler/icons-react";
 import {
   Select,
@@ -541,30 +541,15 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Search */}
-      <div className="flex items-center gap-2 max-w-sm">
-        <div className="relative flex-1">
-          <IconSearch
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-          />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            placeholder="Search by name or email..."
-            className="field field-search w-full"
-          />
-        </div>
-        <button
-          onClick={() => setPage(1)}
-          className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
-          title="Search"
-        >
-          <IconSearch size={16} />
-        </button>
+      <div className="max-w-sm">
+        <SearchInput
+          placeholder="Search by name or email..."
+          value={search}
+          onChange={(value) => {
+            setSearch(value);
+            setPage(1);
+          }}
+        />
       </div>
 
       {/* Table */}

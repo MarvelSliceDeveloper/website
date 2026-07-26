@@ -11,13 +11,13 @@ import {
   IconBook,
   IconStar,
   IconPlus,
-  IconSearch,
   IconX,
 } from "@tabler/icons-react";
 import { toast, getErrorMessage } from "@/lib/toast";
 import StudentPortalShell from "@/components/StudentPortalShell";
 import RichEditor from "@/components/editor/RichEditor";
 import { usePageTitle } from "@/lib/use-page-title";
+import { SearchInput } from "@/components/ui/SearchInput";
 
 interface CourseInfo {
   id: string;
@@ -287,26 +287,12 @@ export default function StudentNotesPage() {
         </div>
 
         <div className="flex gap-2">
-          <div className="relative flex-1 max-w-md">
-            <IconSearch
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
-            />
-            <input
-              type="text"
+          <div className="flex-1 max-w-md">
+            <SearchInput
               placeholder="Search notes..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="field w-full pl-10 pr-9 text-sm"
+              onChange={setSearchQuery}
             />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground"
-              >
-                <IconX size={14} />
-              </button>
-            )}
           </div>
         </div>
 

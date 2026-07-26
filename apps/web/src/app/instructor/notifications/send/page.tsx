@@ -139,7 +139,7 @@ export default function InstructorSendNotificationPage() {
                 <span className="flex-1">
                   {b.name}
                   <span className="ml-2 text-xs text-muted">
-                    {b.course.title}
+                    {b.course?.title ?? "No course"}
                   </span>
                 </span>
               </label>

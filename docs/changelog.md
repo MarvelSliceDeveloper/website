@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026-07-24 — UI/UX Design System Components
+
+Implemented 15 missing UI components to achieve 92% design system compliance.
+
+### Bug Fix
+- **DataTable**: Fixed `rounded-none` → `rounded-xl` on all table containers to match design spec.
+
+### New Components (`apps/web/src/components/ui/`)
+- **Modal** — Generic dialog with overlay, close, escape handling, body scroll lock, zoom animation
+- **Tabs** — Tab navigation with animated underline indicator and count badges
+- **SearchInput** — Search field with icon, debounced onChange, and clear button
+- **FilterDropdown** — Multi-select filter with checkboxes, active count, clear all
+- **Breadcrumb** — Navigation breadcrumb with chevron separators
+- **Tooltip** — Hover tooltip with configurable position
+- **Avatar** — Image support with fallback to color-coded initials
+- **Switch** — Toggle switch with label and accessibility
+- **Checkbox** — Checkbox with label and hidden native input
+- **RadioGroup** — Radio group with horizontal/vertical layout
+- **DatePicker** — Calendar date picker with month navigation
+- **FileUpload** — Drag-and-drop file upload with preview and remove
+
+### New Component (`apps/web/src/components/shared/`)
+- **ErrorState** — Error display with icon, title, message, and retry action
+
+### Verification
+- TypeScript: Zero new errors
+- Lint: Zero new errors
+- All components use existing design tokens and patterns
+
 ## 2026-07-23 — Performance Optimization (All Tiers)
 
 ### Tier 1: Database & API (High Impact)

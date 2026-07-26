@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { IconBook, IconClipboardList, IconUsers } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
+import { Skeleton } from "@/components/shared/Skeleton";
 
 type Course = {
   id: string;
@@ -21,11 +22,11 @@ export default function InstructorCoursesPage() {
   useEffect(() => {
     Promise.all([
       api
-        .get<{ courses: Course[] }>("/api/admin/courses")
-        .catch(() => ({ courses: [] })),
+        .get<Course[]>("/api/instructor/courses")
+        .catch(() => []),
     ])
       .then(([coursesRes]) => {
-        setCourses(coursesRes.courses ?? []);
+        setCourses(Array.isArray(coursesRes) ? coursesRes : []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -34,13 +35,10 @@ export default function InstructorCoursesPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-48 animate-pulse bg-card-hover/60 rounded" />
+        <Skeleton className="h-8 w-48" />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {[1, 2].map((i) => (
-            <div
-              key={i}
-              className="h-48 animate-pulse bg-card-hover/60 rounded-lg"
-            />
+            <Skeleton key={i} className="h-48 rounded-lg" />
           ))}
         </div>
       </div>

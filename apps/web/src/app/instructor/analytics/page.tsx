@@ -55,7 +55,7 @@ export default function InstructorAnalyticsPage() {
     async function loadAnalytics() {
       try {
         const res = await api.get<AnalyticsData>(
-          "/api/admin/dashboard/analytics",
+          "/api/instructor/analytics",
         );
         setData(res);
       } catch (err) {

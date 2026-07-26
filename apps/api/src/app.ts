@@ -77,6 +77,7 @@ import {
 import { i18nRouter } from "./modules/admin/i18n/i18n.routes";
 import { cacheRouter } from "./modules/admin/cache/cache.routes";
 import { onboardingRouter } from "./modules/onboarding/onboarding.routes";
+import { instructorRouter } from "./modules/instructor/instructor.routes";
 import { auditMiddleware } from "./utils/audit";
 
 const logger = pino({
@@ -253,6 +254,9 @@ app.use("/api/support", supportRouter);
 app.use("/api/tickets", ticketRouter);
 app.use("/api/notes", noteRouter);
 app.use("/api/onboarding", onboardingRouter);
+
+// ── Instructor routes ──
+app.use("/api/instructor", instructorRouter);
 
 // ── Super Admin routes ──
 app.use("/api/admin/users", superAdminRouter);
