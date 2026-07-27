@@ -68,6 +68,24 @@ export default function QuizCard({
 }: QuizCardProps) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(quiz.title);
+  const [dueDateMode, setDueDateMode] = useState<"absolute" | "days">(
+    quiz.daysFromEnrollment ? "days" : "absolute"
+  );
+  const [dueDate, setDueDate] = useState(
+    quiz.dueDate ? new Date(quiz.dueDate).toISOString().slice(0, 16) : ""
+  );
+  const [daysFromEnrollment, setDaysFromEnrollment] = useState(
+    quiz.daysFromEnrollment?.toString() ?? ""
+  );
+  const [allowLateSubmission, setAllowLateSubmission] = useState(
+    quiz.allowLateSubmission ?? false
+  );
+  const [lateSubmissionPenaltyPercent, setLateSubmissionPenaltyPercent] = useState(
+    quiz.lateSubmissionPenaltyPercent ?? 25
+  );
+  const [lateSubmissionGracePeriodHrs, setLateSubmissionGracePeriodHrs] = useState(
+    quiz.lateSubmissionGracePeriodHrs?.toString() ?? ""
+  );
   const [isSpecialExam, setIsSpecialExam] = useState(
     quiz.isSpecialExam ?? false,
   );
@@ -190,6 +208,11 @@ export default function QuizCard({
     try {
       await api.put(`/api/admin/courses/modules/quizzes/${quiz.id}`, {
         title,
+        dueDate: dueDateMode === "absolute" && dueDate ? new Date(dueDate).toISOString() : null,
+        daysFromEnrollment: dueDateMode === "days" && daysFromEnrollment ? Number(daysFromEnrollment) : null,
+        allowLateSubmission,
+        lateSubmissionPenaltyPercent: allowLateSubmission ? lateSubmissionPenaltyPercent : null,
+        lateSubmissionGracePeriodHrs: allowLateSubmission && lateSubmissionGracePeriodHrs ? Number(lateSubmissionGracePeriodHrs) : null,
         isSpecialExam,
         passingScore: Number(passingScore),
         examType:
@@ -235,6 +258,12 @@ export default function QuizCard({
   const cancelEdit = () => {
     setEditing(false);
     setTitle(quiz.title);
+    setDueDateMode(quiz.daysFromEnrollment ? "days" : "absolute");
+    setDueDate(quiz.dueDate ? new Date(quiz.dueDate).toISOString().slice(0, 16) : "");
+    setDaysFromEnrollment(quiz.daysFromEnrollment?.toString() ?? "");
+    setAllowLateSubmission(quiz.allowLateSubmission ?? false);
+    setLateSubmissionPenaltyPercent(quiz.lateSubmissionPenaltyPercent ?? 25);
+    setLateSubmissionGracePeriodHrs(quiz.lateSubmissionGracePeriodHrs?.toString() ?? "");
     setIsSpecialExam(quiz.isSpecialExam ?? false);
     setPassingScore(quiz.passingScore ?? 65);
     setExamType(quiz.examType ?? "MCQ");
@@ -304,6 +333,92 @@ export default function QuizCard({
             Coding Testcases)
           </label>
         </div>
+
+        {/* Due Date Mode */}
+        <div className="space-y-2">
+          <label className="text-xs font-medium">Due Date</label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setDueDateMode("absolute")}
+              className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${dueDateMode === "absolute" ? "bg-primary text-white border-primary" : "bg-paper text-ink border-hairline"}`}
+            >
+              Absolute Date
+            </button>
+            <button
+              type="button"
+              onClick={() => setDueDateMode("days")}
+              className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${dueDateMode === "days" ? "bg-primary text-white border-primary" : "bg-paper text-ink border-hairline"}`}
+            >
+              Days from Enrollment
+            </button>
+          </div>
+        </div>
+
+        {dueDateMode === "absolute" ? (
+          <div className="space-y-2">
+            <label className="text-xs font-medium">Due Date</label>
+            <input
+              type="datetime-local"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="field"
+            />
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <label className="text-xs font-medium">Days After Enrollment</label>
+            <input
+              type="number"
+              value={daysFromEnrollment}
+              onChange={(e) => setDaysFromEnrollment(e.target.value)}
+              placeholder="e.g. 10"
+              className="field"
+              min={1}
+            />
+          </div>
+        )}
+
+        {/* Late Submission Toggle */}
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="quiz-edit-allow-late"
+            checked={allowLateSubmission}
+            onChange={(e) => setAllowLateSubmission(e.target.checked)}
+            className="h-4 w-4 rounded border-hairline"
+          />
+          <label htmlFor="quiz-edit-allow-late" className="text-xs font-medium">
+            Allow Late Submission (with penalty)
+          </label>
+        </div>
+
+        {allowLateSubmission && (
+          <div className="grid grid-cols-2 gap-4 pl-6">
+            <div className="space-y-2">
+              <label className="text-xs font-medium">Penalty %</label>
+              <input
+                type="number"
+                value={lateSubmissionPenaltyPercent}
+                onChange={(e) => setLateSubmissionPenaltyPercent(parseInt(e.target.value) || 25)}
+                min={0}
+                max={100}
+                className="field"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-medium">Grace Period (hrs)</label>
+              <input
+                type="number"
+                value={lateSubmissionGracePeriodHrs}
+                onChange={(e) => setLateSubmissionGracePeriodHrs(e.target.value)}
+                placeholder="Optional"
+                min={1}
+                className="field"
+              />
+            </div>
+          </div>
+        )}
 
         {isSpecialExam && (
           <div className="rounded-md border border-amber-500/20 bg-amber-500/5 p-3 space-y-3">
@@ -595,6 +710,20 @@ export default function QuizCard({
         {quiz.isSpecialExam && (
           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500 text-black">
             SPECIAL EXAM ({quiz.passingScore ?? 65}%)
+          </span>
+        )}
+        {quiz.daysFromEnrollment ? (
+          <span className="text-[11px] text-amber-600">
+            Due: {quiz.daysFromEnrollment}d after enrollment
+          </span>
+        ) : quiz.dueDate ? (
+          <span className="text-[11px] text-amber-600">
+            Due: {new Date(quiz.dueDate).toLocaleDateString()}
+          </span>
+        ) : null}
+        {quiz.allowLateSubmission && (
+          <span className="text-[11px] rounded bg-amber-100 text-amber-700 px-1.5 py-0.5">
+            Late OK (-{quiz.lateSubmissionPenaltyPercent ?? 25}%)
           </span>
         )}
         <div className="flex items-center gap-1 text-[11px] text-amber-600">

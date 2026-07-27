@@ -521,6 +521,8 @@ async function main() {
       maxStudents: 50,
       status: "ACTIVE",
       description: "Package-level batch for the Data Science Program.",
+      defaultDaysToComplete: 30,
+      lateSubmissionPenaltyPercent: 25,
     },
   });
   console.log("✅ Batch created");
@@ -642,7 +644,7 @@ async function main() {
         { label: "<>", isCorrect: false },
       ],
     },
-  ]);
+  ], { daysFromEnrollment: 14, allowLateSubmission: true, lateSubmissionPenaltyPercent: 25 });
 
   await createAssignment(
     pythonModule1.id,
@@ -650,6 +652,7 @@ async function main() {
     pkgBatch.id,
     "Python Basics Assignment",
     0,
+    { daysFromEnrollment: 14, allowLateSubmission: true, lateSubmissionPenaltyPercent: 25 },
   );
 
   // ─── Module 2: NumPy & Pandas ───────────────────────────────────────────────
@@ -1217,6 +1220,12 @@ async function createQuiz(
     text: string;
     options: { label: string; isCorrect: boolean }[];
   }[],
+  options?: {
+    dueDate?: Date;
+    daysFromEnrollment?: number;
+    allowLateSubmission?: boolean;
+    lateSubmissionPenaltyPercent?: number;
+  },
 ) {
   const existing = await prisma.quiz.findFirst({ where: { moduleId, title } });
   if (existing) return existing;
@@ -1226,6 +1235,10 @@ async function createQuiz(
       moduleId,
       title,
       order,
+      dueDate: options?.dueDate ?? null,
+      daysFromEnrollment: options?.daysFromEnrollment ?? null,
+      allowLateSubmission: options?.allowLateSubmission ?? false,
+      lateSubmissionPenaltyPercent: options?.lateSubmissionPenaltyPercent ?? null,
       questions: {
         create: questions.map((q) => ({
           text: q.text,
@@ -1242,6 +1255,12 @@ async function createAssignment(
   batchId: string,
   title: string,
   order: number,
+  options?: {
+    dueDate?: Date;
+    daysFromEnrollment?: number;
+    allowLateSubmission?: boolean;
+    lateSubmissionPenaltyPercent?: number;
+  },
 ) {
   const existing = await prisma.assignment.findFirst({
     where: { moduleId, title, courseId },
@@ -1257,7 +1276,10 @@ async function createAssignment(
       description: `Assignment: ${title}`,
       type: "ASSIGNMENT",
       order,
-      dueDate: new Date("2025-12-31"),
+      dueDate: options?.dueDate ?? new Date("2025-12-31"),
+      daysFromEnrollment: options?.daysFromEnrollment ?? null,
+      allowLateSubmission: options?.allowLateSubmission ?? false,
+      lateSubmissionPenaltyPercent: options?.lateSubmissionPenaltyPercent ?? null,
       maxPoints: 100,
     },
   });
@@ -1272,6 +1294,8 @@ async function upsertBatch(data: {
   maxStudents: number;
   status: "UPCOMING" | "ACTIVE" | "COMPLETED";
   description: string;
+  defaultDaysToComplete?: number;
+  lateSubmissionPenaltyPercent?: number;
 }) {
   const existing = await prisma.batch.findFirst({
     where: { courseId: data.courseId, name: data.name },

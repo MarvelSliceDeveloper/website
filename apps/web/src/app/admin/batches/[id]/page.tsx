@@ -11,6 +11,8 @@ import {
   IconEyeOff,
   IconLock,
   IconLockOpen,
+  IconTrash,
+  IconPlus,
 } from "@tabler/icons-react";
 
 type BatchCourse = {
@@ -72,12 +74,30 @@ export default function BatchDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [batch, setBatch] = useState<Batch | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"students" | "sessions" | "courses">(
+  const [tab, setTab] = useState<"students" | "sessions" | "courses" | "extensions" | "mentors">(
     "students",
   );
   const [courses, setCourses] = useState<BatchCourse[]>([]);
   const [toggling, setToggling] = useState<string | null>(null);
   const [togglingExam, setTogglingExam] = useState<string | null>(null);
+
+  // Extensions state
+  const [extensions, setExtensions] = useState<any[]>([]);
+  const [extLoading, setExtLoading] = useState(false);
+  const [showAddExt, setShowAddExt] = useState(false);
+  const [extAssignmentId, setExtAssignmentId] = useState("");
+  const [extQuizId, setExtQuizId] = useState("");
+  const [extNewDate, setExtNewDate] = useState("");
+  const [extReason, setExtReason] = useState("");
+
+  // Mentors state
+  const [mentors, setMentors] = useState<any[]>([]);
+  const [mentorLoading, setMentorLoading] = useState(false);
+  const [showAddMentor, setShowAddMentor] = useState(false);
+  const [mentorCourseId, setMentorCourseId] = useState("");
+  const [mentorUserId, setMentorUserId] = useState("");
+  const [instructorOptions, setInstructorOptions] = useState<any[]>([]);
+  const [courseOptions, setCourseOptions] = useState<any[]>([]);
 
   const fetchBatch = useCallback(async () => {
     try {
@@ -105,11 +125,51 @@ export default function BatchDetailPage() {
     fetchBatch();
   }, [fetchBatch]);
 
+  const fetchExtensions = useCallback(async () => {
+    setExtLoading(true);
+    try {
+      const data = await api.get<any[]>(`/api/admin/batches/${id}/extensions`);
+      setExtensions(data);
+    } catch {
+      setExtensions([]);
+    } finally {
+      setExtLoading(false);
+    }
+  }, [id]);
+
+  const fetchMentors = useCallback(async () => {
+    setMentorLoading(true);
+    try {
+      const data = await api.get<any[]>(`/api/admin/batches/${id}/mentors`);
+      setMentors(data);
+    } catch {
+      setMentors([]);
+    } finally {
+      setMentorLoading(false);
+    }
+  }, [id]);
+
+  const fetchInstructors = useCallback(async () => {
+    try {
+      const data = await api.get<any[]>("/api/admin/batches/instructors");
+      setInstructorOptions(data);
+    } catch {
+      setInstructorOptions([]);
+    }
+  }, []);
+
   useEffect(() => {
     if (tab === "courses") {
       fetchCourses();
     }
-  }, [tab, fetchCourses]);
+    if (tab === "extensions") {
+      fetchExtensions();
+    }
+    if (tab === "mentors") {
+      fetchMentors();
+      fetchInstructors();
+    }
+  }, [tab, fetchCourses, fetchExtensions, fetchMentors, fetchInstructors]);
 
   const handleToggleVisibility = async (courseId: string) => {
     setToggling(courseId);
@@ -269,12 +329,12 @@ export default function BatchDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-border pb-0">
-        {(["students", "sessions", "courses"] as const).map((t) => (
+      <div className="flex gap-1 border-b border-border pb-0 overflow-x-auto">
+        {(["students", "sessions", "courses", "extensions", "mentors"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
               tab === t
                 ? "border-primary text-primary-hover"
                 : "border-transparent text-muted-foreground hover:text-foreground"
@@ -284,7 +344,11 @@ export default function BatchDetailPage() {
               ? `Students (${uniqueStudents.length})`
               : t === "sessions"
                 ? `Sessions (${batch.sessions.length})`
-                : `Courses (${courses.length || 0})`}
+                : t === "courses"
+                  ? `Courses (${courses.length || 0})`
+                  : t === "extensions"
+                    ? `Extensions (${extensions.length})`
+                    : "Mentors"}
           </button>
         ))}
       </div>
@@ -428,6 +492,283 @@ export default function BatchDetailPage() {
                 </div>
               );
             })
+          )}
+        </div>
+      )}
+
+      {tab === "extensions" && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Grant extensions for assignments/quizzes. Applies to ALL students in the batch.
+            </p>
+            <button
+              onClick={() => setShowAddExt(!showAddExt)}
+              className="btn-primary text-xs flex items-center gap-1"
+            >
+              <IconPlus size={14} /> Grant Extension
+            </button>
+          </div>
+
+          {showAddExt && (
+            <div className="glass-card p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Assignment ID (optional)</label>
+                  <input
+                    type="text"
+                    value={extAssignmentId}
+                    onChange={(e) => setExtAssignmentId(e.target.value)}
+                    placeholder="Or leave blank and use Quiz ID"
+                    className="field text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Quiz ID (optional)</label>
+                  <input
+                    type="text"
+                    value={extQuizId}
+                    onChange={(e) => setExtQuizId(e.target.value)}
+                    placeholder="Or leave blank and use Assignment ID"
+                    className="field text-xs"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">New Due Date *</label>
+                  <input
+                    type="datetime-local"
+                    value={extNewDate}
+                    onChange={(e) => setExtNewDate(e.target.value)}
+                    className="field"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Reason (optional)</label>
+                  <input
+                    type="text"
+                    value={extReason}
+                    onChange={(e) => setExtReason(e.target.value)}
+                    placeholder="e.g. Public holiday"
+                    className="field text-xs"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setShowAddExt(false)} className="btn-secondary text-xs">Cancel</button>
+                <button
+                  onClick={async () => {
+                    if (!extNewDate || (!extAssignmentId && !extQuizId)) {
+                      toast.error("Provide a due date and either an Assignment or Quiz ID");
+                      return;
+                    }
+                    try {
+                      await api.post(`/api/admin/batches/${id}/extensions`, {
+                        assignmentId: extAssignmentId || undefined,
+                        quizId: extQuizId || undefined,
+                        extendedDueDate: new Date(extNewDate).toISOString(),
+                        reason: extReason || undefined,
+                      });
+                      toast.success("Extension granted");
+                      setShowAddExt(false);
+                      setExtAssignmentId("");
+                      setExtQuizId("");
+                      setExtNewDate("");
+                      setExtReason("");
+                      fetchExtensions();
+                    } catch (err) {
+                      toast.error(getErrorMessage(err));
+                    }
+                  }}
+                  className="btn-primary text-xs"
+                >
+                  Grant
+                </button>
+              </div>
+            </div>
+          )}
+
+          {extLoading ? (
+            <p className="text-sm text-muted animate-pulse">Loading...</p>
+          ) : extensions.length === 0 ? (
+            <div className="glass-card p-8 text-center">
+              <p className="text-muted-foreground text-sm">No extensions granted yet.</p>
+            </div>
+          ) : (
+            <div className="glass-card overflow-hidden rounded-none">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border text-left">
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Item</th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Original Due</th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Extended To</th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Granted By</th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Reason</th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {extensions.map((ext: any) => (
+                    <tr key={ext.id} className="hover:bg-card-hover/50 transition-colors">
+                      <td className="px-5 py-3 text-sm">
+                        {ext.assignment?.title || ext.quiz?.title || "—"}
+                      </td>
+                      <td className="px-5 py-3 text-xs text-muted">
+                        {new Date(ext.originalDueDate).toLocaleDateString()}
+                      </td>
+                      <td className="px-5 py-3 text-xs text-warning font-medium">
+                        {new Date(ext.extendedDueDate).toLocaleDateString()}
+                      </td>
+                      <td className="px-5 py-3 text-xs text-muted">{ext.grantedBy?.name || "—"}</td>
+                      <td className="px-5 py-3 text-xs text-muted">{ext.reason || "—"}</td>
+                      <td className="px-5 py-3">
+                        <button
+                          onClick={async () => {
+                            try {
+                              await api.delete(`/api/admin/batches/${id}/extensions/${ext.id}`);
+                              toast.success("Extension revoked");
+                              fetchExtensions();
+                            } catch (err) {
+                              toast.error(getErrorMessage(err));
+                            }
+                          }}
+                          className="text-danger hover:text-danger text-xs"
+                        >
+                          <IconTrash size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === "mentors" && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Assign instructors as course mentors for this batch.
+            </p>
+            <button
+              onClick={() => setShowAddMentor(!showAddMentor)}
+              className="btn-primary text-xs flex items-center gap-1"
+            >
+              <IconPlus size={14} /> Assign Mentor
+            </button>
+          </div>
+
+          {showAddMentor && (
+            <div className="glass-card p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Course *</label>
+                  <select
+                    value={mentorCourseId}
+                    onChange={(e) => setMentorCourseId(e.target.value)}
+                    className="field text-xs"
+                  >
+                    <option value="">Select course...</option>
+                    {(courseOptions.length > 0 ? courseOptions : courses).map((c: any) => (
+                      <option key={c.courseId || c.id} value={c.courseId || c.id}>
+                        {c.course?.title || c.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Instructor *</label>
+                  <select
+                    value={mentorUserId}
+                    onChange={(e) => setMentorUserId(e.target.value)}
+                    className="field text-xs"
+                  >
+                    <option value="">Select instructor...</option>
+                    {instructorOptions.map((inst: any) => (
+                      <option key={inst.id} value={inst.id}>
+                        {inst.name} ({inst.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setShowAddMentor(false)} className="btn-secondary text-xs">Cancel</button>
+                <button
+                  onClick={async () => {
+                    if (!mentorCourseId || !mentorUserId) {
+                      toast.error("Select a course and an instructor");
+                      return;
+                    }
+                    try {
+                      await api.post(`/api/admin/batches/${id}/mentors`, {
+                        courseId: mentorCourseId,
+                        mentorId: mentorUserId,
+                      });
+                      toast.success("Mentor assigned");
+                      setShowAddMentor(false);
+                      setMentorCourseId("");
+                      setMentorUserId("");
+                      fetchMentors();
+                    } catch (err) {
+                      toast.error(getErrorMessage(err));
+                    }
+                  }}
+                  className="btn-primary text-xs"
+                >
+                  Assign
+                </button>
+              </div>
+            </div>
+          )}
+
+          {mentorLoading ? (
+            <p className="text-sm text-muted animate-pulse">Loading...</p>
+          ) : mentors.length === 0 ? (
+            <div className="glass-card p-8 text-center">
+              <p className="text-muted-foreground text-sm">No mentors assigned yet.</p>
+            </div>
+          ) : (
+            <div className="glass-card overflow-hidden rounded-none">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border text-left">
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Course</th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Mentor</th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Email</th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {mentors.map((m: any) => (
+                    <tr key={m.id} className="hover:bg-card-hover/50 transition-colors">
+                      <td className="px-5 py-3 text-sm font-medium">{m.course?.title}</td>
+                      <td className="px-5 py-3 text-sm">{m.mentor?.name}</td>
+                      <td className="px-5 py-3 text-xs text-muted">{m.mentor?.email}</td>
+                      <td className="px-5 py-3">
+                        <button
+                          onClick={async () => {
+                            try {
+                              await api.delete(`/api/admin/batches/${id}/mentors/${m.courseId}`);
+                              toast.success("Mentor removed");
+                              fetchMentors();
+                            } catch (err) {
+                              toast.error(getErrorMessage(err));
+                            }
+                          }}
+                          className="text-danger hover:text-danger text-xs"
+                        >
+                          <IconTrash size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}

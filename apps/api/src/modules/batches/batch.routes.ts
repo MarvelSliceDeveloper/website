@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { batchController } from "./batch.controller";
+import { batchExtensionController } from "./batch-extension.controller";
+import { batchMentorController } from "./batch-mentor.controller";
 import { requireAuth, requireRole } from "../../middleware/auth.middleware";
 import { UserRole } from "@lms/types";
 
@@ -77,6 +79,52 @@ router.put(
   "/:id/courses/:courseId/exam-required",
   requireRole([UserRole.ADMIN]),
   batchController.toggleExamRequired,
+);
+
+// --- Extension management (batch-level) ---
+
+// GET /api/admin/batches/:batchId/extensions — list extensions
+router.get(
+  "/:batchId/extensions",
+  requireRole([UserRole.ADMIN]),
+  batchExtensionController.list,
+);
+
+// POST /api/admin/batches/:batchId/extensions — grant extension for an assignment/quiz
+router.post(
+  "/:batchId/extensions",
+  requireRole([UserRole.ADMIN]),
+  batchExtensionController.create,
+);
+
+// DELETE /api/admin/batches/:batchId/extensions/:extensionId — revoke extension
+router.delete(
+  "/:batchId/extensions/:extensionId",
+  requireRole([UserRole.ADMIN]),
+  batchExtensionController.remove,
+);
+
+// --- Course mentor management ---
+
+// GET /api/admin/batches/:batchId/mentors — list mentors for batch
+router.get(
+  "/:batchId/mentors",
+  requireRole([UserRole.ADMIN]),
+  batchMentorController.list,
+);
+
+// POST /api/admin/batches/:batchId/mentors — assign mentor to a course in the batch
+router.post(
+  "/:batchId/mentors",
+  requireRole([UserRole.ADMIN]),
+  batchMentorController.assign,
+);
+
+// DELETE /api/admin/batches/:batchId/mentors/:courseId — remove mentor from course
+router.delete(
+  "/:batchId/mentors/:courseId",
+  requireRole([UserRole.ADMIN]),
+  batchMentorController.remove,
 );
 
 // --- Student management ---

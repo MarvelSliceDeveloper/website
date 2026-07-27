@@ -29,6 +29,8 @@ type FormState = {
   endDate: string;
   maxStudents: string;
   description: string;
+  defaultDaysToComplete: string;
+  lateSubmissionPenaltyPercent: string;
 };
 
 export default function CreateBatchPage() {
@@ -48,6 +50,8 @@ export default function CreateBatchPage() {
     endDate: "",
     maxStudents: "",
     description: "",
+    defaultDaysToComplete: "",
+    lateSubmissionPenaltyPercent: "25",
   });
 
   // Fetch active packages and instructors on mount
@@ -118,6 +122,12 @@ export default function CreateBatchPage() {
         endDate: new Date(form.endDate).toISOString(),
         maxStudents: form.maxStudents ? Number(form.maxStudents) : undefined,
         description: form.description || undefined,
+        defaultDaysToComplete: form.defaultDaysToComplete
+          ? Number(form.defaultDaysToComplete)
+          : undefined,
+        lateSubmissionPenaltyPercent: form.lateSubmissionPenaltyPercent
+          ? Number(form.lateSubmissionPenaltyPercent)
+          : undefined,
       });
 
       if ("batches" in result) {
@@ -281,6 +291,43 @@ export default function CreateBatchPage() {
               placeholder="Optional notes"
               className="field"
             />
+          </div>
+        </div>
+
+        {/* Due Date & Penalty Settings */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Default Days to Complete
+            </label>
+            <input
+              type="number"
+              value={form.defaultDaysToComplete}
+              onChange={(e) => update("defaultDaysToComplete", e.target.value)}
+              placeholder="e.g. 30"
+              className="field"
+              min={1}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Due dates calculated as enrollment date + N days
+            </p>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Late Submission Penalty %
+            </label>
+            <input
+              type="number"
+              value={form.lateSubmissionPenaltyPercent}
+              onChange={(e) => update("lateSubmissionPenaltyPercent", e.target.value)}
+              placeholder="25"
+              className="field"
+              min={0}
+              max={100}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Default penalty for late submissions
+            </p>
           </div>
         </div>
 

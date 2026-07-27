@@ -12,6 +12,10 @@ interface Assignment {
   type: string;
   description: string | null;
   dueDate: string;
+  daysFromEnrollment?: number | null;
+  allowLateSubmission?: boolean;
+  lateSubmissionPenaltyPercent?: number | null;
+  lateSubmissionGracePeriodHrs?: number | null;
   maxPoints: number;
   questionPdfUrl: string | null;
 }
@@ -38,10 +42,25 @@ export default function AssignmentCard({
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(assignment.title);
   const [description, setDescription] = useState(assignment.description || "");
+  const [dueDateMode, setDueDateMode] = useState<"absolute" | "days">(
+    assignment.daysFromEnrollment ? "days" : "absolute"
+  );
   const [dueDate, setDueDate] = useState(
     assignment.dueDate
       ? new Date(assignment.dueDate).toISOString().slice(0, 16)
       : "",
+  );
+  const [daysFromEnrollment, setDaysFromEnrollment] = useState(
+    assignment.daysFromEnrollment?.toString() ?? ""
+  );
+  const [allowLateSubmission, setAllowLateSubmission] = useState(
+    assignment.allowLateSubmission ?? false
+  );
+  const [lateSubmissionPenaltyPercent, setLateSubmissionPenaltyPercent] = useState(
+    assignment.lateSubmissionPenaltyPercent ?? 25
+  );
+  const [lateSubmissionGracePeriodHrs, setLateSubmissionGracePeriodHrs] = useState(
+    assignment.lateSubmissionGracePeriodHrs?.toString() ?? ""
   );
   const [maxPoints, setMaxPoints] = useState(assignment.maxPoints);
   const [questionPdfUrl, setQuestionPdfUrl] = useState(
@@ -61,7 +80,11 @@ export default function AssignmentCard({
       await api.put(`/api/admin/courses/modules/assignments/${assignment.id}`, {
         title,
         description,
-        dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+        dueDate: dueDateMode === "absolute" && dueDate ? new Date(dueDate).toISOString() : undefined,
+        daysFromEnrollment: dueDateMode === "days" && daysFromEnrollment ? Number(daysFromEnrollment) : null,
+        allowLateSubmission,
+        lateSubmissionPenaltyPercent: allowLateSubmission ? lateSubmissionPenaltyPercent : null,
+        lateSubmissionGracePeriodHrs: allowLateSubmission && lateSubmissionGracePeriodHrs ? Number(lateSubmissionGracePeriodHrs) : null,
         maxPoints,
         questionPdfUrl: questionPdfUrl || undefined,
       });
@@ -92,11 +115,16 @@ export default function AssignmentCard({
     setEditing(false);
     setTitle(assignment.title);
     setDescription(assignment.description || "");
+    setDueDateMode(assignment.daysFromEnrollment ? "days" : "absolute");
     setDueDate(
       assignment.dueDate
         ? new Date(assignment.dueDate).toISOString().slice(0, 16)
         : "",
     );
+    setDaysFromEnrollment(assignment.daysFromEnrollment?.toString() ?? "");
+    setAllowLateSubmission(assignment.allowLateSubmission ?? false);
+    setLateSubmissionPenaltyPercent(assignment.lateSubmissionPenaltyPercent ?? 25);
+    setLateSubmissionGracePeriodHrs(assignment.lateSubmissionGracePeriodHrs?.toString() ?? "");
     setMaxPoints(assignment.maxPoints);
     setQuestionPdfUrl(assignment.questionPdfUrl || "");
   };
@@ -135,7 +163,28 @@ export default function AssignmentCard({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        {/* Due Date Mode */}
+        <div className="space-y-2">
+          <label className="text-xs font-medium">Due Date</label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setDueDateMode("absolute")}
+              className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${dueDateMode === "absolute" ? "bg-primary text-white border-primary" : "bg-paper text-ink border-hairline"}`}
+            >
+              Absolute Date
+            </button>
+            <button
+              type="button"
+              onClick={() => setDueDateMode("days")}
+              className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${dueDateMode === "days" ? "bg-primary text-white border-primary" : "bg-paper text-ink border-hairline"}`}
+            >
+              Days from Enrollment
+            </button>
+          </div>
+        </div>
+
+        {dueDateMode === "absolute" ? (
           <div className="space-y-2">
             <label className="text-xs font-medium">Due Date</label>
             <input
@@ -145,6 +194,62 @@ export default function AssignmentCard({
               className="field"
             />
           </div>
+        ) : (
+          <div className="space-y-2">
+            <label className="text-xs font-medium">Days After Enrollment</label>
+            <input
+              type="number"
+              value={daysFromEnrollment}
+              onChange={(e) => setDaysFromEnrollment(e.target.value)}
+              placeholder="e.g. 10"
+              className="field"
+              min={1}
+            />
+          </div>
+        )}
+
+        {/* Late Submission Toggle */}
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="edit-allow-late"
+            checked={allowLateSubmission}
+            onChange={(e) => setAllowLateSubmission(e.target.checked)}
+            className="h-4 w-4 rounded border-hairline"
+          />
+          <label htmlFor="edit-allow-late" className="text-xs font-medium">
+            Allow Late Submission (with penalty)
+          </label>
+        </div>
+
+        {allowLateSubmission && (
+          <div className="grid grid-cols-2 gap-4 pl-6">
+            <div className="space-y-2">
+              <label className="text-xs font-medium">Penalty %</label>
+              <input
+                type="number"
+                value={lateSubmissionPenaltyPercent}
+                onChange={(e) => setLateSubmissionPenaltyPercent(parseInt(e.target.value) || 25)}
+                min={0}
+                max={100}
+                className="field"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-medium">Grace Period (hrs)</label>
+              <input
+                type="number"
+                value={lateSubmissionGracePeriodHrs}
+                onChange={(e) => setLateSubmissionGracePeriodHrs(e.target.value)}
+                placeholder="Optional"
+                min={1}
+                className="field"
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-xs font-medium">Max Points</label>
             <input
@@ -211,9 +316,18 @@ export default function AssignmentCard({
         <span className="text-xs text-blue-600">
           {assignment.maxPoints} pts
         </span>
-        {assignment.dueDate && (
+        {assignment.daysFromEnrollment ? (
+          <span className="text-xs text-blue-500">
+            Due: {assignment.daysFromEnrollment}d after enrollment
+          </span>
+        ) : assignment.dueDate ? (
           <span className="text-xs text-blue-500">
             Due: {new Date(assignment.dueDate).toLocaleDateString()}
+          </span>
+        ) : null}
+        {assignment.allowLateSubmission && (
+          <span className="text-xs rounded bg-amber-100 text-amber-700 px-1.5 py-0.5">
+            Late OK (-{assignment.lateSubmissionPenaltyPercent ?? 25}%)
           </span>
         )}
         {assignment.questionPdfUrl && (

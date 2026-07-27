@@ -36,6 +36,11 @@ export type TestCase = {
 export type Quiz = {
   id: string;
   title: string;
+  dueDate?: string | null;
+  daysFromEnrollment?: number | null;
+  allowLateSubmission?: boolean;
+  lateSubmissionPenaltyPercent?: number | null;
+  lateSubmissionGracePeriodHrs?: number | null;
   isSpecialExam?: boolean;
   passingScore?: number;
   timeLimitMin?: number | null;
@@ -57,6 +62,10 @@ export type Assignment = {
   type: string;
   description: string | null;
   dueDate: string;
+  daysFromEnrollment?: number | null;
+  allowLateSubmission?: boolean;
+  lateSubmissionPenaltyPercent?: number | null;
+  lateSubmissionGracePeriodHrs?: number | null;
   maxPoints: number;
   questionPdfUrl: string | null;
 };

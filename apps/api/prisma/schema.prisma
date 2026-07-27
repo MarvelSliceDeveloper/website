@@ -111,6 +111,8 @@ model User {
   createdApiKeys          ApiKey[]
   createdAnnouncements    Announcement[]
   createdStaticPages      StaticPage[]
+  batchCourseMentors      BatchCourseMentor[]
+  grantedExtensions       BatchAssignmentExtension[]
 }
 
 model Course {
@@ -143,6 +145,7 @@ model Course {
   packageCourses           PackageCourse[]
   packageEnrollmentCourses PackageEnrollmentCourse[]
   courseVisibility         BatchCourseVisibility[]
+  batchCourseMentors       BatchCourseMentor[]
   courseTags               CourseTag[]
   certificates             Certificate[]
   categoryRelation         Category?                  @relation(fields: [categoryId], references: [id])
@@ -203,30 +206,34 @@ model Practical {
 
 // A Batch is a course cohort — e.g. "Python Batch Jan 2025"
 model Batch {
-  id                       String                    @id @default(cuid())
-  courseId                 String?
-  packageId                String? // Optional: batch belongs to a package
-  instructorId             String // Assigned mentor/instructor
-  name                     String // e.g. "Python Batch Jan 2025"
-  startDate                DateTime
-  endDate                  DateTime
-  isActive                 Boolean                   @default(true)
-  maxStudents              Int?
-  status                   BatchStatus               @default(UPCOMING)
-  description              String?
-  deletedAt                DateTime?
-  deletedBy                String?
-  restoredAt               DateTime?
-  restoredBy               String?
-  course                   Course?                   @relation(fields: [courseId], references: [id])
-  package                  CoursePackage?            @relation(fields: [packageId], references: [id])
-  instructor               User                      @relation("BatchInstructor", fields: [instructorId], references: [id])
-  enrollments              EnrollmentRequest[]
-  sessions                 LiveSession[]
-  assignments              Assignment[]
-  packageEnrollmentCourses PackageEnrollmentCourse[]
-  courseVisibility         BatchCourseVisibility[]
-  certificates             Certificate[]
+  id                           String                    @id @default(cuid())
+  courseId                     String?
+  packageId                    String? // Optional: batch belongs to a package
+  instructorId                 String // Assigned mentor/instructor
+  name                         String // e.g. "Python Batch Jan 2025"
+  startDate                    DateTime
+  endDate                      DateTime
+  isActive                     Boolean                   @default(true)
+  maxStudents                  Int?
+  status                       BatchStatus               @default(UPCOMING)
+  description                  String?
+  defaultDaysToComplete        Int? // Default days-from-enrollment for assignments/quizzes
+  lateSubmissionPenaltyPercent Int                       @default(25) // Default late penalty %
+  deletedAt                    DateTime?
+  deletedBy                    String?
+  restoredAt                   DateTime?
+  restoredBy                   String?
+  course                       Course?                   @relation(fields: [courseId], references: [id])
+  package                      CoursePackage?            @relation(fields: [packageId], references: [id])
+  instructor                   User                      @relation("BatchInstructor", fields: [instructorId], references: [id])
+  enrollments                  EnrollmentRequest[]
+  sessions                     LiveSession[]
+  assignments                  Assignment[]
+  packageEnrollmentCourses     PackageEnrollmentCourse[]
+  courseVisibility             BatchCourseVisibility[]
+  certificates                 Certificate[]
+  extensions                   BatchAssignmentExtension[]
+  courseMentors                BatchCourseMentor[]
 
   @@index([packageId])
   @@index([courseId])
@@ -246,6 +253,44 @@ model BatchCourseVisibility {
 
   @@unique([batchId, courseId])
   @@index([batchId])
+}
+
+// Batch-level extension for an assignment/quiz — applies to ALL students in the batch
+model BatchAssignmentExtension {
+  id              String   @id @default(cuid())
+  batchId         String
+  assignmentId    String?  // null if quiz extension
+  quizId          String?  // null if assignment extension
+  originalDueDate DateTime
+  extendedDueDate DateTime
+  grantedById     String   // Admin who granted
+  reason          String?  @db.Text
+  createdAt       DateTime @default(now())
+
+  batch      Batch      @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  grantedBy  User       @relation(fields: [grantedById], references: [id])
+  assignment Assignment? @relation(fields: [assignmentId], references: [id])
+  quiz       Quiz?      @relation(fields: [quizId], references: [id])
+
+  @@unique([batchId, assignmentId])
+  @@unique([batchId, quizId])
+  @@index([batchId])
+}
+
+// Course mentor assigned to a course within a batch (for package-level batches)
+model BatchCourseMentor {
+  id        String @id @default(cuid())
+  batchId   String
+  courseId  String
+  mentorId  String // User with INSTRUCTOR role
+
+  batch  Batch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  mentor User   @relation(fields: [mentorId], references: [id])
+
+  @@unique([batchId, courseId])
+  @@index([batchId])
+  @@index([mentorId])
 }
 
 // Student applies → pending → admin approves → assigned to batch
@@ -397,6 +442,10 @@ model Quiz {
   title         String
   order         Int           @default(0)
   dueDate       DateTime?
+  daysFromEnrollment        Int?      // If set → dueDate = enrollmentDate + N days
+  lateSubmissionPenaltyPercent Int?   // Overrides batch default. null = use batch default
+  allowLateSubmission       Boolean   @default(false)
+  lateSubmissionGracePeriodHrs Int?   // Max hours past due allowed
   isSpecialExam Boolean       @default(false)
   passingScore  Int           @default(65)
   timeLimitMin  Int?
@@ -412,6 +461,7 @@ model Quiz {
   questions     Question[]
   module        Module        @relation(fields: [moduleId], references: [id])
   attempts      QuizAttempt[]
+  extensions    BatchAssignmentExtension[]
 
   @@index([moduleId])
 }
@@ -428,18 +478,23 @@ model Question {
 
 // Stores student quiz submissions for course-content quizzes
 model QuizAttempt {
-  id         String            @id @default(cuid())
-  quizId     String
-  userId     String
-  answers    Json // [{ questionId, selectedOptionId }]
-  score      Int               @default(0) // number of correct answers
-  total      Int               @default(0) // total questions
-  percentage Float             @default(0)
-  isPassed   Boolean           @default(false)
-  status     QuizAttemptStatus @default(PENDING)
-  createdAt  DateTime          @default(now())
-  quiz       Quiz              @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                  String            @id @default(cuid())
+  quizId              String
+  userId              String
+  answers             Json // [{ questionId, selectedOptionId }]
+  score               Int               @default(0) // number of correct answers
+  total               Int               @default(0) // total questions
+  percentage          Float             @default(0)
+  isPassed            Boolean           @default(false)
+  status              QuizAttemptStatus @default(PENDING)
+  createdAt           DateTime          @default(now()) // attempt start time
+  submittedAt         DateTime?         // when student submitted (distinct from createdAt)
+  isLate              Boolean           @default(false)
+  latePenaltyPercent  Int?              // penalty % applied
+  latePenaltyAmount   Int?              // points deducted
+  originalPercentage  Float?            // score before penalty
+  quiz                Quiz              @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([quizId])
   @@index([userId])
@@ -575,6 +630,10 @@ model Assignment {
   questionPdfUrl String? // PDF file URL for ASSIGNMENT type
   order          Int                    @default(0)
   dueDate        DateTime
+  daysFromEnrollment        Int?       // If set → dueDate = enrollmentDate + N days
+  lateSubmissionPenaltyPercent Int?    // Overrides batch default. null = use batch default
+  allowLateSubmission       Boolean    @default(false)
+  lateSubmissionGracePeriodHrs Int?    // Max hours past due allowed
   maxPoints      Int                    @default(100)
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt
@@ -590,6 +649,7 @@ model Assignment {
   restoredAt     DateTime?
   restoredBy     String?
   submissions    AssignmentSubmission[]
+  extensions     BatchAssignmentExtension[]
 }
 
 model AssignmentSubmission {
@@ -602,6 +662,10 @@ model AssignmentSubmission {
   feedback          String?                   @db.Text
   gradedAt          DateTime?
   totalScore        Int? // auto-calculated after MCQ grading
+  isLate            Boolean                   @default(false)
+  latePenaltyPercent Int?
+  latePenaltyAmount  Int? // points deducted
+  originalScore     Int? // score before penalty
   comment           String?                   @db.Text // Student's submission note
   answerFileUrl     String?                   // File uploaded by student (for ASSIGNMENT type)
   assignment        Assignment                @relation(fields: [assignmentId], references: [id], onDelete: Cascade)

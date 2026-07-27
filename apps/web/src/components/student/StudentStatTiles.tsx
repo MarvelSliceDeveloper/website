@@ -9,7 +9,7 @@ export interface StudentStatTile {
   value: number;
   icon: React.ReactNode;
   onClick: () => void;
-  iconColor: "blue" | "orange" | "green";
+  iconColor: "blue" | "orange" | "green" | "indigo" | "amber" | "red";
   liveBadge?: string;
   trend?: { value: number; label: string };
 }
@@ -47,6 +47,9 @@ const CHIP_STYLES: Record<string, { bg: string; icon: string }> = {
   blue: { bg: "bg-brand-blue-tint", icon: "text-brand-blue" },
   orange: { bg: "bg-brand-orange-tint", icon: "text-brand-orange" },
   green: { bg: "bg-success-tint", icon: "text-success" },
+  indigo: { bg: "bg-brand-indigo-tint", icon: "text-brand-indigo" },
+  amber: { bg: "bg-brand-amber-tint", icon: "text-brand-amber" },
+  red: { bg: "bg-danger-tint", icon: "text-danger" },
 };
 
 function StatTile({ tile }: { tile: StudentStatTile }) {

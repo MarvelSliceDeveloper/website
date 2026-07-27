@@ -27,6 +27,8 @@ export const CreateBatchSchema = z
     endDate: z.string().datetime(),
     maxStudents: z.number().int().min(1).optional(),
     description: z.string().optional(),
+    defaultDaysToComplete: z.number().int().min(1).optional(),
+    lateSubmissionPenaltyPercent: z.number().int().min(0).max(100).optional(),
   })
   .refine((data) => data.courseId || data.packageId, {
     message: "Either courseId or packageId is required",
@@ -40,6 +42,8 @@ export const UpdateBatchSchema = z.object({
   description: z.string().nullable().optional(),
   status: z.enum(["UPCOMING", "ACTIVE", "COMPLETED"]).optional(),
   isActive: z.boolean().optional(),
+  defaultDaysToComplete: z.number().int().min(1).nullable().optional(),
+  lateSubmissionPenaltyPercent: z.number().int().min(0).max(100).optional(),
 });
 
 export const AddStudentsSchema = z.object({
@@ -103,6 +107,8 @@ export const batchService = {
         endDate: new Date(data.endDate),
         maxStudents: data.maxStudents,
         description: data.description,
+        defaultDaysToComplete: data.defaultDaysToComplete,
+        lateSubmissionPenaltyPercent: data.lateSubmissionPenaltyPercent ?? 25,
         status: "UPCOMING",
       },
       include: {
@@ -158,6 +164,8 @@ export const batchService = {
         endDate: new Date(data.endDate),
         maxStudents: data.maxStudents,
         description: data.description,
+        defaultDaysToComplete: data.defaultDaysToComplete,
+        lateSubmissionPenaltyPercent: data.lateSubmissionPenaltyPercent ?? 25,
         status: "UPCOMING",
       },
       include: {
@@ -367,6 +375,12 @@ export const batchService = {
     const updateData: any = { ...data };
     if (data.startDate) updateData.startDate = new Date(data.startDate);
     if (data.endDate) updateData.endDate = new Date(data.endDate);
+    if (data.defaultDaysToComplete === null) {
+      updateData.defaultDaysToComplete = null;
+    }
+    if (data.lateSubmissionPenaltyPercent !== undefined) {
+      updateData.lateSubmissionPenaltyPercent = data.lateSubmissionPenaltyPercent;
+    }
 
     return prisma.batch.update({
       where: { id: batchId },

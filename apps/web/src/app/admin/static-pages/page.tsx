@@ -11,6 +11,8 @@ import {
   IconTrash,
   IconRefresh,
   IconX,
+  IconExternalLink,
+  IconArrowBackUp,
 } from "@tabler/icons-react";
 
 type StaticPage = {
@@ -22,18 +24,211 @@ type StaticPage = {
   updatedAt: string;
 };
 
+type StaticPageInput = {
+  title: string;
+  slug: string;
+  content: string;
+  isPublished: boolean;
+};
+
+const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+function generateSlug(title: string) {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+// ---------------------------------------------------------------------------
+// Form
+// ---------------------------------------------------------------------------
+
+function StaticPageForm({
+  initial,
+  saving,
+  onCancel,
+  onSubmit,
+}: {
+  initial: StaticPage | null;
+  saving: boolean;
+  onCancel: () => void;
+  onSubmit: (input: StaticPageInput) => void;
+}) {
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [slug, setSlug] = useState(initial?.slug ?? "");
+  const [content, setContent] = useState(initial?.content ?? "");
+  const [isPublished, setIsPublished] = useState(initial?.isPublished ?? false);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(!!initial);
+  const [slugError, setSlugError] = useState<string | null>(null);
+
+  function handleTitleChange(value: string) {
+    setTitle(value);
+    if (!slugManuallyEdited) {
+      setSlug(generateSlug(value));
+      setSlugError(null);
+    }
+  }
+
+  function handleSlugChange(value: string) {
+    setSlug(value);
+    setSlugManuallyEdited(true);
+  }
+
+  function handleSlugBlur() {
+    const trimmed = slug.trim();
+    if (trimmed && !SLUG_REGEX.test(trimmed)) {
+      setSlugError(
+        "Slug must be lowercase letters, numbers, and hyphens only (e.g. about-us).",
+      );
+    } else {
+      setSlugError(null);
+    }
+  }
+
+  function resetSlugToAuto() {
+    setSlug(generateSlug(title));
+    setSlugManuallyEdited(false);
+    setSlugError(null);
+  }
+
+  function handleSubmit() {
+    const trimmedTitle = title.trim();
+    const trimmedSlug = slug.trim();
+
+    if (!trimmedTitle) {
+      toast.error("Title is required");
+      return;
+    }
+    if (!trimmedSlug) {
+      toast.error("Slug is required");
+      return;
+    }
+    if (!SLUG_REGEX.test(trimmedSlug)) {
+      toast.error("Slug must be lowercase letters, numbers, and hyphens only");
+      return;
+    }
+
+    onSubmit({
+      title: trimmedTitle,
+      slug: trimmedSlug,
+      content,
+      isPublished,
+    });
+  }
+
+  const isValid = title.trim().length > 0 && slug.trim().length > 0 && !slugError;
+
+  return (
+    <div
+      role="dialog"
+      aria-label={initial ? "Edit page" : "New page"}
+      className="rounded-xl border border-border bg-card p-5 space-y-3"
+    >
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="text-sm font-semibold text-foreground">
+          {initial ? "Edit Page" : "New Page"}
+        </h3>
+        <button
+          onClick={onCancel}
+          aria-label="Close form"
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <IconX size={16} />
+        </button>
+      </div>
+
+      <input
+        type="text"
+        placeholder="Page title"
+        value={title}
+        onChange={(e) => handleTitleChange(e.target.value)}
+        aria-label="Page title"
+        className="input text-xs w-full"
+      />
+
+      <div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            Slug:
+          </span>
+          <input
+            type="text"
+            placeholder="page-slug"
+            value={slug}
+            onChange={(e) => handleSlugChange(e.target.value)}
+            onBlur={handleSlugBlur}
+            aria-label="Page slug"
+            aria-invalid={!!slugError}
+            className={`input text-xs flex-1 font-mono ${
+              slugError ? "border-danger focus:border-danger" : ""
+            }`}
+          />
+          {slugManuallyEdited && (
+            <button
+              type="button"
+              onClick={resetSlugToAuto}
+              title="Reset slug to auto-generated"
+              aria-label="Reset slug to auto-generated"
+              className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+            >
+              <IconArrowBackUp size={14} />
+            </button>
+          )}
+        </div>
+        {slugError && (
+          <p className="mt-1 text-[11px] text-danger">{slugError}</p>
+        )}
+      </div>
+
+      <textarea
+        placeholder="Page content"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        aria-label="Page content"
+        className="input text-xs w-full min-h-[200px] font-mono"
+      />
+
+      <div className="flex items-center gap-2">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isPublished}
+            onChange={(e) => setIsPublished(e.target.checked)}
+            className="rounded border-border"
+          />
+          <span className="text-xs text-foreground">Published</span>
+        </label>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <button
+          onClick={handleSubmit}
+          disabled={saving || !isValid}
+          className="btn-primary text-xs py-2 disabled:opacity-40"
+        >
+          {saving ? "Saving..." : initial ? "Update" : "Create"}
+        </button>
+        <button onClick={onCancel} className="btn-secondary text-xs py-2">
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
 export default function AdminStaticPagesPage() {
   usePageTitle("Static Pages");
   const [pages, setPages] = useState<StaticPage[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formTitle, setFormTitle] = useState("");
-  const [formSlug, setFormSlug] = useState("");
-  const [formContent, setFormContent] = useState("");
-  const [formPublished, setFormPublished] = useState(false);
-  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+  const [editingPage, setEditingPage] = useState<StaticPage | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function fetchPages() {
     setLoading(true);
@@ -42,7 +237,8 @@ export default function AdminStaticPagesPage() {
         "/api/admin/static-pages",
       );
       setPages(data.pages);
-    } catch {
+    } catch (err) {
+      toast.error(getErrorMessage(err));
       setPages([]);
     } finally {
       setLoading(false);
@@ -53,72 +249,29 @@ export default function AdminStaticPagesPage() {
     fetchPages();
   }, []);
 
-  function generateSlug(title: string) {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
-  }
-
-  function handleTitleChange(value: string) {
-    setFormTitle(value);
-    if (!slugManuallyEdited) {
-      setFormSlug(generateSlug(value));
-    }
-  }
-
   function openCreate() {
-    setEditingId(null);
-    setFormTitle("");
-    setFormSlug("");
-    setFormContent("");
-    setFormPublished(false);
-    setSlugManuallyEdited(false);
+    setEditingPage(null);
     setShowForm(true);
   }
 
   function openEdit(page: StaticPage) {
-    setEditingId(page.id);
-    setFormTitle(page.title);
-    setFormSlug(page.slug);
-    setFormContent(page.content);
-    setFormPublished(page.isPublished);
-    setSlugManuallyEdited(true);
+    setEditingPage(page);
     setShowForm(true);
   }
 
   function cancelForm() {
     setShowForm(false);
-    setEditingId(null);
-    setFormTitle("");
-    setFormSlug("");
-    setFormContent("");
-    setFormPublished(false);
-    setSlugManuallyEdited(false);
+    setEditingPage(null);
   }
 
-  async function handleSubmit() {
-    if (!formTitle.trim()) {
-      toast.error("Title is required");
-      return;
-    }
-    if (!formSlug.trim()) {
-      toast.error("Slug is required");
-      return;
-    }
+  async function handleSubmit(input: StaticPageInput) {
     setSaving(true);
     try {
-      const body = {
-        title: formTitle.trim(),
-        slug: formSlug.trim(),
-        content: formContent,
-        isPublished: formPublished,
-      };
-      if (editingId) {
-        await api.put(`/api/admin/static-pages/${editingId}`, body);
+      if (editingPage) {
+        await api.put(`/api/admin/static-pages/${editingPage.id}`, input);
         toast.success("Page updated");
       } else {
-        await api.post("/api/admin/static-pages", body);
+        await api.post("/api/admin/static-pages", input);
         toast.success("Page created");
       }
       cancelForm();
@@ -131,13 +284,21 @@ export default function AdminStaticPagesPage() {
   }
 
   async function handleDelete(id: string, title: string) {
+    if (deletingId) return;
     if (!confirm(`Delete page "${title}"? This cannot be undone.`)) return;
+
+    setDeletingId(id);
+    const previousPages = pages;
+    setPages((prev) => prev.filter((p) => p.id !== id));
+
     try {
       await api.delete(`/api/admin/static-pages/${id}`);
       toast.success("Page deleted");
-      fetchPages();
     } catch (err) {
       toast.error(getErrorMessage(err));
+      setPages(previousPages);
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -159,12 +320,14 @@ export default function AdminStaticPagesPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={fetchPages}
+            aria-label="Refresh page list"
             className="btn-secondary text-xs py-2 flex items-center gap-1.5"
           >
             <IconRefresh size={14} /> Refresh
           </button>
           <button
             onClick={openCreate}
+            aria-label="Create new page"
             className="btn-primary text-xs py-2 flex items-center gap-1.5"
           >
             <IconPlus size={14} /> Create Page
@@ -173,70 +336,12 @@ export default function AdminStaticPagesPage() {
       </div>
 
       {showForm && (
-        <div className="rounded-xl border border-border bg-card p-5 space-y-3">
-          <div className="flex items-center justify-between mb-1">
-            <h3 className="text-sm font-semibold text-foreground">
-              {editingId ? "Edit Page" : "New Page"}
-            </h3>
-            <button
-              onClick={cancelForm}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <IconX size={16} />
-            </button>
-          </div>
-          <input
-            type="text"
-            placeholder="Page title"
-            value={formTitle}
-            onChange={(e) => handleTitleChange(e.target.value)}
-            className="input text-xs w-full"
-          />
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
-              Slug:
-            </span>
-            <input
-              type="text"
-              placeholder="page-slug"
-              value={formSlug}
-              onChange={(e) => {
-                setFormSlug(e.target.value);
-                setSlugManuallyEdited(true);
-              }}
-              className="input text-xs flex-1 font-mono"
-            />
-          </div>
-          <textarea
-            placeholder="Page content"
-            value={formContent}
-            onChange={(e) => setFormContent(e.target.value)}
-            className="input text-xs w-full min-h-[200px] font-mono"
-          />
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formPublished}
-                onChange={(e) => setFormPublished(e.target.checked)}
-                className="rounded border-border"
-              />
-              <span className="text-xs text-foreground">Published</span>
-            </label>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleSubmit}
-              disabled={saving || !formTitle.trim() || !formSlug.trim()}
-              className="btn-primary text-xs py-2 disabled:opacity-40"
-            >
-              {saving ? "Saving..." : editingId ? "Update" : "Create"}
-            </button>
-            <button onClick={cancelForm} className="btn-secondary text-xs py-2">
-              Cancel
-            </button>
-          </div>
-        </div>
+        <StaticPageForm
+          initial={editingPage}
+          saving={saving}
+          onCancel={cancelForm}
+          onSubmit={handleSubmit}
+        />
       )}
 
       <div className="rounded-xl border border-border bg-card p-5">
@@ -270,9 +375,23 @@ export default function AdminStaticPagesPage() {
                       {pg.title}
                     </td>
                     <td className="py-3 pr-3">
-                      <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded">
-                        /{pg.slug}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                          /{pg.slug}
+                        </span>
+                        {pg.isPublished && (
+                          <a
+                            href={`/${pg.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="View live page"
+                            aria-label={`View live page for ${pg.title}`}
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            <IconExternalLink size={12} />
+                          </a>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 pr-3">
                       <span
@@ -292,15 +411,19 @@ export default function AdminStaticPagesPage() {
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => openEdit(pg)}
-                          className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                          disabled={deletingId === pg.id}
+                          aria-label={`Edit ${pg.title}`}
                           title="Edit"
+                          className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors disabled:opacity-40"
                         >
                           <IconEdit size={14} />
                         </button>
                         <button
                           onClick={() => handleDelete(pg.id, pg.title)}
-                          className="p-1.5 rounded-md hover:bg-danger/10 text-muted-foreground hover:text-danger transition-colors"
+                          disabled={deletingId === pg.id}
+                          aria-label={`Delete ${pg.title}`}
                           title="Delete"
+                          className="p-1.5 rounded-md hover:bg-danger/10 text-muted-foreground hover:text-danger transition-colors disabled:opacity-40"
                         >
                           <IconTrash size={14} />
                         </button>

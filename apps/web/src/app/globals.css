@@ -16,6 +16,10 @@
   --brand-blue: #2551d9;
   --brand-blue-dark: #1b3aa0;
   --brand-blue-tint: #eaf0fe;
+  --brand-indigo: #6366f1;
+  --brand-indigo-tint: #eef2ff;
+  --brand-amber: #f59e0b;
+  --brand-amber-tint: #fffbeb;
   --ink: #1e2230;
   --slate: #5b6272;
   --mist: #eef0f3;
@@ -52,6 +56,10 @@
   --brand-blue: #2551d9;
   --brand-blue-dark: #1b3aa0;
   --brand-blue-tint: #eaf0fe;
+  --brand-indigo: #6366f1;
+  --brand-indigo-tint: #eef2ff;
+  --brand-amber: #f59e0b;
+  --brand-amber-tint: #fffbeb;
   --ink: #1e2230;
   --slate: #5b6272;
   --mist: #eef0f3;
@@ -84,6 +92,10 @@
   --color-brand-blue: var(--brand-blue);
   --color-brand-blue-dark: var(--brand-blue-dark);
   --color-brand-blue-tint: var(--brand-blue-tint);
+  --color-brand-indigo: var(--brand-indigo);
+  --color-brand-indigo-tint: var(--brand-indigo-tint);
+  --color-brand-amber: var(--brand-amber);
+  --color-brand-amber-tint: var(--brand-amber-tint);
   --color-ink: var(--ink);
   --color-slate: var(--slate);
   --color-mist: var(--mist);

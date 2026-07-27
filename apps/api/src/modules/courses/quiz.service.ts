@@ -6,6 +6,10 @@ import { appendToContentOrder, removeFromContentOrder } from "./module.service";
 export const CreateQuizSchema = z.object({
   title: z.string().min(2).max(200),
   dueDate: z.string().datetime().optional().nullable(),
+  daysFromEnrollment: z.number().int().min(1).optional(),
+  lateSubmissionPenaltyPercent: z.number().int().min(0).max(100).optional(),
+  allowLateSubmission: z.boolean().default(false),
+  lateSubmissionGracePeriodHrs: z.number().int().min(1).optional(),
   isSpecialExam: z.boolean().default(false),
   passingScore: z.number().min(0).max(100).default(65),
   timeLimitMin: z.number().min(1).optional().nullable(),
@@ -50,6 +54,10 @@ export const CreateQuizSchema = z.object({
 export const UpdateQuizSchema = z.object({
   title: z.string().min(2).max(200).optional(),
   dueDate: z.string().datetime().optional().nullable(),
+  daysFromEnrollment: z.number().int().min(1).nullable().optional(),
+  lateSubmissionPenaltyPercent: z.number().int().min(0).max(100).nullable().optional(),
+  allowLateSubmission: z.boolean().optional(),
+  lateSubmissionGracePeriodHrs: z.number().int().min(1).nullable().optional(),
   isSpecialExam: z.boolean().optional(),
   passingScore: z.number().min(0).max(100).optional(),
   timeLimitMin: z.number().min(1).optional().nullable(),
@@ -150,6 +158,10 @@ export const quizService = {
         moduleId,
         title: data.title,
         ...(data.dueDate && { dueDate: new Date(data.dueDate) }),
+        daysFromEnrollment: data.daysFromEnrollment,
+        lateSubmissionPenaltyPercent: data.lateSubmissionPenaltyPercent,
+        allowLateSubmission: data.allowLateSubmission ?? false,
+        lateSubmissionGracePeriodHrs: data.lateSubmissionGracePeriodHrs,
         isSpecialExam: data.isSpecialExam ?? false,
         passingScore: data.passingScore ?? 65,
         timeLimitMin: data.timeLimitMin ?? null,
@@ -193,6 +205,18 @@ export const quizService = {
         ...(data.title && { title: data.title }),
         ...(data.dueDate !== undefined && {
           dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        }),
+        ...(data.daysFromEnrollment !== undefined && {
+          daysFromEnrollment: data.daysFromEnrollment,
+        }),
+        ...(data.lateSubmissionPenaltyPercent !== undefined && {
+          lateSubmissionPenaltyPercent: data.lateSubmissionPenaltyPercent,
+        }),
+        ...(data.allowLateSubmission !== undefined && {
+          allowLateSubmission: data.allowLateSubmission,
+        }),
+        ...(data.lateSubmissionGracePeriodHrs !== undefined && {
+          lateSubmissionGracePeriodHrs: data.lateSubmissionGracePeriodHrs,
         }),
         ...(data.isSpecialExam !== undefined && {
           isSpecialExam: data.isSpecialExam,

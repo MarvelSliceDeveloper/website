@@ -1,5 +1,37 @@
 # Changelog
 
+## 2026-07-27 — Batch Due Date, Late Penalty & Course Mentor System
+
+Implemented a complete system for customizable due dates, late submission penalties, batch-level extensions, and course mentor assignment per batch.
+
+### Database (Schema)
+- **Batch**: Added `defaultDaysToComplete` (Int?), `lateSubmissionPenaltyPercent` (Int @default(25))
+- **Assignment**: Added `daysFromEnrollment` (Int?), `allowLateSubmission` (Boolean), `lateSubmissionPenaltyPercent` (Int?), `lateSubmissionGracePeriodHrs` (Int?)
+- **Quiz**: Added same fields as Assignment
+- **AssignmentSubmission**: Added `isLate` (Boolean), `latePenaltyPercent` (Int?), `latePenaltyAmount` (Int?), `originalScore` (Int?)
+- **QuizAttempt**: Added `submittedAt` (DateTime?), `isLate` (Boolean), `latePenaltyPercent` (Int?), `latePenaltyAmount` (Int?), `originalPercentage` (Float?)
+- **BatchAssignmentExtension** (new): Batch-level extension for an assignment/quiz — applies to ALL students
+- **BatchCourseMentor** (new): Assigns an instructor as course mentor within a batch
+
+### Backend API
+- `apps/api/src/services/due-date.service.ts` — Due date calculator (relative/absolute), late penalty calculator, enrollment date lookup
+- Batch create/update schemas accept `defaultDaysToComplete`, `lateSubmissionPenaltyPercent`
+- Assignment/Quiz create/update schemas accept `daysFromEnrollment`, `allowLateSubmission`, `lateSubmissionPenaltyPercent`, `lateSubmissionGracePeriodHrs`
+- `POST/GET/DELETE /api/admin/batches/:batchId/extensions` — Batch-level extension CRUD
+- `POST/GET/DELETE /api/admin/batches/:batchId/mentors` — Course mentor assignment CRUD
+
+### Frontend
+- Batch create form: "Default Days to Complete" + "Late Submission Penalty %" fields
+- Course builder: "Absolute Date" / "Days from Enrollment" toggle on AddAssignmentForm, AddQuizForm, AssignmentCard, QuizCard
+- Late submission toggle with penalty % and grace period hours on all assignment/quiz forms
+- Batch detail page: "Extensions" tab (grant/revoke batch-level deadline extensions) + "Mentors" tab (assign course mentors)
+- Updated Quiz type in types.ts to include `dueDate`, `daysFromEnrollment`, late submission fields
+
+### Seed Data
+- Default batch (`batch-datascience`) has `defaultDaysToComplete: 30`, `lateSubmissionPenaltyPercent: 25`
+- First python assignment uses `daysFromEnrollment: 14`, `allowLateSubmission: true`
+- First python quiz uses `daysFromEnrollment: 14`, `allowLateSubmission: true`
+
 ## 2026-07-24 — UI/UX Design System Components
 
 Implemented 15 missing UI components to achieve 92% design system compliance.

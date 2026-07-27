@@ -23,7 +23,12 @@ export default function AddAssignmentForm({
 }: AddAssignmentFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [dueDateMode, setDueDateMode] = useState<"absolute" | "days">("absolute");
   const [dueDate, setDueDate] = useState("");
+  const [daysFromEnrollment, setDaysFromEnrollment] = useState("");
+  const [allowLateSubmission, setAllowLateSubmission] = useState(false);
+  const [lateSubmissionPenaltyPercent, setLateSubmissionPenaltyPercent] = useState(25);
+  const [lateSubmissionGracePeriodHrs, setLateSubmissionGracePeriodHrs] = useState("");
   const [maxPoints, setMaxPoints] = useState(100);
   const [questionPdfUrl, setQuestionPdfUrl] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,7 +44,11 @@ export default function AddAssignmentForm({
       await api.post(`/api/admin/courses/modules/${moduleId}/assignments`, {
         title,
         description,
-        dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+        dueDate: dueDateMode === "absolute" && dueDate ? new Date(dueDate).toISOString() : undefined,
+        daysFromEnrollment: dueDateMode === "days" && daysFromEnrollment ? Number(daysFromEnrollment) : undefined,
+        allowLateSubmission,
+        lateSubmissionPenaltyPercent: allowLateSubmission ? lateSubmissionPenaltyPercent : undefined,
+        lateSubmissionGracePeriodHrs: allowLateSubmission && lateSubmissionGracePeriodHrs ? Number(lateSubmissionGracePeriodHrs) : undefined,
         maxPoints,
         questionPdfUrl: questionPdfUrl || undefined,
         courseId,
@@ -100,9 +109,30 @@ export default function AddAssignmentForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      {/* Due Date Mode */}
+      <div className="space-y-2">
+        <label className="text-xs font-medium">Due Date</label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setDueDateMode("absolute")}
+            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${dueDateMode === "absolute" ? "bg-primary text-white border-primary" : "bg-paper text-ink border-hairline"}`}
+          >
+            Absolute Date
+          </button>
+          <button
+            type="button"
+            onClick={() => setDueDateMode("days")}
+            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${dueDateMode === "days" ? "bg-primary text-white border-primary" : "bg-paper text-ink border-hairline"}`}
+          >
+            Days from Enrollment
+          </button>
+        </div>
+      </div>
+
+      {dueDateMode === "absolute" ? (
         <div className="space-y-2">
-          <label className="text-xs font-medium">Due Date (optional)</label>
+          <label className="text-xs font-medium">Due Date</label>
           <input
             type="datetime-local"
             value={dueDate}
@@ -110,6 +140,62 @@ export default function AddAssignmentForm({
             className="field"
           />
         </div>
+      ) : (
+        <div className="space-y-2">
+          <label className="text-xs font-medium">Days After Enrollment</label>
+          <input
+            type="number"
+            value={daysFromEnrollment}
+            onChange={(e) => setDaysFromEnrollment(e.target.value)}
+            placeholder="e.g. 10"
+            className="field"
+            min={1}
+          />
+        </div>
+      )}
+
+      {/* Late Submission Toggle */}
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="allowLate"
+          checked={allowLateSubmission}
+          onChange={(e) => setAllowLateSubmission(e.target.checked)}
+          className="h-4 w-4 rounded border-hairline"
+        />
+        <label htmlFor="allowLate" className="text-xs font-medium">
+          Allow Late Submission (with penalty)
+        </label>
+      </div>
+
+      {allowLateSubmission && (
+        <div className="grid grid-cols-2 gap-4 pl-6">
+          <div className="space-y-2">
+            <label className="text-xs font-medium">Penalty %</label>
+            <input
+              type="number"
+              value={lateSubmissionPenaltyPercent}
+              onChange={(e) => setLateSubmissionPenaltyPercent(parseInt(e.target.value) || 25)}
+              min={0}
+              max={100}
+              className="field"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-medium">Grace Period (hrs)</label>
+            <input
+              type="number"
+              value={lateSubmissionGracePeriodHrs}
+              onChange={(e) => setLateSubmissionGracePeriodHrs(e.target.value)}
+              placeholder="Optional"
+              min={1}
+              className="field"
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="text-xs font-medium">Max Points</label>
           <input

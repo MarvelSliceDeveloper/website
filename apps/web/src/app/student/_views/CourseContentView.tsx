@@ -890,7 +890,7 @@ export default function CourseContentView({
     );
   };
 
-  const renderAccordion = () => (
+const renderAccordion = () => (
   <div className="space-y-3 p-3">
     {d.modules.map((module, mIdx) => {
       const isExpanded = expandedModules.has(module.id);
@@ -945,11 +945,13 @@ export default function CourseContentView({
                     lesson.id === selectedLessonId && !selectedRecordingId;
                   const isBookmarked = bookmarks.includes(lesson.id);
                   return (
-                    <li key={lesson.id} className="px-2">
+                    <li key={lesson.id} className="px-2 py-0.5">
                       <button
                         onClick={() => selectLesson(lesson, module.id)}
-                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
-                          active ? "bg-primary/10 font-medium" : "hover:bg-muted/50"
+                        className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                          active
+                            ? "bg-primary/10 border-primary/30 font-medium"
+                            : "border-border hover:bg-muted/50"
                         }`}
                         aria-current={active ? "page" : undefined}
                       >
@@ -1000,11 +1002,13 @@ export default function CourseContentView({
                   const quiz = item.data;
                   const isActive = selectedQuizId === quiz.id;
                   return (
-                    <li key={quiz.id} className="px-2">
+                    <li key={quiz.id} className="px-2 py-0.5">
                       <button
                         onClick={() => selectQuiz(quiz.id)}
-                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
-                          isActive ? "bg-primary/10 font-medium" : "hover:bg-muted/50"
+                        className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                          isActive
+                            ? "bg-primary/10 border-primary/30 font-medium"
+                            : "border-border hover:bg-muted/50"
                         }`}
                         aria-current={isActive ? "page" : undefined}
                       >
@@ -1048,11 +1052,13 @@ export default function CourseContentView({
                   const assignment = item.data;
                   const isActive = selectedAssignmentId === assignment.id;
                   return (
-                    <li key={assignment.id} className="px-2">
+                    <li key={assignment.id} className="px-2 py-0.5">
                       <button
                         onClick={() => selectAssignment(assignment)}
-                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
-                          isActive ? "bg-primary/10 font-medium" : "hover:bg-muted/50"
+                        className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                          isActive
+                            ? "bg-primary/10 border-primary/30 font-medium"
+                            : "border-border hover:bg-muted/50"
                         }`}
                         aria-current={isActive ? "page" : undefined}
                       >
@@ -1092,11 +1098,13 @@ export default function CourseContentView({
                   const practical = item.data;
                   const isActive = selectedPracticalId === practical.id;
                   return (
-                    <li key={practical.id} className="px-2">
+                    <li key={practical.id} className="px-2 py-0.5">
                       <button
                         onClick={() => selectPractical(practical.id)}
-                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
-                          isActive ? "bg-primary/10 font-medium" : "hover:bg-muted/50"
+                        className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                          isActive
+                            ? "bg-primary/10 border-primary/30 font-medium"
+                            : "border-border hover:bg-muted/50"
                         }`}
                         aria-current={isActive ? "page" : undefined}
                       >
@@ -1140,11 +1148,13 @@ export default function CourseContentView({
                       l.resources.map((r) => {
                         const isActive = selectedResource?.url === r.url;
                         return (
-                          <li key={`${l.id}-resource-${r.url}`} className="px-2">
+                          <li key={`${l.id}-resource-${r.url}`} className="px-2 py-0.5">
                             <button
                               onClick={() => selectResource(r.name, r.url)}
-                              className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
-                                isActive ? "bg-primary/10 font-medium" : "hover:bg-muted/50"
+                              className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                                isActive
+                                  ? "bg-primary/10 border-success/30 font-medium"
+                                  : "border-border hover:bg-muted/50"
                               }`}
                               aria-current={isActive ? "page" : undefined}
                             >

@@ -132,7 +132,7 @@ export default function HomeView({
         stats.enrolledCount,
       icon: <IconBook size={20} />,
       onClick: () => navigate({ view: "COURSES" }),
-      iconColor: "blue" as const,
+      iconColor: "indigo" as const,
       trend: { value: 0, label: "this month" },
     },
     {
@@ -141,7 +141,7 @@ export default function HomeView({
       value: pendingAssignments,
       icon: <IconPencil size={20} />,
       onClick: () => navigate({ view: "ASSIGNMENT_OVERDUE" }),
-      iconColor: "orange" as const,
+      iconColor: "red" as const,
       liveBadge: pendingAssignments > 0 ? "Overdue" : undefined,
     },
     {
@@ -150,7 +150,7 @@ export default function HomeView({
       value: pendingQuizzes,
       icon: <IconClock size={20} />,
       onClick: () => navigate({ view: "QUIZ_OVERDUE" }),
-      iconColor: "orange" as const,
+      iconColor: "amber" as const,
       liveBadge: pendingQuizzes > 0 ? "Overdue" : undefined,
     },
     {
