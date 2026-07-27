@@ -3,7 +3,12 @@ import { prisma } from "../../utils/prisma";
 export const instructorService = {
   async getAnalytics(instructorId: string) {
     const batches = await prisma.batch.findMany({
-      where: { instructorId },
+      where: {
+        OR: [
+          { instructorId },
+          { courseMentors: { some: { mentorId: instructorId } } },
+        ],
+      },
       select: { id: true, courseId: true },
     });
 
@@ -167,7 +172,12 @@ export const instructorService = {
 
   async getMyBatches(instructorId: string) {
     return prisma.batch.findMany({
-      where: { instructorId },
+      where: {
+        OR: [
+          { instructorId },
+          { courseMentors: { some: { mentorId: instructorId } } },
+        ],
+      },
       include: {
         course: { select: { id: true, title: true } },
         _count: { select: { enrollments: true, sessions: true } },
@@ -178,7 +188,12 @@ export const instructorService = {
 
   async getMyCourses(instructorId: string) {
     const batches = await prisma.batch.findMany({
-      where: { instructorId },
+      where: {
+        OR: [
+          { instructorId },
+          { courseMentors: { some: { mentorId: instructorId } } },
+        ],
+      },
       select: { courseId: true },
     });
 

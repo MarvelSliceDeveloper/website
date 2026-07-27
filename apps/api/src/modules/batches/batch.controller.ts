@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { handleControllerError } from "../../utils/errors";
+import { prisma } from "../../utils/prisma";
 import {
   batchService,
   CreateBatchSchema,
@@ -55,11 +56,13 @@ export const batchController = {
   async getById(req: AuthRequest, res: Response) {
     try {
       const batch = await batchService.getBatchById(req.params.id);
-      if (
-        req.user?.role === "INSTRUCTOR" &&
-        batch.instructorId !== req.user.userId
-      ) {
-        return res.status(403).json({ error: "Insufficient permissions" });
+      if (req.user?.role === "INSTRUCTOR") {
+        const isMentor = await prisma.batchCourseMentor.findFirst({
+          where: { batchId: req.params.id, mentorId: req.user.userId },
+        });
+        if (batch.instructorId !== req.user.userId && !isMentor) {
+          return res.status(403).json({ error: "Insufficient permissions" });
+        }
       }
       return res.json(batch);
     } catch (err: unknown) {
@@ -96,7 +99,10 @@ export const batchController = {
     try {
       if (req.user?.role === "INSTRUCTOR") {
         const batch = await batchService.getBatchById(req.params.id);
-        if (batch.instructorId !== req.user.userId) {
+        const isMentor = await prisma.batchCourseMentor.findFirst({
+          where: { batchId: req.params.id, mentorId: req.user.userId },
+        });
+        if (batch.instructorId !== req.user.userId && !isMentor) {
           return res.status(403).json({ error: "Insufficient permissions" });
         }
       }

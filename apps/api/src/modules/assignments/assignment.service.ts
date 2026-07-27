@@ -29,10 +29,18 @@ export const assignmentService = {
     batchId: string,
     courseId: string,
   ) {
-    const batch = await prisma.batch.findUnique({ where: { id: batchId } });
+    const batch = await prisma.batch.findUnique({
+      where: { id: batchId },
+      include: { courseMentors: true },
+    });
     if (!batch) throw new Error("Batch not found");
     if (batch.instructorId !== instructorId) {
-      throw new Error("You are not the instructor of this batch");
+      const isMentor = batch.courseMentors?.some(
+        (m) => m.mentorId === instructorId && m.courseId === courseId,
+      );
+      if (!isMentor) {
+        throw new Error("You are not the instructor of this batch");
+      }
     }
     if (batch.courseId !== courseId) {
       // Package-level batch: verify the course is part of the package
@@ -117,7 +125,14 @@ export const assignmentService = {
     if (filters.batchId) where.batchId = filters.batchId;
     if (filters.courseId) where.courseId = filters.courseId;
     if (filters.instructorId) {
-      where.batch = { instructorId: filters.instructorId };
+      where.batch = {
+        OR: [
+          { instructorId: filters.instructorId },
+          {
+            courseMentors: { some: { mentorId: filters.instructorId } },
+          },
+        ],
+      };
     }
     if (filters.studentId) {
       where.batch = {
@@ -205,11 +220,18 @@ export const assignmentService = {
     if (role === "STUDENT" && submission.studentId !== userId) {
       throw new Error("Access denied");
     }
-    if (
-      role === "INSTRUCTOR" &&
-      (submission as any).assignment?.batch?.instructorId !== userId
-    ) {
-      throw new Error("Access denied");
+    if (role === "INSTRUCTOR") {
+      const batch = (submission as any).assignment?.batch;
+      if (batch?.instructorId !== userId) {
+        const isMentor = await prisma.batchCourseMentor.findFirst({
+          where: {
+            batchId: batch?.id,
+            mentorId: userId,
+            courseId: submission.assignment.courseId,
+          },
+        });
+        if (!isMentor) throw new Error("Access denied");
+      }
     }
 
     return submission;
@@ -228,7 +250,16 @@ export const assignmentService = {
     });
     if (!assignment) throw new Error("Assignment not found");
     if (assignment.batch.instructorId !== instructorId) {
-      throw new Error("You are not the instructor of this batch");
+      const isMentor = await prisma.batchCourseMentor.findFirst({
+        where: {
+          batchId: assignment.batchId,
+          mentorId: instructorId,
+          courseId: assignment.courseId,
+        },
+      });
+      if (!isMentor) {
+        throw new Error("You are not the instructor of this batch");
+      }
     }
 
     const {
@@ -281,7 +312,16 @@ export const assignmentService = {
 
     if (!submission) throw new Error("Submission not found");
     if (submission.assignment.batch.instructorId !== instructorId) {
-      throw new Error("You are not the instructor of this batch");
+      const isMentor = await prisma.batchCourseMentor.findFirst({
+        where: {
+          batchId: submission.assignment.batchId,
+          mentorId: instructorId,
+          courseId: submission.assignment.courseId,
+        },
+      });
+      if (!isMentor) {
+        throw new Error("You are not the instructor of this batch");
+      }
     }
 
     const updated = await prisma.assignmentSubmission.update({

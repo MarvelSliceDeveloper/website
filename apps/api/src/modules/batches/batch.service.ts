@@ -207,7 +207,18 @@ export const batchService = {
       where.OR = courseFilter;
     }
     if (filters.status) where.status = filters.status;
-    if (filters.instructorId) where.instructorId = filters.instructorId;
+    if (filters.instructorId) {
+      const mentorOrInstructor = [
+        { instructorId: filters.instructorId },
+        { courseMentors: { some: { mentorId: filters.instructorId } } },
+      ];
+      if (where.OR) {
+        where.AND = [{ OR: where.OR }, { OR: mentorOrInstructor }];
+        delete where.OR;
+      } else {
+        where.OR = mentorOrInstructor;
+      }
+    }
     if (filters.packageId) where.packageId = filters.packageId;
     if (filters.search) {
       where.name = { contains: filters.search, mode: "insensitive" };
@@ -513,7 +524,10 @@ export const batchService = {
         select: { instructorId: true },
       });
       if (!batch) throw new Error("Batch not found");
-      if (batch.instructorId !== authUser.userId)
+      const isMentor = await prisma.batchCourseMentor.findFirst({
+        where: { batchId, mentorId: authUser.userId },
+      });
+      if (batch.instructorId !== authUser.userId && !isMentor)
         throw new Error("You can only remove students from your own batches");
     }
 
