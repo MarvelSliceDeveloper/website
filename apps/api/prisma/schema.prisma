@@ -602,7 +602,8 @@ model AssignmentSubmission {
   feedback          String?                   @db.Text
   gradedAt          DateTime?
   totalScore        Int? // auto-calculated after MCQ grading
-  answerFileUrl     String? // File uploaded by student (for ASSIGNMENT type)
+  comment           String?                   @db.Text // Student's submission note
+  answerFileUrl     String?                   // File uploaded by student (for ASSIGNMENT type)
   assignment        Assignment                @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   student           User                      @relation(fields: [studentId], references: [id], onDelete: Cascade)
 

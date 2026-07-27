@@ -672,7 +672,7 @@ function StudentPortalContent() {
       await api.post("/api/mentorship/tickets", {
         title: topic.length > 50 ? topic.slice(0, 50) + "..." : topic,
         description: topic,
-        courseId,
+        courseId: courseId || undefined,
         preferredDate: preferredDate || undefined,
       });
       toast.success("Mentorship request submitted.");

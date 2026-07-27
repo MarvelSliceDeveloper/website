@@ -235,8 +235,8 @@ export default function StudentNotesPage() {
               label: "Edited This Week",
               value: notesThisWeek,
               icon: IconChevronRight,
-              bg: "bg-accent/15",
-              text: "text-accent",
+              bg: "bg-brand-blue-tint",
+              text: "text-brand-blue",
             },
             {
               label: "Courses",
@@ -421,7 +421,7 @@ export default function StudentNotesPage() {
                                 {note.course.title}
                               </span>
                               {note.moduleId && (
-                                <span className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/5 px-2 py-0.5 text-[10px] font-medium text-accent">
+                                <span className="inline-flex items-center gap-1 rounded-full border border-brand-blue/20 bg-brand-blue-tint px-2 py-0.5 text-[10px] font-medium text-brand-blue">
                                   Module
                                 </span>
                               )}

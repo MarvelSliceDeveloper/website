@@ -15,6 +15,12 @@ import {
   IconFile,
   IconFileSpreadsheet,
   IconChartBar,
+  IconArrowLeft,
+  IconArrowRight,
+  IconListDetails,
+  IconTargetArrow,
+  IconStarFilled,
+  IconClock,
 } from "@tabler/icons-react";
 
 interface QuizOption {
@@ -100,10 +106,10 @@ const TIER_STYLES: Record<
   { stroke: string; text: string; bg: string; border: string; emoji: string }
 > = {
   pass: {
-    stroke: "text-emerald-500",
-    text: "text-emerald-600",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/30",
+    stroke: "text-[#158A5C]",
+    text: "text-[#158A5C]",
+    bg: "bg-[#158A5C]/10",
+    border: "border-[#158A5C]/30",
     emoji: "🎉",
   },
   partial: {
@@ -114,10 +120,10 @@ const TIER_STYLES: Record<
     emoji: "💪",
   },
   fail: {
-    stroke: "text-rose-500",
-    text: "text-rose-600",
-    bg: "bg-rose-500/10",
-    border: "border-rose-500/30",
+    stroke: "text-[#D6293A]",
+    text: "text-[#D6293A]",
+    bg: "bg-[#D6293A]/10",
+    border: "border-[#D6293A]/30",
     emoji: "📚",
   },
 };
@@ -212,29 +218,28 @@ function getOptionState(
   return isSelected ? "selected" : "default";
 }
 
+// Plain radio-style marker (empty ring / filled dot), no numbers, no icons —
+// matches a simple exam-style options list. Card / text handle the row
+// background + label color; ring / dot handle the radio circle itself.
 const OPTION_STATE_STYLES: Record<
   OptionState,
-  { card: string; text: string; marker: string }
+  { card: string; text: string }
 > = {
   default: {
-    card: "border-border/60",
+    card: "border-border/60 hover:border-border",
     text: "text-foreground",
-    marker: "border-border text-muted-foreground",
   },
   selected: {
-    card: "border-primary/60 bg-primary/10",
+    card: "border-primary/60 bg-primary/5",
     text: "text-foreground",
-    marker: "bg-primary border-primary text-primary-foreground",
   },
   correct: {
-    card: "border-emerald-500/60 bg-emerald-500/10",
-    text: "text-emerald-700 dark:text-emerald-300",
-    marker: "bg-emerald-500 border-emerald-500 text-white",
+    card: "border-[#158A5C]/30 bg-[#158A5C]/10",
+    text: "text-[#158A5C]",
   },
   wrong: {
-    card: "border-rose-500/60 bg-rose-500/10",
-    text: "text-rose-700 dark:text-rose-300",
-    marker: "bg-rose-500 border-rose-500 text-white",
+    card: "border-[#D6293A]/30 bg-[#D6293A]/10",
+    text: "text-[#D6293A]",
   },
 };
 
@@ -316,56 +321,82 @@ export default function QuizContent({
     setPhase("intro");
   };
 
-  // ── Intro ────────────────────────────────────────────────────────────
+// ── Intro ────────────────────────────────────────────────────────────
   if (phase === "intro") {
+    const isOverdue = quizData.dueDate
+      ? new Date(quizData.dueDate).getTime() < Date.now()
+      : false;
+
     return (
-      <div className="space-y-5">
-        <button
-          onClick={onBack}
-          className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
-        >
-          ← Back to lesson
-        </button>
+      <div className="max-w-lg mx-auto space-y-6 py-8">
+        <div className="text-center space-y-1.5">
+          <h2 className="text-xl font-bold text-foreground">
+            {quizData.title}
+          </h2>
+          {quizData.description && (
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+              {quizData.description}
+            </p>
+          )}
+        </div>
 
-        <h2 className="text-lg font-bold text-foreground text-center">
-          {quizData.title}
-        </h2>
+        {/* Last attempt result — only shown on retake, so the "Start again"
+            button has context instead of looking identical to a first try. */}
+        {quizResult && (
+          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-2.5 text-sm">
+            <span className="text-muted-foreground">Your last score</span>
+            <span className="font-semibold text-foreground">
+              {Math.round(quizResult.percentage)}%
+            </span>
+          </div>
+        )}
 
-        <div className="bg-muted/40 border border-border rounded-xl p-4">
-          <p className="text-xs font-semibold text-foreground flex items-center gap-1.5 mb-2">
-            <IconClipboardCheck size={14} className="text-amber-500" />
+        <div className="rounded-lg bg-muted/40 border border-border p-5">
+          <p className="text-sm font-semibold text-foreground mb-2">
             Instructions:
           </p>
-          <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside">
+          <ul className="space-y-1.5 text-sm text-foreground list-disc pl-5">
             <li>
               The exam consists of <strong>{totalQuestions}</strong>{" "}
               {totalQuestions === 1 ? "question" : "questions"} and{" "}
               <strong>{passingPercentage}%</strong> is required to pass.
             </li>
             <li>
-              Max points: <strong>{quizData.maxPoints}</strong>
+              This assessment is worth <strong>{quizData.maxPoints}</strong>{" "}
+              {quizData.maxPoints === 1 ? "point" : "points"}.
             </li>
-            {quizData.dueDate && (
+            {quizData.hasAssignment && (
               <li>
-                Due:{" "}
+                This quiz also includes a{" "}
+                <strong>file upload assignment</strong> — have your solution
+                ready before you start.
+              </li>
+            )}
+            {quizData.hasCoding && (
+              <li>
+                This quiz includes a <strong>coding task</strong>.
+              </li>
+            )}
+            {quizData.dueDate && (
+              <li className={isOverdue ? "text-rose-600" : undefined}>
+                {isOverdue ? "Was due" : "Due by"}{" "}
                 <strong>
-                  {new Date(quizData.dueDate).toLocaleDateString("en-IN")}
+                  {new Date(quizData.dueDate).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
                 </strong>
+                {isOverdue && " — this deadline has passed"}.
               </li>
             )}
           </ul>
         </div>
 
-        {quizData.description && (
-          <p className="text-sm text-muted-foreground">
-            {quizData.description}
-          </p>
-        )}
-
-        <div className="flex justify-center pt-2">
+        <div className="flex justify-center">
           <button
             onClick={() => setPhase("active")}
-            className="btn-primary text-sm px-8 py-2.5 rounded-full transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            className="btn-primary text-sm font-semibold px-8 py-2.5 rounded-full"
           >
             {quizResult ? "Start again" : "Start"}
           </button>
@@ -373,7 +404,6 @@ export default function QuizContent({
       </div>
     );
   }
-
   // ── Results ──────────────────────────────────────────────────────────
   if (phase === "results" && quizResult) {
     const tier = getResultTier(quizResult.percentage, passingPercentage);
@@ -428,22 +458,22 @@ export default function QuizContent({
         {/* Score breakdown: correct vs incorrect get their own color/icon so
             the summary matches the per-question markers below. */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 flex items-center gap-2.5">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
+          <div className="rounded-xl border border-[#158A5C]/30 bg-[#158A5C]/10 p-4 flex items-center gap-2.5">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#158A5C] text-white">
               <IconCheck size={15} />
             </span>
             <div>
-              <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+              <p className="text-sm font-semibold text-[#158A5C]">
                 {quizResult.score} correct
               </p>
             </div>
           </div>
-          <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 flex items-center gap-2.5">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-rose-500 text-white">
+          <div className="rounded-xl border border-[#D6293A]/30 bg-[#D6293A]/10 p-4 flex items-center gap-2.5">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#D6293A] text-white">
               <IconX size={15} />
             </span>
             <div>
-              <p className="text-sm font-semibold text-rose-700 dark:text-rose-300">
+              <p className="text-sm font-semibold text-[#D6293A]">
                 {incorrectCount} incorrect
               </p>
             </div>
@@ -474,12 +504,12 @@ export default function QuizContent({
               );
               const wasCorrect = graded?.isCorrect ?? false;
               markerClass = wasCorrect
-                ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-600"
-                : "border-rose-500/60 bg-rose-500/10 text-rose-600";
+                ? "border-[#158A5C]/60 bg-[#158A5C]/10 text-[#158A5C]"
+                : "border-[#D6293A]/60 bg-[#D6293A]/10 text-[#D6293A]";
             } else if (isCurrent) {
               markerClass = "border-primary bg-primary/10 text-primary";
             } else if (isAnswered) {
-              markerClass = "border-emerald-500/60 text-emerald-600";
+              markerClass = "border-[#158A5C]/60 text-[#158A5C]";
             }
 
             return (
@@ -548,7 +578,7 @@ export default function QuizContent({
       {currentQuestion && (
         <div className="space-y-4">
           <div>
-            <p className="text-xs font-semibold text-amber-500 uppercase tracking-wider mb-1">
+            <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">
               Question {currentIndex + 1}
             </p>
             <p className="text-sm font-semibold text-foreground leading-snug">
@@ -572,7 +602,7 @@ export default function QuizContent({
                 )
                 : undefined;
 
-              return currentQuestion.options.map((opt, optIndex) => {
+              return currentQuestion.options.map((opt, optIdx) => {
                 const isSelected =
                   selectedAnswers[currentQuestion.id] === opt.id;
                 const isCorrectAnswer =
@@ -589,36 +619,38 @@ export default function QuizContent({
                 );
                 const styles = OPTION_STATE_STYLES[state];
 
+                const letter = String.fromCharCode(65 + optIdx);
+
                 return (
                   <button
                     key={opt.id}
                     type="button"
                     disabled={quizSubmitted}
                     onClick={() => onAnswerSelect(currentQuestion.id, opt.id)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-lg border text-sm text-left transition-colors ${styles.card} ${styles.text}`}
+                    className={`w-full flex items-center gap-3 p-3.5 rounded-lg border text-sm text-left transition-colors ${styles.card} ${styles.text}`}
                   >
-                    {/* Numbered marker: shows the option number (1, 2, 3…) by
-                        default and while selected; swaps to a check/cross
-                        icon only once the question has been graded. */}
                     <span
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-bold transition-colors ${styles.marker}`}
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold border-2"
+                      style={
+                        state === "default"
+                          ? { borderColor: "#d1d5db", color: "#6b7086" }
+                          : state === "selected"
+                            ? { backgroundColor: "var(--primary)", color: "#fff", borderColor: "var(--primary)" }
+                            : state === "correct"
+                              ? { backgroundColor: "#158A5C", color: "#fff", borderColor: "#158A5C" }
+                              : { backgroundColor: "#D6293A", color: "#fff", borderColor: "#D6293A" }
+                      }
                     >
-                      {state === "correct" ? (
-                        <IconCheck size={13} />
-                      ) : state === "wrong" ? (
-                        <IconX size={13} />
-                      ) : (
-                        optIndex + 1
-                      )}
+                      {letter}
                     </span>
                     <span className="flex-1">{opt.optionText}</span>
                     {quizSubmitted && isCorrectAnswer && (
-                      <span className="text-[10px] font-semibold text-emerald-600 shrink-0">
+                      <span className="text-[10px] font-semibold text-[#158A5C] shrink-0">
                         Correct answer
                       </span>
                     )}
                     {isWrongSelection && (
-                      <span className="text-[10px] font-semibold text-rose-600 shrink-0">
+                      <span className="text-[10px] font-semibold text-[#D6293A] shrink-0">
                         Your answer
                       </span>
                     )}

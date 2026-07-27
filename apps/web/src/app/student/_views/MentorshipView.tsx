@@ -47,8 +47,8 @@ const statusConfig: Record<
   },
   ASSIGNED: {
     label: "Mentor assigned",
-    badgeClasses: "border-accent/30 bg-accent/10 text-accent",
-    iconBg: "bg-accent/15 text-accent",
+    badgeClasses: "border-brand-blue/20 bg-brand-blue-tint text-brand-blue",
+    iconBg: "bg-brand-blue-tint text-brand-blue",
     icon: <IconUserCheck size={16} stroke={1.8} />,
   },
   SCHEDULED: {

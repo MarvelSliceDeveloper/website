@@ -2,19 +2,35 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #111827;
+  --foreground: #1e2230;
   --card: #ffffff;
   --card-hover: #f9fafb;
-  --border: #e5e7eb;
+  --border: #e1e4ea;
   --border-hover: #d1d5db;
-  --primary: #4f46e5;
-  --primary-hover: #6366f1;
-  --accent: #0891b2;
-  --success: #22c55e;
+  --primary: #5b4fe8;
+  --primary-hover: #4f46e5;
+
+  --brand-orange: #ea5b1f;
+  --brand-orange-dark: #c64614;
+  --brand-orange-tint: #fdece3;
+  --brand-blue: #2551d9;
+  --brand-blue-dark: #1b3aa0;
+  --brand-blue-tint: #eaf0fe;
+  --ink: #1e2230;
+  --slate: #5b6272;
+  --mist: #eef0f3;
+  --hairline: #e1e4ea;
+  --paper: #ffffff;
+
+  --success: #1e9e63;
+  --success-text: #178055;
+  --success-tint: #e7f7ef;
+  --danger: #d63a3a;
+  --danger-tint: #fbeaea;
   --warning: #f59e0b;
-  --danger: #ef4444;
   --muted: #6b7280;
-  --muted-foreground: #9ca3af;
+  --muted-foreground: #5b6272;
+  --text-secondary: #8a8fa3;
   --radius: 14px;
 }
 
@@ -22,19 +38,35 @@
 
 [data-theme="light"] {
   --background: #ffffff;
-  --foreground: #111827;
+  --foreground: #1e2230;
   --card: #ffffff;
   --card-hover: #f9fafb;
-  --border: #e5e7eb;
+  --border: #e1e4ea;
   --border-hover: #d1d5db;
-  --primary: #4f46e5;
-  --primary-hover: #6366f1;
-  --accent: #0891b2;
-  --success: #22c55e;
+  --primary: #5b4fe8;
+  --primary-hover: #4f46e5;
+
+  --brand-orange: #ea5b1f;
+  --brand-orange-dark: #c64614;
+  --brand-orange-tint: #fdece3;
+  --brand-blue: #2551d9;
+  --brand-blue-dark: #1b3aa0;
+  --brand-blue-tint: #eaf0fe;
+  --ink: #1e2230;
+  --slate: #5b6272;
+  --mist: #eef0f3;
+  --hairline: #e1e4ea;
+  --paper: #ffffff;
+
+  --success: #1e9e63;
+  --success-text: #178055;
+  --success-tint: #e7f7ef;
+  --danger: #d63a3a;
+  --danger-tint: #fbeaea;
   --warning: #f59e0b;
-  --danger: #ef4444;
   --muted: #6b7280;
-  --muted-foreground: #9ca3af;
+  --muted-foreground: #5b6272;
+  --text-secondary: #8a8fa3;
 }
 
 @theme {
@@ -46,12 +78,26 @@
   --color-border-hover: var(--border-hover);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
-  --color-accent: var(--accent);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-orange-dark: var(--brand-orange-dark);
+  --color-brand-orange-tint: var(--brand-orange-tint);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-blue-dark: var(--brand-blue-dark);
+  --color-brand-blue-tint: var(--brand-blue-tint);
+  --color-ink: var(--ink);
+  --color-slate: var(--slate);
+  --color-mist: var(--mist);
+  --color-hairline: var(--hairline);
+  --color-paper: var(--paper);
   --color-success: var(--success);
-  --color-warning: var(--warning);
+  --color-success-text: var(--success-text);
+  --color-success-tint: var(--success-tint);
   --color-danger: var(--danger);
+  --color-danger-tint: var(--danger-tint);
+  --color-warning: var(--warning);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-text-secondary: var(--text-secondary);
   --font-sans: var(--font-body);
 }
 
@@ -106,7 +152,7 @@ textarea:focus-visible,
 select:focus-visible,
 button:focus-visible,
 a:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--primary) 70%, white);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 
@@ -142,7 +188,7 @@ a:focus-visible {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary), #4338ca);
+  background: var(--brand-orange-dark);
   color: #fff;
   padding: 0.62rem 1rem;
   border-radius: 0.72rem;
@@ -266,6 +312,23 @@ a:focus-visible {
   background: color-mix(in srgb, var(--border-hover) 90%, white);
 }
 
+/* ─── Dark sidebar (course content) ──────────────────────────────────────── */
+
+[data-sidebar-dark] {
+  --background: #111111;
+  --foreground: #ffffff;
+  --card: #111111;
+  --card-hover: #1a1a1a;
+  --border: #2a2a2a;
+  --border-hover: #3a3a3a;
+  --muted: #9ca3af;
+  --muted-foreground: #9ca3af;
+  --primary: #7c73ff;
+  --primary-hover: #5b4fe8;
+  --success: #22c55e;
+  --danger: #ef4444;
+}
+
 /* ─── Student Portal Utilities ───────────────────────────────────────────── */
 
 /* Eyebrow / section label */
@@ -371,38 +434,20 @@ a:focus-visible {
 
 [data-section="admin"] {
   --background: #ffffff;
-  --foreground: #111827;
+  --foreground: #1a1d29;
   --card: #ffffff;
   --card-hover: #f9fafb;
   --border: #e5e7eb;
   --border-hover: #d1d5db;
-  --primary: #4f46e5;
-  --primary-hover: #6366f1;
+  --primary: #5b4fe8;
+  --primary-hover: #4f46e5;
   --accent: #0891b2;
-  --success: #22c55e;
+  --success: #158a5c;
   --warning: #f59e0b;
-  --danger: #ef4444;
+  --danger: #d6293a;
   --muted: #6b7280;
-  --muted-foreground: #9ca3af;
-  --radius: 6px;
-}
-
-/* Flat dark palette for admin when global theme is dark */
-[data-theme="dark"] [data-section="admin"] {
-  --background: #ffffff;
-  --foreground: #111827;
-  --card: #ffffff;
-  --card-hover: #f9fafb;
-  --border: #e5e7eb;
-  --border-hover: #d1d5db;
-  --primary: #4f46e5;
-  --primary-hover: #6366f1;
-  --accent: #0891b2;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --muted: #6b7280;
-  --muted-foreground: #9ca3af;
+  --muted-foreground: #6b7086;
+  --text-secondary: #8a8fa3;
   --radius: 6px;
 }
 

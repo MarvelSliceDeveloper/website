@@ -233,4 +233,8 @@ export interface OverdueAssignment {
   status: "PENDING" | "SUBMITTED";
   type: "QUIZ" | "ASSIGNMENT";
   submissionId?: string | null;
+  grade?: string | null;
+  totalScore?: number | null;
+  feedback?: string | null;
+  submittedAt?: string | null;
 }

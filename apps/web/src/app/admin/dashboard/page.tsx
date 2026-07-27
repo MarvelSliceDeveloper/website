@@ -510,9 +510,15 @@ function AdminDashboard() {
       color: "bg-accent/15 text-accent border border-accent/20",
     },
     {
+      label: "Calendar",
+      href: "/admin/calendar",
+      icon: IconCalendar,
+      color: "bg-primary/15 text-primary border border-primary/20",
+    },
+    {
       label: "View Sessions",
       href: "/admin/sessions",
-      icon: IconCalendar,
+      icon: IconVideo,
       color: "bg-success/15 text-success border border-success/20",
     },
     {

@@ -41,7 +41,7 @@ const STATUS_CONFIG: Record<
   ASSIGNED: {
     label: "Mentor assigned",
     icon: <IconMessageCircle size={12} />,
-    classes: "border-accent/30 bg-accent/10 text-accent",
+    classes: "border-brand-blue/20 bg-brand-blue-tint text-brand-blue",
     border: "border-l-accent/40",
   },
   SCHEDULED: {
@@ -159,7 +159,7 @@ export default function StudentMentorshipPage() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
       {/* Greeting banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-accent/20 bg-linear-to-r from-accent/15 via-accent/5 to-primary/10 p-5 sm:p-6">
+      <div className="relative overflow-hidden rounded-2xl border border-brand-blue/20 bg-linear-to-r from-accent/15 via-accent/5 to-primary/10 p-5 sm:p-6">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(37,192,232,0.12),transparent_60%)]" />
         <div className="relative flex items-center gap-4">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-accent to-cyan-500 text-xl font-bold text-white shadow-lg shadow-accent/30">
@@ -213,8 +213,8 @@ export default function StudentMentorshipPage() {
             label: "Courses",
             value: courses.length,
             icon: IconMessageCircle,
-            bg: "bg-accent/15",
-            text: "text-accent",
+            bg: "bg-brand-blue-tint",
+            text: "text-brand-blue",
           },
         ].map((stat) => (
           <div
@@ -244,10 +244,10 @@ export default function StudentMentorshipPage() {
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="rounded-xl border border-accent/30 bg-accent/5 p-6 space-y-4"
+          className="rounded-xl border border-brand-blue/20 bg-brand-blue-tint p-6 space-y-4"
         >
           <div className="flex items-center gap-2.5 mb-1">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-accent">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-blue-tint text-brand-blue">
               <IconCalendarPlus size={16} />
             </div>
             <p className="font-semibold text-foreground">New Session Request</p>
@@ -324,7 +324,7 @@ export default function StudentMentorshipPage() {
         </div>
         {openTickets.length === 0 ? (
           <div className="glass-card flex flex-col items-center gap-3 py-12 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-blue-tint text-brand-blue">
               <IconMessageCircle size={28} />
             </div>
             <p className="font-semibold text-foreground">No open requests</p>

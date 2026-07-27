@@ -51,7 +51,7 @@ const STATUS_CONFIG: Record<string, { label: string; classes: string }> = {
   },
   IN_PROGRESS: {
     label: "In Progress",
-    classes: "border-accent/30 bg-accent/10 text-accent",
+    classes: "border-brand-blue/20 bg-brand-blue-tint text-brand-blue",
   },
   RESOLVED: {
     label: "Resolved",
@@ -444,7 +444,7 @@ export default function StudentSupportPage() {
   const STAT_ICONS: Record<string, { bg: string; text: string }> = {
     open: { bg: "bg-warning/15", text: "text-warning" },
     resolved: { bg: "bg-success/15", text: "text-success" },
-    total: { bg: "bg-accent/15", text: "text-accent" },
+    total: { bg: "bg-brand-blue-tint", text: "text-brand-blue" },
     messages: { bg: "bg-primary/15", text: "text-primary" },
   };
 

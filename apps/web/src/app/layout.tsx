@@ -25,10 +25,7 @@ const dmSans = DM_Sans({
 
 // ─── Viewport (separate export — Next.js 14+) ─────────────────────────────────
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f0a0a" },
-  ],
+  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5, // allow pinch-zoom for accessibility
@@ -111,13 +108,8 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              (function() {
-                try {
-                  var saved = localStorage.getItem('lms-theme');
-                  var theme = saved === 'light' || saved === 'dark' ? saved : 'light';
-                  document.documentElement.setAttribute('data-theme', theme);
-                } catch (e) {}
-              })();
+              document.documentElement.setAttribute('data-theme', 'light');
+              try { localStorage.setItem('lms-theme', 'light'); } catch (e) {}
             `,
           }}
         />

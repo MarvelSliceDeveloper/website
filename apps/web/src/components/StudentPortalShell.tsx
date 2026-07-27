@@ -7,7 +7,6 @@
  * Key features:
  * - Sticky header with --shell-header-height CSS variable for child height calculations
  * - Notification bell with real-time polling (30s interval), mark read individually/all
- * - Theme toggle (light/dark) with localStorage persistence
  * - Responsive: email hidden on mobile, breadcrumbs hidden below md breakpoint
  *
  * @example
@@ -24,8 +23,6 @@ import {
   IconArrowLeft,
   IconArrowRight,
   IconBell,
-  IconMoon,
-  IconSun,
   IconX,
   IconLogout,
   IconSettings,
@@ -70,7 +67,6 @@ export default function StudentPortalShell({
 }: StudentPortalShellProps) {
   const router = useRouter();
   const [notifOpen, setNotifOpen] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">("light");
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -122,18 +118,6 @@ export default function StudentPortalShell({
       setUnreadCount((prev) => prev + 1);
     }, []),
   );
-
-  useEffect(() => {
-    const saved = window.localStorage.getItem("lms-theme");
-    if (saved === "light" || saved === "dark") {
-      setTheme(saved);
-    }
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    window.localStorage.setItem("lms-theme", theme);
-  }, [theme]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -213,11 +197,9 @@ export default function StudentPortalShell({
                     height={40}
                     className="h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
                   />
-                  <span className="text-base font-extrabold tracking-tight text-foreground sm:text-lg">
-                    <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400">
-                      Marvel
-                    </span>
-                    <span className="text-indigo-500 ml-0.5">Slice</span>
+                  <span className="text-base font-extrabold tracking-tight text-ink sm:text-lg">
+                    <span className="text-brand-blue">Marvel</span>
+                    <span className="text-brand-orange ml-0.5">Slice</span>
                   </span>
                 </div>
               )}
@@ -262,7 +244,7 @@ export default function StudentPortalShell({
               {!hideProfile && (
                 <>
                   <span
-                    className="hidden max-w-[200px] truncate px-1 text-[13px] text-muted-foreground sm:inline"
+                    className="hidden max-w-[200px] truncate px-1 text-[13px] text-slate sm:inline"
                     title={studentEmail}
                   >
                     {studentEmail}
@@ -272,27 +254,11 @@ export default function StudentPortalShell({
                 </>
               )}
 
-              <button
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
-                aria-label={
-                  theme === "dark"
-                    ? "Switch to light mode"
-                    : "Switch to dark mode"
-                }
-              >
-                {theme === "light" ? (
-                  <IconSun size={17} stroke={1.8} />
-                ) : (
-                  <IconMoon size={17} stroke={1.8} />
-                )}
-              </button>
-
               <div ref={notifRef} className="relative">
                 <button
                   id="sp-notif-btn"
                   onClick={() => setNotifOpen((v) => !v)}
-                  className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
+                  className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-mist text-slate transition-colors hover:bg-hairline hover:text-ink"
                   aria-label="Notifications"
                   aria-haspopup="true"
                   aria-expanded={notifOpen}
@@ -390,7 +356,7 @@ export default function StudentPortalShell({
                 <>
                   <button
                     onClick={() => router.push("/student/settings")}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-border-hover hover:text-foreground"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-mist text-slate transition-colors hover:bg-hairline hover:text-ink"
                     aria-label="Settings"
                     title={studentName}
                   >
@@ -399,7 +365,7 @@ export default function StudentPortalShell({
 
                   <button
                     onClick={handleSignOut}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:border-danger/40 hover:text-danger"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-mist text-slate transition-colors hover:bg-danger-tint hover:text-danger"
                     aria-label="Sign out"
                   >
                     <IconLogout size={17} stroke={1.8} />

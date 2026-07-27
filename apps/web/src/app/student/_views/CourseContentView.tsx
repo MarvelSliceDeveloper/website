@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import {
   IconBook2,
@@ -16,6 +16,8 @@ import {
   IconFile,
   IconDownload,
   IconDeviceSpeaker,
+  IconClock,
+  IconCheck,
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
@@ -48,6 +50,66 @@ const StickyNoteWidget = dynamic(
 
 type ContentPanel = "content" | "live";
 
+
+function ResizableSidebar({
+  children,
+  defaultWidth = 320,
+  minWidth = 260,
+  maxWidth = 480,
+}: {
+  children: React.ReactNode;
+  defaultWidth?: number;
+  minWidth?: number;
+  maxWidth?: number;
+}) {
+  const [width, setWidth] = useState(defaultWidth);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+
+  useEffect(() => {
+    function onMouseMove(e: MouseEvent) {
+      if (!isDragging.current || !containerRef.current) return;
+      const left = containerRef.current.getBoundingClientRect().left;
+      const newWidth = Math.min(maxWidth, Math.max(minWidth, e.clientX - left));
+      setWidth(newWidth);
+    }
+    function onMouseUp() {
+      isDragging.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    }
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [minWidth, maxWidth]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative shrink-0 h-full border-r border-border"
+      style={{ width }}
+    >
+      <div className="h-full overflow-y-auto">{children}</div>
+
+      {/* Drag handle */}
+      <div
+        onMouseDown={() => {
+          isDragging.current = true;
+          document.body.style.cursor = "col-resize";
+          document.body.style.userSelect = "none";
+        }}
+        onDoubleClick={() => setWidth(defaultWidth)}
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize sidebar"
+        className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize hover:bg-primary/30 active:bg-primary/50 transition-colors"
+      />
+    </div>
+  );
+}
 function formatMinutes(totalSeconds: number) {
   const mins = Math.round(totalSeconds / 60);
   if (mins < 60) return `${mins}min`;
@@ -527,6 +589,8 @@ export default function CourseContentView({
     );
   }
 
+  const d = data;
+
   // ── Main pane: video + lesson info ──────────────────────────────────────
 
   const renderMain = () => {
@@ -558,7 +622,7 @@ export default function CourseContentView({
     }
 
     if (selectedAssignmentId) {
-      const allModules = data.modules;
+      const allModules = d.modules;
       let foundAssignment:
         | (typeof data.modules)[number]["assignments"][number]
         | null = null;
@@ -583,7 +647,7 @@ export default function CourseContentView({
     }
 
     if (selectedPracticalId) {
-      const allModules = data.modules;
+      const allModules = d.modules;
       let foundPractical: PracticalInfo | null = null;
       for (const mod of allModules) {
         const p = (mod.practicals || []).find(
@@ -599,11 +663,11 @@ export default function CourseContentView({
           <div className="space-y-4">
             <div className="bg-white border border-border/60 rounded-xl p-4 shadow-sm">
               <div className="flex items-center gap-2.5 mb-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
-                  <IconDeviceSpeaker size={17} />
-                </span>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-violet-600">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-blue-tint text-brand-blue">
+                    <IconDeviceSpeaker size={17} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-blue">
                     Hands-On / Practical
                   </p>
                   <p className="text-sm font-medium text-foreground">
@@ -673,7 +737,7 @@ export default function CourseContentView({
                     href={foundPractical.pdfUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-600 transition-colors hover:bg-emerald-500/20"
+                    className="flex items-center gap-1.5 rounded-lg border border-brand-blue/30 bg-brand-blue-tint/50 px-3 py-1.5 text-xs font-medium text-brand-blue transition-colors hover:bg-brand-blue-tint"
                   >
                     <IconDownload size={14} />
                     Open PDF
@@ -729,11 +793,11 @@ export default function CourseContentView({
           {/* Study material header — Udemy-style with download */}
           <div className="bg-white border border-border/60 rounded-xl p-4 mb-4 shadow-sm">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-blue-tint text-brand-blue">
                 <IconFile size={17} />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-blue">
                   Study Material
                 </p>
                 <p className="text-sm font-medium text-foreground truncate">
@@ -745,7 +809,7 @@ export default function CourseContentView({
                 target="_blank"
                 rel="noreferrer"
                 download
-                className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-zinc-500/10 px-3 py-1.5 text-xs font-medium text-emerald-600 transition-colors hover:bg-emerald-500/20 hover:border-emerald-500/50"
+                className="flex items-center gap-1.5 rounded-lg border border-brand-blue/30 bg-brand-blue-tint/50 px-3 py-1.5 text-xs font-medium text-brand-blue transition-colors hover:bg-brand-blue-tint hover:border-brand-blue/50"
               >
                 <IconDownload size={14} />
                 Download
@@ -763,391 +827,388 @@ export default function CourseContentView({
 
     return (
       <>
-        <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-white border border-border/60 shadow-sm">
+        <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-card border border-border shadow-sm">
           <VideoPlayer lesson={selectedLesson} recording={selectedRecording} />
         </div>
-        <div className="px-1">
-          <h2 className="text-base font-semibold text-foreground mt-4">
-            {selectedRecording?.title ??
-              selectedLesson?.title ??
-              selectedModule?.title ??
-              "Select a lesson"}
-          </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {selectedRecording ? (
-              "Recorded live session"
-            ) : (
-              <>
-                {currentLessonIndex >= 0
-                  ? `Lesson ${currentLessonIndex + 1}`
-                  : ""}
-                {currentModuleIndex >= 0
-                  ? ` · Module ${currentModuleIndex + 1}`
-                  : ""}
-                {selectedLesson?.durationSeconds
-                  ? ` · ${Math.floor(selectedLesson.durationSeconds / 60)} min`
-                  : ""}
-              </>
-            )}
-          </p>
-          {data.batch?.instructor && (
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Instructor: {data.batch.instructor}
-            </p>
+    <div className="px-1">
+      <h2 className="text-base font-semibold text-foreground mt-4">
+        {selectedRecording?.title ??
+          selectedLesson?.title ??
+          selectedModule?.title ??
+          "Select a lesson"}
+      </h2>
+      <p className="text-xs text-muted-foreground mt-0.5">
+        {selectedRecording ? (
+          "Recorded live session"
+        ) : (
+          <>
+            {currentLessonIndex >= 0
+              ? `Lesson ${currentLessonIndex + 1}`
+              : ""}
+            {currentModuleIndex >= 0
+              ? ` · Module ${currentModuleIndex + 1}`
+              : ""}
+            {selectedLesson?.durationSeconds
+              ? ` · ${Math.floor(selectedLesson.durationSeconds / 60)} min`
+              : ""}
+          </>
+        )}
+      </p>
+      {d.batch?.instructor && (
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Instructor: {d.batch.instructor}
+        </p>
+      )}
+      {selectedRecording && (
+        <button
+          onClick={clearRecording}
+          className="text-xs font-medium text-primary hover:underline mt-2"
+        >
+          ← Back to current lesson
+        </button>
+      )}
+    </div>
+    <div className="bg-card border border-border rounded-xl p-4 mt-4 shadow-sm">
+      <div className="flex items-center gap-2.5 mb-1.5">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
+          {selectedRecording ? (
+            <IconVideo size={15} />
+          ) : (
+            <IconBook2 size={15} />
           )}
-          {selectedRecording && (
-            <button
-              onClick={clearRecording}
-              className="text-xs font-medium text-primary hover:underline mt-2"
-            >
-              ← Back to current lesson
-            </button>
-          )}
-        </div>
-        <div className="bg-white border border-border/60 rounded-xl p-4 mt-4 shadow-sm">
-          <div className="flex items-center gap-2.5 mb-1.5">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-              {selectedRecording ? (
-                <IconVideo size={15} />
-              ) : (
-                <IconBook2 size={15} />
-              )}
-            </span>
-            <h3 className="text-sm font-semibold text-foreground">
-              {selectedRecording ? "About this session" : "About this lesson"}
-            </h3>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed pl-9.5">
-            {selectedLesson?.description ??
-              "Select a lesson from the sidebar to view details."}
-          </p>
-        </div>
+        </span>
+        <h3 className="text-sm font-semibold text-foreground">
+          {selectedRecording ? "About this session" : "About this lesson"}
+        </h3>
+      </div>
+      <p className="text-xs text-muted-foreground leading-relaxed pl-[38px]">
+        {selectedLesson?.description ??
+          "Select a lesson from the sidebar to view details."}
+      </p>
+    </div>
       </>
     );
   };
 
-  // ── Sidebar: "Course content" / "Live Session" tab pair ────────────────
-
   const renderAccordion = () => (
-    <ul className="pb-3">
-      {data.modules.map((module, mIdx) => {
-        const isExpanded = expandedModules.has(module.id);
-        const isActiveModule = module.id === selectedModuleId;
-        const totalSeconds = module.lessons.reduce(
-          (s, l) => s + (l.durationSeconds ?? 0),
-          0,
-        );
-        const itemCount =
-          module.lessons.length +
-          module.quizzes.length +
-          module.assignments.length +
-          (module.practicals?.length ?? 0);
+  <div className="space-y-3 p-3">
+    {d.modules.map((module, mIdx) => {
+      const isExpanded = expandedModules.has(module.id);
+      const isActiveModule = module.id === selectedModuleId;
+      const totalSeconds = module.lessons.reduce(
+        (s, l) => s + (l.durationSeconds ?? 0),
+        0,
+      );
+      const itemCount =
+        module.lessons.length +
+        module.quizzes.length +
+        module.assignments.length +
+        (module.practicals?.length ?? 0);
 
-        return (
-          <li key={module.id} className="border-b border-border/50">
-            <button
-              onClick={() => toggleModule(module.id)}
-              className={`w-full flex items-start justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/50 ${
-                isActiveModule ? "bg-muted/30" : ""
-              }`}
-            >
-              <span className="min-w-0">
-                <span className="block text-[13px] font-semibold leading-snug text-foreground">
-                  Section {mIdx + 1}: {module.title}
-                </span>
-                <span className="block text-[11px] mt-1 text-muted-foreground">
-                  {itemCount} {itemCount === 1 ? "item" : "items"}
-                  {totalSeconds ? ` · ${formatMinutes(totalSeconds)}` : ""}
-                </span>
+      return (
+        <div
+          key={module.id}
+          className={`rounded-xl border overflow-hidden transition-colors ${
+            isExpanded || isActiveModule ? "border-primary/40" : "border-border"
+          }`}
+        >
+          <button
+            onClick={() => toggleModule(module.id)}
+            className={`w-full flex items-start justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+              isActiveModule ? "bg-primary/5" : ""
+            }`}
+            aria-expanded={isExpanded}
+          >
+            <span className="min-w-0">
+              <span className="block text-[13px] font-semibold leading-snug text-foreground">
+                Module {mIdx + 1} – {module.title}
               </span>
-              <IconChevronDown
-                size={16}
-                className={`shrink-0 mt-0.5 text-muted-foreground transition-transform duration-200 ${
-                  isExpanded ? "rotate-180" : ""
-                }`}
-              />
-            </button>
+              <span className="block text-[11px] mt-0.5 text-muted-foreground">
+                {itemCount} {itemCount === 1 ? "item" : "items"}
+                {totalSeconds ? ` · ${formatMinutes(totalSeconds)}` : ""}
+              </span>
+            </span>
+            <IconChevronDown
+              size={16}
+              className={`shrink-0 mt-0.5 text-muted-foreground transition-transform duration-200 ${
+                isExpanded ? "rotate-180" : ""
+              }`}
+            />
+          </button>
 
-            {isExpanded && (
-              <ul className="pb-2">
-                {buildUnifiedList(module).map((item, idx) => {
-                  if (item.type === "LESSON") {
-                    const lesson = item.data;
-                    const active =
-                      lesson.id === selectedLessonId && !selectedRecordingId;
-                    const isBookmarked = bookmarks.includes(lesson.id);
-                    return (
-                      <li key={lesson.id} className="px-2">
-                        <button
-                          onClick={() => selectLesson(lesson, module.id)}
-                          className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
-                            active ? "bg-primary/15" : "hover:bg-primary/8"
+          {isExpanded && (
+            <ul className="pb-2 pt-1 border-t border-border/60">
+              {buildUnifiedList(module).map((item, idx) => {
+                if (item.type === "LESSON") {
+                  const lesson = item.data;
+                  const active =
+                    lesson.id === selectedLessonId && !selectedRecordingId;
+                  const isBookmarked = bookmarks.includes(lesson.id);
+                  return (
+                    <li key={lesson.id} className="px-2">
+                      <button
+                        onClick={() => selectLesson(lesson, module.id)}
+                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                          active ? "bg-primary/10 font-medium" : "hover:bg-muted/50"
+                        }`}
+                        aria-current={active ? "page" : undefined}
+                      >
+                        <span
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                              active
+                                ? "bg-brand-blue border-brand-blue"
+                                : "border-border bg-transparent"
                           }`}
                         >
+                          <IconVideo
+                            size={11}
+                            className={active ? "text-ink ml-px" : "text-muted-foreground"}
+                          />
+                        </span>
+                        <span className="min-w-0 flex-1">
                           <span
-                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                              active ? "bg-primary" : "bg-muted"
+                            className={`block text-xs truncate ${
+                              active ? "text-foreground font-medium" : "text-muted-foreground"
                             }`}
                           >
-                            <IconVideo
-                              size={11}
-                              className={
-                                active
-                                  ? "text-primary-foreground ml-px"
-                                  : "text-muted-foreground"
-                              }
-                            />
+                            {idx + 1}. {lesson.title}
                           </span>
-                          <span className="min-w-0 flex-1">
-                            <span
-                              className={`block text-xs truncate ${
-                                active
-                                  ? "text-foreground font-medium"
-                                  : "text-muted-foreground"
-                              }`}
-                            >
-                              {idx + 1}. {lesson.title}
-                            </span>
+                        </span>
+                        {lesson.durationSeconds ? (
+                          <span className="text-[10px] shrink-0 text-muted-foreground/70">
+                            {formatMinutes(lesson.durationSeconds)}
                           </span>
-                          {lesson.durationSeconds ? (
-                            <span className="text-[10px] shrink-0 text-muted-foreground/70">
-                              {formatMinutes(lesson.durationSeconds)}
-                            </span>
-                          ) : null}
-                          <span
-                            role="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleBookmark(lesson.id);
-                            }}
-                            className={`text-[10px] shrink-0 ${
-                              isBookmarked ? "text-primary" : "text-transparent"
-                            }`}
-                          >
-                            ●
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  }
-
-                  if (item.type === "QUIZ") {
-                    const quiz = item.data;
-                    const isActive = selectedQuizId === quiz.id;
-                    return (
-                      <li key={quiz.id} className="px-2">
-                        <button
-                          onClick={() => selectQuiz(quiz.id)}
-                          className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
-                            isActive ? "bg-amber-500/15" : "hover:bg-primary/8"
+                        ) : null}
+                        <span
+                          role="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleBookmark(lesson.id);
+                          }}
+                          className={`text-[10px] shrink-0 ${
+                            isBookmarked ? "text-primary" : "text-transparent"
                           }`}
                         >
-                          <span
-                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                              isActive ? "bg-amber-500" : "bg-amber-500/15"
+                          ●
+                        </span>
+                      </button>
+                    </li>
+                  );
+                }
+
+                if (item.type === "QUIZ") {
+                  const quiz = item.data;
+                  const isActive = selectedQuizId === quiz.id;
+                  return (
+                    <li key={quiz.id} className="px-2">
+                      <button
+                        onClick={() => selectQuiz(quiz.id)}
+                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                          isActive ? "bg-primary/10 font-medium" : "hover:bg-muted/50"
+                        }`}
+                        aria-current={isActive ? "page" : undefined}
+                      >
+                        <span
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                            isActive
+                              ? "bg-brand-blue border-brand-blue"
+                              : "border-border bg-transparent"
                             }`}
                           >
                             <IconClipboardCheck
-                              size={12}
-                              className={
-                                isActive ? "text-white" : "text-amber-500"
-                              }
-                            />
+                            size={12}
+                            className={isActive ? "text-ink" : "text-muted-foreground"}
+                          />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span
+                            className={`block text-xs truncate ${
+                              isActive ? "text-foreground font-medium" : "text-muted-foreground"
+                            }`}
+                          >
+                            {idx + 1}. {quiz.title}
                           </span>
-                          <span className="min-w-0 flex-1">
-                            <span
-                              className={`block text-xs truncate ${
-                                isActive
-                                  ? "text-foreground font-medium"
-                                  : "text-muted-foreground"
-                              }`}
-                            >
-                              {idx + 1}. {quiz.title}
-                            </span>
+                        </span>
+                        {quiz.dueDate && new Date(quiz.dueDate).getTime() < Date.now() ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-danger/10 text-danger shrink-0">
+                            <IconClock size={9} />
+                            Due
                           </span>
+                        ) : (
                           <span className="text-[10px] shrink-0 text-muted-foreground/70">
                             {quiz.questionCount}Q
                           </span>
-                        </button>
-                      </li>
-                    );
-                  }
+                        )}
+                      </button>
+                    </li>
+                  );
+                }
 
-                  if (item.type === "ASSIGNMENT") {
-                    const assignment = item.data;
-                    const isActive = selectedAssignmentId === assignment.id;
-                    return (
-                      <li key={assignment.id} className="px-2">
-                        <button
-                          onClick={() => selectAssignment(assignment)}
-                          className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
-                            isActive ? "bg-blue-500/15" : "hover:bg-primary/8"
+                if (item.type === "ASSIGNMENT") {
+                  const assignment = item.data;
+                  const isActive = selectedAssignmentId === assignment.id;
+                  return (
+                    <li key={assignment.id} className="px-2">
+                      <button
+                        onClick={() => selectAssignment(assignment)}
+                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                          isActive ? "bg-primary/10 font-medium" : "hover:bg-muted/50"
+                        }`}
+                        aria-current={isActive ? "page" : undefined}
+                      >
+                        <span
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                            isActive
+                              ? "bg-brand-blue border-brand-blue"
+                              : "border-border bg-transparent"
                           }`}
                         >
+                          <IconFileSpreadsheet
+                            size={12}
+                            className={isActive ? "text-ink" : "text-muted-foreground"}
+                          />
+                        </span>
+                        <span className="min-w-0 flex-1">
                           <span
-                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                              isActive ? "bg-blue-500" : "bg-blue-500/15"
+                            className={`block text-xs truncate ${
+                              isActive ? "text-foreground font-medium" : "text-muted-foreground"
                             }`}
                           >
-                            <IconFileSpreadsheet
-                              size={12}
-                              className={
-                                isActive ? "text-white" : "text-blue-500"
-                              }
-                            />
+                            {idx + 1}. {assignment.title}
                           </span>
-                          <span className="min-w-0 flex-1">
-                            <span
-                              className={`block text-xs truncate ${
-                                isActive
-                                  ? "text-foreground font-medium"
-                                  : "text-muted-foreground"
-                              }`}
-                            >
-                              {idx + 1}. {assignment.title}
-                            </span>
-                          </span>
-                          <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
-                            {new Date(assignment.dueDate).toLocaleDateString(
-                              "en-IN",
-                              { day: "numeric", month: "short" },
-                            )}
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  }
+                        </span>
+                        <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
+                          {new Date(assignment.dueDate).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                          })}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                }
 
-                  if (item.type === "PRACTICAL") {
-                    const practical = item.data;
-                    const isActive = selectedPracticalId === practical.id;
-                    return (
-                      <li key={practical.id} className="px-2">
-                        <button
-                          onClick={() => selectPractical(practical.id)}
-                          className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
-                            isActive ? "bg-violet-500/15" : "hover:bg-primary/8"
+                if (item.type === "PRACTICAL") {
+                  const practical = item.data;
+                  const isActive = selectedPracticalId === practical.id;
+                  return (
+                    <li key={practical.id} className="px-2">
+                      <button
+                        onClick={() => selectPractical(practical.id)}
+                        className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                          isActive ? "bg-primary/10 font-medium" : "hover:bg-muted/50"
+                        }`}
+                        aria-current={isActive ? "page" : undefined}
+                      >
+                        <span
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                            isActive
+                              ? "bg-brand-blue border-brand-blue"
+                              : "border-border bg-transparent"
                           }`}
                         >
+                          <IconDeviceSpeaker
+                            size={12}
+                            className={isActive ? "text-ink" : "text-muted-foreground"}
+                          />
+                        </span>
+                        <span className="min-w-0 flex-1">
                           <span
-                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                              isActive ? "bg-violet-500" : "bg-violet-500/15"
+                            className={`block text-xs truncate ${
+                              isActive ? "text-foreground font-medium" : "text-muted-foreground"
                             }`}
                           >
-                            <IconDeviceSpeaker
-                              size={12}
-                              className={
-                                isActive ? "text-white" : "text-violet-500"
-                              }
-                            />
+                            {idx + 1}. {practical.title}
                           </span>
-                          <span className="min-w-0 flex-1">
-                            <span
-                              className={`block text-xs truncate ${
-                                isActive
-                                  ? "text-foreground font-medium"
-                                  : "text-muted-foreground"
+                        </span>
+                        <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
+                          Practical
+                        </span>
+                      </button>
+                    </li>
+                  );
+                }
+
+                return null;
+              })}
+
+              {module.lessons.some((l) => l.resources && l.resources.length > 0) && (
+                <>
+                  {module.lessons
+                    .filter((l) => l.resources && l.resources.length > 0)
+                    .flatMap((l) =>
+                      l.resources.map((r) => {
+                        const isActive = selectedResource?.url === r.url;
+                        return (
+                          <li key={`${l.id}-resource-${r.url}`} className="px-2">
+                            <button
+                              onClick={() => selectResource(r.name, r.url)}
+                              className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                                isActive ? "bg-primary/10 font-medium" : "hover:bg-muted/50"
                               }`}
+                              aria-current={isActive ? "page" : undefined}
                             >
-                              {idx + 1}. {practical.title}
-                            </span>
-                          </span>
-                          <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
-                            Practical
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  }
-
-                  return null;
-                })}
-
-                {module.lessons.some(
-                  (l) => l.resources && l.resources.length > 0,
-                ) && (
-                  <>
-                    {module.lessons
-                      .filter((l) => l.resources && l.resources.length > 0)
-                      .flatMap((l) =>
-                        l.resources.map((r) => {
-                          const isActive = selectedResource?.url === r.url;
-                          return (
-                            <li
-                              key={`${l.id}-resource-${r.url}`}
-                              className="px-2"
-                            >
-                              <button
-                                onClick={() => selectResource(r.name, r.url)}
-                                className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors ${
+                              <span
+                                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
                                   isActive
-                                    ? "bg-emerald-500/15"
-                                    : "hover:bg-primary/8"
+                                    ? "bg-success border-success"
+                                    : "border-border bg-transparent"
                                 }`}
                               >
+                                <IconFile
+                                  size={12}
+                                  className={isActive ? "text-ink" : "text-muted-foreground"}
+                                />
+                              </span>
+                              <span className="min-w-0 flex-1">
                                 <span
-                                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                                    isActive
-                                      ? "bg-emerald-500"
-                                      : "bg-emerald-500/15"
+                                  className={`block text-xs truncate ${
+                                    isActive ? "text-foreground font-medium" : "text-muted-foreground"
                                   }`}
                                 >
-                                  <IconFile
-                                    size={12}
-                                    className={
-                                      isActive
-                                        ? "text-white"
-                                        : "text-emerald-500"
-                                    }
-                                  />
+                                  {r.name}
                                 </span>
-                                <span className="min-w-0 flex-1">
-                                  <span
-                                    className={`block text-xs truncate ${
-                                      isActive
-                                        ? "text-foreground font-medium"
-                                        : "text-muted-foreground"
-                                    }`}
-                                  >
-                                    {r.name}
-                                  </span>
-                                </span>
-                              </button>
-                            </li>
-                          );
-                        }),
-                      )}
-                  </>
-                )}
-              </ul>
-            )}
-          </li>
-        );
-      })}
-    </ul>
-  );
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      }),
+                    )}
+                </>
+              )}
+            </ul>
+          )}
+        </div>
+      );
+    })}
+  </div>
+);
 
   const renderContentPanel = () => (
     <div className="flex flex-col h-full">
       <div className="flex items-center border-b border-border shrink-0">
         <button
           onClick={() => setContentPanel("content")}
-          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-3.5 border-b-2 transition-colors ${
+          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-3.5 border-b-2 transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-[-2px] ${
             contentPanel === "content"
-              ? "border-foreground text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+              ? "border-brand-orange text-black"
+              : "border-transparent text-slate hover:text-ink"
           }`}
+          role="tab"
+          aria-selected={contentPanel === "content"}
         >
           <IconBook2 size={14} />
           Course content
         </button>
         <button
           onClick={() => setContentPanel("live")}
-          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-3.5 border-b-2 transition-colors ${
+          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-3.5 border-b-2 transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-[-2px] ${
             contentPanel === "live"
-              ? "border-danger text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground"
+              ? "border-brand-orange text-black"
+              : "border-transparent text-slate hover:text-ink"
           }`}
+          role="tab"
+          aria-selected={contentPanel === "live"}
         >
           <IconCalendarEvent
             size={14}
@@ -1171,7 +1232,7 @@ export default function CourseContentView({
                   <span className="w-1.5 h-1.5 rounded-full bg-danger animate-pulse" />
                   Live Now
                 </p>
-                {data.sessions
+                {d.sessions
                   .filter((s) => s.isLive)
                   .map((session) => (
                     <div key={session.id} className="flex items-start gap-2.5">
@@ -1216,25 +1277,35 @@ export default function CourseContentView({
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide px-4 pt-4 pb-2">
                 Recorded sessions
               </p>
-              {data.recordings.length === 0 ? (
+              {d.recordings.length === 0 ? (
                 <p className="text-xs text-muted-foreground text-center py-6">
                   No past sessions recorded yet
                 </p>
               ) : (
                 <ul className="pb-3">
-                  {data.recordings.map((rec) => {
+                  {d.recordings.map((rec) => {
                     const active = rec.id === selectedRecordingId;
                     return (
                       <li key={rec.id} className="px-2">
                         <button
                           onClick={() => selectRecording(rec.id)}
-                          className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
-                            active ? "bg-primary/15" : "hover:bg-primary/8"
+                          className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                            active ? "bg-white/10 font-medium" : "hover:bg-white/5"
                           }`}
+                          aria-current={active ? "page" : undefined}
+                          style={active ? { boxShadow: "inset 3px 0 0 #7C73FF" } : undefined}
                         >
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                          <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white/15 text-muted-foreground">
                             <IconVideo size={16} />
+                            {rec.isCompleted && (
+                              <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-success text-white">
+                                <IconCheck size={8} />
+                              </span>
+                            )}
                           </span>
+                          {rec.isCompleted && (
+                            <span className="sr-only">Completed</span>
+                          )}
                           <span className="min-w-0 flex-1">
                             <span
                               className={`block text-xs font-medium truncate ${
@@ -1303,11 +1374,11 @@ export default function CourseContentView({
                 else if (prev.type === "PRACTICAL")
                   selectPractical(prev.data.id);
               } else {
-                const modIdx = data.modules.findIndex(
+                const modIdx = d.modules.findIndex(
                   (m) => m.id === selectedModuleId,
                 );
                 if (modIdx > 0) {
-                  const prevMod = data.modules[modIdx - 1];
+                  const prevMod = d.modules[modIdx - 1];
                   const prevUnified = buildUnifiedList(prevMod);
                   if (prevUnified.length > 0) {
                     const last = prevUnified[prevUnified.length - 1];
@@ -1327,7 +1398,7 @@ export default function CourseContentView({
             }}
             disabled={(() => {
               if (!selectedModule || selectedResource) return true;
-              const unified = buildUnifiedList(selectedModule);
+              const unified = buildUnifiedList(selectedModule!);
               const curIdx = unified.findIndex(
                 (item) =>
                   (item.type === "LESSON" &&
@@ -1339,21 +1410,21 @@ export default function CourseContentView({
                     item.data.id === selectedPracticalId),
               );
               const isAtFirstInModule = curIdx <= 0;
-              const modIdx = data.modules.findIndex(
+              const modIdx = d.modules.findIndex(
                 (m) => m.id === selectedModuleId,
               );
               return isAtFirstInModule && modIdx <= 0;
             })()}
-            className="flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 disabled:opacity-40 disabled:hover:text-muted-foreground disabled:hover:border-border transition-colors"
+            className="flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 disabled:opacity-40 disabled:hover:text-muted-foreground disabled:hover:border-border transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
           >
             <IconArrowLeft size={13} /> Previous
           </button>
           <div className="flex-1" />
           <span className="text-xs text-muted-foreground">
-            {selectedModule &&
-              !selectedResource &&
-              (() => {
-                const unified = buildUnifiedList(selectedModule);
+              {selectedModule &&
+                !selectedResource &&
+                (() => {
+                  const unified = buildUnifiedList(selectedModule!);
                 const curIdx = unified.findIndex(
                   (item) =>
                     (item.type === "LESSON" &&
@@ -1372,11 +1443,12 @@ export default function CourseContentView({
           <div className="flex-1" />
           <button
             onClick={() => setShowStickyWidget((v) => !v)}
-            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border transition-colors ${
+            className={`flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
               showStickyWidget
                 ? "border-primary/50 bg-primary/15 text-primary"
                 : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
             }`}
+            aria-pressed={showStickyWidget}
           >
             <IconPencil size={13} />{" "}
             {showStickyWidget ? "Close Notes" : "Take Note"}
@@ -1405,11 +1477,11 @@ export default function CourseContentView({
                 else if (next.type === "PRACTICAL")
                   selectPractical(next.data.id);
               } else {
-                const modIdx = data.modules.findIndex(
+                const modIdx = d.modules.findIndex(
                   (m) => m.id === selectedModuleId,
                 );
-                if (modIdx >= 0 && modIdx < data.modules.length - 1) {
-                  const nextMod = data.modules[modIdx + 1];
+                if (modIdx >= 0 && modIdx < d.modules.length - 1) {
+                  const nextMod = d.modules[modIdx + 1];
                   const nextUnified = buildUnifiedList(nextMod);
                   if (nextUnified.length > 0) {
                     const first = nextUnified[0];
@@ -1429,7 +1501,7 @@ export default function CourseContentView({
             }}
             disabled={(() => {
               if (!selectedModule || selectedResource) return true;
-              const unified = buildUnifiedList(selectedModule);
+              const unified = buildUnifiedList(selectedModule!);
               const curIdx = unified.findIndex(
                 (item) =>
                   (item.type === "LESSON" &&
@@ -1442,19 +1514,19 @@ export default function CourseContentView({
               );
               const isAtLastInModule =
                 curIdx >= 0 && curIdx >= unified.length - 1;
-              const modIdx = data.modules.findIndex(
+              const modIdx = d.modules.findIndex(
                 (m) => m.id === selectedModuleId,
               );
-              return isAtLastInModule && modIdx >= data.modules.length - 1;
+              return isAtLastInModule && modIdx >= d.modules.length - 1;
             })()}
-            className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg text-primary-foreground bg-primary hover:opacity-90 disabled:opacity-40 transition-opacity"
+            className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg text-primary-foreground bg-primary hover:opacity-90 disabled:opacity-40 transition-opacity focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
           >
             Continue <IconArrowRight size={13} />
           </button>
         </div>
       </div>
 
-      <div className="w-115 shrink-0 border-l border-border bg-card overflow-hidden">
+      <div className="w-115 shrink-0 border-l border-hairline bg-paper overflow-hidden">
         {renderContentPanel()}
       </div>
 
@@ -1469,7 +1541,8 @@ export default function CourseContentView({
 
       <button
         onClick={() => setShowStickyWidget((v) => !v)}
-        className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl transition-transform hover:scale-105 active:scale-95"
+        className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl transition-transform hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-[#a9a3f8] focus-visible:outline-offset-2"
+        aria-label={showStickyWidget ? "Close sticky notes" : "Open sticky notes"}
         title={showStickyWidget ? "Close sticky notes" : "Open sticky notes"}
       >
         <IconNotes size={22} />

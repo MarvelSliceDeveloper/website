@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
+import RichEditor from "@/components/editor/RichEditor";
 import { IconX } from "@tabler/icons-react";
 
 interface AddAssignmentFormProps {
@@ -78,11 +79,11 @@ export default function AddAssignmentForm({
 
       <div className="space-y-2">
         <label className="text-xs font-medium">Description (optional)</label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+        <RichEditor
+          content={description}
+          onChange={setDescription}
           placeholder="Enter description"
-          className="field min-h-[80px]"
+          minHeight="150px"
         />
       </div>
 

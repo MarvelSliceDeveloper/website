@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { IconPlus, IconX } from "@tabler/icons-react";
+import RichEditor from "@/components/editor/RichEditor";
 import type { Course, CourseFormData } from "./types";
 
 export default function CourseDetailsTab({
@@ -116,17 +117,16 @@ export default function CourseDetailsTab({
         <label className="mb-1.5 block text-sm font-medium text-foreground">
           Description
         </label>
-        <textarea
-          value={form.description}
-          onChange={(e) =>
+        <RichEditor
+          content={form.description}
+          onChange={(html) =>
             setForm((p: CourseFormData) => ({
               ...p,
-              description: e.target.value,
+              description: html,
             }))
           }
-          className="field min-h-[100px] resize-y"
-          required
-          minLength={10}
+          placeholder="Enter course description..."
+          minHeight="150px"
         />
       </div>
 

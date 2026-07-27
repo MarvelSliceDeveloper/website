@@ -4,6 +4,7 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { IconPlus, IconX, IconTrash } from "@tabler/icons-react";
+import RichEditor from "@/components/editor/RichEditor";
 
 interface QuizOption {
   label: string;
@@ -433,11 +434,11 @@ export default function AddQuizForm({
             <label className="text-xs font-medium">
               Assignment Instructions
             </label>
-            <textarea
-              value={assignmentInstructions}
-              onChange={(e) => setAssignmentInstructions(e.target.value)}
+            <RichEditor
+              content={assignmentInstructions}
+              onChange={setAssignmentInstructions}
               placeholder="Enter detailed assignment/project instructions for student submission..."
-              className="field min-h-[90px]"
+              minHeight="150px"
             />
           </div>
           <div className="space-y-1">
@@ -465,11 +466,11 @@ export default function AddQuizForm({
             <label className="text-xs font-medium">
               Coding Problem Description
             </label>
-            <textarea
-              value={codingPrompt}
-              onChange={(e) => setCodingPrompt(e.target.value)}
+            <RichEditor
+              content={codingPrompt}
+              onChange={setCodingPrompt}
               placeholder="Describe the coding challenge and algorithm requirements..."
-              className="field min-h-[90px]"
+              minHeight="150px"
             />
           </div>
 

@@ -13,6 +13,7 @@ import {
   IconRefresh,
 } from "@tabler/icons-react";
 import type { Lesson } from "./types";
+import RichEditor from "@/components/editor/RichEditor";
 
 export default function LessonCard({
   lesson,
@@ -162,14 +163,13 @@ export default function LessonCard({
               className="field text-xs"
               autoFocus
             />
-            <input
-              type="text"
-              value={editForm.description}
-              onChange={(e) =>
-                setEditForm((p) => ({ ...p, description: e.target.value }))
+            <RichEditor
+              content={editForm.description}
+              onChange={(html) =>
+                setEditForm((p) => ({ ...p, description: html }))
               }
               placeholder="Description"
-              className="field text-[11px]"
+              minHeight="150px"
             />
             <div className="flex items-center gap-1.5">
               <div className="relative flex-1">

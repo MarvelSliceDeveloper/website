@@ -6,8 +6,6 @@ import {
   IconBell,
   IconSettings,
   IconX,
-  IconSun,
-  IconMoon,
   IconEye,
   IconArrowLeft,
 } from "@tabler/icons-react";
@@ -30,7 +28,6 @@ export default function Header({
   inboxHref?: string;
 }) {
   const router = useRouter();
-  const [theme, setTheme] = useState<"dark" | "light">("light");
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -77,22 +74,6 @@ export default function Header({
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
-
-  useEffect(() => {
-    const saved = window.localStorage.getItem("lms-theme");
-    if (saved === "light" || saved === "dark") {
-      setTheme(saved);
-      document.documentElement.setAttribute("data-theme", saved);
-    }
-  }, []);
-
-  // Toggle between light and dark theme
-  const toggleTheme = () => {
-    const nextTheme = theme === "dark" ? "light" : "dark";
-    setTheme(nextTheme);
-    document.documentElement.setAttribute("data-theme", nextTheme);
-    window.localStorage.setItem("lms-theme", nextTheme);
-  };
 
   // Mark all notifications as read
   const markAllRead = async () => {
@@ -230,19 +211,6 @@ export default function Header({
             aria-label="Settings"
           >
             <IconSettings size={17} stroke={1.8} />
-          </button>
-          <button
-            onClick={toggleTheme}
-            className="flex h-8 w-8 items-center justify-center text-muted hover:text-foreground hover:bg-card-hover transition-colors"
-            aria-label={
-              theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
-            }
-          >
-            {theme === "light" ? (
-              <IconSun size={16} stroke={1.8} />
-            ) : (
-              <IconMoon size={16} stroke={1.8} />
-            )}
           </button>
         </div>
       </div>

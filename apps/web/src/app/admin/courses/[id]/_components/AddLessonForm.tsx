@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { IconPlus, IconRefresh } from "@tabler/icons-react";
+import RichEditor from "@/components/editor/RichEditor";
 
 export default function AddLessonForm({
   moduleId,
@@ -93,12 +94,11 @@ export default function AddLessonForm({
             className="field text-xs"
             required
           />
-          <input
-            type="text"
-            value={desc}
-            onChange={(e) => setDesc(e.target.value)}
+          <RichEditor
+            content={desc}
+            onChange={setDesc}
             placeholder="Short description (optional)"
-            className="field text-xs"
+            minHeight="150px"
           />
           <div className="relative">
             <input

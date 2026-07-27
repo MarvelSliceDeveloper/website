@@ -163,11 +163,13 @@ export const assignmentController = {
         return res.status(400).json({ error: "No answer file uploaded" });
       }
 
+      const comment = req.body.comment?.trim() || undefined;
       const fileUrl = buildAssignmentFileUrl(req, req.file.filename);
       const submission = await assignmentService.submitFileAnswer(
         req.user.userId,
         req.params.id,
         fileUrl,
+        comment,
       );
 
       return res.status(200).json({ submission });

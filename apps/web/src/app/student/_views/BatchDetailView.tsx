@@ -59,7 +59,7 @@ const sessionStatusConfig = {
   },
   UPCOMING: {
     label: "📅 UPCOMING",
-    classes: "border-accent/30 bg-accent/10 text-accent",
+    classes: "border-brand-blue/20 bg-brand-blue-tint text-brand-blue",
   },
   PAST: { label: "Past", classes: "border-border bg-card text-muted" },
 };

@@ -21,6 +21,7 @@ const DEFAULT_OPTIONS: PlyrOpts = {
     "duration",
     "mute",
     "volume",
+    "captions",
     "settings",
     "pip",
     "airplay",
@@ -236,7 +237,14 @@ export function VideoPlayer({ lesson, recording }: Props) {
           {recording.title}
         </div>
         <div className="absolute bottom-0 left-0 right-0 p-3">
-          <div className="mb-2.5 h-1 overflow-hidden rounded-full bg-white/20">
+          <div
+            className="mb-2.5 h-1 overflow-hidden rounded-full bg-white/20"
+            role="slider"
+            aria-valuenow={recording.watchedPercent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Video progress"
+          >
             <div
               className="h-full rounded-full bg-primary transition-all"
               style={{ width: `${recording.watchedPercent}%` }}

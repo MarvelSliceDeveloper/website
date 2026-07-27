@@ -4,6 +4,7 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { IconX, IconExternalLink, IconGripVertical } from "@tabler/icons-react";
+import RichEditor from "@/components/editor/RichEditor";
 
 interface Assignment {
   id: string;
@@ -126,11 +127,11 @@ export default function AssignmentCard({
 
         <div className="space-y-2">
           <label className="text-xs font-medium">Description</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+          <RichEditor
+            content={description}
+            onChange={setDescription}
             placeholder="Enter description"
-            className="field min-h-[80px]"
+            minHeight="150px"
           />
         </div>
 

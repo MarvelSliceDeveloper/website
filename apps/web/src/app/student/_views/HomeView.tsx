@@ -35,6 +35,7 @@ import type {
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import StudentStatTiles from "@/components/student/StudentStatTiles";
+import LiveSessionBanner from "@/components/LiveSessionBanner";
 
 interface HomeViewProps {
   stats: DashboardStats;
@@ -90,9 +91,13 @@ export default function HomeView({
   const [referralEmail, setReferralEmail] = useState("");
   const [referralPhone, setReferralPhone] = useState("");
 
+  const [mentorQueryType, setMentorQueryType] = useState<
+    "course" | "generic" | "career" | "other"
+  >("course");
   const [mentorCourseId, setMentorCourseId] = useState(
     enrolledCourses[0]?.id ?? "",
   );
+  const [mentorOtherQuery, setMentorOtherQuery] = useState("");
   const [mentorTopic, setMentorTopic] = useState("");
   const [mentorDateTime, setMentorDateTime] = useState("");
   const [mentorSubmitting, setMentorSubmitting] = useState(false);
@@ -126,9 +131,8 @@ export default function HomeView({
         enrolledCourses.filter((c) => c.status !== "COMPLETED").length ||
         stats.enrolledCount,
       icon: <IconBook size={20} />,
-      gradient: "",
       onClick: () => navigate({ view: "COURSES" }),
-      iconColor: "primary",
+      iconColor: "blue" as const,
       trend: { value: 0, label: "this month" },
     },
     {
@@ -136,9 +140,8 @@ export default function HomeView({
       label: "Assignment Overdue",
       value: pendingAssignments,
       icon: <IconPencil size={20} />,
-      gradient: "",
       onClick: () => navigate({ view: "ASSIGNMENT_OVERDUE" }),
-      iconColor: "danger",
+      iconColor: "orange" as const,
       liveBadge: pendingAssignments > 0 ? "Overdue" : undefined,
     },
     {
@@ -146,9 +149,8 @@ export default function HomeView({
       label: "Quiz Overdue",
       value: pendingQuizzes,
       icon: <IconClock size={20} />,
-      gradient: "",
       onClick: () => navigate({ view: "QUIZ_OVERDUE" }),
-      iconColor: "accent",
+      iconColor: "orange" as const,
       liveBadge: pendingQuizzes > 0 ? "Overdue" : undefined,
     },
     {
@@ -158,9 +160,8 @@ export default function HomeView({
         enrolledCourses.filter((c) => c.status === "COMPLETED").length ||
         stats.completedCount,
       icon: <IconCertificate size={20} />,
-      gradient: "",
       onClick: () => navigate({ view: "COURSE_COMPLETED" }),
-      iconColor: "success",
+      iconColor: "green" as const,
       trend: { value: stats.completedCount > 0 ? 5 : 0, label: "this month" },
     },
   ];
@@ -197,6 +198,30 @@ export default function HomeView({
 
   return (
     <div className="sp-view-enter space-y-6 motion-reduce:animate-none">
+      {/* ── Live / Upcoming Session Banner ───────────────────────────────── */}
+      {liveSessionsToday
+        .filter(
+          (s) =>
+            s.status === "LIVE" ||
+            (s.status === "UPCOMING" &&
+              new Date(s.scheduledAt).getTime() - Date.now() <
+                30 * 60 * 1000),
+        )
+        .slice(0, 1)
+        .map((s) => (
+          <LiveSessionBanner
+            key={s.id}
+            session={{
+              title: s.title,
+              courseName: s.courseTitle,
+              startTime: s.scheduledAt,
+              endTime: s.endDateTime || s.scheduledAt,
+              joinUrl: s.joinUrl,
+            }}
+            onJoin={() => handleJoinSession(s)}
+          />
+        ))}
+
       {/* ── Stat Tiles (full width) ──────────────────────────────────────── */}
       <StudentStatTiles tiles={statTiles} />
 
@@ -208,61 +233,49 @@ export default function HomeView({
         <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-5">
           {[
             {
+              label: "Calendar",
+              sub: "View schedule",
+              icon: <IconCalendar size={20} />,
+              color: "blue",
+              onClick: () => navigate({ view: "CALENDAR" }),
+            },
+            {
               label: "Study Notes",
               sub: "Review saved notes",
               icon: <IconNotes size={20} />,
-              color: "indigo",
+              color: "blue",
               onClick: () => router.push("/student/notes"),
             },
             {
               label: "Certificates",
               sub: "View credentials",
               icon: <IconCertificate size={20} />,
-              color: "sky",
+              color: "blue",
               onClick: () => navigate({ view: "CERTIFICATES" }),
-            },
-            {
-              label: "Mentorship",
-              sub: "Book 1-on-1 sessions",
-              icon: <IconHeart size={20} />,
-              color: "violet",
-              onClick: () => navigate({ view: "MENTORSHIP" }),
             },
             {
               label: "Inbox Messages",
               sub: "Check alerts & mails",
               icon: <IconMail size={20} />,
-              color: "emerald",
+              color: "blue",
               onClick: () => router.push("/student/inbox"),
             },
             {
               label: "Support Center",
               sub: "Get help from staff",
               icon: <IconHelp size={20} />,
-              color: "rose",
+              color: "orange",
               onClick: () => router.push("/student/support"),
             },
           ].map((action, idx) => {
             const colorClasses = {
-              indigo:
-                "border-indigo-500/25 bg-indigo-500/8 hover:bg-indigo-500/15 hover:border-indigo-500/45 text-indigo-600 dark:text-indigo-400 hover:shadow-indigo-500/10",
-              sky: "border-sky-500/25 bg-sky-500/8 hover:bg-sky-500/15 hover:border-sky-500/45 text-sky-600 dark:text-sky-400 hover:shadow-sky-500/10",
-              violet:
-                "border-violet-500/25 bg-violet-500/8 hover:bg-violet-500/15 hover:border-violet-500/45 text-violet-600 dark:text-violet-400 hover:shadow-violet-500/10",
-              emerald:
-                "border-emerald-500/25 bg-emerald-500/8 hover:bg-emerald-500/15 hover:border-emerald-500/45 text-emerald-600 dark:text-emerald-400 hover:shadow-emerald-500/10",
-              rose: "border-rose-500/25 bg-rose-500/8 hover:bg-rose-500/15 hover:border-rose-500/45 text-rose-600 dark:text-rose-400 hover:shadow-rose-500/10",
+              blue: "border-brand-blue/20 bg-brand-blue-tint/40 hover:bg-brand-blue-tint hover:border-brand-blue/40 text-brand-blue",
+              orange: "border-brand-orange/20 bg-brand-orange-tint/40 hover:bg-brand-orange-tint hover:border-brand-orange/40 text-brand-orange",
             }[action.color];
 
             const iconBg = {
-              indigo:
-                "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20",
-              sky: "bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/20",
-              violet:
-                "bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-500/20",
-              emerald:
-                "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
-              rose: "bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20",
+              blue: "bg-brand-blue-tint text-brand-blue border border-brand-blue/10",
+              orange: "bg-brand-orange-tint text-brand-orange border border-brand-orange/10",
             }[action.color];
 
             return (
@@ -310,13 +323,13 @@ export default function HomeView({
                 onClick={() => setActiveTab(tab.id)}
                 className={`pb-3 relative transition-colors ${
                   isActive
-                    ? "text-primary font-bold"
-                    : "text-muted hover:text-foreground"
+                    ? "text-brand-orange font-bold"
+                    : "text-slate hover:text-ink"
                 }`}
               >
                 {tab.label}
                 {isActive && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-primary rounded-full" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.75 bg-brand-orange rounded-full" />
                 )}
               </button>
             );
@@ -335,8 +348,8 @@ export default function HomeView({
                   onClick={() => setInnerTab("my_courses")}
                   className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${
                     innerTab === "my_courses"
-                      ? "bg-primary text-white shadow-sm"
-                      : "text-muted hover:text-foreground"
+                      ? "bg-brand-blue text-white shadow-sm"
+                      : "text-slate hover:text-ink"
                   }`}
                 >
                   MY COURSES
@@ -345,8 +358,8 @@ export default function HomeView({
                   onClick={() => setInnerTab("results")}
                   className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors ${
                     innerTab === "results"
-                      ? "bg-primary text-white shadow-sm"
-                      : "text-muted hover:text-foreground"
+                      ? "bg-brand-blue text-white shadow-sm"
+                      : "text-slate hover:text-ink"
                   }`}
                 >
                   RESULTS
@@ -355,14 +368,14 @@ export default function HomeView({
               <div className="relative w-64">
                 <IconSearch
                   size={16}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate"
                 />
                 <input
                   type="text"
                   placeholder="Search courses..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-card pl-10 pr-4 py-1.5 text-xs text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
+                  className="w-full rounded-xl border border-hairline bg-mist pl-10 pr-4 py-1.5 text-xs text-ink placeholder:text-slate focus:border-brand-orange focus:outline-none"
                 />
               </div>
             </div>
@@ -701,7 +714,7 @@ export default function HomeView({
                       ? "bg-danger/10 text-danger border-danger/25"
                       : evt.type === "mentorship"
                         ? "bg-success/10 text-success border-success/25"
-                        : "bg-accent/10 text-accent border-accent/25";
+                        : "bg-brand-blue-tint text-brand-blue border-brand-blue/20";
 
                   return (
                     <div
@@ -900,7 +913,7 @@ export default function HomeView({
                             key={item.id}
                             className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border ${
                               isQuiz
-                                ? "border-accent/25 bg-accent/[0.02]"
+                                ? "border-brand-blue/20 bg-brand-blue-tint"
                                 : "border-danger/25 bg-danger/[0.02]"
                             }`}
                           >
@@ -908,7 +921,7 @@ export default function HomeView({
                               <div
                                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
                                   isQuiz
-                                    ? "bg-accent/15 text-accent border border-accent/25"
+                                    ? "bg-brand-blue-tint text-brand-blue border border-brand-blue/20"
                                     : "bg-danger/15 text-danger border border-danger/25"
                                 }`}
                               >
@@ -1005,12 +1018,20 @@ export default function HomeView({
                   if (!mentorTopic.trim()) return;
                   setMentorSubmitting(true);
                   try {
+                    const topicWithType =
+                      mentorQueryType === "other" && mentorOtherQuery.trim()
+                        ? `[${mentorOtherQuery.trim()}] ${mentorTopic}`
+                        : `[${mentorQueryType.toUpperCase()}] ${mentorTopic}`;
+                    const effectiveCourseId =
+                      mentorQueryType === "course" ? mentorCourseId : "";
                     await onMentorshipSubmit?.(
-                      mentorCourseId,
-                      mentorTopic,
+                      effectiveCourseId,
+                      topicWithType,
                       mentorDateTime,
                     );
                     toast.success("Mentorship request submitted!");
+                    setMentorQueryType("course");
+                    setMentorOtherQuery("");
                     setMentorTopic("");
                     setMentorDateTime("");
                   } catch {
@@ -1023,33 +1044,92 @@ export default function HomeView({
               >
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Select Course
+                    Query Type
                   </label>
-                  <select
-                    value={mentorCourseId}
-                    onChange={(e) => setMentorCourseId(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-                  >
-                    {enrolledCourses.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.title}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="mt-1 flex gap-2">
+                    {(["course", "generic", "career", "other"] as const).map(
+                      (t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setMentorQueryType(t)}
+                          className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors ${
+                            mentorQueryType === t
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
+                          }`}
+                        >
+                          {t === "course"
+                            ? "Course"
+                            : t === "generic"
+                              ? "Generic"
+                              : t === "career"
+                                ? "Career"
+                                : "Other"}
+                        </button>
+                      ),
+                    )}
+                  </div>
                 </div>
+
+                {mentorQueryType === "other" && (
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Specify Query Type
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Technical, Project, etc."
+                      value={mentorOtherQuery}
+                      onChange={(e) => setMentorOtherQuery(e.target.value)}
+                      className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
+                    />
+                  </div>
+                )}
+
+                {mentorQueryType === "course" && (
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Select Course
+                    </label>
+                    <select
+                      value={mentorCourseId}
+                      onChange={(e) => setMentorCourseId(e.target.value)}
+                      className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                    >
+                      {enrolledCourses.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Topic / Query Details
+                    {mentorQueryType === "course"
+                      ? "Describe Your Query"
+                      : "Tell Us About It"}
                   </label>
                   <textarea
                     rows={3}
-                    placeholder="Describe what you want to learn or discuss with your mentor..."
+                    placeholder={
+                      mentorQueryType === "course"
+                        ? "Describe your doubt or issue related to the selected course..."
+                        : mentorQueryType === "generic"
+                          ? "Describe your general query or concern..."
+                          : mentorQueryType === "career"
+                            ? "Describe your career-related question..."
+                            : "Describe your query in detail..."
+                    }
                     value={mentorTopic}
                     onChange={(e) => setMentorTopic(e.target.value)}
                     className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
                     required
                   />
                 </div>
+
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     Preferred Date & Time
@@ -1062,13 +1142,28 @@ export default function HomeView({
                     required
                   />
                 </div>
-                <button
-                  type="submit"
-                  disabled={mentorSubmitting}
-                  className="w-full btn-primary py-2.5 text-sm font-semibold shadow-md mt-1 disabled:opacity-50"
-                >
-                  {mentorSubmitting ? "Submitting..." : "Request Session"}
-                </button>
+
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMentorQueryType("course");
+                      setMentorOtherQuery("");
+                      setMentorTopic("");
+                      setMentorDateTime("");
+                    }}
+                    className="flex-1 btn-secondary py-2.5 text-sm font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={mentorSubmitting}
+                    className="flex-1 btn-primary py-2.5 text-sm font-semibold shadow-md disabled:opacity-50"
+                  >
+                    {mentorSubmitting ? "Submitting..." : "Submit"}
+                  </button>
+                </div>
               </form>
             </div>
 
@@ -1138,7 +1233,7 @@ export default function HomeView({
                                   t.status === "OPEN"
                                     ? "bg-warning/10 text-warning border-warning/20"
                                     : t.status === "ASSIGNED"
-                                      ? "bg-accent/10 text-accent border-accent/20"
+                                      ? "bg-brand-blue-tint text-brand-blue border-brand-blue/20"
                                       : "bg-success/10 text-success border-success/20"
                                 }`}
                               >

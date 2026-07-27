@@ -28,6 +28,7 @@ type Submission = {
   status: "PENDING" | "GRADED";
   grade: string | null;
   feedback: string | null;
+  comment: string | null;
   submittedAt: string;
   answerFileUrl: string | null;
   student: { id: string; name: string; email: string };
@@ -215,6 +216,14 @@ export default function InstructorAssignmentsPage() {
                         </a>
                       )}
                     </div>
+                    {sub.comment && (
+                      <div className="mt-3 text-xs text-muted-foreground bg-muted/20 rounded-lg p-3 border border-border/50">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider mb-1">
+                          Student Note
+                        </p>
+                        <div className="prose prose-xs max-w-none text-foreground/80 [&_p]:my-0.5" dangerouslySetInnerHTML={{ __html: sub.comment }} />
+                      </div>
+                    )}
                   </div>
                   <div className="shrink-0">
                     {sub.status === "GRADED" ? (
@@ -283,6 +292,15 @@ export default function InstructorAssignmentsPage() {
                       <IconFile size={16} />
                       View Submission
                     </a>
+                  </div>
+                )}
+
+                {gradeModal.comment && (
+                  <div className="rounded-lg bg-muted/20 border border-border/50 p-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                      Student Note
+                    </p>
+                    <div className="text-sm text-foreground/80 prose prose-xs max-w-none [&_p]:my-0.5" dangerouslySetInnerHTML={{ __html: gradeModal.comment }} />
                   </div>
                 )}
 

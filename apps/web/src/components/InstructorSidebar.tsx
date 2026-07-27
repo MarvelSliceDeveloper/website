@@ -19,6 +19,7 @@ import {
   IconMenu2,
   IconX,
   IconBook,
+  IconFileCheck,
 } from "@tabler/icons-react";
 
 import type { NavItem, NavItemChild } from "@/components/shared/SidebarTypes";
@@ -60,6 +61,11 @@ const overviewItems: NavItem[] = [
     href: "/instructor/courses",
     icon: IconBook,
     children: [{ label: "All Courses", href: "/instructor/courses" }],
+  },
+  {
+    label: "Assignments",
+    href: "/instructor/assignments",
+    icon: IconFileCheck,
   },
   {
     label: "Mentorship",

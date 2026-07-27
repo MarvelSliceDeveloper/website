@@ -53,7 +53,7 @@ export default function CourseCompletedView({
             </p>
           </div>
           <div className="glass-card p-4 text-center">
-            <p className="text-2xl font-bold text-accent">
+            <p className="text-2xl font-bold text-brand-blue">
               {completedCourses.length * 20}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">

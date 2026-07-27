@@ -9,6 +9,7 @@ import {
   IconPlus,
   IconTrash,
 } from "@tabler/icons-react";
+import RichEditor from "@/components/editor/RichEditor";
 
 interface QuizOption {
   id?: string;
@@ -468,11 +469,11 @@ export default function QuizCard({
             <h5 className="text-xs font-semibold uppercase tracking-wider text-blue-400">
               Assignment / Practical Task
             </h5>
-            <textarea
-              value={assignmentInstructions}
-              onChange={(e) => setAssignmentInstructions(e.target.value)}
+            <RichEditor
+              content={assignmentInstructions}
+              onChange={setAssignmentInstructions}
               placeholder="Enter assignment instructions..."
-              className="field min-h-[80px]"
+              minHeight="150px"
             />
             <input
               type="text"
@@ -490,11 +491,11 @@ export default function QuizCard({
             <h5 className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
               Coding Problem & Testcases
             </h5>
-            <textarea
-              value={codingPrompt}
-              onChange={(e) => setCodingPrompt(e.target.value)}
+            <RichEditor
+              content={codingPrompt}
+              onChange={setCodingPrompt}
               placeholder="Coding problem description..."
-              className="field min-h-[80px]"
+              minHeight="150px"
             />
             {testCases.map((tc, tcIdx) => (
               <div

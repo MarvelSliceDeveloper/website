@@ -302,6 +302,7 @@ export const assignmentService = {
     studentId: string,
     assignmentId: string,
     answerFileUrl: string,
+    comment?: string,
   ) {
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId },
@@ -337,10 +338,12 @@ export const assignmentService = {
         assignmentId,
         studentId,
         answerFileUrl,
+        comment,
         status: "PENDING",
       },
       update: {
         answerFileUrl,
+        comment,
         submittedAt: new Date(),
       },
     });

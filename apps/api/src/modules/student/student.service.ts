@@ -11,6 +11,10 @@ export interface OverdueAssignmentItem {
   status: "PENDING" | "SUBMITTED";
   type: "QUIZ" | "ASSIGNMENT";
   submissionId?: string | null;
+  grade?: string | null;
+  totalScore?: number | null;
+  feedback?: string | null;
+  submittedAt?: string | null;
 }
 
 export interface ContinueLearningItem {
@@ -76,7 +80,7 @@ export const studentService = {
           module: { select: { title: true } },
           submissions: {
             where: { studentId: userId },
-            select: { id: true, status: true },
+            select: { id: true, status: true, grade: true, totalScore: true, feedback: true, submittedAt: true },
           },
         },
         orderBy: { dueDate: "desc" },
@@ -96,6 +100,10 @@ export const studentService = {
           status: submission ? "SUBMITTED" : "PENDING",
           type: assignment.type as "QUIZ" | "ASSIGNMENT",
           submissionId: submission?.id || null,
+          grade: submission?.grade ?? null,
+          totalScore: submission?.totalScore ?? null,
+          feedback: submission?.feedback ?? null,
+          submittedAt: submission?.submittedAt?.toISOString() ?? null,
         });
       }
     }
@@ -123,7 +131,7 @@ export const studentService = {
           courseId: true,
           submissions: {
             where: { studentId: userId },
-            select: { id: true, status: true },
+            select: { id: true, status: true, grade: true, totalScore: true, feedback: true, submittedAt: true },
             take: 1,
           },
         },
@@ -148,6 +156,10 @@ export const studentService = {
           status: submission ? "SUBMITTED" : "PENDING",
           type: assignment.type as "QUIZ" | "ASSIGNMENT",
           submissionId: submission?.id ?? null,
+          grade: submission?.grade ?? null,
+          totalScore: submission?.totalScore ?? null,
+          feedback: submission?.feedback ?? null,
+          submittedAt: submission?.submittedAt?.toISOString() ?? null,
         });
       }
     }

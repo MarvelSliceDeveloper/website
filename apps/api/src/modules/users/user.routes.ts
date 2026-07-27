@@ -460,6 +460,7 @@ router.patch("/:id", async (req: Request, res: Response) => {
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const authUser = (req as AuthRequest).user;
 
     const user = await prisma.user.findUnique({
       where: { id },
@@ -470,6 +471,15 @@ router.delete("/:id", async (req: Request, res: Response) => {
     });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
+    }
+
+    if (
+      authUser?.role !== UserRole.SUPER_ADMIN &&
+      (user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN)
+    ) {
+      return res.status(403).json({
+        error: "You do not have permission to delete this user.",
+      });
     }
 
     if (user.instructorOf.length > 0) {

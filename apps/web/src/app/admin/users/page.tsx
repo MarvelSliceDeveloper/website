@@ -458,13 +458,16 @@ export default function AdminUsersPage() {
           >
             <IconEdit size={14} />
           </button>
-          <button
-            onClick={() => setDeleteUserId(user.id)}
-            className="rounded-md border border-danger/20 p-1.5 text-danger hover:bg-danger/10 transition-colors"
-            title="Delete user"
-          >
-            <IconTrash size={14} />
-          </button>
+          {(currentUserRole === "SUPER_ADMIN" ||
+            (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) && (
+            <button
+              onClick={() => setDeleteUserId(user.id)}
+              className="rounded-md border border-danger/20 p-1.5 text-danger hover:bg-danger/10 transition-colors"
+              title="Delete user"
+            >
+              <IconTrash size={14} />
+            </button>
+          )}
         </div>
       ),
     },
