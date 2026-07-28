@@ -41,7 +41,7 @@ interface HomeViewProps {
   stats: DashboardStats;
   overdueAssignments: OverdueAssignment[];
   continueLearning: ContinueLearningItem[];
-  liveSessionsToday: LiveSession[];
+  liveSessions: LiveSession[];
   openTickets: MentorshipTicket[];
   enrolledCourses?: EnrolledCourse[];
   calendarEvents?: CalendarEvent[];
@@ -69,7 +69,7 @@ export default function HomeView({
   stats,
   overdueAssignments,
   continueLearning = [],
-  liveSessionsToday,
+  liveSessions,
   openTickets,
   enrolledCourses = [],
   calendarEvents = [],
@@ -104,8 +104,8 @@ export default function HomeView({
 
   const [joiningSessionId, setJoiningSessionId] = useState<string | null>(null);
 
-  const liveSessions = liveSessionsToday.filter((s) => s.status === "LIVE");
-  const liveCount = liveSessions.length;
+  const activeLiveSessions = liveSessions.filter((s) => s.status === "LIVE");
+  const liveCount = activeLiveSessions.length;
   const openTicketCount = openTickets.filter(
     (t) => t.status === "OPEN" || t.status === "ASSIGNED",
   ).length;
@@ -199,28 +199,10 @@ export default function HomeView({
   return (
     <div className="sp-view-enter space-y-6 motion-reduce:animate-none">
       {/* ── Live / Upcoming Session Banner ───────────────────────────────── */}
-      {liveSessionsToday
-        .filter(
-          (s) =>
-            s.status === "LIVE" ||
-            (s.status === "UPCOMING" &&
-              new Date(s.scheduledAt).getTime() - Date.now() <
-                30 * 60 * 1000),
-        )
-        .slice(0, 1)
-        .map((s) => (
-          <LiveSessionBanner
-            key={s.id}
-            session={{
-              title: s.title,
-              courseName: s.courseTitle,
-              startTime: s.scheduledAt,
-              endTime: s.endDateTime || s.scheduledAt,
-              joinUrl: s.joinUrl,
-            }}
-            onJoin={() => handleJoinSession(s)}
-          />
-        ))}
+      <LiveSessionBanner
+        sessions={liveSessions}
+        onJoin={(s) => handleJoinSession(s)}
+      />
 
       {/* ── Stat Tiles (full width) ──────────────────────────────────────── */}
       <StudentStatTiles tiles={statTiles} />
@@ -777,7 +759,7 @@ export default function HomeView({
             <div className="glass-card p-5 border border-border/80 rounded-2xl bg-card space-y-4">
               <p className="sp-eyebrow">Sessions Today & Upcoming</p>
               <div className="divide-y divide-border/60">
-                {liveSessionsToday.length === 0 ? (
+                {liveSessions.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10 text-center text-muted">
                     <IconVideo size={32} className="mb-2 text-muted/60" />
                     <p className="text-sm font-semibold">
@@ -785,7 +767,7 @@ export default function HomeView({
                     </p>
                   </div>
                 ) : (
-                  liveSessionsToday.map((s) => {
+                  liveSessions.map((s) => {
                     const start = new Date(s.scheduledAt);
                     const time = start.toLocaleTimeString("en-IN", {
                       hour: "2-digit",

@@ -1,30 +1,46 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { IconRadio, IconClock, IconArrowRight } from "@tabler/icons-react";
+import { api } from "@/lib/api";
+import type { LiveSession } from "@/lib/api-types";
 
-type Session = {
-  title: string;
-  courseName: string;
-  startTime: string;
-  endTime: string;
-  joinUrl?: string;
-};
+const POLL_INTERVAL_MS = 60_000;
+const DEFAULT_END_FALLBACK_MS = 2 * 60 * 60 * 1000;
 
-function getStatus(
-  session: Session,
+function resolveEndTime(session: LiveSession): number {
+  const start = new Date(session.scheduledAt).getTime();
+  const end = session.endDateTime
+    ? new Date(session.endDateTime).getTime()
+    : start + DEFAULT_END_FALLBACK_MS;
+  return end;
+}
+
+function getSessionStatus(
+  session: LiveSession,
   upcomingWindowMinutes: number,
-  now: Date,
+  nowMs: number,
 ): "live" | "scheduled" | "hidden" {
-  if (!session || !session.startTime || !session.endTime) return "hidden";
-  const start = new Date(session.startTime).getTime();
-  const end = new Date(session.endTime).getTime();
-  const nowMs = now.getTime();
+  if (!session.scheduledAt) return "hidden";
+  const start = new Date(session.scheduledAt).getTime();
+  const end = resolveEndTime(session);
 
-  if (nowMs >= start && nowMs <= end) return "live";
+  if (nowMs >= start && nowMs < end) return "live";
   if (nowMs < start && start - nowMs <= upcomingWindowMinutes * 60 * 1000)
     return "scheduled";
   return "hidden";
+}
+
+function pickBestSession(
+  sessions: LiveSession[],
+  upcomingWindowMinutes: number,
+  nowMs: number,
+): LiveSession | null {
+  for (const s of sessions) {
+    if (getSessionStatus(s, upcomingWindowMinutes, nowMs) !== "hidden")
+      return s;
+  }
+  return null;
 }
 
 function formatCountdown(msRemaining: number) {
@@ -35,32 +51,55 @@ function formatCountdown(msRemaining: number) {
 }
 
 export default function LiveSessionBanner({
-  session,
+  sessions,
   upcomingWindowMinutes = 30,
   onJoin,
 }: {
-  session: Session;
+  sessions: LiveSession[];
   upcomingWindowMinutes?: number;
-  onJoin?: () => void;
+  onJoin?: (session: LiveSession) => void;
 }) {
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState(Date.now());
+  const [liveSessions, setLiveSessions] = useState<LiveSession[]>(sessions);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
+    setLiveSessions(sessions);
+  }, [sessions]);
+
+  const pollSessions = useCallback(async () => {
+    try {
+      const data = await api.get<{ sessions: LiveSession[] }>(
+        "/api/sessions",
+      );
+      setLiveSessions(data.sessions || []);
+    } catch {
+      // Silent fail — banner will hide if sessions become stale
+    }
   }, []);
 
-  const status = getStatus(session, upcomingWindowMinutes, now);
-  if (status === "hidden") return null;
+  useEffect(() => {
+    const tick = setInterval(() => setNow(Date.now()), 1000);
+    pollRef.current = setInterval(pollSessions, POLL_INTERVAL_MS);
 
+    return () => {
+      clearInterval(tick);
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [pollSessions]);
+
+  const bestSession = pickBestSession(liveSessions, upcomingWindowMinutes, now);
+  if (!bestSession) return null;
+
+  const status = getSessionStatus(bestSession, upcomingWindowMinutes, now);
   const isLive = status === "live";
-  const start = new Date(session.startTime);
-  const msUntilStart = start.getTime() - now.getTime();
+  const start = new Date(bestSession.scheduledAt).getTime();
+  const msUntilStart = start - now;
 
   const handleJoin = () => {
-    if (onJoin) onJoin();
-    else if (session.joinUrl)
-      window.open(session.joinUrl, "_blank", "noopener,noreferrer");
+    if (onJoin) onJoin(bestSession);
+    else if (bestSession.joinUrl)
+      window.open(bestSession.joinUrl, "_blank", "noopener,noreferrer");
   };
 
   const bg = isLive ? "bg-danger" : "bg-warning";
@@ -81,9 +120,11 @@ export default function LiveSessionBanner({
       <div className="min-w-0 flex-1">
         <p className="text-[11px] font-extrabold uppercase tracking-wide opacity-90 mb-0.5">
           {isLive ? "Live now" : "Starting soon"}
-          {session.courseName ? ` · ${session.courseName}` : ""}
+          {bestSession.courseTitle
+            ? ` · ${bestSession.courseTitle}`
+            : ""}
         </p>
-        <p className="text-[15px] font-bold truncate">{session.title}</p>
+        <p className="text-[15px] font-bold truncate">{bestSession.title}</p>
         {!isLive && (
           <p className="text-xs opacity-90 mt-0.5">
             Starts in {formatCountdown(msUntilStart)}

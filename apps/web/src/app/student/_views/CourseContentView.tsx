@@ -804,39 +804,10 @@ export default function CourseContentView({
 
     if (selectedResource) {
       return (
-        <>
-          {/* Study material header — Udemy-style with download */}
-          <div className="bg-white border border-border/60 rounded-xl p-4 mb-4 shadow-sm">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-blue-tint text-brand-blue">
-                <IconFile size={17} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-blue">
-                  Study Material
-                </p>
-                <p className="text-sm font-medium text-foreground truncate">
-                  {selectedResource.name}
-                </p>
-              </div>
-              <a
-                href={selectedResource.url}
-                target="_blank"
-                rel="noreferrer"
-                download
-                className="flex items-center gap-1.5 rounded-lg border border-brand-blue/30 bg-brand-blue-tint/50 px-3 py-1.5 text-xs font-medium text-brand-blue transition-colors hover:bg-brand-blue-tint hover:border-brand-blue/50"
-              >
-                <IconDownload size={14} />
-                Download
-              </a>
-            </div>
-          </div>
-          <StudyMaterialContent
-            name={selectedResource.name}
-            url={selectedResource.url}
-            onBack={clearResourcePreview}
-          />
-        </>
+        <StudyMaterialContent
+          name={selectedResource.name}
+          url={selectedResource.url}
+        />
       );
     }
 

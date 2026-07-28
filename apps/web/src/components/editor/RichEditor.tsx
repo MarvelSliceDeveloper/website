@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { Editor } from "@tinymce/tinymce-react";
+import type { Editor as EditorType } from "tinymce";
 
 interface RichEditorProps {
   content: string;
@@ -20,7 +21,7 @@ export default function RichEditor({
   editable = true,
   minHeight = "200px",
 }: RichEditorProps) {
-  const editorRef = useRef<any>(null);
+  const editorRef = useRef<EditorType | null>(null);
 
   return (
     <Editor

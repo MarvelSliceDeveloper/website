@@ -128,11 +128,14 @@ interface ApiRecordingResponse {
 
 function computeSessionStatus(
   scheduledAt: string,
-  endDateTime: string,
+  endDateTime: string | null | undefined,
 ): "LIVE" | "UPCOMING" | "PAST" {
   const now = Date.now();
   const start = new Date(scheduledAt).getTime();
-  const end = new Date(endDateTime).getTime();
+  // Fallback: if no end time, assume 2 hours from start
+  const end = endDateTime
+    ? new Date(endDateTime).getTime()
+    : start + 2 * 60 * 60 * 1000;
 
   if (now >= start && now < end) return "LIVE";
   if (now >= end) return "PAST";
@@ -177,7 +180,6 @@ async function fetchPortalData(): Promise<PortalData> {
       .catch(() => ({ items: [] })),
   ]);
 
-  // AFTER ✅ — endDateTime passed through, status computed dynamically
   const mappedSessions: LiveSession[] = (sessionsData.sessions || []).map(
     (s: ApiSessionRecord) => ({
       id: s.id,
@@ -191,10 +193,16 @@ async function fetchPortalData(): Promise<PortalData> {
       batchLabel: s.batch?.name || "—",
       status: computeSessionStatus(s.scheduledAt, s.scheduledEndAt),
       scheduledAt: s.scheduledAt,
-      endDateTime: s.scheduledEndAt,
+      endDateTime:
+        s.scheduledEndAt ||
+        new Date(
+          new Date(s.scheduledAt).getTime() + 2 * 60 * 60 * 1000,
+        ).toISOString(),
       joinUrl: s.joinUrl,
       recordingSyncingIn:
-        new Date(s.scheduledEndAt) <= new Date() && !s.recording
+        s.scheduledEndAt &&
+        new Date(s.scheduledEndAt) <= new Date() &&
+        !s.recording
           ? "~20 min"
           : undefined,
     }),
@@ -766,7 +774,7 @@ function StudentPortalContent() {
             stats={portalData.stats}
             overdueAssignments={portalData.overdueAssignments}
             continueLearning={portalData.continueLearning}
-            liveSessionsToday={portalData.liveSessions}
+            liveSessions={portalData.liveSessions}
             openTickets={portalData.mentorshipTickets}
             enrolledCourses={portalData.enrolledCourses}
             calendarEvents={portalData.calendarEvents}

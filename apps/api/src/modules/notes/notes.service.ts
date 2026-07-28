@@ -1,5 +1,6 @@
 import { prisma } from "../../utils/prisma";
 import { paginate } from "../../utils/paginate";
+import { AppError } from "../../utils/errors";
 
 export const notesService = {
   async list(
@@ -48,6 +49,15 @@ export const notesService = {
     body: string;
     isSticky?: boolean;
   }) {
+    if (data.moduleId) {
+      const moduleExists = await prisma.module.findUnique({
+        where: { id: data.moduleId },
+        select: { id: true },
+      });
+      if (!moduleExists) {
+        throw new AppError(404, "Module not found");
+      }
+    }
     return prisma.note.create({ data });
   },
 

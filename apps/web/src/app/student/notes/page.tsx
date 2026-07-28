@@ -64,6 +64,9 @@ export default function StudentNotesPage() {
     isSticky: false,
   });
   const [creating, setCreating] = useState(false);
+  const [createErrors, setCreateErrors] = useState<{ courseId?: string; title?: string }>({});
+  const [editErrors, setEditErrors] = useState<{ title?: string }>({});
+  const [displayCount, setDisplayCount] = useState(20);
 
   useEffect(() => {
     let cancelled = false;
@@ -139,6 +142,7 @@ export default function StudentNotesPage() {
   }
 
   async function saveEdit(id: string) {
+    if (!validateEditForm()) return;
     setSaving(true);
     try {
       await api.patch(`/api/notes/${id}`, {
@@ -169,8 +173,24 @@ export default function StudentNotesPage() {
     setEditIsSticky(false);
   }
 
+  function validateCreateForm(): boolean {
+    const errors: { courseId?: string; title?: string } = {};
+    if (!createForm.courseId) errors.courseId = "Please select a course";
+    if (createForm.title.length > 200) errors.title = "Title must be 200 characters or fewer";
+    setCreateErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
+
+  function validateEditForm(): boolean {
+    const errors: { title?: string } = {};
+    if (editTitle.length > 200) errors.title = "Title must be 200 characters or fewer";
+    setEditErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
+
   async function createNote(e: React.FormEvent) {
     e.preventDefault();
+    if (!validateCreateForm()) return;
     setCreating(true);
     try {
       const note = await api.post<{ note: NoteItem }>("/api/notes", createForm);
@@ -191,9 +211,12 @@ export default function StudentNotesPage() {
     return (
       note.title.toLowerCase().includes(q) ||
       stripHtml(note.body).toLowerCase().includes(q) ||
-      note.course.title.toLowerCase().includes(q)
+      note.course?.title.toLowerCase().includes(q)
     );
   });
+
+  const displayedNotes = filteredNotes.slice(0, displayCount);
+  const hasMore = filteredNotes.length > displayCount;
 
   const stickyCount = notes.filter((n) => n.isSticky).length;
   const notesThisWeek = notes.filter((n) => {
@@ -317,7 +340,7 @@ export default function StudentNotesPage() {
                 </span>
               </button>
               {courses.map((c) => {
-                const count = notes.filter((n) => n.course.id === c.id).length;
+                const count = notes.filter((n) => n.course?.id === c.id).length;
                 return (
                   <button
                     key={c.id}
@@ -364,7 +387,8 @@ export default function StudentNotesPage() {
                 </p>
               </div>
             ) : (
-              filteredNotes.map((note) => {
+              <>
+              {displayedNotes.map((note) => {
                 const borderClass = note.isSticky
                   ? "border-l-warning/40"
                   : note.moduleId
@@ -386,27 +410,44 @@ export default function StudentNotesPage() {
                           onChange={(e) => setEditTitle(e.target.value)}
                           placeholder="Note title..."
                           className="field w-full text-sm font-semibold"
+                          maxLength={200}
                         />
+                        {editErrors.title && (
+                          <p className="text-xs text-danger">{editErrors.title}</p>
+                        )}
                         <RichEditor
                           content={editBody}
                           onChange={setEditBody}
                           placeholder="Write your note..."
                           minHeight="150px"
                         />
-                        <div className="flex justify-end gap-2">
+                        <div className="flex items-center justify-between">
                           <button
-                            onClick={cancelEdit}
-                            className="btn-secondary text-xs"
+                            type="button"
+                            onClick={() => setEditIsSticky(!editIsSticky)}
+                            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-warning"
                           >
-                            Cancel
+                            <IconStar
+                              size={14}
+                              className={editIsSticky ? "text-warning fill-current" : ""}
+                            />
+                            {editIsSticky ? "Pinned" : "Pin to top"}
                           </button>
-                          <button
-                            onClick={() => saveEdit(note.id)}
-                            disabled={saving}
-                            className="btn-primary text-xs"
-                          >
-                            {saving ? "Saving..." : "Save"}
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={cancelEdit}
+                              className="btn-secondary text-xs"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => saveEdit(note.id)}
+                              disabled={saving}
+                              className="btn-primary text-xs"
+                            >
+                              {saving ? "Saving..." : "Save"}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ) : (
@@ -418,7 +459,7 @@ export default function StudentNotesPage() {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 mb-0.5">
                               <span className="inline-flex items-center rounded-full border border-border/50 bg-card-hover/50 px-2 py-0.5 text-[10px] font-medium text-muted">
-                                {note.course.title}
+                                {note.course?.title || "Unknown Course"}
                               </span>
                               {note.moduleId && (
                                 <span className="inline-flex items-center gap-1 rounded-full border border-brand-blue/20 bg-brand-blue-tint px-2 py-0.5 text-[10px] font-medium text-brand-blue">
@@ -476,7 +517,16 @@ export default function StudentNotesPage() {
                     </div>
                   </div>
                 );
-              })
+              })}
+              {hasMore && (
+                <button
+                  onClick={() => setDisplayCount((prev) => prev + 20)}
+                  className="w-full py-3 text-sm font-medium text-primary hover:bg-primary/5 rounded-xl transition-colors"
+                >
+                  Load more ({filteredNotes.length - displayCount} remaining)
+                </button>
+              )}
+              </>
             )}
           </div>
         </div>
@@ -530,7 +580,11 @@ export default function StudentNotesPage() {
                   }
                   placeholder="Note title..."
                   className="field w-full text-sm"
+                  maxLength={200}
                 />
+                {createErrors.title && (
+                  <p className="text-xs text-danger mt-1">{createErrors.title}</p>
+                )}
               </div>
               <div>
                 <label className="text-xs font-medium text-muted mb-1 block">
