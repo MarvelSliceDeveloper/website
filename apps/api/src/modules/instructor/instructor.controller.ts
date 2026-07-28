@@ -4,7 +4,9 @@ import { handleControllerError } from "../../utils/errors";
 import { instructorService } from "./instructor.service";
 
 export const instructorController = {
-  // GET /api/instructor/analytics — instructor-scoped analytics
+  // GET /api/instructor/analytics
+  // Returns course completion rates, student retention, video drop-off, and quiz scores
+  // scoped to this instructor's batches/courses only.
   async getAnalytics(req: AuthRequest, res: Response) {
     try {
       if (!req.user)
@@ -18,7 +20,9 @@ export const instructorController = {
     }
   },
 
-  // GET /api/instructor/batches — instructor's assigned batches
+  // GET /api/instructor/batches
+  // Returns all batches where this instructor is the assigned teacher or a course mentor.
+  // Includes course title, enrollment count, and session count.
   async getMyBatches(req: AuthRequest, res: Response) {
     try {
       if (!req.user)
@@ -32,7 +36,9 @@ export const instructorController = {
     }
   },
 
-  // GET /api/instructor/courses — instructor's courses (via batches)
+  // GET /api/instructor/courses
+  // Returns unique courses from the instructor's assigned batches.
+  // Each course includes module and batch counts.
   async getMyCourses(req: AuthRequest, res: Response) {
     try {
       if (!req.user)

@@ -159,7 +159,7 @@ export const ticketService = {
       prisma.mentorshipTicket.count({ where }),
     ]);
     return {
-      items: tickets.map((t) => ({ ...t, type: "MENTORSHIP" as const })),
+      tickets: tickets.map((t) => ({ ...t, type: "MENTORSHIP" as const })),
       total,
       page: currentPage,
       limit: currentLimit,

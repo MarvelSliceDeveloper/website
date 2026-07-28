@@ -7,8 +7,11 @@ import { assignmentController } from "./assignment.controller";
 import { practicalController } from "./practical.controller";
 import { uploadCourseThumbnail } from "./course.upload";
 import { uploadLessonResource, uploadPracticalPdf } from "./modules.upload";
-import { requireAuth, requireRole } from "../../middleware/auth.middleware";
+import { requireAuth, requireRole, AuthRequest } from "../../middleware/auth.middleware";
 import { UserRole } from "@lms/types";
+import { prisma } from "../../utils/prisma";
+import { moduleService } from "./module.service";
+import { handleControllerError } from "../../utils/errors";
 
 const router = Router();
 
@@ -315,6 +318,60 @@ router.delete(
   "/practicals/:practicalId/resources/:resourceId",
   requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
   practicalController.deleteResource,
+);
+
+// --- Certification Module Routes ---
+
+// GET /api/admin/courses/:courseId/certification — get certification module + quiz
+router.get(
+  "/:courseId/certification",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const certModule = await moduleService.getCertificationModule(
+        req.params.courseId,
+      );
+      return res.json({
+        module: certModule
+          ? { id: certModule.id, title: certModule.title }
+          : null,
+        quiz: certModule?.quizzes[0]
+          ? {
+              id: certModule.quizzes[0].id,
+              title: certModule.quizzes[0].title,
+              passingScore: certModule.quizzes[0].passingScore,
+              timeLimitMin: certModule.quizzes[0].timeLimitMin,
+              hasMcq: certModule.quizzes[0].hasMcq,
+              hasAssignment: certModule.quizzes[0].hasAssignment,
+              assignmentInstructions:
+                certModule.quizzes[0].assignmentInstructions,
+              questionCount: certModule.quizzes[0].questions.length,
+            }
+          : null,
+      });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+);
+
+// PUT /api/admin/courses/:courseId/certification — update certification module settings
+router.put(
+  "/:courseId/certification",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const certModule = await moduleService.updateCertificationModule(
+        req.params.courseId,
+        req.body,
+      );
+      return res.json(certModule);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
 );
 
 export const courseRouter = router;

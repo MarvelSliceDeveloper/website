@@ -51,6 +51,9 @@ export default function InstructorAnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Fetches analytics data from /api/instructor/analytics.
+  // Returns: completionRates, activeRetention, videoDropOff, quizScoreAverages
+  // All scoped to the instructor's assigned batches/courses.
   useEffect(() => {
     async function loadAnalytics() {
       try {

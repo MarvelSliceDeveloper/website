@@ -7,7 +7,7 @@
 
     var global$5 = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
-    /* eslint-disable @typescript-eslint/no-wrapper-object-types */
+     
     const hasProto = (v, constructor, predicate) => {
         var _a;
         if (predicate(v, constructor.prototype)) {
@@ -317,11 +317,11 @@
     // reuse the same object
     Optional.singletonNone = new Optional(false);
 
-    /* eslint-disable @typescript-eslint/unbound-method */
+     
     const nativeSlice = Array.prototype.slice;
     const nativeIndexOf = Array.prototype.indexOf;
     const nativePush = Array.prototype.push;
-    /* eslint-enable */
+     
     const rawIndexOf = (ts, t) => nativeIndexOf.call(ts, t);
     const contains = (xs, x) => rawIndexOf(xs, x) > -1;
     const map = (xs, f) => {
@@ -382,7 +382,7 @@
     //
     // Use the native keys if it is available (IE9+), otherwise fall back to manually filtering
     const keys = Object.keys;
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+     
     const hasOwnProperty = Object.hasOwnProperty;
     const each = (obj, f) => {
         const props = keys(obj);
@@ -1157,7 +1157,7 @@
             href: data.url.value,
             attach: data.url.meta !== undefined && data.url.meta.attach ? data.url.meta.attach : noop
         };
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+         
         DialogConfirms.preprocess(editor, changedData).then((pData) => {
             link(editor, attachState, pData);
         });
@@ -1257,7 +1257,7 @@
     };
     const open = (editor) => {
         const data = collectData(editor);
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+         
         data.then((info) => {
             const onSubmit = handleSubmit(editor, info);
             return makeDialog(info, onSubmit, editor);

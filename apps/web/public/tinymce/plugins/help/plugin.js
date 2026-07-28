@@ -5,7 +5,7 @@
 (function () {
     'use strict';
 
-    /* eslint-disable @typescript-eslint/no-wrapper-object-types */
+     
     const hasProto = (v, constructor, predicate) => {
         var _a;
         if (predicate(v, constructor.prototype)) {
@@ -298,10 +298,10 @@
     // reuse the same object
     Optional.singletonNone = new Optional(false);
 
-    /* eslint-disable @typescript-eslint/unbound-method */
+     
     const nativeSlice = Array.prototype.slice;
     const nativeIndexOf = Array.prototype.indexOf;
-    /* eslint-enable */
+     
     const rawIndexOf = (ts, t) => nativeIndexOf.call(ts, t);
     const contains = (xs, x) => rawIndexOf(xs, x) > -1;
     const map = (xs, f) => {
@@ -352,7 +352,7 @@
     //
     // Use the native keys if it is available (IE9+), otherwise fall back to manually filtering
     const keys = Object.keys;
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+     
     const hasOwnProperty = Object.hasOwnProperty;
     const get$1 = (obj, key) => {
         return has(obj, key) ? Optional.from(obj[key]) : Optional.none();
@@ -467,7 +467,7 @@
     pLoadHtmlByLangCode(baseUrl, global$2.getCode()).catch(() => pLoadHtmlByLangCode(baseUrl, 'en'));
     const initI18nLoad = (editor, baseUrl) => {
         editor.on('init', () => {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+             
             pLoadI18nHtml(baseUrl);
         });
     };
@@ -779,7 +779,7 @@
         return Optional.from(getHelpTabs(editor)).fold(() => getNamesFromTabs(tabs), (tabsFromSettings) => parseHelpTabsSetting(tabsFromSettings, tabs));
     };
     const init = (editor, customTabs, pluginUrl) => () => {
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+         
         pParseCustomTabs(editor, customTabs, pluginUrl).then(({ tabs, names }) => {
             const foundTabs = map(names, (name) => get$1(tabs, name));
             const dialogTabs = cat(foundTabs);

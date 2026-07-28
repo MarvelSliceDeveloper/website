@@ -16,7 +16,7 @@
         editor.execCommand('mceInsertContent', false, evtChr);
     };
 
-    /* eslint-disable @typescript-eslint/no-wrapper-object-types */
+     
     const hasProto = (v, constructor, predicate) => {
         var _a;
         if (predicate(v, constructor.prototype)) {
@@ -310,7 +310,7 @@
     // reuse the same object
     Optional.singletonNone = new Optional(false);
 
-    /* eslint-disable @typescript-eslint/unbound-method */
+     
     const nativeSlice = Array.prototype.slice;
     const nativePush = Array.prototype.push;
     const map = (xs, f) => {

@@ -7,7 +7,7 @@
 
     var global$1 = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
-    /* eslint-disable @typescript-eslint/no-wrapper-object-types */
+     
     const hasProto = (v, constructor, predicate) => {
         var _a;
         if (predicate(v, constructor.prototype)) {
@@ -395,11 +395,11 @@
         editor.on('PreInit', () => {
             if (!editor.queryCommandSupported('QuickbarInsertImage')) {
                 editor.addCommand('QuickbarInsertImage', () => {
-                    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                     
                     pickFile(editor).then((files) => {
                         if (files.length > 0) {
                             const blob = files[0];
-                            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                             
                             blobToBase64(blob).then((base64) => {
                                 insertBlob(editor, base64, blob);
                             });
@@ -468,7 +468,7 @@
         div.innerHTML = html;
         if (!div.hasChildNodes() || div.childNodes.length > 1) {
             const message = 'HTML does not have a single root node';
-            // eslint-disable-next-line no-console
+             
             console.error(message, html);
             throw new Error(message);
         }

@@ -544,7 +544,7 @@ export default function ModuleCard({
                 <div className="space-y-1">
                   {allResources.map((resource, rIdx) => (
                     <div
-                      key={resource.id}
+                      key={`${resource.lessonId}-${resource.id}`}
                       draggable
                       onDragStart={() => setResourceDragIdx(rIdx)}
                       onDragOver={(e) => {

@@ -19,6 +19,8 @@ export default function InstructorCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Fetches courses from the instructor-specific endpoint.
+  // /api/instructor/courses returns unique courses from the instructor's assigned batches.
   useEffect(() => {
     Promise.all([
       api

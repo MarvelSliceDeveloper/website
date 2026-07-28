@@ -58,6 +58,7 @@ export interface CourseModule {
   description: string | null;
   order: number;
   isFreePreview: boolean;
+  isCertificationModule: boolean;
   contentOrder: ContentOrderItem[] | null;
   lessons: CourseLesson[];
   completionPercent: number;

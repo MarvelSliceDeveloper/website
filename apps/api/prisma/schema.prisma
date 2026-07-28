@@ -160,6 +160,7 @@ model Module {
   description   String?
   order         Int
   isFreePreview Boolean       @default(false)
+  isCertificationModule Boolean @default(false) // Special module: certification exam gate
   contentOrder  Json? // [{type: "LESSON"|"QUIZ"|"ASSIGNMENT"|"PRACTICAL", id: string}]
   course        Course        @relation(fields: [courseId], references: [id])
   lessons       Lesson[]

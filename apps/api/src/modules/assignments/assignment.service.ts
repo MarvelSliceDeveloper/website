@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
+import { AppError } from "../../utils/errors";
 import { notificationService } from "../notifications/notification.service";
 import { paginate } from "../../utils/paginate";
 
@@ -33,13 +34,13 @@ export const assignmentService = {
       where: { id: batchId },
       include: { courseMentors: true },
     });
-    if (!batch) throw new Error("Batch not found");
+    if (!batch) throw new AppError(404, "Batch not found");
     if (batch.instructorId !== instructorId) {
       const isMentor = batch.courseMentors?.some(
         (m) => m.mentorId === instructorId && m.courseId === courseId,
       );
       if (!isMentor) {
-        throw new Error("You are not the instructor of this batch");
+        throw new AppError(403, "You are not the instructor of this batch");
       }
     }
     if (batch.courseId !== courseId) {
@@ -58,7 +59,7 @@ export const assignmentService = {
       ) {
         // Course belongs to this package — valid
       } else {
-        throw new Error("Batch does not belong to the selected course");
+        throw new AppError(400, "Batch does not belong to the selected course");
       }
     }
     return batch;
@@ -215,10 +216,10 @@ export const assignmentService = {
       },
     });
 
-    if (!submission) throw new Error("Submission not found");
+    if (!submission) throw new AppError(404, "Submission not found");
 
     if (role === "STUDENT" && submission.studentId !== userId) {
-      throw new Error("Access denied");
+      throw new AppError(403, "Access denied");
     }
     if (role === "INSTRUCTOR") {
       const batch = (submission as any).assignment?.batch;
@@ -230,7 +231,7 @@ export const assignmentService = {
             courseId: submission.assignment.courseId,
           },
         });
-        if (!isMentor) throw new Error("Access denied");
+        if (!isMentor) throw new AppError(403, "Access denied");
       }
     }
 
@@ -248,7 +249,7 @@ export const assignmentService = {
       where: { id: assignmentId },
       include: { batch: true },
     });
-    if (!assignment) throw new Error("Assignment not found");
+    if (!assignment) throw new AppError(404, "Assignment not found");
     if (assignment.batch.instructorId !== instructorId) {
       const isMentor = await prisma.batchCourseMentor.findFirst({
         where: {
@@ -258,7 +259,7 @@ export const assignmentService = {
         },
       });
       if (!isMentor) {
-        throw new Error("You are not the instructor of this batch");
+        throw new AppError(403, "You are not the instructor of this batch");
       }
     }
 
@@ -310,7 +311,7 @@ export const assignmentService = {
       },
     });
 
-    if (!submission) throw new Error("Submission not found");
+    if (!submission) throw new AppError(404, "Submission not found");
     if (submission.assignment.batch.instructorId !== instructorId) {
       const isMentor = await prisma.batchCourseMentor.findFirst({
         where: {
@@ -320,7 +321,7 @@ export const assignmentService = {
         },
       });
       if (!isMentor) {
-        throw new Error("You are not the instructor of this batch");
+        throw new AppError(403, "You are not the instructor of this batch");
       }
     }
 
@@ -357,13 +358,13 @@ export const assignmentService = {
       },
     });
 
-    if (!assignment) throw new Error("Assignment not found");
+    if (!assignment) throw new AppError(404, "Assignment not found");
     if (assignment.type !== "ASSIGNMENT")
-      throw new Error("This is a quiz, not a file-upload assignment");
-    if (new Date() > assignment.dueDate)
-      throw new Error("Assignment due date has passed");
+      throw new AppError(400, "This is a quiz, not a file-upload assignment");
+    if (assignment.dueDate && new Date() > assignment.dueDate)
+      throw new AppError(400, "Assignment due date has passed");
     if (assignment.batch.enrollments.length === 0) {
-      throw new Error("You are not enrolled in the batch for this assignment");
+      throw new AppError(403, "You are not enrolled in the batch for this assignment");
     }
 
     // Upsert — allow re-submission before grading

@@ -39,13 +39,15 @@ type Session = {
   scheduledAt: string;
   endedAt: string | null;
   title?: string;
-  batch?: { name: string; course: { title: string } } | null;
+  course?: { title: string } | null;
+  batch?: { name: string; course?: { title: string } | null } | null;
 };
 
 type Batch = {
   id: string;
   name: string;
-  course: { title: string };
+  course?: { title: string } | null;
+  courseMentors?: { course: { title: string } }[];
   _count?: { enrollments: number; sessions: number };
 };
 
@@ -80,13 +82,16 @@ export default function InstructorDashboardPage() {
   const [upcomingSessions, setUpcomingSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Loads all dashboard data in parallel: sessions, batches, and assignments.
+  // Then fetches pending submissions for each assignment that has submissions.
+  // Aggregates stats: total batches, students, sessions, pending submissions.
   useEffect(() => {
     async function loadData() {
       try {
         const [sessionsRes, batchesRes, assignmentsRes] =
           await Promise.allSettled([
             api.get<{ sessions?: Session[] }>("/api/sessions"),
-            api.get<Batch[]>("/api/admin/batches"),
+            api.get<Batch[]>("/api/instructor/batches"),
             api.get<{ assignments: Assignment[] }>("/api/assignments"),
           ]);
 
@@ -319,9 +324,11 @@ export default function InstructorDashboardPage() {
                         })}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                        {session.batch
-                          ? `${session.batch.course.title} · Batch: ${session.batch.name}`
-                          : session.title}
+                        {session.course
+                          ? session.course.title
+                          : session.batch
+                            ? `${session.batch.course?.title ?? "Course"} · ${session.batch.name}`
+                            : session.title ?? "Session"}
                       </p>
                     </div>
                   </div>

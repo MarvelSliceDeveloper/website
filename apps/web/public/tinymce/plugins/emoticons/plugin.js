@@ -7,7 +7,7 @@
 
     var global$1 = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
-    /* eslint-disable @typescript-eslint/no-wrapper-object-types */
+     
     const isSimpleType = (type) => (value) => typeof value === type;
     const eq = (t) => (a) => t === a;
     const isNull = eq(null);
@@ -275,7 +275,7 @@
     // reuse the same object
     Optional.singletonNone = new Optional(false);
 
-    /* eslint-disable @typescript-eslint/unbound-method */
+     
     const nativeSlice = Array.prototype.slice;
     const exists = (xs, pred) => {
         for (let i = 0, len = xs.length; i < len; i++) {
@@ -313,7 +313,7 @@
     //
     // Use the native keys if it is available (IE9+), otherwise fall back to manually filtering
     const keys = Object.keys;
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+     
     const hasOwnProperty = Object.hasOwnProperty;
     const each = (obj, f) => {
         const props = keys(obj);
@@ -540,7 +540,7 @@
                 const userEmojis = getUserDefinedEmoji(editor);
                 processEmojis(merge(emojis, userEmojis));
             }, (err) => {
-                // eslint-disable-next-line no-console
+                 
                 console.log(`Failed to load emojis: ${err}`);
                 categories.set({});
                 all.set([]);
@@ -571,7 +571,7 @@
                         else {
                             numRetries--;
                             if (numRetries < 0) {
-                                // eslint-disable-next-line no-console
+                                 
                                 console.log('Could not load emojis from url: ' + databaseUrl);
                                 clearInterval(interval);
                                 reject(false);

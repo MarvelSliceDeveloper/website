@@ -36,7 +36,7 @@
     const getNumberStyles = option('advlist_number_styles');
     const getBulletStyles = option('advlist_bullet_styles');
 
-    /* eslint-disable @typescript-eslint/no-wrapper-object-types */
+     
     const isNullable = (a) => a === null || a === undefined;
     const isNonNullable = (a) => !isNullable(a);
 
@@ -292,7 +292,7 @@
     Optional.singletonNone = new Optional(false);
 
     const nativeIndexOf = Array.prototype.indexOf;
-    /* eslint-enable */
+     
     const rawIndexOf = (ts, t) => nativeIndexOf.call(ts, t);
     const contains = (xs, x) => rawIndexOf(xs, x) > -1;
     const findUntil = (xs, pred, until) => {
@@ -455,7 +455,7 @@
                 register$2(editor);
             }
             else {
-                // eslint-disable-next-line no-console
+                 
                 console.error('Please use the Lists plugin together with the List Styles plugin.');
             }
         });

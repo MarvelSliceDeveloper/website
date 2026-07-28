@@ -7,7 +7,7 @@
 
     var global$3 = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
-    /* eslint-disable @typescript-eslint/no-wrapper-object-types */
+     
     const hasProto = (v, constructor, predicate) => {
         var _a;
         if (predicate(v, constructor.prototype)) {
@@ -323,11 +323,11 @@
     // reuse the same object
     Optional.singletonNone = new Optional(false);
 
-    /* eslint-disable @typescript-eslint/unbound-method */
+     
     const nativeSlice = Array.prototype.slice;
     const nativeIndexOf = Array.prototype.indexOf;
     const nativePush = Array.prototype.push;
-    /* eslint-enable */
+     
     const rawIndexOf = (ts, t) => nativeIndexOf.call(ts, t);
     const contains = (xs, x) => rawIndexOf(xs, x) > -1;
     const exists = (xs, pred) => {
@@ -480,7 +480,7 @@
     //
     // Use the native keys if it is available (IE9+), otherwise fall back to manually filtering
     const keys = Object.keys;
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+     
     const hasOwnProperty = Object.hasOwnProperty;
     const each = (obj, f) => {
         const props = keys(obj);
@@ -639,7 +639,7 @@
         div.innerHTML = html;
         if (!div.hasChildNodes() || div.childNodes.length > 1) {
             const message = 'HTML does not have a single root node';
-            // eslint-disable-next-line no-console
+             
             console.error(message, html);
             throw new Error(message);
         }
@@ -849,7 +849,7 @@
             dom.setAttribute(key, value + '');
         }
         else {
-            // eslint-disable-next-line no-console
+             
             console.error('Invalid call to Attribute.set. Key ', key, ':: Value ', value, ':: Element ', dom);
             throw new Error('Attribute value was not simple');
         }
@@ -896,7 +896,7 @@
     // some elements, such as mathml, don't have style attributes
     // others, such as angular elements, have style attributes that aren't a CSSStyleDeclaration
     const isSupported = (dom) => 
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+     
     dom.style !== undefined && isFunction(dom.style.getPropertyValue);
 
     // Node.contains() is very, very, very good performance
@@ -919,7 +919,7 @@
         // JQuery coerces numbers to pixels for certain property names, and other times lets numbers through.
         // we're going to be explicit; strings only.
         if (!isString(value)) {
-            // eslint-disable-next-line no-console
+             
             console.error('Invalid call to CSS.set. Property ', property, ':: Value ', value, ':: Element ', dom);
             throw new Error('CSS value must be a string: ' + value);
         }
@@ -2277,7 +2277,7 @@
         return hexColour(value);
     };
 
-    /* eslint-disable no-console */
+     
     const rgbRegex = /^\s*rgb\s*\(\s*(\d+)\s*[,\s]\s*(\d+)\s*[,\s]\s*(\d+)\s*\)\s*$/i;
     // This regex will match rgba(0, 0, 0, 0.5) or rgba(0, 0, 0, 50%) , or without commas
     const rgbaRegex = /^\s*rgba\s*\(\s*(\d+)\s*[,\s]\s*(\d+)\s*[,\s]\s*(\d+)\s*[,\s]\s*((?:\d?\.\d+|\d+)%?)\s*\)\s*$/i;

@@ -7,7 +7,7 @@
 
     var global$1 = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
-    /* eslint-disable @typescript-eslint/no-wrapper-object-types */
+     
     const hasProto = (v, constructor, predicate) => {
         var _a;
         if (predicate(v, constructor.prototype)) {
@@ -42,7 +42,7 @@
 
     const not = (f) => (t) => !f(t);
 
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+     
     const hasOwnProperty = Object.hasOwnProperty;
     const has = (obj, key) => hasOwnProperty.call(obj, key);
 
@@ -130,7 +130,7 @@
     )?
     */
     const link = () => 
-    // eslint-disable-next-line max-len
+     
     /(?:[A-Za-z][A-Za-z\d.+-]{0,14}:\/\/(?:[-.~*+=!&;:'%@?^${}(),\w]+@)?|www\.|[-;:&=+$,.\w]+@)[A-Za-z\d-]+(?:\.[A-Za-z\d-]+)*(?::\d+)?(?:\/(?:[-.~*+=!;:'%@$(),\/\w]*[-~*+=%@$()\/\w])?)?(?:\?(?:[-.~*+=!&;:'%@?^${}(),\/\w]+))?(?:#(?:[-.~*+=!&;:'%@?^${}(),\/\w]+))?/g;
 
     const option = (name) => (editor) => editor.options.get(name);

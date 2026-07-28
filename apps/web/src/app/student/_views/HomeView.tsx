@@ -122,7 +122,7 @@ export default function HomeView({
   ).length;
   const overdueTotal = pendingAssignments + pendingQuizzes;
 
-  // Stat tiles using solid color mapping
+  // Option C color scheme: Blue=learning, Orange=urgent, Grey=neutral
   const statTiles = [
     {
       id: "enrolled",
@@ -132,7 +132,7 @@ export default function HomeView({
         stats.enrolledCount,
       icon: <IconBook size={20} />,
       onClick: () => navigate({ view: "COURSES" }),
-      iconColor: "indigo" as const,
+      iconColor: "blue" as const,  // Blue = learning/content
       trend: { value: 0, label: "this month" },
     },
     {
@@ -141,7 +141,7 @@ export default function HomeView({
       value: pendingAssignments,
       icon: <IconPencil size={20} />,
       onClick: () => navigate({ view: "ASSIGNMENT_OVERDUE" }),
-      iconColor: "red" as const,
+      iconColor: "orange" as const,  // Orange = urgent/time-sensitive
       liveBadge: pendingAssignments > 0 ? "Overdue" : undefined,
     },
     {
@@ -150,7 +150,7 @@ export default function HomeView({
       value: pendingQuizzes,
       icon: <IconClock size={20} />,
       onClick: () => navigate({ view: "QUIZ_OVERDUE" }),
-      iconColor: "amber" as const,
+      iconColor: "orange" as const,  // Orange = urgent/time-sensitive
       liveBadge: pendingQuizzes > 0 ? "Overdue" : undefined,
     },
     {
@@ -269,20 +269,21 @@ export default function HomeView({
             },
           ].map((action, idx) => {
             const colorClasses = {
-              blue: "border-brand-blue/20 bg-brand-blue-tint/40 hover:bg-brand-blue-tint hover:border-brand-blue/40 text-brand-blue",
-              orange: "border-brand-orange/20 bg-brand-orange-tint/40 hover:bg-brand-orange-tint hover:border-brand-orange/40 text-brand-orange",
+              blue: "border-brand-blue/20 bg-gradient-to-br from-white via-brand-blue/[0.04] to-brand-blue/[0.1] hover:from-brand-blue/[0.06] hover:to-brand-blue/[0.15] hover:border-brand-blue/40 hover:shadow-brand-blue/10 hover:shadow-lg text-brand-blue",
+              orange: "border-brand-orange/20 bg-gradient-to-br from-white via-brand-orange/[0.04] to-brand-orange/[0.1] hover:from-brand-orange/[0.06] hover:to-brand-orange/[0.15] hover:border-brand-orange/40 hover:shadow-brand-orange/10 hover:shadow-lg text-brand-orange",
             }[action.color];
 
             const iconBg = {
-              blue: "bg-brand-blue-tint text-brand-blue border border-brand-blue/10",
-              orange: "bg-brand-orange-tint text-brand-orange border border-brand-orange/10",
+              blue: "bg-gradient-to-br from-brand-blue-tint to-brand-blue/20 text-brand-blue border border-brand-blue/10",
+              orange: "bg-gradient-to-br from-brand-orange-tint to-brand-orange/20 text-brand-orange border border-brand-orange/10",
             }[action.color];
 
             return (
               <button
                 key={idx}
                 onClick={action.onClick}
-                className={`flex flex-col items-start p-4 rounded-2xl border text-left transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md cursor-pointer ${colorClasses}`}
+                style={{ animationDelay: `${idx * 60}ms` }}
+                className={`tile-stagger relative flex flex-col items-start p-4 rounded-2xl border text-left transition-all duration-300 hover:-translate-y-0.5 cursor-pointer overflow-hidden ${colorClasses}`}
               >
                 <div className={`p-2 rounded-xl mb-2.5 ${iconBg}`}>
                   {action.icon}
@@ -586,8 +587,9 @@ export default function HomeView({
               {/* Right Column: Referral Box */}
               <div>
                 <div className="glass-card p-5 border border-border/80 rounded-2xl bg-card shadow-sm hover:border-primary/20 transition-all duration-300">
-                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 p-5 text-white shadow-md">
+                  <div className="tile-stagger relative overflow-hidden rounded-xl bg-gradient-to-br from-brand-orange via-orange-500 to-amber-500 p-5 text-white shadow-md hero-shimmer">
                     <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-white/10 blur-xl" />
+                    <div className="absolute -left-4 -bottom-4 h-16 w-16 rounded-full bg-white/10 blur-lg" />
                     <h3 className="text-base font-bold">Refer your friend</h3>
                     <p className="mt-1 text-xs text-white/80">
                       and earn rewards up to Rs. 5000/-
@@ -755,7 +757,7 @@ export default function HomeView({
                           href={evt.joinUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="btn-primary px-3 py-1.5 text-xs font-semibold shrink-0"
+                          className="inline-flex items-center justify-center rounded-xl bg-brand-orange px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-orange/90 shrink-0"
                         >
                           Join
                         </a>
@@ -822,7 +824,7 @@ export default function HomeView({
                             href={s.joinUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="btn-primary py-1.5 px-4 text-xs font-semibold shrink-0"
+                            className="inline-flex items-center justify-center rounded-xl bg-brand-orange py-1.5 px-4 text-xs font-semibold text-white shadow-sm hover:bg-brand-orange/90 shrink-0"
                           >
                             Join Session
                           </a>
@@ -911,18 +913,18 @@ export default function HomeView({
                         return (
                           <div
                             key={item.id}
-                            className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border ${
+                            className={`tile-stagger flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border transition-all duration-300 ${
                               isQuiz
-                                ? "border-brand-blue/20 bg-brand-blue-tint"
-                                : "border-danger/25 bg-danger/[0.02]"
+                                ? "border-brand-orange/20 bg-gradient-to-br from-white via-brand-orange/[0.04] to-brand-orange/[0.1]"
+                                : "border-danger/25 bg-gradient-to-br from-white via-danger/[0.03] to-danger/[0.08]"
                             }`}
                           >
                             <div className="flex items-start gap-3">
                               <div
                                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
                                   isQuiz
-                                    ? "bg-brand-blue-tint text-brand-blue border border-brand-blue/20"
-                                    : "bg-danger/15 text-danger border border-danger/25"
+                                    ? "bg-gradient-to-br from-brand-orange-tint to-brand-orange/20 text-brand-orange border border-brand-orange/20"
+                                    : "bg-gradient-to-br from-danger-tint to-danger/15 text-danger border border-danger/25"
                                 }`}
                               >
                                 {isQuiz ? (
@@ -956,7 +958,7 @@ export default function HomeView({
                                     : { view: "ASSIGNMENT_OVERDUE" },
                                 )
                               }
-                              className="btn-primary py-1.5 px-3 text-xs font-semibold shrink-0 self-start sm:self-center"
+                              className="inline-flex items-center justify-center rounded-xl bg-brand-orange py-1.5 px-3 text-xs font-semibold text-white shadow-sm hover:bg-brand-orange/90 shrink-0 self-start sm:self-center"
                             >
                               Attempt Now
                             </button>

@@ -5,7 +5,7 @@
 (function () {
     'use strict';
 
-    /* eslint-disable @typescript-eslint/no-wrapper-object-types */
+     
     const getPrototypeOf$2 = Object.getPrototypeOf;
     const hasProto = (v, constructor, predicate) => {
         var _a;
@@ -350,11 +350,11 @@
     // reuse the same object
     Optional.singletonNone = new Optional(false);
 
-    /* eslint-disable @typescript-eslint/unbound-method */
+     
     const nativeSlice = Array.prototype.slice;
     const nativeIndexOf = Array.prototype.indexOf;
     const nativePush = Array.prototype.push;
-    /* eslint-enable */
+     
     const rawIndexOf = (ts, t) => nativeIndexOf.call(ts, t);
     const indexOf = (xs, x) => {
         // The rawIndexOf method does not wrap up in an option. This is for performance reasons.
@@ -538,7 +538,7 @@
     //
     // Use the native keys if it is available (IE9+), otherwise fall back to manually filtering
     const keys = Object.keys;
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+     
     const hasOwnProperty = Object.hasOwnProperty;
     const each = (obj, f) => {
         const props = keys(obj);
@@ -680,7 +680,7 @@
                     match,
                     // NOTE: Only for debugging.
                     log: (label) => {
-                        // eslint-disable-next-line no-console
+                         
                         console.log(label, {
                             constructors,
                             constructor: key,
@@ -977,7 +977,7 @@
     };
 
     // Use window object as the global if it's available since CSP will block script evals
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
+     
     const Global = typeof window !== 'undefined' ? window : Function('return this;')();
 
     /**
@@ -1307,7 +1307,7 @@
         div.innerHTML = html;
         if (!div.hasChildNodes() || div.childNodes.length > 1) {
             const message = 'HTML does not have a single root node';
-            // eslint-disable-next-line no-console
+             
             console.error(message, html);
             throw new Error(message);
         }
@@ -2098,7 +2098,7 @@
             dom.setAttribute(key, value + '');
         }
         else {
-            // eslint-disable-next-line no-console
+             
             console.error('Invalid call to Attribute.set. Key ', key, ':: Value ', value, ':: Element ', dom);
             throw new Error('Attribute value was not simple');
         }
@@ -2211,7 +2211,7 @@
     // some elements, such as mathml, don't have style attributes
     // others, such as angular elements, have style attributes that aren't a CSSStyleDeclaration
     const isSupported = (dom) => 
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+     
     dom.style !== undefined && isFunction(dom.style.getPropertyValue);
 
     // Node.contains() is very, very, very good performance
@@ -2242,7 +2242,7 @@
         // JQuery coerces numbers to pixels for certain property names, and other times lets numbers through.
         // we're going to be explicit; strings only.
         if (!isString(value)) {
-            // eslint-disable-next-line no-console
+             
             console.error('Invalid call to CSS.set. Property ', property, ':: Value ', value, ':: Element ', dom);
             throw new Error('CSS value must be a string: ' + value);
         }
@@ -3678,7 +3678,7 @@
                 if (contains$2(['mousemove', 'mouseover', 'mouseout', systemInit()], eventName)) {
                     return;
                 }
-                // eslint-disable-next-line no-console
+                 
                 console.log(eventName, {
                     event: eventName,
                     time: finishTime - startTime,
@@ -5689,7 +5689,7 @@
             // available for all keying modes
             setGridSize: (component, keyConfig, keyState, numRows, numColumns) => {
                 if (!isFlatgridState(keyState)) {
-                    // eslint-disable-next-line no-console
+                     
                     console.error('Layout does not support setGridSize');
                 }
                 else {
@@ -6032,7 +6032,7 @@
             const originator = event.originator;
             const target = event.target;
             if (isRecursive(component, originator, target)) {
-                // eslint-disable-next-line no-console
+                 
                 console.warn(focus$3() + ' did not get interpreted by the desired target. ' +
                     '\nOriginator: ' + element(originator) +
                     '\nTarget: ' + element(target) +
@@ -6081,7 +6081,7 @@
             throw new Error(getMessage(event));
         };
         const warn = (event) => () => {
-            // eslint-disable-next-line no-console
+             
             console.warn(getMessage(event));
         };
         return {
@@ -7337,7 +7337,7 @@
     const withinRange = (coord1, coord2, xRange, yRange, scroll, origin) => {
         const a1 = asAbsolute(coord1, scroll, origin);
         const a2 = asAbsolute(coord2, scroll, origin);
-        // eslint-disable-next-line no-console
+         
         // console.log(`a1.left: ${a1.left}, a2.left: ${a2.left}, leftDelta: ${a1.left - a2.left}, xRange: ${xRange}, lD <= xRange: ${Math.abs(a1.left - a2.left) <= xRange}`);
         // console.log(`a1.top: ${a1.top}, a2.top: ${a2.top}, topDelta: ${a1.top - a2.top}, yRange: ${yRange}, lD <= xRange: ${Math.abs(a1.top - a2.top) <= yRange}`);
         return Math.abs(a1.left - a2.left) <= xRange &&
@@ -10865,7 +10865,7 @@
             getListContainer(list).fold(() => {
                 // check that the group container existed. It may not have if the components
                 // did not list anything, and shell was false.
-                // eslint-disable-next-line no-console
+                 
                 console.error('Custom List was defined to not be a shell, but no item container was specified in components');
                 throw new Error('Custom List was defined to not be a shell, but no item container was specified in components');
             }, (container) => {
@@ -10969,7 +10969,7 @@
     const focus$1 = constant$1(focusEvent);
     const toggled = constant$1(toggledEvent);
 
-    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+     
     const getItemRole = (detail) => detail.role.fold(() => detail.toggling
         .map((toggling) => toggling.exclusive ? 'menuitemradio' : 'menuitemcheckbox')
         .getOr('menuitem'), identity);
@@ -12450,7 +12450,7 @@
             getGroupContainer(toolbar).fold(() => {
                 // check that the group container existed. It may not have if the components
                 // did not list anything, and shell was false.
-                // eslint-disable-next-line no-console
+                 
                 console.error('Toolbar was defined to not be a shell, but no groups container was specified in components');
                 throw new Error('Toolbar was defined to not be a shell, but no groups container was specified in components');
             }, (container) => {
@@ -16314,7 +16314,7 @@
       freeze,
       seal,
       create: create$1
-    } = Object; // eslint-disable-line import/no-mutable-exports
+    } = Object;  
     let {
       apply,
       construct
@@ -16503,12 +16503,12 @@
     const MUSTACHE_EXPR = seal(/\{\{[\w\W]*|[\w\W]*\}\}/gm); // Specify template detection regex for SAFE_FOR_TEMPLATES mode
     const ERB_EXPR = seal(/<%[\w\W]*|[\w\W]*%>/gm);
     const TMPLIT_EXPR = seal(/\$\{[\w\W]*/gm); // eslint-disable-line unicorn/better-regex
-    const DATA_ATTR = seal(/^data-[\-\w.\u00B7-\uFFFF]+$/); // eslint-disable-line no-useless-escape
-    const ARIA_ATTR = seal(/^aria-[\-\w]+$/); // eslint-disable-line no-useless-escape
-    const IS_ALLOWED_URI = seal(/^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|matrix):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i // eslint-disable-line no-useless-escape
+    const DATA_ATTR = seal(/^data-[\-\w.\u00B7-\uFFFF]+$/);  
+    const ARIA_ATTR = seal(/^aria-[\-\w]+$/);  
+    const IS_ALLOWED_URI = seal(/^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|matrix):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i  
     );
     const IS_SCRIPT_OR_DATA = seal(/^(?:\w+script|data):/i);
-    const ATTR_WHITESPACE = seal(/[\u0000-\u0020\u00A0\u1680\u180E\u2000-\u2029\u205F\u3000]/g // eslint-disable-line no-control-regex
+    const ATTR_WHITESPACE = seal(/[\u0000-\u0020\u00A0\u1680\u180E\u2000-\u2029\u205F\u3000]/g  
     );
     const DOCTYPE_NAME = seal(/^html$/i);
     const CUSTOM_ELEMENT = seal(/^[a-z][.\w]*(-[.\w]+)+$/i);
@@ -16817,7 +16817,7 @@
        *
        * @param cfg optional config literal
        */
-      // eslint-disable-next-line complexity
+       
       const _parseConfig = function _parseConfig() {
         let cfg = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         if (CONFIG && CONFIG === cfg) {
@@ -17155,7 +17155,7 @@
        */
       const _createNodeIterator = function _createNodeIterator(root) {
         return createNodeIterator.call(root.ownerDocument || root, root,
-        // eslint-disable-next-line no-bitwise
+         
         NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_COMMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_PROCESSING_INSTRUCTION | NodeFilter.SHOW_CDATA_SECTION, null);
       };
       /**
@@ -17284,7 +17284,7 @@
        * @param value Attribute value.
        * @return Returns true if `value` is valid, otherwise false.
        */
-      // eslint-disable-next-line complexity
+       
       const _isValidAttribute = function _isValidAttribute(lcTag, lcName, value) {
         /* Make sure attribute cannot clobber */
         if (SANITIZE_DOM && (lcName === 'id' || lcName === 'name') && (value in document || value in formElement)) {
@@ -17472,7 +17472,7 @@
         /* Execute a hook if present */
         _executeHooks(hooks.afterSanitizeShadowDOM, fragment, null);
       };
-      // eslint-disable-next-line complexity
+       
       DOMPurify.sanitize = function (dirty) {
         let cfg = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         let body = null;
@@ -18598,9 +18598,9 @@
 
     const menuHasIcons = (xs) => exists(xs, (item) => 'icon' in item && item.icon !== undefined);
     const handleError = (error) => {
-        // eslint-disable-next-line no-console
+         
         console.error(formatError(error));
-        // eslint-disable-next-line no-console
+         
         console.log(error);
         return Optional.none();
     };
@@ -19143,7 +19143,7 @@
     ]);
     const createUrlDialog = (spec) => asRaw('dialog', urlDialogSchema, spec);
 
-    // eslint-disable-next-line @typescript-eslint/no-wrapper-object-types
+     
     const getAllObjects = (obj) => {
         if (isObject(obj)) {
             return [obj].concat(bind$3(values(obj), getAllObjects));
@@ -19788,7 +19788,7 @@
                         addSpinnerElement(component.element);
                         descendant(component.element, 'img').each((image$1) => {
                             image(image$1).catch((e) => {
-                                // eslint-disable-next-line no-console
+                                 
                                 console.error(e);
                             }).finally(() => {
                                 removeSpinnerElement(component.element);
@@ -20268,7 +20268,7 @@
         return hsvColour(Math.round(h), Math.round(s * 100), Math.round(v * 100));
     };
 
-    /* eslint-disable no-console */
+     
     const min = Math.min;
     const max = Math.max;
     const round$1 = Math.round;
@@ -21530,7 +21530,7 @@
                 // Fancy menu items don't have shortcuts or icons
                 (d) => fancy(d, backstage));
             default: {
-                // eslint-disable-next-line no-console
+                 
                 console.error('Unknown item in general menu', item);
                 return Optional.none();
             }
@@ -22835,7 +22835,7 @@
                     const picker = memPicker.get(comp);
                     const optRgbForm = Composing.getCurrent(picker);
                     optRgbForm.fold(() => {
-                        // eslint-disable-next-line no-console
+                         
                         console.log('Can not find form');
                     }, (rgbForm) => {
                         Representing.setValue(rgbForm, {
@@ -22882,7 +22882,7 @@
                 config('custom-editor-events', [
                     runOnAttached((component) => {
                         memReplaced.getOpt(component).each((ta) => {
-                            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                             
                             (isOldCustomEditor(spec)
                                 ? spec.init(ta.element.dom)
                                 : global$3.load(spec.scriptId, spec.scriptUrl).then((init) => init(ta.element.dom, spec.settings))).then((ea) => {
@@ -23319,7 +23319,7 @@
                     remove$3(frameComponent.element, 'tox-imagepreview__loaded');
                 }
                 applyFramePositioning();
-                // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                 
                 image(img).then((img) => {
                     // Ensure the component hasn't been removed while the image was loading
                     // if it is disconnected, just do nothing
@@ -24893,7 +24893,7 @@
             emit(comp, formCancelEvent);
         }
         else {
-            // eslint-disable-next-line no-console
+             
             console.error('Unknown button type: ', buttonType);
         }
     };
@@ -24989,7 +24989,7 @@
             return renderToggleButton(spec, backstage.shared.providers, spec.text.or(spec.tooltip).getOrUndefined());
         }
         else {
-            // eslint-disable-next-line no-console
+             
             console.error('Unknown footer button type: ', buttonType);
             throw new Error('Unknown footer button type');
         }
@@ -26049,7 +26049,7 @@
         }
         catch (e) {
             if (e instanceof SyntaxError) {
-                // eslint-disable-next-line no-console
+                 
                 console.log('Local storage ' + STORAGE_KEY + ' was not valid JSON', e);
                 return {};
             }
@@ -26057,7 +26057,7 @@
         }
         // validate the parsed value
         if (!isRecordOfUrlArray(history)) {
-            // eslint-disable-next-line no-console
+             
             console.log('Local storage ' + STORAGE_KEY + ' was not valid format', history);
             return {};
         }
@@ -27078,7 +27078,7 @@
         });
     };
 
-    // eslint-disable-next-line max-len
+     
     const renderToolbarGroupCommon = (toolbarGroup) => {
         const attributes = toolbarGroup.label.isNone() ?
             toolbarGroup.title.fold(() => ({}), (title) => ({ attributes: { 'aria-label': title } }))
@@ -29383,7 +29383,7 @@
         })
     };
     const extractFrom = (spec, backstage, editor, btnName) => get$h(types, spec.type).fold(() => {
-        // eslint-disable-next-line no-console
+         
         console.error('skipping button defined by', spec);
         return Optional.none();
     }, (render) => Optional.some(render(spec, backstage, editor, btnName)));
@@ -29435,7 +29435,7 @@
             return toolbar;
         }
         else {
-            // eslint-disable-next-line no-console
+             
             console.error('Toolbar type should be string, string[], boolean or ToolbarGroup[]');
             return [];
         }
@@ -29451,7 +29451,7 @@
     (spec) => {
         if (spec.type === 'grouptoolbarbutton' && !allowToolbarGroups) {
             // TODO change this message when sliding is available
-            // eslint-disable-next-line no-console
+             
             console.warn(`Ignoring the '${toolbarItem}' toolbar button. Group toolbar buttons are only supported when using floating toolbar mode and cannot be nested.`);
             return Optional.none();
         }
@@ -29560,7 +29560,7 @@
         const { mainUi, uiMotherships } = uiRefs;
         const lastToolbarWidth = Cell(0);
         const outerContainer = mainUi.outerContainer;
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+         
         iframe(editor);
         const eTargetNode = SugarElement.fromDom(args.targetNode);
         const uiRoot = getContentContainer(getRootNode(eTargetNode));
@@ -30087,7 +30087,7 @@
         const targetElm = SugarElement.fromDom(args.targetNode);
         const ui = InlineHeader(editor, targetElm, uiRefs, backstage, floatContainer);
         const toolbarPersist = isToolbarPersist(editor);
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+         
         inline(editor);
         const render = () => {
             // Because we set the floatContainer immediately afterwards, this is just telling us
@@ -33039,7 +33039,7 @@
                 ComposingConfigs.memento(memForm),
                 memento(memForm, {
                     postprocess: (formValue) => toValidValues(formValue).fold((err) => {
-                        // eslint-disable-next-line no-console
+                         
                         console.error(err);
                         return {};
                     }, identity)

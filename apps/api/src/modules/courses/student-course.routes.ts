@@ -3,6 +3,7 @@ import { requireAuth, AuthRequest } from "../../middleware/auth.middleware";
 import { prisma } from "../../utils/prisma";
 import { quizController } from "./quiz.controller";
 import { getCached, setCache } from "../../utils/memory-cache";
+import { moduleService } from "./module.service";
 
 const router = Router();
 
@@ -730,6 +731,19 @@ router.post(
           .json({ error: "Quiz already submitted", attempt: existing });
       }
 
+      // Timer enforcement: if quiz has timeLimitMin, verify submission is within limit
+      if (quiz.timeLimitMin && quiz.timeLimitMin > 0) {
+        const submitTime = new Date();
+        const attemptStartTime = existing?.createdAt ?? submitTime;
+        const elapsedMinutes =
+          (submitTime.getTime() - attemptStartTime.getTime()) / (1000 * 60);
+        if (elapsedMinutes > quiz.timeLimitMin + 1) {
+          return res.status(400).json({
+            error: `Time limit exceeded. You had ${quiz.timeLimitMin} minutes.`,
+          });
+        }
+      }
+
       // Score the answers
       let score = 0;
       const enrichedAnswers = answers.map(
@@ -832,6 +846,82 @@ router.get(
     } catch (error: any) {
       console.error("Error fetching quiz attempt:", error);
       return res.status(500).json({ error: "Failed to fetch quiz attempt" });
+    }
+  },
+);
+
+// GET /api/courses/:courseId/certification — get certification exam data
+router.get(
+  "/:courseId/certification",
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+      const { courseId } = req.params;
+
+      const certModule = await moduleService.getCertificationModule(courseId);
+      if (!certModule) {
+        return res.json({ module: null, quiz: null, progress: null });
+      }
+
+      const quiz = certModule.quizzes[0] ?? null;
+      let quizWithQuestions = null;
+      if (quiz) {
+        const questions = quiz.questions.map((q, qIdx) => {
+          const rawOptions = q.options as Array<{
+            label: string;
+            isCorrect: boolean;
+          }>;
+          const options = rawOptions.map((opt, oIdx) => ({
+            id: `${oIdx}`,
+            optionText: opt.label,
+          }));
+          return {
+            id: q.id,
+            questionText: q.text,
+            orderIndex: qIdx,
+            options,
+          };
+        });
+
+        quizWithQuestions = {
+          id: quiz.id,
+          title: quiz.title,
+          passingScore: quiz.passingScore,
+          timeLimitMin: quiz.timeLimitMin,
+          hasMcq: quiz.hasMcq,
+          hasAssignment: quiz.hasAssignment,
+          assignmentInstructions: quiz.assignmentInstructions,
+          questionCount: questions.length,
+          questions,
+        };
+      }
+
+      const existingAttempt = quiz
+        ? await prisma.quizAttempt.findFirst({
+            where: { quizId: quiz.id, userId },
+            orderBy: { createdAt: "desc" },
+          })
+        : null;
+
+      return res.json({
+        module: { id: certModule.id, title: certModule.title },
+        quiz: quizWithQuestions,
+        attempt: existingAttempt
+          ? {
+              id: existingAttempt.id,
+              score: existingAttempt.score,
+              total: existingAttempt.total,
+              percentage: existingAttempt.percentage,
+              isPassed: existingAttempt.isPassed,
+              submittedAt: existingAttempt.createdAt,
+            }
+          : null,
+      });
+    } catch (err: unknown) {
+      (req as any).log?.error?.("[certification] Fetch failed:", err);
+      return res
+        .status(500)
+        .json({ error: "Failed to fetch certification data" });
     }
   },
 );

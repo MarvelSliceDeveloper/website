@@ -15,8 +15,10 @@ import CourseDetailsTab from "./_components/CourseDetailsTab";
 import ContentTab from "./_components/ContentTab";
 import SessionsTab from "./_components/SessionsTab";
 import RecordingsTab from "./_components/RecordingsTab";
+import CertificationTab from "./_components/CertificationTab";
 import { usePageTitle } from "@/lib/use-page-title";
 import TabButton from "./_components/TabButton";
+import { IconAward } from "@tabler/icons-react";
 
 const MAX_THUMBNAIL_BYTES = 5 * 1024 * 1024;
 const ALLOWED_THUMBNAIL_TYPES = new Set([
@@ -42,7 +44,7 @@ export default function CourseDetailPage() {
   const [thumbnailUploading, setThumbnailUploading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<
-    "details" | "content" | "sessions" | "recordings"
+    "details" | "content" | "sessions" | "recordings" | "certification"
   >("details");
 
   const [form, setForm] = useState<CourseFormData>({
@@ -270,6 +272,17 @@ export default function CourseDetailPage() {
           active={activeTab === "recordings"}
           onClick={() => setActiveTab("recordings")}
         />
+        <button
+          onClick={() => setActiveTab("certification")}
+          className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === "certification"
+              ? "border-amber-500 text-amber-600"
+              : "border-transparent text-muted hover:text-foreground"
+          }`}
+        >
+          <IconAward className="h-4 w-4" />
+          Certification
+        </button>
       </div>
 
       {activeTab === "details" && (
@@ -295,6 +308,8 @@ export default function CourseDetailPage() {
       {activeTab === "sessions" && <SessionsTab courseId={id} />}
 
       {activeTab === "recordings" && <RecordingsTab courseId={id} />}
+
+      {activeTab === "certification" && <CertificationTab courseId={id} />}
     </div>
   );
 }

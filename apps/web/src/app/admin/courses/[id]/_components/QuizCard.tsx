@@ -45,6 +45,11 @@ interface Quiz {
   codingPrompt?: string | null;
   testCases?: TestCase[] | null;
   questions: QuizQuestion[];
+  dueDate?: string | null;
+  daysFromEnrollment?: number | null;
+  allowLateSubmission?: boolean;
+  lateSubmissionPenaltyPercent?: number | null;
+  lateSubmissionGracePeriodHrs?: number | null;
 }
 
 interface QuizCardProps {
@@ -85,9 +90,6 @@ export default function QuizCard({
   );
   const [lateSubmissionGracePeriodHrs, setLateSubmissionGracePeriodHrs] = useState(
     quiz.lateSubmissionGracePeriodHrs?.toString() ?? ""
-  );
-  const [isSpecialExam, setIsSpecialExam] = useState(
-    quiz.isSpecialExam ?? false,
   );
   const [passingScore, setPassingScore] = useState(quiz.passingScore ?? 65);
   const [examType, setExamType] = useState<string>(quiz.examType ?? "MCQ");
@@ -184,6 +186,9 @@ export default function QuizCard({
     }
   };
 
+  // Validates quiz data and sends PUT request to update the quiz.
+  // Checks: title required, each MCQ question needs text + correct answer.
+  // Sends only relevant fields based on enabled features (MCQ, assignment, coding).
   const handleUpdate = async () => {
     if (!title.trim()) {
       toast.error("Please enter a title");
@@ -213,7 +218,6 @@ export default function QuizCard({
         allowLateSubmission,
         lateSubmissionPenaltyPercent: allowLateSubmission ? lateSubmissionPenaltyPercent : null,
         lateSubmissionGracePeriodHrs: allowLateSubmission && lateSubmissionGracePeriodHrs ? Number(lateSubmissionGracePeriodHrs) : null,
-        isSpecialExam,
         passingScore: Number(passingScore),
         examType:
           hasMcq && hasAssignment && hasCoding ? "ALL_IN_ONE" : examType,
@@ -228,7 +232,7 @@ export default function QuizCard({
         testCases: hasCoding ? testCases : undefined,
         questions: hasMcq ? questions : [],
       });
-      toast.success("Quiz / Special Exam updated successfully");
+      toast.success("Quiz updated successfully");
       setEditing(false);
       onUpdate();
     } catch (error) {
@@ -241,6 +245,7 @@ export default function QuizCard({
     }
   };
 
+  // Deletes this quiz after confirmation. Calls onUpdate to refresh the parent list.
   const handleDelete = async () => {
     setDeleting(true);
     try {
@@ -255,6 +260,7 @@ export default function QuizCard({
     }
   };
 
+  // Resets all form state back to the original quiz values and exits edit mode.
   const cancelEdit = () => {
     setEditing(false);
     setTitle(quiz.title);
@@ -264,7 +270,6 @@ export default function QuizCard({
     setAllowLateSubmission(quiz.allowLateSubmission ?? false);
     setLateSubmissionPenaltyPercent(quiz.lateSubmissionPenaltyPercent ?? 25);
     setLateSubmissionGracePeriodHrs(quiz.lateSubmissionGracePeriodHrs?.toString() ?? "");
-    setIsSpecialExam(quiz.isSpecialExam ?? false);
     setPassingScore(quiz.passingScore ?? 65);
     setExamType(quiz.examType ?? "MCQ");
     setHasMcq(quiz.hasMcq ?? true);
@@ -289,7 +294,7 @@ export default function QuizCard({
     return (
       <div className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
         <div className="flex items-center justify-between">
-          <h4 className="font-medium text-sm">Edit Quiz / Special Exam</h4>
+          <h4 className="font-medium text-sm">Edit Quiz</h4>
           <button
             onClick={cancelEdit}
             className="p-1 text-muted hover:text-foreground"
@@ -307,31 +312,6 @@ export default function QuizCard({
             placeholder="Enter title"
             className="field"
           />
-        </div>
-
-        <div className="flex items-center gap-3 rounded-md border border-amber-500/30 bg-amber-500/10 p-3">
-          <input
-            type="checkbox"
-            id={`edit-isSpecialExam-${quiz.id}`}
-            checked={isSpecialExam}
-            onChange={(e) => {
-              const checked = e.target.checked;
-              setIsSpecialExam(checked);
-              if (checked) {
-                setHasMcq(true);
-                setHasAssignment(true);
-                setHasCoding(true);
-              }
-            }}
-            className="h-4 w-4 rounded accent-amber-500"
-          />
-          <label
-            htmlFor={`edit-isSpecialExam-${quiz.id}`}
-            className="text-xs font-medium cursor-pointer text-amber-300"
-          >
-            Mark as Special / Certification Exam (Includes MCQ + Assignment +
-            Coding Testcases)
-          </label>
         </div>
 
         {/* Due Date Mode */}
@@ -416,59 +396,6 @@ export default function QuizCard({
                 min={1}
                 className="field"
               />
-            </div>
-          </div>
-        )}
-
-        {isSpecialExam && (
-          <div className="rounded-md border border-amber-500/20 bg-amber-500/5 p-3 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-amber-400">
-                Exam Components Included:
-              </span>
-              <div className="flex items-center gap-4 text-xs">
-                <label className="flex items-center gap-1.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={hasMcq}
-                    onChange={(e) => setHasMcq(e.target.checked)}
-                    className="rounded accent-primary"
-                  />
-                  MCQ Quiz
-                </label>
-                <label className="flex items-center gap-1.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={hasAssignment}
-                    onChange={(e) => setHasAssignment(e.target.checked)}
-                    className="rounded accent-primary"
-                  />
-                  Assignment
-                </label>
-                <label className="flex items-center gap-1.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={hasCoding}
-                    onChange={(e) => setHasCoding(e.target.checked)}
-                    className="rounded accent-primary"
-                  />
-                  Coding Testcases
-                </label>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-1 border-t border-amber-500/20">
-              <div className="space-y-1">
-                <label className="text-xs font-medium">Passing Score (%)</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={passingScore}
-                  onChange={(e) => setPassingScore(Number(e.target.value))}
-                  className="field"
-                />
-              </div>
             </div>
           </div>
         )}
@@ -692,11 +619,7 @@ export default function QuizCard({
         e.preventDefault();
         onDrop?.();
       }}
-      className={`flex items-center justify-between rounded-md border ${
-        quiz.isSpecialExam
-          ? "border-amber-500/50 bg-amber-500/10"
-          : "border-amber-200 bg-amber-50"
-      } px-3 py-2 transition-all duration-200 ${
+      className={`flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-3 py-2 transition-all duration-200 ${
         isDragging ? "opacity-40 scale-[0.98]" : ""
       }`}
     >
@@ -707,11 +630,6 @@ export default function QuizCard({
           </span>
         )}
         <span className="text-sm font-medium text-amber-700">{quiz.title}</span>
-        {quiz.isSpecialExam && (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500 text-black">
-            SPECIAL EXAM ({quiz.passingScore ?? 65}%)
-          </span>
-        )}
         {quiz.daysFromEnrollment ? (
           <span className="text-[11px] text-amber-600">
             Due: {quiz.daysFromEnrollment}d after enrollment

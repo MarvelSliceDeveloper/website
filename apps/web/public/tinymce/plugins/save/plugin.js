@@ -7,7 +7,7 @@
 
     var global$2 = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
-    /* eslint-disable @typescript-eslint/no-wrapper-object-types */
+     
     const isSimpleType = (type) => (value) => typeof value === type;
     const isFunction = isSimpleType('function');
 

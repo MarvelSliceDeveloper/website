@@ -946,6 +946,90 @@ async function main() {
     3,
   );
 
+  // ─── Module 5: Certification Exam ──────────────────────────────────────────
+  const pythonCertModule = await upsertModule(pythonCourse.id, {
+    title: "Certification Exam",
+    description: "Final certification examination for the Python for Data Science course.",
+    order: 4,
+    isFreePreview: false,
+  });
+
+  const existingCertQuiz = await prisma.quiz.findFirst({
+    where: { moduleId: pythonCertModule.id, title: "Python Data Science Certification" },
+  });
+  if (!existingCertQuiz) {
+    await prisma.quiz.create({
+      data: {
+        moduleId: pythonCertModule.id,
+        title: "Python Data Science Certification",
+        order: 0,
+        isSpecialExam: true,
+        passingScore: 60,
+        timeLimitMin: 30,
+        hasMcq: true,
+        hasAssignment: false,
+        hasCoding: false,
+        examType: "MCQ",
+        questions: {
+          create: [
+            {
+              text: "Which of the following is the correct way to create a NumPy array of zeros?",
+              options: [
+                { label: "np.zeros((3, 3))", isCorrect: true },
+                { label: "np.zeroes(3, 3)", isCorrect: false },
+                { label: "np.array.zeros(3)", isCorrect: false },
+                { label: "np.zeros[3, 3]", isCorrect: false },
+              ],
+            },
+            {
+              text: "What does df.describe() return in Pandas?",
+              options: [
+                { label: "Summary statistics of the DataFrame", isCorrect: true },
+                { label: "The first 5 rows", isCorrect: false },
+                { label: "Column data types", isCorrect: false },
+                { label: "The DataFrame schema", isCorrect: false },
+              ],
+            },
+            {
+              text: "Which matplotlib function creates a scatter plot?",
+              options: [
+                { label: "plt.scatter()", isCorrect: true },
+                { label: "plt.plot()", isCorrect: false },
+                { label: "plt.scatterplot()", isCorrect: false },
+                { label: "plt.scatter_chart()", isCorrect: false },
+              ],
+            },
+            {
+              text: "In Scikit-learn, what is the purpose of train_test_split?",
+              options: [
+                { label: "Split data into training and testing sets", isCorrect: true },
+                { label: "Split the model into layers", isCorrect: false },
+                { label: "Split features into categories", isCorrect: false },
+                { label: "Split the dataset into equal parts", isCorrect: false },
+              ],
+            },
+            {
+              text: "Which Pandas method handles missing values by removing rows?",
+              options: [
+                { label: "df.dropna()", isCorrect: true },
+                { label: "df.remove_na()", isCorrect: false },
+                { label: "df.clean()", isCorrect: false },
+                { label: "df.filter_na()", isCorrect: false },
+              ],
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  // Mark the module as certification module
+  await prisma.module.update({
+    where: { id: pythonCertModule.id },
+    data: { isCertificationModule: true },
+  });
+  console.log("✅ Python course certification exam module created");
+
   console.log(
     "✅ Python course content created (modules, lessons, quizzes, assignments, study materials)",
   );

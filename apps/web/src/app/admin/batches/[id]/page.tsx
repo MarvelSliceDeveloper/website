@@ -97,7 +97,6 @@ export default function BatchDetailPage() {
   const [mentorCourseId, setMentorCourseId] = useState("");
   const [mentorUserId, setMentorUserId] = useState("");
   const [instructorOptions, setInstructorOptions] = useState<any[]>([]);
-  const [courseOptions, setCourseOptions] = useState<any[]>([]);
 
   const fetchBatch = useCallback(async () => {
     try {
@@ -159,7 +158,7 @@ export default function BatchDetailPage() {
   }, []);
 
   useEffect(() => {
-    if (tab === "courses") {
+    if (tab === "courses" || tab === "mentors") {
       fetchCourses();
     }
     if (tab === "extensions") {
@@ -672,9 +671,9 @@ export default function BatchDetailPage() {
                     className="field text-xs"
                   >
                     <option value="">Select course...</option>
-                    {(courseOptions.length > 0 ? courseOptions : courses).map((c: any) => (
-                      <option key={c.courseId || c.id} value={c.courseId || c.id}>
-                        {c.course?.title || c.title}
+                    {(courses.length > 0 ? courses : []).map((c: BatchCourse) => (
+                      <option key={c.courseId} value={c.courseId}>
+                        {c.course.title}
                       </option>
                     ))}
                   </select>

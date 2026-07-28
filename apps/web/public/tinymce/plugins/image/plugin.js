@@ -7,7 +7,7 @@
 
     var global$4 = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
-    /* eslint-disable @typescript-eslint/no-wrapper-object-types */
+     
     const getPrototypeOf = Object.getPrototypeOf;
     const hasProto = (v, constructor, predicate) => {
         var _a;
@@ -313,7 +313,7 @@
     // reuse the same object
     Optional.singletonNone = new Optional(false);
 
-    /* eslint-disable @typescript-eslint/unbound-method */
+     
     const nativeSlice = Array.prototype.slice;
     const nativePush = Array.prototype.push;
     const flatten = (xs) => {
@@ -349,7 +349,7 @@
     //
     // Use the native keys if it is available (IE9+), otherwise fall back to manually filtering
     const keys = Object.keys;
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+     
     const hasOwnProperty = Object.hasOwnProperty;
     const each = (obj, f) => {
         const props = keys(obj);
@@ -406,7 +406,7 @@
         div.innerHTML = html;
         if (!div.hasChildNodes() || div.childNodes.length > 1) {
             const message = 'HTML does not have a single root node';
-            // eslint-disable-next-line no-console
+             
             console.error(message, html);
             throw new Error(message);
         }
@@ -451,7 +451,7 @@
             dom.setAttribute(key, value + '');
         }
         else {
-            // eslint-disable-next-line no-console
+             
             console.error('Invalid call to Attribute.set. Key ', key, ':: Value ', value, ':: Element ', dom);
             throw new Error('Attribute value was not simple');
         }
@@ -598,11 +598,11 @@
     const createImageList = (editor, callback) => {
         const imageList = getImageList(editor);
         if (isString(imageList)) {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+             
             fetch(imageList)
                 .then((res) => {
                 if (res.ok) {
-                    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                     
                     res.json().then(callback);
                 }
             });
@@ -1378,7 +1378,7 @@
                         api.setData({ dimensions: size });
                     }
                 })
-                    // eslint-disable-next-line no-console
+                     
                     .catch((e) => console.error(e));
             }
             else {
@@ -1436,7 +1436,7 @@
                 changeSrc(helpers, info, state, api);
                 api.focus('src');
             };
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+             
             blobToDataUri(file).then((dataUrl) => {
                 const blobInfo = helpers.createBlobCache(file, blobUri, dataUrl);
                 if (info.automaticUploads) {
@@ -1507,7 +1507,7 @@
             style: getStyleValue(helpers.normalizeCss, toImageData(data, false))
         };
         editor.execCommand('mceUpdateImage', false, toImageData(finalData, info.hasAccessibilityOptions));
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+         
         editor.editorUpload.uploadImagesAuto();
         api.close();
     };
@@ -1566,7 +1566,7 @@
             uploadImage: uploadImage(editor)
         };
         const open = () => {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+             
             collect(editor)
                 .then((info) => {
                 const state = createState(info);

@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../utils/prisma";
+import { moduleService } from "../courses/module.service";
 
 interface CourseProgress {
   courseId: string;
@@ -7,6 +8,8 @@ interface CourseProgress {
   totalItems: number;
   completedItems: number;
   isComplete: boolean;
+  hasCertificationModule: boolean;
+  certificationQuizPassed: boolean;
   details: {
     totalLessons: number;
     completedLessons: number;
@@ -27,7 +30,11 @@ export async function getCourseContentProgress(
       id: true,
       title: true,
       modules: {
-        select: { id: true, lessons: { select: { id: true, videoUrl: true } } },
+        select: {
+          id: true,
+          isCertificationModule: true,
+          lessons: { select: { id: true, videoUrl: true } },
+        },
       },
     },
   });
@@ -36,16 +43,22 @@ export async function getCourseContentProgress(
     throw new Error("Course not found");
   }
 
-  const moduleIds = course.modules.map((m) => m.id);
-  const totalLessons = course.modules.reduce((s, m) => s + m.lessons.length, 0);
+  const certModule = course.modules.find((m) => m.isCertificationModule);
+  const regularModules = course.modules.filter((m) => !m.isCertificationModule);
+  const regularModuleIds = regularModules.map((m) => m.id);
+
+  const totalLessons = regularModules.reduce(
+    (s, m) => s + m.lessons.length,
+    0,
+  );
 
   const [quizzes, assignments] = await Promise.all([
     prisma.quiz.findMany({
-      where: { moduleId: { in: moduleIds } },
+      where: { moduleId: { in: regularModuleIds } },
       select: { id: true, moduleId: true },
     }),
     prisma.assignment.findMany({
-      where: { moduleId: { in: moduleIds } },
+      where: { moduleId: { in: regularModuleIds } },
       select: { id: true, moduleId: true },
     }),
   ]);
@@ -101,9 +114,40 @@ export async function getCourseContentProgress(
 
   const totalItems = contentItems.reduce((s, c) => s + c.total, 0);
   const completedItems = contentItems.reduce((s, c) => s + c.completed, 0);
-  const isComplete =
+  const regularComplete =
     contentItems.length > 0 &&
     contentItems.every((c) => c.completed >= c.total);
+
+  let certificationQuizPassed = false;
+  if (certModule) {
+    const certQuiz = (
+      await prisma.quiz.findMany({
+        where: { moduleId: certModule.id },
+        select: { id: true, passingScore: true },
+      })
+    )[0];
+
+    if (certQuiz) {
+      const certAttempt = await prisma.quizAttempt.findFirst({
+        where: {
+          userId,
+          quizId: certQuiz.id,
+          status: { not: "PENDING" },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+      if (certAttempt) {
+        certificationQuizPassed =
+          certAttempt.isPassed ||
+          certAttempt.percentage >= (certQuiz.passingScore ?? 60);
+      }
+    }
+  }
+
+  const hasCertificationModule = !!certModule;
+  const isComplete = hasCertificationModule
+    ? regularComplete && certificationQuizPassed
+    : regularComplete;
 
   return {
     courseId: course.id,
@@ -111,6 +155,8 @@ export async function getCourseContentProgress(
     totalItems,
     completedItems,
     isComplete,
+    hasCertificationModule,
+    certificationQuizPassed,
     details: {
       totalLessons,
       completedLessons: totalLessons,
@@ -212,10 +258,10 @@ export async function getPackageSpecialExamProgress(
               id: true,
               title: true,
               modules: {
+                where: { isCertificationModule: true },
                 select: {
                   id: true,
                   quizzes: {
-                    where: { isSpecialExam: true },
                     select: {
                       id: true,
                       title: true,
@@ -252,21 +298,21 @@ export async function getPackageSpecialExamProgress(
   const courseStatuses = pkg.courses.map((pc) => {
     const c = pc.course;
     const isExamRequired = batchVisibilityMap.get(c.id) ?? true;
-    const specialExams = c.modules.flatMap((m) => m.quizzes);
-    const primaryExam = specialExams[0] || null;
-    const bestAttempt = primaryExam?.attempts[0] || null;
+    const certModule = c.modules[0] || null;
+    const certQuiz = certModule?.quizzes[0] || null;
+    const bestAttempt = certQuiz?.attempts[0] || null;
     const isPassed = bestAttempt
       ? bestAttempt.isPassed ||
-        bestAttempt.percentage >= (primaryExam?.passingScore ?? 65)
+        bestAttempt.percentage >= (certQuiz?.passingScore ?? 65)
       : false;
 
     return {
       courseId: c.id,
       courseTitle: c.title,
       isExamRequired,
-      specialExamId: primaryExam?.id || null,
-      specialExamTitle: primaryExam?.title || null,
-      passingScore: primaryExam?.passingScore ?? 65,
+      certExamId: certQuiz?.id || null,
+      certExamTitle: certQuiz?.title || null,
+      passingScore: certQuiz?.passingScore ?? 65,
       isPassed,
       scorePercentage: bestAttempt?.percentage ?? 0,
       attempted: !!bestAttempt,
@@ -312,7 +358,7 @@ export async function checkAndIssuePackageCertificate(
   if (!progress.allPassed) {
     return {
       issued: false,
-      reason: "Not all required Special Exams have been passed",
+      reason: "Not all required certification exams have been passed",
     };
   }
 

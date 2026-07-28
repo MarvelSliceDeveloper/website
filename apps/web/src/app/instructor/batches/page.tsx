@@ -11,6 +11,8 @@ import {
 } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
 
+type CourseSummary = { id: string; title: string };
+
 type Batch = {
   id: string;
   name: string;
@@ -18,9 +20,17 @@ type Batch = {
   endDate: string;
   maxStudents: number;
   description: string | null;
-  course: { id: string; title: string };
+  course: CourseSummary | null;
+  courseMentors: { course: CourseSummary }[];
   _count: { enrollments: number; sessions: number };
 };
+
+function getCoursesForBatch(b: Batch): CourseSummary[] {
+  const fromMentors = b.courseMentors.map((cm) => cm.course);
+  if (fromMentors.length > 0) return fromMentors;
+  if (b.course) return [b.course];
+  return [];
+}
 
 export default function InstructorBatchesPage() {
   usePageTitle("Batches");
@@ -43,10 +53,12 @@ function BatchesPageContent() {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Fetches batches assigned to this instructor from the instructor-specific endpoint.
+  // The /api/instructor/batches endpoint filters by the logged-in instructor's ID.
   useEffect(() => {
     async function loadBatches() {
       try {
-        const data = await api.get<Batch[]>("/api/admin/batches");
+        const data = await api.get<Batch[]>("/api/instructor/batches");
         setBatches(Array.isArray(data) ? data : []);
       } catch (err: unknown) {
         console.error("Failed to load batches:", err);
@@ -132,9 +144,20 @@ function BatchesPageContent() {
                   <h3 className="font-bold text-foreground text-base mt-2 truncate">
                     {b.name}
                   </h3>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {b.course.title}
-                  </p>
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {getCoursesForBatch(b).length > 0 ? (
+                      getCoursesForBatch(b).map((c) => (
+                        <span
+                          key={c.id}
+                          className="inline-flex items-center rounded-full bg-brand-blue-tint/60 px-2 py-0.5 text-[10px] font-semibold text-brand-blue border border-brand-blue/15"
+                        >
+                          {c.title}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-muted-foreground">No course assigned</span>
+                    )}
+                  </div>
                 </div>
 
                 {b.description && (

@@ -7,7 +7,7 @@
 
     var global$2 = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
-    /* eslint-disable @typescript-eslint/no-wrapper-object-types */
+     
     const isNullable = (a) => a === null || a === undefined;
     const isNonNullable = (a) => !isNullable(a);
 
@@ -273,7 +273,7 @@
     const head = (xs) => get$1(xs, 0);
 
     // Use window object as the global if it's available since CSP will block script evals
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
+     
     const Global = typeof window !== 'undefined' ? window : Function('return this;')();
 
     const blank = (r) => (s) => s.replace(r, '');
@@ -1300,7 +1300,7 @@
     						}
     					}
 
-    					// eslint-disable-next-line no-redeclare
+    					 
     					var from = match.index;
     					var matchStr = match[0];
     					var before = str.slice(0, from);

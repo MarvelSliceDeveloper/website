@@ -18,6 +18,7 @@ import {
   IconDeviceSpeaker,
   IconClock,
   IconCheck,
+  IconAward,
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
@@ -45,6 +46,10 @@ const StudyMaterialContent = dynamic(
 );
 const StickyNoteWidget = dynamic(
   () => import("@/components/StickyNoteWidget"),
+  { ssr: false },
+);
+const CertificationExamView = dynamic(
+  () => import("./_comps/CertificationExamView"),
   { ssr: false },
 );
 
@@ -265,6 +270,7 @@ export default function CourseContentView({
   } | null>(null);
 
   const [joiningSessionId, setJoiningSessionId] = useState<string | null>(null);
+  const [showCertificationExam, setShowCertificationExam] = useState(false);
 
   // ── Data fetching ──────────────────────────────────────────────────────
 
@@ -594,6 +600,15 @@ export default function CourseContentView({
   // ── Main pane: video + lesson info ──────────────────────────────────────
 
   const renderMain = () => {
+    if (showCertificationExam && certModule) {
+      return (
+        <CertificationExamView
+          courseId={courseId}
+          onBack={() => setShowCertificationExam(false)}
+        />
+      );
+    }
+
     if (selectedQuizId && quizLoading) {
       return (
         <div className="flex items-center justify-center h-full gap-3 py-16">
@@ -1191,8 +1206,39 @@ const renderAccordion = () => (
         </div>
       );
     })}
+    {renderCertificationSection()}
   </div>
 );
+
+  const certModule = d?.modules.find((m) => m.isCertificationModule);
+
+  const renderCertificationSection = () => {
+    if (!certModule) return null;
+    return (
+      <div className="p-3">
+        <div className="rounded-xl border border-amber-500/30 overflow-hidden">
+          <button
+            onClick={() => setShowCertificationExam(true)}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-amber-500/5 ${
+              showCertificationExam ? "bg-amber-500/10" : ""
+            }`}
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+              <IconAward size={16} className="text-amber-500" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-[13px] font-semibold leading-snug text-foreground">
+                Certification Exam
+              </span>
+              <span className="block text-[11px] mt-0.5 text-muted-foreground">
+                Final exam for certificate
+              </span>
+            </span>
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   const renderContentPanel = () => (
     <div className="flex flex-col h-full">

@@ -5,7 +5,7 @@
 (function () {
     'use strict';
 
-    /* eslint-disable @typescript-eslint/no-wrapper-object-types */
+     
     const hasProto = (v, constructor, predicate) => {
         var _a;
         if (predicate(v, constructor.prototype)) {
@@ -294,7 +294,7 @@
     // reuse the same object
     Optional.singletonNone = new Optional(false);
 
-    /* eslint-disable @typescript-eslint/unbound-method */
+     
     const nativeSlice = Array.prototype.slice;
     const map = (xs, f) => {
         // pre-allocating array size when it's guaranteed to be known
@@ -357,7 +357,7 @@
     };
 
     // Use window object as the global if it's available since CSP will block script evals
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
+     
     const Global = typeof window !== 'undefined' ? window : Function('return this;')();
 
     /** path :: ([String], JsObj?) -> JsObj */
@@ -419,7 +419,7 @@
         div.innerHTML = html;
         if (!div.hasChildNodes() || div.childNodes.length > 1) {
             const message = 'HTML does not have a single root node';
-            // eslint-disable-next-line no-console
+             
             console.error(message, html);
             throw new Error(message);
         }
@@ -504,7 +504,7 @@
             dom.setAttribute(key, value + '');
         }
         else {
-            // eslint-disable-next-line no-console
+             
             console.error('Invalid call to Attribute.set. Key ', key, ':: Value ', value, ':: Element ', dom);
             throw new Error('Attribute value was not simple');
         }

@@ -1,6 +1,13 @@
 import { prisma } from "../../utils/prisma";
 
 export const instructorService = {
+  // Builds analytics dashboard data scoped to this instructor.
+  // 1. Finds all batches where instructor is teacher or mentor
+  // 2. Gets enrolled students and their progress
+  // 3. Calculates completion rates per course
+  // 4. Computes monthly student retention from login logs
+  // 5. Groups video watch progress into drop-off buckets
+  // 6. Averages quiz scores across attempts
   async getAnalytics(instructorId: string) {
     const batches = await prisma.batch.findMany({
       where: {
@@ -170,6 +177,8 @@ export const instructorService = {
     };
   },
 
+  // Returns batches where this instructor is the assigned teacher or a course mentor.
+  // Includes course title, enrollment count, and session count. Sorted by start date descending.
   async getMyBatches(instructorId: string) {
     return prisma.batch.findMany({
       where: {
@@ -180,12 +189,24 @@ export const instructorService = {
       },
       include: {
         course: { select: { id: true, title: true } },
-        _count: { select: { enrollments: true, sessions: true } },
+        courseMentors: {
+          include: {
+            course: { select: { id: true, title: true } },
+          },
+        },
+        _count: {
+          select: {
+            enrollments: { where: { status: "APPROVED" } },
+            sessions: true,
+          },
+        },
       },
       orderBy: { startDate: "desc" },
     });
   },
 
+  // Returns unique courses from the instructor's assigned batches.
+  // First finds all batches, extracts unique course IDs, then fetches courses with module/batch counts.
   async getMyCourses(instructorId: string) {
     const batches = await prisma.batch.findMany({
       where: {

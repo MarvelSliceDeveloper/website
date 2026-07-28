@@ -7,7 +7,7 @@
 
     var global$1 = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
-    /* eslint-disable @typescript-eslint/no-wrapper-object-types */
+     
     const eq = (t) => (a) => t === a;
     const isUndefined = eq(undefined);
     const isNullable = (a) => a === null || a === undefined;

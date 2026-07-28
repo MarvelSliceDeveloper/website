@@ -8,6 +8,7 @@
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
 import { AppError } from "../../utils/errors";
+import { moduleService } from "./module.service";
 
 // --- Zod Schemas ---
 
@@ -114,6 +115,8 @@ export const courseService = {
         data: data.tagIds.map((tagId) => ({ courseId: course.id, tagId })),
       });
     }
+
+    await moduleService.ensureCertificationModule(course.id);
 
     return course;
   },
@@ -301,6 +304,8 @@ export const courseService = {
         durationMinutes: Math.ceil(totalSeconds / 60) || null,
       },
     });
+
+    await moduleService.ensureCertificationModule(courseId);
 
     return { published: true, checklist };
   },

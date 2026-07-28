@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
+import { AppError } from "../../utils/errors";
 
 type ContentItemType = "LESSON" | "QUIZ" | "ASSIGNMENT" | "PRACTICAL";
 
@@ -211,5 +212,107 @@ export const moduleService = {
     });
 
     return { reordered: true };
+  },
+
+  async getCertificationModule(courseId: string) {
+    return prisma.module.findFirst({
+      where: { courseId, isCertificationModule: true },
+      include: {
+        quizzes: {
+          include: { questions: true },
+          orderBy: { order: "asc" },
+        },
+        assignments: { orderBy: { dueDate: "asc" } },
+      },
+    });
+  },
+
+  async createCertificationModule(courseId: string) {
+    const lastModule = await prisma.module.findFirst({
+      where: { courseId },
+      orderBy: { order: "desc" },
+    });
+    const nextOrder = (lastModule?.order ?? -1) + 1;
+
+    const certModule = await prisma.module.create({
+      data: {
+        courseId,
+        title: "Certification Exam",
+        description: "Final certification examination for this course",
+        order: nextOrder,
+        isCertificationModule: true,
+        isFreePreview: false,
+      },
+    });
+
+    await prisma.quiz.create({
+      data: {
+        moduleId: certModule.id,
+        title: "Certification Exam",
+        isSpecialExam: true,
+        passingScore: 60,
+        hasMcq: true,
+        hasAssignment: false,
+        hasCoding: false,
+        examType: "MCQ",
+      },
+    });
+
+    return certModule;
+  },
+
+  async ensureCertificationModule(courseId: string) {
+    const existing = await this.getCertificationModule(courseId);
+    if (existing) return existing;
+    return this.createCertificationModule(courseId);
+  },
+
+  async updateCertificationModule(
+    courseId: string,
+    data: {
+      title?: string;
+      passingScore?: number;
+      timeLimitMin?: number | null;
+      hasAssignment?: boolean;
+      assignmentInstructions?: string | null;
+    },
+  ) {
+    const certModule = await this.getCertificationModule(courseId);
+    if (!certModule) {
+      throw new AppError(404, "Certification module not found for this course");
+    }
+
+    const quiz = certModule.quizzes[0];
+    if (!quiz) {
+      throw new AppError(404, "Certification quiz not found");
+    }
+
+    if (data.title !== undefined) {
+      await prisma.module.update({
+        where: { id: certModule.id },
+        data: { title: data.title },
+      });
+    }
+
+    await prisma.quiz.update({
+      where: { id: quiz.id },
+      data: {
+        ...(data.passingScore !== undefined && {
+          passingScore: data.passingScore,
+        }),
+        ...(data.timeLimitMin !== undefined && {
+          timeLimitMin: data.timeLimitMin,
+        }),
+        ...(data.hasAssignment !== undefined && {
+          hasAssignment: data.hasAssignment,
+          examType: data.hasAssignment ? "ALL_IN_ONE" : "MCQ",
+        }),
+        ...(data.assignmentInstructions !== undefined && {
+          assignmentInstructions: data.assignmentInstructions,
+        }),
+      },
+    });
+
+    return this.getCertificationModule(courseId);
   },
 };

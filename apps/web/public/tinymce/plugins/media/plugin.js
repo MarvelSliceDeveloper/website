@@ -7,7 +7,7 @@
 
     var global$6 = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
-    /* eslint-disable @typescript-eslint/no-wrapper-object-types */
+     
     const hasProto = (v, constructor, predicate) => {
         var _a;
         if (predicate(v, constructor.prototype)) {
@@ -293,7 +293,7 @@
     // reuse the same object
     Optional.singletonNone = new Optional(false);
 
-    /* eslint-disable @typescript-eslint/unbound-method */
+     
     const nativeSlice = Array.prototype.slice;
     const nativePush = Array.prototype.push;
     // Unwound implementing other functions in terms of each.
@@ -327,7 +327,7 @@
     //
     // Use the native keys if it is available (IE9+), otherwise fall back to manually filtering
     const keys = Object.keys;
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+     
     const hasOwnProperty = Object.hasOwnProperty;
     const each = (obj, f) => {
         const props = keys(obj);
@@ -452,7 +452,7 @@
                         if (!data.type) {
                             data.type = name;
                         }
-                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                         
                         data = global$5.extend(node.attributes.map, data);
                     }
                     if (name === 'source') {

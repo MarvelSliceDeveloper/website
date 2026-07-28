@@ -22,6 +22,13 @@ export const ticketController = {
 
       if (data.type === "MENTORSHIP") {
         notificationService.notifyMentorshipCreated(ticket.id);
+
+        const { tickets } = await ticketService.listTickets({
+          userId: req.user!.userId,
+          type: "MENTORSHIP",
+        });
+
+        return res.status(201).json({ ticket, tickets });
       } else {
         notificationService.notifySupportTicketCreated(ticket.id);
       }

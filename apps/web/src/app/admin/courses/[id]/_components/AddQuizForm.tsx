@@ -40,8 +40,6 @@ export default function AddQuizForm({
   const [allowLateSubmission, setAllowLateSubmission] = useState(false);
   const [lateSubmissionPenaltyPercent, setLateSubmissionPenaltyPercent] = useState(25);
   const [lateSubmissionGracePeriodHrs, setLateSubmissionGracePeriodHrs] = useState("");
-  const [isSpecialExam, setIsSpecialExam] = useState(false);
-  const [passingScore, setPassingScore] = useState(65);
   const [examType, setExamType] = useState<
     "MCQ" | "ASSIGNMENT" | "CODING_TESTCASE" | "ALL_IN_ONE"
   >("MCQ");
@@ -175,8 +173,7 @@ export default function AddQuizForm({
         allowLateSubmission,
         lateSubmissionPenaltyPercent: allowLateSubmission ? lateSubmissionPenaltyPercent : undefined,
         lateSubmissionGracePeriodHrs: allowLateSubmission && lateSubmissionGracePeriodHrs ? Number(lateSubmissionGracePeriodHrs) : undefined,
-        isSpecialExam,
-        passingScore: Number(passingScore),
+        passingScore: 65,
         examType:
           hasMcq && hasAssignment && hasCoding ? "ALL_IN_ONE" : examType,
         hasMcq,
@@ -190,11 +187,7 @@ export default function AddQuizForm({
         testCases: hasCoding ? testCases : undefined,
         questions: hasMcq ? questions : [],
       });
-      toast.success(
-        isSpecialExam
-          ? "Special Exam added successfully"
-          : "Quiz added successfully",
-      );
+      toast.success("Quiz added successfully");
       onSuccess();
     } catch (error) {
       console.error("Failed to add quiz:", error);
@@ -209,7 +202,7 @@ export default function AddQuizForm({
   return (
     <div className="space-y-4 rounded-lg border border-border bg-card p-4">
       <div className="flex items-center justify-between">
-        <h4 className="font-medium text-sm">Add Quiz / Special Exam</h4>
+        <h4 className="font-medium text-sm">Add Quiz</h4>
         <button
           onClick={onCancel}
           className="p-1 text-muted hover:text-foreground"
@@ -224,34 +217,9 @@ export default function AddQuizForm({
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter title (e.g. Comprehensive Certification Exam)"
+          placeholder="Enter quiz title"
           className="field"
         />
-      </div>
-
-      <div className="flex items-center gap-3 rounded-md border border-amber-500/30 bg-amber-500/10 p-3">
-        <input
-          type="checkbox"
-          id="isSpecialExam"
-          checked={isSpecialExam}
-          onChange={(e) => {
-            const checked = e.target.checked;
-            setIsSpecialExam(checked);
-            if (checked) {
-              setHasMcq(true);
-              setHasAssignment(true);
-              setHasCoding(true);
-            }
-          }}
-          className="h-4 w-4 rounded accent-amber-500"
-        />
-        <label
-          htmlFor="isSpecialExam"
-          className="text-xs font-medium cursor-pointer text-amber-300"
-        >
-          Mark as Special / Certification Exam (Includes MCQ + Assignment +
-          Coding Testcases)
-        </label>
       </div>
 
       {/* Due Date Mode */}
@@ -336,59 +304,6 @@ export default function AddQuizForm({
               min={1}
               className="field"
             />
-          </div>
-        </div>
-      )}
-
-      {isSpecialExam && (
-        <div className="rounded-md border border-amber-500/20 bg-amber-500/5 p-3 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-amber-400">
-              Exam Components Included:
-            </span>
-            <div className="flex items-center gap-4 text-xs">
-              <label className="flex items-center gap-1.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={hasMcq}
-                  onChange={(e) => setHasMcq(e.target.checked)}
-                  className="rounded accent-primary"
-                />
-                MCQ Quiz
-              </label>
-              <label className="flex items-center gap-1.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={hasAssignment}
-                  onChange={(e) => setHasAssignment(e.target.checked)}
-                  className="rounded accent-primary"
-                />
-                Assignment
-              </label>
-              <label className="flex items-center gap-1.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={hasCoding}
-                  onChange={(e) => setHasCoding(e.target.checked)}
-                  className="rounded accent-primary"
-                />
-                Coding Testcases
-              </label>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 pt-1 border-t border-amber-500/20">
-            <div className="space-y-1">
-              <label className="text-xs font-medium">Passing Score (%)</label>
-              <input
-                type="number"
-                min={1}
-                max={100}
-                value={passingScore}
-                onChange={(e) => setPassingScore(Number(e.target.value))}
-                className="field"
-              />
-            </div>
           </div>
         </div>
       )}
@@ -627,7 +542,7 @@ export default function AddQuizForm({
           disabled={loading}
           className="btn-primary text-xs"
         >
-          {loading ? "Adding..." : "Add Quiz / Special Exam"}
+          {loading ? "Adding..." : "Add Quiz"}
         </button>
       </div>
     </div>

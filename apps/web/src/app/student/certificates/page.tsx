@@ -52,8 +52,8 @@ type SpecialExamCourseStatus = {
   courseId: string;
   courseTitle: string;
   isExamRequired: boolean;
-  specialExamId: string | null;
-  specialExamTitle: string | null;
+  certExamId: string | null;
+  certExamTitle: string | null;
   passingScore: number;
   isPassed: boolean;
   scorePercentage: number;
@@ -200,10 +200,10 @@ export default function CertificatesPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
-            Certificates & Special Exams
+                    Certificates & Certification Exams
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Complete all required Special Exams in your enrolled program to
+                Complete all required certification exams in your enrolled program to
             unlock and claim your official Package Certification.
           </p>
         </div>
@@ -243,7 +243,7 @@ export default function CertificatesPage() {
                     {progress.packageName}
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Special Exam Progress: {progress.passedCount} of{" "}
+                      Certification Exam Progress: {progress.passedCount} of{" "}
                     {progress.totalRequired} required exams passed
                   </p>
                 </div>
@@ -307,7 +307,7 @@ export default function CertificatesPage() {
                 </div>
               </div>
 
-              {/* Courses & Special Exams status list */}
+              {/* Courses & Certification Exams status list */}
               <div className="mt-5 space-y-2">
                 {progress.courses.map((cs) => (
                   <div
@@ -319,17 +319,17 @@ export default function CertificatesPage() {
                         {cs.courseTitle}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {cs.specialExamTitle ? (
+                        {cs.certExamTitle ? (
                           <>
                             Exam:{" "}
                             <span className="font-semibold">
-                              {cs.specialExamTitle}
+                              {cs.certExamTitle}
                             </span>{" "}
                             (Passing: {cs.passingScore}%)
                           </>
                         ) : (
                           <span className="italic text-muted">
-                            No Special Exam configured
+                            No certification exam configured
                           </span>
                         )}
                       </p>
@@ -435,7 +435,7 @@ export default function CertificatesPage() {
             <div className="rounded-xl border border-dashed border-border/60 bg-background/40 p-6 text-sm text-muted-foreground">
               {isLoading
                 ? "Loading..."
-                : "No certificates issued yet. Pass all required Special Exams in your enrolled program to claim your certificate."}
+                    : "No certificates issued yet. Pass all required certification exams in your enrolled program to claim your certificate."}
             </div>
           )}
         </div>
@@ -472,7 +472,7 @@ export default function CertificatesPage() {
                     </span>
                   </div>
                   <p className="mt-4 text-sm text-muted-foreground">
-                    Complete all lessons and Special Exams to receive your
+                    Complete all lessons and certification exams to receive your
                     certificate.
                   </p>
                 </div>
