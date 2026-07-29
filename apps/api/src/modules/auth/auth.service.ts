@@ -157,15 +157,19 @@ export const authService = {
       sessionId = session.id;
     }
 
-    const payload: Record<string, unknown> = {
+    const payload: {
+      userId: string;
+      role: string;
+      email: string;
+      sessionTimeoutMin: number;
+      sessionId?: string;
+    } = {
       userId: user.id,
       role: user.role,
       email: user.email,
       sessionTimeoutMin: user.sessionTimeoutMin ?? 480,
+      ...(sessionId ? { sessionId } : {}),
     };
-    if (sessionId) {
-      payload.sessionId = sessionId;
-    }
 
     const accessToken = jwt.sign(payload, getJwtSecret(), {
       expiresIn: JWT_EXPIRY as any,

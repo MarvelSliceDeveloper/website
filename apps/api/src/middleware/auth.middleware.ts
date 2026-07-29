@@ -175,7 +175,7 @@ export const requireAuth = async (
           }
           // Update lastActiveAt periodically (once per minute)
           const now = Math.floor(Date.now() / 60000);
-          const lastUpdate = Math.floor((payload.iat || 0));
+          const lastUpdate = Math.floor((payload.iat || 0) / 60);
           if (now > lastUpdate) {
             prisma.adminSession.update({
               where: { id: tokenPayload.sessionId },

@@ -77,10 +77,11 @@ export const authController = {
       }
 
       // Log successful login
+      const loginResult = result as { accessToken: string; user: { userId: string; name: string; mustChangePassword: boolean; onboardingComplete: boolean } };
       prisma.loginLog
         .create({
           data: {
-            userId: result.user.userId,
+            userId: loginResult.user.userId,
             ip: req.ip,
             userAgent: req.headers["user-agent"],
             deviceInfo: (req.headers["sec-ch-ua-platform"] as string) || null,
@@ -88,14 +89,14 @@ export const authController = {
         })
         .catch((err) => console.error("[auth] Failed to log login:", err));
 
-      res.cookie("accessToken", result.accessToken, {
+      res.cookie("accessToken", loginResult.accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
         maxAge: ACCESS_TOKEN_MAX_AGE,
       });
 
-      return res.status(200).json(result);
+      return res.status(200).json(loginResult);
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
       return res.status(statusCode).json(body);
