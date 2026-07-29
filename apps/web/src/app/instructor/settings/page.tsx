@@ -25,6 +25,7 @@ import {
   IconCheck,
 } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 const NOTIFICATION_TYPES = [
   "SESSION_SCHEDULED",
@@ -409,14 +410,12 @@ export default function InstructorSettingsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div>
-        <p className="sp-eyebrow">Instructor</p>
-        <h1 className="mt-1.5 text-2xl font-bold text-foreground">Settings</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage your account and preferences.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Settings"
+        breadcrumbs={[{ label: "Settings", href: "/instructor/settings" }]}
+        role="Instructor"
+        description="Manage your account and preferences."
+      />
 
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">

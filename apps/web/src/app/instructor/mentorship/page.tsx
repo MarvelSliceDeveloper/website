@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 type TicketStatus =
   | "OPEN"
@@ -192,20 +193,12 @@ function InstructorMentorshipContent() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-            Instructor
-          </p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">
-            Mentorship
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {tickets.filter((t) => t.mentor).length} assigned ticket
-            {tickets.filter((t) => t.mentor).length !== 1 ? "s" : ""}
-          </p>
-        </div>
-      </div>
+      <AdminPageHeader
+        title="Mentorship"
+        breadcrumbs={[{ label: "Mentorship", href: "/instructor/mentorship" }]}
+        role="Instructor"
+        description={`${tickets.filter((t) => t.mentor).length} assigned ticket${tickets.filter((t) => t.mentor).length !== 1 ? "s" : ""}`}
+      />
 
       <div className="flex gap-1.5">
         {statusFilterOrder.map((s) => (

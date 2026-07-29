@@ -11,6 +11,9 @@ router.use(requireAuth);
 // POST /api/attendance/:sessionId/join - Join session and record attendance
 router.post("/:sessionId/join", attendanceController.joinSession);
 
+// POST /api/attendance/:sessionId/leave - Leave session and compute duration
+router.post("/:sessionId/leave", attendanceController.leaveSession);
+
 // GET /api/attendance/:sessionId - Get list of students who attended (Admins & Instructors only)
 router.get(
   "/:sessionId",

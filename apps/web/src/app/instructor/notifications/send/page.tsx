@@ -5,11 +5,24 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type BatchOption = {
   id: string;
   name: string;
   course: { id: string; title: string };
+};
+type EmailTemplateOption = {
+  id: string;
+  name: string;
+  subject: string;
 };
 
 export default function InstructorSendNotificationPage() {
@@ -25,10 +38,19 @@ export default function InstructorSendNotificationPage() {
   const [sending, setSending] = useState(false);
   const [confirmShow, setConfirmShow] = useState(false);
 
+  const [emailTemplates, setEmailTemplates] = useState<
+    EmailTemplateOption[]
+  >([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+
   useEffect(() => {
     api
       .get<{ batches: BatchOption[] }>("/api/admin/batches")
       .then((res) => setBatches(res.batches ?? []))
+      .catch(() => {});
+    api
+      .get<EmailTemplateOption[]>("/api/admin/email-templates")
+      .then(setEmailTemplates)
       .catch(() => {});
   }, []);
 
@@ -51,6 +73,7 @@ export default function InstructorSendNotificationPage() {
           targetIds: Array.from(selectedBatchIds),
           title: title.trim(),
           message: message.trim(),
+          ...(selectedTemplateId ? { emailTemplateId: selectedTemplateId } : {}),
         },
       );
       toast.success(res.message || `Sent to ${res.count} users`);
@@ -78,23 +101,12 @@ export default function InstructorSendNotificationPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <button
-          onClick={() => router.back()}
-          className="mb-3 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          ← Back
-        </button>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-          Instructor
-        </p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground">
-          Send Notification
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Send a custom notification to students in your batches.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Send Notification"
+        breadcrumbs={[{ label: "Send Notification", href: "/instructor/notifications/send" }]}
+        role="Instructor"
+        description="Send a custom notification to students in your batches."
+      />
 
       <div className="glass-card space-y-5 p-6">
         {/* Target type (locked to BATCH) */}
@@ -175,6 +187,51 @@ export default function InstructorSendNotificationPage() {
             maxLength={2000}
           />
           <p className="mt-1 text-xs text-muted">{message.length}/2000</p>
+        </div>
+
+        {/* Email Template selector */}
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
+            Email Template <span className="text-xs text-muted">(optional)</span>
+          </label>
+          <Select
+            value={selectedTemplateId}
+            onValueChange={setSelectedTemplateId}
+          >
+            <SelectTrigger className="field">
+              <SelectValue placeholder="Default template (no selection)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Default template</SelectItem>
+              {emailTemplates.map((t) => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedTemplateId && (
+            <div className="mt-2 rounded-lg border border-border/60 bg-card-hover/30 px-3 py-2">
+              <p className="text-xs text-muted">
+                Subject:{" "}
+                <span className="font-medium text-foreground">
+                  {emailTemplates.find((t) => t.id === selectedTemplateId)
+                    ?.subject ?? ""}
+                </span>
+              </p>
+              <p className="mt-0.5 text-xs text-muted">
+                Uses{" "}
+                <code className="rounded bg-border/40 px-1">
+                  {`{{notificationTitle}}`}
+                </code>{" "}
+                and{" "}
+                <code className="rounded bg-border/40 px-1">
+                  {`{{notificationMessage}}`}
+                </code>{" "}
+                placeholders
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Send button */}

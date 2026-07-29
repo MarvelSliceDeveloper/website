@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
+import { IconChevronRight } from "@tabler/icons-react";
 import type {
   Course,
   ChecklistItem,
@@ -196,28 +196,14 @@ export default function CourseDetailPage() {
 
   return (
     <div className="space-y-6">
+      <div className="mb-3 flex items-center gap-1 text-xs text-muted-foreground">
+        <Link href="/admin/courses" className="hover:text-foreground transition-colors">Courses</Link>
+        <IconChevronRight size={14} />
+        <span className="text-foreground">{course?.title || "..."}</span>
+      </div>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Image
-              src="/images/logo.svg"
-              alt="Marvel Slice"
-              width={20}
-              height={20}
-              className="h-5 w-auto"
-            />
-            <span className="text-xs font-bold tracking-tight">
-              <span className="text-blue-600">Marvel</span>{" "}
-              <span className="text-blue-500">Slice</span>
-            </span>
-          </div>
-          <Link
-            href="/admin/courses"
-            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
-          >
-            ← Back to Courses
-          </Link>
-          <div className="flex items-center gap-3 mt-1">
+          <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-foreground">
               {course.title}
             </h1>

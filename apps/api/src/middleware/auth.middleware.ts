@@ -13,6 +13,7 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { UserRole } from "@lms/types";
+import { prisma } from "../utils/prisma";
 
 /** Resolves required env var or throws at middleware init time */
 function assertEnv(name: string): string {
@@ -119,7 +120,7 @@ function sessionExpired(
 }
 
 // Verify JWT from Authorization header or cookie, attach user to request
-export const requireAuth = (
+export const requireAuth = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction,
@@ -159,6 +160,33 @@ export const requireAuth = (
       email: payload.email,
       sessionTimeoutMin: payload.sessionTimeoutMin,
     };
+
+    // Verify admin session is still active (non-blocking for backward compat)
+    if (req.user && (req.user.role === UserRole.ADMIN || req.user.role === UserRole.SUPER_ADMIN)) {
+      const tokenPayload = jwt.decode(token) as jwt.JwtPayload & { sessionId?: string } | null;
+      if (tokenPayload?.sessionId) {
+        try {
+          const session = await prisma.adminSession.findUnique({
+            where: { id: tokenPayload.sessionId },
+            select: { active: true },
+          });
+          if (!session || !session.active) {
+            return res.status(401).json({ error: "Session has been terminated" });
+          }
+          // Update lastActiveAt periodically (once per minute)
+          const now = Math.floor(Date.now() / 60000);
+          const lastUpdate = Math.floor((payload.iat || 0));
+          if (now > lastUpdate) {
+            prisma.adminSession.update({
+              where: { id: tokenPayload.sessionId },
+              data: { lastActiveAt: new Date() },
+            }).catch(() => {});
+          }
+        } catch {
+          // If session check fails, allow request through (degraded mode)
+        }
+      }
+    }
 
     next();
   } catch (err) {

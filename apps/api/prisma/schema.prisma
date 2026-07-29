@@ -66,6 +66,14 @@ enum BatchStatus {
   COMPLETED
 }
 
+enum InstructorStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ACTIVE
+  INACTIVE
+}
+
 model User {
   id                      String                   @id @default(cuid())
   name                    String
@@ -77,7 +85,9 @@ model User {
   role                    Role                     @default(STUDENT)
   isSuspended             Boolean                  @default(false)
   mustChangePassword      Boolean                  @default(false)
+  twoFactorEnabled        Boolean                  @default(false)
   onboardingComplete      Boolean                  @default(false)
+  instructorOnboardingComplete Boolean              @default(false)
   suspendedAt             DateTime?
   suspendedBy             String?
   rateLimitPerMin         Int                      @default(60)
@@ -97,6 +107,7 @@ model User {
   attendance              Attendance[]
   sessionsLed             LiveSession[]            @relation("SessionInstructor")
   assignmentSubmissions   AssignmentSubmission[]
+  gradedSubmissions       AssignmentSubmission[] @relation("GradedSubmissions")
   quizAttempts            QuizAttempt[]
   sentMessages            Message[]                @relation("SentMessages")
   receivedMessages        Message[]                @relation("ReceivedMessages")
@@ -108,11 +119,16 @@ model User {
   auditLogs               AuditLog[]
   graphApiLogs            GraphApiLog[]
   loginLogs               LoginLog[]
+  adminSessions           AdminSession[]
   createdApiKeys          ApiKey[]
   createdAnnouncements    Announcement[]
   createdStaticPages      StaticPage[]
   batchCourseMentors      BatchCourseMentor[]
   grantedExtensions       BatchAssignmentExtension[]
+  refundsInitiated        Refund[]                   @relation("RefundInitiator")
+  twoFactorAuth           TwoFactorAuth?
+  instructorProfile       InstructorProfile?
+  instructorVerifications InstructorProfile[]        @relation("InstructorVerifier")
 }
 
 model Course {
@@ -151,6 +167,8 @@ model Course {
   categoryRelation         Category?                  @relation(fields: [categoryId], references: [id])
   createdAt                DateTime                   @default(now())
   updatedAt                DateTime                   @updatedAt
+
+  @@index([status, categoryId])
 }
 
 model Module {
@@ -606,7 +624,18 @@ model Attendance {
   user      User        @relation(fields: [userId], references: [id])
   session   LiveSession @relation(fields: [sessionId], references: [id])
 
+  leftAt          DateTime?
+  durationSeconds Int?
+
   @@unique([userId, sessionId])
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
 }
 
 enum QuizAttemptStatus {
@@ -671,6 +700,8 @@ model AssignmentSubmission {
   answerFileUrl     String?                   // File uploaded by student (for ASSIGNMENT type)
   assignment        Assignment                @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   student           User                      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  gradedById        String?
+  gradedByUser      User?                     @relation("GradedSubmissions", fields: [gradedById], references: [id], onDelete: SetNull)
 
   @@unique([assignmentId, studentId])
 }
@@ -744,6 +775,24 @@ model LoginLog {
   user       User      @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([userId])
+}
+
+model AdminSession {
+  id           String   @id @default(cuid())
+  userId       String
+  tokenPrefix  String   // First 8 chars of JWT for identification
+  ip           String?
+  userAgent    String?
+  deviceInfo   String?
+  lastActiveAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+  active       Boolean  @default(true)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenPrefix])
+  @@index([active])
 }
 
 model PermissionOverride {
@@ -894,9 +943,32 @@ model Payment {
   package    CoursePackage      @relation(fields: [packageId], references: [id])
   coupon     Coupon?            @relation(fields: [couponId], references: [id])
   enrollment PackageEnrollment?
+  refunds    Refund[]
 
   @@index([userId])
   @@index([couponId])
+  @@index([status])
+}
+
+model Refund {
+  id               String       @id @default(cuid())
+  paymentId        String
+  amount           Int          // in paise
+  currency         String       @default("INR")
+  status           RefundStatus @default(PENDING)
+  reason           String?
+  initiatedById    String       // Admin who initiated
+  razorpayRefundId String?      @unique
+  metadata         Json?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  payment    Payment @relation(fields: [paymentId], references: [id])
+  initiatedBy User    @relation("RefundInitiator", fields: [initiatedById], references: [id])
+
+  @@index([paymentId])
+  @@index([initiatedById])
+  @@index([status])
 }
 
 enum DiscountType {
@@ -1031,4 +1103,76 @@ model EmailTemplate {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// === NOTIFICATION WEBHOOKS ===
+
+model NotificationWebhook {
+  id        String   @id @default(cuid())
+  name      String
+  url       String
+  events    Json     @default("[]") // ["health.failed", "health.recovered"]
+  active    Boolean  @default(true)
+  lastFiredAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// === TWO-FACTOR AUTHENTICATION ===
+
+model TwoFactorAuth {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  secret        String   // TOTP secret (base32 encoded)
+  verifiedAt    DateTime? // When user first verified setup
+  backupCodes   Json?    // Hashed array of backup codes
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// === INSTRUCTOR PROFILES ===
+
+model InstructorProfile {
+  id                       String           @id @default(cuid())
+  userId                   String           @unique
+  bio                      String?          @db.Text
+  designation              String?          // e.g. "Senior Software Engineer"
+  qualification            String?          // Highest degree
+  experienceYears          Int?             // Years of experience
+  skills                   Json?            // string[]
+  currentlyEmployed        Boolean          @default(false)
+  companyName              String?
+  availableTime            String?          // e.g. "20 hrs/week", "Weekends"
+  phone                    String?
+  address                  String?          @db.Text
+  city                     String?
+  state                    String?
+  country                  String?
+  photoUrl                 String?
+  resumeUrl                String?
+  languages                Json?            // string[]
+  socialLinks              Json?            // { linkedin, github, portfolio }
+  bankName                 String?
+  bankAccountNumber        String?
+  bankIfscCode             String?
+  bankAccountHolderName    String?
+  upiId                    String?
+  joiningDate              DateTime?
+  status                   InstructorStatus @default(PENDING)
+  rejectionReason          String?
+  verifiedById             String?
+  verifiedAt               DateTime?
+  rating                   Float            @default(0)
+  totalStudents            Int              @default(0)
+  completedSessions        Int              @default(0)
+  createdAt                DateTime         @default(now())
+  updatedAt                DateTime         @updatedAt
+
+  user       User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verifiedBy User? @relation("InstructorVerifier", fields: [verifiedById], references: [id])
+
+  @@index([status])
+  @@index([verifiedById])
 }

@@ -534,6 +534,7 @@ function AdminDashboard() {
       <AdminPageHeader
         title="Dashboard"
         description="Platform overview and quick actions."
+        breadcrumbs={[{ label: "Dashboard", href: "/admin/dashboard" }]}
         action={
           <div className="hidden items-center gap-4 sm:flex">
             <div className="text-right">

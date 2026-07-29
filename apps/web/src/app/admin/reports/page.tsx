@@ -6,6 +6,7 @@ import { toast } from "@/lib/toast";
 import type { DashboardChartData } from "@/lib/api-types";
 import dynamic from "next/dynamic";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { IconDownload, IconCalendar, IconRefresh } from "@tabler/icons-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -1048,32 +1049,26 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-            Analytics
-          </p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">
-            Reports
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Detailed analytics and insights across the platform.
-          </p>
-        </div>
-        <button
-          onClick={handleDownloadPDF}
-          disabled={downloading || !data}
-          className="btn-primary text-sm flex items-center gap-2 disabled:opacity-50"
-        >
-          {downloading ? (
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-          ) : (
-            <IconDownload size={16} />
-          )}
-          {downloading ? "Generating..." : "Download PDF"}
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Reports"
+        description="Detailed analytics and insights across the platform."
+        breadcrumbs={[{ label: "Reports", href: "/admin/reports" }]}
+        role="Analytics"
+        action={
+          <button
+            onClick={handleDownloadPDF}
+            disabled={downloading || !data}
+            className="btn-primary text-sm flex items-center gap-2 disabled:opacity-50"
+          >
+            {downloading ? (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            ) : (
+              <IconDownload size={16} />
+            )}
+            {downloading ? "Generating..." : "Download PDF"}
+          </button>
+        }
+      />
 
       {/* Time Range Filter */}
       <div className="flex flex-wrap items-center gap-2">

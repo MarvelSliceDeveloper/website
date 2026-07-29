@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import SupportTicketList from "./_comps/SupportTicketList";
 import SupportTicketDetail from "./_comps/SupportTicketDetail";
 import CreateTicketForm from "./_comps/CreateTicketForm";
@@ -23,9 +23,10 @@ export default function InstructorSupportPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <PageHeader
-        role="Instructor"
+      <AdminPageHeader
         title="Support"
+        breadcrumbs={[{ label: "Support", href: "/instructor/support" }]}
+        role="Instructor"
         description="Report issues or ask questions. Admin will review and respond."
         action={
           <button

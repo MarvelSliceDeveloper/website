@@ -1,6 +1,49 @@
 # Changelog
 
-## 2026-07-27 — Batch Due Date, Late Penalty & Course Mentor System
+## 2026-07-29 — Admin Security, Maintenance, GDPR, Backup & Alerting Features
+
+### Database (Schema)
+- **User**: Added `twoFactorEnabled` (Boolean @default(false))
+- **AdminSession** (new): Tracks admin login sessions — id, userId, tokenPrefix, ip, userAgent, deviceInfo, lastActiveAt, expiresAt, active
+- **NotificationWebhook** (new): Webhook endpoints for system alerts — name, url, events (JSON), active, lastFiredAt
+
+### Session Security
+- `apps/api/src/modules/auth/auth.service.ts` — `generateTokens()` now async; creates `AdminSession` for ADMIN/SUPER_ADMIN users and includes `sessionId` in JWT payload
+- `apps/api/src/modules/auth/auth.controller.ts` — login, password change, set password handlers pass `req.ip` + `user-agent` to `generateTokens()`
+- `apps/api/src/middleware/auth.middleware.ts` — `requireAuth` now async (line 123); checks `AdminSession.active` for admin users on every request; periodic `lastActiveAt` update
+- `apps/api/src/modules/payments/payment.service.ts` — both `generateTokens()` calls now `await`ed
+- `apps/api/src/modules/admin/sessions/sessions.routes.ts` — `GET /`, `GET /all`, `POST /:id/kill`, `POST /kill-all` for session management
+
+### Maintenance Mode
+- `apps/api/src/middleware/maintenance.middleware.ts` — 15-second cache; blocks non-admin routes when `maintenance_mode` setting is enabled; skips admin routes, auth, webhooks, health
+- `apps/api/src/modules/admin/maintenance/maintenance.routes.ts` — `GET /` (status), `PUT /` (toggle)
+- Registered in `app.ts` before all other routes
+
+### GDPR Compliance
+- `apps/api/src/modules/admin/gdpr/gdpr.routes.ts` — `GET /export/:userId` (exports user data: profile, enrollments, certificates, quiz attempts, submissions, notifications); `POST /anonymize/:userId` (destructive — blanks name/email, clears auth, suspends)
+- `apps/web/src/app/admin/gdpr/page.tsx` — search users, export as JSON preview, anonymize with warning
+
+### Backup & Restore
+- `apps/api/src/modules/admin/backup/backup.routes.ts` — `POST /` (pg_dump), `GET /list`, `GET /download/:filename`, `POST /restore` (pg_restore via file upload), `DELETE /:filename`
+- `apps/web/src/app/admin/settings/backup/page.tsx` — create/restore/delete backups, file picker for restore
+
+### Alerting Webhooks
+- `apps/api/src/modules/admin/webhooks/alerting-webhooks.routes.ts` — Full CRUD + `POST /:id/test` for NotificationWebhook
+- `apps/api/src/services/alerting.service.ts` — `fire(event, payload)` dispatches to all matching active webhooks
+- `apps/web/src/app/admin/settings/webhooks/page.tsx` — create/edit/test/delete webhooks with event checkboxes
+
+### UI/Sidebar Updates
+- `apps/web/src/components/AdminSidebar.tsx` — Added "Backup & Restore" and "Alerting Webhooks" under Settings → System; added "Compliance" section with GDPR; imported `IconShield`
+
+### Tests (20 new tests, all passing)
+- `apps/api/src/__tests__/features/session-security.test.ts` — 4 tests: AdminSession creation for ADMIN/SUPER_ADMIN, skipped for STUDENT, sessionTimeoutMin in JWT
+- `apps/api/src/__tests__/features/maintenance.test.ts` — 4 tests: blocks non-admin, allows through when off, allows admin routes, blocks health
+- `apps/api/src/__tests__/features/admin-features.test.ts` — 12 tests: route registration for GDPR (2), Backup (5), Alerting Webhooks (5)
+
+### Other
+- `apps/api/src/app.ts` — mounted `/api/admin/gdpr`, `/api/admin/backup`, `/api/admin/alerting-webhooks` routes
+- All route mounts use `requireAuth` + `requireRole([ADMIN, SUPER_ADMIN])` (backup uses `requireSuperAdmin`)
+- Docs: `docs/plan-to-work/admin-gdpr-backup-alerting.md` → `docs/plan-completed/`
 
 Implemented a complete system for customizable due dates, late submission penalties, batch-level extensions, and course mentor assignment per batch.
 

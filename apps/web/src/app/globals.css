@@ -11,7 +11,7 @@
   --primary-hover: #4f46e5;
 
   --brand-orange: #ea5b1f;
-  --brand-orange-dark: #c64614;
+  --brand-orange-dark: #d16033;
   --brand-orange-tint: #fdece3;
   --brand-blue: #2551d9;
   --brand-blue-dark: #1b3aa0;
@@ -50,7 +50,7 @@
   --primary: #5b4fe8;
   --primary-hover: #4f46e5;
 
-  --brand-orange: #ea5b1f;
+  --brand-orange: #dd6d3d;
   --brand-orange-dark: #c64614;
   --brand-orange-tint: #fdece3;
   --brand-blue: #2551d9;
@@ -200,7 +200,7 @@ a:focus-visible {
 }
 
 .btn-primary {
-  background: var(--brand-orange-dark);
+  background: #ff6b04;
   color: #fff;
   padding: 0.62rem 1rem;
   border-radius: 0.72rem;

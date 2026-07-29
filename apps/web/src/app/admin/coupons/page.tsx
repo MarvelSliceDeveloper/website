@@ -4,8 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
-  IconTicket,
   IconPlus,
   IconTrash,
   IconRefresh,
@@ -14,6 +14,7 @@ import {
   IconToggleRight,
   IconCopy,
   IconSparkles,
+  IconTicket,
 } from "@tabler/icons-react";
 
 type Coupon = {
@@ -187,42 +188,35 @@ export default function AdminCouponsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-            Super Administration
-          </p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl flex items-center gap-3">
-            <IconTicket size={28} className="text-primary-hover" />
-            Coupons
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Create and manage discount coupon codes for packages.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={fetchCoupons}
-            className="btn-secondary text-xs py-2 flex items-center gap-1.5"
-          >
-            <IconRefresh size={14} /> Refresh
-          </button>
-          <button
-            onClick={() => setShowForm(true)}
-            className="btn-primary text-xs py-2 flex items-center gap-1.5"
-          >
-            <IconPlus size={14} /> Create Coupon
-          </button>
-        </div>
-      </div>
+      <AdminPageHeader
+        title="Coupons"
+        description="Create and manage discount coupon codes for packages."
+        breadcrumbs={[{ label: "Coupons", href: "/admin/coupons" }]}
+        role="Super Administration"
+        action={
+          <div className="flex items-center gap-2">
+            <button
+              onClick={fetchCoupons}
+              className="btn-secondary text-xs py-2 flex items-center gap-1.5"
+            >
+              <IconRefresh size={14} /> Refresh
+            </button>
+            <button
+              onClick={() => setShowForm(true)}
+              className="btn-primary text-xs py-2 flex items-center gap-1.5"
+            >
+              <IconPlus size={14} /> Add Coupon
+            </button>
+          </div>
+        }
+      />
 
       {/* Create Form */}
       {showForm && (
         <div className="rounded-xl border border-border bg-card p-5 space-y-4">
           <div className="flex items-center justify-between mb-1">
             <h3 className="text-sm font-semibold text-foreground">
-              New Coupon
+              Add Coupon
             </h3>
             <button
               onClick={resetForm}
@@ -395,7 +389,7 @@ export default function AdminCouponsPage() {
               disabled={saving || !formTitle.trim() || !formDiscountValue}
               className="btn-primary text-xs py-2 disabled:opacity-40"
             >
-              {saving ? "Creating..." : "Create Coupon"}
+              {saving ? "Adding..." : "Add Coupon"}
             </button>
             <button onClick={resetForm} className="btn-secondary text-xs py-2">
               Cancel

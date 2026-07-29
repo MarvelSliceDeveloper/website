@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   IconVideo,
   IconUsers,
@@ -184,19 +184,12 @@ export default function InstructorDashboardPage() {
     loadData();
   }, []);
 
-  const greeting =
-    new Date().getHours() < 12
-      ? "Good morning"
-      : new Date().getHours() < 17
-        ? "Good afternoon"
-        : "Good evening";
-
   return (
     <div className="space-y-6">
-      <PageHeader
+      <AdminPageHeader
+        title="Dashboard"
+        breadcrumbs={[{ label: "Dashboard", href: "/instructor/dashboard" }]}
         role="Instructor"
-        title={`${greeting}!`}
-        description="Here is a summary of your workspace."
         action={
           <div className="hidden items-center gap-4 sm:flex">
             <div className="text-right">

@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
-import { IconTrash, IconRefresh, IconRestore } from "@tabler/icons-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { IconRefresh, IconRestore } from "@tabler/icons-react";
 
 type TrashEntity = {
   id: string;
@@ -61,26 +62,20 @@ export default function TrashPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-            Administration
-          </p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl flex items-center gap-3">
-            <IconTrash size={28} className="text-primary-hover" />
-            Trash
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Soft-deleted entities. Restore or permanently remove.
-          </p>
-        </div>
-        <button
-          onClick={fetchTrash}
-          className="btn-secondary text-xs py-2 flex items-center gap-1.5"
-        >
-          <IconRefresh size={14} /> Refresh
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Trash"
+        description="Soft-deleted entities. Restore or permanently remove."
+        breadcrumbs={[{ label: "Trash", href: "/admin/trash" }]}
+        role="Administration"
+        action={
+          <button
+            onClick={fetchTrash}
+            className="btn-secondary text-xs py-2 flex items-center gap-1.5"
+          >
+            <IconRefresh size={14} /> Refresh
+          </button>
+        }
+      />
 
       {/* Tabs */}
       <div className="flex items-center gap-1 flex-wrap border-b border-border/60">

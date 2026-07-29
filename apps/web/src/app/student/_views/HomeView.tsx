@@ -122,7 +122,7 @@ export default function HomeView({
   ).length;
   const overdueTotal = pendingAssignments + pendingQuizzes;
 
-  // Option C color scheme: Blue=learning, Orange=urgent, Grey=neutral
+  // Option C color scheme: Blue=learning, Orange=Assignment overdue, Red=Quiz overdue, Green=completed
   const statTiles = [
     {
       id: "enrolled",
@@ -132,8 +132,7 @@ export default function HomeView({
         stats.enrolledCount,
       icon: <IconBook size={20} />,
       onClick: () => navigate({ view: "COURSES" }),
-      iconColor: "blue" as const,  // Blue = learning/content
-      trend: { value: 0, label: "this month" },
+      iconColor: "blue" as const, // Blue = learning/content
     },
     {
       id: "assignment-overdue",
@@ -141,7 +140,7 @@ export default function HomeView({
       value: pendingAssignments,
       icon: <IconPencil size={20} />,
       onClick: () => navigate({ view: "ASSIGNMENT_OVERDUE" }),
-      iconColor: "orange" as const,  // Orange = urgent/time-sensitive
+      iconColor: "orange" as const, // Orange = urgent/time-sensitive
       liveBadge: pendingAssignments > 0 ? "Overdue" : undefined,
     },
     {
@@ -150,7 +149,7 @@ export default function HomeView({
       value: pendingQuizzes,
       icon: <IconClock size={20} />,
       onClick: () => navigate({ view: "QUIZ_OVERDUE" }),
-      iconColor: "orange" as const,  // Orange = urgent/time-sensitive
+      iconColor: "red" as const, // Red = distinct from Assignment Overdue's orange
       liveBadge: pendingQuizzes > 0 ? "Overdue" : undefined,
     },
     {
@@ -162,7 +161,6 @@ export default function HomeView({
       icon: <IconCertificate size={20} />,
       onClick: () => navigate({ view: "COURSE_COMPLETED" }),
       iconColor: "green" as const,
-      trend: { value: stats.completedCount > 0 ? 5 : 0, label: "this month" },
     },
   ];
 
@@ -554,7 +552,7 @@ export default function HomeView({
                                   params: { courseId: c.id },
                                 });
                               }}
-                              className="btn-primary border border-border bg-card text-foreground hover:bg-card-hover hover:border-primary/30 py-2 px-4 text-xs font-semibold shrink-0 w-full sm:w-auto transition-colors"
+                              className="bg-primary rounded-xl text-white hover:bg-primary/80 cursor-pointer py-2 px-4 text-xs font-semibold shrink-0 w-full sm:w-auto transition-colors"
                             >
                               Launch Course
                             </button>
@@ -640,7 +638,7 @@ export default function HomeView({
                     </div>
                     <button
                       type="submit"
-                      className="w-full btn-primary py-2.5 text-sm font-semibold shadow-md mt-1"
+                      className="w-full bg-orange-600 cursor-pointer text-white  rounded-2xl py-2.5 text-sm font-semibold hover:bg-orange-600/80 transition-colors mt-1"
                     >
                       Submit Referral
                     </button>

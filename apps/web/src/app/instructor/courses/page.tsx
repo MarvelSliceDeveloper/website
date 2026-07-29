@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { IconBook, IconClipboardList, IconUsers } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Skeleton } from "@/components/shared/Skeleton";
 
 type Course = {
@@ -50,14 +51,11 @@ export default function InstructorCoursesPage() {
   if (courses.length === 0) {
     return (
       <div className="space-y-6">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-            Instructor
-          </p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">
-            My Courses
-          </h1>
-        </div>
+        <AdminPageHeader
+          title="My Courses"
+          breadcrumbs={[{ label: "Courses", href: "/instructor/courses" }]}
+          role="Instructor"
+        />
         <div className="glass-card p-12 text-center">
           <IconBook size={40} className="mx-auto text-muted mb-3" />
           <p className="font-semibold text-foreground">No courses assigned</p>
@@ -71,18 +69,11 @@ export default function InstructorCoursesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-          Instructor
-        </p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl flex items-center gap-3">
-          <IconBook size={28} className="text-primary-hover" />
-          My Courses
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          View your assigned courses, quizzes, and assignments.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="My Courses"
+        breadcrumbs={[{ label: "Courses", href: "/instructor/courses" }]}
+        role="Instructor"
+      />
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         {courses.map((course) => (

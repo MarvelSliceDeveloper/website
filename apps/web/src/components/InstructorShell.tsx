@@ -5,7 +5,6 @@ import AppShell from "./AppShell";
 import InstructorSidebar from "./InstructorSidebar";
 import { api } from "@/lib/api";
 
-// Instructor shell wrapping AppShell with instructor sidebar
 export default function InstructorShell({
   children,
 }: {
@@ -37,6 +36,8 @@ export default function InstructorShell({
           />
         )}
         inboxHref="/instructor/inbox"
+        userName={userName}
+        userEmail={userEmail}
       >
         {children}
       </AppShell>

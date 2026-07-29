@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
-  IconFileText,
   IconPlus,
   IconEdit,
   IconTrash,
@@ -127,7 +127,7 @@ function StaticPageForm({
     >
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-sm font-semibold text-foreground">
-          {initial ? "Edit Page" : "New Page"}
+          {initial ? "Edit Page" : "Add Page"}
         </h3>
         <button
           onClick={onCancel}
@@ -304,36 +304,29 @@ export default function AdminStaticPagesPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-            Administration
-          </p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl flex items-center gap-3">
-            <IconFileText size={28} className="text-primary-hover" />
-            Static Pages
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage static content pages (About, Terms, Privacy, etc.).
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={fetchPages}
-            aria-label="Refresh page list"
-            className="btn-secondary text-xs py-2 flex items-center gap-1.5"
-          >
-            <IconRefresh size={14} /> Refresh
-          </button>
-          <button
-            onClick={openCreate}
-            aria-label="Create new page"
-            className="btn-primary text-xs py-2 flex items-center gap-1.5"
-          >
-            <IconPlus size={14} /> Create Page
-          </button>
-        </div>
-      </div>
+      <AdminPageHeader
+        title="Static Pages"
+        description="Manage static content pages (About, Terms, Privacy, etc.)."
+        breadcrumbs={[{ label: "Static Pages", href: "/admin/static-pages" }]}
+        action={
+          <div className="flex items-center gap-2">
+            <button
+              onClick={fetchPages}
+              aria-label="Refresh page list"
+              className="btn-secondary text-xs py-2 flex items-center gap-1.5"
+            >
+              <IconRefresh size={14} /> Refresh
+            </button>
+            <button
+              onClick={openCreate}
+              aria-label="Create new page"
+              className="btn-primary text-xs py-2 flex items-center gap-1.5"
+            >
+              <IconPlus size={14} /> Add Page
+            </button>
+          </div>
+        }
+      />
 
       {showForm && (
         <StaticPageForm

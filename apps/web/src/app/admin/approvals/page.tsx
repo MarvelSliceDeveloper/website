@@ -74,6 +74,7 @@ export default function ApprovalsPage() {
       <AdminPageHeader
         title="Instructor Approvals"
         description={`${users.length} pending approval${users.length !== 1 ? "s" : ""}`}
+        breadcrumbs={[{ label: "Approvals", href: "/admin/approvals" }]}
         action={
           <button
             onClick={fetchPending}

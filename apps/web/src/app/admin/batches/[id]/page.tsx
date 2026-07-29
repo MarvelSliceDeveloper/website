@@ -6,6 +6,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   IconEye,
   IconEyeOff,
@@ -276,28 +277,21 @@ export default function BatchDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link
-            href="/admin/batches"
-            className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors mb-2 inline-flex items-center gap-1"
+      <AdminPageHeader
+        title={batch.name}
+        description={batch.course?.title ?? batch.package?.name ?? "All Courses"}
+        breadcrumbs={[
+          { label: "Batches", href: "/admin/batches" },
+          { label: batch.name, href: "#" },
+        ]}
+        action={
+          <span
+            className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[batch.status] || ""}`}
           >
-            ← Back to Batches
-          </Link>
-          <div className="flex items-center gap-3 mt-1">
-            <h1 className="text-2xl font-bold text-foreground">{batch.name}</h1>
-            <span
-              className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[batch.status] || ""}`}
-            >
-              {batch.status}
-            </span>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {batch.course?.title ?? batch.package?.name ?? "All Courses"}
-          </p>
-        </div>
-      </div>
+            {batch.status}
+          </span>
+        }
+      />
 
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

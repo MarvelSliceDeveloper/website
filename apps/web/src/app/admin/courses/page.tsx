@@ -18,6 +18,7 @@ import {
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import DataTable from "@/components/admin/DataTable";
+import { FilterTabs } from "@/components/shared/FilterTabs";
 import type { DataTableColumn } from "@/components/admin/DataTable";
 import { TableSkeleton } from "@/components/admin/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -340,6 +341,9 @@ function CoursesPageContent() {
       <AdminPageHeader
         title="Course Management"
         description={`${total} course${total !== 1 ? "s" : ""} total`}
+        breadcrumbs={[
+          { label: "Courses", href: "/admin/courses" },
+        ]}
         action={
           <Link href="/admin/courses/new" className="btn-primary">
             + Add Course
@@ -347,29 +351,24 @@ function CoursesPageContent() {
         }
       />
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex-1 min-w-[200px] max-w-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <FilterTabs
+          tabs={[
+            { value: "", label: "All" },
+            { value: "DRAFT", label: "Draft" },
+            { value: "PUBLISHED", label: "Published" },
+            { value: "ARCHIVED", label: "Archived" },
+          ]}
+          active={statusFilter}
+          onChange={setStatusFilter}
+        />
+
+        <div className="min-w-[200px] max-w-sm">
           <SearchInput
             placeholder="Search courses..."
             value={search}
             onChange={setSearch}
           />
-        </div>
-
-        <div className="flex gap-1.5">
-          {["", "DRAFT", "PUBLISHED", "ARCHIVED"].map((s) => (
-            <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                statusFilter === s
-                  ? "bg-primary/15 text-primary-hover border border-primary/25"
-                  : "text-muted-foreground hover:bg-card-hover border border-transparent"
-              }`}
-            >
-              {s || "All"}
-            </button>
-          ))}
         </div>
       </div>
 

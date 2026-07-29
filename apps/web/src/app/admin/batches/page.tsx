@@ -8,6 +8,7 @@ import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { IconUsersGroup } from "@tabler/icons-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { FilterTabs } from "@/components/shared/FilterTabs";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 
@@ -103,6 +104,9 @@ function BatchesPageContent() {
       <AdminPageHeader
         title="Batch Management"
         description={`${batches.length} batch${batches.length !== 1 ? "es" : ""}`}
+        breadcrumbs={[
+          { label: "Batches", href: "/admin/batches" },
+        ]}
         action={
           <Link href="/admin/batches/new" className="btn-primary">
             + Add Batch
@@ -110,24 +114,18 @@ function BatchesPageContent() {
         }
       />
 
-      {/* Filters */}
-      <div className="flex gap-1.5">
-        {["", "UPCOMING", "ACTIVE", "COMPLETED"].map((s) => (
-          <button
-            key={s}
-            onClick={() =>
-              router.push(s ? `/admin/batches?status=${s}` : "/admin/batches")
-            }
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-              statusFilter === s
-                ? "bg-primary/15 text-primary-hover border border-primary/25"
-                : "text-muted-foreground hover:bg-card-hover border border-transparent"
-            }`}
-          >
-            {s || "All"}
-          </button>
-        ))}
-      </div>
+      <FilterTabs
+        tabs={[
+          { value: "", label: "All" },
+          { value: "UPCOMING", label: "Upcoming" },
+          { value: "ACTIVE", label: "Active" },
+          { value: "COMPLETED", label: "Completed" },
+        ]}
+        active={statusFilter}
+        onChange={(value) =>
+          router.push(value ? `/admin/batches?status=${value}` : "/admin/batches")
+        }
+      />
 
       {/* Batch Cards */}
       {loading ? (

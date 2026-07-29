@@ -13,6 +13,7 @@ import {
 } from "@tabler/icons-react";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 type Session = {
   id: string;
@@ -231,20 +232,12 @@ function SessionsPageContent() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-            Instructor
-          </p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">
-            Live Sessions
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage your live classes.
-          </p>
-        </div>
-      </div>
+      <AdminPageHeader
+        title="My Sessions"
+        breadcrumbs={[{ label: "Sessions", href: "/instructor/sessions" }]}
+        role="Instructor"
+        description="Manage your live classes."
+      />
 
       {loading ? (
         <div className="glass-card p-12 text-center">

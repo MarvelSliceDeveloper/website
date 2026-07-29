@@ -1,4 +1,5 @@
 import { prisma } from "../../utils/prisma";
+import { AppError } from "../../utils/errors";
 
 export const attendanceService = {
   // Records a student joining a live session
@@ -40,6 +41,29 @@ export const attendanceService = {
         sessionId,
       },
       update: {}, // No updates needed if already recorded
+    });
+  },
+
+  // Records a student leaving a live session
+  async leaveSession(userId: string, sessionId: string) {
+    const record = await prisma.attendance.findUnique({
+      where: {
+        userId_sessionId: { userId, sessionId },
+      },
+    });
+
+    if (!record || record.leftAt) {
+      throw new AppError(400, "No open attendance record found");
+    }
+
+    const leftAt = new Date();
+    const durationSeconds = Math.floor(
+      (leftAt.getTime() - record.joinedAt.getTime()) / 1000,
+    );
+
+    return prisma.attendance.update({
+      where: { id: record.id },
+      data: { leftAt, durationSeconds },
     });
   },
 

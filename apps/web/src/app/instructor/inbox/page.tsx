@@ -4,18 +4,17 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import {
   IconTrash,
-  IconArrowLeft,
   IconBell,
   IconCheck,
   IconEye,
   IconMessage,
 } from "@tabler/icons-react";
 import { toast } from "@/lib/toast";
-import { useRouter } from "next/navigation";
 import { timeAgo } from "@/lib/time-ago";
 import type { NotificationItem } from "@/lib/notifications";
 import { NotificationIcon } from "@/lib/notifications";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface MessageRecord {
   id: string;
@@ -38,26 +37,16 @@ type Tab = "notifications" | "messages";
 
 export default function InstructorInboxPage() {
   usePageTitle("Inbox");
-  const router = useRouter();
   const [tab, setTab] = useState<Tab>("notifications");
 
   return (
     <div className="space-y-6">
-      <div>
-        <button
-          onClick={() => router.back()}
-          className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors mb-3 inline-flex items-center gap-1"
-        >
-          <IconArrowLeft size={14} /> Back
-        </button>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-          Instructor
-        </p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground">Inbox</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Notifications and messages with admins and students.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Inbox"
+        breadcrumbs={[{ label: "Inbox", href: "/instructor/inbox" }]}
+        role="Instructor"
+        description="Notifications and messages with admins and students."
+      />
 
       <div className="flex gap-2 border-b border-border/50">
         {[

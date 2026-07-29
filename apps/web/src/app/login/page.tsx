@@ -14,6 +14,7 @@ import {
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { usePageTitle } from "@/lib/use-page-title";
+import TwoFactorLogin from "@/components/TwoFactorLogin";
 
 // ── Floating Shape (ambient decoration for left panel) ─────────────────────
 
@@ -76,6 +77,9 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
+  const [tempToken, setTempToken] = useState<string | null>(null);
+  const [twoFactorEmail, setTwoFactorEmail] = useState("");
 
   const handleSignIn = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -85,10 +89,19 @@ export default function LoginPage() {
     try {
       const result = await api.post<{
         user?: { role?: string; mustChangePassword?: boolean };
+        requires2fa?: boolean;
+        tempToken?: string;
       }>("/api/auth/login", {
         email: normalizedEmail,
         password,
       });
+
+      if (result?.requires2fa && result?.tempToken) {
+        setTempToken(result.tempToken);
+        setTwoFactorEmail(normalizedEmail);
+        setShowTwoFactor(true);
+        return;
+      }
 
       toast.success("Signed in successfully");
       const role = result?.user?.role;
@@ -116,6 +129,32 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleTwoFactorComplete = (result: { token: string; user: any }) => {
+    toast.success("Signed in successfully");
+    const role = result?.user?.role;
+
+    if (result?.user?.mustChangePassword) {
+      router.push("/set-password");
+      return;
+    }
+
+    if (role === "ADMIN" || role === "SUPER_ADMIN") {
+      router.push("/admin/dashboard");
+      return;
+    }
+    if (role === "INSTRUCTOR") {
+      router.push("/instructor/dashboard");
+      return;
+    }
+    router.push("/student/");
+  };
+
+  const handleCancelTwoFactor = () => {
+    setShowTwoFactor(false);
+    setTempToken(null);
+    setTwoFactorEmail("");
   };
 
   return (
@@ -275,92 +314,108 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              {/* Form */}
-              <form
-                onSubmit={handleSignIn}
-                className="mt-7 space-y-4"
-                style={{
-                  animation:
-                    "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both",
-                }}
-              >
-                {/* Email */}
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                  className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3.5 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
-                />
-
-                {/* Password */}
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    required
-                    className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3.5 pr-11 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-all duration-200 hover:bg-muted/10 hover:text-foreground"
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
-                  >
-                    {showPassword ? (
-                      <IconEyeOff size={18} stroke={1.5} />
-                    ) : (
-                      <IconEye size={18} stroke={1.5} />
-                    )}
-                  </button>
-                </div>
-
-                {/* Remember / Forgot */}
-                <div className="flex items-center justify-between text-[13px]">
-                  <label className="flex cursor-pointer select-none items-center gap-1.5 text-muted transition-colors hover:text-foreground">
-                    <input
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="h-4 w-4 rounded border-border accent-primary"
-                    />
-                    Remember Me
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => router.push("/forgot-password")}
-                    className="font-semibold text-blue-600 transition-colors hover:text-blue-700"
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
-
-                {/* Log In */}
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition-all duration-300 hover:from-blue-700 hover:to-blue-600 hover:shadow-xl hover:shadow-blue-600/30 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0"
+              {showTwoFactor && tempToken ? (
+                <div
+                  className="mt-7"
+                  style={{
+                    animation:
+                      "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both",
+                  }}
                 >
-                  <span
-                    className="relative z-10"
-                    style={{
-                      background:
-                        "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)",
-                      backgroundSize: "200% 100%",
-                      animation: isSubmitting
-                        ? "none"
-                        : "shimmer-sweep 3s ease-in-out infinite",
-                    }}
+                  <TwoFactorLogin
+                    tempToken={tempToken}
+                    email={twoFactorEmail}
+                    onComplete={handleTwoFactorComplete}
+                    onCancel={handleCancelTwoFactor}
+                  />
+                </div>
+              ) : (
+                <form
+                  onSubmit={handleSignIn}
+                  className="mt-7 space-y-4"
+                  style={{
+                    animation:
+                      "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both",
+                  }}
+                >
+                  {/* Email */}
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    required
+                    className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3.5 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
+                  />
+
+                  {/* Password */}
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      required
+                      className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3.5 pr-11 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-all duration-200 hover:bg-muted/10 hover:text-foreground"
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                    >
+                      {showPassword ? (
+                        <IconEyeOff size={18} stroke={1.5} />
+                      ) : (
+                        <IconEye size={18} stroke={1.5} />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Remember / Forgot */}
+                  <div className="flex items-center justify-between text-[13px]">
+                    <label className="flex cursor-pointer select-none items-center gap-1.5 text-muted transition-colors hover:text-foreground">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="h-4 w-4 rounded border-border accent-primary"
+                      />
+                      Remember Me
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => router.push("/forgot-password")}
+                      className="font-semibold text-blue-600 transition-colors hover:text-blue-700"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+
+                  {/* Log In */}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition-all duration-300 hover:from-blue-700 hover:to-blue-600 hover:shadow-xl hover:shadow-blue-600/30 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0"
                   >
-                    {isSubmitting ? "Logging in..." : "Log In"}
-                  </span>
-                </button>
-              </form>
+                    <span
+                      className="relative z-10"
+                      style={{
+                        background:
+                          "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)",
+                        backgroundSize: "200% 100%",
+                        animation: isSubmitting
+                          ? "none"
+                          : "shimmer-sweep 3s ease-in-out infinite",
+                      }}
+                    >
+                      {isSubmitting ? "Logging in..." : "Log In"}
+                    </span>
+                  </button>
+                </form>
+              )}
 
               {/* Divider */}
               <div

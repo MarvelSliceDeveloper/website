@@ -5,7 +5,6 @@ import AppShell from "./AppShell";
 import AdminSidebar from "./AdminSidebar";
 import { api } from "@/lib/api";
 
-// Admin shell wrapping AppShell with admin sidebar
 export default function AdminShell({
   children,
 }: {
@@ -42,6 +41,8 @@ export default function AdminShell({
           />
         )}
         inboxHref="/admin/inbox"
+        userName={userName}
+        userEmail={userEmail}
       >
         {children}
       </AppShell>

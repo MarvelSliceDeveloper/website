@@ -10,6 +10,7 @@ import {
   IconClock,
 } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 type CourseSummary = { id: string; title: string };
 
@@ -89,19 +90,12 @@ function BatchesPageContent() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-400">
-          Instructor
-        </p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">
-          My Cohorts & Batches
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Monitor enrollment stats and scheduling progress across your assigned
-          student batches.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="My Batches"
+        breadcrumbs={[{ label: "Batches", href: "/instructor/batches" }]}
+        role="Instructor"
+        description="Monitor enrollment stats and scheduling progress across your assigned student batches."
+      />
 
       {loading ? (
         <div className="glass-card p-12 text-center">

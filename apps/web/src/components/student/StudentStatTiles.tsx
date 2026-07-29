@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { IconArrowRight, IconTrendingUp } from "@tabler/icons-react";
+import { IconArrowRight } from "@tabler/icons-react";
 
 export interface StudentStatTile {
   id: string;
@@ -11,7 +11,6 @@ export interface StudentStatTile {
   onClick: () => void;
   iconColor: "blue" | "orange" | "green" | "indigo" | "amber" | "red";
   liveBadge?: string;
-  trend?: { value: number; label: string };
 }
 
 interface StudentStatTilesProps {
@@ -43,41 +42,35 @@ function useCountUp(target: number, duration = 800) {
   return count;
 }
 
-const TILE_STYLES: Record<string, { gradient: string; glow: string; chip: string; icon: string }> = {
+const TILE_STYLES: Record<string, { bg: string; chip: string; icon: string }> = {
   blue: {
-    gradient: "bg-gradient-to-br from-white via-brand-blue/[0.06] to-brand-blue/[0.12]",
-    glow: "after:bg-brand-blue/20",
-    chip: "bg-gradient-to-br from-brand-blue-tint to-brand-blue/20",
+    bg: "bg-[radial-gradient(at_bottom_right,var(--color-brand-blue)_0%,transparent_80%)]",
+    chip: "bg-white",
     icon: "text-brand-blue",
   },
   orange: {
-    gradient: "bg-gradient-to-br from-white via-brand-orange/[0.06] to-brand-orange/[0.12]",
-    glow: "after:bg-brand-orange/20",
-    chip: "bg-gradient-to-br from-brand-orange-tint to-brand-orange/20",
-    icon: "text-brand-orange",
+    bg: "bg-[radial-gradient(at_bottom_right,var(--color-brand-amber)_0%,transparent_80%)]",
+    chip: "bg-white",
+    icon: "text-brand-amber",
   },
   green: {
-    gradient: "bg-gradient-to-br from-white via-success/[0.06] to-success/[0.12]",
-    glow: "after:bg-success/20",
-    chip: "bg-gradient-to-br from-success-tint to-success/20",
+    bg: "bg-[radial-gradient(at_bottom_right,var(--color-success)_0%,transparent_80%)]",
+    chip: "bg-white",
     icon: "text-success",
   },
   indigo: {
-    gradient: "bg-gradient-to-br from-white via-brand-indigo/[0.06] to-brand-indigo/[0.12]",
-    glow: "after:bg-brand-indigo/20",
-    chip: "bg-gradient-to-br from-brand-indigo-tint to-brand-indigo/20",
+    bg: "bg-[radial-gradient(at_bottom_right,var(--color-brand-indigo)_0%,transparent_80%)]",
+    chip: "bg-white",
     icon: "text-brand-indigo",
   },
   amber: {
-    gradient: "bg-gradient-to-br from-white via-brand-amber/[0.06] to-brand-amber/[0.12]",
-    glow: "after:bg-brand-amber/20",
-    chip: "bg-gradient-to-br from-brand-amber-tint to-brand-amber/20",
+    bg: "bg-[radial-gradient(at_bottom_right,var(--color-brand-amber)_0%,transparent_80%)]",
+    chip: "bg-white",
     icon: "text-brand-amber",
   },
   red: {
-    gradient: "bg-gradient-to-br from-white via-danger/[0.06] to-danger/[0.12]",
-    glow: "after:bg-danger/20",
-    chip: "bg-gradient-to-br from-danger-tint to-danger/20",
+    bg: "bg-[radial-gradient(at_bottom_right,var(--color-danger)_0%,transparent_80%)]",
+    chip: "bg-white",
     icon: "text-danger",
   },
 };
@@ -90,14 +83,11 @@ function StatTile({ tile, index }: { tile: StudentStatTile; index: number }) {
     <button
       onClick={tile.onClick}
       style={{ animationDelay: `${index * 80}ms` }}
-      className={`tile-stagger group relative flex flex-col gap-3 overflow-hidden p-5 text-left rounded-2xl border border-hairline shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-transparent ${style.gradient}`}
+      className={`tile-stagger group relative flex flex-col gap-3 overflow-hidden p-5 text-left rounded-2xl border border-hairline bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer ${style.bg}`}
     >
-      <span
-        className={`pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100 after:absolute after:inset-0 after:rounded-2xl after:blur-2xl ${style.glow}`}
-      />
       <div className="relative z-[1] flex items-center justify-between">
-        <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${style.chip} ${style.icon} border border-current/10 shadow-sm transition-shadow duration-300 group-hover:shadow-md`}>
-          <div className="[&>svg]:size-[22px]">{tile.icon}</div>
+        <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${style.chip} shadow-sm ring-1 ring-black/5`}>
+          <div className={`[&>svg]:size-[22px] ${style.icon}`}>{tile.icon}</div>
         </div>
         {tile.liveBadge ? (
           <span className="rounded-full bg-gradient-to-r from-danger to-red-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm shadow-danger/30">
@@ -112,17 +102,10 @@ function StatTile({ tile, index }: { tile: StudentStatTile; index: number }) {
         <p className="mt-0.5 text-4xl font-extrabold tracking-tight text-ink">
           {count}
         </p>
-        {tile.trend && (
-          <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-slate">
-            <IconTrendingUp size={13} className="text-slate" />
-            {tile.trend.value >= 0 ? "+" : ""}
-            {tile.trend.value}% {tile.trend.label}
-          </span>
-        )}
       </div>
       <IconArrowRight
         size={14}
-        className="absolute right-4 top-4 text-slate/40 opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100 z-[1]"
+        className={`absolute right-4 top-4 ${style.icon} opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100 z-[1]`}
       />
     </button>
   );

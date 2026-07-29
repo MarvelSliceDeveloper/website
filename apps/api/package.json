@@ -28,6 +28,7 @@
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "multer": "^2.2.0",
+    "otplib": "^13.4.1",
     "pdf-lib": "^1.17.1",
     "pino": "^8.20.0",
     "pino-http": "^11.0.0",

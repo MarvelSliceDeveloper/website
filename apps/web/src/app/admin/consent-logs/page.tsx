@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
-import { IconShield, IconRefresh } from "@tabler/icons-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { IconRefresh } from "@tabler/icons-react";
 
 type ConsentEntry = {
   id: string;
@@ -43,18 +44,11 @@ export default function ConsentLogsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-          Administration
-        </p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl flex items-center gap-3">
-          <IconShield size={28} className="text-primary-hover" />
-          Consent Logs
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          History of user consent actions (Microsoft, Data Processing).
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Consent Logs"
+        description="History of user consent actions (Microsoft, Data Processing)."
+        breadcrumbs={[{ label: "Consent Logs", href: "/admin/consent-logs" }]}
+      />
 
       <button
         onClick={fetchLogs}
@@ -65,11 +59,11 @@ export default function ConsentLogsPage() {
 
       <div className="glass-card p-5 border border-border/80">
         {loading ? (
-          <div className="py-12 text-center text-sm text-muted animate-pulse">
+          <div className="py-12 text-center text-sm text-foreground/60 animate-pulse">
             Loading...
           </div>
         ) : logs.length === 0 ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">
+          <div className="py-12 text-center text-sm text-foreground/50">
             No consent logs.
           </div>
         ) : (
@@ -90,7 +84,7 @@ export default function ConsentLogsPage() {
                     key={log.id}
                     className="hover:bg-card-hover transition-colors"
                   >
-                    <td className="py-3 pr-3 font-mono text-[10px] text-muted-foreground">
+                    <td className="py-3 pr-3 font-mono text-[10px] text-foreground/70">
                       {log.userId.slice(0, 12)}...
                     </td>
                     <td className="py-3 pr-3">
@@ -101,10 +95,10 @@ export default function ConsentLogsPage() {
                     <td className="py-3 pr-3 font-medium text-foreground">
                       {log.action}
                     </td>
-                    <td className="py-3 pr-3 text-muted whitespace-nowrap">
+                    <td className="py-3 pr-3 text-foreground/60 whitespace-nowrap">
                       {new Date(log.createdAt).toLocaleString("en-IN")}
                     </td>
-                    <td className="py-3 text-muted-foreground max-w-[200px] truncate text-[10px]">
+                    <td className="py-3 text-foreground/60 max-w-[200px] truncate text-[10px]">
                       {log.details ? JSON.stringify(log.details) : "—"}
                     </td>
                   </tr>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { FilterTabs } from "@/components/shared/FilterTabs";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
@@ -80,9 +81,12 @@ export default function AdminPackagesPage() {
 
   return (
     <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <AdminPageHeader
-        title="Course Packages"
+<AdminPageHeader
+        title="Packages"
         description="Create and manage course bundles for students."
+        breadcrumbs={[
+          { label: "Packages", href: "/admin/packages" },
+        ]}
         action={
           <Link
             href="/admin/packages/new"
@@ -94,27 +98,16 @@ export default function AdminPackagesPage() {
         }
       />
 
-      {/* Status filters */}
-      <div className="flex gap-1.5">
-        {[
+      <FilterTabs
+        tabs={[
           { value: "", label: "All" },
           { value: "DRAFT", label: "Draft" },
           { value: "ACTIVE", label: "Active" },
           { value: "ARCHIVED", label: "Archived" },
-        ].map((f) => (
-          <button
-            key={f.value}
-            onClick={() => setStatusFilter(f.value)}
-            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-              statusFilter === f.value
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border text-muted-foreground hover:bg-card-hover"
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+        ]}
+        active={statusFilter}
+        onChange={setStatusFilter}
+      />
 
       {/* Package Cards */}
       {loading ? (

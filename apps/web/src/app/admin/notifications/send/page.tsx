@@ -20,6 +20,11 @@ type BatchOption = {
   name: string;
   course: { id: string; title: string };
 };
+type EmailTemplateOption = {
+  id: string;
+  name: string;
+  subject: string;
+};
 
 export default function AdminSendNotificationPage() {
   usePageTitle("Send Notification");
@@ -39,6 +44,11 @@ export default function AdminSendNotificationPage() {
   const [sending, setSending] = useState(false);
   const [confirmShow, setConfirmShow] = useState(false);
 
+  const [emailTemplates, setEmailTemplates] = useState<
+    EmailTemplateOption[]
+  >([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+
   useEffect(() => {
     api
       .get<CourseOption[]>("/api/admin/batches/courses")
@@ -47,6 +57,10 @@ export default function AdminSendNotificationPage() {
     api
       .get<{ batches: BatchOption[] }>("/api/admin/batches")
       .then((data) => setBatches(data.batches))
+      .catch(() => {});
+    api
+      .get<EmailTemplateOption[]>("/api/admin/email-templates")
+      .then(setEmailTemplates)
       .catch(() => {});
   }, []);
 
@@ -82,6 +96,7 @@ export default function AdminSendNotificationPage() {
           targetIds,
           title: title.trim(),
           message: message.trim(),
+          ...(selectedTemplateId ? { emailTemplateId: selectedTemplateId } : {}),
         },
       );
       toast.success(res.message || `Sent to ${res.count} users`);
@@ -264,6 +279,51 @@ export default function AdminSendNotificationPage() {
             maxLength={2000}
           />
           <p className="mt-1 text-xs text-muted">{message.length}/2000</p>
+        </div>
+
+        {/* Email Template selector */}
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
+            Email Template <span className="text-xs text-muted">(optional)</span>
+          </label>
+          <Select
+            value={selectedTemplateId}
+            onValueChange={setSelectedTemplateId}
+          >
+            <SelectTrigger className="field">
+              <SelectValue placeholder="Default template (no selection)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Default template</SelectItem>
+              {emailTemplates.map((t) => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedTemplateId && (
+            <div className="mt-2 rounded-lg border border-border/60 bg-card-hover/30 px-3 py-2">
+              <p className="text-xs text-muted">
+                Subject:{" "}
+                <span className="font-medium text-foreground">
+                  {emailTemplates.find((t) => t.id === selectedTemplateId)
+                    ?.subject ?? ""}
+                </span>
+              </p>
+              <p className="mt-0.5 text-xs text-muted">
+                Uses{" "}
+                <code className="rounded bg-border/40 px-1">
+                  {`{{notificationTitle}}`}
+                </code>{" "}
+                and{" "}
+                <code className="rounded bg-border/40 px-1">
+                  {`{{notificationMessage}}`}
+                </code>{" "}
+                placeholders
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Send button */}

@@ -16,7 +16,7 @@ interface SearchInputProps {
  * Debounces onChange to avoid excessive re-renders.
  */
 export function SearchInput({
-  placeholder = "Search...",
+  placeholder = "  Search...",
   value: controlledValue,
   onChange,
   debounceMs = 300,
@@ -67,7 +67,7 @@ export function SearchInput({
         value={internalValue}
         onChange={(e) => handleChange(e.target.value)}
         placeholder={placeholder}
-        className="field pl-9 pr-9"
+        className="w-full rounded-xl border border-border bg-background px-10 py-2.5 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none transition-colors"
       />
       {internalValue && (
         <button

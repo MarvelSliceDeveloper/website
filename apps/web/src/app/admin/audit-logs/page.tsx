@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
-  IconClipboardData,
   IconRefresh,
   IconSearch,
   IconChevronDown,
@@ -94,28 +94,20 @@ export default function AdminAuditLogsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-            Administration
-          </p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl flex items-center gap-3">
-            <IconClipboardData size={28} className="text-primary-hover" />
-            Audit Logs
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Track all user and system actions across the platform.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+      <AdminPageHeader
+        title="Audit Logs"
+        description="Track all user and system actions across the platform."
+        breadcrumbs={[{ label: "Audit Logs", href: "/admin/audit-logs" }]}
+        role="Administration"
+        action={
           <button
             onClick={fetchLogs}
             className="btn-secondary text-xs py-2 flex items-center gap-1.5"
           >
             <IconRefresh size={14} /> Refresh
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Filter Bar */}
       <div className="rounded-xl border border-border bg-card p-4">

@@ -92,6 +92,7 @@ export default function AdminAnalyticsPage() {
       <AdminPageHeader
         title="Learning Analytics & Performance UX"
         description="Comprehensive insights on course completion, active student retention, video engagement drop-off, and assessment scores."
+        breadcrumbs={[{ label: "Analytics", href: "/admin/analytics" }]}
       />
 
       {/* Top Stat Tiles */}

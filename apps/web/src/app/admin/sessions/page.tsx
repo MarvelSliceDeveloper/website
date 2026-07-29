@@ -151,6 +151,7 @@ export default function AdminSessionsPage() {
       <AdminPageHeader
         title="Sessions"
         description={`${sessions.length} total sessions`}
+        breadcrumbs={[{ label: "Sessions", href: "/admin/sessions" }]}
         action={
           <Link href="/admin/sessions/new" className="btn-primary">
             + Schedule Session

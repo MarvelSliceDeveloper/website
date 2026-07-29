@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
-  IconCertificate,
   IconRefresh,
   IconBan,
   IconPalette,
@@ -137,20 +137,11 @@ export default function AdminCertificatesPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-            Administration
-          </p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl flex items-center gap-3">
-            <IconCertificate size={28} className="text-primary-hover" />
-            Certificates
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage issued certificates and customize certificate templates.
-          </p>
-        </div>
-      </div>
+      <AdminPageHeader
+        title="Certificates"
+        description="Manage issued certificates and customize certificate templates."
+        breadcrumbs={[{ label: "Certificates", href: "/admin/certificates" }]}
+      />
 
       {/* Tab Navigation */}
       <div className="border-b border-border/70">
@@ -244,40 +235,37 @@ function CertificatesTab() {
     <>
       {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-3">
-        {stats
-          ? [
-              {
-                label: "Total Certificates",
-                value: stats.total,
-                color: "text-primary",
-              },
-              {
-                label: "Issued This Month",
-                value: stats.issuedThisMonth,
-                color: "text-success",
-              },
-              {
-                label: "Revoked",
-                value: stats.revoked,
-                color: "text-danger",
-              },
-            ].map((s) => (
-              <div
-                key={s.label}
-                className="rounded-xl border border-border bg-card p-5"
-              >
-                <p className="text-xs text-muted-foreground">{s.label}</p>
-                <p className={`text-2xl font-bold mt-1 ${s.color}`}>
-                  {s.value.toLocaleString()}
-                </p>
-              </div>
-            ))
-          : Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-24 rounded-xl bg-card border border-border animate-pulse"
-              />
-            ))}
+        {[
+          {
+            label: "Total Certificates",
+            value: stats?.total ?? null,
+            color: "text-primary",
+          },
+          {
+            label: "Issued This Month",
+            value: stats?.issuedThisMonth ?? null,
+            color: "text-success",
+          },
+          {
+            label: "Revoked",
+            value: stats?.revoked ?? null,
+            color: "text-danger",
+          },
+        ].map((s) => (
+          <div
+            key={s.label}
+            className="rounded-xl border border-border bg-card p-5"
+          >
+            <p className="text-xs text-foreground/60">{s.label}</p>
+            <p className={`text-2xl font-bold mt-1 ${s.color}`}>
+              {s.value !== null && !loading
+                ? s.value.toLocaleString()
+                : loading
+                  ? <span className="text-foreground/20">—</span>
+                  : "0"}
+            </p>
+          </div>
+        ))}
       </div>
 
       {/* Certificates Table */}
@@ -294,18 +282,18 @@ function CertificatesTab() {
           </button>
         </div>
         {loading ? (
-          <div className="py-12 text-center text-sm text-muted animate-pulse">
+          <div className="py-12 text-center text-sm text-foreground/60 animate-pulse">
             Loading certificates...
           </div>
         ) : certificates.length === 0 ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">
+          <div className="py-12 text-center text-sm text-foreground/50">
             No certificates found.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-border/60 text-muted uppercase font-bold tracking-wider">
+                <tr className="border-b border-border/60 text-foreground/50 uppercase font-bold tracking-wider">
                   <th className="py-2.5 pr-3">Certificate #</th>
                   <th className="py-2.5 pr-3">Student</th>
                   <th className="py-2.5 pr-3">Course</th>
@@ -320,16 +308,16 @@ function CertificatesTab() {
                     key={cert.id}
                     className="hover:bg-card-hover transition-colors"
                   >
-                    <td className="py-3 pr-3 font-mono text-[10px] text-muted-foreground">
+                    <td className="py-3 pr-3 font-mono text-xs text-foreground/70">
                       {cert.certificateNumber}
                     </td>
                     <td className="py-3 pr-3 font-medium text-foreground">
                       {cert.studentName}
                     </td>
-                    <td className="py-3 pr-3 text-muted-foreground">
+                    <td className="py-3 pr-3 text-foreground/70">
                       {cert.courseName}
                     </td>
-                    <td className="py-3 pr-3 text-muted whitespace-nowrap">
+                    <td className="py-3 pr-3 text-foreground/60 whitespace-nowrap">
                       {new Date(cert.issuedAt).toLocaleDateString("en-IN")}
                     </td>
                     <td className="py-3 pr-3">
@@ -350,7 +338,7 @@ function CertificatesTab() {
                             onClick={() =>
                               handleRevoke(cert.id, cert.certificateNumber)
                             }
-                            className="p-1.5 rounded-md hover:bg-danger/10 text-muted-foreground hover:text-danger transition-colors"
+                            className="p-1.5 rounded-md hover:bg-danger/10 text-foreground/60 hover:text-danger transition-colors"
                             title="Revoke"
                           >
                             <IconBan size={14} />

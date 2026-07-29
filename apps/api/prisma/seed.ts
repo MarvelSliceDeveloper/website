@@ -28,8 +28,47 @@ async function main() {
     "Demo Instructor",
     "instructor123",
     "INSTRUCTOR",
+    { instructorOnboardingComplete: true },
   );
   console.log("✅ Instructor:", instructor.email);
+
+  // ─── Instructor Profile ─────────────────────────────────────────────────────
+  await prisma.instructorProfile.upsert({
+    where: { userId: instructor.id },
+    update: {},
+    create: {
+      userId: instructor.id,
+      bio: "Experienced data scientist and educator with over 8 years in the field. Passionate about teaching Python, machine learning, and data analysis to aspiring professionals.",
+      designation: "Senior Data Scientist",
+      qualification: "M.Tech in Computer Science",
+      experienceYears: 8,
+      skills: JSON.stringify(["Python", "Machine Learning", "Data Analysis", "SQL", "Deep Learning"]),
+      currentlyEmployed: true,
+      companyName: "TechCorp Solutions",
+      availableTime: "20 hrs/week",
+      phone: "+91-9876543210",
+      city: "Bangalore",
+      state: "Karnataka",
+      country: "India",
+      languages: JSON.stringify(["English", "Hindi", "Kannada"]),
+      socialLinks: JSON.stringify({
+        linkedin: "https://linkedin.com/in/demo-instructor",
+        github: "https://github.com/demo-instructor",
+      }),
+      bankName: "State Bank of India",
+      bankAccountNumber: "XXXX-XXXX-1234",
+      bankIfscCode: "SBIN0001234",
+      bankAccountHolderName: "Demo Instructor",
+      upiId: "instructor@upi",
+      status: "APPROVED",
+      verifiedById: superAdmin.id,
+      verifiedAt: new Date(),
+      rating: 4.8,
+      totalStudents: 156,
+      completedSessions: 48,
+    },
+  });
+  console.log("✅ Instructor profile created");
 
   const student = await upsertUser(
     "student@lms.local",
@@ -430,6 +469,33 @@ async function main() {
 </html>`,
     },
     {
+      name: "notification-default",
+      subject: "{{notificationTitle}}",
+      isActive: true,
+      variables: JSON.stringify(["notificationTitle", "notificationMessage"]),
+      body: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:40px 20px;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center">
+      <table style="max-width:600px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+        <tr><td style="background:#4F46E5;padding:24px;text-align:center;">
+          <h1 style="color:#fff;margin:0;font-size:22px;">{{notificationTitle}}</h1>
+        </td></tr>
+        <tr><td style="padding:32px 24px;">
+          <p style="font-size:15px;color:#333;line-height:1.7;">{{notificationMessage}}</p>
+        </td></tr>
+        <tr><td style="background:#f8f8f8;padding:16px 24px;text-align:center;font-size:11px;color:#aaa;">
+          &copy; 2026 Marvel Slice LMS. All rights reserved.
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+    },
+    {
       name: "reset-password",
       subject: "Reset Your Password - Marvel Slice LMS",
       isActive: true,
@@ -481,7 +547,7 @@ async function main() {
       create: tpl,
     });
   }
-  console.log("✅ Email templates seeded (welcome, reset-password)");
+  console.log("✅ Email templates seeded (welcome, reset-password, notification-default)");
 
   // ─── Package (needed before batch) ───────────────────────────────────────────
   const dataSciencePkg = await prisma.coursePackage.upsert({
@@ -1165,6 +1231,40 @@ async function main() {
   }
   console.log("✅ Enrollment created");
 
+  // ─── Payment & Refund (sample) ────────────────────────────────────────────────
+  const existingPayment = await prisma.payment.findFirst({
+    where: { userId: student.id, packageId: dataSciencePkg.id },
+  });
+  if (!existingPayment) {
+    const payment = await prisma.payment.create({
+      data: {
+        userId: student.id,
+        packageId: dataSciencePkg.id,
+        amount: 4990000,
+        currency: "INR",
+        status: "PAID",
+        razorpayOrderId: "order_sample_dummy",
+        razorpayPaymentId: "pay_sample_dummy",
+        razorpaySignature: "sig_sample_dummy",
+      },
+    });
+
+    await prisma.refund.create({
+      data: {
+        paymentId: payment.id,
+        amount: 2495000,
+        currency: "INR",
+        status: "COMPLETED",
+        reason: "Partial refund — student requested course change",
+        initiatedById: admin.id,
+        razorpayRefundId: "rfnd_sample_dummy",
+      },
+    });
+    console.log("✅ Sample payment & refund created");
+  } else {
+    console.log("✅ Payment already exists");
+  }
+
   // ─── Notification Preferences ────────────────────────────────────────────────
   const allUsers = [superAdmin, admin, instructor, student];
   const notifTypes = [
@@ -1207,6 +1307,9 @@ async function main() {
     "   Package: Data Science Program — Batch: Data Science Batch — Jul 2025",
   );
   console.log("   BatchCourseVisibility: Python course visible, others hidden");
+  console.log("   Instructor Profile: Demo Instructor (approved)");
+  console.log("   Payment + Refund: Sample data available");
+  console.log("   Email Templates: welcome, reset-password, notification-default");
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -1216,12 +1319,13 @@ async function upsertUser(
   name: string,
   password: string,
   role: "SUPER_ADMIN" | "ADMIN" | "INSTRUCTOR" | "STUDENT",
+  extraData?: Partial<{ instructorOnboardingComplete: boolean }>,
 ) {
   const hash = await bcrypt.hash(password, 10);
   return prisma.user.upsert({
     where: { email },
     update: {},
-    create: { name, email, passwordHash: hash, role },
+    create: { name, email, passwordHash: hash, role, ...extraData },
   });
 }
 

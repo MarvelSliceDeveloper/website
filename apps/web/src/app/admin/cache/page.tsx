@@ -63,6 +63,7 @@ export default function CachePage() {
       <AdminPageHeader
         title="Cache Management"
         description="Monitor and manage platform cache"
+        breadcrumbs={[{ label: "Cache", href: "/admin/cache" }]}
         action={
           <button
             onClick={fetchStatus}

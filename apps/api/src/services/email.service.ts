@@ -100,6 +100,39 @@ interface SendEmailOptions {
   attachment?: SendEmailAttachment[];
 }
 
+/**
+ * Renders an EmailTemplate from the database by replacing
+ * {{notificationTitle}} and {{notificationMessage}} placeholders
+ * with actual values. Falls back gracefully if template not found.
+ */
+async function renderDbTemplate(
+  templateId: string,
+  data: Record<string, unknown>,
+): Promise<{ subject: string; html: string } | null> {
+  try {
+    const { prisma } = await import("../../utils/prisma");
+    const template = await prisma.emailTemplate.findUnique({
+      where: { id: templateId },
+    });
+    if (!template || !template.isActive) return null;
+
+    const title = (data.title as string) || "Notification";
+    const message = (data.message as string) || "";
+
+    const subject = template.subject.replace(
+      /\{\{notificationTitle\}\}/g,
+      title,
+    );
+    const html = template.body
+      .replace(/\{\{notificationTitle\}\}/g, title)
+      .replace(/\{\{notificationMessage\}\}/g, message);
+
+    return { subject, html };
+  } catch {
+    return null;
+  }
+}
+
 export const emailService = {
   async sendEmail(options: SendEmailOptions): Promise<boolean> {
     const client = getBrevoClient();
@@ -311,6 +344,42 @@ export const emailService = {
     } catch (error: unknown) {
       console.error(
         `[email] Failed to send notification email (type: ${String(type)}): ${String(error instanceof Error ? error.message : error)}`,
+      );
+      return false;
+    }
+  },
+
+  async sendEmailWithTemplate(
+    user: { name: string; email: string },
+    templateId: string,
+    data: Record<string, unknown>,
+  ): Promise<boolean> {
+    if (!isConfigured()) {
+      console.warn(
+        "[email] BREVO_API_KEY not set — skipping template email",
+      );
+      return false;
+    }
+
+    try {
+      const rendered = await renderDbTemplate(templateId, data);
+      if (!rendered) {
+        console.warn(
+          `[email] Template ${templateId} not found or inactive — falling back to default`,
+        );
+        return this.sendNotificationEmail(user, "CUSTOM_NOTIFICATION", data);
+      }
+
+      return this.sendEmail({
+        to: [{ email: user.email, name: user.name }],
+        subject: rendered.subject,
+        html: rendered.html,
+        text: `${data.title || "Notification"}: ${data.message || ""}`,
+        tags: ["notification", "custom", "template"],
+      });
+    } catch (error: unknown) {
+      console.error(
+        `[email] Failed to send template email: ${error instanceof Error ? error.message : error}`,
       );
       return false;
     }

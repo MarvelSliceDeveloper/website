@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
-  IconCreditCard,
   IconRefresh,
   IconCheck,
   IconX,
@@ -100,26 +100,20 @@ export default function AdminPaymentsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-            Administration
-          </p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl flex items-center gap-3">
-            <IconCreditCard size={28} className="text-primary-hover" />
-            Payments
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Revenue dashboard and payment history.
-          </p>
-        </div>
-        <button
-          onClick={fetchData}
-          className="btn-secondary text-xs py-2 flex items-center gap-1.5"
-        >
-          <IconRefresh size={14} /> Refresh
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Payments"
+        description="Revenue dashboard and payment history."
+        breadcrumbs={[{ label: "Payments", href: "/admin/payments" }]}
+        role="Administration"
+        action={
+          <button
+            onClick={fetchData}
+            className="btn-secondary text-xs py-2 flex items-center gap-1.5"
+          >
+            <IconRefresh size={14} /> Refresh
+          </button>
+        }
+      />
 
       {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">

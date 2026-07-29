@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
-  IconMail,
   IconEdit,
   IconRefresh,
   IconEye,
   IconX,
+  IconPlus,
 } from "@tabler/icons-react";
 
 type EmailTemplate = {
@@ -25,6 +26,8 @@ export default function AdminEmailTemplatesPage() {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<EmailTemplate | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [formName, setFormName] = useState("");
   const [formSubject, setFormSubject] = useState("");
   const [formBody, setFormBody] = useState("");
   const [formActive, setFormActive] = useState(true);
@@ -51,33 +54,60 @@ export default function AdminEmailTemplatesPage() {
   }, []);
 
   function openEdit(tpl: EmailTemplate) {
+    setCreating(false);
     setEditing(tpl);
+    setFormName(tpl.name);
     setFormSubject(tpl.subject);
     setFormBody(tpl.body);
     setFormActive(tpl.isActive);
   }
 
+  function openCreate() {
+    setEditing(null);
+    setCreating(true);
+    setFormName("");
+    setFormSubject("");
+    setFormBody("");
+    setFormActive(true);
+    setPreviewHtml(null);
+  }
+
   function cancelEdit() {
     setEditing(null);
+    setCreating(false);
+    setFormName("");
     setFormSubject("");
     setFormBody("");
     setFormActive(true);
   }
 
   async function handleSave() {
-    if (!editing) return;
     if (!formSubject.trim()) {
       toast.error("Subject is required");
       return;
     }
+    if (creating && !formName.trim()) {
+      toast.error("Template name is required");
+      return;
+    }
     setSaving(true);
     try {
-      await api.put(`/api/admin/email-templates/${editing.id}`, {
-        subject: formSubject.trim(),
-        body: formBody,
-        isActive: formActive,
-      });
-      toast.success("Template updated");
+      if (creating) {
+        await api.post("/api/admin/email-templates", {
+          name: formName.trim(),
+          subject: formSubject.trim(),
+          body: formBody,
+          isActive: formActive,
+        });
+        toast.success("Template created");
+      } else if (editing) {
+        await api.put(`/api/admin/email-templates/${editing.id}`, {
+          subject: formSubject.trim(),
+          body: formBody,
+          isActive: formActive,
+        });
+        toast.success("Template updated");
+      }
       cancelEdit();
       fetchTemplates();
     } catch (err) {
@@ -104,33 +134,34 @@ export default function AdminEmailTemplatesPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-            Administration
-          </p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl flex items-center gap-3">
-            <IconMail size={28} className="text-primary-hover" />
-            Email Templates
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage email templates for automated notifications.
-          </p>
-        </div>
-        <button
-          onClick={fetchTemplates}
-          className="btn-secondary text-xs py-2 flex items-center gap-1.5"
-        >
-          <IconRefresh size={14} /> Refresh
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Email Templates"
+        description="Manage email templates for automated notifications."
+        breadcrumbs={[{ label: "Email Templates", href: "/admin/email-templates" }]}
+        action={
+          <div className="flex items-center gap-2">
+            <button
+              onClick={openCreate}
+              className="btn-primary text-xs py-2 flex items-center gap-1.5"
+            >
+              <IconPlus size={14} /> New Template
+            </button>
+            <button
+              onClick={fetchTemplates}
+              className="btn-secondary text-xs py-2 flex items-center gap-1.5"
+            >
+              <IconRefresh size={14} /> Refresh
+            </button>
+          </div>
+        }
+      />
 
       {/* Editor Panel */}
-      {editing && (
+      {(editing || creating) && (
         <div className="rounded-xl border border-primary/30 bg-card p-5 space-y-3">
           <div className="flex items-center justify-between mb-1">
             <h3 className="text-sm font-semibold text-foreground">
-              Edit: {editing.name}
+              {creating ? "New Template" : `Edit: ${editing!.name}`}
             </h3>
             <button
               onClick={cancelEdit}
@@ -139,6 +170,15 @@ export default function AdminEmailTemplatesPage() {
               <IconX size={16} />
             </button>
           </div>
+          {creating && (
+            <input
+              type="text"
+              placeholder="Template name"
+              value={formName}
+              onChange={(e) => setFormName(e.target.value)}
+              className="input text-xs w-full"
+            />
+          )}
           <input
             type="text"
             placeholder="Subject line"
@@ -164,10 +204,10 @@ export default function AdminEmailTemplatesPage() {
             </label>
             <button
               onClick={handleSave}
-              disabled={saving || !formSubject.trim()}
+              disabled={saving || !formSubject.trim() || (creating && !formName.trim())}
               className="btn-primary text-xs py-2 disabled:opacity-40"
             >
-              {saving ? "Saving..." : "Save Changes"}
+              {saving ? "Saving..." : creating ? "Create Template" : "Save Changes"}
             </button>
             <button onClick={cancelEdit} className="btn-secondary text-xs py-2">
               Cancel

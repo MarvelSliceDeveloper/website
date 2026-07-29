@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast } from "@/lib/toast";
-import { IconKey, IconRefresh, IconCopy, IconTrash } from "@tabler/icons-react";
+import {
+  IconKey,
+  IconRefresh,
+  IconCopy,
+  IconTrash,
+  IconBrandYoutube,
+} from "@tabler/icons-react";
 
 type ApiKeyEntry = {
   id: string;
@@ -24,6 +30,10 @@ export default function ApiKeysPage() {
   const [newKeyName, setNewKeyName] = useState("");
   const [newKeyDesc, setNewKeyDesc] = useState("");
   const [createdKey, setCreatedKey] = useState<string | null>(null);
+  const [youtubeStatus, setYoutubeStatus] = useState<{
+    configured: boolean;
+    masked: string | null;
+  } | null>(null);
 
   async function fetchKeys() {
     setLoading(true);
@@ -41,7 +51,20 @@ export default function ApiKeysPage() {
 
   useEffect(() => {
     fetchKeys();
+    fetchYoutubeStatus();
   }, []);
+
+  async function fetchYoutubeStatus() {
+    try {
+      const data = await api.get<{
+        configured: boolean;
+        masked: string | null;
+      }>("/api/admin/api-keys/youtube-status");
+      setYoutubeStatus(data);
+    } catch {
+      // silent
+    }
+  }
 
   async function handleCreate() {
     if (!newKeyName.trim()) return;
@@ -181,18 +204,18 @@ export default function ApiKeysPage() {
       {/* Keys Table */}
       <div className="glass-card p-5 border border-border/80">
         {loading ? (
-          <div className="py-12 text-center text-sm text-muted animate-pulse">
+          <div className="py-12 text-center text-sm text-foreground/60 animate-pulse">
             Loading API keys...
           </div>
         ) : keys.length === 0 ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">
+          <div className="py-12 text-center text-sm text-foreground/50">
             No API keys created yet.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-border/60 text-muted uppercase font-bold tracking-wider">
+                <tr className="border-b border-border/60 text-foreground/50 uppercase font-bold tracking-wider">
                   <th className="py-2.5 pr-3">Name</th>
                   <th className="py-2.5 pr-3">Key</th>
                   <th className="py-2.5 pr-3">Status</th>
@@ -210,7 +233,7 @@ export default function ApiKeysPage() {
                     <td className="py-3 pr-3 font-medium text-foreground">
                       {k.name}
                     </td>
-                    <td className="py-3 pr-3 font-mono text-[10px] text-muted-foreground">
+                    <td className="py-3 pr-3 font-mono text-[10px] text-foreground/70">
                       {k.key}
                     </td>
                     <td className="py-3 pr-3">
@@ -224,12 +247,12 @@ export default function ApiKeysPage() {
                         {k.active ? "Active" : "Revoked"}
                       </span>
                     </td>
-                    <td className="py-3 pr-3 text-muted">
+                    <td className="py-3 pr-3 text-foreground/60">
                       {k.lastUsedAt
                         ? new Date(k.lastUsedAt).toLocaleDateString()
                         : "Never"}
                     </td>
-                    <td className="py-3 pr-3 text-muted">
+                    <td className="py-3 pr-3 text-foreground/60">
                       {new Date(k.createdAt).toLocaleDateString()}
                     </td>
                     <td className="py-3">
@@ -248,6 +271,36 @@ export default function ApiKeysPage() {
             </table>
           </div>
         )}
+      </div>
+
+      {/* YouTube API Key Status */}
+      <div className="rounded-xl border border-border bg-card p-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <IconBrandYoutube size={20} className="text-danger" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                YouTube API Key
+              </p>
+              <p className="text-xs text-foreground/60 mt-0.5">
+                {youtubeStatus === null
+                  ? "Checking..."
+                  : youtubeStatus.configured
+                    ? `Configured: ${youtubeStatus.masked}`
+                    : "Not configured — set YOUTUBE_API_KEY in .env"}
+              </p>
+            </div>
+          </div>
+          {youtubeStatus?.configured ? (
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-success/15 text-success border border-success/25">
+              Active
+            </span>
+          ) : youtubeStatus !== null ? (
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-danger/15 text-danger border border-danger/25">
+              Missing
+            </span>
+          ) : null}
+        </div>
       </div>
     </div>
   );

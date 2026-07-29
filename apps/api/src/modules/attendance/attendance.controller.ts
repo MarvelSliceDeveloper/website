@@ -25,6 +25,27 @@ export const attendanceController = {
     }
   },
 
+  // POST /api/attendance/:sessionId/leave — records student leaving a session
+  async leaveSession(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
+
+      const { sessionId } = req.params;
+      const attendance = await attendanceService.leaveSession(
+        req.user.userId,
+        sessionId,
+      );
+
+      return res
+        .status(200)
+        .json({ message: "Session left", attendance });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
   // GET /api/attendance/:sessionId — lists attendance for a session
   async getSessionAttendance(req: AuthRequest, res: Response) {
     try {

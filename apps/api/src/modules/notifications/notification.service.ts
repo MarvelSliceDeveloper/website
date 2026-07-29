@@ -43,6 +43,7 @@ export async function dispatchEmailsForNotification(
   userIds: string[],
   type: string,
   data: Record<string, unknown>,
+  emailTemplateId?: string,
 ): Promise<void> {
   if (!userIds || userIds.length === 0) return;
 
@@ -74,18 +75,23 @@ export async function dispatchEmailsForNotification(
     if (optedInUsers.length === 0) return;
 
     for (const user of optedInUsers) {
-      emailService
-        .sendNotificationEmail(
-          { name: user.name, email: user.email },
-          type,
-          data,
-        )
-        .catch((err) => {
-          console.error(
-            `[notification] Failed to send email to ${user.email}:`,
-            err,
+      const sendMethod = emailTemplateId
+        ? emailService.sendEmailWithTemplate(
+            { name: user.name, email: user.email },
+            emailTemplateId,
+            data,
+          )
+        : emailService.sendNotificationEmail(
+            { name: user.name, email: user.email },
+            type,
+            data,
           );
-        });
+      sendMethod.catch((err) => {
+        console.error(
+          `[notification] Failed to send email to ${user.email}:`,
+          err,
+        );
+      });
     }
   } catch (err) {
     console.error("[notification] Error dispatching emails:", err);
@@ -817,9 +823,10 @@ export const notificationService = {
       title: string;
       message: string;
       type?: string;
+      emailTemplateId?: string;
     },
   ): Promise<{ count: number }> {
-    const { targetType, targetIds, title, message } = options;
+    const { targetType, targetIds, title, message, emailTemplateId } = options;
     const type = options.type ?? "CUSTOM_NOTIFICATION";
 
     if (senderRole !== UserRole.ADMIN && senderRole !== UserRole.INSTRUCTOR) {
@@ -915,14 +922,12 @@ export const notificationService = {
     }));
 
     const count = await this.createMany(notifications);
-    dispatchEmailsForNotification(userIds, type, {
-      title,
-      message,
-      sentBy: senderId,
-      senderRole,
-      targetType,
-      targetIds,
-    });
+    dispatchEmailsForNotification(
+      userIds,
+      type,
+      { title, message, sentBy: senderId, senderRole, targetType, targetIds },
+      emailTemplateId,
+    );
     return { count };
   },
 };

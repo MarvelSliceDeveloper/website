@@ -2,14 +2,15 @@ import { Router, type Response } from "express";
 import { prisma } from "../../../utils/prisma";
 import {
   requireAuth,
-  requireSuperAdmin,
+  requireRole,
   type AuthRequest,
 } from "../../../middleware/auth.middleware";
+import { UserRole } from "@lms/types";
 
 const router = Router();
 
 router.use(requireAuth);
-router.use(requireSuperAdmin);
+router.use(requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]));
 
 const sampleData: Record<string, string> = {
   userName: "John Doe",
@@ -50,6 +51,37 @@ router.get("/", async (_req: AuthRequest, res: Response) => {
     return res.status(500).json({
       error:
         error instanceof Error ? error.message : "Failed to fetch templates",
+    });
+  }
+});
+
+// POST / — Create new email template
+router.post("/", async (req: AuthRequest, res: Response) => {
+  try {
+    const { name, subject, body, variables, isActive } = req.body;
+
+    if (!name || typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({ error: "Template name is required" });
+    }
+    if (!subject || typeof subject !== "string") {
+      return res.status(400).json({ error: "Subject is required" });
+    }
+
+    const template = await prisma.emailTemplate.create({
+      data: {
+        name: name.trim(),
+        subject: subject.trim(),
+        body: body || "",
+        variables: variables || [],
+        isActive: isActive !== undefined ? isActive : true,
+      },
+    });
+
+    return res.status(201).json({ template });
+  } catch (error: unknown) {
+    return res.status(500).json({
+      error:
+        error instanceof Error ? error.message : "Failed to create template",
     });
   }
 });

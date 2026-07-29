@@ -6,6 +6,7 @@ import StatCard from "@/components/admin/StatCard";
 import { ChartSkeleton } from "@/components/admin/LoadingSkeleton";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   IconChartBar,
   IconHelpCircle,
@@ -89,16 +90,13 @@ export default function InstructorAnalyticsPage() {
     : 84;
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Instructor Course Analytics
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Track student engagement, course completion, video retention drop-off,
-          and quiz scores.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <AdminPageHeader
+        title="Analytics"
+        breadcrumbs={[{ label: "Analytics", href: "/instructor/analytics" }]}
+        role="Instructor"
+        description="Track student engagement, course completion, video retention drop-off, and quiz scores."
+      />
 
       {/* Top Stat Tiles */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

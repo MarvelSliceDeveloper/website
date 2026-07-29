@@ -63,7 +63,18 @@ export const authController = {
   async login(req: Request, res: Response) {
     try {
       const data = LoginSchema.parse(req.body);
-      const result = await authService.login(data);
+      const result = await authService.login(data, {
+        ip: req.ip,
+        userAgent: req.headers["user-agent"],
+      });
+
+      if ("requires2fa" in result && result.requires2fa) {
+        return res.status(200).json({
+          requires2fa: true,
+          tempToken: result.tempToken,
+          user: result.user,
+        });
+      }
 
       // Log successful login
       prisma.loginLog
@@ -424,13 +435,15 @@ export const authController = {
         data: { passwordHash: hashedPassword, mustChangePassword: false },
       });
 
-      const tokens = authService.generateTokens({
+      const tokens = await authService.generateTokens({
         id: user.id,
         role: user.role,
         email: user.email,
         name: user.name,
         mustChangePassword: false,
         sessionTimeoutMin: user.sessionTimeoutMin,
+        ip: req.ip,
+        userAgent: req.headers["user-agent"],
       });
 
       res.cookie("accessToken", tokens.accessToken, {
@@ -506,13 +519,15 @@ export const authController = {
         data: { passwordHash: hashedPassword, mustChangePassword: false },
       });
 
-      const tokens = authService.generateTokens({
+      const tokens = await authService.generateTokens({
         id: user.id,
         role: user.role,
         email: user.email,
         name: user.name,
         mustChangePassword: false,
         sessionTimeoutMin: user.sessionTimeoutMin,
+        ip: req.ip,
+        userAgent: req.headers["user-agent"],
       });
 
       res.cookie("accessToken", tokens.accessToken, {

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   IconClipboardList,
   IconUsers,
@@ -356,18 +357,12 @@ export default function InstructorAssignmentsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-400">
-          Instructor
-        </p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">
-          Assessments
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          View quizzes and assignments for your courses. Click to grade
-          submissions.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Assignments"
+        breadcrumbs={[{ label: "Assignments", href: "/instructor/assignments" }]}
+        role="Instructor"
+        description="View quizzes and assignments for your courses. Click to grade submissions."
+      />
 
       {loading ? (
         <div className="border border-border bg-card p-12 text-center">

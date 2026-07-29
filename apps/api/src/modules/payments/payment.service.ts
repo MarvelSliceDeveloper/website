@@ -67,7 +67,7 @@ export const paymentService = {
 
     if (user) {
       // Existing user — just generate a new JWT
-      const tokens = authService.generateTokens({
+      const tokens = await authService.generateTokens({
         id: user.id,
         role: user.role,
         email: user.email,
@@ -100,7 +100,7 @@ export const paymentService = {
       },
     });
 
-    const tokens = authService.generateTokens({
+    const tokens = await authService.generateTokens({
       id: user.id,
       role: user.role,
       email: user.email,

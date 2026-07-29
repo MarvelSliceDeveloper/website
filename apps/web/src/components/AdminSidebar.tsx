@@ -1,8 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { useUnreadCounts } from "@/hooks/useUnreadCounts";
@@ -13,8 +12,6 @@ import {
   IconClipboardCheck,
   IconLayoutDashboard,
   IconMail,
-  IconLogout,
-  IconMessages,
   IconPackage,
   IconUsers,
   IconUsersGroup,
@@ -29,6 +26,8 @@ import {
   IconUserCheck,
   IconBellRinging,
   IconServer,
+  IconShield,
+  IconRefresh,
 } from "@tabler/icons-react";
 
 import type { NavItem, NavItemChild } from "@/components/shared/SidebarTypes";
@@ -147,7 +146,7 @@ function NavGroup({
   return (
     <div className="space-y-1.5">
       <p
-        className={`px-4 py-1 text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-border/40 ${
+        className={`px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-border/60 ${
           collapsed ? "hidden" : "block"
         }`}
       >
@@ -318,261 +317,322 @@ export default function AdminSidebar({
   userEmail?: string;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
   const isSuperAdmin = userRole === "SUPER_ADMIN";
   const unreadCounts = useUnreadCounts();
 
-  const sidebarItems: NavItem[] = [
-    { label: "Dashboard", href: "/admin/dashboard", icon: IconLayoutDashboard },
+  const sidebarItems = [
+    {
+      label: "Main",
+      items: [
+        { label: "Dashboard", href: "/admin/dashboard", icon: IconLayoutDashboard },
+      ],
+    },
     ...(isSuperAdmin
       ? [
-          // Super Admin: system operations
-          ...[
-            {
-              label: "Activity Logs",
-              href: "/admin/logs",
-              icon: IconFileDescription as React.ComponentType<{
-                size?: number | string;
-                stroke?: number | string;
-                className?: string;
-              }>,
-            },
-            {
-              label: "Trash",
-              href: "/admin/trash",
-              icon: IconTrash as React.ComponentType<{
-                size?: number | string;
-                stroke?: number | string;
-                className?: string;
-              }>,
-            },
-            {
-              label: "Announcements",
-              href: "/admin/announcements",
-              icon: IconBellRinging as React.ComponentType<{
-                size?: number | string;
-                stroke?: number | string;
-                className?: string;
-              }>,
-            },
-            {
-              label: "Content",
-              href: "/admin/categories",
-              icon: IconBook as React.ComponentType<{
-                size?: number | string;
-                stroke?: number | string;
-                className?: string;
-              }>,
-              children: [
-                { label: "Categories", href: "/admin/categories" },
-                { label: "Tags", href: "/admin/tags" },
-                { label: "Static Pages", href: "/admin/static-pages" },
-                { label: "Certificates", href: "/admin/certificates" },
-              ],
-            },
-            {
-              label: "Audit Logs",
-              href: "/admin/audit-logs",
-              icon: IconFileDescription as React.ComponentType<{
-                size?: number | string;
-                stroke?: number | string;
-                className?: string;
-              }>,
-            },
-            {
-              label: "Coupons",
-              href: "/admin/coupons",
-              icon: IconClipboardCheck as React.ComponentType<{
-                size?: number | string;
-                stroke?: number | string;
-                className?: string;
-              }>,
-            },
-          ],
           {
-            label: "Approvals",
-            href: "/admin/approvals",
-            icon: IconUserCheck as React.ComponentType<{
-              size?: number | string;
-              stroke?: number | string;
-              className?: string;
-            }>,
-          },
-          {
-            label: "Users",
-            href: "/admin/users",
-            icon: IconUsers,
-            children: [
-              { label: "Login History", href: "/admin/users/login-history" },
-              { label: "All Users", href: "/admin/users" },
+            label: "Content",
+            items: [
+              {
+                label: "Content",
+                href: "/admin/categories",
+                icon: IconBook as React.ComponentType<{
+                  size?: number | string;
+                  stroke?: number | string;
+                  className?: string;
+                }>,
+                children: [
+                  { label: "Categories", href: "/admin/categories" },
+                  { label: "Tags", href: "/admin/tags" },
+                  { label: "Static Pages", href: "/admin/static-pages" },
+                ],
+              },
             ],
           },
           {
-            label: "Settings",
-            href: "/admin/settings",
-            icon: IconSettings,
-            children: [
-              { label: "System Settings", href: "/admin/settings/system" },
-              { label: "API Keys", href: "/admin/settings/api-keys" },
-              { label: "Permissions", href: "/admin/settings/permissions" },
-              { label: "Consent Logs", href: "/admin/consent-logs" },
-              { label: "General", href: "/admin/settings" },
+            label: "Logs",
+            items: [
+              {
+                label: "Activity Logs",
+                href: "/admin/logs",
+                icon: IconFileDescription as React.ComponentType<{
+                  size?: number | string;
+                  stroke?: number | string;
+                  className?: string;
+                }>,
+              },
+              {
+                label: "Audit Logs",
+                href: "/admin/audit-logs",
+                icon: IconFileDescription as React.ComponentType<{
+                  size?: number | string;
+                  stroke?: number | string;
+                  className?: string;
+                }>,
+              },
+            ],
+          },
+          {
+            label: "Management",
+            items: [
+              {
+                label: "Trash",
+                href: "/admin/trash",
+                icon: IconTrash as React.ComponentType<{
+                  size?: number | string;
+                  stroke?: number | string;
+                  className?: string;
+                }>,
+              },
+              {
+                label: "Announcements",
+                href: "/admin/announcements",
+                icon: IconBellRinging as React.ComponentType<{
+                  size?: number | string;
+                  stroke?: number | string;
+                  className?: string;
+                }>,
+              },
+              {
+                label: "Approvals",
+                href: "/admin/approvals",
+                icon: IconUserCheck as React.ComponentType<{
+                  size?: number | string;
+                  stroke?: number | string;
+                  className?: string;
+                }>,
+              },
+              {
+                label: "Coupons",
+                href: "/admin/coupons",
+                icon: IconClipboardCheck as React.ComponentType<{
+                  size?: number | string;
+                  stroke?: number | string;
+                  className?: string;
+                }>,
+              },
+              {
+                label: "Assignment Review",
+                href: "/admin/assignments/review",
+                icon: IconClipboardCheck as React.ComponentType<{
+                  size?: number | string;
+                  stroke?: number | string;
+                  className?: string;
+                }>,
+              },
+            ],
+          },
+          {
+            label: "Users",
+            items: [
+              {
+                label: "Users",
+                href: "/admin/users",
+                icon: IconUsers,
+                children: [
+                  { label: "Login History", href: "/admin/users/login-history" },
+                  { label: "View Users", href: "/admin/users" },
+                  { label: "Instructors", href: "/admin/instructors" },
+                ],
+              },
             ],
           },
           {
             label: "System",
-            href: "/admin/cache",
-            icon: IconServer as React.ComponentType<{
-              size?: number | string;
-              stroke?: number | string;
-              className?: string;
-            }>,
-            children: [
-              { label: "Cache", href: "/admin/cache" },
-              { label: "Email Templates", href: "/admin/email-templates" },
-              { label: "Branding", href: "/admin/branding" },
-              { label: "i18n", href: "/admin/i18n" },
-            ],
-          },
-          {
-            label: "Microsoft",
-            href: "/admin/microsoft",
-            icon: IconBrandWindows,
-          },
-          {
-            label: "Health",
-            href: "/admin/health",
-            icon: IconServer as React.ComponentType<{
-              size?: number | string;
-              stroke?: number | string;
-              className?: string;
-            }>,
-          },
-        ]
-      : [
-          // Admin: platform operations
-          {
-            label: "Inbox",
-            href: "/admin/inbox",
-            icon: IconMail,
-            unreadKey: "inbox",
-            children: [
+            items: [
               {
-                label: "Notifications",
-                href: "/admin/inbox",
-                unreadKey: "notifications",
-              },
-              { label: "Send Notification", href: "/admin/notifications/send" },
-              {
-                label: "Mentorship Tickets",
-                href: "/admin/inbox/tickets",
-                unreadKey: "tickets",
-              },
-              { label: "Support", href: "/admin/inbox/support" },
-              {
-                label: "Messages",
-                href: "/admin/inbox/messages",
-                unreadKey: "messages",
-              },
-            ],
-          },
-          {
-            label: "Courses",
-            href: "/admin/courses",
-            icon: IconBook,
-            children: [
-              { label: "All Courses", href: "/admin/courses" },
-              { label: "Create Course", href: "/admin/courses/new" },
-              { label: "Drafts", href: "/admin/courses?status=DRAFT" },
-              { label: "Published", href: "/admin/courses?status=PUBLISHED" },
-              { label: "Archived", href: "/admin/courses?status=ARCHIVED" },
-            ],
-          },
-          {
-            label: "Batches",
-            href: "/admin/batches",
-            icon: IconUsersGroup,
-            children: [
-              { label: "All Batches", href: "/admin/batches" },
-              { label: "Create Batch", href: "/admin/batches/new" },
-              { label: "Active", href: "/admin/batches?status=ACTIVE" },
-              { label: "Upcoming", href: "/admin/batches?status=UPCOMING" },
-              { label: "Completed", href: "/admin/batches?status=COMPLETED" },
-            ],
-          },
-          {
-            label: "Sessions",
-            href: "/admin/sessions",
-            icon: IconVideo,
-            children: [
-              { label: "All Sessions", href: "/admin/sessions" },
-              { label: "Schedule Session", href: "/admin/sessions/new" },
-              { label: "Upcoming", href: "/admin/sessions?status=UPCOMING" },
-              { label: "Past", href: "/admin/sessions?status=PAST" },
-            ],
-          },
-          { label: "Reports", href: "/admin/reports", icon: IconChartBar },
-          {
-            label: "Packages",
-            href: "/admin/packages",
-            icon: IconPackage,
-            children: [
-              { label: "All Packages", href: "/admin/packages" },
-              { label: "Create Package", href: "/admin/packages/new" },
-              {
-                label: "Pending Enrollments",
-                href: "/admin/packages/enrollments?status=PENDING",
+                label: "System",
+                href: "/admin/cache",
+                icon: IconServer as React.ComponentType<{
+                  size?: number | string;
+                  stroke?: number | string;
+                  className?: string;
+                }>,
+                children: [
+                  { label: "Cache", href: "/admin/cache" },
+                  { label: "Email Templates", href: "/admin/email-templates" },
+                  { label: "Branding", href: "/admin/branding" },
+                  { label: "i18n", href: "/admin/i18n" },
+                ],
               },
               {
-                label: "Active Packages",
-                href: "/admin/packages?status=ACTIVE",
-              },
-            ],
-          },
-          { label: "Calendar", href: "/admin/calendar", icon: IconCalendar },
-          {
-            label: "Users",
-            href: "/admin/users",
-            icon: IconUsers,
-            children: [
-              { label: "All Users", href: "/admin/users" },
-              { label: "Import Users", href: "/admin/users/import" },
-            ],
-          },
-          {
-            label: "Certificates",
-            href: "/admin/certificates",
-            icon: IconClipboardCheck,
-          },
-          { label: "Payments", href: "/admin/payments", icon: IconPackage },
-          {
-            label: "Mentorship",
-            href: "/admin/mentorship",
-            icon: IconMessages,
-            unreadKey: "mentorship",
-            children: [
-              { label: "All Requests", href: "/admin/mentorship?status=all" },
-              {
-                label: "Pending Review",
-                href: "/admin/mentorship?status=OPEN",
-                unreadKey: "mentorship_pending",
-              },
-              { label: "Assigned", href: "/admin/mentorship?status=ASSIGNED" },
-              {
-                label: "Scheduled",
-                href: "/admin/mentorship?status=SCHEDULED",
+                label: "Microsoft",
+                href: "/admin/microsoft",
+                icon: IconBrandWindows,
               },
               {
-                label: "Completed",
-                href: "/admin/mentorship?status=COMPLETED",
+                label: "Health",
+                href: "/admin/health",
+                icon: IconServer as React.ComponentType<{
+                  size?: number | string;
+                  stroke?: number | string;
+                  className?: string;
+                }>,
               },
             ],
           },
           {
             label: "Settings",
-            href: "/admin/settings",
-            icon: IconSettings,
-            children: [{ label: "General", href: "/admin/settings" }],
+            items: [
+              {
+                label: "Settings",
+                href: "/admin/settings",
+                icon: IconSettings,
+                children: [
+                  { label: "System Settings", href: "/admin/settings/system" },
+                  { label: "API Keys", href: "/admin/settings/api-keys" },
+                  { label: "Permissions", href: "/admin/settings/permissions" },
+                  { label: "Backup & Restore", href: "/admin/settings/backup" },
+                  { label: "Alerting Webhooks", href: "/admin/settings/webhooks" },
+                  { label: "Consent Logs", href: "/admin/consent-logs" },
+                  { label: "General", href: "/admin/settings" },
+                ],
+              },
+            ],
+          },
+          {
+            label: "Compliance",
+            items: [
+              {
+                label: "GDPR",
+                href: "/admin/gdpr",
+                icon: IconShield,
+                children: [
+                  { label: "Data Export", href: "/admin/gdpr" },
+                ],
+              },
+            ],
+          },
+        ]
+      : [
+          {
+            label: "Academics",
+            items: [
+              {
+                label: "Courses",
+                href: "/admin/courses",
+                icon: IconBook,
+                children: [
+                  { label: "View Courses", href: "/admin/courses" },
+                  { label: "Add Course", href: "/admin/courses/new" },
+                ],
+              },
+              {
+                label: "Batches",
+                href: "/admin/batches",
+                icon: IconUsersGroup,
+                children: [
+                  { label: "View Batches", href: "/admin/batches" },
+                  { label: "Add Batch", href: "/admin/batches/new" },
+                ],
+              },
+              {
+                label: "Sessions",
+                href: "/admin/sessions",
+                icon: IconVideo,
+                children: [
+                  { label: "View Sessions", href: "/admin/sessions" },
+                  { label: "Schedule Session", href: "/admin/sessions/new" },
+                  { label: "Upcoming", href: "/admin/sessions?status=UPCOMING" },
+                  { label: "Past", href: "/admin/sessions?status=PAST" },
+                ],
+              },
+              {
+                label: "Assignment Review",
+                href: "/admin/assignments/review",
+                icon: IconClipboardCheck,
+              },
+            ],
+          },
+          {
+            label: "Communication",
+            items: [
+              {
+                label: "Inbox",
+                href: "/admin/inbox",
+                icon: IconMail,
+                unreadKey: "inbox",
+                children: [
+                  {
+                    label: "Notifications",
+                    href: "/admin/inbox",
+                    unreadKey: "notifications",
+                  },
+                  { label: "Send Notification", href: "/admin/notifications/send" },
+                  { label: "Support", href: "/admin/inbox/support" },
+                  {
+                    label: "Messages",
+                    href: "/admin/inbox/messages",
+                    unreadKey: "messages",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            label: "Sales & Finance",
+            items: [
+              {
+                label: "Packages",
+                href: "/admin/packages",
+                icon: IconPackage,
+                children: [
+                  { label: "View Packages", href: "/admin/packages" },
+                  { label: "Add Package", href: "/admin/packages/new" },
+                  {
+                    label: "Pending Enrollments",
+                    href: "/admin/packages/enrollments?status=PENDING",
+                  },
+                  {
+                    label: "Active Packages",
+                    href: "/admin/packages?status=ACTIVE",
+                  },
+                ],
+              },
+              { label: "Payments", href: "/admin/payments", icon: IconPackage },
+              {
+                label: "Certificates",
+                href: "/admin/certificates",
+                icon: IconClipboardCheck,
+              },
+              {
+                label: "Refunds",
+                href: "/admin/refunds",
+                icon: IconRefresh,
+              },
+            ],
+          },
+          {
+            label: "Reports",
+            items: [
+              { label: "Reports", href: "/admin/reports", icon: IconChartBar },
+              { label: "Calendar", href: "/admin/calendar", icon: IconCalendar },
+            ],
+          },
+          {
+            label: "People",
+            items: [
+              {
+                label: "Users",
+                href: "/admin/users",
+                icon: IconUsers,
+                children: [
+                  { label: "View Users", href: "/admin/users" },
+                  { label: "Import Users", href: "/admin/users/import" },
+                  { label: "Instructors", href: "/admin/instructors" },
+                ],
+              },
+            ],
+          },
+          {
+            label: "Configuration",
+            items: [
+              {
+                label: "Settings",
+                href: "/admin/settings",
+                icon: IconSettings,
+                children: [{ label: "General", href: "/admin/settings" }],
+              },
+            ],
           },
         ]),
   ];
@@ -586,27 +646,14 @@ export default function AdminSidebar({
       {/* Sidebar Header */}
       <div
         className={`flex h-14 items-center border-b border-border bg-card ${
-          collapsed ? "justify-center px-2" : "gap-2.5 px-4"
+          collapsed ? "justify-center px-2" : "justify-end px-3"
         }`}
       >
-        <div
-          className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer select-none"
-          onClick={() => router.push("/admin/dashboard")}
-        >
-          <Image
-            src="/images/logo.svg"
-            alt="Marvel Slice"
-            width={36}
-            height={36}
-            className="h-9 w-auto object-contain transition-transform duration-300 hover:scale-105"
-          />
-          <span
-            className={`text-base font-extrabold tracking-tight text-foreground ${collapsed ? "hidden" : "block"}`}
-          >
-            <span>Marvel</span>
-            <span className="text-primary ml-0.5">Slice</span>
+        {!collapsed && (
+          <span className="flex-1 text-[10px] font-semibold uppercase tracking-wider text-muted">
+            Navigation
           </span>
-        </div>
+        )}
         <button
           onClick={onToggleCollapse}
           className="flex h-7 w-7 shrink-0 items-center justify-center text-muted hover:text-foreground hover:bg-muted/15 transition-colors rounded-lg"
@@ -618,45 +665,18 @@ export default function AdminSidebar({
 
       {/* Navigation Links */}
       <nav className="flex-1 overflow-y-auto py-3 space-y-4">
-        <NavGroup
-          label="Overview"
-          items={sidebarItems}
-          pathname={pathname}
-          collapsed={collapsed}
-          unreadCounts={unreadCounts}
-        />
+        {sidebarItems.map((group) => (
+          <NavGroup
+            key={group.label}
+            label={group.label}
+            items={group.items}
+            pathname={pathname}
+            collapsed={collapsed}
+            unreadCounts={unreadCounts}
+          />
+        ))}
       </nav>
 
-      {/* Footer Profile & Logout */}
-      <div className="border-t border-border bg-card p-3 space-y-1.5">
-        <div
-          className={`flex items-center border border-border rounded-lg bg-slate-170 dark:bg-slate-90/5 ${
-            collapsed ? "justify-center" : "gap-2.5 px-2 py-1.5"
-          }`}
-        >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-primary/10 text-[10px] font-bold text-primary">
-            AD
-          </div>
-          <div className={`min-w-0 ${collapsed ? "hidden" : "block"}`}>
-            <p className="truncate text-xs font-semibold text-foreground">
-              {userName || "Admin"}
-            </p>
-            <p className="truncate text-[10px] text-muted-foreground">
-              {userEmail || ""}
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={async () => {
-            await api.post("/api/auth/logout");
-            router.push("/login");
-          }}
-          className="btn-danger w-full justify-center py-2 text-xs font-semibold"
-        >
-          <IconLogout size={15} stroke={1.8} className="shrink-0" />
-          <span className={collapsed ? "hidden" : "inline"}>Sign out</span>
-        </button>
-      </div>
     </aside>
   );
 }

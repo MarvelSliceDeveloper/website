@@ -478,6 +478,9 @@ export default function AdminUsersPage() {
       <AdminPageHeader
         title="Users"
         description={`${counts.total} registered users`}
+        breadcrumbs={[
+          { label: "Users", href: "/admin/users" },
+        ]}
         action={
           <button
             onClick={() => setShowModal(true)}
@@ -488,71 +491,74 @@ export default function AdminUsersPage() {
         }
       />
 
-      {/* Package filter chips — only visible when STUDENT filter is active */}
-      {roleFilter === "STUDENT" && packages.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {packages.map((pkg) => (
-            <button
-              key={pkg.id}
-              onClick={() =>
-                router.replace(
-                  packageFilter === pkg.id
-                    ? `/admin/users?role=STUDENT`
-                    : `/admin/users?role=STUDENT&packageId=${pkg.id}`,
-                )
-              }
-              className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-                packageFilter === pkg.id
-                  ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                  : "border-border text-muted-foreground hover:bg-card-hover"
-              }`}
-            >
-              {pkg.name} · {pkg.count}
-            </button>
-          ))}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-col gap-3">
+          {/* Role filter chips */}
+          <div className="flex flex-wrap gap-2">
+            {(["STUDENT", "INSTRUCTOR", "ADMIN", "SUPER_ADMIN"] as const)
+              .filter(
+                (role) =>
+                  currentUserRole === "SUPER_ADMIN" ||
+                  (role !== "ADMIN" && role !== "SUPER_ADMIN"),
+              )
+              .map((role) => (
+                <button
+                  key={role}
+                  onClick={() =>
+                    router.replace(
+                      roleFilter === role
+                        ? "/admin/users"
+                        : `/admin/users?role=${role}`,
+                    )
+                  }
+                  className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+                    roleFilter === role
+                      ? roleStyles[role]
+                      : "border-border text-muted-foreground hover:bg-card-hover"
+                  }`}
+                >
+                  <span>{roleIcons[role]}</span>
+                  {role} · {counts[role]}
+                </button>
+              ))}
+          </div>
+
+          {/* Package filter chips — only visible when STUDENT filter is active */}
+          {roleFilter === "STUDENT" && packages.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {packages.map((pkg) => (
+                <button
+                  key={pkg.id}
+                  onClick={() =>
+                    router.replace(
+                      packageFilter === pkg.id
+                        ? `/admin/users?role=STUDENT`
+                        : `/admin/users?role=STUDENT&packageId=${pkg.id}`,
+                    )
+                  }
+                  className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+                    packageFilter === pkg.id
+                      ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                      : "border-border text-muted-foreground hover:bg-card-hover"
+                  }`}
+                >
+                  {pkg.name} · {pkg.count}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-      )}
 
-      {/* Role filter chips */}
-      <div className="flex flex-wrap gap-2">
-        {(["STUDENT", "INSTRUCTOR", "ADMIN", "SUPER_ADMIN"] as const)
-          .filter(
-            (role) =>
-              currentUserRole === "SUPER_ADMIN" ||
-              (role !== "ADMIN" && role !== "SUPER_ADMIN"),
-          )
-          .map((role) => (
-            <button
-              key={role}
-              onClick={() =>
-                router.replace(
-                  roleFilter === role
-                    ? "/admin/users"
-                    : `/admin/users?role=${role}`,
-                )
-              }
-              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-                roleFilter === role
-                  ? roleStyles[role]
-                  : "border-border text-muted-foreground hover:bg-card-hover"
-              }`}
-            >
-              <span>{roleIcons[role]}</span>
-              {role} · {counts[role]}
-            </button>
-          ))}
-      </div>
-
-      {/* Search */}
-      <div className="max-w-sm">
-        <SearchInput
-          placeholder="Search by name or email..."
-          value={search}
-          onChange={(value) => {
-            setSearch(value);
-            setPage(1);
-          }}
-        />
+        <div className="max-w-sm">
+          <SearchInput
+            placeholder="Search by name or email..."
+            value={search}
+            onChange={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+          />
+        </div>
       </div>
 
       {/* Table */}

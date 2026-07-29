@@ -14,19 +14,19 @@ type Override = {
 };
 
 const DEFAULT_PERMISSIONS = [
-  { permission: "course.create", label: "Create Course" },
+  { permission: "course.create", label: "Add Course" },
   { permission: "course.edit", label: "Edit Course" },
   { permission: "course.delete", label: "Delete Course" },
   { permission: "course.view.all", label: "View All Courses" },
-  { permission: "batch.create", label: "Create Batch" },
+  { permission: "batch.create", label: "Add Batch" },
   { permission: "batch.edit", label: "Edit Batch" },
   { permission: "batch.delete", label: "Delete Batch" },
   { permission: "session.create", label: "Create Session" },
   { permission: "session.edit", label: "Edit Session" },
   { permission: "session.delete", label: "Delete Session" },
-  { permission: "student.create", label: "Create Student" },
+  { permission: "student.create", label: "Add Student" },
   { permission: "enrollment.manage", label: "Manage Enrollments" },
-  { permission: "assignment.create", label: "Create Assignment" },
+  { permission: "assignment.create", label: "Add Assignment" },
   { permission: "assignment.grade", label: "Grade Assignments" },
   { permission: "mentorship.answer", label: "Answer Mentorship" },
 ];
@@ -205,16 +205,16 @@ export default function PermissionsPage() {
                     <td key={role} className="py-3 pr-4 text-center">
                       <button
                         onClick={() => toggleLocal(role, perm.permission)}
-                        className={`w-8 h-5 rounded-full transition-colors relative ${
+                        className={`w-10 h-6 rounded-full transition-all duration-200 relative ${
                           isToggled(role, perm.permission)
-                            ? "bg-emerald-500"
-                            : "bg-muted"
+                            ? "bg-primary"
+                            : "bg-gray-200 dark:bg-slate-600"
                         }`}
                       >
                         <span
-                          className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                          className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md ring-1 ring-black/5 transition-all duration-200 ${
                             isToggled(role, perm.permission)
-                              ? "translate-x-[14px]"
+                              ? "translate-x-[18px]"
                               : "translate-x-0.5"
                           }`}
                         />

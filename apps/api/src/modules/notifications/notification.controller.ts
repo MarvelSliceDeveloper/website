@@ -108,7 +108,8 @@ export const notificationController = {
       if (!req.user)
         return res.status(401).json({ error: "Authentication required" });
 
-      const { targetType, targetIds, title, message, type } = req.body;
+      const { targetType, targetIds, title, message, type, emailTemplateId } =
+        req.body;
 
       if (
         !targetType ||
@@ -147,6 +148,7 @@ export const notificationController = {
           title: title.trim(),
           message: message.trim(),
           type,
+          emailTemplateId,
         },
       );
 

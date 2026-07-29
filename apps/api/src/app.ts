@@ -15,6 +15,7 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { doubleCsrf } from "csrf-csrf";
 import { authRouter } from "./modules/auth/auth.routes";
+import { twoFactorRouter } from "./modules/auth/2fa.routes";
 import { calendarRouter } from "./modules/calendar/calendar.routes";
 import { webhookRouter } from "./modules/calendar/webhook.routes";
 import { sessionRouter } from "./modules/sessions/session.routes";
@@ -78,7 +79,16 @@ import { i18nRouter } from "./modules/admin/i18n/i18n.routes";
 import { cacheRouter } from "./modules/admin/cache/cache.routes";
 import { onboardingRouter } from "./modules/onboarding/onboarding.routes";
 import { instructorRouter } from "./modules/instructor/instructor.routes";
+import { profileRouter } from "./modules/instructor/profile.routes";
 import { auditMiddleware } from "./utils/audit";
+import { maintenanceMiddleware } from "./middleware/maintenance.middleware";
+import { maintenanceRouter } from "./modules/admin/maintenance/maintenance.routes";
+import gdprRouter from "./modules/admin/gdpr/gdpr.routes";
+import backupRouter from "./modules/admin/backup/backup.routes";
+import alertingWebhooksRouter from "./modules/admin/webhooks/alerting-webhooks.routes";
+import { refundsRouter } from "./modules/admin/refunds/refunds.routes";
+import { assignmentReviewRouter } from "./modules/admin/assignments/review.routes";
+import { instructorsRouter } from "./modules/admin/instructors/instructors.routes";
 
 const logger = pino({
   level: process.env.LOG_LEVEL || "info",
@@ -144,6 +154,7 @@ const csrfExemptPaths = [
   "/api/auth/forgot-password",
   "/api/auth/reset-password",
   "/api/auth/azure-ad/callback",
+  "/api/auth/2fa/challenge",
   "/api/webhooks/",
   "/api/csrf-token",
   "/health",
@@ -215,7 +226,9 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // ── Routes ──
+app.use(maintenanceMiddleware);
 app.use("/api/auth", authRouter);
+app.use("/api/auth/2fa", twoFactorRouter);
 app.use("/api/webhooks", webhookRouter);
 app.post("/api/webhooks/events", eventsWebhookController.handleEventsWebhook);
 app.get("/api/csrf-token", (req: Request, res: Response) => {
@@ -257,6 +270,7 @@ app.use("/api/onboarding", onboardingRouter);
 
 // ── Instructor routes ──
 app.use("/api/instructor", instructorRouter);
+app.use("/api/instructor", profileRouter);
 
 // ── Super Admin routes ──
 app.use("/api/admin/users", superAdminRouter);
@@ -274,7 +288,7 @@ app.use("/api/admin/trash", trashRouter);
 // ── Admin feature routes ──
 app.use("/api/admin/categories", categoriesRouter);
 app.use("/api/admin/tags", tagsRouter);
-app.use("/api/admin/admin-certificates", adminCertificatesRouter);
+app.use("/api/admin/certificates", adminCertificatesRouter);
 app.use("/api/admin/certificate-templates", certificateTemplateRouter);
 app.use("/api/admin/static-pages", staticPagesRouter);
 app.use("/api/admin/email-templates", emailTemplatesRouter);
@@ -297,6 +311,27 @@ app.use("/api/youtube", youtubeRouter);
 app.use("/api/coupons", couponRouter);
 app.use("/api/payments", paymentRouter);
 app.use("/api/admin/payments", adminPaymentRouter);
+
+// ── Maintenance (kill switch) ──
+app.use("/api/admin/maintenance", maintenanceRouter);
+
+// ── Refunds ──
+app.use("/api/admin/refunds", refundsRouter);
+
+// ── Assignment Review Queue ──
+app.use("/api/admin/assignments/review", assignmentReviewRouter);
+
+// ── Instructor Management ──
+app.use("/api/admin/instructors", instructorsRouter);
+
+// ── GDPR (data export & anonymization) ──
+app.use("/api/admin/gdpr", gdprRouter);
+
+// ── Database Backup / Restore ──
+app.use("/api/admin/backup", backupRouter);
+
+// ── Alerting Webhooks ──
+app.use("/api/admin/alerting-webhooks", alertingWebhooksRouter);
 
 import { AppError } from "./utils/errors";
 

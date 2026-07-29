@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import SecuritySettings from "@/components/SecuritySettings";
 import {
   IconBell,
   IconCalendarEvent,
@@ -89,7 +91,7 @@ const TYPE_CONFIG: Record<
   },
 };
 
-type SettingsSection = "profile" | "notifications" | "appearance";
+type SettingsSection = "profile" | "security" | "notifications" | "appearance";
 
 export default function AdminSettingsPage() {
   usePageTitle("Settings");
@@ -195,6 +197,12 @@ export default function AdminSettingsPage() {
       label: "Profile",
       icon: <IconUser size={18} />,
       description: "Your account details",
+    },
+    {
+      id: "security",
+      label: "Security",
+      icon: <IconShield size={18} />,
+      description: "2FA & password",
     },
     {
       id: "notifications",
@@ -410,16 +418,11 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-          Admin
-        </p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground">Settings</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage your account and preferences.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Settings"
+        description="Manage your account and preferences."
+        breadcrumbs={[{ label: "Settings", href: "/admin/settings" }]}
+      />
 
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
@@ -515,6 +518,7 @@ export default function AdminSettingsPage() {
         {/* Right: active settings panel */}
         <div className="lg:col-span-8 xl:col-span-9 rounded-xl border border-border/60 bg-card overflow-hidden">
           {activeSection === "profile" && renderProfile()}
+          {activeSection === "security" && <SecuritySettings />}
           {activeSection === "notifications" && renderNotifications()}
           {activeSection === "appearance" && renderAppearance()}
         </div>

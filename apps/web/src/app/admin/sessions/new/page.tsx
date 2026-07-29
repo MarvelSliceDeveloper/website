@@ -2,15 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   IconCalendar,
   IconVideo,
   IconUsersGroup,
   IconBook,
   IconLink,
+  IconArrowLeft,
 } from "@tabler/icons-react";
 import {
   Select,
@@ -208,28 +211,30 @@ export default function ScheduleSessionPage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      {/* Header */}
-      <div>
-        <button
-          onClick={() => router.back()}
-          className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors mb-3 inline-flex items-center gap-1"
-        >
-          ← Back to Sessions
-        </button>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-          Admin
-        </p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground">
-          Schedule Live Session
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Select a course, assign the session to an active student batch, and
-          schedule the online meeting.
-        </p>
-      </div>
+    <div className="max-w-3xl space-y-6">
+      <AdminPageHeader
+        title="Schedule Session"
+        description="Select a course, assign the session to an active student batch, and schedule the online meeting."
+        breadcrumbs={[
+          { label: "Sessions", href: "/admin/sessions" },
+          { label: "Schedule", href: "/admin/sessions/new" },
+        ]}
+        action={
+          <Link
+            href="/admin/sessions"
+            className="btn-secondary text-sm flex items-center gap-1.5"
+          >
+            <IconArrowLeft size={16} stroke={1.5} />
+            Back
+          </Link>
+        }
+      />
 
-      <form onSubmit={handleSubmit} className="glass-card p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="glass-card p-6 space-y-4">
+          <h2 className="text-sm font-semibold text-foreground">
+            Session Details
+          </h2>
         {/* Course Selector */}
         <div>
           <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
@@ -451,16 +456,12 @@ export default function ScheduleSessionPage() {
             </p>
           </div>
         </div>
+        </div>
 
-        {/* Form Actions */}
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="btn-secondary"
-          >
+        <div className="flex items-center justify-end gap-3">
+          <Link href="/admin/sessions" className="btn-secondary text-sm">
             Cancel
-          </button>
+          </Link>
           <button
             type="submit"
             className="btn-primary flex items-center gap-2"

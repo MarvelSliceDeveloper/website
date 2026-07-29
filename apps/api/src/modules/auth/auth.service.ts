@@ -9,6 +9,7 @@
  */
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { prisma } from "../../utils/prisma";
 import { z } from "zod";
 import { AppError } from "../../utils/errors";
@@ -76,7 +77,7 @@ export const authService = {
     return this.generateTokens({ ...user, name: user.name });
   },
 
-  async login(data: z.infer<typeof LoginSchema>) {
+  async login(data: z.infer<typeof LoginSchema>, context?: { ip?: string; userAgent?: string }) {
     const { email, password } = data;
 
     // Use case-insensitive lookup so logins are resilient to email casing
@@ -97,6 +98,24 @@ export const authService = {
       );
     }
 
+    if (user.twoFactorEnabled) {
+      const twoFactorAuth = await prisma.twoFactorAuth.findUnique({
+        where: { userId: user.id },
+      });
+      if (twoFactorAuth?.verifiedAt) {
+        const tempToken = jwt.sign(
+          { userId: user.id, purpose: "2fa-challenge" },
+          getJwtSecret(),
+          { expiresIn: "5m" },
+        );
+        return {
+          requires2fa: true as const,
+          tempToken,
+          user: { userId: user.id, email: user.email, name: user.name, role: user.role },
+        };
+      }
+    }
+
     return this.generateTokens({
       id: user.id,
       role: user.role,
@@ -105,11 +124,13 @@ export const authService = {
       mustChangePassword: user.mustChangePassword,
       onboardingComplete: user.onboardingComplete,
       sessionTimeoutMin: user.sessionTimeoutMin,
+      ip: context?.ip,
+      userAgent: context?.userAgent,
     });
   },
 
   // Generate JWT access token for a user
-  generateTokens(user: {
+  async generateTokens(user: {
     id: string;
     role: string;
     email: string;
@@ -117,13 +138,34 @@ export const authService = {
     mustChangePassword?: boolean;
     onboardingComplete?: boolean;
     sessionTimeoutMin?: number;
+    ip?: string;
+    userAgent?: string;
   }) {
-    const payload = {
+    const isAdmin = user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN;
+    let sessionId: string | undefined;
+
+    if (isAdmin) {
+      const session = await prisma.adminSession.create({
+        data: {
+          userId: user.id,
+          tokenPrefix: crypto.randomBytes(4).toString("hex"),
+          ip: user.ip || null,
+          userAgent: user.userAgent || null,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+      });
+      sessionId = session.id;
+    }
+
+    const payload: Record<string, unknown> = {
       userId: user.id,
       role: user.role,
       email: user.email,
       sessionTimeoutMin: user.sessionTimeoutMin ?? 480,
     };
+    if (sessionId) {
+      payload.sessionId = sessionId;
+    }
 
     const accessToken = jwt.sign(payload, getJwtSecret(), {
       expiresIn: JWT_EXPIRY as any,

@@ -1,13 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { api } from "../lib/api";
 import {
   IconLayoutDashboard,
-  IconLogout,
   IconSend,
   IconUsers,
   IconVideo,
@@ -20,6 +17,7 @@ import {
   IconX,
   IconBook,
   IconFileCheck,
+  IconUser,
 } from "@tabler/icons-react";
 
 import type { NavItem, NavItemChild } from "@/components/shared/SidebarTypes";
@@ -41,7 +39,7 @@ const overviewItems: NavItem[] = [
     href: "/instructor/sessions",
     icon: IconVideo,
     children: [
-      { label: "All Sessions", href: "/instructor/sessions" },
+      { label: "View Sessions", href: "/instructor/sessions" },
       { label: "Upcoming", href: "/instructor/sessions?status=UPCOMING" },
       { label: "Past", href: "/instructor/sessions?status=PAST" },
     ],
@@ -51,7 +49,7 @@ const overviewItems: NavItem[] = [
     href: "/instructor/batches",
     icon: IconUsers,
     children: [
-      { label: "All Batches", href: "/instructor/batches" },
+      { label: "View Batches", href: "/instructor/batches" },
       { label: "Active", href: "/instructor/batches?status=ACTIVE" },
       { label: "Completed", href: "/instructor/batches?status=COMPLETED" },
     ],
@@ -60,7 +58,7 @@ const overviewItems: NavItem[] = [
     label: "My Courses",
     href: "/instructor/courses",
     icon: IconBook,
-    children: [{ label: "All Courses", href: "/instructor/courses" }],
+    children: [{ label: "View Courses", href: "/instructor/courses" }],
   },
   {
     label: "Assignments",
@@ -72,13 +70,14 @@ const overviewItems: NavItem[] = [
     href: "/instructor/mentorship",
     icon: IconMessageCircle,
     children: [
-      { label: "All Requests", href: "/instructor/mentorship" },
+      { label: "View Requests", href: "/instructor/mentorship" },
       { label: "Pending", href: "/instructor/mentorship?status=OPEN" },
       { label: "Scheduled", href: "/instructor/mentorship?status=SCHEDULED" },
       { label: "Completed", href: "/instructor/mentorship?status=COMPLETED" },
     ],
   },
   { label: "Support", href: "/instructor/support", icon: IconHelp },
+  { label: "My Profile", href: "/instructor/settings?tab=profile", icon: IconUser },
   { label: "Settings", href: "/instructor/settings", icon: IconSettings },
 ];
 
@@ -323,25 +322,7 @@ export default function InstructorSidebar({
   const pathname = usePathname();
   const router = useRouter();
 
-  // Log out the user and redirect to login
-  async function handleSignOut() {
-    try {
-      await api.post("/api/auth/logout");
-    } catch {
-      // ignore
-    }
-    router.push("/login");
-  }
 
-  // Get initials for profile picture
-  const displayInitials = userName
-    ? userName
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
-    : "IN";
 
   return (
     <aside
@@ -352,27 +333,14 @@ export default function InstructorSidebar({
       {/* Sidebar Header */}
       <div
         className={`flex h-14 items-center border-b border-border bg-card ${
-          collapsed ? "justify-center px-2" : "gap-2.5 px-4"
+          collapsed ? "justify-center px-2" : "justify-end px-3"
         }`}
       >
-        <div
-          className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer select-none"
-          onClick={() => router.push("/instructor/dashboard")}
-        >
-          <Image
-            src="/images/logo.svg"
-            alt="Marvel Slice"
-            width={36}
-            height={36}
-            className="h-9 w-auto object-contain transition-transform duration-300 hover:scale-105"
-          />
-          <span
-            className={`text-base font-extrabold tracking-tight text-foreground ${collapsed ? "hidden" : "block"}`}
-          >
-            <span>Marvel</span>
-            <span className="text-primary ml-0.5">Slice</span>
+        {!collapsed && (
+          <span className="flex-1 text-[10px] font-semibold uppercase tracking-wider text-muted">
+            Navigation
           </span>
-        </div>
+        )}
         <button
           onClick={onToggleCollapse}
           className="flex h-7 w-7 shrink-0 items-center justify-center text-muted hover:text-foreground hover:bg-muted/15 transition-colors rounded-lg"
@@ -392,33 +360,6 @@ export default function InstructorSidebar({
         />
       </nav>
 
-      {/* Footer Profile & Logout */}
-      <div className="border-t border-border bg-card p-3 space-y-1.5">
-        <div
-          className={`flex items-center border border-border rounded-lg bg-slate-170 dark:bg-slate-90/5 ${
-            collapsed ? "justify-center" : "gap-2.5 px-2 py-1.5"
-          }`}
-        >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-primary/10 text-[10px] font-bold text-primary">
-            {displayInitials}
-          </div>
-          <div className={`min-w-0 ${collapsed ? "hidden" : "block"}`}>
-            <p className="truncate text-xs font-semibold text-foreground">
-              {userName || "Instructor"}
-            </p>
-            <p className="truncate text-[10px] text-muted-foreground">
-              {userEmail || ""}
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={handleSignOut}
-          className="btn-danger w-full justify-center py-2 text-xs font-semibold"
-        >
-          <IconLogout size={15} stroke={1.8} className="shrink-0" />
-          <span className={collapsed ? "hidden" : "inline"}>Sign out</span>
-        </button>
-      </div>
     </aside>
   );
 }

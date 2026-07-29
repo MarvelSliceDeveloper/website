@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { usePageTitle } from "@/lib/use-page-title";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
-import { IconBellRinging, IconSend, IconRefresh } from "@tabler/icons-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { IconSend, IconRefresh } from "@tabler/icons-react";
 
 type Announcement = {
   id: string;
@@ -164,26 +165,20 @@ export default function AnnouncementsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-            Administration
-          </p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl flex items-center gap-3">
-            <IconBellRinging size={28} className="text-primary-hover" />
-            Announcements
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Send broadcast announcements with in-app notification + email.
-          </p>
-        </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="btn-primary text-xs py-2 flex items-center gap-1.5"
-        >
-          <IconSend size={14} /> New Announcement
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Announcements"
+        description="Send broadcast announcements with in-app notification + email."
+        breadcrumbs={[{ label: "Announcements", href: "/admin/announcements" }]}
+        role="Administration"
+        action={
+          <button
+            onClick={() => setShowCreate(true)}
+            className="btn-primary text-xs py-2 flex items-center gap-1.5"
+          >
+            <IconSend size={14} /> New Announcement
+          </button>
+        }
+      />
 
       {showCreate && (
         <div className="glass-card p-5 border border-primary/30 space-y-3">

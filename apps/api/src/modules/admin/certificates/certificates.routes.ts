@@ -2,14 +2,15 @@ import { Router, type Response } from "express";
 import { prisma } from "../../../utils/prisma";
 import {
   requireAuth,
-  requireSuperAdmin,
+  requireRole,
   type AuthRequest,
 } from "../../../middleware/auth.middleware";
+import { UserRole } from "@lms/types";
 
 const router = Router();
 
 router.use(requireAuth);
-router.use(requireSuperAdmin);
+router.use(requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]));
 
 // GET /stats — Certificate statistics (must be before /:id)
 router.get("/stats", async (_req: AuthRequest, res: Response) => {

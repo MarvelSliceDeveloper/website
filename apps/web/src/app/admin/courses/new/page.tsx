@@ -3,9 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast } from "sonner";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { IconArrowLeft } from "@tabler/icons-react";
 
 const MAX_THUMBNAIL_BYTES = 5 * 1024 * 1024;
 const ALLOWED_THUMBNAIL_TYPES = new Set([
@@ -109,110 +112,109 @@ export default function CreateCoursePage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      {/* Header */}
-      <div>
-        <button
-          onClick={() => router.back()}
-          className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors mb-3 inline-flex items-center gap-1"
-        >
-          ← Back to Courses
-        </button>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-          Admin
-        </p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground">
-          Add New Course
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Start with the basics. You can add modules, videos, and design the
-          course page later.
-        </p>
-      </div>
+    <div className="max-w-3xl space-y-6">
+      <AdminPageHeader
+        title="Add Course"
+        description="Start with the basics. You can add modules, videos, and design the course page later."
+        breadcrumbs={[
+          { label: "Courses", href: "/admin/courses" },
+          { label: "Add", href: "/admin/courses/new" },
+        ]}
+        action={
+          <Link
+            href="/admin/courses"
+            className="btn-secondary text-sm flex items-center gap-1.5"
+          >
+            <IconArrowLeft size={16} stroke={1.5} />
+            Back
+          </Link>
+        }
+      />
 
-      <form onSubmit={handleSubmit} className="glass-card p-6 space-y-5">
-        {/* Title */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Course Title <span className="text-danger">*</span>
-          </label>
-          <input
-            type="text"
-            value={form.title}
-            onChange={(e) => update("title", e.target.value)}
-            placeholder="e.g. Advanced TypeScript Patterns"
-            className="field"
-            required
-            minLength={3}
-            maxLength={200}
-          />
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="glass-card p-6 space-y-4">
+          <h2 className="text-sm font-semibold text-foreground">
+            Course Details
+          </h2>
 
-        {/* Description */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Description <span className="text-danger">*</span>
-          </label>
-          <textarea
-            value={form.description}
-            onChange={(e) => update("description", e.target.value)}
-            placeholder="What will students learn in this course?"
-            className="field min-h-[120px] resize-y"
-            required
-            minLength={10}
-          />
-          <p className="mt-1 text-xs text-muted">
-            You can add rich formatting in the Course Designer later.
-          </p>
-        </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Course Title <span className="text-danger">*</span>
+            </label>
+            <input
+              type="text"
+              value={form.title}
+              onChange={(e) => update("title", e.target.value)}
+              placeholder="e.g. Advanced TypeScript Patterns"
+              className="field w-full"
+              required
+              minLength={3}
+              maxLength={200}
+            />
+          </div>
 
-        {/* Thumbnail */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Thumbnail
-          </label>
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="h-20 w-28 overflow-hidden rounded-lg border border-border bg-card flex items-center justify-center text-xl">
-              {thumbnailPreview ? (
-                <Image
-                  src={thumbnailPreview}
-                  alt="Course thumbnail preview"
-                  width={112}
-                  height={80}
-                  className="h-full w-full object-cover"
-                  unoptimized
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Description <span className="text-danger">*</span>
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) => update("description", e.target.value)}
+              placeholder="What will students learn in this course?"
+              className="field w-full min-h-[120px] resize-y"
+              required
+              minLength={10}
+            />
+            <p className="mt-1 text-xs text-muted">
+              You can add rich formatting in the Course Designer later.
+            </p>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Thumbnail
+            </label>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="h-20 w-28 overflow-hidden rounded-lg border border-border bg-card flex items-center justify-center text-xl">
+                {thumbnailPreview ? (
+                  <Image
+                    src={thumbnailPreview}
+                    alt="Course thumbnail preview"
+                    width={112}
+                    height={80}
+                    className="h-full w-full object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  "\ud83d\udcda"
+                )}
+              </div>
+              <div className="space-y-1">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleThumbnailChange}
+                  className="field w-full"
                 />
-              ) : (
-                "\ud83d\udcda"
-              )}
+                <p className="text-xs text-muted">JPG, PNG, or WebP. Max 5 MB.</p>
+              </div>
             </div>
-            <div className="space-y-1">
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                onChange={handleThumbnailChange}
-                className="field"
-              />
-              <p className="text-xs text-muted">JPG, PNG, or WebP. Max 5 MB.</p>
-            </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Category
+            </label>
+            <input
+              type="text"
+              value={form.category}
+              onChange={(e) => update("category", e.target.value)}
+              placeholder="e.g. Programming, Design"
+              className="field w-full"
+            />
           </div>
         </div>
 
-        {/* Category */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Category
-          </label>
-          <input
-            type="text"
-            value={form.category}
-            onChange={(e) => update("category", e.target.value)}
-            placeholder="e.g. Programming, Design"
-            className="field"
-          />
-        </div>
-
-        {/* Info box */}
         <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-muted-foreground">
           <p className="font-medium text-foreground mb-1">What happens next?</p>
           <p>
@@ -222,15 +224,10 @@ export default function CreateCoursePage() {
           </p>
         </div>
 
-        {/* Submit */}
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="btn-secondary"
-          >
+        <div className="flex items-center justify-end gap-3">
+          <Link href="/admin/courses" className="btn-secondary text-sm">
             Cancel
-          </button>
+          </Link>
           <button type="submit" className="btn-primary" disabled={submitting}>
             {submitting ? "Adding..." : "Add Course"}
           </button>

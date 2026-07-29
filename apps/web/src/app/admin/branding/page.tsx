@@ -134,6 +134,7 @@ export default function BrandingPage() {
         <AdminPageHeader
           title="Branding"
           description="Customize platform branding"
+          breadcrumbs={[{ label: "Branding", href: "/admin/branding" }]}
         />
         <div className="glass-card p-12 text-center">
           <p className="text-muted animate-pulse">
@@ -149,6 +150,7 @@ export default function BrandingPage() {
       <AdminPageHeader
         title="Branding"
         description="Customize platform branding and theme"
+        breadcrumbs={[{ label: "Branding", href: "/admin/branding" }]}
         action={
           <button
             onClick={handleSave}

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   Select,
   SelectContent,
@@ -108,35 +109,29 @@ export default function AdminMentorshipPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-            Admin
-          </p>
-          <h1 className="text-2xl font-bold text-foreground">
-            Mentorship Management
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage 1-on-1 mentorship requests and assign mentors to students
-          </p>
-        </div>
-        <button onClick={fetchData} className="btn-secondary">
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-            />
-          </svg>
-          Refresh
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Mentorship Management"
+        description="Manage 1-on-1 mentorship requests and assign mentors to students"
+        breadcrumbs={[{ label: "Mentorship", href: "/admin/mentorship" }]}
+        action={
+          <button onClick={fetchData} className="btn-secondary">
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            Refresh
+          </button>
+        }
+      />
 
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-5">
         <StatCard label="Total" value={stats.total} color="bg-primary" />

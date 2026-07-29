@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast } from "@/lib/toast";
-import { IconFileText, IconRefresh, IconPlus } from "@tabler/icons-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { IconRefresh, IconPlus } from "@tabler/icons-react";
 
 type AssignmentTemplate = {
   id: string;
@@ -42,26 +43,20 @@ export default function AssignmentTemplatesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-            Library
-          </p>
-          <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl flex items-center gap-3">
-            <IconFileText size={28} className="text-primary-hover" />
-            Assignment Templates
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Predefined assignment templates. Attach to courses during creation.
-          </p>
-        </div>
-        <button
-          onClick={() => router.push("/admin/assignment-templates/new")}
-          className="btn-primary text-xs py-2 flex items-center gap-1.5"
-        >
-          <IconPlus size={14} /> Add Template
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Assignment Templates"
+        description="Predefined assignment templates. Attach to courses during creation."
+        role="Library"
+        breadcrumbs={[{ label: "Assignment Templates", href: "/admin/assignment-templates" }]}
+        action={
+          <button
+            onClick={() => router.push("/admin/assignment-templates/new")}
+            className="btn-primary text-xs py-2 flex items-center gap-1.5"
+          >
+            <IconPlus size={14} /> Add Template
+          </button>
+        }
+      />
 
       <button
         onClick={fetchTemplates}

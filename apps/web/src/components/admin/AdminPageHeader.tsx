@@ -35,9 +35,6 @@ export function AdminPageHeader({
       )}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-            {role}
-          </p>
           <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">
             {title}
           </h1>

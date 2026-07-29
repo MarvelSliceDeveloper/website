@@ -2,9 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { api } from "@/lib/api";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { IconArrowLeft } from "@tabler/icons-react";
 import {
   Select,
   SelectContent,
@@ -149,102 +152,102 @@ export default function CreateBatchPage() {
     ) : null;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <button
-          onClick={() => router.back()}
-          className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors mb-3 inline-flex items-center gap-1"
-        >
-          ← Back to Batches
-        </button>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-hover">
-          Admin
-        </p>
-        <h1 className="mt-1 text-2xl font-bold text-foreground">
-          Add New Batch
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Select a package to create a batch for each of its courses. A package
-          can have multiple batches over time.
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="glass-card p-6 space-y-5">
-        {/* Package */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Package <span className="text-danger">*</span>
-          </label>
-          <Select
-            value={form.packageId}
-            onValueChange={(v) => update("packageId", v)}
+    <div className="max-w-3xl space-y-6">
+      <AdminPageHeader
+        title="Add Batch"
+        description="Select a package to create a batch for each of its courses."
+        breadcrumbs={[
+          { label: "Batches", href: "/admin/batches" },
+          { label: "Add", href: "/admin/batches/new" },
+        ]}
+        action={
+          <Link
+            href="/admin/batches"
+            className="btn-secondary text-sm flex items-center gap-1.5"
           >
-            <SelectTrigger className="field">
-              <SelectValue placeholder="Select a package" />
-            </SelectTrigger>
-            <SelectContent>
-              {packages.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {packages.length === 0 && (
-            <p className="mt-1 text-xs text-warning">
-              No active packages found. Create and activate a package first.
-            </p>
-          )}
-          {showError("packageId")}
-        </div>
+            <IconArrowLeft size={16} stroke={1.5} />
+            Back
+          </Link>
+        }
+      />
 
-        {/* Instructor */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Instructor <span className="text-danger">*</span>
-          </label>
-          <Select
-            value={form.instructorId}
-            onValueChange={(v) => update("instructorId", v)}
-          >
-            <SelectTrigger className="field">
-              <SelectValue placeholder="Select an instructor" />
-            </SelectTrigger>
-            <SelectContent>
-              {instructors.map((i) => (
-                <SelectItem key={i.id} value={i.id}>
-                  {i.name} ({i.role})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {showError("instructorId")}
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="glass-card p-6 space-y-4">
+          <h2 className="text-sm font-semibold text-foreground">
+            Batch Details
+          </h2>
 
-        {/* Batch Name */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Batch Name <span className="text-danger">*</span>
-          </label>
-          <input
-            type="text"
-            value={form.name}
-            onChange={(e) => update("name", e.target.value)}
-            placeholder="e.g. Python Batch — June 2025"
-            className="field"
-          />
-          {showError("name")}
-        </div>
-
-        {/* Dates */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Start Date <span className="text-danger">*</span>
+              Package <span className="text-danger">*</span>
+            </label>
+            <Select
+              value={form.packageId}
+              onValueChange={(v) => update("packageId", v)}
+            >
+              <SelectTrigger className="field w-full">
+                <SelectValue placeholder="Select a package" />
+              </SelectTrigger>
+              <SelectContent>
+                {packages.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {packages.length === 0 && (
+              <p className="mt-1 text-xs text-warning">
+                No active packages found. Create and activate a package first.
+              </p>
+            )}
+            {showError("packageId")}
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Instructor <span className="text-danger">*</span>
+            </label>
+            <Select
+              value={form.instructorId}
+              onValueChange={(v) => update("instructorId", v)}
+            >
+              <SelectTrigger className="field w-full">
+                <SelectValue placeholder="Select an instructor" />
+              </SelectTrigger>
+              <SelectContent>
+                {instructors.map((i) => (
+                  <SelectItem key={i.id} value={i.id}>
+                    {i.name} ({i.role})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {showError("instructorId")}
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Batch Name <span className="text-danger">*</span>
             </label>
             <input
-              type="date"
-              value={form.startDate}
+              type="text"
+              value={form.name}
+              onChange={(e) => update("name", e.target.value)}
+              placeholder="e.g. Python Batch — June 2025"
+              className="field w-full"
+            />
+            {showError("name")}
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
+                Start Date <span className="text-danger">*</span>
+              </label>
+              <input
+                type="date"
+                value={form.startDate}
               onChange={(e) => update("startDate", e.target.value)}
               className="field"
             />
@@ -293,52 +296,53 @@ export default function CreateBatchPage() {
             />
           </div>
         </div>
+        </div>
 
-        {/* Due Date & Penalty Settings */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Default Days to Complete
-            </label>
-            <input
-              type="number"
-              value={form.defaultDaysToComplete}
-              onChange={(e) => update("defaultDaysToComplete", e.target.value)}
-              placeholder="e.g. 30"
-              className="field"
-              min={1}
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              Due dates calculated as enrollment date + N days
-            </p>
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Late Submission Penalty %
-            </label>
-            <input
-              type="number"
-              value={form.lateSubmissionPenaltyPercent}
-              onChange={(e) => update("lateSubmissionPenaltyPercent", e.target.value)}
-              placeholder="25"
-              className="field"
-              min={0}
-              max={100}
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              Default penalty for late submissions
-            </p>
+        <div className="glass-card p-6 space-y-4">
+          <h2 className="text-sm font-semibold text-foreground">
+            Submission Settings
+          </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
+                Default Days to Complete
+              </label>
+              <input
+                type="number"
+                value={form.defaultDaysToComplete}
+                onChange={(e) => update("defaultDaysToComplete", e.target.value)}
+                placeholder="e.g. 30"
+                className="field w-full"
+                min={1}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Due dates calculated as enrollment date + N days
+              </p>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
+                Late Submission Penalty %
+              </label>
+              <input
+                type="number"
+                value={form.lateSubmissionPenaltyPercent}
+                onChange={(e) => update("lateSubmissionPenaltyPercent", e.target.value)}
+                placeholder="25"
+                className="field w-full"
+                min={0}
+                max={100}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Default penalty for late submissions
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="btn-secondary"
-          >
+        <div className="flex items-center justify-end gap-3">
+          <Link href="/admin/batches" className="btn-secondary text-sm">
             Cancel
-          </button>
+          </Link>
           <button
             type="submit"
             className="btn-primary"

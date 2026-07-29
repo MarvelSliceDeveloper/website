@@ -6,6 +6,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { usePageTitle } from "@/lib/use-page-title";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   IconArrowLeft,
   IconCalendar,
@@ -205,46 +206,41 @@ export default function SessionDetailPage() {
 
   return (
     <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <Link
-          href="/admin/sessions"
-          className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
-        >
-          <IconArrowLeft size={14} /> Back to Sessions
-        </Link>
-        <Link
-          href="/admin/sessions"
-          className="btn-secondary text-xs flex items-center gap-1.5"
-        >
-          <IconEdit size={14} /> Edit Details
-        </Link>
-      </div>
-
-      {/* Title Card */}
-      <div className="glass-card p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-xl font-bold text-foreground">
-              {session.title}
-            </h1>
-            <p className="text-xs text-muted-foreground mt-1.5 font-mono flex items-center gap-1.5">
-              <IconId size={12} />
-              {session.id}
-              <span className="text-muted ml-2">
-                &middot; Created{" "}
-                {new Date(
-                  parseInt(session.id.substring(0, 8), 36) * 1000 || nowMs,
-                ).toLocaleDateString("en-IN")}
-              </span>
-            </p>
+      <AdminPageHeader
+        title={session.title}
+        breadcrumbs={[
+          { label: "Sessions", href: "/admin/sessions" },
+          { label: session.title, href: "#" },
+        ]}
+        action={
+          <div className="flex items-center gap-3">
+            <span
+              className={`shrink-0 text-[11px] font-semibold px-3 py-1 rounded-full border ${statusColor}`}
+            >
+              {statusLabel}
+            </span>
+            <Link
+              href="/admin/sessions"
+              className="btn-secondary text-xs flex items-center gap-1.5"
+            >
+              <IconEdit size={14} /> Edit Details
+            </Link>
           </div>
-          <span
-            className={`shrink-0 text-[11px] font-semibold px-3 py-1 rounded-full border ${statusColor}`}
-          >
-            {statusLabel}
+        }
+      />
+
+      {/* Session ID Card */}
+      <div className="glass-card p-6">
+        <p className="text-xs text-muted-foreground font-mono flex items-center gap-1.5">
+          <IconId size={12} />
+          {session.id}
+          <span className="text-muted ml-2">
+            &middot; Created{" "}
+            {new Date(
+              parseInt(session.id.substring(0, 8), 36) * 1000 || nowMs,
+            ).toLocaleDateString("en-IN")}
           </span>
-        </div>
+        </p>
       </div>
 
       {/* Main Grid */}
