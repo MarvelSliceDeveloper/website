@@ -17,4 +17,7 @@ router.put("/profile", profileController.upsertProfile);
 // GET /api/instructor/profile/status — Get onboarding status
 router.get("/profile/status", profileController.getOnboardingStatus);
 
+// POST /api/instructor/profile/upload — Upload photo/resume
+router.post("/profile/upload", profileController.uploadFile);
+
 export { router as profileRouter };

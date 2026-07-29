@@ -1,5 +1,6 @@
 import { prisma } from "../../utils/prisma";
 import { AppError } from "../../utils/errors";
+import { notificationService } from "../notifications/notification.service";
 
 interface ProfileUpdateData {
   bio?: string;
@@ -52,6 +53,7 @@ export const profileService = {
   async upsertProfile(userId: string, data: ProfileUpdateData) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      select: { id: true, name: true, email: true, role: true },
     });
 
     if (!user) {
@@ -80,10 +82,26 @@ export const profileService = {
         } as any,
       });
 
-      await prisma.user.update({
-        where: { id: userId },
-        data: { instructorOnboardingComplete: true },
-      });
+      prisma.user
+        .findMany({
+          where: { role: "SUPER_ADMIN" },
+          select: { id: true },
+        })
+        .then((superAdmins) => {
+          if (superAdmins.length > 0) {
+            notificationService.createMany(
+              superAdmins.map((sa) => ({
+                userId: sa.id,
+                title: "Instructor Pending Approval",
+                message: `${user.name} (${user.email}) has submitted their instructor profile and is awaiting your approval.`,
+                type: "SYSTEM",
+              })),
+            );
+          }
+        })
+        .catch((err) =>
+          console.error("[profile] Failed to send notification:", err),
+        );
 
       return profile;
     }
