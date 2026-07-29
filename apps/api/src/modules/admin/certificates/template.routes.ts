@@ -2,6 +2,7 @@ import { Router, type Response } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../../utils/prisma";
 import {
   requireAuth,
@@ -332,7 +333,7 @@ router.post(
         data: {
           pdfTemplateType: "uploadedPdf",
           pdfTemplateUrl: relativePath,
-          pdfTemplateFields,
+          pdfTemplateFields: pdfTemplateFields as Prisma.InputJsonValue[],
         },
       });
 
@@ -364,7 +365,7 @@ router.delete("/:id/pdf-template", async (req: AuthRequest, res: Response) => {
       data: {
         pdfTemplateType: "jsPdf",
         pdfTemplateUrl: null,
-        pdfTemplateFields: null,
+        pdfTemplateFields: Prisma.JsonNull,
       },
     });
 

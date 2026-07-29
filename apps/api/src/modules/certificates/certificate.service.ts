@@ -135,6 +135,7 @@ async function buildCourseCompletionMap(userId: string) {
 
   const issued = certificates
     .map((certificate) => {
+      if (!certificate.courseId) return null;
       const course = courseById.get(certificate.courseId);
       if (!course) return null;
 
@@ -310,7 +311,7 @@ export const certificateService = {
       const g = parseInt(hexColor.slice(3, 5), 16) / 255;
       const b = parseInt(hexColor.slice(5, 7), 16) / 255;
 
-      const { width } = helveticaFont.widthOfTextAtSize(
+      const width = helveticaFont.widthOfTextAtSize(
         text,
         field.fontSize || 22,
       );

@@ -70,7 +70,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       certificates: certificates.map((c) => ({
         id: c.id,
         studentName: c.user.name,
-        courseName: c.course.title,
+        courseName: c.course?.title ?? "N/A",
         certificateNumber: c.certificateNumber,
         issuedAt: c.issuedAt,
         status: c.status,

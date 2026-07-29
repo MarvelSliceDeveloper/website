@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { prisma } from "../../../utils/prisma";
+import { prisma } from "../../utils/prisma";
 
 vi.mock("../../../utils/prisma", () => ({
   prisma: {
