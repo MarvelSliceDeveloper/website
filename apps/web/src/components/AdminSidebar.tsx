@@ -402,6 +402,15 @@ export default function AdminSidebar({
                 }>,
               },
               {
+                label: "Enrollments",
+                href: "/admin/enrollments",
+                icon: IconClipboardCheck as React.ComponentType<{
+                  size?: number | string;
+                  stroke?: number | string;
+                  className?: string;
+                }>,
+              },
+              {
                 label: "Coupons",
                 href: "/admin/coupons",
                 icon: IconClipboardCheck as React.ComponentType<{
@@ -514,6 +523,7 @@ export default function AdminSidebar({
                 children: [
                   { label: "View Courses", href: "/admin/courses" },
                   { label: "Add Course", href: "/admin/courses/new" },
+                  { label: "Enrollments", href: "/admin/enrollments" },
                 ],
               },
               {

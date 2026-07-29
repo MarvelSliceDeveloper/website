@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import AppShell from "./AppShell";
 import InstructorSidebar from "./InstructorSidebar";
 import { api } from "@/lib/api";
@@ -10,6 +11,7 @@ export default function InstructorShell({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const [userName, setUserName] = useState<string>("");
   const [userEmail, setUserEmail] = useState<string>("");
 
@@ -24,6 +26,11 @@ export default function InstructorShell({
       })
       .catch(() => {});
   }, []);
+
+  // Onboarding route — render standalone without sidebar/header
+  if (pathname?.startsWith("/instructor/onboarding")) {
+    return <>{children}</>;
+  }
 
   return (
     <div data-section="admin">
