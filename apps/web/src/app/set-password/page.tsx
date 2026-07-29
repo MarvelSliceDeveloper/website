@@ -39,7 +39,7 @@ export default function SetPasswordPage() {
           if (role === "ADMIN" || role === "SUPER_ADMIN")
             router.replace("/admin/dashboard");
           else if (role === "INSTRUCTOR")
-            router.replace("/instructor/dashboard");
+            router.replace("/instructor/onboarding");
           else router.replace("/student");
           return;
         }
@@ -88,7 +88,7 @@ export default function SetPasswordPage() {
       const role = res.user?.role;
       if (role === "ADMIN" || role === "SUPER_ADMIN")
         router.push("/admin/dashboard");
-      else if (role === "INSTRUCTOR") router.push("/instructor/dashboard");
+      else if (role === "INSTRUCTOR") router.push("/instructor/onboarding");
       else router.push("/student");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to set password";

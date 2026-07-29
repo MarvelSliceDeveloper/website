@@ -116,7 +116,7 @@ export default function LoginPage() {
         return;
       }
       if (role === "INSTRUCTOR") {
-        router.push("/instructor/dashboard");
+        router.push("/instructor/onboarding");
         return;
       }
       router.push("/student/");
@@ -145,7 +145,7 @@ export default function LoginPage() {
       return;
     }
     if (role === "INSTRUCTOR") {
-      router.push("/instructor/dashboard");
+      router.push("/instructor/onboarding");
       return;
     }
     router.push("/student/");

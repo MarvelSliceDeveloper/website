@@ -94,8 +94,8 @@ export default function SuperAdminPage() {
     },
     {
       label: "Audit Logs",
-      href: "/admin/logs",
-      desc: "User activity and system logs",
+      href: "/admin/audit-logs",
+      desc: "Audit trail of sensitive operations",
     },
     {
       label: "Login History",
