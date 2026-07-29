@@ -206,6 +206,10 @@ export default function InstructorDetailPage() {
   const [performance, setPerformance] = useState<PerformanceData | null>(null);
   const [performanceLoading, setPerformanceLoading] = useState(false);
 
+  // Rejection reason dialog
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+
   const fetchInstructor = useCallback(async () => {
     try {
       const data = await api.get<InstructorDetail>(`/api/admin/instructors/${id}`);
@@ -325,15 +329,56 @@ export default function InstructorDetailPage() {
     if (activeTab === "performance") fetchPerformance();
   }, [activeTab, fetchPerformance]);
 
-  const handleVerify = async (action: "approve" | "reject") => {
+  const handleVerify = async (action: "approve" | "reject", reason?: string) => {
     try {
-      await api.put(`/api/admin/instructors/${id}/verify`, { action });
+      await api.put(`/api/admin/instructors/${id}/verify`, {
+        action,
+        ...(reason ? { rejectionReason: reason } : {}),
+      });
       toast.success(action === "approve" ? "Instructor approved" : "Instructor rejected");
+      setShowRejectDialog(false);
+      setRejectionReason("");
       fetchInstructor();
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     }
   };
+
+  function RejectDialog() {
+    if (!showRejectDialog) return null;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="w-full max-w-md rounded-2xl bg-card p-6 shadow-2xl border border-border">
+          <h3 className="text-lg font-bold text-foreground">Reject Instructor</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Provide a reason the instructor will see on their onboarding page.
+          </p>
+          <textarea
+            value={rejectionReason}
+            onChange={(e) => setRejectionReason(e.target.value)}
+            rows={4}
+            className="mt-4 w-full rounded-xl border border-border bg-muted/5 px-4 py-3 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/20 resize-none"
+            placeholder="Explain why the profile was rejected..."
+          />
+          <div className="mt-5 flex items-center justify-end gap-3">
+            <button
+              onClick={() => { setShowRejectDialog(false); setRejectionReason(""); }}
+              className="btn-secondary text-sm px-4 py-2"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleVerify("reject", rejectionReason)}
+              disabled={!rejectionReason.trim()}
+              className="btn-danger text-sm px-4 py-2 disabled:opacity-50"
+            >
+              Reject
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const profile = instructor?.instructorProfile;
   const initials = instructor?.name
@@ -393,7 +438,7 @@ export default function InstructorDetailPage() {
                   <IconCheck size={14} /> Verify
                 </button>
                 <button
-                  onClick={() => handleVerify("reject")}
+                  onClick={() => setShowRejectDialog(true)}
                   className="btn-danger text-sm flex items-center gap-1.5"
                 >
                   <IconX size={14} /> Reject
@@ -486,7 +531,7 @@ export default function InstructorDetailPage() {
               <FieldRow label="Qualification" value={profile?.qualification} />
               <FieldRow label="Experience" value={profile?.experienceYears ? `${profile.experienceYears} years` : null} />
               <FieldRow label="Skills">
-                {profile?.skills && profile.skills.length > 0 ? (
+                {Array.isArray(profile?.skills) && profile.skills.length > 0 ? (
                   <div className="flex flex-wrap gap-1">
                     {profile.skills.map((s) => (
                       <span key={s} className="inline-flex rounded bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
@@ -499,7 +544,7 @@ export default function InstructorDetailPage() {
                 )}
               </FieldRow>
               <FieldRow label="Languages">
-                {profile?.languages && profile.languages.length > 0 ? (
+                {Array.isArray(profile?.languages) && profile.languages.length > 0 ? (
                   <div className="flex flex-wrap gap-1">
                     {profile.languages.map((l) => (
                       <span key={l} className="inline-flex rounded bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success">
@@ -525,7 +570,7 @@ export default function InstructorDetailPage() {
               <FieldRow label="State" value={profile?.state} />
               <FieldRow label="Country" value={profile?.country} />
               <FieldRow label="Social Links">
-                {profile?.socialLinks ? (
+                {profile?.socialLinks && typeof profile.socialLinks === "object" ? (
                   <div className="flex flex-wrap gap-2">
                     {profile.socialLinks.linkedin && (
                       <a href={profile.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
@@ -864,6 +909,7 @@ export default function InstructorDetailPage() {
           )}
         </div>
       )}
+      <RejectDialog />
     </div>
   );
 }
