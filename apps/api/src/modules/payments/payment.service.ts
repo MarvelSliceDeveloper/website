@@ -72,7 +72,7 @@ export const paymentService = {
         role: user.role,
         email: user.email,
         name: user.name,
-        mustChangePassword: user.mustChangePassword,
+        mustChangePassword: user!.mustChangePassword,
         sessionTimeoutMin: user.sessionTimeoutMin,
       });
       return {
@@ -105,7 +105,7 @@ export const paymentService = {
       role: user.role,
       email: user.email,
       name: user.name,
-      mustChangePassword: user.mustChangePassword,
+      mustChangePassword: user!.mustChangePassword,
       sessionTimeoutMin: user.sessionTimeoutMin,
     });
 
@@ -352,11 +352,11 @@ export const paymentService = {
         .catch((err: Error) =>
           console.error("[payment] Failed to send welcome email:", err),
         );
-    } else if (user.mustChangePassword) {
+    } else if (user!.mustChangePassword) {
       const dummyPassword = generateDummyPassword();
       const hashed = await bcrypt.hash(dummyPassword, 12);
       await prisma.user.update({
-        where: { id: user.id },
+        where: { id: user!.id },
         data: { passwordHash: hashed },
       });
 
@@ -458,11 +458,11 @@ export const paymentService = {
         .catch((err: Error) =>
           console.error("[payment] Failed to send welcome email:", err),
         );
-    } else if (user.mustChangePassword) {
+    } else if (user!.mustChangePassword) {
       const dummyPassword = generateDummyPassword();
       const hashed = await bcrypt.hash(dummyPassword, 12);
       await prisma.user.update({
-        where: { id: user.id },
+        where: { id: user!.id },
         data: { passwordHash: hashed },
       });
 

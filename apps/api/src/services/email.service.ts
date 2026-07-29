@@ -110,7 +110,7 @@ async function renderDbTemplate(
   data: Record<string, unknown>,
 ): Promise<{ subject: string; html: string } | null> {
   try {
-    const { prisma } = await import("../../utils/prisma");
+    const { prisma } = await import("../utils/prisma");
     const template = await prisma.emailTemplate.findUnique({
       where: { id: templateId },
     });
@@ -206,7 +206,6 @@ export const emailService = {
                 amount: user.invoice.amount,
                 discountAmount: user.invoice.discountAmount,
                 date: new Date(),
-                password: user.credentials?.password,
               }).toString("base64"),
               name: `invoice-${user.invoice.paymentId.slice(-8)}.pdf`,
             },
