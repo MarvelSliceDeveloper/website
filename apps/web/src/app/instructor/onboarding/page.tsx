@@ -6,6 +6,7 @@ import {
   IconCircleCheck,
   IconCircleX,
   IconClockHour4,
+  IconLogout2,
   IconUserPlus,
   IconChevronRight,
   IconBriefcase,
@@ -14,6 +15,9 @@ import {
   IconSend,
   IconEdit,
   IconCheck,
+  IconPhoto,
+  IconFileUpload,
+  IconX,
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
@@ -93,6 +97,11 @@ export default function InstructorOnboardingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
+
   const checkStatus = useCallback(async () => {
     try {
       const status = await api.get<{
@@ -153,6 +162,8 @@ export default function InstructorOnboardingPage() {
           bankIfscCode?: string;
           bankAccountHolderName?: string;
           upiId?: string;
+          photoUrl?: string;
+          resumeUrl?: string;
         };
       }>("/api/instructor/profile");
 
@@ -181,6 +192,7 @@ export default function InstructorOnboardingPage() {
         bankAccountHolderName: p?.bankAccountHolderName ?? "",
         upiId: p?.upiId ?? "",
       });
+      if (p?.photoUrl) setPhotoPreview(p.photoUrl);
     } catch {
       toast.error("Failed to load profile");
     }
@@ -197,10 +209,32 @@ export default function InstructorOnboardingPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  async function uploadFile(file: File, field: string): Promise<string> {
+    const formData = new FormData();
+    formData.append(field, file);
+    const res = await api.post<{ photoUrl?: string; resumeUrl?: string }>(
+      "/api/instructor/profile/upload",
+      formData,
+    );
+    return res[field === "photo" ? "photoUrl" : "resumeUrl"] ?? "";
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     try {
+      let photoUrl = "";
+      let resumeUrl = "";
+
+      if (photoFile) {
+        setUploadingFiles(true);
+        photoUrl = await uploadFile(photoFile, "photo");
+      }
+      if (resumeFile) {
+        setUploadingFiles(true);
+        resumeUrl = await uploadFile(resumeFile, "resume");
+      }
+
       const body: Record<string, unknown> = {
         bio: form.bio || undefined,
         designation: form.designation || undefined,
@@ -230,6 +264,8 @@ export default function InstructorOnboardingPage() {
         bankIfscCode: form.bankIfscCode || undefined,
         bankAccountHolderName: form.bankAccountHolderName || undefined,
         upiId: form.upiId || undefined,
+        ...(photoUrl && { photoUrl }),
+        ...(resumeUrl && { resumeUrl }),
       };
 
       Object.keys(body).forEach((k) => {
@@ -245,6 +281,7 @@ export default function InstructorOnboardingPage() {
         err instanceof Error ? err.message : "Failed to save profile",
       );
     } finally {
+      setUploadingFiles(false);
       setSubmitting(false);
     }
   }
@@ -280,7 +317,7 @@ export default function InstructorOnboardingPage() {
                   i < currentStep
                     ? "bg-primary text-white"
                     : i === currentStep
-                      ? "border-2 border-primary bg-primary/10 text-primary"
+                      ? "border-2 border-primary bg-primary text-white shadow-[0_0_0_3px_rgba(59,130,246,0.25)]"
                       : "border border-border bg-muted text-muted-foreground"
                 }`}
               >
@@ -316,7 +353,14 @@ export default function InstructorOnboardingPage() {
   };
 
   const renderPendingState = () => (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="relative flex min-h-screen items-center justify-center bg-background px-4">
+      <button
+        onClick={handleLogout}
+        className="absolute right-4 top-4 flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors"
+      >
+        <IconLogout2 size={14} />
+        Logout
+      </button>
       <div className="w-full max-w-lg">
         {renderStepIndicator()}
         <div
@@ -353,7 +397,14 @@ export default function InstructorOnboardingPage() {
   );
 
   const renderRejectedState = () => (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="relative flex min-h-screen items-center justify-center bg-background px-4">
+      <button
+        onClick={handleLogout}
+        className="absolute right-4 top-4 flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors"
+      >
+        <IconLogout2 size={14} />
+        Logout
+      </button>
       <div className="w-full max-w-lg">
         {renderStepIndicator()}
         <div
@@ -408,10 +459,28 @@ export default function InstructorOnboardingPage() {
     </div>
   );
 
+  async function handleLogout() {
+    try {
+      await api.post("/api/auth/logout");
+    } catch {
+      /* ignore */
+    }
+    router.push("/login");
+  }
+
   const renderForm = () => (
     <div className="min-h-screen bg-background px-4 py-10 sm:px-8">
       <div className="mx-auto max-w-3xl">
-        {renderStepIndicator()}
+        <div className="relative">
+          {renderStepIndicator()}
+          <button
+            onClick={handleLogout}
+            className="absolute right-0 top-0 flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-card-hover transition-colors"
+          >
+            <IconLogout2 size={14} />
+            Logout
+          </button>
+        </div>
 
         <div
           className="mt-10"
@@ -430,6 +499,118 @@ export default function InstructorOnboardingPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Profile Photo & Resume */}
+            <div className="rounded-2xl bg-card/80 p-1 shadow-[0_8px_60px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-border/60">
+              <div className="rounded-[14px] bg-card px-6 py-6">
+                <div className="flex items-center gap-3 border-b border-border pb-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                    <IconPhoto size={20} />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">
+                      Profile Photo & Resume
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Upload your photo and CV (optional)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  {/* Photo */}
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-foreground">
+                      Profile Photo
+                    </label>
+                    {photoPreview ? (
+                      <div className="relative inline-block">
+                        <img
+                          src={photoPreview}
+                          alt="Preview"
+                          className="h-28 w-28 rounded-xl object-cover border border-border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
+                          className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-danger text-white shadow"
+                        >
+                          <IconX size={12} />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex h-28 w-28 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/5 transition-all hover:border-primary/50 hover:bg-primary/5">
+                        <IconPhoto size={24} className="text-muted-foreground" />
+                        <span className="mt-1 text-[10px] text-muted-foreground">Upload</span>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              if (file.size > 5 * 1024 * 1024) {
+                                toast.error("Photo must be less than 5 MB");
+                                return;
+                              }
+                              setPhotoFile(file);
+                              setPhotoPreview(URL.createObjectURL(file));
+                            }
+                          }}
+                        />
+                      </label>
+                    )}
+                  </div>
+
+                  {/* Resume */}
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-foreground">
+                      Resume / CV
+                    </label>
+                    {resumeFile ? (
+                      <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/5 px-4 py-3">
+                        <IconFileUpload size={20} className="text-primary" />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-foreground">
+                            {resumeFile.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {(resumeFile.size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setResumeFile(null)}
+                          className="text-muted-foreground hover:text-danger"
+                        >
+                          <IconX size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex h-28 w-28 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/5 transition-all hover:border-primary/50 hover:bg-primary/5">
+                        <IconFileUpload size={24} className="text-muted-foreground" />
+                        <span className="mt-1 text-[10px] text-muted-foreground">Upload</span>
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx,image/jpeg,image/png"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              if (file.size > 10 * 1024 * 1024) {
+                                toast.error("Resume must be less than 10 MB");
+                                return;
+                              }
+                              setResumeFile(file);
+                            }
+                          }}
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Professional Info */}
             <div className="rounded-2xl bg-card/80 p-1 shadow-[0_8px_60px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-border/60">
               <div className="rounded-[14px] bg-card px-6 py-6">
@@ -799,18 +980,20 @@ export default function InstructorOnboardingPage() {
             <div className="flex justify-center pb-8">
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || uploadingFiles}
                 className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-10 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-600/25 transition-all duration-300 hover:from-blue-700 hover:to-blue-600 hover:shadow-xl hover:shadow-blue-600/30 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0"
               >
                 <IconSend size={18} />
                 <span>
-                  {submitting
-                    ? onboardingState === "rejected"
-                      ? "Resubmitting..."
-                      : "Submitting..."
-                    : onboardingState === "rejected"
-                      ? "Resubmit Profile"
-                      : "Submit for Verification"}
+                  {uploadingFiles
+                    ? "Uploading files..."
+                    : submitting
+                      ? onboardingState === "rejected"
+                        ? "Resubmitting..."
+                        : "Submitting..."
+                      : onboardingState === "rejected"
+                        ? "Resubmit Profile"
+                        : "Submit for Verification"}
                 </span>
               </button>
             </div>
