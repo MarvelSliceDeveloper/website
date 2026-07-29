@@ -8,7 +8,6 @@ import {
 import { UserRole } from "@lms/types";
 import bcrypt from "bcryptjs";
 import { emailService } from "../../services/email.service";
-import { notificationService } from "../notifications/notification.service";
 import { paginate } from "../../utils/paginate";
 
 const router = Router();
@@ -157,7 +156,6 @@ router.post("/", async (req: Request, res: Response) => {
       }
     }
 
-    const isSuspended = role === "INSTRUCTOR";
     const passwordHash = await bcrypt.hash(password, 12);
 
     const user = await prisma.$transaction(async (tx) => {
@@ -167,14 +165,12 @@ router.post("/", async (req: Request, res: Response) => {
           email,
           passwordHash,
           role: role as UserRole,
-          isSuspended,
         },
         select: {
           id: true,
           name: true,
           email: true,
           role: true,
-          isSuspended: true,
         },
       });
 
@@ -231,23 +227,6 @@ router.post("/", async (req: Request, res: Response) => {
       .catch((err) => {
         console.error("[users] Failed to send welcome email:", err);
       });
-
-    if (isSuspended) {
-      const superAdmins = await prisma.user.findMany({
-        where: { role: "SUPER_ADMIN" },
-        select: { id: true },
-      });
-      if (superAdmins.length > 0) {
-        notificationService.createMany(
-          superAdmins.map((sa) => ({
-            userId: sa.id,
-            title: "Instructor Pending Approval",
-            message: `${user.name} (${user.email}) has registered as an instructor and is awaiting your approval.`,
-            type: "SYSTEM",
-          })),
-        );
-      }
-    }
 
     return res.status(201).json(user);
   } catch (error) {
@@ -455,8 +434,7 @@ router.patch("/:id", async (req: Request, res: Response) => {
   }
 });
 
-// DELETE /api/users/:id — delete a user (admin only)
-// Deletes a user and their related records
+// DELETE /api/users/:id — soft-delete a user (admin only)
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -490,7 +468,6 @@ router.delete("/:id", async (req: Request, res: Response) => {
     }
 
     await prisma.$transaction(async (tx) => {
-      // Nullify optional foreign keys
       if (user.sessionsLed.length > 0) {
         await tx.liveSession.updateMany({
           where: { instructorId: id },
@@ -502,25 +479,16 @@ router.delete("/:id", async (req: Request, res: Response) => {
         data: { mentorId: null },
       });
 
-      // Delete owned records
-      await tx.notification.deleteMany({ where: { userId: id } });
-      await tx.notificationPreference.deleteMany({ where: { userId: id } });
-      await tx.progress.deleteMany({ where: { userId: id } });
-      await tx.certificate.deleteMany({ where: { userId: id } });
-      await tx.enrollmentRequest.deleteMany({ where: { userId: id } });
-      await tx.attendance.deleteMany({ where: { userId: id } });
-      await tx.mentorshipTicket.deleteMany({ where: { studentId: id } });
-      await tx.assignmentSubmission.deleteMany({ where: { studentId: id } });
-      await tx.packageEnrollmentCourse.deleteMany({
-        where: { enrollment: { userId: id } },
+      await tx.user.update({
+        where: { id },
+        data: {
+          deletedAt: new Date(),
+          deletedBy: authUser!.userId,
+        },
       });
-      await tx.packageEnrollment.deleteMany({ where: { userId: id } });
-      await tx.loginLog.deleteMany({ where: { userId: id } });
-
-      await tx.user.delete({ where: { id } });
     });
 
-    return res.json({ message: "User deleted successfully" });
+    return res.json({ message: "User soft-deleted" });
   } catch (error) {
     return handleError(res, error);
   }
