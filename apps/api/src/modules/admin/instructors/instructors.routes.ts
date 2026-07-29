@@ -135,16 +135,17 @@ router.post("/", requireSuperAdmin, async (req: AuthRequest, res: Response) => {
         email,
         passwordHash,
         role: UserRole.INSTRUCTOR,
-        instructorProfile: {
-          create: {},
-        },
       },
-      include: { instructorProfile: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
     });
 
     return res.status(201).json({
       ...user,
-      passwordHash: undefined,
       generatedPassword: password ? undefined : generatedPassword,
     });
   } catch (err: unknown) {
