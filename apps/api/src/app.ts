@@ -227,6 +227,11 @@ app.use(limiter);
 
 // ── Routes ──
 app.use(maintenanceMiddleware);
+
+// Auto-audit: log all mutations on admin routes (placed before route handlers
+// so the on('finish') listener is attached before the response is written)
+app.use(auditMiddleware);
+
 app.use("/api/auth", authRouter);
 app.use("/api/auth/2fa", twoFactorRouter);
 app.use("/api/webhooks", webhookRouter);
@@ -300,9 +305,6 @@ app.use("/api/admin/users", bulkUsersRouter);
 app.use("/api/admin/branding", brandingRouter);
 app.use("/api/admin/i18n", i18nRouter);
 app.use("/api/admin/cache", cacheRouter);
-
-// ── Auto-audit: log all mutations on admin routes ──
-app.use(auditMiddleware);
 
 // ── YouTube API (authenticated) ──
 app.use("/api/youtube", youtubeRouter);

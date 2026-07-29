@@ -6,6 +6,7 @@
  * 2. `auditMiddleware` — auto-captures POST/PUT/PATCH/DELETE on /api/admin/* routes.
  */
 import type { Request, Response, NextFunction } from "express";
+import { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 
 /** HTTP method → audit action label */
@@ -103,7 +104,7 @@ export async function logAudit(opts: {
         action: opts.action,
         entityType: opts.entityType,
         entityId: opts.entityId ?? null,
-        details: opts.details ?? undefined,
+        details: (opts.details ?? undefined) as Prisma.InputJsonValue | undefined,
         ipAddress: opts.ipAddress ?? null,
         userAgent: opts.userAgent ?? null,
       },
@@ -162,7 +163,7 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
           action,
           entityType,
           entityId,
-          details,
+          details: details as Prisma.InputJsonValue | undefined,
           ipAddress: ip,
           userAgent: (req.headers["user-agent"] as string) || null,
         },
