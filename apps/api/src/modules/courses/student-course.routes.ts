@@ -734,7 +734,7 @@ router.post(
       // Timer enforcement: if quiz has timeLimitMin, verify submission is within limit
       if (quiz.timeLimitMin && quiz.timeLimitMin > 0) {
         const submitTime = new Date();
-        const attemptStartTime = existing?.createdAt ?? submitTime;
+        const attemptStartTime = submitTime;
         const elapsedMinutes =
           (submitTime.getTime() - attemptStartTime.getTime()) / (1000 * 60);
         if (elapsedMinutes > quiz.timeLimitMin + 1) {
@@ -864,7 +864,22 @@ router.get(
       }
 
       const quiz = certModule.quizzes[0] ?? null;
-      let quizWithQuestions = null;
+      let quizWithQuestions: {
+          id: string;
+          title: string;
+          passingScore: number;
+          timeLimitMin: number | null;
+          hasMcq: boolean;
+          hasAssignment: boolean;
+          assignmentInstructions: string | null;
+          questionCount: number;
+          questions: Array<{
+            id: string;
+            questionText: string;
+            orderIndex: number;
+            options: Array<{ id: string; optionText: string }>;
+          }>;
+        } | null = null;
       if (quiz) {
         const questions = quiz.questions.map((q, qIdx) => {
           const rawOptions = q.options as Array<{

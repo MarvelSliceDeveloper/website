@@ -37,7 +37,7 @@ router.get("/health", async (_req: AuthRequest, res: Response) => {
 router.get("/pending", async (_req: AuthRequest, res: Response) => {
   try {
     const users = await prisma.user.findMany({
-      where: { role: "INSTRUCTOR", isSuspended: true },
+      where: { role: "INSTRUCTOR", instructorProfile: { status: "PENDING" } },
       select: { id: true, name: true, email: true },
     });
     return res.json({ users });
@@ -59,10 +59,24 @@ router.put("/:id/approve", async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: "User is not an instructor" });
     }
 
-    await prisma.user.update({
-      where: { id },
-      data: { isSuspended: false, suspendedAt: null, suspendedBy: null },
-    });
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id },
+        data: {
+          isSuspended: false,
+          instructorOnboardingComplete: true,
+          suspendedAt: null,
+          suspendedBy: null,
+        },
+      }),
+      prisma.instructorProfile.update({
+        where: { userId: id },
+        data: {
+          status: "APPROVED",
+          verifiedAt: new Date(),
+        },
+      }),
+    ]);
 
     return res.json({ message: "Instructor approved" });
   } catch (error: unknown) {
