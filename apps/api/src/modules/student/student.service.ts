@@ -86,9 +86,20 @@ export const studentService = {
         orderBy: { dueDate: "desc" },
       });
 
+      // Fetch batch-level extensions so extended due dates are reflected
+      const extensions = await prisma.batchAssignmentExtension.findMany({
+        where: {
+          batchId: { in: uniqueBatchIds },
+          assignmentId: { not: null },
+        },
+        select: { assignmentId: true, extendedDueDate: true },
+      });
+      const extMap = new Map(extensions.map((e) => [e.assignmentId!, e.extendedDueDate]));
+
       for (const assignment of assignments) {
         const submission = assignment.submissions[0];
         seenAssignmentIds.add(assignment.id);
+        const effectiveDueDate = extMap.get(assignment.id) ?? assignment.dueDate;
         result.push({
           id: assignment.id,
           courseId: assignment.courseId,
@@ -96,7 +107,7 @@ export const studentService = {
           moduleName: assignment.module?.title || "—",
           unitName: assignment.type === "QUIZ" ? "Quiz" : "Assignment",
           assignmentName: assignment.title,
-          dueDate: assignment.dueDate.toISOString(),
+          dueDate: effectiveDueDate.toISOString(),
           status: submission ? "SUBMITTED" : "PENDING",
           type: assignment.type as "QUIZ" | "ASSIGNMENT",
           submissionId: submission?.id || null,

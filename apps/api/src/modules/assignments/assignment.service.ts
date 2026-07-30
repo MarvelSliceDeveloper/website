@@ -18,8 +18,9 @@ export const CreateFileAssignmentSchema = z.object({
 });
 
 export const GradeSubmissionSchema = z.object({
-  grade: z.string().min(1),
+  grade: z.number().int().min(0).max(100),
   feedback: z.string().optional(),
+  latePenaltyPercent: z.number().int().min(1).max(25).optional(),
 });
 
 export const assignmentService = {
@@ -126,14 +127,17 @@ export const assignmentService = {
     if (filters.batchId) where.batchId = filters.batchId;
     if (filters.courseId) where.courseId = filters.courseId;
     if (filters.instructorId) {
-      where.batch = {
-        OR: [
-          { instructorId: filters.instructorId },
-          {
-            courseMentors: { some: { mentorId: filters.instructorId } },
-          },
-        ],
-      };
+      const mentorCourses = await prisma.batchCourseMentor.findMany({
+        where: { mentorId: filters.instructorId },
+        select: { batchId: true, courseId: true },
+      });
+
+      if (mentorCourses.length > 0) {
+        where.OR = mentorCourses.map((mc) => ({
+          batchId: mc.batchId,
+          courseId: mc.courseId,
+        }));
+      }
     }
     if (filters.studentId) {
       where.batch = {
@@ -161,7 +165,7 @@ export const assignmentService = {
         where,
         include: {
           course: { select: { id: true, title: true } },
-          batch: { select: { id: true, name: true } },
+          batch: { select: { id: true, name: true, passingScore: true } },
           submissions: filters.studentId
             ? {
                 where: { studentId: filters.studentId },
@@ -297,8 +301,9 @@ export const assignmentService = {
   async gradeSubmission(
     instructorId: string,
     submissionId: string,
-    grade: string,
+    grade: number,
     feedback?: string,
+    latePenaltyPercent?: number,
   ) {
     const submission = await prisma.assignmentSubmission.findUnique({
       where: { id: submissionId },
@@ -325,13 +330,25 @@ export const assignmentService = {
       }
     }
 
+    const pct = latePenaltyPercent ?? submission.latePenaltyPercent ?? 0;
+    const originalScore = grade;
+    const penaltyAmount = pct > 0 ? Math.round((grade * pct) / 100) : 0;
+    const totalScore = Math.max(0, originalScore - penaltyAmount);
+
+    const passingScore = submission.assignment.batch?.passingScore ?? 50;
+    const newStatus = totalScore >= passingScore ? "GRADED" : "PENDING";
+
     const updated = await prisma.assignmentSubmission.update({
       where: { id: submissionId },
       data: {
-        grade,
+        grade: String(totalScore),
         feedback: feedback || null,
-        status: "GRADED",
+        status: newStatus,
         gradedAt: new Date(),
+        totalScore,
+        originalScore,
+        latePenaltyPercent: pct > 0 ? pct : null,
+        latePenaltyAmount: pct > 0 ? penaltyAmount : null,
       },
     });
     notificationService.notifyAssignmentGraded(submissionId);
@@ -349,7 +366,8 @@ export const assignmentService = {
       where: { id: assignmentId },
       include: {
         batch: {
-          include: {
+          select: {
+            lateSubmissionPenaltyPercent: true,
             enrollments: {
               where: { userId: studentId, status: "APPROVED" },
             },
@@ -361,13 +379,31 @@ export const assignmentService = {
     if (!assignment) throw new AppError(404, "Assignment not found");
     if (assignment.type !== "ASSIGNMENT")
       throw new AppError(400, "This is a quiz, not a file-upload assignment");
-    if (assignment.dueDate && new Date() > assignment.dueDate)
-      throw new AppError(400, "Assignment due date has passed");
-    if (assignment.batch.enrollments.length === 0) {
-      throw new AppError(403, "You are not enrolled in the batch for this assignment");
+
+    let effectiveDueDate = assignment.dueDate;
+    if (assignment.batchId) {
+      const ext = await prisma.batchAssignmentExtension.findUnique({
+        where: { batchId_assignmentId: { batchId: assignment.batchId, assignmentId } },
+        select: { extendedDueDate: true },
+      });
+      if (ext) effectiveDueDate = ext.extendedDueDate;
+    }
+    const isLate = effectiveDueDate ? new Date() > effectiveDueDate : false;
+    if (assignment.batch) {
+      const hasBatchEnrollment = assignment.batch.enrollments.length > 0;
+      const hasPackageEnrollment =
+        !hasBatchEnrollment &&
+        (await prisma.packageEnrollmentCourse.findFirst({
+          where: {
+            batchId: assignment.batchId!,
+            enrollment: { userId: studentId, status: "APPROVED" },
+          },
+        }));
+      if (!hasBatchEnrollment && !hasPackageEnrollment) {
+        throw new AppError(403, "You are not enrolled in the batch for this assignment");
+      }
     }
 
-    // Upsert — allow re-submission before grading
     return prisma.assignmentSubmission.upsert({
       where: {
         assignmentId_studentId: {
@@ -381,11 +417,22 @@ export const assignmentService = {
         answerFileUrl,
         comment,
         status: "PENDING",
+        isLate,
+        latePenaltyPercent: isLate ? assignment.batch?.lateSubmissionPenaltyPercent ?? null : null,
       },
       update: {
         answerFileUrl,
         comment,
         submittedAt: new Date(),
+        status: "PENDING",
+        isLate,
+        latePenaltyPercent: isLate ? assignment.batch?.lateSubmissionPenaltyPercent ?? null : null,
+        grade: null,
+        feedback: null,
+        gradedAt: null,
+        totalScore: null,
+        originalScore: null,
+        latePenaltyAmount: null,
       },
     });
   },

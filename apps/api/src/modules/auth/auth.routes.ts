@@ -6,7 +6,7 @@ const router = Router();
 
 router.post("/register", authController.register);
 router.post("/login", authController.login);
-router.post("/logout", authController.logout);
+router.post("/logout", requireAuth, authController.logout);
 
 // GET /api/auth/me — return current authenticated user
 router.get("/me", requireAuth, authController.me);

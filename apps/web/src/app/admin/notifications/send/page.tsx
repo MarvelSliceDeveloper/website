@@ -59,8 +59,8 @@ export default function AdminSendNotificationPage() {
       .then((data) => setBatches(data.batches))
       .catch(() => {});
     api
-      .get<EmailTemplateOption[]>("/api/admin/email-templates")
-      .then(setEmailTemplates)
+      .get<EmailTemplateOption[] | { templates: EmailTemplateOption[] }>("/api/admin/email-templates")
+      .then((res) => setEmailTemplates(Array.isArray(res) ? res : res.templates ?? []))
       .catch(() => {});
   }, []);
 

@@ -263,43 +263,43 @@ function CoursesPageContent() {
       key: "id",
       label: "Actions",
       render: (_, course) => (
-        <div className="flex items-center justify-end gap-1">
+        <div className="flex items-center justify-center gap-1">
           <Link
             href={`/admin/courses/${course.id}`}
-            className="rounded-md border border-border p-1.5 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+            className="rounded-md border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
             title="Edit course"
           >
-            <IconEdit size={14} />
+            <IconEdit size={16} />
           </Link>
           {course.status === "DRAFT" && (
             <button
               onClick={() => handlePublish(course.id)}
-              className="rounded-md border border-success/20 p-1.5 text-success hover:bg-success/10 transition-colors"
+              className="rounded-md border border-success/20 p-2 text-success hover:bg-success/10 transition-colors"
               title="Publish course"
             >
-              <IconUpload size={14} />
+              <IconUpload size={16} />
             </button>
           )}
           {course.status === "PUBLISHED" && (
             <button
               onClick={() => handleUnpublish(course.id)}
-              className="rounded-md border border-warning/20 p-1.5 text-warning hover:bg-warning/10 transition-colors"
+              className="rounded-md border border-warning/20 p-2 text-warning hover:bg-warning/10 transition-colors"
               title="Unpublish course"
             >
-              <IconPhoto size={14} />
+              <IconPhoto size={16} />
             </button>
           )}
           {course.status !== "ARCHIVED" && (
             <button
               onClick={() => handleDelete(course.id, course.title)}
               disabled={deleting === course.id}
-              className="rounded-md border border-danger/20 p-1.5 text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
+              className="rounded-md border border-danger/20 p-2 text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
               title="Archive course"
             >
               {deleting === course.id ? (
                 <span className="h-3.5 w-3.5 animate-spin rounded-full border border-danger border-t-transparent" />
               ) : (
-                <IconArchive size={14} />
+                <IconArchive size={16} />
               )}
             </button>
           )}
@@ -308,25 +308,25 @@ function CoursesPageContent() {
               <button
                 onClick={() => handleRecover(course.id)}
                 disabled={recovering === course.id}
-                className="rounded-md border border-success/20 p-1.5 text-success hover:bg-success/10 transition-colors disabled:opacity-50"
+                className="rounded-md border border-success/20 p-2 text-success hover:bg-success/10 transition-colors disabled:opacity-50"
                 title="Recover course"
               >
                 {recovering === course.id ? (
                   <span className="h-3.5 w-3.5 animate-spin rounded-full border border-success border-t-transparent" />
                 ) : (
-                  <IconRefresh size={14} />
+                  <IconRefresh size={16} />
                 )}
               </button>
               <button
                 onClick={() => handlePermanentDelete(course.id, course.title)}
                 disabled={purging === course.id}
-                className="rounded-md border border-danger/20 p-1.5 text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
+                className="rounded-md border border-danger/20 p-2 text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
                 title="Delete permanently"
               >
                 {purging === course.id ? (
                   <span className="h-3.5 w-3.5 animate-spin rounded-full border border-danger border-t-transparent" />
                 ) : (
-                  <IconTrash size={14} />
+                  <IconTrash size={16} />
                 )}
               </button>
             </>

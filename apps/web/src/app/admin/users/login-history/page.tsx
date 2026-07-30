@@ -12,6 +12,7 @@ type LoginEntry = {
   userAgent: string | null;
   loginAt: string;
   logoutAt: string | null;
+  user: { id: string; name: string; email: string };
 };
 
 export default function LoginHistoryPage() {
@@ -77,7 +78,7 @@ export default function LoginHistoryPage() {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-border/60 text-muted uppercase font-bold tracking-wider">
-                  <th className="py-2.5 pr-3">User ID</th>
+                  <th className="py-2.5 pr-3">User</th>
                   <th className="py-2.5 pr-3">IP</th>
                   <th className="py-2.5 pr-3">User Agent</th>
                   <th className="py-2.5 pr-3">Login At</th>
@@ -90,8 +91,13 @@ export default function LoginHistoryPage() {
                     key={log.id}
                     className="hover:bg-card-hover transition-colors"
                   >
-                    <td className="py-3 pr-3 font-mono text-[10px] text-muted-foreground">
-                      {log.userId.slice(0, 12)}...
+                    <td className="py-3 pr-3 text-muted-foreground">
+                      <span className="font-medium text-foreground">
+                        {log.user.name}
+                      </span>
+                      <span className="ml-1.5 text-[10px] text-muted">
+                        {log.user.email}
+                      </span>
                     </td>
                     <td className="py-3 pr-3 font-mono text-[10px] text-muted">
                       {log.ip || "—"}

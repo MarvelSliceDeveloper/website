@@ -103,8 +103,16 @@ export const authController = {
     }
   },
 
-  // POST /api/auth/logout — clear the auth cookie
-  async logout(req: Request, res: Response) {
+  // POST /api/auth/logout — clear the auth cookie and record logout time
+  async logout(req: AuthRequest, res: Response) {
+    if (req.user?.userId) {
+      prisma.loginLog
+        .updateMany({
+          where: { userId: req.user.userId, logoutAt: null },
+          data: { logoutAt: new Date() },
+        })
+        .catch((err) => console.error("[auth] Failed to update logoutAt:", err));
+    }
     res.clearCookie("accessToken");
     return res.status(200).json({ message: "Logged out successfully" });
   },

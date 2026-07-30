@@ -52,7 +52,7 @@ type Batch = {
   description: string | null;
   course: { id: string; title: string } | null;
   package?: { id: string; name: string } | null;
-  instructor: { id: string; name: string; email: string };
+  instructor: { id: string; name: string; email: string } | null;
   enrollments: Student[];
   packageEnrollmentCourses: {
     enrollment: { user: { id: string; name: string; email: string } };
@@ -317,7 +317,7 @@ export default function BatchDetailPage() {
         </div>
         <div className="glass-card p-4 text-center">
           <p className="text-sm font-medium text-foreground">
-            {batch.instructor.name}
+            {batch.instructor?.name ?? "—"}
           </p>
           <p className="text-xs text-muted">Instructor</p>
         </div>
@@ -738,6 +738,12 @@ export default function BatchDetailPage() {
                     <span className="text-muted">{batch.instructor.email}</span>
                     <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">Primary</span>
                   </div>
+                </div>
+              )}
+              {!batch?.instructor && (
+                <div className="glass-card p-4">
+                  <h4 className="text-xs font-semibold uppercase text-muted mb-2">Primary Instructor</h4>
+                  <p className="text-sm text-muted-foreground">No primary instructor assigned. Use course mentors below.</p>
                 </div>
               )}
 

@@ -552,7 +552,29 @@ function AdminDashboard() {
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {statsCards.map((stat) => (
-          <StatCard key={stat.label} {...stat} loading={loading} />
+          <Link
+            key={stat.label}
+            href={stat.href}
+            className="border border-border bg-card p-5 hover:border-muted-foreground/30 transition-colors"
+          >
+            {loading ? (
+              <div className="space-y-3">
+                <div className="h-4 w-4 animate-pulse bg-border" />
+                <div className="h-3 w-24 animate-pulse bg-border" />
+                <div className="h-7 w-16 animate-pulse bg-border" />
+              </div>
+            ) : (
+              <>
+                <stat.icon size={22} stroke={1.5} className="text-muted-foreground mb-3" />
+                <p className="mt-1.5 text-2xl font-extrabold tracking-tight text-foreground">
+                  {stat.value === null ? "\u2014" : String(stat.value)}
+                </p>
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground mt-1">
+                  {stat.label}
+                </p>
+              </>
+            )}
+          </Link>
         ))}
       </div>
 

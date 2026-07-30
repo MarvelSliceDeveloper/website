@@ -439,33 +439,33 @@ export default function AdminUsersPage() {
       key: "id",
       label: "Actions",
       render: (_, user) => (
-        <div className="flex items-center justify-end gap-1">
+        <div className="flex items-center justify-center gap-1">
           {currentUserRole === "SUPER_ADMIN" &&
             user.role === "INSTRUCTOR" &&
             user.isSuspended && (
               <button
                 onClick={() => handleApproveInstructor(user.id)}
-                className="rounded-md border border-success/20 p-1.5 text-success hover:bg-success/10 transition-colors"
+                className="rounded-md border border-success/20 p-2 text-success hover:bg-success/10 transition-colors"
                 title="Approve instructor"
               >
-                <IconCheck size={14} />
+                <IconCheck size={16} />
               </button>
             )}
           <button
             onClick={() => openEditModal(user)}
-            className="rounded-md border border-border p-1.5 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+            className="rounded-md border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
             title="Edit user"
           >
-            <IconEdit size={14} />
+            <IconEdit size={16} />
           </button>
           {(currentUserRole === "SUPER_ADMIN" ||
             (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) && (
             <button
               onClick={() => setDeleteUserId(user.id)}
-              className="rounded-md border border-danger/20 p-1.5 text-danger hover:bg-danger/10 transition-colors"
+              className="rounded-md border border-danger/20 p-2 text-danger hover:bg-danger/10 transition-colors"
               title="Delete user"
             >
-              <IconTrash size={14} />
+              <IconTrash size={16} />
             </button>
           )}
         </div>

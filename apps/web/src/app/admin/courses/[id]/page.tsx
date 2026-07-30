@@ -201,7 +201,7 @@ export default function CourseDetailPage() {
         <IconChevronRight size={14} />
         <span className="text-foreground">{course?.title || "..."}</span>
       </div>
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-foreground">

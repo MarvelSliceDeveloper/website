@@ -243,6 +243,7 @@ model Batch {
   description                  String?
   defaultDaysToComplete        Int? // Default days-from-enrollment for assignments/quizzes
   lateSubmissionPenaltyPercent Int                       @default(25) // Default late penalty %
+  passingScore                 Int                       @default(50) // Score threshold for auto-resubmit
   deletedAt                    DateTime?
   deletedBy                    String?
   restoredAt                   DateTime?

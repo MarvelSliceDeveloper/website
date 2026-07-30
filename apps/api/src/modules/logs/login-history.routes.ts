@@ -17,6 +17,7 @@ router.get("/", async (_req: Request, res: Response) => {
     const logs = await prisma.loginLog.findMany({
       orderBy: { loginAt: "desc" },
       take: 200,
+      include: { user: { select: { id: true, name: true, email: true } } },
     });
     return res.json({ logs });
   } catch (error: any) {
