@@ -15,13 +15,22 @@ import { paginate } from "../../utils/paginate";
 
 /**
  * Schema for creating a batch. Requires either courseId or packageId.
+ * For package batches, courseInstructors can assign instructors per course.
  * Uses .refine() to enforce the either/or constraint at the schema level.
  */
 export const CreateBatchSchema = z
   .object({
     courseId: z.string().optional(),
     packageId: z.string().optional(),
-    instructorId: z.string().min(1, "Instructor is required"),
+    instructorId: z.string().optional(),
+    courseInstructors: z
+      .array(
+        z.object({
+          courseId: z.string().min(1, "Course ID is required"),
+          instructorId: z.string().optional(),
+        }),
+      )
+      .optional(),
     name: z.string().min(3).max(100),
     startDate: z.string().datetime(),
     endDate: z.string().datetime(),
@@ -63,17 +72,19 @@ export const batchService = {
     });
     if (!course) throw new Error("Course not found");
 
-    // Verify the instructor exists and has INSTRUCTOR role
-    const instructor = await prisma.user.findUnique({
-      where: { id: data.instructorId },
-    });
-    if (!instructor) throw new Error("Instructor not found");
-    if (
-      instructor.role !== "INSTRUCTOR" &&
-      instructor.role !== "ADMIN" &&
-      instructor.role !== "SUPER_ADMIN"
-    ) {
-      throw new Error("User is not an instructor");
+    // Verify the instructor exists and has INSTRUCTOR role (if provided)
+    if (data.instructorId) {
+      const instructor = await prisma.user.findUnique({
+        where: { id: data.instructorId },
+      });
+      if (!instructor) throw new Error("Instructor not found");
+      if (
+        instructor.role !== "INSTRUCTOR" &&
+        instructor.role !== "ADMIN" &&
+        instructor.role !== "SUPER_ADMIN"
+      ) {
+        throw new Error("User is not an instructor");
+      }
     }
 
     // If packageId is provided, verify package exists, is ACTIVE, and course belongs to it
@@ -101,7 +112,7 @@ export const batchService = {
       data: {
         courseId: data.courseId,
         packageId: data.packageId,
-        instructorId: data.instructorId,
+        instructorId: data.instructorId ?? null,
         name: data.name,
         startDate: new Date(data.startDate),
         endDate: new Date(data.endDate),
@@ -119,7 +130,7 @@ export const batchService = {
     });
   },
 
-  // Creates one batch per course in a package (when no courseId is given)
+  // Creates a single batch for an entire package (courseId=null) with per-course instructors
   async createBatchesForPackage(data: z.infer<typeof CreateBatchSchema>) {
     if (!data.packageId) throw new Error("packageId is required");
 
@@ -130,17 +141,44 @@ export const batchService = {
     if (!pkg) throw new Error("Package not found");
     if (pkg.status !== "ACTIVE") throw new Error("Package is not active");
 
-    // Verify instructor
-    const instructor = await prisma.user.findUnique({
-      where: { id: data.instructorId },
-    });
-    if (!instructor) throw new Error("Instructor not found");
-    if (
-      instructor.role !== "INSTRUCTOR" &&
-      instructor.role !== "ADMIN" &&
-      instructor.role !== "SUPER_ADMIN"
-    ) {
-      throw new Error("User is not an instructor");
+    // Verify primary instructor if provided
+    if (data.instructorId) {
+      const instructor = await prisma.user.findUnique({
+        where: { id: data.instructorId },
+      });
+      if (!instructor) throw new Error("Instructor not found");
+      if (
+        instructor.role !== "INSTRUCTOR" &&
+        instructor.role !== "ADMIN" &&
+        instructor.role !== "SUPER_ADMIN"
+      ) {
+        throw new Error("User is not an instructor");
+      }
+    }
+
+    // Verify course instructors if provided
+    const courseInstructorIds = new Set<string>();
+    if (data.courseInstructors?.length) {
+      for (const ci of data.courseInstructors) {
+        if (!ci.instructorId) continue;
+        if (courseInstructorIds.has(ci.instructorId)) continue;
+        courseInstructorIds.add(ci.instructorId);
+        const instructor = await prisma.user.findUnique({
+          where: { id: ci.instructorId },
+        });
+        if (!instructor) {
+          throw new Error(`Course instructor ${ci.instructorId} not found`);
+        }
+        if (
+          instructor.role !== "INSTRUCTOR" &&
+          instructor.role !== "ADMIN" &&
+          instructor.role !== "SUPER_ADMIN"
+        ) {
+          throw new Error(
+            `User ${instructor.name} is not an instructor`,
+          );
+        }
+      }
     }
 
     // Get all courses in the package
@@ -153,12 +191,17 @@ export const batchService = {
       throw new Error("Package has no courses. Add courses first.");
     }
 
+    // Build courseInstructors map for quick lookup
+    const instructorMap = new Map(
+      data.courseInstructors?.map((ci) => [ci.courseId, ci.instructorId]) ?? [],
+    );
+
     // Create one batch for the entire package (courseId=null means it covers all package courses)
     const batch = await prisma.batch.create({
       data: {
         courseId: null,
         packageId: data.packageId,
-        instructorId: data.instructorId,
+        instructorId: data.instructorId ?? null,
         name: data.name,
         startDate: new Date(data.startDate),
         endDate: new Date(data.endDate),
@@ -172,10 +215,51 @@ export const batchService = {
         course: { select: { id: true, title: true } },
         instructor: { select: { id: true, name: true, email: true } },
         package: { select: { id: true, name: true } },
+        courseMentors: { include: { mentor: { select: { id: true, name: true, email: true } }, course: { select: { id: true, title: true } } } },
       },
     });
 
-    return batch;
+    // Create BatchCourseMentor records for each course-instructor assignment
+    if (data.courseInstructors?.length) {
+      const mentorsToCreate = data.courseInstructors
+        .filter((ci) => ci.instructorId && packageCourses.some((pc) => pc.course.id === ci.courseId))
+        .map((ci) => ({
+          batchId: batch.id,
+          courseId: ci.courseId,
+          mentorId: ci.instructorId!,
+        }));
+
+      if (mentorsToCreate.length > 0) {
+        await prisma.batchCourseMentor.createMany({
+          data: mentorsToCreate,
+          skipDuplicates: true,
+        });
+      }
+    }
+
+    // Create BatchCourseVisibility for each course (hidden by default)
+    const visibilityData = packageCourses.map((pc) => ({
+      batchId: batch.id,
+      courseId: pc.course.id,
+      isVisible: false,
+      isExamRequired: true,
+    }));
+
+    await prisma.batchCourseVisibility.createMany({
+      data: visibilityData,
+      skipDuplicates: true,
+    });
+
+    // Re-fetch with all includes
+    return prisma.batch.findUnique({
+      where: { id: batch.id },
+      include: {
+        course: { select: { id: true, title: true } },
+        instructor: { select: { id: true, name: true, email: true } },
+        package: { select: { id: true, name: true } },
+        courseMentors: { include: { mentor: { select: { id: true, name: true, email: true } }, course: { select: { id: true, title: true } } } },
+      },
+    });
   },
 
   // Lists batches with optional filters

@@ -14,6 +14,7 @@ import {
   IconLockOpen,
   IconTrash,
   IconPlus,
+  IconEdit,
 } from "@tabler/icons-react";
 
 type BatchCourse = {
@@ -97,6 +98,7 @@ export default function BatchDetailPage() {
   const [showAddMentor, setShowAddMentor] = useState(false);
   const [mentorCourseId, setMentorCourseId] = useState("");
   const [mentorUserId, setMentorUserId] = useState("");
+  const [editingMentorId, setEditingMentorId] = useState<string | null>(null);
   const [instructorOptions, setInstructorOptions] = useState<any[]>([]);
 
   const fetchBatch = useCallback(async () => {
@@ -689,7 +691,12 @@ export default function BatchDetailPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-2">
-                <button onClick={() => setShowAddMentor(false)} className="btn-secondary text-xs">Cancel</button>
+                <button onClick={() => {
+                  setShowAddMentor(false);
+                  setMentorCourseId("");
+                  setMentorUserId("");
+                  setEditingMentorId(null);
+                }} className="btn-secondary text-xs">Cancel</button>
                 <button
                   onClick={async () => {
                     if (!mentorCourseId || !mentorUserId) {
@@ -701,10 +708,11 @@ export default function BatchDetailPage() {
                         courseId: mentorCourseId,
                         mentorId: mentorUserId,
                       });
-                      toast.success("Mentor assigned");
+                      toast.success(editingMentorId ? "Mentor updated" : "Mentor assigned");
                       setShowAddMentor(false);
                       setMentorCourseId("");
                       setMentorUserId("");
+                      setEditingMentorId(null);
                       fetchMentors();
                     } catch (err) {
                       toast.error(getErrorMessage(err));
@@ -712,7 +720,7 @@ export default function BatchDetailPage() {
                   }}
                   className="btn-primary text-xs"
                 >
-                  Assign
+                  {editingMentorId ? "Update" : "Assign"}
                 </button>
               </div>
             </div>
@@ -720,47 +728,77 @@ export default function BatchDetailPage() {
 
           {mentorLoading ? (
             <p className="text-sm text-muted animate-pulse">Loading...</p>
-          ) : mentors.length === 0 ? (
-            <div className="glass-card p-8 text-center">
-              <p className="text-muted-foreground text-sm">No mentors assigned yet.</p>
-            </div>
           ) : (
-            <div className="glass-card overflow-hidden rounded-none">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Course</th>
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Mentor</th>
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Email</th>
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/50">
-                  {mentors.map((m: any) => (
-                    <tr key={m.id} className="hover:bg-card-hover/50 transition-colors">
-                      <td className="px-5 py-3 text-sm font-medium">{m.course?.title}</td>
-                      <td className="px-5 py-3 text-sm">{m.mentor?.name}</td>
-                      <td className="px-5 py-3 text-xs text-muted">{m.mentor?.email}</td>
-                      <td className="px-5 py-3">
-                        <button
-                          onClick={async () => {
-                            try {
-                              await api.delete(`/api/admin/batches/${id}/mentors/${m.courseId}`);
-                              toast.success("Mentor removed");
-                              fetchMentors();
-                            } catch (err) {
-                              toast.error(getErrorMessage(err));
-                            }
-                          }}
-                          className="text-danger hover:text-danger text-xs"
-                        >
-                          <IconTrash size={14} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-4">
+              {batch?.instructor && (
+                <div className="glass-card p-4">
+                  <h4 className="text-xs font-semibold uppercase text-muted mb-2">Primary Instructor</h4>
+                  <div className="flex items-center gap-3 text-sm">
+                    <span className="font-medium">{batch.instructor.name}</span>
+                    <span className="text-muted">{batch.instructor.email}</span>
+                    <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">Primary</span>
+                  </div>
+                </div>
+              )}
+
+              {mentors.length === 0 ? (
+                <div className="glass-card p-8 text-center">
+                  <p className="text-muted-foreground text-sm">No per-course mentors assigned yet.</p>
+                </div>
+              ) : (
+                <div className="glass-card overflow-hidden rounded-none">
+                  <h4 className="px-5 py-3 text-xs font-semibold uppercase text-muted border-b border-border">Course Mentors</h4>
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border text-left">
+                        <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Course</th>
+                        <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Mentor</th>
+                        <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Email</th>
+                        <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                      {mentors.map((m: any) => (
+                        <tr key={m.id} className="hover:bg-card-hover/50 transition-colors">
+                          <td className="px-5 py-3 text-sm font-medium">{m.course?.title}</td>
+                          <td className="px-5 py-3 text-sm">{m.mentor?.name}</td>
+                          <td className="px-5 py-3 text-xs text-muted">{m.mentor?.email}</td>
+                          <td className="px-5 py-3">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => {
+                                  setMentorCourseId(m.course?.id ?? m.courseId);
+                                  setMentorUserId(m.mentor?.id ?? "");
+                                  setEditingMentorId(m.id);
+                                  setShowAddMentor(true);
+                                }}
+                                className="text-muted-foreground hover:text-primary transition-colors"
+                                title="Edit mentor"
+                              >
+                                <IconEdit size={14} />
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await api.delete(`/api/admin/batches/${id}/mentors/${m.courseId}`);
+                                    toast.success("Mentor removed");
+                                    fetchMentors();
+                                  } catch (err) {
+                                    toast.error(getErrorMessage(err));
+                                  }
+                                }}
+                                className="text-danger hover:text-danger text-xs"
+                              >
+                                <IconTrash size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
         </div>

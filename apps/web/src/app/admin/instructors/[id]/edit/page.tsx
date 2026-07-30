@@ -32,9 +32,7 @@ type FormState = {
   upiId: string;
 };
 
-interface InstructorResponse {
-  id: string;
-  user: { name: string; email: string };
+interface InstructorProfileData {
   designation: string | null;
   qualification: string | null;
   experienceYears: number | null;
@@ -55,6 +53,11 @@ interface InstructorResponse {
   bankIfscCode: string | null;
   bankAccountHolderName: string | null;
   upiId: string | null;
+}
+
+interface InstructorResponse {
+  id: string;
+  instructorProfile: InstructorProfileData | null;
 }
 
 export default function EditInstructorPage() {
@@ -96,29 +99,30 @@ export default function EditInstructorPage() {
         const data = await api.get<InstructorResponse>(
           `/api/admin/instructors/${params.id}`,
         );
+        const p = data.instructorProfile ?? ({} as InstructorProfileData);
         setForm({
-          designation: data.designation ?? "",
-          qualification: data.qualification ?? "",
-          experienceYears: data.experienceYears?.toString() ?? "",
-          skills: (data.skills ?? []).join(", "),
-          currentlyEmployed: data.currentlyEmployed,
-          companyName: data.companyName ?? "",
-          availableTime: data.availableTime ?? "",
-          phone: data.phone ?? "",
-          bio: data.bio ?? "",
-          address: data.address ?? "",
-          city: data.city ?? "",
-          state: data.state ?? "",
-          country: data.country ?? "",
-          languages: (data.languages ?? []).join(", "),
-          linkedin: data.socialLinks?.linkedin ?? "",
-          github: data.socialLinks?.github ?? "",
-          portfolio: data.socialLinks?.portfolio ?? "",
-          bankName: data.bankName ?? "",
-          bankAccountNumber: data.bankAccountNumber ?? "",
-          bankIfscCode: data.bankIfscCode ?? "",
-          bankAccountHolderName: data.bankAccountHolderName ?? "",
-          upiId: data.upiId ?? "",
+          designation: p.designation ?? "",
+          qualification: p.qualification ?? "",
+          experienceYears: p.experienceYears?.toString() ?? "",
+          skills: (p.skills ?? []).join(", "),
+          currentlyEmployed: p.currentlyEmployed ?? false,
+          companyName: p.companyName ?? "",
+          availableTime: p.availableTime ?? "",
+          phone: p.phone ?? "",
+          bio: p.bio ?? "",
+          address: p.address ?? "",
+          city: p.city ?? "",
+          state: p.state ?? "",
+          country: p.country ?? "",
+          languages: (p.languages ?? []).join(", "),
+          linkedin: p.socialLinks?.linkedin ?? "",
+          github: p.socialLinks?.github ?? "",
+          portfolio: p.socialLinks?.portfolio ?? "",
+          bankName: p.bankName ?? "",
+          bankAccountNumber: p.bankAccountNumber ?? "",
+          bankIfscCode: p.bankIfscCode ?? "",
+          bankAccountHolderName: p.bankAccountHolderName ?? "",
+          upiId: p.upiId ?? "",
         });
       } catch (err) {
         toast.error(getErrorMessage(err));

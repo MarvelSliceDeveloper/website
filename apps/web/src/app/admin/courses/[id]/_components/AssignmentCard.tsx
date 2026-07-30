@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
-import { IconX, IconExternalLink, IconGripVertical } from "@tabler/icons-react";
+import { IconX, IconExternalLink, IconGripVertical, IconCopy, IconCheck } from "@tabler/icons-react";
 import RichEditor from "@/components/editor/RichEditor";
 
 interface Assignment {
@@ -68,6 +68,13 @@ export default function AssignmentCard({
   );
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const copyId = async () => {
+    await navigator.clipboard.writeText(assignment.id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
 
   const handleUpdate = async () => {
     if (!title.trim()) {
@@ -101,7 +108,7 @@ export default function AssignmentCard({
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await api.delete(`/admin/courses/modules/assignments/${assignment.id}`);
+      await api.delete(`/api/admin/courses/modules/assignments/${assignment.id}`);
       toast.success("Assignment deleted successfully");
       onUpdate();
     } catch {
@@ -313,6 +320,20 @@ export default function AssignmentCard({
         <span className="text-sm font-medium text-blue-700">
           {assignment.title}
         </span>
+        <button
+          onClick={copyId}
+          className="group relative inline-flex items-center gap-1 text-[10px] font-mono text-muted-foreground/60 hover:text-foreground transition-colors"
+          title="Copy assignment ID"
+        >
+          {copied ? (
+            <IconCheck size={10} className="text-emerald-500" />
+          ) : (
+            <IconCopy size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+          )}
+          <span className="opacity-60 group-hover:opacity-100 transition-opacity">
+            {assignment.id.slice(0, 8)}...
+          </span>
+        </button>
         <span className="text-xs text-blue-600">
           {assignment.maxPoints} pts
         </span>

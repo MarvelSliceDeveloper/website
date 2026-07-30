@@ -188,6 +188,9 @@ export default function AssignmentOverdueView({
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-border bg-card-hover">
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground w-10">
+                    #
+                  </th>
                   <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                     Assignment Name
                   </th>
@@ -212,7 +215,7 @@ export default function AssignmentOverdueView({
                 </tr>
               </thead>
               <tbody>
-                {filteredItems.map((assignment) => {
+                {filteredItems.map((assignment, idx) => {
                   const isPending = assignment.status === "PENDING";
                   const daysOverdue = isPending
                     ? Math.floor(
@@ -225,6 +228,9 @@ export default function AssignmentOverdueView({
 
                   return (
                     <tr key={assignment.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 text-xs text-muted-foreground text-center">
+                        {idx + 1}
+                      </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-blue-500/15">

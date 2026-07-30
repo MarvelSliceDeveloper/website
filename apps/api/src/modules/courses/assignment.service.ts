@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "../../utils/prisma";
+import { AppError } from "../../utils/errors";
 import { appendToContentOrder, removeFromContentOrder } from "./module.service";
 
 export const CreateAssignmentSchema = z.object({
@@ -68,7 +69,7 @@ export const assignmentService = {
     const existing = await prisma.assignment.findUnique({
       where: { id: assignmentId },
     });
-    if (!existing) throw new Error("Assignment not found");
+    if (!existing) throw new AppError(404, "Assignment not found");
 
     return prisma.assignment.update({
       where: { id: assignmentId },
@@ -103,7 +104,7 @@ export const assignmentService = {
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId },
     });
-    if (!assignment) throw new Error("Assignment not found");
+    if (!assignment) throw new AppError(404, "Assignment not found");
 
     await prisma.assignment.update({
       where: { id: assignmentId },

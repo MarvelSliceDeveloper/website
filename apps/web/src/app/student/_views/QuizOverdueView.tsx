@@ -692,6 +692,9 @@ export default function QuizOverdueView({
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-border/70 bg-muted/30">
+                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground w-10">
+                    #
+                  </th>
                   <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                     Quiz Name
                   </th>
@@ -710,7 +713,7 @@ export default function QuizOverdueView({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50">
-                {filteredItems.map((quiz) => {
+                {filteredItems.map((quiz, idx) => {
                   const isPending = quiz.status === "PENDING";
                   const dueDateTime = quiz.dueDate
                     ? new Date(quiz.dueDate).getTime()
@@ -729,6 +732,9 @@ export default function QuizOverdueView({
                       key={quiz.id}
                       className="hover:bg-muted/20 transition-colors"
                     >
+                      <td className="px-5 py-4 text-xs text-muted-foreground text-center">
+                        {idx + 1}
+                      </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <span

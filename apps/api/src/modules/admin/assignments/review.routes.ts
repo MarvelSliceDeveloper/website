@@ -72,7 +72,22 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       prisma.assignmentSubmission.count({ where: where as any }),
     ]);
 
-    return res.json({ items, total, page, limit });
+    const mapped = items.map((item) => ({
+      id: item.id,
+      student: item.student,
+      assignment: { id: item.assignment.id, title: item.assignment.title },
+      course: item.assignment.course,
+      batch: item.assignment.batch ? { id: item.assignment.batch.id, name: item.assignment.batch.name } : null,
+      instructor: item.assignment.batch?.instructor ?? null,
+      fileUrl: item.fileUrl,
+      grade: item.grade,
+      feedback: item.feedback,
+      status: item.status,
+      submittedAt: item.submittedAt,
+      gradedAt: item.gradedAt,
+    }));
+
+    return res.json({ items: mapped, total, page, limit });
   } catch (err: unknown) {
     const { statusCode, body } = handleControllerError(err, (req as any).log);
     return res.status(statusCode).json(body);

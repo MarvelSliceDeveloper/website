@@ -70,6 +70,52 @@ async function main() {
   });
   console.log("✅ Instructor profile created");
 
+  // ─── Second Instructor (for multi-instructor batch demo) ────────────────────
+  const instructor2 = await upsertUser(
+    "instructor2@lms.local",
+    "Jane Instructor",
+    "instructor123",
+    "INSTRUCTOR",
+    { instructorOnboardingComplete: true },
+  );
+  console.log("✅ Second Instructor:", instructor2.email);
+
+  await prisma.instructorProfile.upsert({
+    where: { userId: instructor2.id },
+    update: {},
+    create: {
+      userId: instructor2.id,
+      bio: "Database expert and educator with 6+ years teaching SQL and data engineering.",
+      designation: "Database Specialist",
+      qualification: "B.Tech in Information Technology",
+      experienceYears: 6,
+      skills: JSON.stringify(["SQL", "Database Design", "PostgreSQL", "Data Modeling"]),
+      currentlyEmployed: true,
+      companyName: "DataWorks Inc.",
+      availableTime: "15 hrs/week",
+      phone: "+91-9876543211",
+      city: "Mumbai",
+      state: "Maharashtra",
+      country: "India",
+      languages: JSON.stringify(["English", "Hindi", "Marathi"]),
+      socialLinks: JSON.stringify({
+        linkedin: "https://linkedin.com/in/jane-instructor",
+      }),
+      bankName: "HDFC Bank",
+      bankAccountNumber: "XXXX-XXXX-5678",
+      bankIfscCode: "HDFC0005678",
+      bankAccountHolderName: "Jane Instructor",
+      upiId: "jane@upi",
+      status: "APPROVED",
+      verifiedById: superAdmin.id,
+      verifiedAt: new Date(),
+      rating: 4.6,
+      totalStudents: 89,
+      completedSessions: 32,
+    },
+  });
+  console.log("✅ Second Instructor profile created");
+
   const student = await upsertUser(
     "student@lms.local",
     "Demo Student",
@@ -592,6 +638,34 @@ async function main() {
     },
   });
   console.log("✅ Batch created");
+
+  // ─── Per-Course Instructors (BatchCourseMentor) ─────────────────────────────
+  // Python → instructor (primary), SQL → instructor2, ML → no specific mentor
+  const pythonCourseMentor = await prisma.batchCourseMentor.upsert({
+    where: {
+      batchId_courseId: { batchId: pkgBatch.id, courseId: pythonCourse.id },
+    },
+    update: {},
+    create: {
+      batchId: pkgBatch.id,
+      courseId: pythonCourse.id,
+      mentorId: instructor.id,
+    },
+  });
+  console.log("✅ Python course mentor set:", pythonCourseMentor.id);
+
+  const sqlCourseMentor = await prisma.batchCourseMentor.upsert({
+    where: {
+      batchId_courseId: { batchId: pkgBatch.id, courseId: sqlCourse.id },
+    },
+    update: {},
+    create: {
+      batchId: pkgBatch.id,
+      courseId: sqlCourse.id,
+      mentorId: instructor2.id,
+    },
+  });
+  console.log("✅ SQL course mentor set:", sqlCourseMentor.id);
 
   // ─── Python: Modules, Lessons, Quizzes, Assignments, Study Materials ────────
   const pythonModule1 = await upsertModule(pythonCourse.id, {
@@ -1189,7 +1263,7 @@ async function main() {
   ]);
   console.log("✅ ML course (placeholder) created");
 
-  // ─── BatchCourseVisibility: first course visible ─────────────────────────────
+  // ─── BatchCourseVisibility: Python visible, others hidden ───────────────────
   await prisma.batchCourseVisibility.upsert({
     where: {
       batchId_courseId: { batchId: pkgBatch.id, courseId: pythonCourse.id },
@@ -1201,7 +1275,29 @@ async function main() {
       isVisible: true,
     },
   });
-  console.log("✅ Batch course visibility set (Python visible)");
+  await prisma.batchCourseVisibility.upsert({
+    where: {
+      batchId_courseId: { batchId: pkgBatch.id, courseId: sqlCourse.id },
+    },
+    update: {},
+    create: {
+      batchId: pkgBatch.id,
+      courseId: sqlCourse.id,
+      isVisible: false,
+    },
+  });
+  await prisma.batchCourseVisibility.upsert({
+    where: {
+      batchId_courseId: { batchId: pkgBatch.id, courseId: mlCourse.id },
+    },
+    update: {},
+    create: {
+      batchId: pkgBatch.id,
+      courseId: mlCourse.id,
+      isVisible: false,
+    },
+  });
+  console.log("✅ Batch course visibility set (Python visible, others hidden)");
 
   // ─── Enrollment ──────────────────────────────────────────────────────────────
   const existingEnrollment = await prisma.packageEnrollment.findFirst({

@@ -5,16 +5,13 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   IconLayoutDashboard,
-  IconSend,
+  IconMail,
   IconUsers,
   IconVideo,
-  IconMail,
   IconMessageCircle,
   IconChevronDown,
   IconHelp,
   IconSettings,
-  IconMenu2,
-  IconX,
   IconBook,
   IconFileCheck,
   IconUser,
@@ -23,27 +20,10 @@ import {
 import type { NavItem, NavItemChild } from "@/components/shared/SidebarTypes";
 
 const overviewItems: NavItem[] = [
-  {
-    label: "Dashboard",
-    href: "/instructor/dashboard",
-    icon: IconLayoutDashboard,
-  },
-  { label: "Inbox", href: "/instructor/inbox", icon: IconMail },
-  {
-    label: "Send Notification",
-    href: "/instructor/notifications/send",
-    icon: IconSend,
-  },
-  {
-    label: "My Sessions",
-    href: "/instructor/sessions",
-    icon: IconVideo,
-    children: [
-      { label: "View Sessions", href: "/instructor/sessions" },
-      { label: "Upcoming", href: "/instructor/sessions?status=UPCOMING" },
-      { label: "Past", href: "/instructor/sessions?status=PAST" },
-    ],
-  },
+  { label: "Dashboard", href: "/instructor/dashboard", icon: IconLayoutDashboard },
+];
+
+const teachingItems: NavItem[] = [
   {
     label: "My Batches",
     href: "/instructor/batches",
@@ -61,10 +41,20 @@ const overviewItems: NavItem[] = [
     children: [{ label: "View Courses", href: "/instructor/courses" }],
   },
   {
-    label: "Assignments",
-    href: "/instructor/assignments",
-    icon: IconFileCheck,
+    label: "My Sessions",
+    href: "/instructor/sessions",
+    icon: IconVideo,
+    children: [
+      { label: "View Sessions", href: "/instructor/sessions" },
+      { label: "Upcoming", href: "/instructor/sessions?status=UPCOMING" },
+      { label: "Past", href: "/instructor/sessions?status=PAST" },
+    ],
   },
+  { label: "Assignments", href: "/instructor/assignments", icon: IconFileCheck },
+];
+
+const communicationItems: NavItem[] = [
+  { label: "Inbox", href: "/instructor/inbox", icon: IconMail },
   {
     label: "Mentorship",
     href: "/instructor/mentorship",
@@ -76,9 +66,12 @@ const overviewItems: NavItem[] = [
       { label: "Completed", href: "/instructor/mentorship?status=COMPLETED" },
     ],
   },
-  { label: "Support", href: "/instructor/support", icon: IconHelp },
+];
+
+const accountItems: NavItem[] = [
   { label: "My Profile", href: "/instructor/settings?tab=profile", icon: IconUser },
   { label: "Settings", href: "/instructor/settings", icon: IconSettings },
+  { label: "Support", href: "/instructor/support", icon: IconHelp },
 ];
 
 // Readable, high-contrast child menu link
@@ -310,12 +303,10 @@ function NavGroup({
 // Instructor sidebar with nav groups and sign-out
 export default function InstructorSidebar({
   collapsed = false,
-  onToggleCollapse,
   userName,
   userEmail,
 }: {
   collapsed?: boolean;
-  onToggleCollapse?: () => void;
   userName?: string;
   userEmail?: string;
 }) {
@@ -326,38 +317,16 @@ export default function InstructorSidebar({
 
   return (
     <aside
-      className={`fixed left-0 top-0 z-40 hidden h-full flex-col border-r border-border bg-card transition-[width] duration-200 lg:flex ${
+      className={`fixed left-0 top-14 z-40 hidden h-[calc(100vh-56px)] flex-col border-r border-t border-border bg-card transition-[width] duration-200 lg:flex ${
         collapsed ? "w-16" : "w-64"
       }`}
     >
-      {/* Sidebar Header */}
-      <div
-        className={`flex h-14 items-center border-b border-border bg-card ${
-          collapsed ? "justify-center px-2" : "justify-end px-3"
-        }`}
-      >
-        {!collapsed && (
-          <span className="flex-1 text-[10px] font-semibold uppercase tracking-wider text-muted">
-            Navigation
-          </span>
-        )}
-        <button
-          onClick={onToggleCollapse}
-          className="flex h-7 w-7 shrink-0 items-center justify-center text-muted hover:text-foreground hover:bg-muted/15 transition-colors rounded-lg"
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <IconMenu2 size={16} /> : <IconX size={14} />}
-        </button>
-      </div>
-
       {/* Navigation Links */}
       <nav className="flex-1 overflow-y-auto py-3 space-y-4">
-        <NavGroup
-          label="Overview"
-          items={overviewItems}
-          pathname={pathname}
-          collapsed={collapsed}
-        />
+        <NavGroup label="Overview" items={overviewItems} pathname={pathname} collapsed={collapsed} />
+        <NavGroup label="Teaching" items={teachingItems} pathname={pathname} collapsed={collapsed} />
+        <NavGroup label="Communication" items={communicationItems} pathname={pathname} collapsed={collapsed} />
+        <NavGroup label="Account" items={accountItems} pathname={pathname} collapsed={collapsed} />
       </nav>
 
     </aside>

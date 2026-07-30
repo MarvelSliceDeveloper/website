@@ -1,0 +1,370 @@
+export interface CountryData {
+  name: string;
+  code: string;
+  states: string[];
+}
+
+export interface TimezoneGroup {
+  region: string;
+  zones: { label: string; value: string }[];
+}
+
+export const TIMEZONE_GROUPS: TimezoneGroup[] = [
+  {
+    region: "North America",
+    zones: [
+      { label: "Newfoundland (UTC-03:30)", value: "America/St_Johns" },
+      { label: "Atlantic (UTC-04:00)", value: "America/Halifax" },
+      { label: "Eastern (UTC-05:00)", value: "America/New_York" },
+      { label: "Central (UTC-06:00)", value: "America/Chicago" },
+      { label: "Mountain (UTC-07:00)", value: "America/Denver" },
+      { label: "Arizona (UTC-07:00)", value: "America/Phoenix" },
+      { label: "Pacific (UTC-08:00)", value: "America/Los_Angeles" },
+      { label: "Alaska (UTC-09:00)", value: "America/Anchorage" },
+      { label: "Hawaii (UTC-10:00)", value: "Pacific/Honolulu" },
+    ],
+  },
+  {
+    region: "South America",
+    zones: [
+      { label: "Buenos Aires (UTC-03:00)", value: "America/Argentina/Buenos_Aires" },
+      { label: "Santiago (UTC-04:00/UTC-03:00)", value: "America/Santiago" },
+      { label: "Bogota / Lima (UTC-05:00)", value: "America/Bogota" },
+      { label: "Caracas (UTC-04:00)", value: "America/Caracas" },
+      { label: "La Paz (UTC-04:00)", value: "America/La_Paz" },
+      { label: "Manaus (UTC-04:00)", value: "America/Manaus" },
+      { label: "Sao Paulo (UTC-03:00)", value: "America/Sao_Paulo" },
+    ],
+  },
+  {
+    region: "Europe",
+    zones: [
+      { label: "London / Dublin (UTC+00:00)", value: "Europe/London" },
+      { label: "Lisbon (UTC+00:00)", value: "Europe/Lisbon" },
+      { label: "Paris / Berlin / Rome (UTC+01:00)", value: "Europe/Paris" },
+      { label: "Madrid (UTC+01:00)", value: "Europe/Madrid" },
+      { label: "Amsterdam (UTC+01:00)", value: "Europe/Amsterdam" },
+      { label: "Stockholm (UTC+01:00)", value: "Europe/Stockholm" },
+      { label: "Prague / Vienna (UTC+01:00)", value: "Europe/Prague" },
+      { label: "Athens / Helsinki (UTC+02:00)", value: "Europe/Athens" },
+      { label: "Istanbul (UTC+03:00)", value: "Europe/Istanbul" },
+      { label: "Moscow (UTC+03:00)", value: "Europe/Moscow" },
+    ],
+  },
+  {
+    region: "Middle East & Africa",
+    zones: [
+      { label: "Cairo (UTC+02:00)", value: "Africa/Cairo" },
+      { label: "Johannesburg (UTC+02:00)", value: "Africa/Johannesburg" },
+      { label: "Lagos (UTC+01:00)", value: "Africa/Lagos" },
+      { label: "Nairobi (UTC+03:00)", value: "Africa/Nairobi" },
+      { label: "Casablanca (UTC+00:00)", value: "Africa/Casablanca" },
+      { label: "Dubai (UTC+04:00)", value: "Asia/Dubai" },
+      { label: "Riyadh (UTC+03:00)", value: "Asia/Riyadh" },
+      { label: "Tehran (UTC+03:30)", value: "Asia/Tehran" },
+      { label: "Karachi (UTC+05:00)", value: "Asia/Karachi" },
+    ],
+  },
+  {
+    region: "Asia",
+    zones: [
+      { label: "India (UTC+05:30)", value: "Asia/Kolkata" },
+      { label: "Colombo (UTC+05:30)", value: "Asia/Colombo" },
+      { label: "Dhaka (UTC+06:00)", value: "Asia/Dhaka" },
+      { label: "Kathmandu (UTC+05:45)", value: "Asia/Kathmandu" },
+      { label: "Bangkok / Jakarta (UTC+07:00)", value: "Asia/Bangkok" },
+      { label: "Singapore / KL (UTC+08:00)", value: "Asia/Singapore" },
+      { label: "Hong Kong (UTC+08:00)", value: "Asia/Hong_Kong" },
+      { label: "Shanghai / Beijing (UTC+08:00)", value: "Asia/Shanghai" },
+      { label: "Taipei (UTC+08:00)", value: "Asia/Taipei" },
+      { label: "Tokyo / Seoul (UTC+09:00)", value: "Asia/Tokyo" },
+      { label: "Manila (UTC+08:00)", value: "Asia/Manila" },
+      { label: "Kuala Lumpur (UTC+08:00)", value: "Asia/Kuala_Lumpur" },
+      { label: "Hanoi (UTC+07:00)", value: "Asia/Ho_Chi_Minh" },
+    ],
+  },
+  {
+    region: "Australia & Pacific",
+    zones: [
+      { label: "Perth (UTC+08:00)", value: "Australia/Perth" },
+      { label: "Adelaide (UTC+09:30)", value: "Australia/Adelaide" },
+      { label: "Sydney / Melbourne (UTC+10:00)", value: "Australia/Sydney" },
+      { label: "Brisbane (UTC+10:00)", value: "Australia/Brisbane" },
+      { label: "Auckland (UTC+12:00)", value: "Pacific/Auckland" },
+      { label: "Fiji (UTC+12:00)", value: "Pacific/Fiji" },
+      { label: "Port Moresby (UTC+10:00)", value: "Pacific/Port_Moresby" },
+    ],
+  },
+];
+
+export const ALL_TIMEZONES = TIMEZONE_GROUPS.flatMap((g) => g.zones);
+
+export function getTimezoneLabel(value: string): string {
+  return ALL_TIMEZONES.find((z) => z.value === value)?.label || value;
+}
+
+export function getCountryLabel(value: string): string {
+  return COUNTRIES.find((c) => c.name === value)?.name || value;
+}
+
+export const COUNTRIES: CountryData[] = [
+  {
+    name: "India",
+    code: "IN",
+    states: [
+      "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+      "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand",
+      "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
+      "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
+      "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura",
+      "Uttar Pradesh", "Uttarakhand", "West Bengal",
+      "Andaman & Nicobar", "Chandigarh", "Dadra & Nagar Haveli",
+      "Daman & Diu", "Delhi", "Jammu & Kashmir", "Ladakh",
+      "Lakshadweep", "Puducherry",
+    ],
+  },
+  {
+    name: "United States",
+    code: "US",
+    states: [
+      "Alabama", "Alaska", "Arizona", "Arkansas", "California",
+      "Colorado", "Connecticut", "Delaware", "Florida", "Georgia",
+      "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
+      "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland",
+      "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri",
+      "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey",
+      "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
+      "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina",
+      "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
+      "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming",
+    ],
+  },
+  {
+    name: "Canada",
+    code: "CA",
+    states: [
+      "Alberta", "British Columbia", "Manitoba", "New Brunswick",
+      "Newfoundland and Labrador", "Nova Scotia", "Ontario",
+      "Prince Edward Island", "Quebec", "Saskatchewan",
+      "Northwest Territories", "Nunavut", "Yukon",
+    ],
+  },
+  {
+    name: "United Kingdom",
+    code: "GB",
+    states: [
+      "England", "Scotland", "Wales", "Northern Ireland",
+    ],
+  },
+  {
+    name: "Australia",
+    code: "AU",
+    states: [
+      "Australian Capital Territory", "New South Wales", "Northern Territory",
+      "Queensland", "South Australia", "Tasmania", "Victoria", "Western Australia",
+    ],
+  },
+  {
+    name: "Germany",
+    code: "DE",
+    states: [
+      "Baden-Württemberg", "Bavaria", "Berlin", "Brandenburg", "Bremen",
+      "Hamburg", "Hesse", "Lower Saxony", "Mecklenburg-Vorpommern",
+      "North Rhine-Westphalia", "Rhineland-Palatinate", "Saarland",
+      "Saxony", "Saxony-Anhalt", "Schleswig-Holstein", "Thuringia",
+    ],
+  },
+  {
+    name: "France",
+    code: "FR",
+    states: [
+      "Auvergne-Rhône-Alpes", "Bourgogne-Franche-Comté", "Brittany",
+      "Centre-Val de Loire", "Corsica", "Grand Est", "Hauts-de-France",
+      "Île-de-France", "Normandy", "Nouvelle-Aquitaine", "Occitanie",
+      "Pays de la Loire", "Provence-Alpes-Côte d'Azur",
+    ],
+  },
+  {
+    name: "United Arab Emirates",
+    code: "AE",
+    states: [
+      "Abu Dhabi", "Ajman", "Dubai", "Fujairah", "Ras al-Khaimah",
+      "Sharjah", "Umm al-Quwain",
+    ],
+  },
+  {
+    name: "Saudi Arabia",
+    code: "SA",
+    states: [
+      "Al Bahah", "Al Jawf", "Al Madinah", "Al Qassim", "Al Riyadh",
+      "Aseer", "Eastern Province", "Ha'il", "Jazan", "Najran",
+      "Northern Borders", "Tabuk",
+    ],
+  },
+  {
+    name: "Singapore",
+    code: "SG",
+    states: [],
+  },
+  {
+    name: "Malaysia",
+    code: "MY",
+    states: [
+      "Johor", "Kedah", "Kelantan", "Kuala Lumpur", "Labuan",
+      "Melaka", "Negeri Sembilan", "Pahang", "Penang", "Perak",
+      "Perlis", "Putrajaya", "Sabah", "Sarawak", "Selangor", "Terengganu",
+    ],
+  },
+  {
+    name: "Indonesia",
+    code: "ID",
+    states: [
+      "Aceh", "Bali", "Banten", "Bengkulu", "Central Java",
+      "Central Kalimantan", "Central Sulawesi", "East Java", "East Kalimantan",
+      "East Nusa Tenggara", "Gorontalo", "Jakarta", "Jambi", "Lampung",
+      "Maluku", "North Kalimantan", "North Maluku", "North Sulawesi",
+      "North Sumatra", "Papua", "Riau", "Riau Islands", "South Kalimantan",
+      "South Sulawesi", "South Sumatra", "Southeast Sulawesi",
+      "West Java", "West Kalimantan", "West Nusa Tenggara",
+      "West Papua", "West Sulawesi", "West Sumatra", "Yogyakarta",
+    ],
+  },
+  {
+    name: "Philippines",
+    code: "PH",
+    states: [
+      "Central Luzon", "Central Visayas", "Cordillera", "Davao",
+      "Eastern Visayas", "Ilocos", "Metro Manila", "Mimaropa",
+      "Northern Mindanao", "Soccsksargen", "Western Visayas", "Zamboanga",
+    ],
+  },
+  {
+    name: "Pakistan",
+    code: "PK",
+    states: [
+      "Azad Kashmir", "Balochistan", "Gilgit-Baltistan",
+      "Islamabad", "Khyber Pakhtunkhwa", "Punjab", "Sindh",
+    ],
+  },
+  {
+    name: "Bangladesh",
+    code: "BD",
+    states: [
+      "Barisal", "Chittagong", "Dhaka", "Khulna", "Mymensingh",
+      "Rajshahi", "Rangpur", "Sylhet",
+    ],
+  },
+  {
+    name: "Sri Lanka",
+    code: "LK",
+    states: [
+      "Central", "Eastern", "North Central", "Northern",
+      "North Western", "Sabaragamuwa", "Southern", "Uva", "Western",
+    ],
+  },
+  {
+    name: "Nepal",
+    code: "NP",
+    states: [
+      "Bagmati", "Gandaki", "Karnali", "Koshi", "Lumbini",
+      "Madhesh", "Sudurpashchim",
+    ],
+  },
+  {
+    name: "Brazil",
+    code: "BR",
+    states: [
+      "Acre", "Alagoas", "Amapá", "Amazonas", "Bahia", "Ceará",
+      "Distrito Federal", "Espírito Santo", "Goiás", "Maranhão",
+      "Mato Grosso", "Mato Grosso do Sul", "Minas Gerais", "Pará",
+      "Paraíba", "Paraná", "Pernambuco", "Piauí", "Rio de Janeiro",
+      "Rio Grande do Norte", "Rio Grande do Sul", "Rondônia", "Roraima",
+      "Santa Catarina", "São Paulo", "Sergipe", "Tocantins",
+    ],
+  },
+  {
+    name: "Mexico",
+    code: "MX",
+    states: [
+      "Aguascalientes", "Baja California", "Baja California Sur",
+      "Campeche", "Chiapas", "Chihuahua", "Coahuila", "Colima",
+      "Durango", "Guanajuato", "Guerrero", "Hidalgo", "Jalisco",
+      "Michoacán", "Morelos", "México", "Nayarit", "Nuevo León",
+      "Oaxaca", "Puebla", "Querétaro", "Quintana Roo", "San Luis Potosí",
+      "Sinaloa", "Sonora", "Tabasco", "Tamaulipas", "Tlaxcala",
+      "Veracruz", "Yucatán", "Zacatecas",
+    ],
+  },
+  {
+    name: "South Africa",
+    code: "ZA",
+    states: [
+      "Eastern Cape", "Free State", "Gauteng", "KwaZulu-Natal",
+      "Limpopo", "Mpumalanga", "North West", "Northern Cape", "Western Cape",
+    ],
+  },
+  {
+    name: "Nigeria",
+    code: "NG",
+    states: [
+      "Abia", "Abuja", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi",
+      "Bayelsa", "Benue", "Borno", "Cross River", "Delta", "Ebonyi",
+      "Edo", "Ekiti", "Enugu", "Gombe", "Imo", "Jigawa", "Kaduna",
+      "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa",
+      "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers",
+      "Sokoto", "Taraba", "Yobe", "Zamfara",
+    ],
+  },
+  {
+    name: "Kenya",
+    code: "KE",
+    states: [
+      "Baringo", "Bomet", "Bungoma", "Busia", "Elgeyo-Marakwet",
+      "Embu", "Garissa", "Homa Bay", "Isiolo", "Kajiado", "Kakamega",
+      "Kericho", "Kiambu", "Kilifi", "Kirinyaga", "Kisii", "Kisumu",
+      "Kitui", "Kwale", "Laikipia", "Lamu", "Machakos", "Makueni",
+      "Mandera", "Marsabit", "Meru", "Migori", "Mombasa",
+      "Murang'a", "Nairobi", "Nakuru", "Nandi", "Narok", "Nyamira",
+      "Nyandarua", "Nyeri", "Samburu", "Siaya", "Taita-Taveta",
+      "Tana River", "Tharaka-Nithi", "Trans Nzoia", "Turkana",
+      "Uasin Gishu", "Vihiga", "Wajir", "West Pokot",
+    ],
+  },
+  {
+    name: "Egypt",
+    code: "EG",
+    states: [
+      "Alexandria", "Aswan", "Asyut", "Beheira", "Beni Suef",
+      "Cairo", "Dakahlia", "Damietta", "Faiyum", "Gharbia",
+      "Giza", "Ismailia", "Kafr El Sheikh", "Luxor", "Matruh",
+      "Minya", "Monufia", "New Valley", "North Sinai", "Port Said",
+      "Qalyubia", "Qena", "Red Sea", "Sharqia", "Sohag",
+      "South Sinai", "Suez",
+    ],
+  },
+  {
+    name: "Turkey",
+    code: "TR",
+    states: [
+      "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Aksaray",
+      "Amasya", "Ankara", "Antalya", "Ardahan", "Artvin", "Aydın",
+      "Balıkesir", "Bartın", "Batman", "Bayburt", "Bilecik", "Bingöl",
+      "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı",
+      "Çorum", "Denizli", "Diyarbakır", "Düzce", "Edirne", "Elazığ",
+      "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun",
+      "Gümüşhane", "Hakkâri", "Hatay", "Iğdır", "Isparta", "İstanbul",
+      "İzmir", "Kahramanmaraş", "Karabük", "Karaman", "Kars",
+      "Kastamonu", "Kayseri", "Kilis", "Kırıkkale", "Kırklareli",
+      "Kırşehir", "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa",
+      "Mardin", "Mersin", "Muğla", "Muş", "Nevşehir", "Niğde",
+      "Ordu", "Osmaniye", "Rize", "Sakarya", "Samsun", "Şanlıurfa",
+      "Siirt", "Sinop", "Sivas", "Şırnak", "Tekirdağ", "Tokat",
+      "Trabzon", "Tunceli", "Uşak", "Van", "Yalova", "Yozgat", "Zonguldak",
+    ],
+  },
+  {
+    name: "Other",
+    code: "OTHER",
+    states: [],
+  },
+];

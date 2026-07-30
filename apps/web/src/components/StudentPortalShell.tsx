@@ -18,7 +18,7 @@
 
 import Image from "next/image";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   IconArrowLeft,
   IconArrowRight,
@@ -27,6 +27,10 @@ import {
   IconLogout,
   IconSettings,
   IconEye,
+  IconBook,
+  IconInbox,
+  IconUser,
+  IconChevronDown,
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import { timeAgo } from "@/lib/time-ago";
@@ -66,11 +70,15 @@ export default function StudentPortalShell({
   fullWidth = false,
 }: StudentPortalShellProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const notifRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   // Fetch notifications from API
   const fetchNotifications = useCallback(async () => {
@@ -123,6 +131,8 @@ export default function StudentPortalShell({
     function handleClick(e: MouseEvent) {
       if (notifRef.current && !notifRef.current.contains(e.target as Node))
         setNotifOpen(false);
+      if (profileRef.current && !profileRef.current.contains(e.target as Node))
+        setProfileOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -178,6 +188,12 @@ export default function StudentPortalShell({
         { "--shell-header-height": headerHeight + "px" } as React.CSSProperties
       }
     >
+      <style>{`
+        @keyframes dropdown-in {
+          from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
       {!hideHeader && (
         <header
           ref={headerRef}
@@ -241,19 +257,6 @@ export default function StudentPortalShell({
             </div>
 
             <div className="flex items-center gap-2">
-              {!hideProfile && (
-                <>
-                  <span
-                    className="hidden max-w-[200px] truncate px-1 text-[13px] text-slate sm:inline"
-                    title={studentEmail}
-                  >
-                    {studentEmail}
-                  </span>
-
-                  <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
-                </>
-              )}
-
               <div ref={notifRef} className="relative">
                 <button
                   id="sp-notif-btn"
@@ -353,24 +356,81 @@ export default function StudentPortalShell({
               </div>
 
               {!hideProfile && (
-                <>
+                <div ref={profileRef} className="relative">
                   <button
-                    onClick={() => router.push("/student/settings")}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-mist text-slate transition-colors hover:bg-hairline hover:text-ink"
-                    aria-label="Settings"
-                    title={studentName}
+                    onClick={() => setProfileOpen((v) => !v)}
+                    className="flex items-center gap-2 rounded-xl bg-mist px-3 py-1.5 text-slate transition-colors hover:bg-hairline hover:text-ink"
+                    aria-label="Profile menu"
                   >
-                    <IconSettings size={17} stroke={1.8} />
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-violet-600 text-[12px] font-bold text-white">
+                      {studentName.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="hidden text-[13px] font-medium sm:inline">
+                      {studentName}
+                    </span>
+                    <IconChevronDown
+                      size={14}
+                      className={`shrink-0 text-muted transition-transform ${profileOpen ? "rotate-180" : ""}`}
+                    />
                   </button>
 
-                  <button
-                    onClick={handleSignOut}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-mist text-slate transition-colors hover:bg-danger-tint hover:text-danger"
-                    aria-label="Sign out"
-                  >
-                    <IconLogout size={17} stroke={1.8} />
-                  </button>
-                </>
+                  {profileOpen && (
+                    <div
+                      className="absolute right-0 top-11 z-50 w-52 rounded-2xl border border-border bg-card py-1.5 shadow-2xl origin-top-right"
+                      style={{
+                        animation: "dropdown-in 0.15s ease-out both",
+                      }}
+                    >
+                      <div className="border-b border-border px-4 py-2.5">
+                        <p className="text-sm font-semibold text-foreground truncate">
+                          {studentName}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          {studentEmail}
+                        </p>
+                      </div>
+
+                      {[
+                        { label: "Courses", icon: IconBook, href: "/student?view=courses", match: () => pathname === "/student" && searchParams.get("view") === "courses" },
+                        { label: "Inbox", icon: IconInbox, href: "/student/inbox", match: () => pathname.startsWith("/student/inbox") },
+                        { label: "Profile", icon: IconUser, href: "/student/settings", match: () => pathname.startsWith("/student/settings") },
+                      ].map((item) => {
+                        const isActive = item.match();
+                        return (
+                          <button
+                            key={item.label}
+                            onClick={() => { router.push(item.href); setProfileOpen(false); }}
+                            className={`group flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all ${
+                              isActive
+                                ? "bg-primary/10 text-primary font-semibold"
+                                : "text-foreground hover:bg-primary/8 hover:text-primary"
+                            }`}
+                          >
+                            <item.icon
+                              size={16}
+                              className={`shrink-0 transition-colors ${
+                                isActive
+                                  ? "text-primary"
+                                  : "text-muted-foreground group-hover:text-primary"
+                              }`}
+                            />
+                            <span>{item.label}</span>
+                          </button>
+                        );
+                      })}
+
+                      <div className="border-t border-border mt-1 pt-1">
+                        <button
+                          onClick={handleSignOut}
+                          className="group flex w-full items-center gap-3 px-4 py-2.5 text-sm text-danger transition-all hover:bg-danger/10"
+                        >
+                          <IconLogout size={16} className="shrink-0 text-danger/70 group-hover:text-danger transition-colors" />
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>

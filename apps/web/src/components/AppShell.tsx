@@ -7,7 +7,6 @@ interface AppShellProps {
   children: React.ReactNode;
   sidebar: (props: {
     collapsed: boolean;
-    onToggleCollapse: () => void;
   }) => React.ReactNode;
   inboxHref: string;
   userName?: string;
@@ -25,18 +24,17 @@ export default function AppShell({
 
   return (
     <div className="min-h-screen bg-background">
-      {sidebar({
-        collapsed: isSidebarCollapsed,
-        onToggleCollapse: () => setIsSidebarCollapsed((v) => !v),
-      })}
+      <Header
+        inboxHref={inboxHref}
+        userName={userName}
+        userEmail={userEmail}
+        collapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed((v) => !v)}
+      />
+      {sidebar({ collapsed: isSidebarCollapsed })}
       <div
-        className={`flex min-h-screen flex-1 flex-col transition-[margin] duration-200 ${isSidebarCollapsed ? "lg:ml-16" : "lg:ml-64"}`}
+        className={`flex min-h-[calc(100vh-56px)] flex-1 flex-col transition-[margin] duration-200 ${isSidebarCollapsed ? "lg:ml-16" : "lg:ml-64"}`}
       >
-        <Header
-          inboxHref={inboxHref}
-          userName={userName}
-          userEmail={userEmail}
-        />
         <main className="flex-1 overflow-y-auto">
           <div className="mx-auto w-full p-4 md:p-5">{children}</div>
         </main>

@@ -13,5 +13,7 @@ router.get("/assignments/overdue", studentController.listOverdueAssignments);
 router.get("/continue-learning", studentController.getContinueLearning);
 router.get("/packages", packageController.getStudentPackages);
 router.get("/payments", studentController.getPaymentHistory);
+router.get("/profile", studentController.getProfile);
+router.patch("/profile", studentController.updateProfile);
 
 export const studentRouter = router;

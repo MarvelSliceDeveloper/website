@@ -283,9 +283,10 @@ function InstructorMentorshipContent() {
                     <>
                       <button
                         onClick={() => handleComplete(ticket.id)}
+                        disabled={processing}
                         className="btn-primary text-xs"
                       >
-                        Mark Complete
+                        {processing ? "Processing..." : "Mark Complete"}
                       </button>
                       <button
                         onClick={() => openSchedule(ticket)}
@@ -309,9 +310,10 @@ function InstructorMentorshipContent() {
                     ticket.status === "SCHEDULED") && (
                     <button
                       onClick={() => handleCancel(ticket.id)}
+                      disabled={processing}
                       className="btn-danger text-xs"
                     >
-                      Cancel
+                      {processing ? "Processing..." : "Cancel"}
                     </button>
                   )}
                 </div>

@@ -33,8 +33,24 @@ interface Instructor {
   createdAt: string;
 }
 
+type ApiRawItem = {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: string;
+  instructorProfile: {
+    designation: string | null;
+    experienceYears: number | null;
+    companyName: string | null;
+    totalStudents: number;
+    rating: number | null;
+    status: string;
+  } | null;
+  activeBatchCount: number;
+};
+
 type ApiResponse = {
-  items: Instructor[];
+  items: ApiRawItem[];
   total: number;
   page: number;
   limit: number;
@@ -111,7 +127,23 @@ export default function AdminInstructorsPage() {
       if (search.trim()) params.search = search.trim();
 
       const data = await api.get<ApiResponse>("/api/admin/instructors", params);
-      setInstructors(data.items ?? []);
+      const mapped: Instructor[] = (data.items ?? []).map((item) => {
+        const p = item.instructorProfile;
+        return {
+          id: item.id,
+          name: item.name,
+          email: item.email,
+          status: p?.status ?? "PENDING",
+          designation: p?.designation ?? null,
+          experience: p?.experienceYears ?? null,
+          currentCompany: p?.companyName ?? null,
+          activeBatches: item.activeBatchCount ?? 0,
+          totalStudents: p?.totalStudents ?? 0,
+          rating: p?.rating ?? null,
+          createdAt: item.createdAt,
+        };
+      });
+      setInstructors(mapped);
       setTotal(data.total ?? 0);
     } catch (err) {
       toast.error(getErrorMessage(err));

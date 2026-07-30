@@ -212,6 +212,7 @@ function MessagesTab() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [thread, setThread] = useState<MessageRecord[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [sending, setSending] = useState(false);
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -251,7 +252,8 @@ function MessagesTab() {
   };
 
   const sendMessage = async () => {
-    if (!selectedUserId || !newMessage.trim()) return;
+    if (!selectedUserId || !newMessage.trim() || sending) return;
+    setSending(true);
     try {
       await api.post("/api/messages", {
         receiverId: selectedUserId,
@@ -262,6 +264,8 @@ function MessagesTab() {
       openThread(selectedUserId);
     } catch {
       toast.error("Failed to send message");
+    } finally {
+      setSending(false);
     }
   };
 
@@ -339,16 +343,17 @@ function MessagesTab() {
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                  onKeyDown={(e) => e.key === "Enter" && !sending && sendMessage()}
                   placeholder="Type a message..."
+                  disabled={sending}
                   className="field flex-1"
                 />
                 <button
                   onClick={sendMessage}
-                  disabled={!newMessage.trim()}
+                  disabled={!newMessage.trim() || sending}
                   className="btn-primary text-sm"
                 >
-                  Send
+                  {sending ? "Sending..." : "Send"}
                 </button>
               </div>
             </div>

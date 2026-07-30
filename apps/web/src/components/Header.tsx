@@ -7,6 +7,7 @@ import {
   IconBell,
   IconSettings,
   IconLogout,
+  IconMenu2,
   IconX,
   IconEye,
   IconArrowLeft,
@@ -27,12 +28,16 @@ interface HeaderProps {
   inboxHref?: string;
   userName?: string;
   userEmail?: string;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 export default function Header({
   inboxHref = "/admin/inbox",
   userName = "",
   userEmail = "",
+  collapsed = false,
+  onToggleCollapse,
 }: HeaderProps) {
   const router = useRouter();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -115,8 +120,16 @@ export default function Header({
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-card">
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 h-14 md:px-6">
+    <header className="sticky top-0 z-30 border-b-2 border-border bg-muted/40 shadow-sm">
+      <div className="mx-auto flex max-w-full items-center gap-4 px-4 h-14 md:px-6">
+        <button
+          onClick={onToggleCollapse}
+          className="flex h-8 w-8 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/15 transition-colors rounded-lg"
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <IconMenu2 size={18} stroke={1.8} />
+        </button>
+
         <div
           className="flex items-center gap-2 cursor-pointer select-none"
           onClick={() => {
@@ -262,6 +275,7 @@ export default function Header({
           >
             <IconLogout size={17} stroke={1.8} />
           </button>
+
         </div>
       </div>
     </header>

@@ -25,8 +25,15 @@ import {
   IconPalette,
   IconEdit,
   IconCreditCard,
+  IconPhone,
+  IconClockHour4,
+  IconMapPin,
+  IconBuildingSkyscraper,
+  IconFlag,
+  IconCheck,
 } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
+import { getTimezoneLabel } from "@/lib/location-data";
 
 const NOTIFICATION_TYPES = [
   "SESSION_SCHEDULED",
@@ -91,7 +98,7 @@ const TYPE_CONFIG: Record<
   },
 };
 
-type SettingsSection = "notifications" | "appearance" | "payments";
+type SettingsSection = "profile" | "notifications" | "appearance" | "payments";
 
 export default function SettingsPage() {
   usePageTitle("Settings");
@@ -103,7 +110,14 @@ export default function SettingsPage() {
   const [studentEmail, setStudentEmail] = useState("");
   const [studentRole, setStudentRole] = useState("STUDENT");
   const [activeSection, setActiveSection] =
-    useState<SettingsSection>("notifications");
+    useState<SettingsSection>("profile");
+
+  const [studentPhone, setStudentPhone] = useState("");
+  const [studentTimezone, setStudentTimezone] = useState("");
+  const [studentAddress, setStudentAddress] = useState("");
+  const [studentState, setStudentState] = useState("");
+  const [studentCountry, setStudentCountry] = useState("");
+  const [profileLoading, setProfileLoading] = useState(true);
 
   const [payments, setPayments] = useState<
     Array<{
@@ -149,6 +163,31 @@ export default function SettingsPage() {
         }
       })
       .catch(() => {});
+  }, []);
+
+  // Load student profile details
+  useEffect(() => {
+    api
+      .get<{
+        user: {
+          phone?: string;
+          timezone?: string;
+          address?: string;
+          state?: string;
+          country?: string;
+        };
+      }>("/api/student/profile")
+      .then((res) => {
+        if (res?.user) {
+          setStudentPhone(res.user.phone || "");
+          setStudentTimezone(res.user.timezone || "");
+          setStudentAddress(res.user.address || "");
+          setStudentState(res.user.state || "");
+          setStudentCountry(res.user.country || "");
+        }
+      })
+      .catch(() => {})
+      .finally(() => setProfileLoading(false));
   }, []);
 
   // Load payment history
@@ -208,6 +247,12 @@ export default function SettingsPage() {
     description: string;
   }[] = [
     {
+      id: "profile",
+      label: "Profile",
+      icon: <IconUser size={18} />,
+      description: "Your contact details",
+    },
+    {
       id: "notifications",
       label: "Notifications",
       icon: <IconBell size={18} />,
@@ -235,6 +280,113 @@ export default function SettingsPage() {
     },
     { label: "Inbox", icon: <IconInbox size={16} />, href: "/student/inbox" },
   ];
+
+  // ── Profile panel ──────────────────────────────────────────────────
+
+  function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | null | undefined }) {
+    if (!value) return null;
+    return (
+      <div className="flex items-center gap-3 text-sm">
+        <span className="shrink-0 text-muted">{icon}</span>
+        <span className="text-muted-foreground min-w-[100px]">{label}</span>
+        <span className="text-foreground font-medium">{value}</span>
+      </div>
+    );
+  }
+
+  function renderProfile() {
+    if (profileLoading) {
+      return (
+        <div className="animate-pulse space-y-3 p-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-12 rounded-xl bg-card-hover/60" />
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div className="flex items-center gap-3 border-b border-border px-6 py-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+            <IconUser size={20} />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-foreground">Profile</p>
+            <p className="text-sm text-muted-foreground">
+              Your account and contact information.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-6 space-y-5">
+          {/* Account Details */}
+          <div className="glass-card p-5 space-y-3">
+            <p className="text-sm font-medium text-foreground border-b border-border/50 pb-2">
+              Account Details
+            </p>
+            <InfoRow icon={<IconUser size={15} />} label="Name" value={studentName} />
+            <InfoRow icon={<IconMail size={15} />} label="Email" value={studentEmail} />
+            <InfoRow icon={<IconShield size={15} />} label="Role" value={studentRole.toLowerCase()} />
+          </div>
+
+          {/* Contact Info */}
+          <div className="glass-card p-5 space-y-3">
+            <p className="text-sm font-medium text-foreground border-b border-border/50 pb-2">
+              Contact Information
+            </p>
+            <InfoRow icon={<IconPhone size={15} />} label="Phone" value={studentPhone} />
+            <InfoRow icon={<IconClockHour4 size={15} />} label="Time Zone" value={studentTimezone ? getTimezoneLabel(studentTimezone) : null} />
+            <InfoRow icon={<IconMapPin size={15} />} label="Address" value={studentAddress} />
+            <InfoRow icon={<IconBuildingSkyscraper size={15} />} label="State" value={studentState} />
+            <InfoRow icon={<IconFlag size={15} />} label="Country" value={studentCountry} />
+            {!studentPhone && !studentTimezone && !studentAddress && !studentState && !studentCountry && (
+              <p className="text-xs text-muted-foreground italic">No contact details added yet.</p>
+            )}
+          </div>
+
+          {/* Payment History Summary */}
+          <div className="glass-card p-5 space-y-3">
+            <p className="text-sm font-medium text-foreground border-b border-border/50 pb-2">
+              Invoices & Payments
+            </p>
+            {payments.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No payments yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {payments.slice(0, 5).map((p) => (
+                  <div key={p.id} className="flex items-center justify-between rounded-lg border border-border/60 bg-card-hover/40 px-3 py-2.5">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{p.package?.name ?? "Package"}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(p.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-foreground">
+                        {p.currency === "INR" ? "₹" : p.currency} {(p.amount / 100).toLocaleString("en-IN")}
+                      </p>
+                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                        p.status === "PAID" ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"
+                      }`}>
+                        {p.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => setActiveSection("payments")}
+              className="text-xs font-semibold text-primary hover:text-primary-hover transition-colors"
+            >
+              View all payments →
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   // ── Notification preferences panel ─────────────────────────────────
 
@@ -575,6 +727,7 @@ export default function SettingsPage() {
 
           {/* Right: active settings panel */}
           <div className="lg:col-span-8 xl:col-span-9 rounded-xl border border-border/60 bg-card overflow-hidden">
+            {activeSection === "profile" && renderProfile()}
             {activeSection === "notifications" && renderNotifications()}
             {activeSection === "appearance" && renderAppearance()}
             {activeSection === "payments" && renderPayments()}

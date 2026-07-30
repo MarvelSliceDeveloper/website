@@ -16,13 +16,27 @@ export const instructorService = {
           { courseMentors: { some: { mentorId: instructorId } } },
         ],
       },
-      select: { id: true, courseId: true },
+      select: { id: true, courseId: true, packageId: true },
     });
 
     const batchIds = batches.map((b) => b.id);
-    const courseIds = [
-      ...new Set(batches.map((b) => b.courseId).filter(Boolean)),
-    ] as string[];
+    const directCourseIds = batches
+      .map((b) => b.courseId)
+      .filter(Boolean) as string[];
+    const packageIds = batches
+      .map((b) => b.packageId)
+      .filter(Boolean) as string[];
+
+    let packageCourseIds: string[] = [];
+    if (packageIds.length > 0) {
+      const packageCourses = await prisma.packageCourse.findMany({
+        where: { packageId: { in: packageIds } },
+        select: { courseId: true },
+      });
+      packageCourseIds = packageCourses.map((pc) => pc.courseId);
+    }
+
+    const courseIds = [...new Set([...directCourseIds, ...packageCourseIds])];
 
     const enrolledStudents = await prisma.enrollmentRequest.findMany({
       where: { batchId: { in: batchIds }, status: "APPROVED" },
@@ -206,21 +220,45 @@ export const instructorService = {
   },
 
   // Returns unique courses from the instructor's assigned batches.
-  // First finds all batches, extracts unique course IDs, then fetches courses with module/batch counts.
+  // Primary instructors see all courses in their batch.
+  // Course mentors see only the specific courses they're assigned to.
   async getMyCourses(instructorId: string) {
-    const batches = await prisma.batch.findMany({
-      where: {
-        OR: [
-          { instructorId },
-          { courseMentors: { some: { mentorId: instructorId } } },
-        ],
-      },
-      select: { courseId: true },
-    });
+    const [mentorAssignments, primaryBatches] = await Promise.all([
+      prisma.batchCourseMentor.findMany({
+        where: { mentorId: instructorId },
+        select: { batchId: true, courseId: true },
+      }),
+      prisma.batch.findMany({
+        where: { instructorId },
+        select: { id: true, courseId: true, packageId: true },
+      }),
+    ]);
 
-    const courseIds = [
-      ...new Set(batches.map((b) => b.courseId).filter(Boolean)),
-    ] as string[];
+    const courseIdSet = new Set<string>();
+
+    // Courses from per-course mentor assignments
+    for (const ma of mentorAssignments) {
+      courseIdSet.add(ma.courseId);
+    }
+
+    // For primary instructor batches, include all courses
+    const primaryPackageIds = primaryBatches
+      .map((b) => b.packageId)
+      .filter(Boolean) as string[];
+    if (primaryPackageIds.length > 0) {
+      const packageCourses = await prisma.packageCourse.findMany({
+        where: { packageId: { in: primaryPackageIds } },
+        select: { courseId: true },
+      });
+      for (const pc of packageCourses) {
+        courseIdSet.add(pc.courseId);
+      }
+    }
+    for (const batch of primaryBatches) {
+      if (batch.courseId) courseIdSet.add(batch.courseId);
+    }
+
+    const courseIds = [...courseIdSet];
 
     return prisma.course.findMany({
       where: { id: { in: courseIds } },
@@ -228,5 +266,46 @@ export const instructorService = {
         _count: { select: { modules: true, batches: true } },
       },
     });
+  },
+
+  // Returns recordings from the instructor's batches for a specific course.
+  async getMyCourseRecordings(instructorId: string, courseId: string) {
+    const batches = await prisma.batch.findMany({
+      where: {
+        OR: [
+          { instructorId, courseId },
+          { instructorId, package: { courses: { some: { courseId } } } },
+          { courseMentors: { some: { mentorId: instructorId, courseId } } },
+        ],
+      },
+      select: { id: true, name: true },
+    });
+
+    if (batches.length === 0) return [];
+
+    const batchIds = batches.map((b) => b.id);
+    const batchMap = Object.fromEntries(batches.map((b) => [b.id, b.name]));
+
+    const sessions = await prisma.liveSession.findMany({
+      where: {
+        batchId: { in: batchIds },
+        courseId,
+        recording: { isNot: null },
+      },
+      include: {
+        recording: true,
+      },
+      orderBy: { scheduledAt: "desc" },
+    });
+
+    return sessions.map((s) => ({
+      id: s.recording!.id,
+      title: s.title,
+      batchName: batchMap[s.batchId!] || "",
+      duration: s.recording!.duration,
+      sharePointUrl: s.recording!.sharePointUrl,
+      syncedAt: s.recording!.syncedAt,
+      scheduledAt: s.scheduledAt,
+    }));
   },
 };

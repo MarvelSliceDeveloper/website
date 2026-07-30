@@ -92,6 +92,11 @@ model User {
   suspendedBy             String?
   rateLimitPerMin         Int                      @default(60)
   sessionTimeoutMin       Int                      @default(480)
+  phone                   String?
+  timezone                String?
+  address                 String?                  @db.Text
+  state                   String?
+  country                 String?
   deletedAt               DateTime?
   deletedBy               String?
   restoredAt              DateTime?
@@ -228,7 +233,7 @@ model Batch {
   id                           String                    @id @default(cuid())
   courseId                     String?
   packageId                    String? // Optional: batch belongs to a package
-  instructorId                 String // Assigned mentor/instructor
+  instructorId                 String? // Primary instructor (optional — course mentors can be assigned per-course)
   name                         String // e.g. "Python Batch Jan 2025"
   startDate                    DateTime
   endDate                      DateTime
@@ -244,7 +249,7 @@ model Batch {
   restoredBy                   String?
   course                       Course?                   @relation(fields: [courseId], references: [id])
   package                      CoursePackage?            @relation(fields: [packageId], references: [id])
-  instructor                   User                      @relation("BatchInstructor", fields: [instructorId], references: [id])
+  instructor                   User?                     @relation("BatchInstructor", fields: [instructorId], references: [id])
   enrollments                  EnrollmentRequest[]
   sessions                     LiveSession[]
   assignments                  Assignment[]

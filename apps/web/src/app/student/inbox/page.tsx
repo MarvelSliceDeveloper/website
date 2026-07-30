@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import {
   IconTrash,
@@ -39,7 +40,9 @@ type Tab = "notifications" | "messages";
 
 export default function StudentInboxPage() {
   usePageTitle("Inbox");
-  const [tab, setTab] = useState<Tab>("notifications");
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get("tab") === "messages" ? "messages" : "notifications";
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [studentName, setStudentName] = useState("Student");
   const [studentEmail, setStudentEmail] = useState("");
 

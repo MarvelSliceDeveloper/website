@@ -17,12 +17,29 @@ onboardingRouter.patch(
       return;
     }
 
+    const { phone, timezone, address, state, country } = req.body;
+
     const user = await prisma.user.update({
       where: { id: userId },
-      data: { onboardingComplete: true },
-      select: { id: true, onboardingComplete: true },
+      data: {
+        onboardingComplete: true,
+        ...(phone !== undefined && { phone }),
+        ...(timezone !== undefined && { timezone }),
+        ...(address !== undefined && { address }),
+        ...(state !== undefined && { state }),
+        ...(country !== undefined && { country }),
+      },
+      select: {
+        id: true,
+        onboardingComplete: true,
+        phone: true,
+        timezone: true,
+        address: true,
+        state: true,
+        country: true,
+      },
     });
 
-    res.json({ onboardingComplete: user.onboardingComplete });
+    res.json({ onboardingComplete: user.onboardingComplete, profile: user });
   },
 );

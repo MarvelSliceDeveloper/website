@@ -51,4 +51,22 @@ export const instructorController = {
       return res.status(statusCode).json(body);
     }
   },
+
+  // GET /api/instructor/courses/:courseId/recordings
+  // Returns recordings from the instructor's batches for this course.
+  async getMyCourseRecordings(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
+
+      const recordings = await instructorService.getMyCourseRecordings(
+        req.user.userId,
+        req.params.courseId,
+      );
+      return res.json(recordings);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
 };

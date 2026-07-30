@@ -7,7 +7,7 @@ import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { api } from "@/lib/api";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { IconArrowLeft, IconUser } from "@tabler/icons-react";
 import {
   Select,
   SelectContent,
@@ -23,6 +23,11 @@ type InstructorOption = {
   email: string;
   role: string;
 };
+type CourseOption = {
+  id: string;
+  courseId: string;
+  course: { id: string; title: string; slug: string };
+};
 
 type FormState = {
   packageId: string;
@@ -36,6 +41,11 @@ type FormState = {
   lateSubmissionPenaltyPercent: string;
 };
 
+type CourseInstructor = {
+  courseId: string;
+  instructorId: string;
+};
+
 export default function CreateBatchPage() {
   usePageTitle("New Batch");
   const router = useRouter();
@@ -44,6 +54,8 @@ export default function CreateBatchPage() {
 
   const [packages, setPackages] = useState<PackageOption[]>([]);
   const [instructors, setInstructors] = useState<InstructorOption[]>([]);
+  const [packageCourses, setPackageCourses] = useState<CourseOption[]>([]);
+  const [courseInstructors, setCourseInstructors] = useState<CourseInstructor[]>([]);
 
   const [form, setForm] = useState<FormState>({
     packageId: "",
@@ -76,13 +88,55 @@ export default function CreateBatchPage() {
       .catch(() => {});
   }, []);
 
+  // When package changes, fetch its courses
+  useEffect(() => {
+    if (!form.packageId) {
+      setPackageCourses([]);
+      setCourseInstructors([]);
+      return;
+    }
+    api
+      .get<{
+        id: string;
+        name: string;
+        courses: Array<{
+          course: { id: string; title: string; slug: string };
+        }>;
+      }>(`/api/admin/packages/${form.packageId}`)
+      .then((res) => {
+        const courses = (res.courses ?? []).map((pc) => ({
+          id: pc.course.id,
+          courseId: pc.course.id,
+          course: pc.course,
+        }));
+        setPackageCourses(courses);
+        setCourseInstructors(
+          courses.map((c) => ({ courseId: c.courseId, instructorId: "" })),
+        );
+      })
+      .catch(() => {});
+  }, [form.packageId]);
+
   const update = (field: keyof FormState, value: string) =>
     setForm((p) => ({ ...p, [field]: value }));
+
+  const updateCourseInstructor = (courseId: string, instructorId: string) =>
+    setCourseInstructors((prev) =>
+      prev.map((ci) => (ci.courseId === courseId ? { ...ci, instructorId } : ci)),
+    );
+
+  const selectedInstructorIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (form.instructorId) ids.add(form.instructorId);
+    courseInstructors.forEach((ci) => {
+      if (ci.instructorId) ids.add(ci.instructorId);
+    });
+    return ids;
+  }, [form.instructorId, courseInstructors]);
 
   const errors = useMemo(() => {
     const e: Partial<Record<keyof FormState, string>> = {};
     if (!form.packageId) e.packageId = "Please select a package";
-    if (!form.instructorId) e.instructorId = "Please select an instructor";
     if (form.name.trim().length < 3)
       e.name = "Name must be at least 3 characters";
     if (!form.startDate) e.startDate = "Start date is required";
@@ -114,12 +168,8 @@ export default function CreateBatchPage() {
 
     setSubmitting(true);
     try {
-      const result = await api.post<
-        | { id: string; name: string }
-        | { message: string; batches: { id: string; name: string }[] }
-      >("/api/admin/batches", {
+      const body: Record<string, unknown> = {
         packageId: form.packageId,
-        instructorId: form.instructorId,
         name: form.name,
         startDate: new Date(form.startDate).toISOString(),
         endDate: new Date(form.endDate).toISOString(),
@@ -131,13 +181,20 @@ export default function CreateBatchPage() {
         lateSubmissionPenaltyPercent: form.lateSubmissionPenaltyPercent
           ? Number(form.lateSubmissionPenaltyPercent)
           : undefined,
-      });
+      };
 
-      if ("batches" in result) {
-        toast.success(result.message);
-      } else {
-        toast.success(`Created batch "${result.name}"`);
-      }
+      if (form.instructorId) body.instructorId = form.instructorId;
+
+      const assigned = courseInstructors.filter(
+        (ci) => ci.instructorId && ci.instructorId.trim(),
+      );
+      if (assigned.length > 0) body.courseInstructors = assigned;
+
+      const result = await api.post<
+        { id: string; name: string }
+      >("/api/admin/batches", body);
+
+      toast.success(`Created batch "${result.name}"`);
       router.push("/admin/batches");
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -155,7 +212,7 @@ export default function CreateBatchPage() {
     <div className="max-w-3xl space-y-6">
       <AdminPageHeader
         title="Add Batch"
-        description="Select a package to create a batch for each of its courses."
+        description="Select a package and assign instructors to each course."
         breadcrumbs={[
           { label: "Batches", href: "/admin/batches" },
           { label: "Add", href: "/admin/batches/new" },
@@ -206,14 +263,14 @@ export default function CreateBatchPage() {
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Instructor <span className="text-danger">*</span>
+              Batch Primary Instructor <span className="text-xs text-muted-foreground">(optional — fallback if no per-course instructor is set)</span>
             </label>
             <Select
               value={form.instructorId}
               onValueChange={(v) => update("instructorId", v)}
             >
               <SelectTrigger className="field w-full">
-                <SelectValue placeholder="Select an instructor" />
+                <SelectValue placeholder="No primary instructor" />
               </SelectTrigger>
               <SelectContent>
                 {instructors.map((i) => (
@@ -223,7 +280,6 @@ export default function CreateBatchPage() {
                 ))}
               </SelectContent>
             </Select>
-            {showError("instructorId")}
           </div>
 
           <div>
@@ -297,6 +353,52 @@ export default function CreateBatchPage() {
           </div>
         </div>
         </div>
+
+        {/* Per-Course Instructors */}
+        {packageCourses.length > 0 && (
+          <div className="glass-card p-6 space-y-4">
+            <h2 className="text-sm font-semibold text-foreground">
+              Course Instructors
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Assign an instructor for each course. Leave empty to assign later.
+            </p>
+            <div className="divide-y divide-border/50">
+              {packageCourses.map((pc, idx) => {
+                const ci = courseInstructors.find((c) => c.courseId === pc.courseId);
+                return (
+                  <div key={pc.courseId} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                      <span className="text-xs font-bold">{idx + 1}</span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {pc.course.title}
+                      </p>
+                    </div>
+                    <div className="w-64 shrink-0">
+                      <Select
+                        value={ci?.instructorId ?? ""}
+                        onValueChange={(v) => updateCourseInstructor(pc.courseId, v)}
+                      >
+                        <SelectTrigger className="field w-full">
+                          <SelectValue placeholder="Select instructor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {instructors.map((i) => (
+                            <SelectItem key={i.id} value={i.id}>
+                              {i.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="glass-card p-6 space-y-4">
           <h2 className="text-sm font-semibold text-foreground">

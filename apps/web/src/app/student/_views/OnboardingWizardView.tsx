@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { api } from "@/lib/api";
+import { toast } from "@/lib/toast";
 import {
   IconArrowLeft,
   IconArrowRight,
@@ -15,7 +17,23 @@ import {
   IconSparkles,
   IconTarget,
   IconTrophy,
+  IconPhone,
+  IconMapPin,
+  IconClockHour4,
+  IconBuildingSkyscraper,
+  IconFlag,
+  IconSearch,
+  IconChevronDown,
 } from "@tabler/icons-react";
+import { TIMEZONE_GROUPS, COUNTRIES } from "@/lib/location-data";
+
+interface ProfileData {
+  phone: string;
+  timezone: string;
+  address: string;
+  state: string;
+  country: string;
+}
 
 interface OnboardingWizardViewProps {
   onComplete: () => void;
@@ -24,8 +42,11 @@ interface OnboardingWizardViewProps {
 const STEPS = [
   { id: "welcome", label: "Welcome", title: "Welcome to Marvel Slice" },
   { id: "tour", label: "Features", title: "Explore Your Tools" },
+  { id: "profile", label: "Profile", title: "Complete Your Profile" },
   { id: "done", label: "All Set!", title: "Ready to Begin" },
 ] as const;
+
+
 
 const FEATURES = [
   {
@@ -33,54 +54,60 @@ const FEATURES = [
     title: "My Enrolled Courses",
     desc: "Access your active modules, structured video lessons, assignments, and quizzes.",
     badge: "Core Learning",
-    color: "text-indigo-600 dark:text-indigo-400",
-    bg: "bg-indigo-500/12 dark:bg-indigo-500/20",
-    border: "border-indigo-500/25 hover:border-indigo-500/50",
+    color: "text-indigo-600 dark:text-indigo-300",
+    iconBorder: "border-indigo-400/30",
+    gradient: "from-indigo-500/8 via-indigo-500/3 to-indigo-500/12",
+    border: "border-indigo-500/20 hover:border-indigo-500/40",
   },
   {
     icon: IconPlayerPlay,
     title: "Live Interactive Classes",
     desc: "Join real-time sessions with expert instructors, ask questions, and collaborate.",
     badge: "Real-time",
-    color: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-500/12 dark:bg-emerald-500/20",
-    border: "border-emerald-500/25 hover:border-emerald-500/50",
+    color: "text-emerald-600 dark:text-emerald-300",
+    iconBorder: "border-emerald-400/30",
+    gradient: "from-emerald-500/8 via-emerald-500/3 to-emerald-500/12",
+    border: "border-emerald-500/20 hover:border-emerald-500/40",
   },
   {
     icon: IconCalendarEvent,
     title: "Interactive Calendar",
     desc: "Keep track of session schedules, project deadlines, and live event reminders.",
     badge: "Schedule",
-    color: "text-amber-600 dark:text-amber-400",
-    bg: "bg-amber-500/12 dark:bg-amber-500/20",
-    border: "border-amber-500/25 hover:border-amber-500/50",
+    color: "text-amber-600 dark:text-amber-300",
+    iconBorder: "border-amber-400/30",
+    gradient: "from-amber-500/8 via-amber-500/3 to-amber-500/12",
+    border: "border-amber-500/20 hover:border-amber-500/40",
   },
   {
     icon: IconSchool,
     title: "1-on-1 Mentorship",
     desc: "Book direct mentorship sessions with your instructor for guidance & code reviews.",
     badge: "Personalized",
-    color: "text-violet-600 dark:text-violet-400",
-    bg: "bg-violet-500/12 dark:bg-violet-500/20",
-    border: "border-violet-500/25 hover:border-violet-500/50",
+    color: "text-violet-600 dark:text-violet-300",
+    iconBorder: "border-violet-400/30",
+    gradient: "from-violet-500/8 via-violet-500/3 to-violet-500/12",
+    border: "border-violet-500/20 hover:border-violet-500/40",
   },
   {
     icon: IconLicense,
     title: "Verified Certificates",
     desc: "Earn shareable course completion certificates to highlight on your resume & LinkedIn.",
     badge: "Credentials",
-    color: "text-sky-600 dark:text-sky-400",
-    bg: "bg-sky-500/12 dark:bg-sky-500/20",
-    border: "border-sky-500/25 hover:border-sky-500/50",
+    color: "text-sky-600 dark:text-sky-300",
+    iconBorder: "border-sky-400/30",
+    gradient: "from-sky-500/8 via-sky-500/3 to-sky-500/12",
+    border: "border-sky-500/20 hover:border-sky-500/40",
   },
   {
     icon: IconHeadset,
     title: "Dedicated Support",
     desc: "Need assistance? Raise support tickets or message your instructors anytime.",
     badge: "24/7 Support",
-    color: "text-rose-600 dark:text-rose-400",
-    bg: "bg-rose-500/12 dark:bg-rose-500/20",
-    border: "border-rose-500/25 hover:border-rose-500/50",
+    color: "text-rose-600 dark:text-rose-300",
+    iconBorder: "border-rose-400/30",
+    gradient: "from-rose-500/8 via-rose-500/3 to-rose-500/12",
+    border: "border-rose-500/20 hover:border-rose-500/40",
   },
 ];
 
@@ -88,12 +115,32 @@ export default function OnboardingWizardView({
   onComplete,
 }: OnboardingWizardViewProps) {
   const [step, setStep] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [profile, setProfile] = useState<ProfileData>({
+    phone: "",
+    timezone: "",
+    address: "",
+    state: "",
+    country: "",
+  });
 
-  function handleNext() {
+  function update<K extends keyof ProfileData>(key: K, value: ProfileData[K]) {
+    setProfile((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function handleNext() {
     if (step < STEPS.length - 1) {
       setStep(step + 1);
     } else {
-      onComplete();
+      setSubmitting(true);
+      try {
+        await api.patch("/api/onboarding/complete", profile);
+        onComplete();
+      } catch {
+        toast.error("Failed to save profile. Please try again.");
+      } finally {
+        setSubmitting(false);
+      }
     }
   }
 
@@ -104,11 +151,11 @@ export default function OnboardingWizardView({
   }
 
   function handleSkip() {
-    onComplete();
+    setStep(2);
   }
 
   return (
-    <div className="mx-auto flex min-h-[80vh] max-w-3xl flex-col items-center justify-center px-4 py-8">
+    <div className="mx-auto flex min-h-[80vh] max-w-4xl flex-col items-center justify-center px-4 py-8">
       {/* Outer Card Wrapper */}
       <div className="relative w-full overflow-hidden rounded-3xl border border-border/80 bg-card/90 p-6 sm:p-10 shadow-2xl backdrop-blur-xl transition-all duration-300">
         {/* Background ambient lighting */}
@@ -162,10 +209,11 @@ export default function OnboardingWizardView({
         </div>
 
         {/* Step content with animated entrance */}
-        <div className="relative z-10 min-h-[340px] w-full sp-view-enter">
+        <div className="relative z-10 min-h-[500px] w-full sp-view-enter">
           {step === 0 && <WelcomeStep />}
           {step === 1 && <FeatureTourStep />}
-          {step === 2 && <AllSetStep />}
+          {step === 2 && <ProfileStep profile={profile} update={update} />}
+          {step === 3 && <AllSetStep />}
         </div>
 
         {/* Actions Bar */}
@@ -190,7 +238,7 @@ export default function OnboardingWizardView({
           </div>
 
           <div className="flex items-center gap-3">
-            {step > 0 && step < STEPS.length - 1 && (
+            {step === 1 && (
               <button
                 onClick={handleSkip}
                 className="text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground hidden sm:block"
@@ -200,9 +248,15 @@ export default function OnboardingWizardView({
             )}
             <button
               onClick={handleNext}
-              className="btn-primary px-7 py-2.5 text-xs font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all hover:scale-[1.02]"
+              disabled={submitting || (step === 2 && !profile.phone.trim())}
+              className="btn-primary px-7 py-2.5 text-xs font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
             >
-              {step === STEPS.length - 1 ? (
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Saving...
+                </span>
+              ) : step === STEPS.length - 1 ? (
                 <>
                   Get Started <IconRocket size={16} className="ml-1" />
                 </>
@@ -295,19 +349,19 @@ function FeatureTourStep() {
         {FEATURES.map((f) => (
           <div
             key={f.title}
-            className={`group flex items-start gap-3.5 rounded-2xl border p-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md bg-card/60 ${f.border}`}
+            className={`group flex items-start gap-3.5 rounded-2xl border p-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md bg-gradient-to-br ${f.gradient} ${f.border}`}
           >
             <div
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 ${f.bg}`}
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 transition-all duration-300 group-hover:scale-110 group-hover:shadow-sm ${f.iconBorder}`}
             >
-              <f.icon size={22} className={f.color} stroke={1.8} />
+              <f.icon size={20} className={f.color} stroke={1.8} />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-xs sm:text-sm font-bold text-foreground truncate">
                   {f.title}
                 </h3>
-                <span className="shrink-0 rounded-full border border-border/80 bg-card px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${f.iconBorder} ${f.color}`}>
                   {f.badge}
                 </span>
               </div>
@@ -398,6 +452,258 @@ function AllSetStep() {
         </a>
         .
       </p>
+    </div>
+  );
+}
+
+function SearchableSelect({
+  value,
+  onChange,
+  options,
+  placeholder,
+  searchPlaceholder,
+  icon,
+  groups,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  options?: { label: string; value: string }[];
+  placeholder: string;
+  searchPlaceholder?: string;
+  icon: React.ReactNode;
+  groups?: { region: string; zones: { label: string; value: string }[] }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const filteredGroups = useMemo(() => {
+    if (!groups) return [];
+    if (!search) return groups;
+    const q = search.toLowerCase();
+    return groups
+      .map((g) => ({
+        ...g,
+        zones: g.zones.filter(
+          (z) => z.label.toLowerCase().includes(q) || z.value.toLowerCase().includes(q),
+        ),
+      }))
+      .filter((g) => g.zones.length > 0);
+  }, [groups, search]);
+
+  const filteredOptions = useMemo(() => {
+    if (!options) return [];
+    if (!search) return options;
+    const q = search.toLowerCase();
+    return options.filter(
+      (o) => o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q),
+    );
+  }, [options, search]);
+
+  const selectedLabel = groups
+    ? groups.flatMap((g) => g.zones).find((z) => z.value === value)?.label
+    : options?.find((o) => o.value === value)?.label;
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={`w-full flex items-center gap-2.5 rounded-xl border px-3.5 py-3 text-sm text-left transition-all ${
+          open
+            ? "border-primary ring-4 ring-primary/20 bg-card"
+            : "border-border bg-muted/5 hover:border-border-hover"
+        } ${value ? "text-foreground" : "text-muted-foreground"}`}
+      >
+        <span className="shrink-0 text-muted-foreground">{icon}</span>
+        <span className="flex-1 truncate">{selectedLabel || placeholder}</span>
+        <IconChevronDown size={15} className={`shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1 w-full rounded-xl border border-border bg-card shadow-xl backdrop-blur-xl overflow-hidden">
+          <div className="relative border-b border-border">
+            <IconSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={searchPlaceholder || "Search..."}
+              className="w-full bg-transparent pl-9 pr-4 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+              autoFocus
+            />
+          </div>
+
+          <div className="max-h-80 overflow-y-auto">
+            <button
+              type="button"
+              onClick={() => { onChange(""); setOpen(false); setSearch(""); }}
+              className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:bg-muted/10 transition-colors"
+            >
+              {placeholder}
+            </button>
+            {groups
+              ? filteredGroups.map((g) => (
+                  <div key={g.region}>
+                    <p className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground bg-muted/5 sticky top-0">
+                      {g.region}
+                    </p>
+                    {g.zones.map((z) => (
+                      <button
+                        key={z.value}
+                        type="button"
+                        onClick={() => { onChange(z.value); setOpen(false); setSearch(""); }}
+                        className={`w-full text-left px-4 py-2 text-sm transition-colors hover:bg-primary/10 ${
+                          value === z.value ? "bg-primary/10 text-primary font-medium" : "text-foreground"
+                        }`}
+                      >
+                        {z.label}
+                      </button>
+                    ))}
+                  </div>
+                ))
+              : filteredOptions.map((o) => (
+                  <button
+                    key={o.value}
+                    type="button"
+                    onClick={() => { onChange(o.value); setOpen(false); setSearch(""); }}
+                    className={`w-full text-left px-4 py-2 text-sm transition-colors hover:bg-primary/10 ${
+                      value === o.value ? "bg-primary/10 text-primary font-medium" : "text-foreground"
+                    }`}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProfileStep({
+  profile,
+  update,
+}: {
+  profile: ProfileData;
+  update: (key: keyof ProfileData, value: string) => void;
+}) {
+  const selectedCountry = COUNTRIES.find((c) => c.name === profile.country);
+  const states = selectedCountry?.states || [];
+
+  return (
+    <div className="mx-auto max-w-xl">
+      <div className="mb-6 text-center">
+        <h2 className="text-xl sm:text-2xl font-bold text-foreground">
+          Complete Your Profile
+        </h2>
+        <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+          Add your contact details so we can keep in touch
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-foreground">
+              Phone Number
+            </label>
+            <div className="relative">
+              <IconPhone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
+              <input
+                type="tel"
+                value={profile.phone}
+                onChange={(e) => update("phone", e.target.value)}
+                className="w-full rounded-xl border border-border bg-muted/5 pl-9 pr-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20"
+                placeholder="+1 234 567 890"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-foreground">
+              Time Zone
+            </label>
+            <SearchableSelect
+              value={profile.timezone}
+              onChange={(val) => update("timezone", val)}
+              groups={TIMEZONE_GROUPS}
+              placeholder="Select time zone"
+              searchPlaceholder="Search time zones..."
+              icon={<IconClockHour4 size={16} />}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-foreground">
+            Address
+          </label>
+          <div className="relative">
+            <IconMapPin size={16} className="absolute left-3 top-3 text-muted-foreground z-10" />
+            <textarea
+              value={profile.address}
+              onChange={(e) => update("address", e.target.value)}
+              rows={2}
+              className="w-full rounded-xl border border-border bg-muted/5 pl-9 pr-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20"
+              placeholder="Street address"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-foreground">
+              Country
+            </label>
+            <SearchableSelect
+              value={profile.country}
+              onChange={(val) => { update("country", val); update("state", ""); }}
+              options={COUNTRIES.map((c) => ({ label: c.name, value: c.name }))}
+              placeholder="Select country"
+              searchPlaceholder="Search countries..."
+              icon={<IconFlag size={16} />}
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-foreground">
+              State
+            </label>
+            {states.length > 0 ? (
+              <SearchableSelect
+                value={profile.state}
+                onChange={(val) => update("state", val)}
+                options={states.map((s) => ({ label: s, value: s }))}
+                placeholder="Select state"
+                searchPlaceholder="Search states..."
+                icon={<IconBuildingSkyscraper size={16} />}
+              />
+            ) : (
+              <div className="relative">
+                <IconBuildingSkyscraper size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
+                <input
+                  type="text"
+                  value={profile.state}
+                  onChange={(e) => update("state", e.target.value)}
+                  className="w-full rounded-xl border border-border bg-muted/5 pl-9 pr-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20"
+                  placeholder="State / Region"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

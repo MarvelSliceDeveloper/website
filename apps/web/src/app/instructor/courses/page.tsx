@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
-import { IconBook, IconClipboardList, IconUsers } from "@tabler/icons-react";
+import { IconBook, IconChevronRight, IconClipboardList, IconUsers } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Skeleton } from "@/components/shared/Skeleton";
@@ -77,14 +78,18 @@ export default function InstructorCoursesPage() {
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         {courses.map((course) => (
-          <div
+          <Link
             key={course.id}
-            className="glass-card border border-border/80 overflow-hidden"
+            href={`/instructor/courses/${course.id}`}
+            className="glass-card border border-border/80 overflow-hidden block hover:ring-1 hover:ring-primary/40 transition-all"
           >
             <div className="p-5 border-b border-border/60">
-              <h2 className="text-lg font-bold text-foreground">
-                {course.title}
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-foreground">
+                  {course.title}
+                </h2>
+                <IconChevronRight size={16} className="text-muted shrink-0" />
+              </div>
               {course.description && (
                 <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                   {course.description}
@@ -106,7 +111,7 @@ export default function InstructorCoursesPage() {
                 </span>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

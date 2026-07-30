@@ -442,6 +442,7 @@ function StudentPortalContent() {
   const [studentName, setStudentName] = useState("Demo Student");
   const [studentEmail, setStudentEmail] = useState("demo@student.example.com");
   const [onboardingComplete, setOnboardingComplete] = useState(true);
+  const [needsProfile, setNeedsProfile] = useState(false);
 
   // Derive current view from URL search params
   const currentView: ViewState = (() => {
@@ -626,6 +627,16 @@ function StudentPortalContent() {
         setStudentName(res.user.name || "");
         setStudentEmail(res.user.email || "");
         setOnboardingComplete(res.user.onboardingComplete);
+
+        if (res.user.onboardingComplete) {
+          api
+            .get<{ user: { phone?: string } }>("/api/student/profile")
+            .then((p) => {
+              if (!active) return;
+              if (!p?.user?.phone?.trim()) setNeedsProfile(true);
+            })
+            .catch(() => {});
+        }
       })
       .catch(() => {
         // ignore — keep demo values if unauthenticated
@@ -707,15 +718,8 @@ function StudentPortalContent() {
     }
   }
 
-  async function handleOnboardingComplete() {
-    try {
-      await api.patch("/api/onboarding/complete");
-      setOnboardingComplete(true);
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to complete onboarding",
-      );
-    }
+  function handleOnboardingComplete() {
+    setOnboardingComplete(true);
   }
 
   // ── Loading / Error states ────────────────────────────────────────────────
@@ -728,10 +732,15 @@ function StudentPortalContent() {
     );
   }
 
-  if (!onboardingComplete) {
+  if (!onboardingComplete || needsProfile) {
     return (
       <StudentPortalShell hideLogo={false}>
-        <OnboardingWizardView onComplete={handleOnboardingComplete} />
+        <OnboardingWizardView
+          onComplete={() => {
+            handleOnboardingComplete();
+            setNeedsProfile(false);
+          }}
+        />
       </StudentPortalShell>
     );
   }

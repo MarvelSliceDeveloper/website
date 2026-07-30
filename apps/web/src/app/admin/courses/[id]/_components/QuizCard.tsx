@@ -8,6 +8,8 @@ import {
   IconGripVertical,
   IconPlus,
   IconTrash,
+  IconCopy,
+  IconCheck,
 } from "@tabler/icons-react";
 import RichEditor from "@/components/editor/RichEditor";
 
@@ -72,6 +74,13 @@ export default function QuizCard({
   isDragging,
 }: QuizCardProps) {
   const [editing, setEditing] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const copyId = async () => {
+    await navigator.clipboard.writeText(quiz.id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
   const [title, setTitle] = useState(quiz.title);
   const [dueDateMode, setDueDateMode] = useState<"absolute" | "days">(
     quiz.daysFromEnrollment ? "days" : "absolute"
@@ -630,6 +639,20 @@ export default function QuizCard({
           </span>
         )}
         <span className="text-sm font-medium text-amber-700">{quiz.title}</span>
+        <button
+          onClick={copyId}
+          className="group relative inline-flex items-center gap-1 text-[10px] font-mono text-muted-foreground/60 hover:text-foreground transition-colors"
+          title="Copy quiz ID"
+        >
+          {copied ? (
+            <IconCheck size={10} className="text-emerald-500" />
+          ) : (
+            <IconCopy size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+          )}
+          <span className="opacity-60 group-hover:opacity-100 transition-opacity">
+            {quiz.id.slice(0, 8)}...
+          </span>
+        </button>
         {quiz.daysFromEnrollment ? (
           <span className="text-[11px] text-amber-600">
             Due: {quiz.daysFromEnrollment}d after enrollment

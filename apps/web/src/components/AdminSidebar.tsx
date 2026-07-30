@@ -19,8 +19,6 @@ import {
   IconCalendar,
   IconChevronDown,
   IconSettings,
-  IconMenu2,
-  IconX,
   IconFileDescription,
   IconTrash,
   IconUserCheck,
@@ -305,13 +303,11 @@ function NavGroup({
 // Main Sidebar Component
 export default function AdminSidebar({
   collapsed = false,
-  onToggleCollapse,
   userRole,
   userName,
   userEmail,
 }: {
   collapsed?: boolean;
-  onToggleCollapse?: () => void;
   userRole?: string;
   userName?: string;
   userEmail?: string;
@@ -402,26 +398,8 @@ export default function AdminSidebar({
                 }>,
               },
               {
-                label: "Enrollments",
-                href: "/admin/enrollments",
-                icon: IconClipboardCheck as React.ComponentType<{
-                  size?: number | string;
-                  stroke?: number | string;
-                  className?: string;
-                }>,
-              },
-              {
                 label: "Coupons",
                 href: "/admin/coupons",
-                icon: IconClipboardCheck as React.ComponentType<{
-                  size?: number | string;
-                  stroke?: number | string;
-                  className?: string;
-                }>,
-              },
-              {
-                label: "Assignment Review",
-                href: "/admin/assignments/review",
                 icon: IconClipboardCheck as React.ComponentType<{
                   size?: number | string;
                   stroke?: number | string;
@@ -523,7 +501,6 @@ export default function AdminSidebar({
                 children: [
                   { label: "View Courses", href: "/admin/courses" },
                   { label: "Add Course", href: "/admin/courses/new" },
-                  { label: "Enrollments", href: "/admin/enrollments" },
                 ],
               },
               {
@@ -649,30 +626,10 @@ export default function AdminSidebar({
 
   return (
     <aside
-      className={`fixed left-0 top-0 z-40 hidden h-full flex-col border-r border-border bg-card transition-[width] duration-200 lg:flex ${
+      className={`fixed left-0 top-14 z-40 hidden h-[calc(100vh-56px)] flex-col border-r border-t border-border bg-card transition-[width] duration-200 lg:flex ${
         collapsed ? "w-16" : "w-64"
       }`}
     >
-      {/* Sidebar Header */}
-      <div
-        className={`flex h-14 items-center border-b border-border bg-card ${
-          collapsed ? "justify-center px-2" : "justify-end px-3"
-        }`}
-      >
-        {!collapsed && (
-          <span className="flex-1 text-[10px] font-semibold uppercase tracking-wider text-muted">
-            Navigation
-          </span>
-        )}
-        <button
-          onClick={onToggleCollapse}
-          className="flex h-7 w-7 shrink-0 items-center justify-center text-muted hover:text-foreground hover:bg-muted/15 transition-colors rounded-lg"
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <IconMenu2 size={16} /> : <IconX size={14} />}
-        </button>
-      </div>
-
       {/* Navigation Links */}
       <nav className="flex-1 overflow-y-auto py-3 space-y-4">
         {sidebarItems.map((group) => (

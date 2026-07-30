@@ -18,4 +18,7 @@ router.get("/batches", instructorController.getMyBatches);
 // GET /api/instructor/courses — instructor's courses (via batches)
 router.get("/courses", instructorController.getMyCourses);
 
+// GET /api/instructor/courses/:courseId/recordings — recordings from instructor's batches for a course
+router.get("/courses/:courseId/recordings", instructorController.getMyCourseRecordings);
+
 export const instructorRouter = router;

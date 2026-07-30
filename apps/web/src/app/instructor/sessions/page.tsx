@@ -79,6 +79,7 @@ function SessionsPageContent() {
   });
 
   const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchSessions = async () => {
     try {
@@ -169,13 +170,15 @@ function SessionsPageContent() {
       )
     )
       return;
-
+    setDeletingId(sessionId);
     try {
       await api.delete(`/api/sessions/${sessionId}`);
       toast.success("Session cancelled successfully!");
       fetchSessions();
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -269,6 +272,7 @@ function SessionsPageContent() {
                     key={session.id}
                     session={session}
                     upcoming
+                    deleting={deletingId === session.id}
                     onViewAttendance={handleViewAttendance}
                     onEdit={openEditModal}
                     onDelete={handleDeleteSession}
@@ -292,6 +296,7 @@ function SessionsPageContent() {
                     session={session}
                     upcoming={false}
                     syncing={syncingId === session.id}
+                    deleting={deletingId === session.id}
                     onSyncRecording={handleSyncRecording}
                     onViewAttendance={handleViewAttendance}
                     onEdit={openEditModal}
@@ -467,6 +472,7 @@ function SessionCard({
   session,
   upcoming,
   syncing,
+  deleting,
   onSyncRecording,
   onViewAttendance,
   onEdit,
@@ -475,6 +481,7 @@ function SessionCard({
   session: Session;
   upcoming: boolean;
   syncing?: boolean;
+  deleting?: boolean;
   onSyncRecording?: (id: string) => void;
   onViewAttendance: (session: Session) => void;
   onEdit: (session: Session) => void;
@@ -536,7 +543,8 @@ function SessionCard({
           </button>
           <button
             onClick={() => onDelete(session.id)}
-            className="p-1.5 rounded-lg hover:bg-danger/10 text-muted-foreground hover:text-danger transition-colors"
+            disabled={deleting}
+            className="p-1.5 rounded-lg hover:bg-danger/10 text-muted-foreground hover:text-danger transition-colors disabled:opacity-40 disabled:pointer-events-none"
             title="Cancel Session"
           >
             <IconTrash size={16} />
