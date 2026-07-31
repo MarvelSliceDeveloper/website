@@ -13,6 +13,7 @@ pnpm dev
 
 - **Web**: http://localhost:3000
 - **API**: http://localhost:4000
+- **Landing site**: http://localhost:5173 (optional, `pnpm dev:landing`)
 - **Postgres** (Docker): localhost:5433
 - **Redis** (Docker): localhost:6379
 
@@ -24,6 +25,18 @@ pnpm dev
 | Admin       | admin@lms.local      | admin123      |
 | Instructor  | instructor@lms.local | instructor123 |
 | Student     | student@lms.local    | student123    |
+
+## Landing Site (apps/landing)
+
+The public Marvel Slice marketing website lives in `apps/landing` — a React 19 + Vite 8 app backed by its **own Supabase database**, fully independent from the LMS portal (no shared data, auth, or API).
+
+```bash
+pnpm dev:landing     # dev server → http://localhost:5173
+pnpm build:landing   # production build → apps/landing/dist
+pnpm lint:landing    # oxlint
+```
+
+Setup: `cd apps/landing && cp .env.example .env`, then fill in `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`. Full workflow, DB schema, and the upstream-update procedure live in `apps/landing/README.md`.
 
 ## Monorepo Layout
 
@@ -74,6 +87,7 @@ LMS/
 │   │       ├── jobs/         # Background sync
 │   │       ├── utils/        # Prisma, encryption, video parsing
 │   │       └── __tests__/
+│   ├── landing/               # Marvel Slice marketing site (Vite 8 + React 19 + Supabase)
 │   └── web/                  # Next.js 16 + React 19 + Tailwind 4
 │       └── src/
 │           ├── app/          # App Router pages

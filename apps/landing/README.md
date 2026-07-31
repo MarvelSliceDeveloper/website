@@ -282,18 +282,42 @@ Title, slug (auto-generated), excerpt, content, image, category dropdown, author
 
 ---
 
-## Setup
+## Setup (monorepo)
+
+This app lives in the LMS monorepo as `apps/landing` (package `@lms/landing`). It has its **own Supabase database** and does not share data or auth with the LMS portal (`apps/web` + `apps/api`).
 
 ### Prerequisites
-- Node.js 18+
-- Supabase project
+- Node.js 20+ (repo requirement)
+- pnpm 8+ (corepack)
+- A Supabase project (tables from `schema.sql` or `supabase/migrations`)
 
-### Installation
+### Install dependencies
 ```bash
-npm install
+# From the repo root — installs all workspaces (api, web, landing)
+pnpm install
+```
+
+### Environment
+```bash
+# From apps/landing
 cp .env.example .env
 # Fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
-npm run dev
+```
+`.env` is gitignored. The dev mail server also reads `SMTP_EMAIL` / `SMTP_PASSWORD` / `ADMIN_EMAIL` for career-application and newsletter emails.
+
+### Run locally
+```bash
+# From the repo root
+pnpm dev:landing
+```
+Starts two processes (via `concurrently`):
+- **Vite dev server** → http://localhost:5173 (proxies `/api` → :3001)
+- **dev-server.js** → http://localhost:3001 (career application + newsletter email sending)
+
+### Build / lint
+```bash
+pnpm build:landing   # vite build → dist/
+pnpm lint:landing    # oxlint
 ```
 
 ### Database
@@ -326,12 +350,20 @@ insert into storage.buckets (id, name, public) values ('pages', 'pages', true);
 create policy "Public access pages" on storage.objects for all using (bucket_id = 'pages');
 ```
 
-### Vercel Deploy
+### Production deploy
+Served as a **static site** by Nginx at `marvelslice.com` (the LMS portal is a separate Nginx route at `lms.marvelslice.com`). Just serve `dist/` after `pnpm build:landing`. `vercel.json` is legacy and not used.
+
+## Updating from upstream
+
+This app is vendored from https://github.com/Lethinkj/marvel-slice via `git subtree`. The upstream repo is registered as the `marvel-slice` git remote:
+
 ```bash
-# Push to GitHub, import on Vercel
-# Set env vars: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
-# No framework config needed — vercel.json provides SPA rewrites
+# From the repo root
+git fetch marvel-slice
+git subtree pull --prefix apps/landing marvel-slice master --squash
 ```
+
+Local changes inside `apps/landing` (e.g. the pnpm `dev` script, the `@lms/landing` package name) will merge or conflict with upstream changes — resolve as normal git conflicts. Always install dependencies from the repo root with pnpm; never `npm install` inside this folder.
 
 ---
 
