@@ -11,12 +11,12 @@
     "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
-    "@fullcalendar/core": "^6.1.20",
-    "@fullcalendar/daygrid": "^6.1.20",
+    "@fullcalendar/core": "^6.1.20",    "@fullcalendar/daygrid": "^6.1.20",
     "@fullcalendar/interaction": "^6.1.20",
     "@fullcalendar/list": "^6.1.20",
     "@fullcalendar/react": "^6.1.20",
     "@fullcalendar/timegrid": "^6.1.20",
+    "@lms/types": "workspace:*",
     "@radix-ui/react-select": "^2.3.2",
     "@sentry/react": "^10.66.0",
     "@tabler/icons-react": "^3.44.0",

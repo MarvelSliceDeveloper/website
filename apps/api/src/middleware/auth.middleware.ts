@@ -51,6 +51,7 @@ const ROLE_HIERARCHY: UserRole[] = [
   UserRole.ADMIN,
   UserRole.INSTRUCTOR,
   UserRole.STUDENT,
+  UserRole.INTERN,
 ];
 
 const ROLE_LEVEL = new Map<UserRole, number>(

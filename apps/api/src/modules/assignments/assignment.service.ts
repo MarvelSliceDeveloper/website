@@ -20,7 +20,6 @@ export const CreateFileAssignmentSchema = z.object({
 export const GradeSubmissionSchema = z.object({
   grade: z.number().int().min(0).max(100),
   feedback: z.string().optional(),
-  latePenaltyPercent: z.number().int().min(1).max(25).optional(),
 });
 
 export const assignmentService = {
@@ -303,7 +302,6 @@ export const assignmentService = {
     submissionId: string,
     grade: number,
     feedback?: string,
-    latePenaltyPercent?: number,
   ) {
     const submission = await prisma.assignmentSubmission.findUnique({
       where: { id: submissionId },
@@ -330,10 +328,7 @@ export const assignmentService = {
       }
     }
 
-    const pct = latePenaltyPercent ?? submission.latePenaltyPercent ?? 0;
-    const originalScore = grade;
-    const penaltyAmount = pct > 0 ? Math.round((grade * pct) / 100) : 0;
-    const totalScore = Math.max(0, originalScore - penaltyAmount);
+    const totalScore = grade;
 
     const passingScore = submission.assignment.batch?.passingScore ?? 50;
     const newStatus = totalScore >= passingScore ? "GRADED" : "PENDING";
@@ -346,9 +341,6 @@ export const assignmentService = {
         status: newStatus,
         gradedAt: new Date(),
         totalScore,
-        originalScore,
-        latePenaltyPercent: pct > 0 ? pct : null,
-        latePenaltyAmount: pct > 0 ? penaltyAmount : null,
       },
     });
     notificationService.notifyAssignmentGraded(submissionId);
@@ -367,7 +359,6 @@ export const assignmentService = {
       include: {
         batch: {
           select: {
-            lateSubmissionPenaltyPercent: true,
             enrollments: {
               where: { userId: studentId, status: "APPROVED" },
             },
@@ -380,15 +371,6 @@ export const assignmentService = {
     if (assignment.type !== "ASSIGNMENT")
       throw new AppError(400, "This is a quiz, not a file-upload assignment");
 
-    let effectiveDueDate = assignment.dueDate;
-    if (assignment.batchId) {
-      const ext = await prisma.batchAssignmentExtension.findUnique({
-        where: { batchId_assignmentId: { batchId: assignment.batchId, assignmentId } },
-        select: { extendedDueDate: true },
-      });
-      if (ext) effectiveDueDate = ext.extendedDueDate;
-    }
-    const isLate = effectiveDueDate ? new Date() > effectiveDueDate : false;
     if (assignment.batch) {
       const hasBatchEnrollment = assignment.batch.enrollments.length > 0;
       const hasPackageEnrollment =
@@ -417,22 +399,16 @@ export const assignmentService = {
         answerFileUrl,
         comment,
         status: "PENDING",
-        isLate,
-        latePenaltyPercent: isLate ? assignment.batch?.lateSubmissionPenaltyPercent ?? null : null,
       },
       update: {
         answerFileUrl,
         comment,
         submittedAt: new Date(),
         status: "PENDING",
-        isLate,
-        latePenaltyPercent: isLate ? assignment.batch?.lateSubmissionPenaltyPercent ?? null : null,
         grade: null,
         feedback: null,
         gradedAt: null,
         totalScore: null,
-        originalScore: null,
-        latePenaltyAmount: null,
       },
     });
   },

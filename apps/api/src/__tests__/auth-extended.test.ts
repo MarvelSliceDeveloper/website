@@ -97,7 +97,9 @@ describe("Auth — Extended Flows", () => {
   // ── Logout ────────────────────────────────────────────────────────────────
   describe("POST /api/auth/logout", () => {
     it("logs out successfully", async () => {
-      const res = await request(app).post("/api/auth/logout");
+      const { agent } = await loginAs("STUDENT");
+
+      const res = await agent.post("/api/auth/logout");
 
       expect(res.status).toBe(200);
       expect(res.body.message).toMatch(/logged out/i);

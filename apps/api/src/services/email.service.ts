@@ -56,8 +56,42 @@ const NOTIFICATION_EMAIL_TEMPLATES: Record<string, EmailTemplateComponent> = {
   SUPPORT_TICKET_STATUS_CHANGED:
     SupportTicketStatusChanged as unknown as EmailTemplateComponent,
   CUSTOM_NOTIFICATION: CustomNotification as unknown as EmailTemplateComponent,
+  INTERN_SESSION_SCHEDULED:
+    CustomNotification as unknown as EmailTemplateComponent,
 };
 /* eslint-enable @typescript-eslint/no-explicit-any */
+
+/**
+ * Resolve a notification attachment (zip/pdf) into Brevo-compatible base64
+ * content. Reads the file from disk; returns undefined if not resolvable.
+ */
+async function resolveAttachment(
+  attachmentUrl?: string,
+  attachmentName?: string,
+): Promise<SendEmailAttachment[] | undefined> {
+  if (!attachmentUrl || !attachmentName) return undefined;
+  try {
+    const marker = "/uploads/notifications/";
+    const idx = attachmentUrl.indexOf(marker);
+    if (idx === -1) return undefined;
+    const filename = attachmentUrl.slice(idx + marker.length).split("?")[0];
+    if (!filename) return undefined;
+
+    const fs = await import("fs");
+    const path = await import("path");
+    const apiRoot = __dirname.includes("dist")
+      ? path.resolve(__dirname, "..")
+      : path.resolve(__dirname, "..", "..", "..");
+    const fullPath = path.join(apiRoot, "uploads", "notifications", filename);
+
+    if (!fs.existsSync(fullPath)) return undefined;
+    const content = fs.readFileSync(fullPath).toString("base64");
+    return [{ content, name: attachmentName }];
+  } catch (err) {
+    console.error("[email] Failed to resolve notification attachment:", err);
+    return undefined;
+  }
+}
 
 function getSenderConfig() {
   return {
@@ -306,6 +340,8 @@ export const emailService = {
     user: { name: string; email: string },
     type: string,
     data: Record<string, unknown>,
+    attachmentUrl?: string,
+    attachmentName?: string,
   ): Promise<boolean> {
     if (!isConfigured()) {
       console.warn(
@@ -339,6 +375,7 @@ export const emailService = {
         html,
         text: this.getTextForType(type, data),
         tags: ["notification", type.toLowerCase()],
+        attachment: await resolveAttachment(attachmentUrl, attachmentName),
       });
     } catch (error: unknown) {
       console.error(
@@ -352,6 +389,8 @@ export const emailService = {
     user: { name: string; email: string },
     templateId: string,
     data: Record<string, unknown>,
+    attachmentUrl?: string,
+    attachmentName?: string,
   ): Promise<boolean> {
     if (!isConfigured()) {
       console.warn(
@@ -366,7 +405,13 @@ export const emailService = {
         console.warn(
           `[email] Template ${templateId} not found or inactive — falling back to default`,
         );
-        return this.sendNotificationEmail(user, "CUSTOM_NOTIFICATION", data);
+        return this.sendNotificationEmail(
+          user,
+          "CUSTOM_NOTIFICATION",
+          data,
+          attachmentUrl,
+          attachmentName,
+        );
       }
 
       return this.sendEmail({
@@ -375,6 +420,7 @@ export const emailService = {
         html: rendered.html,
         text: `${data.title || "Notification"}: ${data.message || ""}`,
         tags: ["notification", "custom", "template"],
+        attachment: await resolveAttachment(attachmentUrl, attachmentName),
       });
     } catch (error: unknown) {
       console.error(
@@ -416,6 +462,8 @@ export const emailService = {
         return `Support Ticket Update — ${(data.label as string) || ""}`;
       case "CUSTOM_NOTIFICATION":
         return (data.title as string) || "Notification from LMS Portal";
+      case "INTERN_SESSION_SCHEDULED":
+        return `Intern Class Scheduled — ${(data.sessionTitle as string) || ""}`;
       default:
         return "Notification from LMS Portal";
     }
@@ -446,6 +494,8 @@ export const emailService = {
         return `${data.senderName || "Admin"} replied to your support ticket "${data.ticketTitle || ""}".`;
       case "CUSTOM_NOTIFICATION":
         return `${data.title || "Notification"}: ${data.message || ""}`;
+      case "INTERN_SESSION_SCHEDULED":
+        return `An online class has been scheduled for you. Session: ${data.sessionTitle || ""}, Time: ${data.scheduledAt || ""}. Join URL: ${data.joinUrl || ""}`;
       default:
         return `You have a new notification from LMS Portal.`;
     }

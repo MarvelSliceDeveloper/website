@@ -9,9 +9,6 @@ export const CreateAssignmentSchema = z.object({
   description: z.string().optional(),
   dueDate: z.string().datetime().optional(),
   daysFromEnrollment: z.number().int().min(1).optional(),
-  lateSubmissionPenaltyPercent: z.number().int().min(0).max(100).optional(),
-  allowLateSubmission: z.boolean().default(false),
-  lateSubmissionGracePeriodHrs: z.number().int().min(1).optional(),
   maxPoints: z.number().int().min(1).default(100),
   questionPdfUrl: z.string().url().optional().or(z.literal("")),
 });
@@ -22,9 +19,6 @@ export const UpdateAssignmentSchema = z.object({
   description: z.string().optional(),
   dueDate: z.string().datetime().optional(),
   daysFromEnrollment: z.number().int().min(1).nullable().optional(),
-  lateSubmissionPenaltyPercent: z.number().int().min(0).max(100).nullable().optional(),
-  allowLateSubmission: z.boolean().optional(),
-  lateSubmissionGracePeriodHrs: z.number().int().min(1).nullable().optional(),
   maxPoints: z.number().int().min(1).optional(),
   questionPdfUrl: z.string().url().optional().or(z.literal("")),
 });
@@ -49,9 +43,6 @@ export const assignmentService = {
         description: data.description || "",
         dueDate: data.dueDate ? new Date(data.dueDate) : new Date(),
         daysFromEnrollment: data.daysFromEnrollment,
-        lateSubmissionPenaltyPercent: data.lateSubmissionPenaltyPercent,
-        allowLateSubmission: data.allowLateSubmission ?? false,
-        lateSubmissionGracePeriodHrs: data.lateSubmissionGracePeriodHrs,
         maxPoints: data.maxPoints,
         ...(data.questionPdfUrl ? { questionPdfUrl: data.questionPdfUrl } : {}),
       },
@@ -82,15 +73,6 @@ export const assignmentService = {
         ...(data.dueDate && { dueDate: new Date(data.dueDate) }),
         ...(data.daysFromEnrollment !== undefined && {
           daysFromEnrollment: data.daysFromEnrollment,
-        }),
-        ...(data.lateSubmissionPenaltyPercent !== undefined && {
-          lateSubmissionPenaltyPercent: data.lateSubmissionPenaltyPercent,
-        }),
-        ...(data.allowLateSubmission !== undefined && {
-          allowLateSubmission: data.allowLateSubmission,
-        }),
-        ...(data.lateSubmissionGracePeriodHrs !== undefined && {
-          lateSubmissionGracePeriodHrs: data.lateSubmissionGracePeriodHrs,
         }),
         ...(data.maxPoints && { maxPoints: data.maxPoints }),
         ...(data.questionPdfUrl !== undefined && {

@@ -108,24 +108,48 @@ export const notificationController = {
       if (!req.user)
         return res.status(401).json({ error: "Authentication required" });
 
-      const { targetType, targetIds, title, message, type, emailTemplateId } =
-        req.body;
+      const {
+        targetType,
+        targetIds: rawTargetIds,
+        title,
+        message,
+        type,
+        emailTemplateId,
+      } = req.body;
+
+      // Multipart/form-data sends arrays as JSON strings — normalize.
+      const targetIds = Array.isArray(rawTargetIds)
+        ? rawTargetIds
+        : typeof rawTargetIds === "string" && rawTargetIds.trim()
+          ? (() => {
+              try {
+                const parsed = JSON.parse(rawTargetIds);
+                return Array.isArray(parsed) ? parsed : [];
+              } catch {
+                return [];
+              }
+            })()
+          : [];
 
       if (
         !targetType ||
-        !["ALL_USERS", "BATCH", "COURSE"].includes(targetType)
+        !["ALL_USERS", "BATCH", "COURSE", "INTERN", "INTERN_FIELD"].includes(
+          targetType,
+        )
       ) {
-        return res
-          .status(400)
-          .json({ error: "targetType must be ALL_USERS, BATCH, or COURSE" });
+        return res.status(400).json({
+          error:
+            "targetType must be ALL_USERS, BATCH, COURSE, INTERN, or INTERN_FIELD",
+        });
       }
       if (
         targetType !== "ALL_USERS" &&
+        targetType !== "INTERN" &&
         (!targetIds || !Array.isArray(targetIds) || targetIds.length === 0)
       ) {
         return res.status(400).json({
           error:
-            "targetIds must be a non-empty array for BATCH or COURSE targets",
+            "targetIds must be a non-empty array for BATCH, COURSE, or INTERN_FIELD targets",
         });
       }
       if (!title || typeof title !== "string" || title.trim().length === 0) {
@@ -149,6 +173,14 @@ export const notificationController = {
           message: message.trim(),
           type,
           emailTemplateId,
+          attachmentUrl:
+            typeof req.body._attachmentUrl === "string"
+              ? req.body._attachmentUrl
+              : undefined,
+          attachmentName:
+            typeof req.body._attachmentName === "string"
+              ? req.body._attachmentName
+              : undefined,
         },
       );
 

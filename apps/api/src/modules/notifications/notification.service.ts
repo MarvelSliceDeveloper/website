@@ -44,6 +44,8 @@ export async function dispatchEmailsForNotification(
   type: string,
   data: Record<string, unknown>,
   emailTemplateId?: string,
+  attachmentUrl?: string,
+  attachmentName?: string,
 ): Promise<void> {
   if (!userIds || userIds.length === 0) return;
 
@@ -80,11 +82,15 @@ export async function dispatchEmailsForNotification(
             { name: user.name, email: user.email },
             emailTemplateId,
             data,
+            attachmentUrl,
+            attachmentName,
           )
         : emailService.sendNotificationEmail(
             { name: user.name, email: user.email },
             type,
             data,
+            attachmentUrl,
+            attachmentName,
           );
       sendMethod.catch((err) => {
         console.error(
@@ -773,10 +779,69 @@ export const notificationService = {
   },
 
   /**
+   * Notify interns when an online class is scheduled.
+   * targetFieldId = null → all interns; otherwise interns in that field.
+   */
+  async notifyInternSessionScheduled(sessionId: string) {
+    const session = await prisma.internSession.findUnique({
+      where: { id: sessionId },
+    });
+    if (!session) return;
+
+    const title = session.title || "Intern Class Scheduled";
+    const startStr = new Date(session.scheduledAt).toLocaleString("en-IN", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const message = `An online class "${title}" has been scheduled for ${startStr}. Join link: ${session.joinUrl || "will be shared later"}`;
+
+    const interns = await prisma.user.findMany({
+      where: {
+        role: "INTERN",
+        deletedAt: null,
+        ...(session.targetFieldId ? { internFieldId: session.targetFieldId } : {}),
+      },
+      select: { id: true, email: true, name: true },
+    });
+
+    if (interns.length === 0) return;
+
+    const notifications = interns.map((intern) => ({
+      userId: intern.id,
+      title,
+      message,
+      type: "INTERN_SESSION_SCHEDULED",
+      metadata: {
+        sessionId: session.id,
+        targetFieldId: session.targetFieldId,
+        joinUrl: session.joinUrl,
+        scheduledAt: session.scheduledAt.toISOString(),
+      },
+    }));
+
+    await this.createMany(notifications);
+
+    const emailData = {
+      title,
+      message,
+      sessionTitle: title,
+      scheduledAt: startStr,
+      joinUrl: session.joinUrl,
+    };
+    dispatchEmailsForNotification(
+      interns.map((i) => i.id),
+      "INTERN_SESSION_SCHEDULED",
+      emailData,
+    );
+  },
+
+  /**
    * Notify a student when their assignment is graded.
    */
-  async notifyAssignmentGraded(submissionId: string) {
-    const submission = await prisma.assignmentSubmission.findUnique({
+  async notifyAssignmentGraded(submissionId: string) {    const submission = await prisma.assignmentSubmission.findUnique({
       where: { id: submissionId },
       include: {
         assignment: { select: { title: true } },
@@ -811,22 +876,39 @@ export const notificationService = {
 
   /**
    * Send a custom notification to a targeted audience.
-   * - ADMIN can target ALL_USERS, BATCH, or COURSE
+   * - ADMIN can target ALL_USERS, BATCH, COURSE, INTERN (all interns),
+   *   or INTERN_FIELD (interns in a specific field)
    * - INSTRUCTOR can only target BATCH and must be the assigned instructor
+   * Optional attachment (zip/pdf) is included in emails.
    */
   async sendNotification(
     senderId: string,
     senderRole: UserRole,
     options: {
-      targetType: "ALL_USERS" | "BATCH" | "COURSE";
+      targetType:
+        | "ALL_USERS"
+        | "BATCH"
+        | "COURSE"
+        | "INTERN"
+        | "INTERN_FIELD";
       targetIds: string[];
       title: string;
       message: string;
       type?: string;
       emailTemplateId?: string;
+      attachmentUrl?: string;
+      attachmentName?: string;
     },
   ): Promise<{ count: number }> {
-    const { targetType, targetIds, title, message, emailTemplateId } = options;
+    const {
+      targetType,
+      targetIds,
+      title,
+      message,
+      emailTemplateId,
+      attachmentUrl,
+      attachmentName,
+    } = options;
     const type = options.type ?? "CUSTOM_NOTIFICATION";
 
     if (senderRole !== UserRole.ADMIN && senderRole !== UserRole.INSTRUCTOR) {
@@ -850,6 +932,25 @@ export const notificationService = {
     if (targetType === "ALL_USERS") {
       if (senderRole !== UserRole.ADMIN) return { count: 0 };
       const users = await prisma.user.findMany({ select: { id: true } });
+      userIds = users.map((u) => u.id);
+    } else if (targetType === "INTERN") {
+      if (senderRole !== UserRole.ADMIN) return { count: 0 };
+      const users = await prisma.user.findMany({
+        where: { role: "INTERN", deletedAt: null },
+        select: { id: true },
+      });
+      userIds = users.map((u) => u.id);
+    } else if (targetType === "INTERN_FIELD") {
+      if (senderRole !== UserRole.ADMIN) return { count: 0 };
+      if (!targetIds || targetIds.length === 0) return { count: 0 };
+      const users = await prisma.user.findMany({
+        where: {
+          role: "INTERN",
+          deletedAt: null,
+          internFieldId: { in: targetIds },
+        },
+        select: { id: true },
+      });
       userIds = users.map((u) => u.id);
     } else if (targetType === "BATCH") {
       if (!targetIds || targetIds.length === 0) return { count: 0 };
@@ -918,6 +1019,8 @@ export const notificationService = {
         senderRole,
         targetType,
         targetIds,
+        attachmentUrl,
+        attachmentName,
       },
     }));
 
@@ -927,6 +1030,8 @@ export const notificationService = {
       type,
       { title, message, sentBy: senderId, senderRole, targetType, targetIds },
       emailTemplateId,
+      attachmentUrl,
+      attachmentName,
     );
     return { count };
   },

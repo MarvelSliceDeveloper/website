@@ -124,6 +124,50 @@ async function main() {
   );
   console.log("✅ Student:", student.email);
 
+  const intern = await upsertUser(
+    "intern@lms.local",
+    "Demo Intern",
+    "intern123",
+    "INTERN",
+  );
+  await prisma.user.update({
+    where: { id: intern.id },
+    data: { designation: "STUDYING" },
+  });
+  console.log("✅ Intern:", intern.email);
+
+  // ─── Intern Fields (admin-managed field of choice) ───────────────────────────
+  const internFieldSeeds = [
+    { name: "Web Development", order: 0 },
+    { name: "Backend Development", order: 1 },
+    { name: "Cybersecurity", order: 2 },
+    { name: "UI/UX Design", order: 3 },
+    { name: "Data Analytics", order: 4 },
+  ];
+  const webDevField = await prisma.internField.upsert({
+    where: { id: "ifield-webdev" },
+    update: { name: "Web Development", order: 0 },
+    create: {
+      id: "ifield-webdev",
+      name: "Web Development",
+      order: 0,
+    },
+  });
+  for (const f of internFieldSeeds) {
+    if (f.name === "Web Development") continue;
+    const existing = await prisma.internField.findFirst({
+      where: { name: f.name, deletedAt: null },
+    });
+    if (!existing) {
+      await prisma.internField.create({ data: { name: f.name, order: f.order } });
+    }
+  }
+  console.log("✅ Intern fields seeded");
+  await prisma.user.update({
+    where: { id: intern.id },
+    data: { internFieldId: webDevField.id },
+  });
+
   // ─── System Settings ────────────────────────────────────────────────────────
   const defaultSettings = [
     {
@@ -618,6 +662,39 @@ async function main() {
   });
   console.log("✅ Package created");
 
+  // ─── Internship Package (fee for intern applications) ────────────────────────
+  await prisma.coursePackage.upsert({
+    where: { id: "pkg-internship" },
+    update: {},
+    create: {
+      id: "pkg-internship",
+      name: "Internship Program",
+      slug: "internship-program",
+      description: "Application fee for the Marvel Slice internship program.",
+      price: 150000,
+      status: "ACTIVE",
+      isInternship: true,
+    },
+  });
+  console.log("✅ Internship package created");
+
+  // ─── Sample Intern Session (for admin scheduling demo) ───────────────────────
+  const existingInternSession = await prisma.internSession.findFirst();
+  if (!existingInternSession) {
+    await prisma.internSession.create({
+      data: {
+        title: "Intern Onboarding Orientation",
+        description: "Welcome session for new interns — overview of the program.",
+        scheduledAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        scheduledEndAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000),
+        joinUrl: "https://meet.google.com/lms-intern-onboarding",
+        targetFieldId: webDevField.id,
+        createdBy: admin.id,
+      },
+    });
+    console.log("✅ Sample intern session created");
+  }
+
   // ─── Batch (needed before assignments — batchId is required) ─────────────────
   const pkgBatch = await prisma.batch.upsert({
     where: { id: "batch-datascience" },
@@ -634,7 +711,6 @@ async function main() {
       status: "ACTIVE",
       description: "Package-level batch for the Data Science Program.",
       defaultDaysToComplete: 30,
-      lateSubmissionPenaltyPercent: 25,
     },
   });
   console.log("✅ Batch created");
@@ -784,7 +860,7 @@ async function main() {
         { label: "<>", isCorrect: false },
       ],
     },
-  ], { daysFromEnrollment: 14, allowLateSubmission: true, lateSubmissionPenaltyPercent: 25 });
+  ], { daysFromEnrollment: 14 });
 
   await createAssignment(
     pythonModule1.id,
@@ -792,7 +868,7 @@ async function main() {
     pkgBatch.id,
     "Python Basics Assignment",
     0,
-    { daysFromEnrollment: 14, allowLateSubmission: true, lateSubmissionPenaltyPercent: 25 },
+    { daysFromEnrollment: 14 },
   );
 
   // ─── Module 2: NumPy & Pandas ───────────────────────────────────────────────
@@ -1396,12 +1472,16 @@ async function main() {
   console.log("   Admin:       admin@lms.local / admin123");
   console.log("   Instructor:  instructor@lms.local / instructor123");
   console.log("   Student:     student@lms.local / student123");
+  console.log("   Intern:      intern@lms.local / intern123");
   console.log(
     "   Courses: Python for Data Science (full), SQL (placeholder), ML (placeholder)",
   );
   console.log(
     "   Package: Data Science Program — Batch: Data Science Batch — Jul 2025",
   );
+  console.log("   Internship Package: Internship Program (flat fee)");
+  console.log("   Intern Fields: Web Development, Backend Development, Cybersecurity, UI/UX Design, Data Analytics");
+  console.log("   Sample Intern Session: Intern Onboarding Orientation");
   console.log("   BatchCourseVisibility: Python course visible, others hidden");
   console.log("   Instructor Profile: Demo Instructor (approved)");
   console.log("   Payment + Refund: Sample data available");
@@ -1414,7 +1494,7 @@ async function upsertUser(
   email: string,
   name: string,
   password: string,
-  role: "SUPER_ADMIN" | "ADMIN" | "INSTRUCTOR" | "STUDENT",
+  role: "SUPER_ADMIN" | "ADMIN" | "INSTRUCTOR" | "STUDENT" | "INTERN",
   extraData?: Partial<{ instructorOnboardingComplete: boolean }>,
 ) {
   const hash = await bcrypt.hash(password, 10);
@@ -1507,8 +1587,6 @@ async function createQuiz(
   options?: {
     dueDate?: Date;
     daysFromEnrollment?: number;
-    allowLateSubmission?: boolean;
-    lateSubmissionPenaltyPercent?: number;
   },
 ) {
   const existing = await prisma.quiz.findFirst({ where: { moduleId, title } });
@@ -1521,8 +1599,6 @@ async function createQuiz(
       order,
       dueDate: options?.dueDate ?? null,
       daysFromEnrollment: options?.daysFromEnrollment ?? null,
-      allowLateSubmission: options?.allowLateSubmission ?? false,
-      lateSubmissionPenaltyPercent: options?.lateSubmissionPenaltyPercent ?? null,
       questions: {
         create: questions.map((q) => ({
           text: q.text,
@@ -1542,8 +1618,6 @@ async function createAssignment(
   options?: {
     dueDate?: Date;
     daysFromEnrollment?: number;
-    allowLateSubmission?: boolean;
-    lateSubmissionPenaltyPercent?: number;
   },
 ) {
   const existing = await prisma.assignment.findFirst({
@@ -1562,8 +1636,6 @@ async function createAssignment(
       order,
       dueDate: options?.dueDate ?? new Date("2025-12-31"),
       daysFromEnrollment: options?.daysFromEnrollment ?? null,
-      allowLateSubmission: options?.allowLateSubmission ?? false,
-      lateSubmissionPenaltyPercent: options?.lateSubmissionPenaltyPercent ?? null,
       maxPoints: 100,
     },
   });
@@ -1579,7 +1651,6 @@ async function upsertBatch(data: {
   status: "UPCOMING" | "ACTIVE" | "COMPLETED";
   description: string;
   defaultDaysToComplete?: number;
-  lateSubmissionPenaltyPercent?: number;
 }) {
   const existing = await prisma.batch.findFirst({
     where: { courseId: data.courseId, name: data.name },

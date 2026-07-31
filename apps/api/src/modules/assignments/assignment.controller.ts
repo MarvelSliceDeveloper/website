@@ -109,13 +109,12 @@ export const assignmentController = {
         return res.status(403).json({ error: "Access denied" });
       }
 
-      const { grade, feedback, latePenaltyPercent } = GradeSubmissionSchema.parse(req.body);
+      const { grade, feedback } = GradeSubmissionSchema.parse(req.body);
       const submission = await assignmentService.gradeSubmission(
         req.user.userId,
         req.params.submissionId,
         grade,
         feedback,
-        latePenaltyPercent,
       );
 
       if (process.env.AUTO_CERTIFICATE !== "false" && submission.studentId) {

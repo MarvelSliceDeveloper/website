@@ -9,6 +9,7 @@ export enum UserRole {
   INSTRUCTOR = "INSTRUCTOR",
   ADMIN = "ADMIN",
   SUPER_ADMIN = "SUPER_ADMIN",
+  INTERN = "INTERN",
 }
 
 export enum CourseStatus {

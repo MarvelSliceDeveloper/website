@@ -204,7 +204,7 @@ export default function AssignmentOverdueView({
                     Due Date
                   </th>
                   <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Grade
+                    Mark
                   </th>
                   <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                     Status

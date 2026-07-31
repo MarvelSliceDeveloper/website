@@ -421,6 +421,15 @@ export default function AdminSidebar({
                   { label: "Instructors", href: "/admin/instructors" },
                 ],
               },
+              {
+                label: "Interns",
+                href: "/admin/interns",
+                icon: IconUserCheck,
+                children: [
+                  { label: "Manage Interns", href: "/admin/interns" },
+                  { label: "Schedule Class", href: "/admin/interns/schedule" },
+                ],
+              },
             ],
           },
           {
@@ -606,6 +615,15 @@ export default function AdminSidebar({
                   { label: "View Users", href: "/admin/users" },
                   { label: "Import Users", href: "/admin/users/import" },
                   { label: "Instructors", href: "/admin/instructors" },
+                ],
+              },
+              {
+                label: "Interns",
+                href: "/admin/interns",
+                icon: IconUserCheck,
+                children: [
+                  { label: "Manage Interns", href: "/admin/interns" },
+                  { label: "Schedule Class", href: "/admin/interns/schedule" },
                 ],
               },
             ],

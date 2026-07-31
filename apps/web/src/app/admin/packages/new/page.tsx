@@ -29,6 +29,7 @@ export default function CreatePackagePage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [isInternship, setIsInternship] = useState(false);
   const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
   const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -58,7 +59,7 @@ export default function CreatePackagePage() {
       toast.error("Package name is required");
       return;
     }
-    if (selectedCourseIds.length === 0) {
+    if (!isInternship && selectedCourseIds.length === 0) {
       toast.error("Select at least one course");
       return;
     }
@@ -71,8 +72,11 @@ export default function CreatePackagePage() {
         description: description.trim() || undefined,
         price: priceNum,
         courseIds: selectedCourseIds,
+        isInternship,
       });
-      toast.success("Package created successfully");
+      toast.success(
+        isInternship ? "Internship package created successfully" : "Package created successfully",
+      );
       router.push("/admin/packages");
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -159,13 +163,32 @@ export default function CreatePackagePage() {
               className="field w-full"
             />
           </div>
+
+          <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-4 py-3">
+            <input
+              type="checkbox"
+              id="isInternship"
+              checked={isInternship}
+              onChange={(e) => setIsInternship(e.target.checked)}
+              className="h-4 w-4 accent-primary"
+            />
+            <label htmlFor="isInternship" className="cursor-pointer">
+              <span className="block text-sm font-medium text-foreground">
+                Internship package
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                Used for intern applications (fee payment, no courses required)
+              </span>
+            </label>
+          </div>
         </div>
 
         {/* Course Selection */}
-        <div className="glass-card p-6 space-y-4">
-          <h2 className="text-sm font-semibold text-foreground">
-            Courses <span className="text-danger">*</span>
-          </h2>
+        {!isInternship && (
+          <div className="glass-card p-6 space-y-4">
+            <h2 className="text-sm font-semibold text-foreground">
+              Courses <span className="text-danger">*</span>
+            </h2>
 
           {loadingCourses ? (
             <div className="space-y-2">
@@ -248,7 +271,8 @@ export default function CreatePackagePage() {
               )}
             </>
           )}
-        </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-2">
@@ -257,7 +281,7 @@ export default function CreatePackagePage() {
           </Link>
           <button
             type="submit"
-            disabled={loading || selectedCourseIds.length === 0}
+            disabled={loading || (!isInternship && selectedCourseIds.length === 0)}
             className="btn-primary text-sm flex items-center gap-1.5"
           >
             {loading ? (

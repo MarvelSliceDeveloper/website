@@ -57,37 +57,3 @@ export async function getBatchLevelExtension(
 
   return ext?.extendedDueDate ?? null;
 }
-
-export interface LatePenaltyResult {
-  isLate: boolean;
-  penaltyPercent: number;
-  penaltyAmount: number;
-  originalScore: number;
-  finalScore: number;
-}
-
-export function calculateLatePenalty(
-  submittedAt: Date,
-  effectiveDueDate: Date,
-  maxScore: number,
-  penaltyPercent: number | null | undefined,
-  gracePeriodHrs: number | null | undefined,
-  rawScore: number,
-): LatePenaltyResult {
-  const isLate = submittedAt > effectiveDueDate;
-  if (!isLate) {
-    return { isLate: false, penaltyPercent: 0, penaltyAmount: 0, originalScore: rawScore, finalScore: rawScore };
-  }
-
-  const pct = penaltyPercent ?? 25;
-  const penaltyAmount = Math.round(maxScore * (pct / 100));
-  const finalScore = Math.max(0, rawScore - penaltyAmount);
-
-  return {
-    isLate: true,
-    penaltyPercent: pct,
-    penaltyAmount,
-    originalScore: rawScore,
-    finalScore,
-  };
-}

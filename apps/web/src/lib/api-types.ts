@@ -166,6 +166,7 @@ export interface CataloguePackage {
   price: number | null;
   status: string;
   createdAt: string;
+  isInternship?: boolean;
   courses: {
     course: {
       id: string;
@@ -198,6 +199,7 @@ export interface PackageDetail {
   status: string;
   createdAt: string;
   updatedAt: string;
+  isInternship?: boolean;
   courses: {
     course: {
       id: string;

@@ -22,7 +22,7 @@ export const CreateBatchSchema = z
   .object({
     courseId: z.string().optional(),
     packageId: z.string().optional(),
-    instructorId: z.string().optional(),
+    instructorId: z.string().min(1).optional(),
     courseInstructors: z
       .array(
         z.object({
@@ -37,7 +37,6 @@ export const CreateBatchSchema = z
     maxStudents: z.number().int().min(1).optional(),
     description: z.string().optional(),
     defaultDaysToComplete: z.number().int().min(1).optional(),
-    lateSubmissionPenaltyPercent: z.number().int().min(0).max(100).optional(),
   })
   .refine((data) => data.courseId || data.packageId, {
     message: "Either courseId or packageId is required",
@@ -52,7 +51,6 @@ export const UpdateBatchSchema = z.object({
   status: z.enum(["UPCOMING", "ACTIVE", "COMPLETED"]).optional(),
   isActive: z.boolean().optional(),
   defaultDaysToComplete: z.number().int().min(1).nullable().optional(),
-  lateSubmissionPenaltyPercent: z.number().int().min(0).max(100).optional(),
 });
 
 export const AddStudentsSchema = z.object({
@@ -119,7 +117,6 @@ export const batchService = {
         maxStudents: data.maxStudents,
         description: data.description,
         defaultDaysToComplete: data.defaultDaysToComplete,
-        lateSubmissionPenaltyPercent: data.lateSubmissionPenaltyPercent ?? 25,
         status: "UPCOMING",
       },
       include: {
@@ -208,7 +205,6 @@ export const batchService = {
         maxStudents: data.maxStudents,
         description: data.description,
         defaultDaysToComplete: data.defaultDaysToComplete,
-        lateSubmissionPenaltyPercent: data.lateSubmissionPenaltyPercent ?? 25,
         status: "UPCOMING",
       },
       include: {
@@ -472,9 +468,6 @@ export const batchService = {
     if (data.endDate) updateData.endDate = new Date(data.endDate);
     if (data.defaultDaysToComplete === null) {
       updateData.defaultDaysToComplete = null;
-    }
-    if (data.lateSubmissionPenaltyPercent !== undefined) {
-      updateData.lateSubmissionPenaltyPercent = data.lateSubmissionPenaltyPercent;
     }
 
     return prisma.batch.update({

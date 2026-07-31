@@ -56,6 +56,10 @@ router.get("/", async (req: Request, res: Response) => {
           name: true,
           email: true,
           role: true,
+          phone: true,
+          designation: true,
+          internFieldId: true,
+          internField: { select: { id: true, name: true } },
           isSuspended: true,
           packageEnrollments: {
             select: {
@@ -109,7 +113,7 @@ router.get("/", async (req: Request, res: Response) => {
 // Creates a new user account
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const { name, email, password, role, packageId, batchId } = req.body;
+    const { name, email, password, role, packageId, batchId, designation, internFieldId } = req.body;
 
     if (!name || !email || !password || !role) {
       return res
@@ -117,7 +121,7 @@ router.post("/", async (req: Request, res: Response) => {
         .json({ error: "Name, email, password, and role are required" });
     }
 
-    if (!["STUDENT", "INSTRUCTOR", "ADMIN"].includes(role)) {
+    if (!["STUDENT", "INSTRUCTOR", "ADMIN", "INTERN"].includes(role)) {
       return res.status(400).json({ error: "Invalid user role" });
     }
 
@@ -165,6 +169,13 @@ router.post("/", async (req: Request, res: Response) => {
           email,
           passwordHash,
           role: role as UserRole,
+          ...(role === "INTERN"
+            ? {
+                designation: designation || null,
+                internFieldId:
+                  typeof internFieldId === "string" ? internFieldId : null,
+              }
+            : {}),
         },
         select: {
           id: true,
@@ -239,22 +250,23 @@ router.post("/", async (req: Request, res: Response) => {
 router.patch("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, email, role, packageId, batchId } = req.body;
+    const { name, email, role, packageId, batchId, designation, internFieldId } = req.body;
 
-    const hasUserFields = name || email || role;
+    const hasUserFields =
+      name || email || role || designation !== undefined || internFieldId !== undefined;
     const hasEnrollmentFields =
       packageId !== undefined || batchId !== undefined;
 
     if (!hasUserFields && !hasEnrollmentFields) {
       return res.status(400).json({
         error:
-          "At least one field (name, email, role, packageId, batchId) is required",
+          "At least one field (name, email, role, designation, internFieldId, packageId, batchId) is required",
       });
     }
 
     if (
       role &&
-      !["STUDENT", "INSTRUCTOR", "ADMIN", "SUPER_ADMIN"].includes(role)
+      !["STUDENT", "INSTRUCTOR", "ADMIN", "SUPER_ADMIN", "INTERN"].includes(role)
     ) {
       return res.status(400).json({ error: "Invalid user role" });
     }
@@ -328,10 +340,15 @@ router.patch("/:id", async (req: Request, res: Response) => {
 
     const result = await prisma.$transaction(async (tx) => {
       // Update user fields
-      const updateData: Record<string, string> = {};
+      const updateData: Record<string, string | string[] | null> = {};
       if (name) updateData.name = name;
       if (email) updateData.email = email;
       if (role) updateData.role = role;
+      if (designation !== undefined) updateData.designation = designation || null;
+      if (internFieldId !== undefined) {
+        updateData.internFieldId =
+          typeof internFieldId === "string" ? internFieldId : null;
+      }
 
       const user = hasUserFields
         ? await tx.user.update({

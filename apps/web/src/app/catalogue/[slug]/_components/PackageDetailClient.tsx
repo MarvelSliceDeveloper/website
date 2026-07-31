@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { PackageDetail } from "@/lib/api-types";
 import { RazorpayCheckoutWidget } from "./RazorpayCheckoutWidget";
+import { InternCheckoutWidget } from "./InternCheckoutWidget";
 
 interface Props {
   pkg: PackageDetail;
@@ -202,7 +203,11 @@ export function PackageDetailClient({ pkg }: Props) {
 
           {/* Right column — sticky checkout */}
           <div className="lg:col-span-1">
-            <RazorpayCheckoutWidget pkg={pkg} />
+            {pkg.isInternship ? (
+              <InternCheckoutWidget pkg={pkg} />
+            ) : (
+              <RazorpayCheckoutWidget pkg={pkg} />
+            )}
           </div>
         </div>
       </main>

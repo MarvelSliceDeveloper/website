@@ -68,6 +68,7 @@ type PackageDetail = {
   description: string | null;
   status: "DRAFT" | "ACTIVE" | "ARCHIVED";
   createdAt: string;
+  isInternship?: boolean;
   courses: PackageCourse[];
   enrollments: PackageEnrollment[];
   _count: { enrollments: number };
@@ -376,6 +377,14 @@ export default function PackageDetailPage({
               <StatusBadge status={pkg.status} config={statusConfig} />
             </div>
           </div>
+          {pkg.isInternship && (
+            <div>
+              <p className="text-xs text-muted-foreground">Type</p>
+              <span className="mt-1 inline-block rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                Internship
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -440,7 +449,7 @@ export default function PackageDetailPage({
           <h2 className="text-sm font-semibold text-foreground">
             Enrolled Students
           </h2>
-          {pkg.status === "ACTIVE" && (
+          {pkg.status === "ACTIVE" && !pkg.isInternship && (
             <button
               onClick={openEnrollModal}
               className="btn-primary text-xs flex items-center gap-1.5"
