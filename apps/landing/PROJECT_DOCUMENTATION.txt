@@ -1,0 +1,613 @@
+================================================================================
+  MARVEL SLICE — FULL PROJECT DOCUMENTATION
+================================================================================
+
+A dynamic education/LMS website built with React + Supabase.
+Features a DB-driven front end with a full admin dashboard for content
+management — no Supabase Auth required (simple email/password admin login).
+
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+1.  Tech Stack
+2.  Project Structure
+3.  Public Routes
+4.  Admin Routes
+5.  Database Schema (30 tables)
+6.  API Endpoints
+7.  Admin Panel Pages
+8.  Key Architecture Decisions
+9.  Setup
+10. Security Notes
+
+
+================================================================================
+1. TECH STACK
+================================================================================
+
+  Framework    : React 19 + Vite 8
+  Routing      : React Router v6
+  State/Server : @tanstack/react-query v5
+  Styling      : Tailwind CSS v4
+  UI Animation : Framer Motion
+  Icons        : React Icons (Feather)
+  UI Library   : Headless UI
+  Backend      : Supabase (PostgreSQL + Storage + REST API)
+  Linting      : Oxlint
+  Deployment   : Vercel (SPA with rewrites)
+  Email        : Nodemailer (Gmail SMTP)
+
+
+================================================================================
+2. PROJECT STRUCTURE
+================================================================================
+
+  src/
+  ├── main.jsx                         # Entry point — QueryClientProvider
+  ├── App.jsx                          # Router: public /* + admin /*
+  ├── index.css                        # Tailwind v4 imports + custom tokens
+  │
+  ├── lib/
+  │   └── supabaseClient.js            # Supabase client (anon key)
+  │
+  ├── hooks/
+  │   ├── useSupabase.js               # Site queries: nav, courses, home, etc.
+  │   └── useBlog.js                   # Blog queries: posts, categories, tags
+  │
+  ├── components/
+  │   ├── layout/
+  │   │   ├── TopBar.jsx               # Contact bar (phone, email, social links)
+  │   │   ├── Header.jsx               # Sticky header with nav + mobile menu
+  │   │   ├── NavDropdown.jsx          # Dropdown + mobile nav for Header
+  │   │   └── Footer.jsx               # Footer with nav tree
+  │   ├── home/
+  │   │   ├── Hero.jsx                 # Hero section
+  │   │   ├── KeyHighlights.jsx        # Icon grid of highlights
+  │   │   ├── CourseTabsNav.jsx        # Tab navigation for course detail
+  │   │   ├── CourseOverview.jsx       # Q&A accordion
+  │   │   ├── ProjectsSection.jsx      # Project cards
+  │   │   ├── CertificationSection.jsx # Certification info
+  │   │   ├── PromoBanner.jsx          # Callout banner
+  │   │   ├── AlumniCompanies.jsx      # Logo grid
+  │   │   ├── FAQSection.jsx           # Accordion FAQ
+  │   │   └── RelatedCourses.jsx       # Latest courses grid
+  │   ├── chat/
+  │   │   └── ChatWidget.jsx           # Public chat widget (Supabase Realtime)
+  │   └── ui/
+  │       ├── Button.jsx               # Unified Button (variants, sizes, shapes)
+  │       ├── Card.jsx                 # Reusable card wrapper
+  │       ├── Tabs.jsx                 # Tab component
+  │       └── AccordionItem.jsx        # Expandable accordion
+  │
+  ├── pages/
+  │   ├── Home.jsx                     # DB-driven home page
+  │   ├── Courses.jsx                  # Course listing by category
+  │   ├── CourseDetail.jsx             # Single course (hero, brochure, tabs, etc.)
+  │   ├── Career.jsx                   # Career page (role categories, jobs, form)
+  │   ├── Blog.jsx                     # Blog listing + single post view
+  │   └── NavPage.jsx                  # Dynamic pages (About, Contact, etc.)
+  │
+  └── admin/
+      ├── Admin.jsx                    # Admin router + AuthProvider + ProtectedRoute
+      ├── context/
+      │   └── AuthContext.jsx          # Admin auth (email/password, SHA-256)
+      ├── layout/
+      │   ├── AdminLayout.jsx          # Shell: sidebar + header
+      │   └── Sidebar.jsx              # Collapsible nav sections
+      ├── components/
+      │   └── ImageUploader.jsx        # Inline upload to Storage
+      └── pages/
+          ├── Login.jsx                # Admin login form
+          ├── Dashboard.jsx            # Stats, recent courses, quick links
+          ├── SiteSettings.jsx         # Logo, contact info, social links
+          ├── NavMenuManager.jsx       # Tree nav editor
+          ├── NavItemManager.jsx       # Nav items overview + course linking
+          ├── NavItemChildren.jsx      # Child item CRUD + multi-course linking
+          ├── CoursesList.jsx          # All courses table
+          ├── CourseEditor.jsx         # 10-tab course editor
+          ├── CourseReports.jsx        # Generate combined brochure PDFs
+          ├── PromoBannerManager.jsx   # Banner heading/text/CTA
+          ├── AlumniCompaniesManager.jsx  # Logo + name list
+          ├── TagsManager.jsx          # Tag CRUD
+          ├── FooterManager.jsx        # Footer column/link editor
+          ├── MediaLibrary.jsx         # Image uploads
+          ├── AdminUsersManager.jsx    # Admin account management
+          ├── NavPageEditor.jsx        # Content sections + course picker
+          ├── HomePageEditor.jsx       # Home sections editor
+          ├── CareerPageEditor.jsx     # Career page (hero, culture, benefits,
+          │                           #   role categories, job openings, form config)
+          ├── CareerSubmissions.jsx    # Career applications viewer (search, filter,
+          │                           #   export CSV/PDF, detail modal)
+          ├── BrochureDownloads.jsx    # Brochure requests (read/unread, search,
+          │                           #   date filter, export CSV)
+          ├── FormSubmissions.jsx      # Demo form submissions (search, date filter,
+          │                           #   export CSV)
+          ├── ChatPanel.jsx            # Live chat management (Supabase Realtime)
+          ├── AboutPageEditor.jsx      # About page editor
+          ├── ContactPageEditor.jsx    # Contact page editor
+          ├── ServicesPageEditor.jsx   # Services page editor
+          ├── TrainingPageEditor.jsx   # Training page editor
+          ├── BlogManager.jsx          # Blog posts table
+          ├── BlogPostEditor.jsx       # Post editor with tags
+          └── BlogCategoriesManager.jsx  # Category CRUD
+
+
+================================================================================
+3. PUBLIC ROUTES
+================================================================================
+
+  /                                Home page (DB-driven sections)
+  /about                           About page
+  /blog                            Blog listing with category/tag/search
+  /blog/:slug                      Single blog post
+  /contact                         Contact page
+  /career                          Career page (role categories, jobs, form)
+  /courses                         Course listing grouped by nav category
+  /courses/category/:categorySlug  Filtered courses
+  /courses/:slug                   Single course page with brochure download
+  /:slug                           Dynamic catch-all for nav items
+
+
+================================================================================
+4. ADMIN ROUTES
+================================================================================
+
+  /admin                                Dashboard
+  /admin/login                          Login page
+  /admin/site-settings                  Site Settings
+  /admin/nav-menu                       Nav Menu Manager
+  /admin/nav-menu/children/:id          Nav Item Children editor
+  /admin/nav-menu/manage                Nav Item Manager (overview)
+  /admin/courses                        Courses List
+  /admin/courses/wizard                 Course Wizard
+  /admin/courses/reports                Course Reports (brochure PDF generation)
+  /admin/courses/:id                    Course Editor (10 tabs)
+  /admin/promo-banner                   Promo Banner Manager
+  /admin/alumni                         Alumni Companies Manager
+  /admin/tags                           Tags Manager
+  /admin/footer                         Footer Manager
+  /admin/media                          Media Library
+  /admin/admin-users                    Admin Users Manager
+  /admin/nav-pages/:id                  Nav Page Editor (sections + courses)
+  /admin/home-page                      Redirects to /admin/home/hero
+  /admin/home/:section                  Home Page Editor (specific section)
+  /admin/about-page                     About Page Editor
+  /admin/contact-page                   Contact Page Editor
+  /admin/career-page                    Career Page Editor
+  /admin/services-page                  Services Page Editor
+  /admin/training-page                  Training Page Editor
+  /admin/career-submissions             Career Submissions viewer
+  /admin/brochure-downloads             Brochure Downloads viewer
+  /admin/form-submissions               Form Submissions viewer
+  /admin/pages/:slug                    Page Editor Redirect (auto-creates nav item)
+  /admin/chats                          Chat Panel
+  /admin/blog                           Blog Manager
+  /admin/blog/:id                       Blog Post Editor
+  /admin/blog/categories                Blog Categories Manager
+
+
+================================================================================
+5. DATABASE SCHEMA (30 tables)
+================================================================================
+
+  5.1 Content Management
+  ──────────────────────────────────────────────────────────────────────────────
+
+  site_settings
+    Singleton row: logo URL, contact info, social links (Facebook, Instagram,
+    YouTube, LinkedIn, Twitter/X), address, phone, email.
+
+  nav_items
+    Navigation tree. Top-level items have a parent_label (one of: "Software
+    Learning", "Competitive Exam", "Services", "Training"). Child items use
+    parent_id FK. Columns: id, label, path, parent_label, parent_id, sort_order,
+    is_active, created_at, updated_at.
+
+  nav_pages
+    Page content per nav_item. Columns: id, nav_item_id FK, heading, sections
+    (JSONB array of section objects), hero_image, is_published, created_at,
+    updated_at. Sections have types: text, image, cards, features, cta.
+
+  career_page_content
+    Singleton-row career page content. Columns: id, hero_image, hero_heading,
+    hero_subheading, culture, culture_heading, benefits (JSONB array of
+    {title, description} objects), benefits_heading, section1_heading,
+    section1_subheading, section1_description, section2_heading,
+    section2_subheading, form_config (JSONB for form field customization),
+    is_published, created_at, updated_at.
+
+  home_sections
+    DB-driven home page sections. Each row has a section_key (hero, highlights,
+    overview, projects, certification, faqs, tabs, empowering, featured_courses,
+    services, cta_banner, stats, partners) with heading, content, and image.
+    If no sections exist, falls back to first published course data.
+
+  5.2 Courses
+  ──────────────────────────────────────────────────────────────────────────────
+
+  courses
+    Course metadata. Columns: id, title, slug, description, subtitle, video_url,
+    thumbnail, hero_image, nav_item_id FK, rating, learners, experience_level,
+    duration, duration_unit, is_published, created_at, updated_at.
+    Also: checklist (JSONB array), stats_heading, stats (JSONB array).
+
+  highlights
+    Per-course icon + label pairs. Columns: id, course_id FK, icon, label,
+    sort_order.
+
+  overview_faqs
+    Per-course Q&A with list items. Columns: id, course_id FK, question, answer,
+    list_items (JSONB array), sort_order.
+
+  course_fees
+    Per-course pricing plans with features. Columns: id, course_id FK, plan,
+    price, currency, features (JSONB array), sort_order.
+
+  projects
+    Per-course projects. Columns: id, course_id FK, title, description,
+    sort_order.
+
+  certifications
+    Per-course certification (1:1 with course). Columns: id, course_id FK,
+    description, certification_image, recognized_companies (JSONB array of
+    {name, logo} objects).
+
+  faqs
+    Per-course general FAQs. Columns: id, course_id FK, question, answer,
+    sort_order.
+
+  course_tabs
+    Per-course tab labels + rich text content. Columns: id, course_id FK,
+    label, content (JSONB), sort_order.
+
+  course_tags
+    M2M junction: courses ↔ tags. Columns: course_id FK, tag_id FK.
+
+  related_courses
+    Curated cross-links between courses. Columns: id, course_id FK,
+    related_course_id FK.
+
+  5.3 Career
+  ──────────────────────────────────────────────────────────────────────────────
+
+  role_categories
+    Job family category cards on Career page. Columns: id, name, display_order,
+    is_active, created_at. Each category can have multiple job openings.
+
+  job_openings
+    Job listings linked to role_categories. Columns: id, title, department,
+    location, type, experience, salary, description, is_active,
+    role_category_id FK, sort_order, created_at, updated_at.
+
+  career_submissions
+    Job application form submissions. Columns: id, full_name, email, phone,
+    department, category, description, file_url (resume upload URL),
+    created_at.
+
+  5.4 Blog
+  ──────────────────────────────────────────────────────────────────────────────
+
+  blog_categories
+    Category name + slug.
+
+  blog_posts
+    Posts with slug, excerpt, content (rich text), author, category_id FK,
+    image_url, is_published, is_featured, published_at, created_at, updated_at.
+
+  blog_post_tags
+    M2M: posts ↔ tags. Columns: post_id FK, tag_id FK.
+
+  5.5 Shared
+  ──────────────────────────────────────────────────────────────────────────────
+
+  tags
+    Shared tags for courses and blog posts. Columns: id, name, slug.
+
+  5.6 Site Features
+  ──────────────────────────────────────────────────────────────────────────────
+
+  promo_banners
+    Callout banner. Columns: id, heading, subtext, cta_text, cta_link,
+    is_active.
+
+  alumni_companies
+    Partner/hiring company logos. Columns: id, name, logo_url, sort_order.
+
+  newsletter_subscribers
+    Email subscriptions from newsletter signup. Columns: id, email, created_at.
+
+  brochure_downloads
+    Course brochure download requests. Columns: id, name, email, phone,
+    course_id FK, course_title (denormalized), is_read (admin read/unread),
+    created_at.
+
+  form_submissions
+    Home page demo/intro form submissions. Columns: id, full_name, email,
+    phone, created_at.
+
+  5.7 Chat
+  ──────────────────────────────────────────────────────────────────────────────
+
+  conversations
+    Chat conversations. Columns: id, name, email, status, created_at.
+
+  messages
+    Chat messages (Supabase Realtime). Columns: id, conversation_id FK,
+    content, sender (user/admin), created_at.
+
+  5.8 Admin
+  ──────────────────────────────────────────────────────────────────────────────
+
+  admin_profiles
+    Admin accounts. Columns: id, email, password_hash (SHA-256 or bcrypt),
+    full_name, role (master_admin/admin/editor/manager), created_by FK,
+    created_at, updated_at.
+
+  Functions: verify_admin(), create_admin(), delete_admin(), update_admin(),
+  list_admins(), role_rank().
+
+  5.9 Storage Buckets
+  ──────────────────────────────────────────────────────────────────────────────
+
+  pages     — Public image uploads for site content
+  career-uploads — Public resume/document uploads for career applications
+
+  5.10 Indexes
+  ──────────────────────────────────────────────────────────────────────────────
+  All FK columns indexed. blog_posts has composite index on
+  (is_published, published_at desc). Automatic updated_at triggers on
+  site_settings, nav_pages, home_sections, blog_posts, career_page_content,
+  job_openings.
+
+  Note: All public tables have RLS disabled by default (run at end of
+  schema.sql). Some tables (form_submissions, career_submissions, chat tables)
+  have specific RLS policies for public insert/select.
+
+
+================================================================================
+6. API ENDPOINTS
+================================================================================
+
+  Development server runs on port 3001 (configurable via DEV_API_PORT env var).
+  Production uses Vercel serverless functions in /api/.
+
+  POST /api/submit-career
+    Source: Career.jsx (after career_submissions insert)
+    Body: { full_name, email, phone, department, category, description, file_url }
+    Action: Sends admin notification + applicant auto-reply via SMTP
+
+  POST /api/submit-form
+    Source: IntroFormSection.jsx (after form_submissions insert)
+    Body: { full_name, email, phone }
+    Action: Sends admin notification + user auto-reply via SMTP
+
+  POST /api/submit-brochure
+    Source: CourseDetail.jsx (after brochure_downloads insert)
+    Body: { name, email, phone, course_title }
+    Action: Sends admin notification + user auto-reply via SMTP
+
+  All endpoints silently return { success: true } when SMTP is not configured.
+  The app relies on direct Supabase inserts for data persistence — the API is
+  purely for email notifications.
+
+
+================================================================================
+7. ADMIN PANEL PAGES (detailed)
+================================================================================
+
+  7.1 Dashboard
+  ──────────────────────────────────────────────────────────────────────────────
+  6 stat cards (Courses, Nav Items, FAQs, Alumni, Tags, Promo Banners) with
+  live counts. Quick create links, content management cards, recent courses.
+
+  7.2 Course Editor (10 tabs)
+  ──────────────────────────────────────────────────────────────────────────────
+  1. Basic Info (title, slug, description, subtitle, rating, learners)
+  2. Media (hero image, thumbnail, video URL)
+  3. Checklist Items
+  4. Highlights (icon + label pairs)
+  5. Overview Q&A (question, answer, list items)
+  6. Course Fees (plan, features, price, currency)
+  7. Projects
+  8. Certification
+  9. FAQs
+  10. Related Courses (curated cross-links)
+
+  7.3 Career Page Editor
+  ──────────────────────────────────────────────────────────────────────────────
+  Hero: heading, subheading, image upload.
+  Company Culture: heading + multi-line content.
+  Benefits & Perks: heading + dynamic list (title + description, add/remove).
+  Role Categories: full CRUD table (name, display_order, active toggle).
+  "We're Hiring" Section: heading, subheading, description.
+  Job Openings: full CRUD table (title, role_category_id FK, location, type,
+    experience, salary, description, is_active, sort_order).
+  Form Configuration: enable/disable toggle, CTA variant, headline, description,
+    CTA text, per-field editor (label, required, placeholder, options).
+
+  7.4 Career Submissions
+  ──────────────────────────────────────────────────────────────────────────────
+  Search, multi-select Department/Category filters, date filter, detail modal,
+  CSV + PDF export with filter dialog, pagination (10/20/30/40/50/100).
+
+  7.5 Brochure Downloads
+  ──────────────────────────────────────────────────────────────────────────────
+  Search (name, email, course title), status filter (all/unread/read), date
+  filter (today/7d/30d/custom), detail modal, mark read/unread, CSV export,
+  pagination (15/page).
+
+  7.6 Form Submissions
+  ──────────────────────────────────────────────────────────────────────────────
+  Search, date filter, detail modal with "Send Email" (mailto:), CSV export,
+  pagination (10/20/30/50/100).
+
+  7.7 Navigation Menu Manager (NavMenuManager)
+  ──────────────────────────────────────────────────────────────────────────────
+  Tree editor organized by section (Software Learning, Competitive Exam,
+  Services, Training). Add/edit/delete items, set parent (multi-level nesting),
+  toggle active state, auto-generate path from label. "Linked Courses" checkbox
+  dropdown for each item to link/unlink courses. Form includes "Link to Course"
+  path selector. Section sidebar shows compact tree with active/status badges.
+
+  7.8 Nav Item Manager (NavItemManager)
+  ──────────────────────────────────────────────────────────────────────────────
+  Overview page listing all nav items grouped by parent_label section. Each row
+  shows label, path, active status, linked courses (clickable links), Sub-items
+  button (links to NavItemChildren), Linked Courses checkbox dropdown for inline
+  linking/unlinking. Child items shown nested with indentation.
+
+  7.9 Nav Item Children (NavItemChildren)
+  ──────────────────────────────────────────────────────────────────────────────
+  CRUD editor for child items under a specific parent. Multi-course selector
+  (checkboxes) for linking courses; courses linked elsewhere shown as disabled.
+  Delete unlinks all courses before deleting.
+
+  7.10 Blog Post Editor
+  ──────────────────────────────────────────────────────────────────────────────
+  Title, slug (auto-generated), excerpt, content, image, category dropdown,
+  author, featured checkbox, publish toggle + date. Tag picker with searchable
+  toggle chips. Save strategy: delete all then re-insert M2M tags.
+
+  7.11 Nav Page Editor
+  ──────────────────────────────────────────────────────────────────────────────
+  Sections editor with types: text, image, cards, features, cta. Includes course
+  picker to show related course cards on the page.
+
+  7.12 Course Reports
+  ──────────────────────────────────────────────────────────────────────────────
+  Generates combined brochure PDFs for selected courses. Category or individual
+  course selection. Uses html2canvas + jspdf for cover page, course descriptions,
+  tabs/content, highlights, pricing, projects, certifications, FAQs.
+
+  7.13 Chat Panel
+  ──────────────────────────────────────────────────────────────────────────────
+  Real-time chat management using Supabase Realtime on conversations + messages
+  tables. Public chat widget available on frontend.
+
+
+================================================================================
+8. KEY ARCHITECTURE DECISIONS
+================================================================================
+
+  8.1 Navigation System
+  ──────────────────────────────────────────────────────────────────────────────
+  Top-level nav items are hardcoded in Header.jsx (Home, About, Software
+  Learning, Competitive Exam, Services, Training, Career, Blog, Contact).
+  Child items fetched from nav_items via parent_label matching, supporting
+  3-level tree. Items without paths are containers; items with paths link.
+
+  8.2 Admin Auth
+  ──────────────────────────────────────────────────────────────────────────────
+  No Supabase Auth. Simple email/password login hashed client-side with SHA-256
+  (Web Crypto API). Matched against admin_profiles.password_hash. Session in
+  localStorage. Role-based access (master_admin > admin > editor > manager).
+
+  8.3 Content Fallback Pattern
+  ──────────────────────────────────────────────────────────────────────────────
+  Career page: reads career_page_content first, falls back to nav_pages data.
+  Home page: reads home_sections, falls back to first published course data.
+  This allows progressive migration without breaking existing content.
+
+  8.4 Course Linking
+  ──────────────────────────────────────────────────────────────────────────────
+  Courses link to nav_items via courses.nav_item_id FK. Multiple courses can
+  share the same nav_item_id. NavItemChildren and NavItemManager provide
+  checkbox dropdowns for multi-course linking. On nav item delete, linked
+  courses have their nav_item_id set to null.
+
+  8.5 Admin RLS Strategy
+  ──────────────────────────────────────────────────────────────────────────────
+  All INSERT/UPDATE/DELETE policies use "to anon, authenticated" because admin
+  uses custom localStorage login (not Supabase Auth sessions), so requests go
+  as the anon role. RLS is disabled on most tables; specific tables have
+  targeted policies for public insert (e.g., form_submissions).
+
+  8.6 Slug Conflict Resolution
+  ──────────────────────────────────────────────────────────────────────────────
+  When saving blog posts, if slug already exists, auto-appends -1, -2, etc.
+  until unique.
+
+  8.7 Image Uploads
+  ──────────────────────────────────────────────────────────────────────────────
+  ImageUploader component uploads to Supabase Storage 'pages' bucket. All admin
+  editors use this inline uploader. Career submissions upload to 'career-uploads'
+  bucket with client-side compression for images.
+
+  8.8 Email (Silent Failure)
+  ──────────────────────────────────────────────────────────────────────────────
+  All API endpoints silently return { success: true } when SMTP is not
+  configured. The app relies on direct Supabase inserts for data persistence;
+  the API is purely for optional email notifications.
+
+  8.9 Unified Button Component
+  ──────────────────────────────────────────────────────────────────────────────
+  Single Button component with variants (primary, accent, outline, ghost, link,
+  pill), sizes (xs-xl), shapes (pill, md, sm, square). Renders as <button>,
+  <Link> (if to prop), or <a> (if href prop).
+
+  8.10 Scroll Restoration
+  ──────────────────────────────────────────────────────────────────────────────
+  ScrollToTop component in App.jsx scrolls to window top on every route change.
+
+
+================================================================================
+9. SETUP
+================================================================================
+
+  Prerequisites:
+    Node.js 18+
+    Supabase project
+
+  Installation:
+    npm install
+    cp .env.example .env
+    # Fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+    npm run dev
+
+  Environment Variables:
+    VITE_SUPABASE_URL   = https://your-project-id.supabase.co
+    VITE_SUPABASE_ANON_KEY = your-anon-key
+    SMTP_EMAIL          = gmail address for sending emails
+    SMTP_PASSWORD       = gmail app password
+    ADMIN_EMAIL         = where admin notifications are sent
+    DEV_API_PORT        = port for dev API server (default 3001)
+
+  Database:
+    Run schema.sql in Supabase SQL Editor to create all tables.
+    Then seed data as needed.
+
+  First Admin User:
+    INSERT INTO admin_profiles (id, email, full_name, role, password_hash)
+    VALUES (gen_random_uuid(), 'admin@marvelslice.com', 'Admin', 'admin',
+            '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9');
+    (password: admin123, SHA-256 hash)
+
+  Storage Buckets:
+    INSERT INTO storage.buckets (id, name, public) VALUES ('pages', 'pages', true);
+    INSERT INTO storage.buckets (id, name, public)
+      VALUES ('career-uploads', 'career-uploads', true);
+
+  Vercel Deploy:
+    Push to GitHub, import on Vercel.
+    Set env vars: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY.
+    No framework config needed — vercel.json provides SPA rewrites.
+
+
+================================================================================
+10. SECURITY NOTES
+================================================================================
+
+  - Admin panel is open access — no RLS, no Supabase Auth.
+  - Simple email/password login hashed client-side with SHA-256.
+  - Session stored in localStorage (not httpOnly cookies).
+  - Intended for internal/admin use behind a VPN or basic auth in production.
+  - API endpoints silently fail if SMTP not configured (no error leakage).
+  - File uploads validate types (PDF, DOC, DOCX, JPG, PNG) and size (max 10 MB).
+  - Career submissions do client-side image compression before upload.
+  - Admin functions enforce role hierarchy (can't create/edit/delete at/above
+    your level).
+
+================================================================================
+  End of Documentation
+================================================================================

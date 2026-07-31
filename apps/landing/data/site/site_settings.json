@@ -1,0 +1,21 @@
+{
+  "id": "912a4ee1-97fd-4df9-b819-78d336368a70",
+  "logo_url": "https://nxlsxywqvvuiljsulito.supabase.co/storage/v1/object/public/pages/site/1784891788016-ywwcck6d1gr.png",
+  "contact_email": "sales@marvelslice.com",
+  "contact_phone": "+91 6380957390",
+  "social_links": {
+    "twitter": "https://twitter.com/...",
+    "facebook": "https://facebook.com/...",
+    "linkedin": "https://linkedin.com/...",
+    "instagram": "https://instagram.com/..."
+  },
+  "updated_at": "2026-07-29T08:40:04.697155+00:00",
+  "address": "123 Tech Park, Chennai, Tamil Nadu, India",
+  "working_hours": {
+    "weekday": "10:00 AM - 7:00 PM",
+    "saturday": "10:00 AM - 3:00 PM"
+  },
+  "blog_heading": "Latest Articles & News",
+  "blog_subheading": "Insights, tutorials, and stories from the Marvel Slice team",
+  "blog_hero_image": "https://nxlsxywqvvuiljsulito.supabase.co/storage/v1/object/public/course-thumbnails/1785314401823-istockphoto-1388970018-170667a.jpg"
+}

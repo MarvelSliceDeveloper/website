@@ -1,0 +1,115 @@
+{
+  "nav_item": {
+    "id": "8b461dc0-3f88-4340-857f-9d7248af6cdf",
+    "parent_id": null,
+    "parent_label": null,
+    "label": "Career",
+    "path": "/career",
+    "sort_order": 99,
+    "is_active": true,
+    "created_at": "2026-07-02T14:42:40.887145+00:00"
+  },
+  "page": {
+    "id": "358da945-8988-4ace-802e-d3c888a1abeb",
+    "nav_item_id": "8b461dc0-3f88-4340-857f-9d7248af6cdf",
+    "heading": "Build Your Career With Marvel Slice",
+    "subheading": "Join a team passionate about transforming education",
+    "hero_image": "https://picsum.photos/seed/career-hero/1200/500",
+    "sections": [
+      {
+        "content": "At Marvel Slice, we're building the future of education. We're looking for passionate individuals who share our vision of making quality learning accessible to everyone.\n\nWe believe in fostering a culture of innovation, collaboration, and continuous learning. If you're excited about education and technology, you'll find a home here.",
+        "heading": "Our Culture",
+        "section_type": "text"
+      },
+      {
+        "items": [
+          {
+            "type": "xxxxxxxxxxxxxx",
+            "title": "uytg7",
+            "location": "xxxxxxxxxxxx",
+            "description": "xxxxxxxxxx"
+          }
+        ],
+        "heading": "Open Positions",
+        "section_type": "positions"
+      }
+    ],
+    "is_published": true,
+    "created_at": "2026-07-02T15:07:51.357439+00:00",
+    "updated_at": "2026-07-17T06:27:39.126447+00:00",
+    "form_config": {
+      "cta": {
+        "text": "Submit Application",
+        "variant": "accent"
+      },
+      "fields": {
+        "email": {
+          "label": "Email Address",
+          "enabled": true,
+          "required": true,
+          "placeholder": "Enter your email"
+        },
+        "phone": {
+          "label": "Phone Number",
+          "enabled": true,
+          "required": true,
+          "placeholder": "Enter your phone number"
+        },
+        "category": {
+          "label": "Position Type",
+          "enabled": true,
+          "options": [
+            "Full-time",
+            "Part-time",
+            "Internship",
+            "Contract",
+            "Freelance"
+          ],
+          "required": true,
+          "placeholder": "Select type"
+        },
+        "full_name": {
+          "label": "Full Name",
+          "enabled": true,
+          "required": true,
+          "placeholder": "Enter your full name"
+        },
+        "department": {
+          "label": "Department",
+          "enabled": true,
+          "options": [
+            "Engineering",
+            "Marketing",
+            "Sales",
+            "Human Resources",
+            "Finance",
+            "Operations",
+            "Design",
+            "Content",
+            "Education"
+          ],
+          "required": true,
+          "placeholder": "Select department"
+        },
+        "description": {
+          "label": "Why do you want to join us?",
+          "enabled": true,
+          "required": true,
+          "placeholder": "Tell us about yourself and why you're interested..."
+        },
+        "file_upload": {
+          "label": "Upload Resume",
+          "enabled": true,
+          "required": true,
+          "placeholder": "Upload your resume (PDF, DOC)"
+        }
+      },
+      "enabled": true,
+      "heading": "Apply Now",
+      "headline": "Apply Now",
+      "position": "after",
+      "subheading": "Fill out the form below and we'll get back to you.",
+      "description": "Fill out the form below and we'll get back to you."
+    }
+  }
+}
