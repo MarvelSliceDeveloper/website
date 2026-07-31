@@ -30,14 +30,13 @@ interface Instructor {
   activeBatches: number;
   totalStudents: number;
   rating: number | null;
-  createdAt: string;
+  createdAt: string | null;
 }
 
 type ApiRawItem = {
   id: string;
   name: string;
   email: string;
-  createdAt: string;
   instructorProfile: {
     designation: string | null;
     experienceYears: number | null;
@@ -45,6 +44,7 @@ type ApiRawItem = {
     totalStudents: number;
     rating: number | null;
     status: string;
+    createdAt: string;
   } | null;
   activeBatchCount: number;
 };
@@ -66,7 +66,8 @@ const statusConfig: Record<string, { label: string; classes: string }> = {
 
 const statusFilters = ["ALL", "PENDING", "APPROVED", "ACTIVE", "INACTIVE"] as const;
 
-function formatDate(dateStr: string) {
+function formatDate(dateStr: string | null | undefined) {
+  if (!dateStr || Number.isNaN(new Date(dateStr).getTime())) return "—";
   return new Date(dateStr).toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
@@ -133,14 +134,14 @@ export default function AdminInstructorsPage() {
           id: item.id,
           name: item.name,
           email: item.email,
-          status: p?.status ?? "PENDING",
+          status: (p?.status ?? "PENDING") as Instructor["status"],
           designation: p?.designation ?? null,
           experience: p?.experienceYears ?? null,
           currentCompany: p?.companyName ?? null,
           activeBatches: item.activeBatchCount ?? 0,
           totalStudents: p?.totalStudents ?? 0,
           rating: p?.rating ?? null,
-          createdAt: item.createdAt,
+          createdAt: p?.createdAt ?? null,
         };
       });
       setInstructors(mapped);

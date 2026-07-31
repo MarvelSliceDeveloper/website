@@ -22,7 +22,7 @@ export default function InstructorSupportPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="w-full space-y-8 p-6">
       <AdminPageHeader
         title="Support"
         breadcrumbs={[{ label: "Support", href: "/instructor/support" }]}

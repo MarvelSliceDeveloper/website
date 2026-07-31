@@ -42,7 +42,7 @@ export default function SupportTicketList({
       .then((data) => {
         setTickets(data.tickets || []);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => {
         setLoading(false);
       });
@@ -92,11 +92,10 @@ export default function SupportTicketList({
           <button
             key={key}
             onClick={() => setActiveTab(key)}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === key
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === key
                 ? "border-primary text-primary-hover"
                 : "border-transparent text-muted hover:text-foreground"
-            }`}
+              }`}
           >
             {label}
             <span className="text-xs text-muted-foreground/60">
@@ -110,14 +109,15 @@ export default function SupportTicketList({
       <div className="relative">
         <IconSearch
           size={16}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
         />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search tickets..."
-          className="field w-full pl-9"
+          className="field w-full"
+          style={{ paddingLeft: "2.25rem" }}
         />
       </div>
 

@@ -46,7 +46,13 @@ async function resolveUserIds(targetType: string, targetIds: string[]) {
         where: { id: { in: targetIds } },
         select: { instructorId: true },
       });
-      const userIds = [...new Set(batches.map((b) => b.instructorId))];
+      const userIds = [
+        ...new Set(
+          batches
+            .map((b) => b.instructorId)
+            .filter((id): id is string => id !== null),
+        ),
+      ];
       return prisma.user.findMany({
         where: { id: { in: userIds }, deletedAt: null },
         select: { id: true, name: true, email: true },

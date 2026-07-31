@@ -1,7 +1,6 @@
 "use client";
 
 import { usePageTitle } from "@/lib/use-page-title";
-import StatCard from "@/components/admin/StatCard";
 import { ChartSkeleton } from "@/components/admin/LoadingSkeleton";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
@@ -161,48 +160,36 @@ function SuperAdminDashboard() {
           ? "Healthy"
           : "Degraded",
       icon: IconServer,
-      variant: (saStats.healthStatus === "ok" ? "green" : "red") as
-        | "green"
-        | "red",
       href: "/health",
     },
     {
       label: "Active API Keys",
       value: saStats.apiKeysActive,
       icon: IconKey,
-      variant: "blue" as const,
       href: "/admin/settings/api-keys",
     },
     {
       label: "Activity Logs (30d)",
       value: saStats.totalLogs,
       icon: IconHistory,
-      variant: "purple" as const,
       href: "/admin/logs",
     },
     {
       label: "Failed Logs (30d)",
       value: saStats.failedLogs,
       icon: IconLock,
-      variant: (saStats.failedLogs > 0 ? "red" : "green") as "red" | "green",
       href: "/admin/logs",
     },
     {
       label: "Pending Instructors",
       value: saStats.pendingInstructors,
       icon: IconUserCheck,
-      variant: (saStats.pendingInstructors > 0 ? "orange" : "green") as
-        | "orange"
-        | "green",
       href: "/admin/users?role=INSTRUCTOR",
     },
     {
       label: "Trash Items",
       value: saStats.trashCount,
       icon: IconTrash,
-      variant: (saStats.trashCount > 0 ? "orange" : "green") as
-        | "orange"
-        | "green",
       href: "/admin/trash",
     },
   ];
@@ -212,9 +199,6 @@ function SuperAdminDashboard() {
       label: "Super Admins",
       value: saStats.totalSuperAdmins,
       icon: IconShield,
-      variant: "red" as const,
-      bg: "bg-gradient-to-br from-danger/20 via-danger/10 to-danger/5 hover:from-danger/25 hover:to-danger/10",
-      border: "border-danger/30 hover:border-danger/50",
       textColor: "text-danger",
       iconColor: "text-danger",
     },
@@ -222,9 +206,6 @@ function SuperAdminDashboard() {
       label: "Admins",
       value: saStats.totalAdmins,
       icon: IconShield,
-      variant: "purple" as const,
-      bg: "bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 hover:from-primary/25 hover:to-primary/10",
-      border: "border-primary/30 hover:border-primary/50",
       textColor: "text-primary",
       iconColor: "text-primary",
     },
@@ -232,9 +213,6 @@ function SuperAdminDashboard() {
       label: "Instructors",
       value: saStats.totalInstructors,
       icon: IconUsers,
-      variant: "blue" as const,
-      bg: "bg-gradient-to-br from-accent/20 via-accent/10 to-accent/5 hover:from-accent/25 hover:to-accent/10",
-      border: "border-accent/30 hover:border-accent/50",
       textColor: "text-accent",
       iconColor: "text-accent",
     },
@@ -242,9 +220,6 @@ function SuperAdminDashboard() {
       label: "Students",
       value: saStats.totalStudents,
       icon: IconSchool,
-      variant: "green" as const,
-      bg: "bg-gradient-to-br from-success/20 via-success/10 to-success/5 hover:from-success/25 hover:to-success/10",
-      border: "border-success/30 hover:border-success/50",
       textColor: "text-success",
       iconColor: "text-success",
     },
@@ -312,7 +287,33 @@ function SuperAdminDashboard() {
       {/* System Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {saCards.map((stat) => (
-          <StatCard key={stat.label} {...stat} loading={loading} />
+          <Link
+            key={stat.label}
+            href={stat.href}
+            className="border border-border bg-card p-5 hover:border-muted-foreground/30 transition-colors"
+          >
+            {loading ? (
+              <div className="space-y-3">
+                <div className="h-4 w-4 animate-pulse bg-border" />
+                <div className="h-3 w-24 animate-pulse bg-border" />
+                <div className="h-7 w-16 animate-pulse bg-border" />
+              </div>
+            ) : (
+              <>
+                <stat.icon
+                  size={22}
+                  stroke={1.5}
+                  className="text-muted-foreground mb-3"
+                />
+                <p className="mt-1.5 text-2xl font-extrabold tracking-tight text-foreground">
+                  {stat.value}
+                </p>
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground mt-1">
+                  {stat.label}
+                </p>
+              </>
+            )}
+          </Link>
         ))}
       </div>
 
@@ -328,7 +329,7 @@ function SuperAdminDashboard() {
           {userCards.map((card) => (
             <div
               key={card.label}
-              className={`border p-5 text-center transition-all duration-300 rounded-2xl bg-card ${card.border} ${card.bg}`}
+              className="border border-border bg-card p-5 text-center transition-colors hover:border-muted-foreground/30"
             >
               <card.icon
                 size={28}

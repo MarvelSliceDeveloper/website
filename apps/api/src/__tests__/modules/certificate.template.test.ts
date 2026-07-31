@@ -1,21 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { prisma } from "../../utils/prisma";
 
-vi.mock("../../../utils/prisma", () => ({
-  prisma: {
-    certificateTemplate: {
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-      findFirst: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      updateMany: vi.fn(),
-      delete: vi.fn(),
-    },
+// Mock Prisma — vi.hoisted() initializes this before the hoisted vi.mock runs
+const mockPrisma = vi.hoisted(() => ({
+  certificateTemplate: {
+    findMany: vi.fn(),
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    updateMany: vi.fn(),
+    delete: vi.fn(),
   },
 }));
 
-const mockPrisma = vi.mocked(prisma);
+vi.mock("../../utils/prisma", () => ({ prisma: mockPrisma }));
 
 describe("Certificate Template Routes", () => {
   beforeEach(() => {

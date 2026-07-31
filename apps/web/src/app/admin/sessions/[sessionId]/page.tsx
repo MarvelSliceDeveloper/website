@@ -52,6 +52,28 @@ type CalendarEvent = {
   id: string;
 };
 
+type SessionStats = {
+  uniqueAttendees: number;
+  liveNow: number;
+  peakConcurrent: number;
+  avgDurationSeconds: number;
+  qualifiedCount: number;
+  lateJoins: number;
+  earlyLeaves: number;
+  attendanceRate: number;
+  totalWatchMinutes: number;
+};
+
+type AttendanceRow = {
+  id: string;
+  joinedAt: string;
+  leftAt: string | null;
+  durationSeconds: number | null;
+  rejoinCount: number;
+  qualified: boolean;
+  user: { id: string; name: string; email: string };
+};
+
 type SessionDetail = {
   id: string;
   title: string;
@@ -117,6 +139,38 @@ export default function SessionDetailPage() {
       setPlaybackUrl(null);
     }
   }, [recordingId]);
+
+  const [stats, setStats] = useState<SessionStats | null>(null);
+  const [attendance, setAttendance] = useState<AttendanceRow[]>([]);
+
+  const fetchAnalytics = useCallback(async () => {
+    try {
+      const [statsRes, attRes] = await Promise.all([
+        api.get<{ stats: SessionStats }>(
+          `/api/attendance/${sessionId}/stats`,
+        ),
+        api.get<{ attendance: AttendanceRow[] }>(
+          `/api/attendance/${sessionId}`,
+        ),
+      ]);
+      setStats(statsRes.stats);
+      setAttendance(attRes.attendance);
+    } catch {
+      // Analytics are best-effort — keep whatever is already loaded
+    }
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (!session) return;
+    fetchAnalytics();
+    const live =
+      !session.endedAt &&
+      new Date(session.scheduledAt).getTime() <= Date.now() &&
+      new Date(session.scheduledEndAt).getTime() >= Date.now();
+    if (!live) return;
+    const interval = setInterval(fetchAnalytics, 30_000);
+    return () => clearInterval(interval);
+  }, [session, fetchAnalytics]);
 
   const handleSync = async () => {
     setSyncing(true);
@@ -241,6 +295,145 @@ export default function SessionDetailPage() {
             ).toLocaleDateString("en-IN")}
           </span>
         </p>
+      </div>
+
+      {/* Live Session Analytics */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted">
+            Live Session Analytics
+          </h2>
+          {stats && stats.totalWatchMinutes > 0 && (
+            <span className="text-xs text-muted-foreground">
+              Total watch time: {stats.totalWatchMinutes} min
+            </span>
+          )}
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatTile
+            label="Joined"
+            value={stats?.uniqueAttendees ?? "—"}
+          />
+          <StatTile label="Live Now" value={stats?.liveNow ?? "—"} />
+          <StatTile
+            label="Peak Concurrent"
+            value={stats?.peakConcurrent ?? "—"}
+          />
+          <StatTile
+            label="Avg Duration"
+            value={
+              stats && stats.avgDurationSeconds > 0
+                ? formatDuration(stats.avgDurationSeconds)
+                : "—"
+            }
+          />
+          <StatTile
+            label="Attendance Rate"
+            value={
+              stats ? `${stats.attendanceRate}%` : "—"
+            }
+          />
+          <StatTile
+            label="Qualified"
+            value={stats?.qualifiedCount ?? "—"}
+            sub={
+              stats && stats.uniqueAttendees > 0
+                ? `of ${stats.uniqueAttendees} joined`
+                : undefined
+            }
+          />
+          <StatTile label="Late Joins" value={stats?.lateJoins ?? "—"} />
+          <StatTile label="Early Leaves" value={stats?.earlyLeaves ?? "—"} />
+        </div>
+
+        {/* Attendance Table */}
+        <div className="glass-card overflow-hidden">
+          <div className="p-4 border-b border-border/60">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted flex items-center gap-1.5">
+              <IconUsers size={14} /> Attendance ({attendance.length})
+            </h3>
+          </div>
+          {attendance.length === 0 ? (
+            <div className="p-8 text-center">
+              <p className="text-sm text-muted-foreground">
+                No attendance recorded yet.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/60 text-left text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                    <th className="px-4 py-2.5 font-semibold">Student</th>
+                    <th className="px-4 py-2.5 font-semibold">Joined</th>
+                    <th className="px-4 py-2.5 font-semibold">Left</th>
+                    <th className="px-4 py-2.5 font-semibold">Duration</th>
+                    <th className="px-4 py-2.5 font-semibold">Rejoins</th>
+                    <th className="px-4 py-2.5 font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {attendance.map((a) => (
+                    <tr
+                      key={a.id}
+                      className="border-b border-border/40 last:border-0"
+                    >
+                      <td className="px-4 py-2.5">
+                        <p className="font-medium text-foreground">
+                          {a.user.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {a.user.email}
+                        </p>
+                      </td>
+                      <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap">
+                        {new Date(a.joinedAt).toLocaleString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </td>
+                      <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap">
+                        {a.leftAt
+                          ? new Date(a.leftAt).toLocaleString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "—"}
+                      </td>
+                      <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap">
+                        {a.durationSeconds != null
+                          ? formatDuration(a.durationSeconds)
+                          : "—"}
+                      </td>
+                      <td className="px-4 py-2.5 text-muted-foreground">
+                        {a.rejoinCount}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        {a.qualified ? (
+                          <span className="text-[10px] uppercase font-semibold bg-success/15 text-success px-2 py-0.5 rounded">
+                            Qualified
+                          </span>
+                        ) : a.leftAt ? (
+                          <span className="text-[10px] uppercase font-semibold bg-muted/15 text-muted-foreground px-2 py-0.5 rounded">
+                            Incomplete
+                          </span>
+                        ) : (
+                          <span className="text-[10px] uppercase font-semibold bg-warning/15 text-warning px-2 py-0.5 rounded">
+                            In session
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Main Grid */}
@@ -491,6 +684,26 @@ export default function SessionDetailPage() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function StatTile({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: string | number;
+  sub?: string;
+}) {
+  return (
+    <div className="border border-border bg-card p-5">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1.5 text-2xl font-bold text-foreground">{value}</p>
+      {sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>}
     </div>
   );
 }

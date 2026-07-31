@@ -632,6 +632,9 @@ model Attendance {
 
   leftAt          DateTime?
   durationSeconds Int?
+  rejoinCount     Int       @default(0)
+  lastSeenAt      DateTime?
+  qualified       Boolean   @default(false)
 
   @@unique([userId, sessionId])
 }

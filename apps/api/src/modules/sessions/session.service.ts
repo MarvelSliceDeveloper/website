@@ -267,7 +267,7 @@ export const sessionService = {
     const limit = filters.limit ?? 50;
     const skip = (page - 1) * limit;
 
-    return prisma.liveSession.findMany({
+    const sessions = await prisma.liveSession.findMany({
       where,
       skip,
       take: limit,
@@ -283,9 +283,29 @@ export const sessionService = {
         },
         module: { select: { id: true, title: true } },
         recording: { select: { id: true, syncedAt: true } },
+        _count: { select: { attendance: true } },
       },
       orderBy: { scheduledAt: "asc" },
     });
+
+    // Aggregate avg duration per session (relation-level `_avg` is not
+    // supported in `include`, so compute it with a groupBy query)
+    const sessionIds = sessions.map((s) => s.id);
+    const durationAggregates = await prisma.attendance.groupBy({
+      by: ["sessionId"],
+      where: { sessionId: { in: sessionIds } },
+      _avg: { durationSeconds: true },
+    });
+    const avgDurationBySession = new Map(
+      durationAggregates.map((a) => [a.sessionId, a._avg.durationSeconds]),
+    );
+
+    return sessions.map((s) => ({
+      ...s,
+      attendance: {
+        _avg: { durationSeconds: avgDurationBySession.get(s.id) ?? null },
+      },
+    }));
   },
 
   // Gets a single session by ID

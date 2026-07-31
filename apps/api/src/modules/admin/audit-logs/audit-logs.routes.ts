@@ -2,14 +2,15 @@ import { Router, type Response } from "express";
 import { prisma } from "../../../utils/prisma";
 import {
   requireAuth,
-  requireSuperAdmin,
+  requireRole,
   type AuthRequest,
 } from "../../../middleware/auth.middleware";
+import { UserRole } from "@lms/types";
 
 const router = Router();
 
 router.use(requireAuth);
-router.use(requireSuperAdmin);
+router.use(requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]));
 
 // POST / — Create audit log entry (internal use)
 router.post("/", async (req: AuthRequest, res: Response) => {

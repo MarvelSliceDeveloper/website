@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import type { LiveSession } from "@/lib/api-types";
 import { api } from "@/lib/api";
+import { useLiveSessionPresence } from "@/hooks/use-live-session-presence";
 
 function downloadIcs(event: {
   title: string;
@@ -190,6 +191,7 @@ function SessionCard({
   const isLive = status === "LIVE";
   const isPast = status === "PAST";
   const [joining, setJoining] = useState(false);
+  const presence = useLiveSessionPresence();
 
   const scheduledStr = new Date(session.scheduledAt).toLocaleString("en-IN", {
     weekday: "short",
@@ -210,6 +212,7 @@ function SessionCard({
     setJoining(true);
     try {
       await api.post(`/api/attendance/${session.id}/join`);
+      presence.start(session.id);
     } catch (err) {
       console.error("Failed to log attendance:", err);
     } finally {

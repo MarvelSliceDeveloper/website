@@ -1,39 +1,35 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { certificateService } from "../../modules/certificates/certificate.service";
 
-// Mock Prisma
-vi.mock("../../utils/prisma", () => ({
-  prisma: {
-    certificate: {
-      findFirst: vi.fn(),
-      findMany: vi.fn(),
-      create: vi.fn(),
-      count: vi.fn(),
-    },
-    certificateTemplate: {
-      findFirst: vi.fn(),
-    },
-    enrollmentRequest: {
-      findMany: vi.fn(),
-    },
-    course: {
-      findMany: vi.fn(),
-    },
-    packageCourse: {
-      findMany: vi.fn(),
-    },
-    batch: {
-      findMany: vi.fn(),
-    },
-    recording: {
-      findMany: vi.fn(),
-    },
+// Mock Prisma — vi.hoisted() initializes this before the hoisted vi.mock runs
+const mockPrisma = vi.hoisted(() => ({
+  certificate: {
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    count: vi.fn(),
+  },
+  certificateTemplate: {
+    findFirst: vi.fn(),
+  },
+  enrollmentRequest: {
+    findMany: vi.fn(),
+  },
+  course: {
+    findMany: vi.fn(),
+  },
+  packageCourse: {
+    findMany: vi.fn(),
+  },
+  batch: {
+    findMany: vi.fn(),
+  },
+  recording: {
+    findMany: vi.fn(),
   },
 }));
 
-import { prisma } from "../../utils/prisma";
-
-const mockPrisma = vi.mocked(prisma);
+vi.mock("../../utils/prisma", () => ({ prisma: mockPrisma }));
 
 describe("certificateService", () => {
   beforeEach(() => {

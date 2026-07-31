@@ -22,6 +22,7 @@ import {
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
+import { useLiveSessionPresence } from "@/hooks/use-live-session-presence";
 
 import { VideoPlayer } from "./_comps/VideoPlayer";
 import type {
@@ -270,6 +271,7 @@ export default function CourseContentView({
   } | null>(null);
 
   const [joiningSessionId, setJoiningSessionId] = useState<string | null>(null);
+  const presence = useLiveSessionPresence();
   const [showCertificationExam, setShowCertificationExam] = useState(false);
 
   // ── Data fetching ──────────────────────────────────────────────────────
@@ -1276,6 +1278,7 @@ const renderAccordion = () => (
                               await api.post(
                                 `/api/attendance/${session.id}/join`,
                               );
+                              presence.start(session.id);
                             } catch (err) {
                               console.error("Failed to log attendance:", err);
                             } finally {

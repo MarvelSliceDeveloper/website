@@ -8,6 +8,7 @@ import StudentTable, {
   type StudentTableColumn,
 } from "@/components/student/StudentTable";
 import PaginationBar from "@/components/student/PaginationBar";
+import { useLiveSessionPresence } from "@/hooks/use-live-session-presence";
 
 function downloadIcs(event: {
   title: string;
@@ -70,6 +71,7 @@ export default function BatchDetailView({
 }: BatchDetailViewProps) {
   const [activeTab, setActiveTab] = useState<Tab>("sessions");
   const [recordingsPage, setRecordingsPage] = useState(1);
+  const presence = useLiveSessionPresence();
 
   const RECORDINGS_PAGE_SIZE = 6;
 
@@ -244,6 +246,7 @@ export default function BatchDetailView({
                             await api.post(
                               `/api/attendance/${session.id}/join`,
                             );
+                            presence.start(session.id);
                           } catch (err) {
                             console.error("Failed to log attendance:", err);
                           } finally {

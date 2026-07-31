@@ -130,6 +130,10 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
   // Don't log audit-log reads/creates themselves
   if (req.path.startsWith("/api/admin/audit-logs")) return next();
 
+  // Capture the full URL now — Express strips req.path/req.url during routing,
+  // so reading them lazily in the finish handler yields "/" and an "Unknown" entity.
+  const originalPath = (req.originalUrl || req.path).split("?")[0];
+
   // Fire after the response is fully written
   res.on("finish", async () => {
     // Only log successful mutations
@@ -142,7 +146,7 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
         | undefined;
       if (!user?.userId) return;
 
-      const entityType = resolveEntityType(req.path);
+      const entityType = resolveEntityType(originalPath);
       const entityId = resolveEntityId(req);
 
       let details: Record<string, unknown> | undefined;
@@ -150,7 +154,7 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
         details = {
           fields: Object.keys(req.body),
           method: req.method,
-          path: req.path,
+          path: originalPath,
         };
       }
 

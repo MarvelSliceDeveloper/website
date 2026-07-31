@@ -27,6 +27,46 @@ describe("extractVideoId", () => {
     );
   });
 
+  it("extracts ID from youtube.com/shorts/", () => {
+    expect(extractVideoId("https://www.youtube.com/shorts/dQw4w9WgXcQ")).toBe(
+      "dQw4w9WgXcQ",
+    );
+  });
+
+  it("extracts ID from youtube.com/live/", () => {
+    expect(extractVideoId("https://www.youtube.com/live/dQw4w9WgXcQ")).toBe(
+      "dQw4w9WgXcQ",
+    );
+  });
+
+  it("extracts ID when v= is not the first query param", () => {
+    expect(
+      extractVideoId("https://www.youtube.com/watch?feature=share&v=dQw4w9WgXcQ"),
+    ).toBe("dQw4w9WgXcQ");
+  });
+
+  it("extracts ID from m.youtube.com/watch?v=", () => {
+    expect(extractVideoId("https://m.youtube.com/watch?v=dQw4w9WgXcQ")).toBe(
+      "dQw4w9WgXcQ",
+    );
+  });
+
+  it("extracts ID from watch?v= with trailing params", () => {
+    expect(
+      extractVideoId("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=30s"),
+    ).toBe("dQw4w9WgXcQ");
+  });
+
+  it("extracts ID from youtu.be/ with trailing params", () => {
+    expect(extractVideoId("https://youtu.be/dQw4w9WgXcQ?si=abc123")).toBe(
+      "dQw4w9WgXcQ",
+    );
+  });
+
+  it("extracts bare 11-char video ID with surrounding whitespace", () => {
+    expect(extractVideoId("  dQw4w9WgXcQ  ")).toBe("dQw4w9WgXcQ");
+  });
+
   it("extracts bare 11-char video ID", () => {
     expect(extractVideoId("dQw4w9WgXcQ")).toBe("dQw4w9WgXcQ");
   });

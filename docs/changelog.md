@@ -1,5 +1,53 @@
 # Changelog
 
+## 2026-07-31 — Live Session Analytics
+
+### Database (Schema)
+- **Attendance**: Added `rejoinCount` (Int @default(0)), `lastSeenAt` (DateTime?), `qualified` (Boolean @default(false))
+
+### Backend API
+- `apps/api/src/services/presence.service.ts` (new) — in-memory presence store (`markPresent`, `liveCount`); Redis presence store deferred (no new deps)
+- `apps/api/src/modules/attendance/attendance.service.ts` — join reopens left records + increments `rejoinCount`; leave computes full-window `durationSeconds` + `qualified` (≥50% of session duration); new `heartbeat`, `getSessionStats` (uniqueAttendees, liveNow, peakConcurrent, avgDurationSeconds, qualifiedCount, lateJoins, earlyLeaves, attendanceRate, totalWatchMinutes), `listForSession`
+- `apps/api/src/modules/attendance/attendance.routes.ts` — `POST /:sessionId/heartbeat`, `GET /:sessionId/stats`, `GET /:sessionId` (ADMIN/INSTRUCTOR)
+- `apps/api/src/jobs/reconcile-attendance.job.ts` (new) — auto-closes open attendance for ended sessions (grace 30 min); started in `index.ts`
+- `apps/api/src/modules/sessions/session.service.ts` — `listSessions` returns per-session `_count.attendance` + `attendance._avg.durationSeconds` (via `groupBy` aggregate — Prisma v5 lacks relation-level `_avg` in `include`)
+- `apps/api/src/modules/admin/assignments/review.routes.ts` — **bug fix**: `fileUrl` mapped from `answerFileUrl` (was `item.fileUrl`, which doesn't exist on the Prisma result — review page always got `undefined`)
+
+### Frontend
+- `apps/web/src/hooks/use-live-session-presence.ts` (new) — 45s heartbeat while in a live session, auto-stops on unmount, fire-and-forget; wired into `LiveSessionsView`, `HomeView`, `CourseContentView`, `BatchDetailView`
+- `apps/web/src/app/admin/sessions/page.tsx` — Attendees + Avg Duration columns
+- `apps/web/src/app/admin/sessions/[sessionId]/page.tsx` — stats tiles (unique attendees, live now, peak concurrent, avg duration, attendance rate, qualified count) + attendance table with qualified badge / rejoin count
+
+### Tests
+- `apps/api/src/__tests__/services/attendance.service.test.ts` (new) — 15 tests: join (404/403/idempotent/reopen + rejoinCount), leave (400/qualified thresholds/endedAt), heartbeat, stats aggregation, list ordering. All passing.
+
+### Docs
+- `docs/plan-to-work/live-session-analytics.md` → `docs/plan-completed/live-session-analytics.md`
+
+## 2026-07-31 — Super Admin Dashboard: Flat Square Cards & Stat Card Consistency
+
+### Frontend
+- `apps/web/src/app/admin/dashboard/page.tsx` — User Distribution cards converted from `rounded-2xl` gradient boxes to flat square cards (role-colored icon + value retained)
+- System Stats cards (System Status, API Keys, Activity Logs, Failed Logs, Pending Instructors, Trash) replaced `StatCard` with the inline flat square pattern used by the Admin dashboard
+- "Activity Logs (30d)" no longer renders teal (`purple` variant mapped to accent colors in `StatCard`) — all superadmin stat cards are now uniform
+- Removed unused `StatCard` import
+
+### Docs
+- `docs/plan-completed/superadmin-dashboard-squares.md`
+
+## 2026-07-31 — Login History: User Name Display & Logout Timestamp
+
+### Backend API
+- `apps/api/src/modules/logs/login-history.routes.ts` — `GET /api/admin/login-history` now includes the `user` relation (id, name, email) so names are returned instead of bare user IDs
+- `apps/api/src/modules/auth/auth.routes.ts` — `POST /api/auth/logout` now requires `requireAuth` middleware so the user identity is available
+- `apps/api/src/modules/auth/auth.controller.ts` — logout handler stamps `logoutAt` on the user's open `LoginLog` records before clearing the cookie
+
+### Frontend
+- `apps/web/src/app/admin/users/login-history/page.tsx` — "User ID" column replaced with "User" showing name + email; `LoginEntry` type extended with `user` object
+
+### Docs
+- `docs/plan-completed/login-history-user-name-logout.md`
+
 ## 2026-07-29 — Admin Security, Maintenance, GDPR, Backup & Alerting Features
 
 ### Database (Schema)

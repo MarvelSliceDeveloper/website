@@ -123,7 +123,7 @@ export default function InstructorSettingsPage() {
     designation?: string;
     qualification?: string;
     experienceYears?: number;
-    skills?: string[];
+    skills?: string | string[];
     currentlyEmployed?: boolean;
     companyName?: string;
     availableTime?: string;
@@ -132,7 +132,7 @@ export default function InstructorSettingsPage() {
     city?: string;
     state?: string;
     country?: string;
-    languages?: string[];
+    languages?: string | string[];
     socialLinks?: Record<string, string>;
     bankName?: string;
     bankAccountNumber?: string;

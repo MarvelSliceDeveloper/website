@@ -23,6 +23,7 @@ if (process.env.DATABASE_URL) {
 import pino from "pino";
 import { app } from "./app";
 import { recordingSyncJob } from "./jobs/recording-sync.job";
+import { reconcileAttendanceJob } from "./jobs/reconcile-attendance.job";
 import { prisma } from "./utils/prisma";
 
 import { socketService } from "./services/socket.service";
@@ -37,11 +38,13 @@ const server = app.listen(PORT, () => {
   logger.info(`API Server running on port ${PORT}`);
   socketService.init(server);
   recordingSyncJob.start();
+  reconcileAttendanceJob.start();
 });
 
 const shutdown = async (signal: string) => {
   logger.info(`${signal} received — shutting down gracefully...`);
   recordingSyncJob.stop();
+  reconcileAttendanceJob.stop();
   server.close(async () => {
     await prisma.$disconnect();
     logger.info("Prisma disconnected, server closed.");

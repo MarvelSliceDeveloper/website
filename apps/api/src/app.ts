@@ -44,6 +44,7 @@ import { permissionRouter } from "./modules/permissions/permission.routes";
 import { quizTemplateRouter } from "./modules/quiz-templates/quiz-template.routes";
 import { assignmentTemplateRouter } from "./modules/assignment-templates/assignment-template.routes";
 import { superAdminRouter } from "./modules/super-admin/super-admin.routes";
+import { adminHealthRouter } from "./modules/admin/health.routes";
 import { courseTemplateRouter } from "./modules/courses/course-template.routes";
 import { logRouter } from "./modules/logs/log.routes";
 import { loginHistoryRouter } from "./modules/logs/login-history.routes";
@@ -278,6 +279,7 @@ app.use("/api/instructor", instructorRouter);
 app.use("/api/instructor", profileRouter);
 
 // ── Super Admin routes ──
+app.use("/api/admin/users", adminHealthRouter);
 app.use("/api/admin/users", superAdminRouter);
 app.use("/api/admin/settings", settingRouter);
 app.use("/api/admin/api-keys", apiKeyRouter);

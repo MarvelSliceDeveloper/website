@@ -70,7 +70,6 @@ const communicationItems: NavItem[] = [
 
 const accountItems: NavItem[] = [
   { label: "My Profile", href: "/instructor/settings?tab=profile", icon: IconUser },
-  { label: "Settings", href: "/instructor/settings", icon: IconSettings },
   { label: "Support", href: "/instructor/support", icon: IconHelp },
 ];
 
@@ -108,18 +107,16 @@ function ChildNavLink({
     <li>
       <Link
         href={child.href}
-        className={`group flex items-center gap-2.5 py-2 pl-9 pr-4 text-[13px] transition-all border-l-3 ${
-          isChildActive
+        className={`group flex items-center gap-2.5 py-2 pl-9 pr-4 text-[13px] transition-all border-l-3 ${isChildActive
             ? "border-primary bg-primary/8 text-primary font-bold"
             : "border-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
-        }`}
+          }`}
       >
         <span
-          className={`h-1.5 w-1.5 rounded-full transition-transform ${
-            isChildActive
+          className={`h-1.5 w-1.5 rounded-full transition-transform ${isChildActive
               ? "bg-primary scale-125 shadow-sm shadow-primary/40"
               : "bg-slate-400/40 dark:bg-slate-600 group-hover:bg-slate-500"
-          }`}
+            }`}
         />
         <span>{child.label}</span>
       </Link>
@@ -169,9 +166,8 @@ function NavGroup({
   return (
     <div className="space-y-1.5">
       <p
-        className={`px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-border/40 ${
-          collapsed ? "hidden" : "block"
-        }`}
+        className={`px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-border/40 ${collapsed ? "hidden" : "block"
+          }`}
       >
         {label}
       </p>
@@ -197,11 +193,10 @@ function NavGroup({
                     type="button"
                     title={item.label}
                     onClick={() => toggleGroup(item.label)}
-                    className={`w-full flex items-center justify-center p-3 text-sm transition-colors cursor-pointer ${
-                      isActive
+                    className={`w-full flex items-center justify-center p-3 text-sm transition-colors cursor-pointer ${isActive
                         ? "bg-primary/10 text-primary border-r-3 border-primary"
                         : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
-                    }`}
+                      }`}
                   >
                     <item.icon size={18} stroke={1.8} className="shrink-0" />
                   </button>
@@ -211,11 +206,10 @@ function NavGroup({
                       type="button"
                       onClick={() => toggleGroup(item.label)}
                       title={item.label}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-[13.5px] font-semibold transition-colors select-none text-left cursor-pointer border-l-3 ${
-                        isActive
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-[13.5px] font-semibold transition-colors select-none text-left cursor-pointer border-l-3 ${isActive
                           ? "border-primary bg-primary/8 text-primary"
                           : "border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
-                      }`}
+                        }`}
                     >
                       <item.icon
                         size={18}
@@ -231,17 +225,15 @@ function NavGroup({
                       <IconChevronDown
                         size={15}
                         stroke={1.8}
-                        className={`shrink-0 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${
-                          isExpanded ? "rotate-180" : ""
-                        }`}
+                        className={`shrink-0 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""
+                          }`}
                       />
                     </button>
                     <div
-                      className={`overflow-hidden transition-all duration-200 ${
-                        isExpanded
+                      className={`overflow-hidden transition-all duration-200 ${isExpanded
                           ? "max-h-64 opacity-100"
                           : "max-h-0 opacity-0 pointer-events-none"
-                      }`}
+                        }`}
                     >
                       <ul className="space-y-0.5 bg-slate-500/[0.03] border-l border-border/60 ml-6">
                         {item.children!.map((child) => (
@@ -259,15 +251,13 @@ function NavGroup({
                 <Link
                   href={item.href}
                   title={item.label}
-                  className={`flex items-center text-[13.5px] font-semibold transition-colors ${
-                    collapsed
+                  className={`flex items-center text-[13.5px] font-semibold transition-colors ${collapsed
                       ? "justify-center p-3"
                       : "gap-3 px-4 py-2.5 border-l-3"
-                  } ${
-                    isActive
+                    } ${isActive
                       ? "border-primary bg-primary/8 text-primary font-bold"
                       : "border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-900 dark:hover:text-slate-100"
-                  }`}
+                    }`}
                 >
                   <item.icon
                     size={18}
@@ -281,11 +271,10 @@ function NavGroup({
                   </span>
                   {item.badge != null && (
                     <span
-                      className={`${
-                        collapsed
+                      className={`${collapsed
                           ? "hidden"
                           : "rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary"
-                      }`}
+                        }`}
                     >
                       {item.badge}
                     </span>
@@ -317,9 +306,8 @@ export default function InstructorSidebar({
 
   return (
     <aside
-      className={`fixed left-0 top-14 z-40 hidden h-[calc(100vh-56px)] flex-col border-r border-t border-border bg-card transition-[width] duration-200 lg:flex ${
-        collapsed ? "w-16" : "w-64"
-      }`}
+      className={`fixed left-0 top-14 z-40 hidden h-[calc(100vh-56px)] flex-col border-r border-t border-border bg-card transition-[width] duration-200 lg:flex ${collapsed ? "w-16" : "w-64"
+        }`}
     >
       {/* Navigation Links */}
       <nav className="flex-1 overflow-y-auto py-3 space-y-4">

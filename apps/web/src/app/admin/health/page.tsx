@@ -108,9 +108,9 @@ export default function AdminHealthPage() {
       checks[1] = { ...checks[1], status: "error", detail: "Unknown" };
     }
 
-    // 2. YouTube API (check env availability via video-info endpoint with dummy param)
+    // 2. YouTube API (check key + reachability with a stable video ID)
     try {
-      await api.get("/api/youtube/video-info?url=");
+      await api.get("/api/youtube/video-info?url=dQw4w9WgXcQ");
       checks[2] = {
         ...checks[2],
         status: "ok",

@@ -54,9 +54,10 @@ export default function BackupPage() {
       try {
         const formData = new FormData();
         formData.append("file", file);
-        const res = await api.post<{ message: string }>("/api/admin/backup/restore", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        const res = await api.post<{ message: string }>(
+          "/api/admin/backup/restore",
+          formData,
+        );
         toast.success(res.message);
         fetchBackups();
       } catch {

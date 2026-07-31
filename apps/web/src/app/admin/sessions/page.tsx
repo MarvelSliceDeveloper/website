@@ -29,6 +29,8 @@ type Session = {
   createdBy: string;
   batch: { id: string; name: string; course: { title: string } } | null;
   recording: { id: string } | null;
+  _count?: { attendance: number };
+  attendance?: { _avg: { durationSeconds: number | null } } | null;
 };
 
 type SessionsResponse = {
@@ -345,6 +347,16 @@ function SessionCard({
             <span className="text-[10px] uppercase font-medium bg-accent/15 text-accent px-1.5 py-0.5 rounded">
               {session.createdFrom}
             </span>
+            {!upcoming && (
+              <span className="text-[10px] uppercase font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                {session._count?.attendance ?? 0} attended
+                {session.attendance?._avg?.durationSeconds
+                  ? ` · avg ${Math.round(
+                      session.attendance._avg.durationSeconds / 60,
+                    )}m`
+                  : ""}
+              </span>
+            )}
             {session.recording && (
               <span className="text-[10px] uppercase font-medium bg-success/15 text-success px-1.5 py-0.5 rounded">
                 Recording

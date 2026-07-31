@@ -58,10 +58,18 @@ interface Submission {
   gradedAt: string | null;
 }
 
+interface InstructorStats {
+  instructorId: string;
+  name: string;
+  pending: number;
+  graded: number;
+}
+
 interface Stats {
-  totalPending: number;
-  totalGraded: number;
-  totalSubmissions: number;
+  pending: number;
+  graded: number;
+  total: number;
+  byInstructor: InstructorStats[];
 }
 
 interface SubmissionResponse {
@@ -241,7 +249,7 @@ export default function AssignmentReviewPage() {
                 {statsLoading ? (
                   <span className="h-7 w-16 block animate-pulse bg-border rounded" />
                 ) : (
-                  stats?.totalPending ?? "\u2014"
+                  stats?.pending ?? "\u2014"
                 )}
               </p>
             </div>
@@ -260,7 +268,7 @@ export default function AssignmentReviewPage() {
                 {statsLoading ? (
                   <span className="h-7 w-16 block animate-pulse bg-border rounded" />
                 ) : (
-                  stats?.totalGraded ?? "\u2014"
+                  stats?.graded ?? "\u2014"
                 )}
               </p>
             </div>
@@ -279,7 +287,7 @@ export default function AssignmentReviewPage() {
                 {statsLoading ? (
                   <span className="h-7 w-16 block animate-pulse bg-border rounded" />
                 ) : (
-                  stats?.totalSubmissions ?? "\u2014"
+                  stats?.total ?? "\u2014"
                 )}
               </p>
             </div>
@@ -289,6 +297,61 @@ export default function AssignmentReviewPage() {
           </div>
         </div>
       </div>
+
+      {/* Submissions by Instructor */}
+      {stats && stats.byInstructor.length > 0 && (
+        <div className="rounded-xl border border-border bg-card p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-4">
+            Submissions by Instructor
+          </h3>
+          <div className="space-y-4">
+            {stats.byInstructor.map((inst) => {
+              const total = inst.pending + inst.graded;
+              const gradedPct = total > 0 ? (inst.graded / total) * 100 : 0;
+              const pendingPct = total > 0 ? (inst.pending / total) * 100 : 0;
+              return (
+                <div key={inst.instructorId} className="flex items-center gap-4">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-xs font-bold text-primary">
+                    {inst.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1.5 flex items-center justify-between gap-3">
+                      <span className="truncate text-sm font-medium text-foreground">
+                        {inst.name}
+                      </span>
+                      <span className="whitespace-nowrap text-xs text-muted-foreground">
+                        <span className="font-semibold text-success">
+                          {inst.graded} graded
+                        </span>
+                        {" · "}
+                        <span className="font-semibold text-amber-600">
+                          {inst.pending} pending
+                        </span>
+                        {" · "}
+                        <span className="font-semibold text-foreground">
+                          {total} total
+                        </span>
+                      </span>
+                    </div>
+                    <div className="flex h-2 w-full overflow-hidden rounded-full bg-border/60">
+                      <div
+                        className="bg-success transition-all"
+                        style={{ width: `${gradedPct}%` }}
+                      />
+                      {inst.pending > 0 && (
+                        <div
+                          className="bg-amber-500 transition-all"
+                          style={{ width: `${pendingPct}%` }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Filter Bar */}
       <div className="rounded-xl border border-border bg-card p-4">

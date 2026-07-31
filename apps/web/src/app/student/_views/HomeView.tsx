@@ -36,6 +36,7 @@ import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import StudentStatTiles from "@/components/student/StudentStatTiles";
 import LiveSessionBanner from "@/components/LiveSessionBanner";
+import { useLiveSessionPresence } from "@/hooks/use-live-session-presence";
 
 interface HomeViewProps {
   stats: DashboardStats;
@@ -103,6 +104,7 @@ export default function HomeView({
   const [mentorSubmitting, setMentorSubmitting] = useState(false);
 
   const [joiningSessionId, setJoiningSessionId] = useState<string | null>(null);
+  const presence = useLiveSessionPresence();
 
   const activeLiveSessions = liveSessions.filter((s) => s.status === "LIVE");
   const liveCount = activeLiveSessions.length;
@@ -190,6 +192,7 @@ export default function HomeView({
     setJoiningSessionId(session.id);
     try {
       await api.post(`/api/attendance/${session.id}/join`);
+      presence.start(session.id);
     } catch (err) {
       console.error("Failed to log attendance:", err);
     } finally {

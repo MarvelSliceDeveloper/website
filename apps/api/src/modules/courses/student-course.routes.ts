@@ -104,7 +104,7 @@ router.get("/enrolled", async (req: AuthRequest, res: Response) => {
         thumbnail: course.thumbnailUrl || "📚",
         batchId: batch.id,
         batchLabel: batch.name,
-        instructor: batch.instructor.name,
+        instructor: batch.instructor?.name ?? "Unknown",
         progress,
         status,
         source: "enrollment" as const,

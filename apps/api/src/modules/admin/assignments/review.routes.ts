@@ -79,7 +79,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       course: item.assignment.course,
       batch: item.assignment.batch ? { id: item.assignment.batch.id, name: item.assignment.batch.name } : null,
       instructor: item.assignment.batch?.instructor ?? null,
-      fileUrl: item.fileUrl,
+      fileUrl: item.answerFileUrl,
       grade: item.grade,
       feedback: item.feedback,
       status: item.status,

@@ -16,20 +16,31 @@ export interface YouTubeVideoInfo {
 /**
  * Extracts the 11-character video ID from various YouTube URL formats.
  *
- * Supports: watch?v=, youtu.be/, embed/, v/, and bare 11-char IDs.
+ * Supports: watch?v= (v= anywhere in the query string), watch/ID,
+ * shorts/, live/, embed/, v/, youtu.be/, and bare 11-char IDs.
  *
  * @param url - YouTube URL or bare video ID
  * @returns 11-character video ID, or null if no match
  */
 export function extractVideoId(url: string): string | null {
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
-    /^([a-zA-Z0-9_-]{11})$/,
-  ];
-  for (const p of patterns) {
-    const m = url.match(p);
-    if (m) return m[1];
+  const trimmed = url.trim();
+
+  // Bare 11-char video ID
+  const bareMatch = trimmed.match(/^([a-zA-Z0-9_-]{11})$/);
+  if (bareMatch) return bareMatch[1];
+
+  // Path-based IDs: /watch/ID, /shorts/ID, /live/ID, /embed/ID, /v/ID, youtu.be/ID
+  const pathMatch = trimmed.match(
+    /(?:youtube\.com\/(?:watch|shorts|live|embed|v)\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+  );
+  if (pathMatch) return pathMatch[1];
+
+  // Query-based: youtube.com/watch?...&v=ID — v= may appear anywhere in the query string
+  if (/youtube\.com/.test(trimmed)) {
+    const queryMatch = trimmed.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+    if (queryMatch) return queryMatch[1];
   }
+
   return null;
 }
 
