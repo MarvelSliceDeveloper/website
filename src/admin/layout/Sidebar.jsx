@@ -1,0 +1,527 @@
+import { FiBriefcase } from "react-icons/fi";
+import { useState, useEffect, useCallback } from "react";
+import { NavLink, Link, useLocation } from "react-router-dom";
+import { FiHome, FiFile, FiBookOpen, FiGrid, FiChevronDown, FiFileText, FiLayers, FiInbox, FiMenu, FiSettings, FiMessageCircle, FiServer, FiZap, FiX, FiBarChart2 } from "react-icons/fi";
+import { useSiteSettings } from "../../hooks/useSupabase";
+
+const navGroups = [
+  { label: "Dashboard", icon: FiHome, items: [{ to: "/admin", label: "Dashboard" }] },
+  {
+    label: "All Pages", icon: FiFile,
+    items: [
+      { to: "/admin/home", label: "Home", catchSubRoutes: true },
+      { to: "/admin/about-page", label: "About" },
+      { to: "/admin/services-page", label: "Services" },
+      { to: "/admin/training-page", label: "Training" },
+      { to: "/admin/career-page", label: "Career" },
+      { to: "/admin/blog-page", label: "Blog" },
+      { to: "/admin/contact-page", label: "Contact" },
+    ],
+  },
+  { label: "Chat", icon: FiMessageCircle, items: [
+    { to: "/admin/chats?tab=live", label: "Live Chat" },
+    { to: "/admin/chats?tab=history", label: "Chat History" }
+    ]},
+
+  {
+    label: "Services", icon: FiServer, parentTo: "/admin/services/new", items: [
+      { to: "/admin/services/new", label: "Add Service" },
+      { to: "/admin/services", label: "All Services", catchSubRoutes: true, siblingRoutes: ["/admin/services/new"] },
+      { to: "/admin/service-categories", label: "Categories" }
+    ],
+  },
+  {
+    label: "Training", icon: FiZap, parentTo: "/admin/training/new", items: [
+      { to: "/admin/training/new", label: "Add Program" },
+      { to: "/admin/training", label: "All Programs", catchSubRoutes: true, siblingRoutes: ["/admin/training/new"] },
+      { to: "/admin/training-categories", label: "Categories" }
+    ],
+  },
+  {
+    label: "Jobs", icon: FiBriefcase, items: [
+      { to: "/admin/jobs/new", label: "Add Job" },
+      { to: "/admin/jobs", label: "View Jobs", catchSubRoutes: true, siblingRoutes: ["/admin/jobs/new"] }
+    ],
+  },
+  { label: "Submissions", icon: FiInbox, items: [
+    { to: "/admin/career-submissions", label: "Career Submissions" },
+    { to: "/admin/brochure-downloads", label: "Brochure Downloads" },
+    { to: "/admin/form-submissions", label: "Form Submissions" },
+    { to: "/admin/newsletter-subscribers", label: "Newsletter Subscribers" },
+    { to: "/admin/contact-submissions", label: "Contact Submissions" },
+    { to: "/admin/chat-submissions", label: "Chat Submissions" },
+    { to: "/admin/courses/reports", label: "Reports" }
+    ]},
+  {
+    label: "Courses", icon: FiBookOpen, parentTo: "/admin/courses", items: [
+      { to: "/admin/courses", label: "All Courses", catchSubRoutes: true, siblingRoutes: ["/admin/courses/wizard", "/admin/courses/reports", "/admin/courses/brochure", "/admin/courses/new"] },
+      { label: "Software Learning", children: [
+        { to: "/admin/courses/wizard?category=Software%20Learning", label: "Add Course" },
+        { to: "/admin/courses?category=Software%20Learning", label: "View Courses" }
+      ]},
+      { label: "Competitive Exam", children: [
+        { to: "/admin/courses/wizard?category=Competitive%20Exam", label: "Add Course" },
+        { to: "/admin/courses?category=Competitive%20Exam", label: "View Courses" }
+      ]},
+      { label: "Tags", children: [
+        { to: "/admin/tags/add", label: "Add Tag" },
+        { to: "/admin/tags", label: "View Tags" }
+      ]},
+      { to: "/admin/courses/brochure", label: "Brochure" },
+    ],
+  },
+  {
+    label: "Blog", icon: FiFileText, items: [
+      { to: "/admin/blog/new", label: "Add Blog" },
+      { to: "/admin/blog", label: "View Posts", catchSubRoutes: true, siblingRoutes: ["/admin/blog/categories", "/admin/blog/new"] },
+      { to: "/admin/blog/categories", label: "Categories" }
+    ],
+  },
+  { label: "Navigation", icon: FiMenu, items: [
+    { label: "Software Learning", children: [
+      { to: "/admin/nav-menu?section=Software%20Learning&tab=add", label: "Add Menu" },
+      { to: "/admin/nav-menu?section=Software%20Learning&tab=view", label: "View Menu" }
+    ]},
+    { label: "Competitive Exam", children: [
+      { to: "/admin/nav-menu?section=Competitive%20Exam&tab=add", label: "Add Menu" },
+      { to: "/admin/nav-menu?section=Competitive%20Exam&tab=view", label: "View Menu" }
+    ]},
+    { label: "Services", children: [
+      { to: "/admin/nav-menu?section=Services&tab=add", label: "Add Menu" },
+      { to: "/admin/nav-menu?section=Services&tab=view", label: "View Menu" }
+    ]},
+    { label: "Training", children: [
+      { to: "/admin/nav-menu?section=Training&tab=add", label: "Add Menu" },
+      { to: "/admin/nav-menu?section=Training&tab=view", label: "View Menu" }
+    ]}
+    ]},
+  { label: "Uploads", icon: FiLayers, items: [
+    { to: "/admin/media", label: "Media Library" }
+    ]},
+  { label: "Settings", icon: FiSettings, items: [
+    { to: "/admin/site-settings?section=general", label: "Site Settings" },
+    { to: "/admin/admin-users", label: "Admin Users" }
+    ]}
+    ];
+
+function isActive(pathname, item) {
+  const fullPath = pathname.split("?")[0] || "/";
+  const fullSearch = pathname.includes("?") ? pathname.split("?").slice(1).join("?") : "";
+  const itemPath = (item.to.split("?")[0].replace(/\/$/, "") || "/");
+  const itemSearch = item.to.includes("?") ? item.to.split("?").slice(1).join("?") : "";
+
+  if (fullPath.replace(/\/$/, "") === itemPath) {
+    if (!fullSearch && !itemSearch) return true;
+    if (fullSearch && itemSearch) {
+      const fullParams = new URLSearchParams(fullSearch);
+      const itemParams = new URLSearchParams(itemSearch);
+      let match = true;
+      for (const [key, val] of itemParams.entries()) {
+        if (fullParams.get(key) !== val) {
+          match = false;
+          break;
+        }
+      }
+      if (match) return true;
+    }
+  }
+
+  if (item.catchSubRoutes && fullPath.replace(/\/$/, "").startsWith(itemPath + "/")) {
+    const nextSeg = fullPath.replace(/\/$/, "").slice(itemPath.length + 1).split("/")[0];
+    if (item.siblingRoutes) {
+      for (const sib of item.siblingRoutes) {
+        if (sib.split("/").filter(Boolean).pop() === nextSeg) return false;
+      }
+    }
+    return true;
+  }
+
+  return false;
+}
+
+const STORAGE_KEY = 'admin_sidebar_groups';
+const activeLabelStyle = {
+  color: '#ffffff',
+};
+
+function loadGroupState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch { return {}; }
+}
+
+function saveGroupState(state) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+}
+
+function useGroupOpen(pathname) {
+  const [groupState, setGroupState] = useState(() => {
+    const saved = loadGroupState();
+    const idx = navGroups.findIndex((g) =>
+      g.items.some((item) => {
+        if (item.to) return isActive(pathname, item);
+        if (item.children) return item.children.some((c) => isActive(pathname, c));
+        return false;
+      })
+    );
+    const next = {};
+      navGroups.forEach((_, i) => { next[String(i)] = false; });
+      if (idx >= 0) next[String(idx)] = true;
+      else if (saved) {
+        const firstOpen = Object.keys(saved).find((k) => saved[k]);
+        if (firstOpen) next[firstOpen] = true;
+      }
+    saveGroupState(next);
+    return next;
+  });
+
+  useEffect(() => {
+    const idx = navGroups.findIndex((g) =>
+      g.items.some((item) => {
+        if (item.to) return isActive(pathname, item);
+        if (item.children) return item.children.some((c) => isActive(pathname, c));
+        return false;
+      })
+    );
+    setGroupState((prev) => {
+      if (idx >= 0 && prev[String(idx)]) return prev;
+      const next = {};
+      navGroups.forEach((_, i) => { next[String(i)] = false; });
+      if (idx >= 0) next[String(idx)] = true;
+      saveGroupState(next);
+      return next;
+    });
+  }, [pathname]);
+
+  const toggleGroup = useCallback((idx) => {
+    setGroupState((prev) => {
+      const key = String(idx);
+      const currentlyOpen = prev[key];
+      const next = {};
+      navGroups.forEach((_, i) => { next[String(i)] = false; });
+      if (!currentlyOpen) next[key] = true;
+      saveGroupState(next);
+      return next;
+    });
+  }, []);
+
+  const isOpen = useCallback((idx) => !!groupState[String(idx)], [groupState]);
+
+  return [isOpen, toggleGroup];
+}
+
+// Shared animated wrapper for collapsible submenus.
+// grid-rows-[0fr]->[1fr] animates height without needing a fixed max-height,
+// so it works regardless of how many items a group has.
+function Collapsible({ open, children }) {
+  return (
+    <div
+      className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+        open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+      }`}
+    >
+      <div className="overflow-hidden">{children}</div>
+    </div>
+  );
+}
+
+function NestedNavGroup({ item, pathname, onNavigate, isAccordionOpen, onToggleAccordion }) {
+  const hasControlledOpen = isAccordionOpen !== undefined;
+  const [localOpen, setLocalOpen] = useState(() => item.children.some((c) => isActive(pathname, c)));
+  useEffect(() => {
+    if (item.children.some((c) => isActive(pathname, c))) {
+      if (hasControlledOpen) {
+        if (!isAccordionOpen) onToggleAccordion?.();
+      } else {
+        setLocalOpen(true);
+      }
+    }
+  }, [pathname, item.children]);
+
+  const open = hasControlledOpen ? isAccordionOpen : localOpen;
+  const handleToggle = () => {
+    if (hasControlledOpen) {
+      onToggleAccordion?.();
+    } else {
+      setLocalOpen((p) => !p);
+    }
+  };
+
+  const iconColor = '#707897';
+
+  const hasActiveChild = item.children.some((c) => isActive(pathname, c));
+
+  return (
+    <div>
+      <button
+        onClick={handleToggle}
+        className={`cursor-pointer w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-all duration-200 ${
+          hasActiveChild ? "" : "text-[#939AB3] hover:text-white hover:bg-white/5 hover:translate-x-0.5"
+        }`}
+        style={hasActiveChild ? { color: '#ffffff' } : undefined}
+      >
+        <FiChevronDown
+          className={`w-3.5 h-3.5 transition-transform duration-300 ease-in-out ${open ? "" : "-rotate-90"}`}
+          style={{ color: iconColor }}
+        />
+        <span style={hasActiveChild ? activeLabelStyle : undefined}>{item.label}</span>
+      </button>
+      <Collapsible open={open}>
+        <div className="ml-3 pl-2 mt-0.5 mb-1 space-y-0.5" style={{ borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
+          {item.children.map((child) => {
+            const act = isActive(pathname, child);
+            return (
+              <NavLink
+                key={child.to}
+                to={child.to}
+                onClick={onNavigate}
+                end
+                className={`cursor-pointer block px-3 py-1.5 text-sm rounded-md transition-all duration-200 ${
+                  act ? "" : "text-[#939AB3] hover:text-white hover:bg-white/5 hover:translate-x-0.5"
+                }`}
+                      style={act ? { color: '#ffffff' } : undefined}
+              >
+                      <span style={act ? activeLabelStyle : undefined}>{child.label}</span>
+              </NavLink>
+            );
+          })}
+        </div>
+      </Collapsible>
+    </div>
+  );
+}
+
+function SidebarNav({ group, idx, pathname, isOpen, onToggle, onNavigate }) {
+  const [activeNested, setActiveNested] = useState(() => {
+    const activeIdx = group.items.findIndex(item =>
+      item.children && item.children.some(c => isActive(pathname, c))
+    );
+    return activeIdx >= 0 ? activeIdx : null;
+  });
+
+  const Icon = group.icon;
+  const groupActive = group.items.some((item) => {
+    if (item.to) return isActive(pathname, item);
+    if (item.children) return item.children.some((c) => isActive(pathname, c));
+    return false;
+  });
+  const opened = isOpen(idx);
+  const iconColor = '#64748b';
+  const groupIconColor = iconColor;
+
+  if (group.items.length === 1 && group.items[0].to) {
+    return (
+      <NavLink
+        to={group.items[0].to}
+        end
+        onClick={onNavigate}
+        className={`cursor-pointer w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-md transition-all duration-200 ${
+          groupActive ? "font-semibold" : "text-[#939AB3] hover:text-white hover:bg-white/5 hover:translate-x-0.5"
+        }`}
+          style={groupActive ? { color: '#ffffff' } : undefined}
+      >
+        <Icon
+          className="w-4 h-4 shrink-0 transition-colors duration-200"
+          style={{ color: groupIconColor }}
+        />
+          <span style={groupActive ? activeLabelStyle : undefined}>{group.label}</span>
+      </NavLink>
+    );
+  }
+
+  if (group.parentTo) {
+    return (
+      <>
+        <div className="flex items-center rounded-md overflow-hidden">
+          <NavLink
+            to={group.parentTo}
+            end
+            onClick={onNavigate}
+            className={`cursor-pointer flex-1 flex items-center gap-2.5 px-3 py-2 text-sm rounded-md transition-all duration-200 ${
+              groupActive ? "font-semibold" : "text-[#939AB3] hover:text-white hover:bg-white/5"
+            }`}
+            style={groupActive ? { color: '#ffffff' } : undefined}
+          >
+            <Icon
+              className="w-4 h-4 shrink-0 transition-colors duration-200"
+              style={{ color: groupIconColor }}
+            />
+            <span style={groupActive ? activeLabelStyle : undefined}>{group.label}</span>
+          </NavLink>
+          <button
+            onClick={() => onToggle(idx)}
+            className="cursor-pointer p-2 mr-1 rounded-md transition-all duration-200 hover:bg-white/5"
+            style={{ color: iconColor }}
+          >
+            <FiChevronDown
+              className={`w-3.5 h-3.5 transition-transform duration-300 ease-in-out ${opened ? '' : '-rotate-90'}`}
+            />
+          </button>
+        </div>
+        <Collapsible open={opened}>
+          <div className="ml-2 pl-2 mt-0.5 space-y-0.5">
+            {group.items.map((item, itemIdx) => {
+              if (item.children) return (
+                <NestedNavGroup
+                  key={item.label}
+                  item={item}
+                  pathname={pathname}
+                  onNavigate={onNavigate}
+                  isAccordionOpen={activeNested === itemIdx}
+                  onToggleAccordion={() => setActiveNested(prev => prev === itemIdx ? null : itemIdx)}
+                />
+              );
+              const act = isActive(pathname, item);
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={onNavigate}
+                  className={`cursor-pointer block px-3 py-1.5 text-sm rounded-md transition-all duration-200 ${
+                    act ? "font-semibold" : "text-[#939AB3] hover:text-white hover:bg-white/5 hover:translate-x-0.5"
+                  }`}
+                      style={act ? { color: '#ffffff' } : undefined}
+                >
+                      <span style={act ? activeLabelStyle : undefined}>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </Collapsible>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <button
+        onClick={() => onToggle(idx)}
+        className={`cursor-pointer w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-md transition-all duration-200 ${
+          groupActive ? "font-semibold" : "text-[#939AB3] hover:text-white hover:bg-white/5"
+        }`}
+        style={groupActive ? { color: '#ffffff' } : undefined}
+      >
+        <Icon
+          className="w-4 h-4 shrink-0 transition-colors duration-200"
+          style={{ color: groupIconColor }}
+        />
+        <span className="flex-1 text-left" style={groupActive ? activeLabelStyle : undefined}>{group.label}</span>
+        <FiChevronDown
+          className={`w-3.5 h-3.5 transition-transform duration-300 ease-in-out ${opened ? '' : '-rotate-90'}`}
+          style={{ color: iconColor }}
+        />
+      </button>
+      <Collapsible open={opened}>
+        <div className="ml-2 pl-2 mt-0.5 space-y-0.5">
+          {group.items.map((item, itemIdx) => {
+            if (item.children) return (
+              <NestedNavGroup
+                key={item.label}
+                item={item}
+                pathname={pathname}
+                onNavigate={onNavigate}
+                isAccordionOpen={activeNested === itemIdx}
+                onToggleAccordion={() => setActiveNested(prev => prev === itemIdx ? null : itemIdx)}
+              />
+            );
+            const act = isActive(pathname, item);
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={onNavigate}
+                className={`cursor-pointer block px-3 py-1.5 text-sm rounded-md transition-all duration-200 ${
+                  act ? "font-semibold" : "text-[#939AB3] hover:text-white hover:bg-white/5 hover:translate-x-0.5"
+                }`}
+                      style={act ? { color: '#ffffff' } : undefined}
+              >
+                      <span style={act ? activeLabelStyle : undefined}>{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </Collapsible>
+    </>
+  );
+}
+
+export default function Sidebar({ mobileOpen, onMobileClose }) {
+  const { pathname, search } = useLocation();
+  const fullPath = pathname + search;
+  const [isOpen, toggleGroup] = useGroupOpen(fullPath);
+  const { data: settings } = useSiteSettings();
+
+  const content = (
+    <div className="flex flex-col h-full" style={{ background: 'linear-gradient(to bottom, #0C1028, #0A0E20)' }}>
+      <div className="flex items-center justify-between h-14 shrink-0 px-4 border-b border-gray-200" style={{ background: 'white' }}>
+        <NavLink to="/admin" className="flex items-center gap-2.5 min-w-0 group">
+          <div className="w-9 h-9 flex items-center justify-center shrink-0 overflow-hidden transition-transform duration-200 group-hover:scale-105">
+            {settings?.logo_url ? (
+              <img src={settings.logo_url} alt="Marvel Slice" className="h-9 w-auto object-contain" />
+            ) : (
+              <div className="w-8 h-8 flex items-center justify-center transition-transform duration-200" style={{ background: 'linear-gradient(to bottom right, rgba(91,80,236,0.3), rgba(91,80,236,0.05))' }}>
+                <FiGrid className="w-4 h-4" style={{ color: '#5B50EC' }} />
+              </div>
+            )}
+          </div>
+          <div className="min-w-0">
+            <span className="text-sm font-semibold block leading-tight" style={{ color: '#0C1028' }}>Marvel Slice</span>
+            <span className="text-[11px] font-medium" style={{ color: '#6b7280' }}>Management Portal</span>
+          </div>
+        </NavLink>
+        <button
+          onClick={onMobileClose}
+          aria-label="Close sidebar"
+          className="lg:hidden p-1.5 rounded-md transition-all duration-200 hover:bg-black/5 active:scale-90"
+          style={{ color: '#707897' }}
+        >
+          <FiX className="w-4 h-4" />
+        </button>
+      </div>
+
+      <nav className="flex-1 overflow-y-auto admin-scrollbar py-3 px-2 space-y-0.5 admin-scrollbar">
+        {navGroups.map((group, idx) => (
+          <SidebarNav key={group.label} group={group} idx={idx} pathname={fullPath} isOpen={isOpen} onToggle={toggleGroup} onNavigate={onMobileClose} />
+        ))}
+      </nav>
+
+      <div className="px-4 py-3 shrink-0 border-t border-white/10">
+        <div className="flex items-center gap-2.5 px-2 py-2 rounded-md transition-colors duration-200 hover:bg-white/[0.08]" style={{ background: 'rgba(255,255,255,0.05)' }}>
+          <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 shadow-sm" style={{ background: 'linear-gradient(to bottom right, rgba(91,80,236,0.4), rgba(91,80,236,0.05))', color: '#5B50EC' }}>M</div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium" style={{ color: '#939AB3' }}>Marvel Slice v1.0</p>
+            <p className="text-[10px]" style={{ color: '#707897' }}>Admin Panel</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <aside className="hidden lg:flex lg:flex-col w-60 shrink-0 h-screen overflow-hidden shadow-elevated transition-all duration-300" style={{ background: 'linear-gradient(to bottom, #0C1028, #0A0E20)' }}>{content}</aside>
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm cursor-pointer animate-[fadeIn_0.2s_ease-in-out]"
+            onClick={onMobileClose}
+          />
+          <aside
+            className="fixed left-0 top-0 h-full w-72 shadow-elevated z-50 overflow-hidden animate-[slideIn_0.25s_ease-out]"
+            style={{ background: 'linear-gradient(to bottom, #0C1028, #0A0E20)' }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Sidebar navigation"
+          >
+            {content}
+          </aside>
+        </div>
+      )}
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+      `}</style>
+    </>
+  );
+}

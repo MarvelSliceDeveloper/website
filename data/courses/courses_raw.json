@@ -1,0 +1,7261 @@
+[
+  {
+    "id": "95634de6-1499-47fd-933b-2c420019cbcb",
+    "slug": "react-mastery",
+    "title": "Modern React with TypeScript",
+    "subtitle": "Build dynamic UIs",
+    "description": "Master React 19, TypeScript, hooks, context, Suspense, server components, and testing.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/react-mastery/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:35:54.596429+00:00",
+    "video_url": null,
+    "nav_item_id": "1c20c76e-745b-4e87-9386-ef247c9c0e61",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Modern React with TypeScript - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Modern React with TypeScript - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Modern React with TypeScript - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Modern React with TypeScript - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "4f82d92c-b510-4c05-9d4b-2b30cdc56b4a",
+        "icon": "zap",
+        "label": "React 19",
+        "course_id": "95634de6-1499-47fd-933b-2c420019cbcb",
+        "sort_order": 0
+      },
+      {
+        "id": "603ddc52-11bf-44a7-82a3-9741ab0eb60a",
+        "icon": "layers",
+        "label": "TypeScript",
+        "course_id": "95634de6-1499-47fd-933b-2c420019cbcb",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "7a261f23-2fec-4ea5-9ffa-e9ee5493e314",
+        "title": "E-Commerce Dashboard",
+        "course_id": "95634de6-1499-47fd-933b-2c420019cbcb",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "React dashboard with Chart.js",
+        "technologies": []
+      },
+      {
+        "id": "42d518de-1255-4c2c-b3f4-44b5f8f5f460",
+        "title": "Social Media App",
+        "course_id": "95634de6-1499-47fd-933b-2c420019cbcb",
+        "difficulty": null,
+        "sort_order": 1,
+        "description": "SPA with auth & posts",
+        "technologies": []
+      }
+    ],
+    "certifications": [
+      {
+        "id": "f1d05f44-3509-4737-8300-09c373b62b87",
+        "course_id": "95634de6-1499-47fd-933b-2c420019cbcb",
+        "image_url": null,
+        "description": "Certified React Dev",
+        "skills_earned": [],
+        "recognized_companies": [
+          "Google",
+          "Meta",
+          "Microsoft"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "9812f0d3-ff45-42c4-9109-068597abeda3",
+    "slug": "vue-nuxt",
+    "title": "Vue 3 & Nuxt",
+    "subtitle": "Progressive web apps",
+    "description": "Vue 3, Composition API, Pinia, Nuxt 3 SSR/SSG. Covers routing, SEO, deployment.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/vue-nuxt/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:36:00.136413+00:00",
+    "video_url": null,
+    "nav_item_id": "1c20c76e-745b-4e87-9386-ef247c9c0e61",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Vue 3 & Nuxt - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Vue 3 & Nuxt - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Vue 3 & Nuxt - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Vue 3 & Nuxt - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "43d1a5ef-98c3-41c3-970c-0300f7c8d1d4",
+        "icon": "zap",
+        "label": "Vue 3",
+        "course_id": "9812f0d3-ff45-42c4-9109-068597abeda3",
+        "sort_order": 0
+      },
+      {
+        "id": "9bee3a68-bf53-4eab-8909-65c0afe8229d",
+        "icon": "layers",
+        "label": "Nuxt 3",
+        "course_id": "9812f0d3-ff45-42c4-9109-068597abeda3",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "86327348-45a9-4734-82d7-5468f0327882",
+        "title": "Blog Platform",
+        "course_id": "9812f0d3-ff45-42c4-9109-068597abeda3",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "Nuxt 3 + Markdown blog",
+        "technologies": []
+      },
+      {
+        "id": "d0c9b03c-1ed5-404a-967e-7a61660bac13",
+        "title": "Chat App",
+        "course_id": "9812f0d3-ff45-42c4-9109-068597abeda3",
+        "difficulty": null,
+        "sort_order": 1,
+        "description": "Vue + WebSocket chat",
+        "technologies": []
+      }
+    ],
+    "certifications": [
+      {
+        "id": "68c73742-71b7-49d1-8ae5-a51900ed6de9",
+        "course_id": "9812f0d3-ff45-42c4-9109-068597abeda3",
+        "image_url": null,
+        "description": "Vue Certified",
+        "skills_earned": [],
+        "recognized_companies": [
+          "Meta",
+          "GitLab"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "3e5408e2-9a05-421d-aa3f-639b2f858313",
+    "slug": "angular-pro",
+    "title": "Angular Enterprise",
+    "subtitle": "Large-scale SPAs",
+    "description": "Angular 18, RxJS, NgRx, Material. Covers lazy loading, PWA, SSR.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/angular-pro/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:36:04.973545+00:00",
+    "video_url": null,
+    "nav_item_id": "1c20c76e-745b-4e87-9386-ef247c9c0e61",
+    "duration": "5 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Angular Enterprise - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Angular Enterprise - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Angular Enterprise - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Angular Enterprise - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "06a900a2-40f0-47a3-8e60-e4f1161c71a9",
+        "icon": "zap",
+        "label": "Angular 18",
+        "course_id": "3e5408e2-9a05-421d-aa3f-639b2f858313",
+        "sort_order": 0
+      },
+      {
+        "id": "9250e050-9c32-47d4-8392-17f4ace5fae1",
+        "icon": "layers",
+        "label": "RxJS & NgRx",
+        "course_id": "3e5408e2-9a05-421d-aa3f-639b2f858313",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "1159fc4e-d24f-4501-830c-002a9e862019",
+        "title": "PM Tool",
+        "course_id": "3e5408e2-9a05-421d-aa3f-639b2f858313",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "Kanban with Angular Material",
+        "technologies": []
+      }
+    ],
+    "certifications": [
+      {
+        "id": "871aacb6-81fb-4d59-a944-b50ab155da96",
+        "course_id": "3e5408e2-9a05-421d-aa3f-639b2f858313",
+        "image_url": null,
+        "description": "Angular Certified",
+        "skills_earned": [],
+        "recognized_companies": [
+          "Google",
+          "Microsoft"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "9a58a851-9297-487a-9db9-8de3514e6151",
+    "slug": "svelte-apps",
+    "title": "Svelte & SvelteKit",
+    "subtitle": "The compiler framework",
+    "description": "Fast reactive apps with Svelte and SvelteKit. Stores, animations, SSR.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/svelte-apps/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:36:09.500858+00:00",
+    "video_url": null,
+    "nav_item_id": "1c20c76e-745b-4e87-9386-ef247c9c0e61",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Svelte & SvelteKit - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Svelte & SvelteKit - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Svelte & SvelteKit - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Svelte & SvelteKit - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "1cc13b47-9807-4d44-949d-fa0c32435f0c",
+        "icon": "zap",
+        "label": "Svelte Reactivity",
+        "course_id": "9a58a851-9297-487a-9db9-8de3514e6151",
+        "sort_order": 0
+      },
+      {
+        "id": "db4d8549-df73-4f25-8556-214c5a30b2ef",
+        "icon": "layers",
+        "label": "SvelteKit",
+        "course_id": "9a58a851-9297-487a-9db9-8de3514e6151",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "ee044cef-fd1b-482c-9089-7109148cc1cb",
+        "title": "Dashboard",
+        "course_id": "9a58a851-9297-487a-9db9-8de3514e6151",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "Svelte + D3.js",
+        "technologies": []
+      }
+    ],
+    "certifications": []
+  },
+  {
+    "id": "4d138cbc-21c5-4a23-abcd-77716e6054b9",
+    "slug": "nextjs-fullstack",
+    "title": "Next.js Full Stack",
+    "subtitle": "React for production",
+    "description": "Next.js App Router, server components, API routes, Prisma, PostgreSQL, Vercel.",
+    "checklist_items": [
+      "Expert-Led Live Training Sessions",
+      "Angular Fundamentals to Advanced Concepts",
+      "Real-Time Project Development Experience",
+      "API Integration and Dynamic Data Handling",
+      "Responsive UI Design Using Bootstrap & Angular Material",
+      "Career Guidance and Placement Support",
+      "Flexible Learning Schedule with Lifetime Access"
+    ],
+    "hero_image_url": "https://picsum.photos/seed/nextjs-fullstack/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:36:13.232178+00:00",
+    "video_url": "https://youtu.be/xnOwOBYaA3w?si=Cimopf3m-4FF8t1v",
+    "nav_item_id": "1c20c76e-745b-4e87-9386-ef247c9c0e61",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Next.js Full Stack - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Next.js Full Stack - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Next.js Full Stack - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Next.js Full Stack - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": "Ready to your learning journey?",
+    "cta_description": "Enroll now and gain industry-ready skills with expert mentors.",
+    "cta_text": "Request Call Baclk",
+    "cta_link": "",
+    "cta_phone": "9272635241",
+    "cta_background_image": "https://nxlsxywqvvuiljsulito.supabase.co/storage/v1/object/public/course-thumbnails/1784378662023-marvel-banner.jpeg",
+    "highlights": [
+      {
+        "id": "d8a35a80-f925-4047-a5bb-e3a79e02619d",
+        "icon": "zap",
+        "label": "App Router",
+        "course_id": "4d138cbc-21c5-4a23-abcd-77716e6054b9",
+        "sort_order": 0
+      },
+      {
+        "id": "f0185a2f-ce00-4fa8-bc39-e88de61eef8c",
+        "icon": "database",
+        "label": "Prisma + Postgres",
+        "course_id": "4d138cbc-21c5-4a23-abcd-77716e6054b9",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "5acb5e19-bce4-499f-ab1b-ca6ad0d20d54",
+        "title": "SaaS Landing",
+        "course_id": "4d138cbc-21c5-4a23-abcd-77716e6054b9",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "Next.js + Stripe",
+        "technologies": []
+      }
+    ],
+    "certifications": [
+      {
+        "id": "595b597b-c819-46d2-a815-dfb5cad79566",
+        "course_id": "4d138cbc-21c5-4a23-abcd-77716e6054b9",
+        "image_url": null,
+        "description": "Next.js Certified",
+        "skills_earned": [],
+        "recognized_companies": [
+          "Vercel",
+          "Netflix"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "090f6a82-f934-4cd1-8d67-a72420914099",
+    "slug": "nodejs-express",
+    "title": "Node.js & Express Backend",
+    "subtitle": "Scalable APIs",
+    "description": "Node.js, Express, PostgreSQL, JWT auth, Redis caching, Docker deployment.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/nodejs-express/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:36:18.50751+00:00",
+    "video_url": null,
+    "nav_item_id": "d4f0a428-8f8c-4ae5-ba53-e27413b35647",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Node.js & Express Backend - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Node.js & Express Backend - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Node.js & Express Backend - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Node.js & Express Backend - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "5ba39713-ede0-414f-b74f-fae2b1300093",
+        "icon": "database",
+        "label": "PostgreSQL & Prisma",
+        "course_id": "090f6a82-f934-4cd1-8d67-a72420914099",
+        "sort_order": 0
+      },
+      {
+        "id": "e990b672-7e83-483d-bc09-e4b6f6372996",
+        "icon": "shield",
+        "label": "JWT & OAuth",
+        "course_id": "090f6a82-f934-4cd1-8d67-a72420914099",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "c1320377-ddb0-4fe8-b535-8e7483a93ca6",
+        "title": "API Gateway",
+        "course_id": "090f6a82-f934-4cd1-8d67-a72420914099",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "Rate-limited authenticated API",
+        "technologies": []
+      },
+      {
+        "id": "5f456208-536c-4f7b-9c03-585111d2de0a",
+        "title": "Chat Service",
+        "course_id": "090f6a82-f934-4cd1-8d67-a72420914099",
+        "difficulty": null,
+        "sort_order": 1,
+        "description": "WebSocket chat with Redis",
+        "technologies": []
+      }
+    ],
+    "certifications": [
+      {
+        "id": "f6996de5-7ba1-46c9-bea2-8deccffd72d7",
+        "course_id": "090f6a82-f934-4cd1-8d67-a72420914099",
+        "image_url": null,
+        "description": "Backend Cert",
+        "skills_earned": [],
+        "recognized_companies": [
+          "Amazon",
+          "Netflix"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "201f9286-54f6-42c5-aa90-4b70d2fef87b",
+    "slug": "python-fastapi",
+    "title": "Python FastAPI Backend",
+    "subtitle": "High-performance APIs",
+    "description": "FastAPI, SQLAlchemy, async Python, OpenAPI docs, testing.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/python-fastapi/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:36:24.091233+00:00",
+    "video_url": null,
+    "nav_item_id": "d4f0a428-8f8c-4ae5-ba53-e27413b35647",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Python FastAPI Backend - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Python FastAPI Backend - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Python FastAPI Backend - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Python FastAPI Backend - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "f86b875e-e388-43cb-8d7f-5c0896db2647",
+        "icon": "zap",
+        "label": "FastAPI Async",
+        "course_id": "201f9286-54f6-42c5-aa90-4b70d2fef87b",
+        "sort_order": 0
+      },
+      {
+        "id": "97f87bc6-9d0d-44b2-9a6f-9e7bdd2283de",
+        "icon": "database",
+        "label": "SQLAlchemy ORM",
+        "course_id": "201f9286-54f6-42c5-aa90-4b70d2fef87b",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "0cbdb0a5-f13d-4ef2-be6f-93bac1250e00",
+        "title": "E-Commerce API",
+        "course_id": "201f9286-54f6-42c5-aa90-4b70d2fef87b",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "FastAPI + PostgreSQL",
+        "technologies": []
+      }
+    ],
+    "certifications": [
+      {
+        "id": "09452cb8-2d94-4976-ae30-3710f2dfa99b",
+        "course_id": "201f9286-54f6-42c5-aa90-4b70d2fef87b",
+        "image_url": null,
+        "description": "FastAPI Cert",
+        "skills_earned": [],
+        "recognized_companies": [
+          "Uber",
+          "Netflix"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "bfbddd72-42fd-4224-a58a-f5acddea6aa4",
+    "slug": "java-spring",
+    "title": "Java Spring Boot",
+    "subtitle": "Enterprise microservices",
+    "description": "Spring Boot, Cloud, JPA, Kafka, microservices, service discovery.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/java-spring/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:36:28.808503+00:00",
+    "video_url": null,
+    "nav_item_id": "d4f0a428-8f8c-4ae5-ba53-e27413b35647",
+    "duration": "6 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Java Spring Boot - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Java Spring Boot - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Java Spring Boot - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Java Spring Boot - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "e3c5b3bf-d414-4984-8241-be9a2097c49e",
+        "icon": "shield",
+        "label": "Spring Security",
+        "course_id": "bfbddd72-42fd-4224-a58a-f5acddea6aa4",
+        "sort_order": 0
+      },
+      {
+        "id": "f1b6dd67-b147-4cd6-aa5d-4bdd4ab0f24d",
+        "icon": "layers",
+        "label": "Microservices",
+        "course_id": "bfbddd72-42fd-4224-a58a-f5acddea6aa4",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "8d300fca-8169-4e76-9b73-7fc983707277",
+        "title": "Order Management",
+        "course_id": "bfbddd72-42fd-4224-a58a-f5acddea6aa4",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "Microservices with Kafka",
+        "technologies": []
+      }
+    ],
+    "certifications": []
+  },
+  {
+    "id": "ee9c13d7-3f6f-4844-b9cd-7051b105059e",
+    "slug": "ml-basics",
+    "title": "ML Fundamentals",
+    "subtitle": "ML from scratch",
+    "description": "scikit-learn, regression, classification, clustering, hyperparameter tuning.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ml-basics/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:36:32.933193+00:00",
+    "video_url": null,
+    "nav_item_id": "d4035ea8-9af9-4cf2-902e-7777753c9e20",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "ML Fundamentals - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "ML Fundamentals - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "ML Fundamentals - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "ML Fundamentals - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "15b319e0-e31d-4da0-b1ab-82420c1d02d4",
+        "icon": "cpu",
+        "label": "Scikit-Learn",
+        "course_id": "ee9c13d7-3f6f-4844-b9cd-7051b105059e",
+        "sort_order": 0
+      },
+      {
+        "id": "ed74c0b4-da03-42e8-a5f2-31436e2ebfe9",
+        "icon": "layers",
+        "label": "Model Pipeline",
+        "course_id": "ee9c13d7-3f6f-4844-b9cd-7051b105059e",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "9f4864be-415b-4d4e-b513-0c1c9233a02a",
+        "title": "Price Predictor",
+        "course_id": "ee9c13d7-3f6f-4844-b9cd-7051b105059e",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "Regression model",
+        "technologies": []
+      },
+      {
+        "id": "85060da3-7d9e-4ea6-b2c2-330b538f5d71",
+        "title": "Segmenter",
+        "course_id": "ee9c13d7-3f6f-4844-b9cd-7051b105059e",
+        "difficulty": null,
+        "sort_order": 1,
+        "description": "K-Means clustering",
+        "technologies": []
+      }
+    ],
+    "certifications": [
+      {
+        "id": "cf3db0d3-c4c6-4e23-bc5d-bdfd197bfc16",
+        "course_id": "ee9c13d7-3f6f-4844-b9cd-7051b105059e",
+        "image_url": null,
+        "description": "ML Cert",
+        "skills_earned": [],
+        "recognized_companies": [
+          "Google",
+          "Amazon"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "b8343150-a11b-40c8-8ce8-0d3da463d31a",
+    "slug": "ml-python-sklearn",
+    "title": "Advanced scikit-learn",
+    "subtitle": "Production ML",
+    "description": "Pipelines, feature selection, ensembles, imbalanced data.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ml-python-sklearn/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:36:38.13608+00:00",
+    "video_url": null,
+    "nav_item_id": "d4035ea8-9af9-4cf2-902e-7777753c9e20",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Advanced scikit-learn - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Advanced scikit-learn - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Advanced scikit-learn - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Advanced scikit-learn - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "11e0e814-a420-4b0f-a3f5-5be31f698221",
+        "icon": "cpu",
+        "label": "Ensembles",
+        "course_id": "b8343150-a11b-40c8-8ce8-0d3da463d31a",
+        "sort_order": 0
+      },
+      {
+        "id": "106d4a09-85a9-4ca6-b71e-2946d1f727c5",
+        "icon": "zap",
+        "label": "Feature Engineering",
+        "course_id": "b8343150-a11b-40c8-8ce8-0d3da463d31a",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "2e80f168-145c-4bba-bf66-43bb2b638c4f",
+        "title": "Fraud Detection",
+        "course_id": "b8343150-a11b-40c8-8ce8-0d3da463d31a",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "SMOTE classification",
+        "technologies": []
+      }
+    ],
+    "certifications": []
+  },
+  {
+    "id": "e4716dcd-8865-4f69-81ac-0e75d2dab746",
+    "slug": "ml-r",
+    "title": "ML with R",
+    "subtitle": "Statistical ML",
+    "description": "R, caret, tidyverse, statistical modeling.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ml-r/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:36:41.826008+00:00",
+    "video_url": null,
+    "nav_item_id": "d4035ea8-9af9-4cf2-902e-7777753c9e20",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "ML with R - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "ML with R - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "ML with R - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "ML with R - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "145aae25-d5ed-4841-a97b-378101bd51ba",
+        "icon": "layers",
+        "label": "Tidyverse",
+        "course_id": "e4716dcd-8865-4f69-81ac-0e75d2dab746",
+        "sort_order": 0
+      },
+      {
+        "id": "51b97bba-38ce-4d49-bad6-e38b5f1c6115",
+        "icon": "trending",
+        "label": "Statistical Models",
+        "course_id": "e4716dcd-8865-4f69-81ac-0e75d2dab746",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "6321567e-9049-403e-acdd-6894500428c3",
+    "slug": "ml-automl",
+    "title": "AutoML with H2O & TPOT",
+    "subtitle": "Automated ML",
+    "description": "H2O.ai, TPOT, AutoKeras for automated model selection.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ml-automl/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:36:45.122288+00:00",
+    "video_url": null,
+    "nav_item_id": "d4035ea8-9af9-4cf2-902e-7777753c9e20",
+    "duration": "2 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "AutoML with H2O & TPOT - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "AutoML with H2O & TPOT - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "AutoML with H2O & TPOT - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "AutoML with H2O & TPOT - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "f5d4ebdb-8777-4db9-81f4-7541ef8d1324",
+        "icon": "zap",
+        "label": "H2O AutoML",
+        "course_id": "6321567e-9049-403e-acdd-6894500428c3",
+        "sort_order": 0
+      },
+      {
+        "id": "909255ab-f07a-4800-97ff-005b05054423",
+        "icon": "cpu",
+        "label": "TPOT",
+        "course_id": "6321567e-9049-403e-acdd-6894500428c3",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "78a9bba9-68f1-4e41-8a67-411ed655a0b6",
+    "slug": "ml-mlops",
+    "title": "MLOps Fundamentals",
+    "subtitle": "ML in production",
+    "description": "ML pipelines, DVC, Docker, model monitoring, drift detection.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ml-mlops/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:36:48.449071+00:00",
+    "video_url": null,
+    "nav_item_id": "d4035ea8-9af9-4cf2-902e-7777753c9e20",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "MLOps Fundamentals - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "MLOps Fundamentals - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "MLOps Fundamentals - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "MLOps Fundamentals - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "defb36fe-d4f0-4eb6-9c93-44152c7ef86a",
+        "icon": "shield",
+        "label": "ML Pipelines",
+        "course_id": "78a9bba9-68f1-4e41-8a67-411ed655a0b6",
+        "sort_order": 0
+      },
+      {
+        "id": "7551cf44-c432-4f9a-81d8-bbbe27405e4b",
+        "icon": "zap",
+        "label": "Model Monitoring",
+        "course_id": "78a9bba9-68f1-4e41-8a67-411ed655a0b6",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "5d4ee537-1e74-4b4e-abc6-ef5493840cbd",
+        "title": "ML Pipeline",
+        "course_id": "78a9bba9-68f1-4e41-8a67-411ed655a0b6",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "End-to-end with MLflow",
+        "technologies": []
+      }
+    ],
+    "certifications": []
+  },
+  {
+    "id": "af316843-879d-47cd-a845-6643a0da3edf",
+    "slug": "dl-tensorflow",
+    "title": "Deep Learning with TF",
+    "subtitle": "Neural networks",
+    "description": "TensorFlow, Keras, CNNs, RNNs, Transformers, GANs.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/dl-tensorflow/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:36:52.161524+00:00",
+    "video_url": null,
+    "nav_item_id": "bb3a8a9c-2f7d-47f0-bd4e-aab2b48f94fb",
+    "duration": "5 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Deep Learning with TF - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Deep Learning with TF - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Deep Learning with TF - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Deep Learning with TF - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "248a30ca-f43a-425b-98cc-3ae232e65240",
+        "icon": "cpu",
+        "label": "CNNs & RNNs",
+        "course_id": "af316843-879d-47cd-a845-6643a0da3edf",
+        "sort_order": 0
+      },
+      {
+        "id": "222e8813-9a6d-4e08-bc4b-2d24357bb358",
+        "icon": "zap",
+        "label": "Transformers",
+        "course_id": "af316843-879d-47cd-a845-6643a0da3edf",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "50daea17-6222-482e-bae2-fdd6ff3a1969",
+        "title": "Image Classifier",
+        "course_id": "af316843-879d-47cd-a845-6643a0da3edf",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "CNN 100-class",
+        "technologies": []
+      },
+      {
+        "id": "41d37c2a-4d15-4241-85d5-4970e1207035",
+        "title": "Text Generator",
+        "course_id": "af316843-879d-47cd-a845-6643a0da3edf",
+        "difficulty": null,
+        "sort_order": 1,
+        "description": "LSTM text",
+        "technologies": []
+      }
+    ],
+    "certifications": [
+      {
+        "id": "a724e2bb-8674-48eb-aae1-6dbf70c0c8b4",
+        "course_id": "af316843-879d-47cd-a845-6643a0da3edf",
+        "image_url": null,
+        "description": "TF Certified",
+        "skills_earned": [],
+        "recognized_companies": [
+          "Google DeepMind",
+          "OpenAI"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "2def74e8-a9cc-40ee-9382-6d61eff91fd8",
+    "slug": "dl-pytorch",
+    "title": "PyTorch Deep Learning",
+    "subtitle": "Flexible deep learning",
+    "description": "PyTorch, autograd, nn.Module, TorchScript.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/dl-pytorch/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:36:57.747055+00:00",
+    "video_url": null,
+    "nav_item_id": "bb3a8a9c-2f7d-47f0-bd4e-aab2b48f94fb",
+    "duration": "5 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "PyTorch Deep Learning - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "PyTorch Deep Learning - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "PyTorch Deep Learning - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "PyTorch Deep Learning - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "0788fc66-7582-4d32-a88d-0b75db073331",
+        "icon": "cpu",
+        "label": "PyTorch",
+        "course_id": "2def74e8-a9cc-40ee-9382-6d61eff91fd8",
+        "sort_order": 0
+      },
+      {
+        "id": "99faddc0-be35-4f7d-95f8-6946cb7e5316",
+        "icon": "layers",
+        "label": "nn.Module",
+        "course_id": "2def74e8-a9cc-40ee-9382-6d61eff91fd8",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "5ae5ceef-5aeb-4e7b-ba11-7e1ed9c20fac",
+        "title": "Style Transfer",
+        "course_id": "2def74e8-a9cc-40ee-9382-6d61eff91fd8",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "Neural style with PyTorch",
+        "technologies": []
+      }
+    ],
+    "certifications": [
+      {
+        "id": "0e283de3-995e-42df-86f0-d72c6503d29a",
+        "course_id": "2def74e8-a9cc-40ee-9382-6d61eff91fd8",
+        "image_url": null,
+        "description": "PyTorch Cert",
+        "skills_earned": [],
+        "recognized_companies": [
+          "Meta AI",
+          "Tesla"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "36cc1c3c-33dc-40f5-b7fd-76d15b69a691",
+    "slug": "dl-nlp",
+    "title": "NLP with Transformers",
+    "subtitle": "Natural language processing",
+    "description": "BERT, GPT, T5, Hugging Face, LLM fine-tuning.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/dl-nlp/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:37:01.819508+00:00",
+    "video_url": null,
+    "nav_item_id": "bb3a8a9c-2f7d-47f0-bd4e-aab2b48f94fb",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "NLP with Transformers - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NLP with Transformers - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NLP with Transformers - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NLP with Transformers - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "ab1ed7a4-c86f-48bb-ab0e-17e2aa5d93cd",
+        "icon": "zap",
+        "label": "Transformers",
+        "course_id": "36cc1c3c-33dc-40f5-b7fd-76d15b69a691",
+        "sort_order": 0
+      },
+      {
+        "id": "37b409e4-eb5e-433a-a8e9-9ddd0ef2e21c",
+        "icon": "layers",
+        "label": "BERT & GPT",
+        "course_id": "36cc1c3c-33dc-40f5-b7fd-76d15b69a691",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "f04be9a7-eec6-4a69-a05e-50e2fb3a0087",
+        "title": "Sentiment Analyzer",
+        "course_id": "36cc1c3c-33dc-40f5-b7fd-76d15b69a691",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "BERT sentiment",
+        "technologies": []
+      },
+      {
+        "id": "53c29198-b72a-48f0-ba11-edba79e38665",
+        "title": "Chatbot",
+        "course_id": "36cc1c3c-33dc-40f5-b7fd-76d15b69a691",
+        "difficulty": null,
+        "sort_order": 1,
+        "description": "Fine-tuned GPT",
+        "technologies": []
+      }
+    ],
+    "certifications": []
+  },
+  {
+    "id": "76d7213e-b363-47f9-a9e2-acd35d7a4618",
+    "slug": "da-pandas",
+    "title": "Data Analysis with Pandas",
+    "subtitle": "Python data analysis",
+    "description": "Pandas, NumPy, Matplotlib, data cleaning, transformation, analysis.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/da-pandas/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:37:06.262726+00:00",
+    "video_url": null,
+    "nav_item_id": "d60db086-c07b-49bf-9821-821b6f0d8a77",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Data Analysis with Pandas - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Data Analysis with Pandas - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Data Analysis with Pandas - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Data Analysis with Pandas - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "88ad62a4-5bfc-4480-8dba-b628427d7fa9",
+        "icon": "layers",
+        "label": "Pandas & NumPy",
+        "course_id": "76d7213e-b363-47f9-a9e2-acd35d7a4618",
+        "sort_order": 0
+      },
+      {
+        "id": "c4509afe-bc88-4ef2-86af-8543ef51e29a",
+        "icon": "zap",
+        "label": "Data Cleaning",
+        "course_id": "76d7213e-b363-47f9-a9e2-acd35d7a4618",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "f3ff92ae-9251-4ad5-9c92-50f44bc37b5d",
+        "title": "Sales Analysis",
+        "course_id": "76d7213e-b363-47f9-a9e2-acd35d7a4618",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "100K rows pandas analysis",
+        "technologies": []
+      }
+    ],
+    "certifications": [
+      {
+        "id": "146afa50-1c5f-4e0a-ba78-eb3c4929e10f",
+        "course_id": "76d7213e-b363-47f9-a9e2-acd35d7a4618",
+        "image_url": null,
+        "description": "Data Analyst Cert",
+        "skills_earned": [],
+        "recognized_companies": [
+          "Deloitte",
+          "KPMG"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "d4c05f5a-a2ed-4c12-b311-c54f09829546",
+    "slug": "da-sql",
+    "title": "SQL for Data Analysis",
+    "subtitle": "Querying for insights",
+    "description": "Window functions, CTEs, query optimization, analytical SQL.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/da-sql/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:37:10.772135+00:00",
+    "video_url": null,
+    "nav_item_id": "d60db086-c07b-49bf-9821-821b6f0d8a77",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "SQL for Data Analysis - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SQL for Data Analysis - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SQL for Data Analysis - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SQL for Data Analysis - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "6af83149-9c2f-4b96-a102-eb5fc83580c7",
+        "icon": "database",
+        "label": "Window Functions",
+        "course_id": "d4c05f5a-a2ed-4c12-b311-c54f09829546",
+        "sort_order": 0
+      },
+      {
+        "id": "8cacac51-4c13-4bfc-a18a-e30140fa8005",
+        "icon": "zap",
+        "label": "Query Optimization",
+        "course_id": "d4c05f5a-a2ed-4c12-b311-c54f09829546",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "5f08e972-4c46-4a49-95c1-408ccc75e2d6",
+        "title": "E-Commerce Analytics",
+        "course_id": "d4c05f5a-a2ed-4c12-b311-c54f09829546",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "SQL order analysis",
+        "technologies": []
+      }
+    ],
+    "certifications": []
+  },
+  {
+    "id": "467cdcfe-bb85-4b9c-bc53-f85277328d46",
+    "slug": "da-excel",
+    "title": "Advanced Excel Analytics",
+    "subtitle": "Spreadsheet mastery",
+    "description": "Power Query, Power Pivot, DAX, macros, charts.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/da-excel/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:37:14.447186+00:00",
+    "video_url": null,
+    "nav_item_id": "d60db086-c07b-49bf-9821-821b6f0d8a77",
+    "duration": "2 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Advanced Excel Analytics - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Advanced Excel Analytics - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Advanced Excel Analytics - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Advanced Excel Analytics - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "26bd96d3-ee22-4ee2-84e8-9da5b9d5c4e8",
+        "icon": "layers",
+        "label": "Power Query",
+        "course_id": "467cdcfe-bb85-4b9c-bc53-f85277328d46",
+        "sort_order": 0
+      },
+      {
+        "id": "4d6dbb54-bba9-4269-a5d8-2b1692a51832",
+        "icon": "zap",
+        "label": "DAX Formulas",
+        "course_id": "467cdcfe-bb85-4b9c-bc53-f85277328d46",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "2bbff46d-77b3-445d-8cf5-d76ee39a06b0",
+    "slug": "da-python-stats",
+    "title": "Python Statistics",
+    "subtitle": "Statistical foundations",
+    "description": "Hypothesis testing, probability, Bayesian inference, regression.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/da-python-stats/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:37:17.384369+00:00",
+    "video_url": null,
+    "nav_item_id": "d60db086-c07b-49bf-9821-821b6f0d8a77",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Python Statistics - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Python Statistics - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Python Statistics - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Python Statistics - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "93adbc1e-6632-43af-9c1b-14e0aa7556dc",
+        "icon": "cpu",
+        "label": "SciPy Stats",
+        "course_id": "2bbff46d-77b3-445d-8cf5-d76ee39a06b0",
+        "sort_order": 0
+      },
+      {
+        "id": "25ab1829-507a-4a83-8c2d-09936dbcb5d2",
+        "icon": "trending",
+        "label": "Hypothesis Testing",
+        "course_id": "2bbff46d-77b3-445d-8cf5-d76ee39a06b0",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "82ccb68c-143d-4cbd-9907-db3627477070",
+        "title": "A/B Testing",
+        "course_id": "2bbff46d-77b3-445d-8cf5-d76ee39a06b0",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "Statistical analysis",
+        "technologies": []
+      }
+    ],
+    "certifications": []
+  },
+  {
+    "id": "7fead814-b8d8-409a-b49a-cf4cc56e2669",
+    "slug": "da-etl",
+    "title": "ETL Pipelines",
+    "subtitle": "Extract, transform, load",
+    "description": "Python, Airflow, dbt, data warehousing, orchestration.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/da-etl/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:37:21.093821+00:00",
+    "video_url": null,
+    "nav_item_id": "d60db086-c07b-49bf-9821-821b6f0d8a77",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "ETL Pipelines - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "ETL Pipelines - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "ETL Pipelines - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "ETL Pipelines - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "6e9cd1c0-c9f3-4ce5-bd41-be10d7bd5d92",
+        "icon": "layers",
+        "label": "Apache Airflow",
+        "course_id": "7fead814-b8d8-409a-b49a-cf4cc56e2669",
+        "sort_order": 0
+      },
+      {
+        "id": "5d39d6b7-5e4d-42bf-b871-468fd9580524",
+        "icon": "database",
+        "label": "dbt",
+        "course_id": "7fead814-b8d8-409a-b49a-cf4cc56e2669",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "d7826d53-f9d8-406c-9a19-de43966eb244",
+    "slug": "dv-tableau",
+    "title": "Tableau Desktop",
+    "subtitle": "Interactive dashboards",
+    "description": "Tableau, calculated fields, LOD expressions, parameters, dashboards.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/dv-tableau/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:37:24.839962+00:00",
+    "video_url": null,
+    "nav_item_id": "3912b494-8d84-439c-ab45-f64c763a70ee",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Tableau Desktop - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Tableau Desktop - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Tableau Desktop - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Tableau Desktop - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "9e81c9b8-2568-48c7-b6c1-264893e9a4fd",
+        "icon": "zap",
+        "label": "Tableau Desktop",
+        "course_id": "d7826d53-f9d8-406c-9a19-de43966eb244",
+        "sort_order": 0
+      },
+      {
+        "id": "6f4f1eb6-94fa-45fe-826d-f75976d593db",
+        "icon": "layers",
+        "label": "LOD Expressions",
+        "course_id": "d7826d53-f9d8-406c-9a19-de43966eb244",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "98944aac-5ed1-4fa8-99e9-2c25d3110f6b",
+        "title": "Executive Dashboard",
+        "course_id": "d7826d53-f9d8-406c-9a19-de43966eb244",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "KPI dashboard in Tableau",
+        "technologies": []
+      }
+    ],
+    "certifications": [
+      {
+        "id": "a5616d22-84e3-4b67-b50c-f784de77ed09",
+        "course_id": "d7826d53-f9d8-406c-9a19-de43966eb244",
+        "image_url": null,
+        "description": "Tableau Certified",
+        "skills_earned": [],
+        "recognized_companies": [
+          "Tableau",
+          "Deloitte"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "b6cddbef-6f69-4ca2-bb38-c59e43a277b4",
+    "slug": "dv-powerbi",
+    "title": "Power BI",
+    "subtitle": "Microsoft BI",
+    "description": "Power BI Desktop, DAX, Power Query, row-level security, deployment.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/dv-powerbi/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:37:28.847801+00:00",
+    "video_url": null,
+    "nav_item_id": "3912b494-8d84-439c-ab45-f64c763a70ee",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Power BI - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Power BI - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Power BI - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Power BI - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "e65b08cd-47c4-4433-8ea3-83bee3333671",
+        "icon": "layers",
+        "label": "Power BI Desktop",
+        "course_id": "b6cddbef-6f69-4ca2-bb38-c59e43a277b4",
+        "sort_order": 0
+      },
+      {
+        "id": "8af7fff8-7ebd-4e1f-b048-58b701516dfc",
+        "icon": "zap",
+        "label": "DAX Formulas",
+        "course_id": "b6cddbef-6f69-4ca2-bb38-c59e43a277b4",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "f1d65e77-f2f4-4f70-b59f-dff472ad63c6",
+        "title": "HR Analytics",
+        "course_id": "b6cddbef-6f69-4ca2-bb38-c59e43a277b4",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "Power BI HR dashboard",
+        "technologies": []
+      }
+    ],
+    "certifications": []
+  },
+  {
+    "id": "81173f29-9ec5-41b5-a95e-04bc0249b07d",
+    "slug": "dv-python-viz",
+    "title": "Python Plotly",
+    "subtitle": "Interactive Python",
+    "description": "Plotly, Dash, Streamlit for interactive data apps.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/dv-python-viz/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:37:32.521056+00:00",
+    "video_url": null,
+    "nav_item_id": "3912b494-8d84-439c-ab45-f64c763a70ee",
+    "duration": "2 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Python Plotly - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Python Plotly - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Python Plotly - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Python Plotly - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "bbd5b54d-51ed-4564-8cff-48c3f8217e2c",
+        "icon": "zap",
+        "label": "Plotly Express",
+        "course_id": "81173f29-9ec5-41b5-a95e-04bc0249b07d",
+        "sort_order": 0
+      },
+      {
+        "id": "98a1c0c0-95c8-4457-ab64-04722beef49e",
+        "icon": "layers",
+        "label": "Dash Apps",
+        "course_id": "81173f29-9ec5-41b5-a95e-04bc0249b07d",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "2b1fb23a-0167-4966-8c88-b1fbf2b5d646",
+    "slug": "aws-solutions",
+    "title": "AWS Solutions Architect",
+    "subtitle": "AWS certification",
+    "description": "EC2, S3, RDS, Lambda, VPC, IAM, CloudFront, best practices.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/aws-solutions/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:37:35.786254+00:00",
+    "video_url": null,
+    "nav_item_id": "4d7dfda2-4a74-4657-8445-04d1a037bdcb",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "AWS Solutions Architect - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "AWS Solutions Architect - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "AWS Solutions Architect - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "AWS Solutions Architect - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "3e31bb7c-a185-4f1f-97ee-5e735bee8f66",
+        "icon": "globe",
+        "label": "AWS Global",
+        "course_id": "2b1fb23a-0167-4966-8c88-b1fbf2b5d646",
+        "sort_order": 0
+      },
+      {
+        "id": "a56bae19-549e-478e-8340-a4a43dac1155",
+        "icon": "shield",
+        "label": "IAM & Security",
+        "course_id": "2b1fb23a-0167-4966-8c88-b1fbf2b5d646",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "df576180-b3cf-4708-b1d3-b605b57b42f5",
+        "title": "Multi-Tier App",
+        "course_id": "2b1fb23a-0167-4966-8c88-b1fbf2b5d646",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "VPC + ALB + EC2 + RDS",
+        "technologies": []
+      }
+    ],
+    "certifications": [
+      {
+        "id": "dc135dee-cec2-4b6e-a7c9-c7261b93fd92",
+        "course_id": "2b1fb23a-0167-4966-8c88-b1fbf2b5d646",
+        "image_url": null,
+        "description": "AWS Certified",
+        "skills_earned": [],
+        "recognized_companies": [
+          "Amazon",
+          "Netflix"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "a4c76945-6073-41a7-81a9-df93e218ab53",
+    "slug": "azure-arch",
+    "title": "Azure Solutions Architect",
+    "subtitle": "Microsoft Azure",
+    "description": "Azure VMs, App Services, SQL, Functions, DevOps.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/azure-arch/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:37:39.856039+00:00",
+    "video_url": null,
+    "nav_item_id": "4d7dfda2-4a74-4657-8445-04d1a037bdcb",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Azure Solutions Architect - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Azure Solutions Architect - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Azure Solutions Architect - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Azure Solutions Architect - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "40359b0d-a424-478d-8a78-d674ac2a089b",
+        "icon": "globe",
+        "label": "Azure Regions",
+        "course_id": "a4c76945-6073-41a7-81a9-df93e218ab53",
+        "sort_order": 0
+      },
+      {
+        "id": "db0d67cc-26d1-4a33-abc6-c0267aea8b18",
+        "icon": "shield",
+        "label": "Azure AD",
+        "course_id": "a4c76945-6073-41a7-81a9-df93e218ab53",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "3a137080-1ca9-4227-b5ab-d7d601adf7ac",
+    "slug": "gcp-arch",
+    "title": "Google Cloud Architect",
+    "subtitle": "GCP certification",
+    "description": "Compute Engine, GKE, Cloud Storage, BigQuery, Cloud Functions.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/gcp-arch/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:37:43.22994+00:00",
+    "video_url": null,
+    "nav_item_id": "4d7dfda2-4a74-4657-8445-04d1a037bdcb",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Google Cloud Architect - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Google Cloud Architect - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Google Cloud Architect - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Google Cloud Architect - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "0793e3a5-96ee-44a3-8a2c-244ec979ecd3",
+        "icon": "globe",
+        "label": "GCP Services",
+        "course_id": "3a137080-1ca9-4227-b5ab-d7d601adf7ac",
+        "sort_order": 0
+      },
+      {
+        "id": "e369516d-307d-4052-9c1c-774283949e57",
+        "icon": "zap",
+        "label": "GKE & Cloud Run",
+        "course_id": "3a137080-1ca9-4227-b5ab-d7d601adf7ac",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": [
+      {
+        "id": "4c5339c8-8459-4c2f-ac79-73136d822592",
+        "course_id": "3a137080-1ca9-4227-b5ab-d7d601adf7ac",
+        "image_url": null,
+        "description": "GCP Certified",
+        "skills_earned": [],
+        "recognized_companies": [
+          "Google"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "d228b1a5-f391-4648-8849-e88b9e4ec0f5",
+    "slug": "multi-cloud",
+    "title": "Multi-Cloud Strategy",
+    "subtitle": "AWS + Azure + GCP",
+    "description": "Multi-cloud architecture, migration, cost optimization, vendor management.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/multi-cloud/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:37:46.97398+00:00",
+    "video_url": null,
+    "nav_item_id": "4d7dfda2-4a74-4657-8445-04d1a037bdcb",
+    "duration": "5 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Multi-Cloud Strategy - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Multi-Cloud Strategy - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Multi-Cloud Strategy - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Multi-Cloud Strategy - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "0a8087e6-2957-4a17-a9c2-56f15210b76e",
+        "icon": "globe",
+        "label": "Multi-Cloud",
+        "course_id": "d228b1a5-f391-4648-8849-e88b9e4ec0f5",
+        "sort_order": 0
+      },
+      {
+        "id": "896b5f8b-20bd-42b6-a8d9-5f5906ee692b",
+        "icon": "shield",
+        "label": "Cloud Security",
+        "course_id": "d228b1a5-f391-4648-8849-e88b9e4ec0f5",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "4f969de4-2bd6-4cbf-a76a-a6bf9e248844",
+    "slug": "terraform-iac",
+    "title": "Terraform IaC",
+    "subtitle": "Infrastructure as Code",
+    "description": "Terraform state, modules, workspaces, multi-cloud provisioning.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/terraform-iac/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:37:50.627867+00:00",
+    "video_url": null,
+    "nav_item_id": "4d7dfda2-4a74-4657-8445-04d1a037bdcb",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Terraform IaC - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Terraform IaC - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Terraform IaC - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Terraform IaC - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "90e3cbe5-8913-4b8b-93ed-ce91e4f023e4",
+        "icon": "layers",
+        "label": "Terraform HCL",
+        "course_id": "4f969de4-2bd6-4cbf-a76a-a6bf9e248844",
+        "sort_order": 0
+      },
+      {
+        "id": "2834a21d-824b-4cf4-86ad-f5bbbbb0c596",
+        "icon": "zap",
+        "label": "Modules & State",
+        "course_id": "4f969de4-2bd6-4cbf-a76a-a6bf9e248844",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "22dfbb57-ada5-462b-9b72-3457bf24e704",
+        "title": "Multi-Cloud Infra",
+        "course_id": "4f969de4-2bd6-4cbf-a76a-a6bf9e248844",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "Terraform AWS+Azure+GCP",
+        "technologies": []
+      }
+    ],
+    "certifications": [
+      {
+        "id": "bc955af4-d340-4924-b6d4-05d6f49f605c",
+        "course_id": "4f969de4-2bd6-4cbf-a76a-a6bf9e248844",
+        "image_url": null,
+        "description": "Terraform Certified",
+        "skills_earned": [],
+        "recognized_companies": [
+          "HashiCorp"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "4c3de668-9721-454b-9080-2a99addca728",
+    "slug": "docker-k8s",
+    "title": "Docker & Kubernetes",
+    "subtitle": "Container orchestration",
+    "description": "Docker Compose, K8s pods, services, Helm, monitoring.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/docker-k8s/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:37:54.743053+00:00",
+    "video_url": null,
+    "nav_item_id": "25b2f078-3d16-4eac-8b13-3e378c50a006",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Docker & Kubernetes - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Docker & Kubernetes - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Docker & Kubernetes - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Docker & Kubernetes - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "c5b07853-1f00-4cf7-9f19-39893a6323bd",
+        "icon": "zap",
+        "label": "Docker Compose",
+        "course_id": "4c3de668-9721-454b-9080-2a99addca728",
+        "sort_order": 0
+      },
+      {
+        "id": "3be7ebb1-6d1b-4511-9a12-f1bbdd0fe757",
+        "icon": "layers",
+        "label": "K8s",
+        "course_id": "4c3de668-9721-454b-9080-2a99addca728",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "45580b1e-64a8-424e-9752-e0314c34a66f",
+        "title": "Microservices K8s",
+        "course_id": "4c3de668-9721-454b-9080-2a99addca728",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "EKS deployment",
+        "technologies": []
+      }
+    ],
+    "certifications": [
+      {
+        "id": "458ff590-a7c1-401f-9c03-0619b91d523b",
+        "course_id": "4c3de668-9721-454b-9080-2a99addca728",
+        "image_url": null,
+        "description": "CKA Certified",
+        "skills_earned": [],
+        "recognized_companies": [
+          "CNCF",
+          "Google"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "4d2ac9e7-bb8c-46f3-ad1a-d0866d550dbc",
+    "slug": "cicd-pipelines",
+    "title": "CI/CD Pipelines",
+    "subtitle": "Automated deployment",
+    "description": "GitHub Actions, GitLab CI, Jenkins, ArgoCD.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/cicd-pipelines/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:37:58.882699+00:00",
+    "video_url": null,
+    "nav_item_id": "25b2f078-3d16-4eac-8b13-3e378c50a006",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "CI/CD Pipelines - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "CI/CD Pipelines - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "CI/CD Pipelines - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "CI/CD Pipelines - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "7722bd7a-f70f-4749-abb4-12b3cf6ed179",
+        "icon": "zap",
+        "label": "GitHub Actions",
+        "course_id": "4d2ac9e7-bb8c-46f3-ad1a-d0866d550dbc",
+        "sort_order": 0
+      },
+      {
+        "id": "27e3314b-aff1-462e-96c9-8121ac40a48c",
+        "icon": "layers",
+        "label": "ArgoCD",
+        "course_id": "4d2ac9e7-bb8c-46f3-ad1a-d0866d550dbc",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "a2a9eae2-5cc3-4a5f-9adc-6e2cfe46f105",
+    "slug": "monitoring",
+    "title": "Monitoring with Prometheus",
+    "subtitle": "Observability",
+    "description": "PromQL, Grafana dashboards, alerting rules, SLI/SLO.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/monitoring/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:38:02.591302+00:00",
+    "video_url": null,
+    "nav_item_id": "25b2f078-3d16-4eac-8b13-3e378c50a006",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Monitoring with Prometheus - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Monitoring with Prometheus - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Monitoring with Prometheus - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Monitoring with Prometheus - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "079dc8c4-cf1b-4103-a146-f1aa289c37cb",
+        "icon": "trending",
+        "label": "PromQL",
+        "course_id": "a2a9eae2-5cc3-4a5f-9adc-6e2cfe46f105",
+        "sort_order": 0
+      },
+      {
+        "id": "7063481a-73b0-4310-9f49-f374c82d957b",
+        "icon": "zap",
+        "label": "Grafana",
+        "course_id": "a2a9eae2-5cc3-4a5f-9adc-6e2cfe46f105",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "a7f65744-e54b-4165-8ab7-a08d0610a615",
+    "slug": "ceh-class",
+    "title": "Certified Ethical Hacker",
+    "subtitle": "CEH v12",
+    "description": "Footprinting, scanning, enumeration, exploitation, CEH syllabus.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ceh-class/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:38:05.541398+00:00",
+    "video_url": null,
+    "nav_item_id": "9e56aa2b-238c-45ed-b3b6-59404ae29ad0",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Certified Ethical Hacker - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Certified Ethical Hacker - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Certified Ethical Hacker - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Certified Ethical Hacker - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "3ede89c0-e883-4284-aa0c-ea29bc89ff62",
+        "icon": "shield",
+        "label": "CEH v12",
+        "course_id": "a7f65744-e54b-4165-8ab7-a08d0610a615",
+        "sort_order": 0
+      },
+      {
+        "id": "af0d2751-0550-4c57-a737-ccb31f2d7ecc",
+        "icon": "zap",
+        "label": "Lab Exercises",
+        "course_id": "a7f65744-e54b-4165-8ab7-a08d0610a615",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "b36d8492-c07a-4026-8443-734f692d85d9",
+        "title": "Pentest Lab",
+        "course_id": "a7f65744-e54b-4165-8ab7-a08d0610a615",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "DVWA pentest lab",
+        "technologies": []
+      }
+    ],
+    "certifications": [
+      {
+        "id": "14b9db8b-7cc8-4a19-ab31-c2f274635879",
+        "course_id": "a7f65744-e54b-4165-8ab7-a08d0610a615",
+        "image_url": null,
+        "description": "EC-Council CEH",
+        "skills_earned": [],
+        "recognized_companies": [
+          "EC-Council"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "32345519-c875-435a-ba03-f772b75f7fa7",
+    "slug": "oscp-prep",
+    "title": "OSCP Penetration Testing",
+    "subtitle": "Offensive Security",
+    "description": "Buffer overflows, web exploitation, privilege escalation, AD attacks.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/oscp-prep/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:38:10.0383+00:00",
+    "video_url": null,
+    "nav_item_id": "9e56aa2b-238c-45ed-b3b6-59404ae29ad0",
+    "duration": "5 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "OSCP Penetration Testing - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "OSCP Penetration Testing - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "OSCP Penetration Testing - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "OSCP Penetration Testing - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "26407db8-eef3-46f4-9ff1-07794093d815",
+        "icon": "zap",
+        "label": "Buffer Overflow",
+        "course_id": "32345519-c875-435a-ba03-f772b75f7fa7",
+        "sort_order": 0
+      },
+      {
+        "id": "2262cb08-fb35-41a5-a6d2-b673f2aa1da6",
+        "icon": "shield",
+        "label": "AD Attacks",
+        "course_id": "32345519-c875-435a-ba03-f772b75f7fa7",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [
+      {
+        "id": "0547661e-6cf0-40dc-a3f2-b5eed3f3d27d",
+        "title": "AD Lab",
+        "course_id": "32345519-c875-435a-ba03-f772b75f7fa7",
+        "difficulty": null,
+        "sort_order": 0,
+        "description": "Active Directory attack lab",
+        "technologies": []
+      }
+    ],
+    "certifications": [
+      {
+        "id": "cd28fe63-c318-43ab-b60c-f998c7f954b5",
+        "course_id": "32345519-c875-435a-ba03-f772b75f7fa7",
+        "image_url": null,
+        "description": "OSCP Certified",
+        "skills_earned": [],
+        "recognized_companies": [
+          "Offensive Security"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "98ce610a-f8bd-4e6a-9039-5d4bb0b593ba",
+    "slug": "web-pentest",
+    "title": "Web App Pentesting",
+    "subtitle": "OWASP Top 10",
+    "description": "SQL injection, XSS, CSRF, SSRF, Burp Suite, API testing.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/web-pentest/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:38:14.096517+00:00",
+    "video_url": null,
+    "nav_item_id": "9e56aa2b-238c-45ed-b3b6-59404ae29ad0",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Web App Pentesting - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Web App Pentesting - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Web App Pentesting - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Web App Pentesting - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "1b37c14a-3442-4974-b999-2f7865d7f4a8",
+        "icon": "zap",
+        "label": "OWASP Top 10",
+        "course_id": "98ce610a-f8bd-4e6a-9039-5d4bb0b593ba",
+        "sort_order": 0
+      },
+      {
+        "id": "183a6443-4e7c-4b3e-bc17-54841e799229",
+        "icon": "layers",
+        "label": "Burp Suite",
+        "course_id": "98ce610a-f8bd-4e6a-9039-5d4bb0b593ba",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "6ea58911-5bd6-4830-9bfc-8027718b8571",
+    "slug": "red-team",
+    "title": "Red Team Operations",
+    "subtitle": "Adversary simulation",
+    "description": "C2 frameworks, phishing, persistence, defense evasion.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/red-team/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:38:17.353672+00:00",
+    "video_url": null,
+    "nav_item_id": "9e56aa2b-238c-45ed-b3b6-59404ae29ad0",
+    "duration": "5 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Red Team Operations - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Red Team Operations - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Red Team Operations - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Red Team Operations - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "9a037d48-acd9-40b8-a3d7-602df82e9731",
+        "icon": "shield",
+        "label": "C2 Frameworks",
+        "course_id": "6ea58911-5bd6-4830-9bfc-8027718b8571",
+        "sort_order": 0
+      },
+      {
+        "id": "5ba20cc4-7bb4-4539-a958-925613091eac",
+        "icon": "zap",
+        "label": "Phishing",
+        "course_id": "6ea58911-5bd6-4830-9bfc-8027718b8571",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "029eb99b-2c20-4493-b263-a9e63586c56f",
+    "slug": "bug-bounty",
+    "title": "Bug Bounty Hunting",
+    "subtitle": "Find vulnerabilities",
+    "description": "Reconnaissance, vuln discovery, disclosure, platform strategies.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/bug-bounty/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:38:20.648626+00:00",
+    "video_url": null,
+    "nav_item_id": "9e56aa2b-238c-45ed-b3b6-59404ae29ad0",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Bug Bounty Hunting - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Bug Bounty Hunting - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Bug Bounty Hunting - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Bug Bounty Hunting - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "6620118a-6530-4fcc-b750-8a504cf3e82e",
+        "icon": "zap",
+        "label": "Recon Techniques",
+        "course_id": "029eb99b-2c20-4493-b263-a9e63586c56f",
+        "sort_order": 0
+      },
+      {
+        "id": "b4d153db-60d8-4700-8df7-b784b0982c71",
+        "icon": "award",
+        "label": "Disclosure Process",
+        "course_id": "029eb99b-2c20-4493-b263-a9e63586c56f",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "ffc87432-89f8-4330-9aaa-530e6ac56d6c",
+    "slug": "netsec-fund",
+    "title": "Network Security Fundamentals",
+    "subtitle": "Secure networks",
+    "description": "Firewalls, IDS/IPS, VPNs, network segmentation, security monitoring.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/netsec-fund/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:38:23.987343+00:00",
+    "video_url": null,
+    "nav_item_id": "983cb9d7-c1ae-4d86-b69d-76a8fbf4b04a",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Network Security Fundamentals - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Network Security Fundamentals - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Network Security Fundamentals - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Network Security Fundamentals - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "da99f2f2-dac1-45bd-a8e0-914905c2193c",
+        "icon": "shield",
+        "label": "Firewalls & IDS/IPS",
+        "course_id": "ffc87432-89f8-4330-9aaa-530e6ac56d6c",
+        "sort_order": 0
+      },
+      {
+        "id": "064d817c-70a7-40ca-94d4-6c8b529e8fa9",
+        "icon": "globe",
+        "label": "VPN",
+        "course_id": "ffc87432-89f8-4330-9aaa-530e6ac56d6c",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": [
+      {
+        "id": "dd5928c5-860e-42ff-9e95-b1a989dc9a55",
+        "course_id": "ffc87432-89f8-4330-9aaa-530e6ac56d6c",
+        "image_url": null,
+        "description": "Security+",
+        "skills_earned": [],
+        "recognized_companies": [
+          "CompTIA"
+        ],
+        "certificate_image_url": null
+      }
+    ]
+  },
+  {
+    "id": "3047e819-24b7-4192-86c8-4137e29e5daf",
+    "slug": "cloud-sec",
+    "title": "Cloud Security Architecture",
+    "subtitle": "Secure the cloud",
+    "description": "Shared responsibility, CSPM, CASB, cloud IAM, incident response.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/cloud-sec/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:38:27.784681+00:00",
+    "video_url": null,
+    "nav_item_id": "983cb9d7-c1ae-4d86-b69d-76a8fbf4b04a",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "Cloud Security Architecture - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Cloud Security Architecture - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Cloud Security Architecture - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "Cloud Security Architecture - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "f677fcf9-3588-430f-b037-5966ff92c9fc",
+        "icon": "shield",
+        "label": "CSPM",
+        "course_id": "3047e819-24b7-4192-86c8-4137e29e5daf",
+        "sort_order": 0
+      },
+      {
+        "id": "9d64f3af-4b6d-43a9-8f9b-7ce4bb876508",
+        "icon": "globe",
+        "label": "Cloud IAM",
+        "course_id": "3047e819-24b7-4192-86c8-4137e29e5daf",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "d0b5982b-be4e-47ba-9e0c-743addf3f3fb",
+    "slug": "soc-analyst",
+    "title": "SOC Analyst & Blue Team",
+    "subtitle": "Defend the enterprise",
+    "description": "SIEM, SOAR, threat intel, incident response, forensics.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/soc-analyst/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:38:31.518429+00:00",
+    "video_url": null,
+    "nav_item_id": "983cb9d7-c1ae-4d86-b69d-76a8fbf4b04a",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "SOC Analyst & Blue Team - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SOC Analyst & Blue Team - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SOC Analyst & Blue Team - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SOC Analyst & Blue Team - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": "",
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "af67dd8e-c604-441e-bc33-e1cb9bafb426",
+        "icon": "zap",
+        "label": "SIEM & SOAR",
+        "course_id": "d0b5982b-be4e-47ba-9e0c-743addf3f3fb",
+        "sort_order": 0
+      },
+      {
+        "id": "554f6b92-aee9-4fa9-85db-034b28f74be4",
+        "icon": "shield",
+        "label": "Incident Response",
+        "course_id": "d0b5982b-be4e-47ba-9e0c-743addf3f3fb",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "79ec5a8b-7e96-454d-965c-a78e866bb0f7",
+    "slug": "upsc-prelims-gs",
+    "title": "UPSC Prelims GS",
+    "subtitle": "GS Paper I & II",
+    "description": "History, Geography, Polity, Economy, Science, Environment. Complete Prelims coverage.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/upsc-prelims-gs/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:38:34.831499+00:00",
+    "video_url": null,
+    "nav_item_id": "a8a63659-aeb1-434e-83aa-3eee0cb6bfa8",
+    "duration": "6 months",
+    "mode": "Online+Offline",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "UPSC Prelims GS - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Prelims GS - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Prelims GS - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Prelims GS - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "8762bbb8-b2d3-4c81-bb2e-f64504d16593",
+        "icon": "book",
+        "label": "Complete GS",
+        "course_id": "79ec5a8b-7e96-454d-965c-a78e866bb0f7",
+        "sort_order": 0
+      },
+      {
+        "id": "9a35cbb8-7fe2-425b-a204-361da91be948",
+        "icon": "zap",
+        "label": "Mock Tests",
+        "course_id": "79ec5a8b-7e96-454d-965c-a78e866bb0f7",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "2676864b-0329-4371-905a-578b6fa02d84",
+    "slug": "upsc-prelims-csat",
+    "title": "UPSC CSAT",
+    "subtitle": "Aptitude paper",
+    "description": "Quant, reasoning, comprehension, data interpretation for CSAT.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/upsc-prelims-csat/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:38:39.966637+00:00",
+    "video_url": null,
+    "nav_item_id": "a8a63659-aeb1-434e-83aa-3eee0cb6bfa8",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "UPSC CSAT - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC CSAT - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC CSAT - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC CSAT - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "c6d2b5f0-cbc9-4d70-8c37-a3380b46d63d",
+        "icon": "zap",
+        "label": "CSAT Focus",
+        "course_id": "2676864b-0329-4371-905a-578b6fa02d84",
+        "sort_order": 0
+      },
+      {
+        "id": "686eae5d-9800-442d-9bd9-36b63497455f",
+        "icon": "layers",
+        "label": "Quant",
+        "course_id": "2676864b-0329-4371-905a-578b6fa02d84",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "61c142ef-7fd1-4ea7-9d43-b93a211f047a",
+    "slug": "upsc-current",
+    "title": "UPSC Current Affairs 2026",
+    "subtitle": "Daily current events",
+    "description": "Daily analysis, monthly magazine, budget, schemes.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/upsc-current/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:38:43.635666+00:00",
+    "video_url": null,
+    "nav_item_id": "a8a63659-aeb1-434e-83aa-3eee0cb6bfa8",
+    "duration": "12 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "UPSC Current Affairs 2026 - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Current Affairs 2026 - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Current Affairs 2026 - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Current Affairs 2026 - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "eb231f74-ecb9-42c8-bee8-a5c1b6d58e1b",
+        "icon": "zap",
+        "label": "Daily Analysis",
+        "course_id": "61c142ef-7fd1-4ea7-9d43-b93a211f047a",
+        "sort_order": 0
+      },
+      {
+        "id": "b51a90a4-72bf-4378-bc84-cf905a4f0da7",
+        "icon": "book",
+        "label": "Monthly Magazine",
+        "course_id": "61c142ef-7fd1-4ea7-9d43-b93a211f047a",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "6dece076-3305-44f5-bf86-705c802a44ea",
+    "slug": "upsc-maps",
+    "title": "UPSC Map Questions",
+    "subtitle": "Geography through maps",
+    "description": "World & India maps, places in news, geographical features.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/upsc-maps/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:38:47.349327+00:00",
+    "video_url": null,
+    "nav_item_id": "a8a63659-aeb1-434e-83aa-3eee0cb6bfa8",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "UPSC Map Questions - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Map Questions - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Map Questions - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Map Questions - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "753eeb4d-06ad-476f-9d06-e167e85583b1",
+        "icon": "globe",
+        "label": "Map-Based",
+        "course_id": "6dece076-3305-44f5-bf86-705c802a44ea",
+        "sort_order": 0
+      },
+      {
+        "id": "5d03a881-72ee-4e5f-bd77-89c7268d188a",
+        "icon": "zap",
+        "label": "Places in News",
+        "course_id": "6dece076-3305-44f5-bf86-705c802a44ea",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "1a2268d7-73cf-4e95-9940-16150a71da50",
+    "slug": "upsc-science",
+    "title": "UPSC Science & Tech",
+    "subtitle": "Science for Prelims",
+    "description": "Biology, Physics, Chemistry, space tech, biotech.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/upsc-science/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:38:50.697287+00:00",
+    "video_url": null,
+    "nav_item_id": "a8a63659-aeb1-434e-83aa-3eee0cb6bfa8",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "UPSC Science & Tech - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Science & Tech - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Science & Tech - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Science & Tech - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "27395751-ec72-408d-8cb7-dc564b3d0fc3",
+        "icon": "zap",
+        "label": "Science",
+        "course_id": "1a2268d7-73cf-4e95-9940-16150a71da50",
+        "sort_order": 0
+      },
+      {
+        "id": "9d28ec19-3103-41f4-9ce6-c35b61168ab6",
+        "icon": "trending",
+        "label": "Tech News",
+        "course_id": "1a2268d7-73cf-4e95-9940-16150a71da50",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "385d664b-9070-42d8-af1f-c8ddf8942277",
+    "slug": "upsc-mains-gs",
+    "title": "UPSC Mains GS",
+    "subtitle": "GS Papers I-IV",
+    "description": "Answer writing, evaluation, feedback for all 4 GS papers.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/upsc-mains-gs/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:38:53.983918+00:00",
+    "video_url": null,
+    "nav_item_id": "63d726e5-f2af-4aff-9129-869e065015a6",
+    "duration": "8 months",
+    "mode": "Online+Offline",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "UPSC Mains GS - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Mains GS - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Mains GS - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Mains GS - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "2c3be0d4-5ed2-4497-b463-37eabd4df923",
+        "icon": "book",
+        "label": "GS I-IV",
+        "course_id": "385d664b-9070-42d8-af1f-c8ddf8942277",
+        "sort_order": 0
+      },
+      {
+        "id": "949b1545-5c9a-4fcf-a190-7686f1d1d506",
+        "icon": "zap",
+        "label": "Answer Writing",
+        "course_id": "385d664b-9070-42d8-af1f-c8ddf8942277",
+        "sort_order": 1
+      },
+      {
+        "id": "3d59f7a4-a0be-4c18-9d3d-abbb12b81ba8",
+        "icon": "message",
+        "label": "Personal Evaluation",
+        "course_id": "385d664b-9070-42d8-af1f-c8ddf8942277",
+        "sort_order": 2
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "e08ecea8-9ed7-45bc-8b8a-872bc3a7d29f",
+    "slug": "upsc-essay",
+    "title": "UPSC Essay",
+    "subtitle": "Essay writing",
+    "description": "Structure, topics, practice with one-on-one feedback.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/upsc-essay/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:38:59.164167+00:00",
+    "video_url": null,
+    "nav_item_id": "63d726e5-f2af-4aff-9129-869e065015a6",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "UPSC Essay - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Essay - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Essay - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Essay - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "5e07f5f3-e40e-4753-8a6d-75a05dc66f6d",
+        "icon": "zap",
+        "label": "Essay Structure",
+        "course_id": "e08ecea8-9ed7-45bc-8b8a-872bc3a7d29f",
+        "sort_order": 0
+      },
+      {
+        "id": "0d09de7b-e674-459a-8513-757faac22a04",
+        "icon": "message",
+        "label": "Personal Feedback",
+        "course_id": "e08ecea8-9ed7-45bc-8b8a-872bc3a7d29f",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "a2f0838e-42ba-4c16-82a6-8d2de77aa7a5",
+    "slug": "upsc-optional",
+    "title": "UPSC Optional Subject",
+    "subtitle": "Sociology/Geography/PA",
+    "description": "In-depth optional coverage with PYQ analysis.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/upsc-optional/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:39:02.170034+00:00",
+    "video_url": null,
+    "nav_item_id": "63d726e5-f2af-4aff-9129-869e065015a6",
+    "duration": "6 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "UPSC Optional Subject - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Optional Subject - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Optional Subject - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "UPSC Optional Subject - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "32b273e4-0c24-4ecc-9648-2d75668f24ed",
+        "icon": "book",
+        "label": "Optional",
+        "course_id": "a2f0838e-42ba-4c16-82a6-8d2de77aa7a5",
+        "sort_order": 0
+      },
+      {
+        "id": "7fc9351c-b1f8-4045-9fb1-473635c5ad57",
+        "icon": "trending",
+        "label": "PYQ Analysis",
+        "course_id": "a2f0838e-42ba-4c16-82a6-8d2de77aa7a5",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "cbf76561-625e-45e6-9bf0-2bd304e6dbb4",
+    "slug": "ssc-cgl-quant",
+    "title": "SSC CGL Quantitative Aptitude",
+    "subtitle": "Maths for CGL",
+    "description": "Number system, algebra, geometry, trigonometry, DI.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ssc-cgl-quant/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:39:05.101857+00:00",
+    "video_url": null,
+    "nav_item_id": "11a48c49-1bb3-4feb-94bc-10455a20f627",
+    "duration": "5 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "SSC CGL Quantitative Aptitude - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CGL Quantitative Aptitude - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CGL Quantitative Aptitude - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CGL Quantitative Aptitude - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "650a91fb-490a-4c01-8aff-f8516316c200",
+        "icon": "zap",
+        "label": "Advanced Maths",
+        "course_id": "cbf76561-625e-45e6-9bf0-2bd304e6dbb4",
+        "sort_order": 0
+      },
+      {
+        "id": "94617e05-db4f-4331-a6ec-e847d3dcd6d1",
+        "icon": "layers",
+        "label": "DI",
+        "course_id": "cbf76561-625e-45e6-9bf0-2bd304e6dbb4",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "a04dd081-7d7e-4c54-92b2-10a8d5c66105",
+    "slug": "ssc-cgl-reasoning",
+    "title": "SSC CGL Reasoning",
+    "subtitle": "Logical & analytical",
+    "description": "Verbal, non-verbal reasoning, puzzles, critical thinking.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ssc-cgl-reasoning/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:39:08.444617+00:00",
+    "video_url": null,
+    "nav_item_id": "11a48c49-1bb3-4feb-94bc-10455a20f627",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "SSC CGL Reasoning - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CGL Reasoning - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CGL Reasoning - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CGL Reasoning - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "8f0f394a-53a2-4c66-ae41-4f43ca0ef4d0",
+        "icon": "zap",
+        "label": "Puzzles",
+        "course_id": "a04dd081-7d7e-4c54-92b2-10a8d5c66105",
+        "sort_order": 0
+      },
+      {
+        "id": "754ba26d-4953-4f3b-8fd2-605f708838a2",
+        "icon": "layers",
+        "label": "Non-Verbal",
+        "course_id": "a04dd081-7d7e-4c54-92b2-10a8d5c66105",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "5611efb8-327c-4541-afd5-7b0edfb8d322",
+    "slug": "ssc-cgl-english",
+    "title": "SSC CGL English",
+    "subtitle": "Grammar & vocab",
+    "description": "Grammar, vocabulary, comprehension, descriptive writing.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ssc-cgl-english/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:39:11.719371+00:00",
+    "video_url": null,
+    "nav_item_id": "11a48c49-1bb3-4feb-94bc-10455a20f627",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "SSC CGL English - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CGL English - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CGL English - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CGL English - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "23564abd-16c9-434c-97fe-1d6ab900f6e8",
+        "icon": "book",
+        "label": "Descriptive",
+        "course_id": "5611efb8-327c-4541-afd5-7b0edfb8d322",
+        "sort_order": 1
+      },
+      {
+        "id": "22cf22f7-80bf-4468-bb6e-8cb55c3e816c",
+        "icon": "zap",
+        "label": "Grammar & Vocab",
+        "course_id": "5611efb8-327c-4541-afd5-7b0edfb8d322",
+        "sort_order": 0
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "cae18eec-b413-4de5-8ff5-1c93394293dd",
+    "slug": "ssc-cgl-gk",
+    "title": "SSC CGL General Awareness",
+    "subtitle": "Static GK & current",
+    "description": "History, geography, polity, economy, science.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ssc-cgl-gk/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:39:15.078056+00:00",
+    "video_url": null,
+    "nav_item_id": "11a48c49-1bb3-4feb-94bc-10455a20f627",
+    "duration": "5 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "SSC CGL General Awareness - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CGL General Awareness - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CGL General Awareness - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CGL General Awareness - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "98b47795-f49d-4b1c-8944-6a4a2021954d",
+        "icon": "book",
+        "label": "Static GK",
+        "course_id": "cae18eec-b413-4de5-8ff5-1c93394293dd",
+        "sort_order": 0
+      },
+      {
+        "id": "5f574c25-8dee-4fa2-aa97-de663d0c68b2",
+        "icon": "trending",
+        "label": "Current Affairs",
+        "course_id": "cae18eec-b413-4de5-8ff5-1c93394293dd",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "3d00f7c5-4dc4-45dc-913e-6a8ca4fd6a16",
+    "slug": "ssc-cgl-mocks",
+    "title": "SSC CGL Mock Series",
+    "subtitle": "Practice & evaluate",
+    "description": "50+ mocks, 200+ sectional tests, detailed solutions.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ssc-cgl-mocks/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:39:18.456421+00:00",
+    "video_url": null,
+    "nav_item_id": "11a48c49-1bb3-4feb-94bc-10455a20f627",
+    "duration": "6 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "SSC CGL Mock Series - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CGL Mock Series - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CGL Mock Series - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CGL Mock Series - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "54b17adf-ef55-4416-bacc-e9b96ac83da9",
+        "icon": "trending",
+        "label": "Rank Analysis",
+        "course_id": "3d00f7c5-4dc4-45dc-913e-6a8ca4fd6a16",
+        "sort_order": 1
+      },
+      {
+        "id": "3422e61d-4c8e-4e25-bebb-0fc0ff128c19",
+        "icon": "zap",
+        "label": "Mock Tests",
+        "course_id": "3d00f7c5-4dc4-45dc-913e-6a8ca4fd6a16",
+        "sort_order": 0
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "eef7ac51-b02c-4be5-b710-6f7bcbaab56f",
+    "slug": "ssc-chsl-combo",
+    "title": "SSC CHSL Complete",
+    "subtitle": "All subjects",
+    "description": "Quant, reasoning, English, GK for CHSL Tier I & II.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ssc-chsl-combo/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:39:22.182045+00:00",
+    "video_url": null,
+    "nav_item_id": "8a446706-f65d-4b70-af18-c03c0f9dbc6d",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "SSC CHSL Complete - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CHSL Complete - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CHSL Complete - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CHSL Complete - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "3c4dc42f-5bf0-4715-88fc-adac7eb6a50a",
+        "icon": "zap",
+        "label": "Mock Tests",
+        "course_id": "eef7ac51-b02c-4be5-b710-6f7bcbaab56f",
+        "sort_order": 1
+      },
+      {
+        "id": "3530195b-62e6-45dc-80a8-b06a83f1d0f5",
+        "icon": "layers",
+        "label": "All Subjects",
+        "course_id": "eef7ac51-b02c-4be5-b710-6f7bcbaab56f",
+        "sort_order": 0
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "0f678aff-c0b2-4a35-8307-a6f3319edd49",
+    "slug": "ssc-chsl-desc",
+    "title": "SSC CHSL Descriptive",
+    "subtitle": "Essay & letter",
+    "description": "Essay, letter writing for CHSL Tier II.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ssc-chsl-desc/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:39:25.929201+00:00",
+    "video_url": null,
+    "nav_item_id": "8a446706-f65d-4b70-af18-c03c0f9dbc6d",
+    "duration": "2 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "SSC CHSL Descriptive - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CHSL Descriptive - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CHSL Descriptive - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CHSL Descriptive - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "f9c0c5f1-e294-462d-90ff-188914eaa7f2",
+        "icon": "message",
+        "label": "Evaluation",
+        "course_id": "0f678aff-c0b2-4a35-8307-a6f3319edd49",
+        "sort_order": 1
+      },
+      {
+        "id": "2509b617-feef-4e59-b0e2-ce5365edd569",
+        "icon": "zap",
+        "label": "Descriptive",
+        "course_id": "0f678aff-c0b2-4a35-8307-a6f3319edd49",
+        "sort_order": 0
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "e2e627f7-48fe-4c3d-8553-164c32a434e4",
+    "slug": "ssc-chsl-gk",
+    "title": "SSC CHSL GK",
+    "subtitle": "GK for CHSL",
+    "description": "Static GK and current affairs for CHSL pattern.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ssc-chsl-gk/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:39:29.236885+00:00",
+    "video_url": null,
+    "nav_item_id": "8a446706-f65d-4b70-af18-c03c0f9dbc6d",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "SSC CHSL GK - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CHSL GK - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CHSL GK - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SSC CHSL GK - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "5c2341d0-9321-4adb-83cf-7b759899e375",
+        "icon": "book",
+        "label": "CHSL GK",
+        "course_id": "e2e627f7-48fe-4c3d-8553-164c32a434e4",
+        "sort_order": 0
+      },
+      {
+        "id": "fc74c27e-842c-496b-804b-d36f20484bdb",
+        "icon": "trending",
+        "label": "Current Affairs",
+        "course_id": "e2e627f7-48fe-4c3d-8553-164c32a434e4",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "f1dda005-5650-4143-8558-cfa999cc1c45",
+    "slug": "ibps-po",
+    "title": "IBPS PO Complete",
+    "subtitle": "Probationary Officer",
+    "description": "Quant, reasoning, English, GK, computer for PO Prelims & Mains.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ibps-po/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:39:32.695282+00:00",
+    "video_url": null,
+    "nav_item_id": "f877419b-c9f0-4e63-b5b1-c46a34b47d10",
+    "duration": "6 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "IBPS PO Complete - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "IBPS PO Complete - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "IBPS PO Complete - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "IBPS PO Complete - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "404c00a9-95ff-45c7-8356-0bb5fb499f24",
+        "icon": "book",
+        "label": "Complete Syllabus",
+        "course_id": "f1dda005-5650-4143-8558-cfa999cc1c45",
+        "sort_order": 0
+      },
+      {
+        "id": "9c236826-878b-46fb-b918-40066970bb9a",
+        "icon": "zap",
+        "label": "Mock Tests",
+        "course_id": "f1dda005-5650-4143-8558-cfa999cc1c45",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "bbb7339d-fee0-429e-9458-db9014770886",
+    "slug": "ibps-clerk",
+    "title": "IBPS Clerk",
+    "subtitle": "Clerical cadre",
+    "description": "Simplified quant, reasoning, English, GK, computer.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ibps-clerk/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:39:36.735736+00:00",
+    "video_url": null,
+    "nav_item_id": "f877419b-c9f0-4e63-b5b1-c46a34b47d10",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "IBPS Clerk - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "IBPS Clerk - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "IBPS Clerk - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "IBPS Clerk - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "0580cae0-a327-4c9c-acd0-ccd51f6c28d0",
+        "icon": "zap",
+        "label": "Clerk Focus",
+        "course_id": "bbb7339d-fee0-429e-9458-db9014770886",
+        "sort_order": 0
+      },
+      {
+        "id": "b4c30bd9-3616-45fc-80b7-cfa47c96dc4f",
+        "icon": "layers",
+        "label": "Simplified Quant",
+        "course_id": "bbb7339d-fee0-429e-9458-db9014770886",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "475000f0-0614-4254-b277-64b1dd4231e1",
+    "slug": "ibps-so",
+    "title": "IBPS Specialist Officer",
+    "subtitle": "SO preparation",
+    "description": "IT, Agriculture, HR, Marketing, Law officer streams.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ibps-so/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:39:40.452079+00:00",
+    "video_url": null,
+    "nav_item_id": "f877419b-c9f0-4e63-b5b1-c46a34b47d10",
+    "duration": "5 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "IBPS Specialist Officer - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "IBPS Specialist Officer - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "IBPS Specialist Officer - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "IBPS Specialist Officer - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "60f44ca0-97df-42b7-847c-4b839276f14e",
+        "icon": "layers",
+        "label": "SO Streams",
+        "course_id": "475000f0-0614-4254-b277-64b1dd4231e1",
+        "sort_order": 0
+      },
+      {
+        "id": "299ea9fb-8a20-43cc-87a1-8176a5450528",
+        "icon": "zap",
+        "label": "Professional Knowledge",
+        "course_id": "475000f0-0614-4254-b277-64b1dd4231e1",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "c6126fdb-cef2-4688-a5dd-715ed7b13141",
+    "slug": "ibps-aao",
+    "title": "IBPS AO & AAO",
+    "subtitle": "Accounting officer",
+    "description": "Accounting, finance, taxation, auditing.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ibps-aao/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:39:43.766266+00:00",
+    "video_url": null,
+    "nav_item_id": "f877419b-c9f0-4e63-b5b1-c46a34b47d10",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "IBPS AO & AAO - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "IBPS AO & AAO - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "IBPS AO & AAO - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "IBPS AO & AAO - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "3a1850fa-d0cf-4a4b-9bef-6006d86452af",
+        "icon": "zap",
+        "label": "Accounting",
+        "course_id": "c6126fdb-cef2-4688-a5dd-715ed7b13141",
+        "sort_order": 0
+      },
+      {
+        "id": "8553f111-d76f-4a5c-82c0-a3d29035d3d2",
+        "icon": "trending",
+        "label": "Finance & Tax",
+        "course_id": "c6126fdb-cef2-4688-a5dd-715ed7b13141",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "215ea8cf-42d8-4ab7-804e-6215582e47b0",
+    "slug": "ibps-mocks",
+    "title": "IBPS Mock Series",
+    "subtitle": "Practice for IBPS",
+    "description": "50+ mocks for PO/Clerk/SO with analysis.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/ibps-mocks/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:39:46.693152+00:00",
+    "video_url": null,
+    "nav_item_id": "f877419b-c9f0-4e63-b5b1-c46a34b47d10",
+    "duration": "6 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "IBPS Mock Series - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "IBPS Mock Series - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "IBPS Mock Series - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "IBPS Mock Series - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "debde2f8-1deb-4175-903f-0f8541649d0f",
+        "icon": "zap",
+        "label": "Full-Length Mocks",
+        "course_id": "215ea8cf-42d8-4ab7-804e-6215582e47b0",
+        "sort_order": 0
+      },
+      {
+        "id": "932d85ce-07af-4929-aeb1-fcf20aec9cd5",
+        "icon": "trending",
+        "label": "Performance Analysis",
+        "course_id": "215ea8cf-42d8-4ab7-804e-6215582e47b0",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "c8721e8d-601b-46a8-aa02-523dbd339ddf",
+    "slug": "sbi-po",
+    "title": "SBI PO Complete",
+    "subtitle": "State Bank PO",
+    "description": "Quant, reasoning, English, GK, descriptive, GD/PI.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/sbi-po/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:39:50.05946+00:00",
+    "video_url": null,
+    "nav_item_id": "d448c95f-0321-43bc-b2f6-9e089695c9b4",
+    "duration": "6 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "SBI PO Complete - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SBI PO Complete - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SBI PO Complete - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SBI PO Complete - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "b6032074-0bf0-4f55-bcf2-cbd3c6017b2f",
+        "icon": "zap",
+        "label": "GD/PI Prep",
+        "course_id": "c8721e8d-601b-46a8-aa02-523dbd339ddf",
+        "sort_order": 1
+      },
+      {
+        "id": "f90b3347-8e03-4549-9758-1f72247d2373",
+        "icon": "award",
+        "label": "SBI PO",
+        "course_id": "c8721e8d-601b-46a8-aa02-523dbd339ddf",
+        "sort_order": 0
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "6fff602d-24f4-4ace-b91c-094c72fb5027",
+    "slug": "sbi-clerk",
+    "title": "SBI Clerk",
+    "subtitle": "Junior associate",
+    "description": "Focused SBI Clerk with simplified study plan.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/sbi-clerk/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:39:54.189346+00:00",
+    "video_url": null,
+    "nav_item_id": "d448c95f-0321-43bc-b2f6-9e089695c9b4",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "SBI Clerk - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SBI Clerk - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SBI Clerk - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SBI Clerk - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "c3a796ad-a25c-4bfb-94aa-bf4f8761af21",
+        "icon": "zap",
+        "label": "Clerk Pattern",
+        "course_id": "6fff602d-24f4-4ace-b91c-094c72fb5027",
+        "sort_order": 0
+      },
+      {
+        "id": "4d8f2236-bc5b-4ae0-b29e-2068428c4e45",
+        "icon": "book",
+        "label": "Simplified",
+        "course_id": "6fff602d-24f4-4ace-b91c-094c72fb5027",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "cff54dd9-4752-4ac6-a1f6-e33f7eedc65a",
+    "slug": "sbi-mocks",
+    "title": "SBI Mock Series",
+    "subtitle": "SBI mocks",
+    "description": "Full-length mocks for PO and Clerk.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/sbi-mocks/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:39:57.57436+00:00",
+    "video_url": null,
+    "nav_item_id": "d448c95f-0321-43bc-b2f6-9e089695c9b4",
+    "duration": "6 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "SBI Mock Series - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SBI Mock Series - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SBI Mock Series - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "SBI Mock Series - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "5dba015b-4571-4b8a-bfa9-0968b3fb05c6",
+        "icon": "message",
+        "label": "Descriptive Evaluation",
+        "course_id": "cff54dd9-4752-4ac6-a1f6-e33f7eedc65a",
+        "sort_order": 1
+      },
+      {
+        "id": "e043b070-d561-42fb-86ef-38d1151ce365",
+        "icon": "zap",
+        "label": "SBI Mocks",
+        "course_id": "cff54dd9-4752-4ac6-a1f6-e33f7eedc65a",
+        "sort_order": 0
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "5b8a0b05-2cf9-4fd0-b299-1e49179323f4",
+    "slug": "rrb-ntpc-combo",
+    "title": "RRB NTPC Complete",
+    "subtitle": "Graduate & undergrad",
+    "description": "Quant, reasoning, GK, science for CBT 1 & 2.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/rrb-ntpc-combo/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:40:00.859993+00:00",
+    "video_url": null,
+    "nav_item_id": "42137743-8afd-427f-9a1c-38133083e28a",
+    "duration": "5 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "RRB NTPC Complete - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB NTPC Complete - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB NTPC Complete - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB NTPC Complete - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "f05deee0-4cfd-41b6-9ca9-a89e8017919e",
+        "icon": "book",
+        "label": "NTPC Syllabus",
+        "course_id": "5b8a0b05-2cf9-4fd0-b299-1e49179323f4",
+        "sort_order": 0
+      },
+      {
+        "id": "76ab4ff9-5dbb-40d9-acb3-1eb6a4e8ef03",
+        "icon": "zap",
+        "label": "Mock Tests",
+        "course_id": "5b8a0b05-2cf9-4fd0-b299-1e49179323f4",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "36d360b4-7e34-4683-8302-9fead26e442d",
+    "slug": "rrb-ntpc-gk",
+    "title": "RRB General Awareness",
+    "subtitle": "GK for railway",
+    "description": "History, geography, polity, economy, railway current affairs.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/rrb-ntpc-gk/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:40:04.905861+00:00",
+    "video_url": null,
+    "nav_item_id": "42137743-8afd-427f-9a1c-38133083e28a",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "RRB General Awareness - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB General Awareness - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB General Awareness - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB General Awareness - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "d2dc1853-c668-4507-8ece-84542ac1e65f",
+        "icon": "trending",
+        "label": "Current Affairs",
+        "course_id": "36d360b4-7e34-4683-8302-9fead26e442d",
+        "sort_order": 1
+      },
+      {
+        "id": "21b9b121-0419-44af-81f1-583830af42b2",
+        "icon": "layers",
+        "label": "Railway GK",
+        "course_id": "36d360b4-7e34-4683-8302-9fead26e442d",
+        "sort_order": 0
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "94896c9d-6fcf-4abf-88b0-af87619bae47",
+    "slug": "rrb-ntpc-math",
+    "title": "RRB NTPC Maths",
+    "subtitle": "Mathematics",
+    "description": "Number system, algebra, geometry, trigonometry, DI.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/rrb-ntpc-math/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:40:08.207448+00:00",
+    "video_url": null,
+    "nav_item_id": "42137743-8afd-427f-9a1c-38133083e28a",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "RRB NTPC Maths - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB NTPC Maths - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB NTPC Maths - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB NTPC Maths - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "3ea696e6-1262-44c2-a818-2c6b85417ca1",
+        "icon": "zap",
+        "label": "Advanced Maths",
+        "course_id": "94896c9d-6fcf-4abf-88b0-af87619bae47",
+        "sort_order": 0
+      },
+      {
+        "id": "d54783b7-9a3a-4fd6-b2d9-ee3bd4ab290c",
+        "icon": "layers",
+        "label": "DI",
+        "course_id": "94896c9d-6fcf-4abf-88b0-af87619bae47",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "0771e201-f697-4243-bf25-c93e5233d393",
+    "slug": "rrb-ntpc-reason",
+    "title": "RRB NTPC Reasoning",
+    "subtitle": "Reasoning",
+    "description": "Analogies, coding-decoding, syllogism, puzzles.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/rrb-ntpc-reason/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:40:11.511483+00:00",
+    "video_url": null,
+    "nav_item_id": "42137743-8afd-427f-9a1c-38133083e28a",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "RRB NTPC Reasoning - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB NTPC Reasoning - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB NTPC Reasoning - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB NTPC Reasoning - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "f98e5da9-9c68-46b8-a182-2843f67aad0e",
+        "icon": "zap",
+        "label": "Puzzles & Syllogism",
+        "course_id": "0771e201-f697-4243-bf25-c93e5233d393",
+        "sort_order": 0
+      },
+      {
+        "id": "3d7b7f9d-6c64-453f-9c59-d7bdb587840b",
+        "icon": "layers",
+        "label": "Non-Verbal",
+        "course_id": "0771e201-f697-4243-bf25-c93e5233d393",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "35326ff1-74c8-44b3-8a3e-d30410ef73bd",
+    "slug": "rrb-ntpc-science",
+    "title": "RRB General Science",
+    "subtitle": "Science for railway",
+    "description": "Physics, chemistry, biology basics.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/rrb-ntpc-science/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:40:14.805991+00:00",
+    "video_url": null,
+    "nav_item_id": "42137743-8afd-427f-9a1c-38133083e28a",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "RRB General Science - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB General Science - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB General Science - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB General Science - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "9480bee3-5554-4412-a499-00d280f285c9",
+        "icon": "book",
+        "label": "Biology",
+        "course_id": "35326ff1-74c8-44b3-8a3e-d30410ef73bd",
+        "sort_order": 1
+      },
+      {
+        "id": "15533096-ebf1-4b81-8cd7-fb9426ff7f7c",
+        "icon": "zap",
+        "label": "Physics & Chem",
+        "course_id": "35326ff1-74c8-44b3-8a3e-d30410ef73bd",
+        "sort_order": 0
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "9fc24e91-d914-45ad-9136-51521c5670fb",
+    "slug": "rrb-gd-combo",
+    "title": "RRB Group D Complete",
+    "subtitle": "Level 1 posts",
+    "description": "Science, math, reasoning, GK, physical test prep.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/rrb-gd-combo/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:40:18.189782+00:00",
+    "video_url": null,
+    "nav_item_id": "106c75d5-d6d0-47cf-8976-d9fedacff9ed",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "RRB Group D Complete - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB Group D Complete - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB Group D Complete - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB Group D Complete - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "67fef09e-c2a8-4c46-b820-78059a7e8694",
+        "icon": "zap",
+        "label": "Group D Focus",
+        "course_id": "9fc24e91-d914-45ad-9136-51521c5670fb",
+        "sort_order": 0
+      },
+      {
+        "id": "e834d045-d932-4980-a731-8ea94919d74c",
+        "icon": "trending",
+        "label": "Physical Test",
+        "course_id": "9fc24e91-d914-45ad-9136-51521c5670fb",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "97ed177f-74b3-4421-9015-0a26ce6f899e",
+    "slug": "rrb-gd-science",
+    "title": "RRB Group D Science",
+    "subtitle": "Science basics",
+    "description": "Physics, chemistry, biology basics for Group D.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/rrb-gd-science/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:40:21.855377+00:00",
+    "video_url": null,
+    "nav_item_id": "106c75d5-d6d0-47cf-8976-d9fedacff9ed",
+    "duration": "2 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "RRB Group D Science - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB Group D Science - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB Group D Science - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB Group D Science - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "4c50c961-e31e-419a-b819-b32b009acac1",
+        "icon": "book",
+        "label": "Science Basics",
+        "course_id": "97ed177f-74b3-4421-9015-0a26ce6f899e",
+        "sort_order": 0
+      },
+      {
+        "id": "209d0879-413f-45b5-9c52-dfb7af113c09",
+        "icon": "zap",
+        "label": "Quick Revision",
+        "course_id": "97ed177f-74b3-4421-9015-0a26ce6f899e",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "4f343d1e-5018-45a1-8f72-a1b53c395d5a",
+    "slug": "rrb-gd-mocks",
+    "title": "RRB Group D Mocks",
+    "subtitle": "Practice",
+    "description": "30+ mocks with section-wise analysis.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/rrb-gd-mocks/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:40:25.201303+00:00",
+    "video_url": null,
+    "nav_item_id": "106c75d5-d6d0-47cf-8976-d9fedacff9ed",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "RRB Group D Mocks - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB Group D Mocks - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB Group D Mocks - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "RRB Group D Mocks - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "9516344d-eca5-47e2-ab44-cda8ff0bdb86",
+        "icon": "zap",
+        "label": "Group D Mocks",
+        "course_id": "4f343d1e-5018-45a1-8f72-a1b53c395d5a",
+        "sort_order": 0
+      },
+      {
+        "id": "dcd4767d-fedb-410b-b2f0-fa2b78ce3764",
+        "icon": "trending",
+        "label": "Analysis",
+        "course_id": "4f343d1e-5018-45a1-8f72-a1b53c395d5a",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "ad32b8c5-a5e1-4c90-ac9b-19a369247baa",
+    "slug": "nda-maths",
+    "title": "NDA Mathematics",
+    "subtitle": "Maths for NDA",
+    "description": "Algebra, trigonometry, calculus, vectors, statistics.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/nda-maths/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:40:28.897898+00:00",
+    "video_url": null,
+    "nav_item_id": "377c600f-9758-446a-a8fd-e71dd69d02cc",
+    "duration": "5 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "NDA Mathematics - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NDA Mathematics - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NDA Mathematics - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NDA Mathematics - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "333413a0-13ac-4354-87ee-f44da0a6de1c",
+        "icon": "zap",
+        "label": "NDA Math",
+        "course_id": "ad32b8c5-a5e1-4c90-ac9b-19a369247baa",
+        "sort_order": 0
+      },
+      {
+        "id": "b62d97a3-06b4-4429-9494-80951b772392",
+        "icon": "layers",
+        "label": "Calculus",
+        "course_id": "ad32b8c5-a5e1-4c90-ac9b-19a369247baa",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "5bf39a43-cd46-412b-b78c-7c57faf34326",
+    "slug": "nda-gat",
+    "title": "NDA General Ability",
+    "subtitle": "GAT",
+    "description": "English, GK, physics, chemistry, bio, history, geography.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/nda-gat/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:40:32.552831+00:00",
+    "video_url": null,
+    "nav_item_id": "377c600f-9758-446a-a8fd-e71dd69d02cc",
+    "duration": "5 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "NDA General Ability - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NDA General Ability - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NDA General Ability - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NDA General Ability - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "6002c606-c4b6-440c-b0cc-d24a855f491c",
+        "icon": "book",
+        "label": "Complete GAT",
+        "course_id": "5bf39a43-cd46-412b-b78c-7c57faf34326",
+        "sort_order": 0
+      },
+      {
+        "id": "ab6e7259-9aa4-4ee3-b040-8009de444981",
+        "icon": "zap",
+        "label": "English & GK",
+        "course_id": "5bf39a43-cd46-412b-b78c-7c57faf34326",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "9e92581e-3789-4a1a-a70e-c2b43f1eaf01",
+    "slug": "nda-ssb",
+    "title": "NDA SSB Interview",
+    "subtitle": "Officer selection",
+    "description": "OIR, PPDT, TAT, WAT, SRT, GTO, interview.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/nda-ssb/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:40:36.727298+00:00",
+    "video_url": null,
+    "nav_item_id": "377c600f-9758-446a-a8fd-e71dd69d02cc",
+    "duration": "2 months",
+    "mode": "Online+Offline",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "NDA SSB Interview - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NDA SSB Interview - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NDA SSB Interview - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NDA SSB Interview - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "feea1a12-4ac7-4822-bdce-bbaee4b509fe",
+        "icon": "message",
+        "label": "SSB Coaching",
+        "course_id": "9e92581e-3789-4a1a-a70e-c2b43f1eaf01",
+        "sort_order": 0
+      },
+      {
+        "id": "11332c41-58db-4eff-9400-d13c6b3bdcef",
+        "icon": "zap",
+        "label": "GTO Tasks",
+        "course_id": "9e92581e-3789-4a1a-a70e-c2b43f1eaf01",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "f055ceb6-c1d4-4b67-b10c-da78618a7588",
+    "slug": "nda-english",
+    "title": "NDA English",
+    "subtitle": "English prep",
+    "description": "Grammar, vocab, comprehension, spotting errors.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/nda-english/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:40:40.030552+00:00",
+    "video_url": null,
+    "nav_item_id": "377c600f-9758-446a-a8fd-e71dd69d02cc",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "NDA English - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NDA English - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NDA English - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NDA English - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "f95f5eb5-e44b-4dee-913d-fc3f1b84533f",
+        "icon": "zap",
+        "label": "Grammar & Vocab",
+        "course_id": "f055ceb6-c1d4-4b67-b10c-da78618a7588",
+        "sort_order": 0
+      },
+      {
+        "id": "077ff1d6-9e70-4e18-acbb-dbf3ddac2b28",
+        "icon": "book",
+        "label": "Comprehension",
+        "course_id": "f055ceb6-c1d4-4b67-b10c-da78618a7588",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "2a8776cd-0f2b-4d27-91ec-e20a0bc69d93",
+    "slug": "nda-gk",
+    "title": "NDA GK",
+    "subtitle": "Defence GK",
+    "description": "Current affairs, defence news, static GK.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/nda-gk/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:40:43.314017+00:00",
+    "video_url": null,
+    "nav_item_id": "377c600f-9758-446a-a8fd-e71dd69d02cc",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "NDA GK - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NDA GK - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NDA GK - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "NDA GK - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "160bd4c4-98fc-4546-ba41-a4bf5be64807",
+        "icon": "trending",
+        "label": "Current Affairs",
+        "course_id": "2a8776cd-0f2b-4d27-91ec-e20a0bc69d93",
+        "sort_order": 0
+      },
+      {
+        "id": "557183dd-7312-4451-8fa0-dbcadc6dc65d",
+        "icon": "book",
+        "label": "Static GK",
+        "course_id": "2a8776cd-0f2b-4d27-91ec-e20a0bc69d93",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "3dd14ce7-6792-48f9-b7bf-af4dff1dd85a",
+    "slug": "cds-combo",
+    "title": "CDS Combined Defence",
+    "subtitle": "CDS OTA & Academy",
+    "description": "English, GK, maths for CDS written + SSB.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/cds-combo/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:40:46.656514+00:00",
+    "video_url": null,
+    "nav_item_id": "578436be-0c63-48ca-a4e7-4def81ed0203",
+    "duration": "6 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "CDS Combined Defence - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "CDS Combined Defence - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "CDS Combined Defence - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "CDS Combined Defence - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "6b01ba67-08bd-472f-a963-4f4208a65f6e",
+        "icon": "layers",
+        "label": "CDS Written",
+        "course_id": "3dd14ce7-6792-48f9-b7bf-af4dff1dd85a",
+        "sort_order": 0
+      },
+      {
+        "id": "37c35206-0bf4-4268-9794-52c696919d32",
+        "icon": "zap",
+        "label": "SSB Preparation",
+        "course_id": "3dd14ce7-6792-48f9-b7bf-af4dff1dd85a",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "d4f2b581-1f57-4e76-bca8-c638d0a7408f",
+    "slug": "cds-english",
+    "title": "CDS English Language",
+    "subtitle": "English for CDS",
+    "description": "Grammar, vocab, para jumbles, comprehension.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/cds-english/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:40:50.656001+00:00",
+    "video_url": null,
+    "nav_item_id": "578436be-0c63-48ca-a4e7-4def81ed0203",
+    "duration": "3 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "CDS English Language - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "CDS English Language - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "CDS English Language - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "CDS English Language - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": false,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "17e2a4f3-70e4-42e3-9853-8f4e13549627",
+        "icon": "zap",
+        "label": "CDS Pattern",
+        "course_id": "d4f2b581-1f57-4e76-bca8-c638d0a7408f",
+        "sort_order": 0
+      },
+      {
+        "id": "107bb973-d190-4270-bcd2-1157ff1f6d6c",
+        "icon": "book",
+        "label": "Vocabulary",
+        "course_id": "d4f2b581-1f57-4e76-bca8-c638d0a7408f",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  },
+  {
+    "id": "1e4f888d-d012-440b-8bae-6a64d5826509",
+    "slug": "cds-mocks",
+    "title": "CDS Mock Series",
+    "subtitle": "Practice",
+    "description": "Full-length mocks for CDS written exam.",
+    "checklist_items": [],
+    "hero_image_url": "https://picsum.photos/seed/cds-mocks/800/400",
+    "video_thumbnail_url": null,
+    "cta_left": "Talk to Advisor",
+    "cta_right": "Download Brochure",
+    "is_published": true,
+    "created_at": "2026-07-17T04:40:53.982215+00:00",
+    "video_url": null,
+    "nav_item_id": "578436be-0c63-48ca-a4e7-4def81ed0203",
+    "duration": "4 months",
+    "mode": "Online",
+    "status": "Active",
+    "curriculum": [
+      {
+        "title": "CDS Mock Series - Module 1",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "CDS Mock Series - Module 2",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "CDS Mock Series - Module 3",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      },
+      {
+        "title": "CDS Mock Series - Module 4",
+        "topics": [
+          "Topic 1",
+          "Topic 2",
+          "Topic 3",
+          "Topic 4"
+        ]
+      }
+    ],
+    "show_pricing": true,
+    "cta_heading": null,
+    "cta_description": null,
+    "cta_text": null,
+    "cta_link": null,
+    "cta_phone": null,
+    "cta_background_image": null,
+    "highlights": [
+      {
+        "id": "3fc6576c-f698-44a3-ba29-cae7c7acadbe",
+        "icon": "zap",
+        "label": "CDS Mocks",
+        "course_id": "1e4f888d-d012-440b-8bae-6a64d5826509",
+        "sort_order": 0
+      },
+      {
+        "id": "a3a030f8-ed2d-4369-8e05-10ac91cb5603",
+        "icon": "trending",
+        "label": "All India Rank",
+        "course_id": "1e4f888d-d012-440b-8bae-6a64d5826509",
+        "sort_order": 1
+      }
+    ],
+    "overview_faqs": [],
+    "course_fees": [],
+    "projects": [],
+    "certifications": []
+  }
+]
