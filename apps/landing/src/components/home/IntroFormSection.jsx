@@ -1,0 +1,253 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { FiBookOpen, FiUsers, FiBriefcase, FiStar, FiClock, FiAward, FiCheckCircle, FiLoader, FiX } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+import Reveal, { Stagger, StaggerItem } from '../ui/Reveal';
+import { supabase } from '../../lib/supabaseClient';
+import { trackFormSubmit } from '../../lib/analytics';
+
+function getStatIcon(label) {
+  const l = (label || '').toLowerCase();
+  if (l.includes('course') || l.includes('program')) return FiBookOpen;
+  if (l.includes('student') || l.includes('alumni')) return FiUsers;
+  if (l.includes('placement')) return FiBriefcase;
+  if (l.includes('trainer') || l.includes('expert') || l.includes('faculty')) return FiStar;
+  if (l.includes('year') || l.includes('experience')) return FiClock;
+  return FiAward;
+}
+
+export default function IntroFormSection({ section }) {
+  const content = section?.content || {};
+  const heading = section?.heading || '';
+  const introText = content.intro_text || '';
+  const stats = content.stats || [];
+  const rawPills = Array.isArray(content.pill_buttons) ? content.pill_buttons : (content.pill_buttons || '').split('\n').filter(Boolean);
+  const formTitle = content.form_title || 'Book Your Free Demo Class';
+
+  const [formName, setFormName] = useState('');
+  const [formEmail, setFormEmail] = useState('');
+  const [formPhone, setFormPhone] = useState('');
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formMsg, setFormMsg] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!formName.trim() || !formEmail.trim() || !formPhone.trim()) {
+      setFormMsg({ type: 'error', text: 'Please fill all fields' });
+      return;
+    }
+    if (!agreeTerms) {
+      setFormMsg({ type: 'error', text: 'Please agree to the terms and conditions.' });
+      return;
+    }
+    setSubmitting(true);
+    setFormMsg(null);
+    const { error } = await supabase.from('form_submissions').insert({
+      full_name: formName.trim(),
+      email: formEmail.trim(),
+      phone: formPhone.trim(),
+    });
+    if (error) {
+      setFormMsg({ type: 'error', text: 'Submission failed. Please try again.' });
+      setSubmitting(false);
+      return;
+    }
+    fetch('/api/submit-form', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        full_name: formName.trim(),
+        email: formEmail.trim(),
+        phone: formPhone.trim(),
+      }),
+    }).catch(() => {});
+    trackFormSubmit('demo_class');
+    setShowSuccessModal(true);
+    setFormName(''); setFormEmail(''); setFormPhone('');
+    setAgreeTerms(false);
+    setSubmitting(false);
+  }
+
+  const features = rawPills.map((label) => ({ label, icon: FiCheckCircle }));
+
+  return (
+    <section className="relative overflow-hidden bg-white">
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        style={{ backgroundImage: 'radial-gradient(#1B3A6B 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div className="grid lg:grid-cols-6 gap-8 lg:gap-12">
+          <Reveal variant="up" className="lg:col-span-4 space-y-6 self-start">
+            {heading && (
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-dark-navy -mt-2">
+                {heading}
+              </h2>
+            )}
+            {introText && (
+              <p className="text-sm sm:text-base leading-relaxed text-justify text-text-gray">
+                {introText}
+              </p>
+            )}
+
+            {stats.length > 0 && (
+              <Stagger className="grid grid-cols-3 gap-4">
+                {stats.map((stat, i) => {
+                  const Icon = getStatIcon(stat.label);
+                  return (
+                    <StaggerItem key={i}>
+                      <div className="bg-white rounded-xl border border-gray-100 p-4 text-center hover:-translate-y-1 transition-all duration-300 max-w-[238px] mx-auto" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
+                        <div className="w-10 h-10 mx-auto rounded-lg bg-brand-orange/10 flex items-center justify-center mb-2">
+                          <Icon className="w-4 h-4 text-brand-orange" />
+                        </div>
+                        <p className="text-xl sm:text-2xl font-extrabold" style={{ color: '#175cdd' }}>{stat.value}</p>
+                        <p className="text-xs mt-0.5" style={{ color: '#000000' }}>{stat.label}</p>
+                      </div>
+                    </StaggerItem>
+                  );
+                })}
+              </Stagger>
+            )}
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Link
+                to="/courses?parent=software-learning"
+                className="inline-flex items-center justify-center gap-2 px-[30px] py-[15px] rounded-full bg-brand-orange text-white font-semibold text-sm hover:bg-brand-orange/90 transition-colors"
+              >
+                Software Learning
+              </Link>
+              <Link
+                to="/courses?parent=competitive-exam"
+                className="inline-flex items-center justify-center gap-2 px-[30px] py-[15px] rounded-full bg-brand-green text-white font-semibold text-sm hover:bg-brand-green/90 transition-colors"
+              >
+                Competitive Exam
+              </Link>
+            </div>
+          </Reveal>
+
+          <Reveal variant="right" className="lg:col-span-2 self-start">
+            <p className="text-base font-[600] text-center mb-2" style={{ color: '#ef4444' }}>Book Your Demo Now!</p>
+            <div className="rounded-2xl overflow-hidden max-w-sm w-full lg:ml-auto" style={{ backgroundColor: '#74a916', boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
+              {/* diagonal header: white left / orange right */}
+              <div className="relative h-16" style={{ backgroundColor: '#ff8415' }}>
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    clipPath: 'polygon(0 0, 55% 0, 35% 100%, 0 100%)',
+                    backgroundColor: '#ffffff',
+                  }}
+                >
+                  <div className="h-full flex items-center pl-5">
+                    <span className="text-xl font-serif font-bold" style={{ color: '#ff8415' }}>Career</span>
+                  </div>
+                </div>
+                <div className="absolute inset-0 flex items-center justify-end">
+                  <span className="bg-white rounded-[6px] px-3 py-1 text-base font-serif font-bold shadow-sm mr-1.5" style={{ color: '#ff8415' }}>
+                    Counselling
+                  </span>
+                </div>
+              </div>
+
+              {/* green body with subtle texture */}
+              <div className="relative p-5">
+                <div
+                  className="absolute inset-0 pointer-events-none opacity-[0.04]"
+                  style={{
+                    backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'100\' viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M10 50 Q 30 20 50 50 T 90 50\' stroke=\'white\' fill=\'none\' stroke-width=\'2\'/%3E%3C/svg%3E")',
+                    backgroundSize: '120px 120px',
+                  }}
+                />
+                <form onSubmit={handleSubmit} className="relative z-10 space-y-3">
+                  <input type="text" placeholder="Your Name" value={formName} onChange={(e) => setFormName(e.target.value)}
+                    className="w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all" />
+                  <input type="email" placeholder="your@email.com" value={formEmail} onChange={(e) => setFormEmail(e.target.value)}
+                    className="w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all" />
+                  <input type="tel" placeholder="Your Phone Number" value={formPhone} onChange={(e) => setFormPhone(e.target.value)}
+                    className="w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all" />
+                  {formMsg?.type === 'error' && formMsg?.text === 'Please agree to the terms and conditions.' && (
+                    <p className="text-red-300 text-xs">{formMsg.text}</p>
+                  )}
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)} className="mt-0.5 w-3.5 h-3.5 border-white/50 accent-white" />
+                    <span className="text-xs text-white/90 leading-relaxed">
+                      I agree to the{' '}
+                      <a href="/terms" className="text-blue-300 underline hover:text-blue-200">Terms of Use</a>
+                      {' '}and{' '}
+                      <a href="/privacy" className="text-blue-300 underline hover:text-blue-200">Privacy Policy</a>.
+                    </span>
+                  </label>
+                  <button type="submit" disabled={submitting} className="w-full flex items-center justify-center gap-2 px-[30px] py-[15px] bg-[#ff8415] text-white font-semibold rounded hover:bg-[#ff8415]/90 transition-colors disabled:opacity-70 text-sm">
+                    {submitting ? <FiLoader className="w-4 h-4 animate-spin" /> : null}
+                    {submitting ? 'Submitting...' : 'Send Message'}
+                  </button>
+                </form>
+              </div>
+            </div>
+            {features.length > 0 && (
+              <Stagger className="grid grid-cols-2 gap-2 mt-4">
+                {features.map((feat, i) => {
+                  const Icon = feat.icon;
+                  return (
+                    <StaggerItem key={i}>
+                      <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-100 px-3 py-2.5 shadow-sm">
+                        <div className="w-7 h-7 rounded-lg bg-brand-blue/10 flex items-center justify-center shrink-0">
+                          <Icon className="w-3.5 h-3.5 text-brand-blue" />
+                        </div>
+                        <span className="text-xs font-bold text-brand-blue">{feat.label}</span>
+                      </div>
+                    </StaggerItem>
+                  );
+                })}
+              </Stagger>
+            )}
+          </Reveal>
+        </div>
+      </div>
+
+      {/* Success Modal */}
+      <AnimatePresence>
+        {showSuccessModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowSuccessModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', duration: 0.5 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="absolute top-4 right-4 p-1.5 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+
+              <div className="w-16 h-16 mx-auto rounded-full bg-green-50 flex items-center justify-center mb-4">
+                <FiCheckCircle className="w-8 h-8 text-green-500" />
+              </div>
+
+              <h3 className="text-xl font-bold text-[#1A1A2E] mb-2">Successfully Submitted!</h3>
+              <p className="text-sm text-neutral-500 leading-relaxed mb-6">
+                Thank you for your interest. We will reach out to you shortly.
+              </p>
+
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full py-3 rounded-lg bg-[#1E56C7] text-white font-semibold text-sm hover:bg-[#1642a0] transition-colors"
+              >
+                Close
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
+  );
+}

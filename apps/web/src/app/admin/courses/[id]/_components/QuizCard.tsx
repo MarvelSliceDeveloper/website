@@ -49,9 +49,6 @@ interface Quiz {
   questions: QuizQuestion[];
   dueDate?: string | null;
   daysFromEnrollment?: number | null;
-  allowLateSubmission?: boolean;
-  lateSubmissionPenaltyPercent?: number | null;
-  lateSubmissionGracePeriodHrs?: number | null;
 }
 
 interface QuizCardProps {
@@ -90,15 +87,6 @@ export default function QuizCard({
   );
   const [daysFromEnrollment, setDaysFromEnrollment] = useState(
     quiz.daysFromEnrollment?.toString() ?? ""
-  );
-  const [allowLateSubmission, setAllowLateSubmission] = useState(
-    quiz.allowLateSubmission ?? false
-  );
-  const [lateSubmissionPenaltyPercent, setLateSubmissionPenaltyPercent] = useState(
-    quiz.lateSubmissionPenaltyPercent ?? 25
-  );
-  const [lateSubmissionGracePeriodHrs, setLateSubmissionGracePeriodHrs] = useState(
-    quiz.lateSubmissionGracePeriodHrs?.toString() ?? ""
   );
   const [passingScore, setPassingScore] = useState(quiz.passingScore ?? 65);
   const [examType, setExamType] = useState<string>(quiz.examType ?? "MCQ");
@@ -224,9 +212,6 @@ export default function QuizCard({
         title,
         dueDate: dueDateMode === "absolute" && dueDate ? new Date(dueDate).toISOString() : null,
         daysFromEnrollment: dueDateMode === "days" && daysFromEnrollment ? Number(daysFromEnrollment) : null,
-        allowLateSubmission,
-        lateSubmissionPenaltyPercent: allowLateSubmission ? lateSubmissionPenaltyPercent : null,
-        lateSubmissionGracePeriodHrs: allowLateSubmission && lateSubmissionGracePeriodHrs ? Number(lateSubmissionGracePeriodHrs) : null,
         passingScore: Number(passingScore),
         examType:
           hasMcq && hasAssignment && hasCoding ? "ALL_IN_ONE" : examType,
@@ -276,9 +261,6 @@ export default function QuizCard({
     setDueDateMode(quiz.daysFromEnrollment ? "days" : "absolute");
     setDueDate(quiz.dueDate ? new Date(quiz.dueDate).toISOString().slice(0, 16) : "");
     setDaysFromEnrollment(quiz.daysFromEnrollment?.toString() ?? "");
-    setAllowLateSubmission(quiz.allowLateSubmission ?? false);
-    setLateSubmissionPenaltyPercent(quiz.lateSubmissionPenaltyPercent ?? 25);
-    setLateSubmissionGracePeriodHrs(quiz.lateSubmissionGracePeriodHrs?.toString() ?? "");
     setPassingScore(quiz.passingScore ?? 65);
     setExamType(quiz.examType ?? "MCQ");
     setHasMcq(quiz.hasMcq ?? true);
@@ -365,47 +347,6 @@ export default function QuizCard({
               className="field"
               min={1}
             />
-          </div>
-        )}
-
-        {/* Late Submission Toggle */}
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="quiz-edit-allow-late"
-            checked={allowLateSubmission}
-            onChange={(e) => setAllowLateSubmission(e.target.checked)}
-            className="h-4 w-4 rounded border-hairline"
-          />
-          <label htmlFor="quiz-edit-allow-late" className="text-xs font-medium">
-            Allow Late Submission (with penalty)
-          </label>
-        </div>
-
-        {allowLateSubmission && (
-          <div className="grid grid-cols-2 gap-4 pl-6">
-            <div className="space-y-2">
-              <label className="text-xs font-medium">Penalty %</label>
-              <input
-                type="number"
-                value={lateSubmissionPenaltyPercent}
-                onChange={(e) => setLateSubmissionPenaltyPercent(parseInt(e.target.value) || 25)}
-                min={0}
-                max={100}
-                className="field"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-medium">Grace Period (hrs)</label>
-              <input
-                type="number"
-                value={lateSubmissionGracePeriodHrs}
-                onChange={(e) => setLateSubmissionGracePeriodHrs(e.target.value)}
-                placeholder="Optional"
-                min={1}
-                className="field"
-              />
-            </div>
           </div>
         )}
 
@@ -662,11 +603,6 @@ export default function QuizCard({
             Due: {new Date(quiz.dueDate).toLocaleDateString()}
           </span>
         ) : null}
-        {quiz.allowLateSubmission && (
-          <span className="text-[11px] rounded bg-amber-100 text-amber-700 px-1.5 py-0.5">
-            Late OK (-{quiz.lateSubmissionPenaltyPercent ?? 25}%)
-          </span>
-        )}
         <div className="flex items-center gap-1 text-[11px] text-amber-600">
           {quiz.hasMcq !== false && (
             <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded">

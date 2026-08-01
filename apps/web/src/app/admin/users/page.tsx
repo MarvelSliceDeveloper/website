@@ -33,7 +33,10 @@ type User = {
   id: string;
   name: string;
   email: string;
-  role: "STUDENT" | "INSTRUCTOR" | "ADMIN" | "SUPER_ADMIN";
+  role: "STUDENT" | "INSTRUCTOR" | "ADMIN" | "SUPER_ADMIN" | "INTERN";
+  phone?: string | null;
+  designation?: "WORKING" | "STUDYING" | null;
+  internField?: { id: string; name: string } | null;
   isSuspended?: boolean;
   packageEnrollments?: {
     package: { id: string; name: string };
@@ -67,6 +70,7 @@ const roleStyles: Record<string, string> = {
   ADMIN: "bg-red-100 text-red-700",
   INSTRUCTOR: "bg-sky-100 text-sky-700",
   STUDENT: "bg-blue-100 text-blue-700",
+  INTERN: "bg-emerald-100 text-emerald-700",
 };
 
 const roleIcons: Record<string, React.ReactNode> = {
@@ -74,6 +78,7 @@ const roleIcons: Record<string, React.ReactNode> = {
   ADMIN: <IconShield size={14} />,
   INSTRUCTOR: <IconChalkboardTeacher size={14} />,
   STUDENT: <IconSchool size={14} />,
+  INTERN: <IconUsers size={14} />,
 };
 
 export default function AdminUsersPage() {
@@ -100,6 +105,8 @@ export default function AdminUsersPage() {
     role: "STUDENT",
     packageId: "",
     batchId: "",
+    designation: "" as string,
+    internFieldId: "",
   });
 
   // Edit user modal
@@ -110,6 +117,8 @@ export default function AdminUsersPage() {
     role: "STUDENT" as string,
     packageId: "",
     batchId: "",
+    designation: "" as string,
+    internFieldId: "",
   });
   const [editing, setEditing] = useState(false);
   // Batches for edit modal's selected package
@@ -130,6 +139,11 @@ export default function AdminUsersPage() {
   // Active packages for create modal
   const [activePackages, setActivePackages] = useState<
     { id: string; name: string }[]
+  >([]);
+
+  // Internship fields for the INTERN role's field dropdown
+  const [internFields, setInternFields] = useState<
+    { id: string; name: string; isActive: boolean }[]
   >([]);
 
   // Batches for the selected package (flat list)
@@ -183,6 +197,15 @@ export default function AdminUsersPage() {
         );
         setActivePackages(active.map((p) => ({ id: p.id, name: p.name })));
       })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    api
+      .get<{ fields: { id: string; name: string; isActive: boolean }[] }>(
+        "/api/admin/interns/fields",
+      )
+      .then((res) => setInternFields(res.fields ?? []))
       .catch(() => {});
   }, []);
 
@@ -249,6 +272,8 @@ export default function AdminUsersPage() {
         ...form,
         packageId: form.packageId || undefined,
         batchId: form.batchId || undefined,
+        designation: form.designation || undefined,
+        internFieldId: form.internFieldId || undefined,
       });
       setForm({
         name: "",
@@ -257,6 +282,8 @@ export default function AdminUsersPage() {
         role: "STUDENT",
         packageId: "",
         batchId: "",
+        designation: "",
+        internFieldId: "",
       });
       setShowModal(false);
       toast.success("User added successfully");
@@ -274,7 +301,7 @@ export default function AdminUsersPage() {
     setEditing(true);
 
     try {
-      const payload: Record<string, string> = {
+      const payload: Record<string, string | string[]> = {
         name: editForm.name,
         email: editForm.email,
         role: editForm.role,
@@ -283,6 +310,11 @@ export default function AdminUsersPage() {
       if (editForm.role === "STUDENT") {
         if (editForm.packageId) payload.packageId = editForm.packageId;
         if (editForm.batchId) payload.batchId = editForm.batchId;
+      }
+      // Only send intern-specific fields for interns
+      if (editForm.role === "INTERN") {
+        payload.designation = editForm.designation;
+        payload.internFieldId = editForm.internFieldId;
       }
       await api.patch(`/api/users/${editUser.id}`, payload);
       setEditUser(null);
@@ -324,6 +356,8 @@ export default function AdminUsersPage() {
       role: user.role,
       packageId: currentPkg,
       batchId: currentBatch,
+      designation: user.designation ?? "",
+      internFieldId: user.internField?.id ?? "",
     });
     // Load batches for the current package
     if (currentPkg) {
@@ -381,6 +415,7 @@ export default function AdminUsersPage() {
     STUDENT: users.filter((u) => u.role === "STUDENT").length,
     ADMIN: users.filter((u) => u.role === "ADMIN").length,
     SUPER_ADMIN: users.filter((u) => u.role === "SUPER_ADMIN").length,
+    INTERN: users.filter((u) => u.role === "INTERN").length,
   };
 
   const columns: DataTableColumn<User>[] = [
@@ -423,6 +458,29 @@ export default function AdminUsersPage() {
           <span className="text-sm text-muted-foreground">—</span>
         );
       },
+    },
+    {
+      key: "internDetails",
+      label: "Designation",
+      render: (_, user) =>
+        user.role === "INTERN" ? (
+          <div className="flex flex-col gap-0.5">
+            <span className="text-xs font-medium text-foreground capitalize">
+              {user.designation?.toLowerCase() === "working"
+                ? "Working"
+                : user.designation?.toLowerCase() === "studying"
+                  ? "Studying"
+                  : "—"}
+            </span>
+            {user.internField && (
+              <span className="text-xs text-muted-foreground">
+                {user.internField.name}
+              </span>
+            )}
+          </div>
+        ) : (
+          <span className="text-sm text-muted-foreground">—</span>
+        ),
     },
     {
       key: "role",
@@ -495,7 +553,7 @@ export default function AdminUsersPage() {
         <div className="flex flex-col gap-3">
           {/* Role filter chips */}
           <div className="flex flex-wrap gap-2">
-            {(["STUDENT", "INSTRUCTOR", "ADMIN", "SUPER_ADMIN"] as const)
+            {(["STUDENT", "INSTRUCTOR", "INTERN", "ADMIN", "SUPER_ADMIN"] as const)
               .filter(
                 (role) =>
                   currentUserRole === "SUPER_ADMIN" ||
@@ -682,6 +740,7 @@ export default function AdminUsersPage() {
               <SelectContent>
                 <SelectItem value="STUDENT">Student</SelectItem>
                 <SelectItem value="INSTRUCTOR">Instructor</SelectItem>
+                <SelectItem value="INTERN">Intern</SelectItem>
                 {currentUserRole === "SUPER_ADMIN" && (
                   <>
                     <SelectItem value="ADMIN">Administrator</SelectItem>
@@ -691,6 +750,60 @@ export default function AdminUsersPage() {
               </SelectContent>
             </Select>
           </div>
+
+          {form.role === "INTERN" && (
+            <>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted">
+                  Designation <span className="text-danger">*</span>
+                </label>
+                <Select
+                  value={form.designation}
+                  onValueChange={(value) =>
+                    setForm({ ...form, designation: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select designation..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="WORKING">Working</SelectItem>
+                    <SelectItem value="STUDYING">Studying</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted">
+                  Field of Study <span className="text-danger">*</span>
+                </label>
+                <Select
+                  value={form.internFieldId}
+                  onValueChange={(value) =>
+                    setForm({ ...form, internFieldId: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select an internship field..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {internFields.length === 0 && (
+                      <p className="px-2 py-1.5 text-xs text-muted-foreground italic">
+                        No internship fields — add them in Interns → Fields
+                      </p>
+                    )}
+                    {internFields
+                      .filter((f) => f.isActive)
+                      .map((field) => (
+                        <SelectItem key={field.id} value={field.id}>
+                          {field.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
 
           {form.role === "STUDENT" && (
             <>
@@ -847,6 +960,7 @@ export default function AdminUsersPage() {
               <SelectContent>
                 <SelectItem value="STUDENT">Student</SelectItem>
                 <SelectItem value="INSTRUCTOR">Instructor</SelectItem>
+                <SelectItem value="INTERN">Intern</SelectItem>
                 {currentUserRole === "SUPER_ADMIN" && (
                   <>
                     <SelectItem value="ADMIN">Administrator</SelectItem>
@@ -856,6 +970,60 @@ export default function AdminUsersPage() {
               </SelectContent>
             </Select>
           </div>
+
+          {editForm.role === "INTERN" && (
+            <>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted">
+                  Designation
+                </label>
+                <Select
+                  value={editForm.designation}
+                  onValueChange={(value) =>
+                    setEditForm({ ...editForm, designation: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select designation..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="WORKING">Working</SelectItem>
+                    <SelectItem value="STUDYING">Studying</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted">
+                  Field of Study
+                </label>
+                <Select
+                  value={editForm.internFieldId}
+                  onValueChange={(value) =>
+                    setEditForm({ ...editForm, internFieldId: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select an internship field..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {internFields.length === 0 && (
+                      <p className="px-2 py-1.5 text-xs text-muted-foreground italic">
+                        No internship fields — add them in Interns → Fields
+                      </p>
+                    )}
+                    {internFields
+                      .filter((f) => f.isActive)
+                      .map((field) => (
+                        <SelectItem key={field.id} value={field.id}>
+                          {field.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
 
           {editForm.role === "STUDENT" && (
             <>

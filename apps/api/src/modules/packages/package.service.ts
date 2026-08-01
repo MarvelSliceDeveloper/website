@@ -14,7 +14,9 @@ export const CreatePackageSchema = z.object({
   price: z.number().int().positive().optional(),
   courseIds: z
     .array(z.string().cuid())
-    .min(1, "At least one course is required"),
+    .min(1, "At least one course is required")
+    .optional(),
+  isInternship: z.boolean().optional(),
 });
 
 export const UpdatePackageSchema = z.object({
@@ -22,6 +24,7 @@ export const UpdatePackageSchema = z.object({
   description: z.string().nullable().optional(),
   price: z.number().int().positive().nullable().optional(),
   courseIds: z.array(z.string().cuid()).min(1).optional(),
+  isInternship: z.boolean().optional(),
 });
 
 export const EnrollStudentSchema = z.object({
@@ -42,12 +45,18 @@ export const ApproveEnrollmentSchema = z.object({
 export const packageService = {
   // Create a new package with courses
   async createPackage(data: z.infer<typeof CreatePackageSchema>) {
-    // Verify all courses exist
-    const courses = await prisma.course.findMany({
-      where: { id: { in: data.courseIds } },
-    });
-    if (courses.length !== data.courseIds.length) {
-      throw new Error("One or more courses not found");
+    const courseIds = data.courseIds ?? [];
+
+    if (courseIds.length > 0) {
+      // Verify all courses exist
+      const courses = await prisma.course.findMany({
+        where: { id: { in: courseIds } },
+      });
+      if (courses.length !== courseIds.length) {
+        throw new Error("One or more courses not found");
+      }
+    } else if (!data.isInternship) {
+      throw new Error("At least one course is required");
     }
 
     const slug = data.name
@@ -61,8 +70,9 @@ export const packageService = {
         slug,
         description: data.description,
         price: data.price,
+        isInternship: data.isInternship ?? false,
         courses: {
-          create: data.courseIds.map((courseId, index) => ({
+          create: courseIds.map((courseId, index) => ({
             courseId,
             order: index,
           })),

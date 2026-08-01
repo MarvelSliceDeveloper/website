@@ -38,9 +38,6 @@ export type Quiz = {
   title: string;
   dueDate?: string | null;
   daysFromEnrollment?: number | null;
-  allowLateSubmission?: boolean;
-  lateSubmissionPenaltyPercent?: number | null;
-  lateSubmissionGracePeriodHrs?: number | null;
   isSpecialExam?: boolean;
   passingScore?: number;
   timeLimitMin?: number | null;
@@ -63,9 +60,6 @@ export type Assignment = {
   description: string | null;
   dueDate: string;
   daysFromEnrollment?: number | null;
-  allowLateSubmission?: boolean;
-  lateSubmissionPenaltyPercent?: number | null;
-  lateSubmissionGracePeriodHrs?: number | null;
   maxPoints: number;
   questionPdfUrl: string | null;
 };

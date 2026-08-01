@@ -90,6 +90,10 @@ import alertingWebhooksRouter from "./modules/admin/webhooks/alerting-webhooks.r
 import { refundsRouter } from "./modules/admin/refunds/refunds.routes";
 import { assignmentReviewRouter } from "./modules/admin/assignments/review.routes";
 import { instructorsRouter } from "./modules/admin/instructors/instructors.routes";
+import {
+  internRouter,
+  adminInternRouter,
+} from "./modules/interns/intern.routes";
 
 const logger = pino({
   level: process.env.LOG_LEVEL || "info",
@@ -163,6 +167,7 @@ const csrfExemptPaths = [
   "/api/payments/verify",
   "/api/payments/batches",
   "/api/coupons/validate",
+  "/api/interns/apply",
 ];
 
 const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
@@ -247,6 +252,7 @@ app.get("/health", (req: Request, res: Response) => {
 // ── Public routes (no auth) ──
 app.use("/api/public/branding", publicBrandingRouter);
 app.use("/api/pages", publicStaticPagesRouter);
+app.use("/api/interns", internRouter);
 
 // ── Protected routes ──
 app.use("/api/calendar", calendarRouter);
@@ -315,6 +321,9 @@ app.use("/api/youtube", youtubeRouter);
 app.use("/api/coupons", couponRouter);
 app.use("/api/payments", paymentRouter);
 app.use("/api/admin/payments", adminPaymentRouter);
+
+// ── Internship ──
+app.use("/api/admin/interns", adminInternRouter);
 
 // ── Maintenance (kill switch) ──
 app.use("/api/admin/maintenance", maintenanceRouter);

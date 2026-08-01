@@ -18,6 +18,7 @@ type Package = {
   description: string | null;
   price: number | null;
   status: "DRAFT" | "ACTIVE" | "ARCHIVED";
+  isInternship?: boolean;
   createdAt: string;
   courses: {
     id: string;
@@ -142,7 +143,14 @@ export default function AdminPackagesPage() {
                     </p>
                   )}
                 </div>
-                <StatusBadge status={pkg.status} config={statusConfig} />
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {pkg.isInternship && (
+                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                      Internship
+                    </span>
+                  )}
+                  <StatusBadge status={pkg.status} config={statusConfig} />
+                </div>
               </div>
 
               <div className="flex items-center gap-4 text-xs text-muted">

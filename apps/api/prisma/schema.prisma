@@ -12,6 +12,12 @@ enum Role {
   INSTRUCTOR
   ADMIN
   SUPER_ADMIN
+  INTERN
+}
+
+enum InternDesignation {
+  WORKING
+  STUDYING
 }
 
 enum EnrollmentStatus {
@@ -97,6 +103,8 @@ model User {
   address                 String?                  @db.Text
   state                   String?
   country                 String?
+  designation             InternDesignation? // WORKING | STUDYING (intern role)
+  internFieldId           String? // intern's single chosen field (one field per intern)
   deletedAt               DateTime?
   deletedBy               String?
   restoredAt              DateTime?
@@ -134,6 +142,7 @@ model User {
   twoFactorAuth           TwoFactorAuth?
   instructorProfile       InstructorProfile?
   instructorVerifications InstructorProfile[]        @relation("InstructorVerifier")
+  internField            InternField?               @relation("InternField", fields: [internFieldId], references: [id])
 }
 
 model Course {
@@ -242,7 +251,6 @@ model Batch {
   status                       BatchStatus               @default(UPCOMING)
   description                  String?
   defaultDaysToComplete        Int? // Default days-from-enrollment for assignments/quizzes
-  lateSubmissionPenaltyPercent Int                       @default(25) // Default late penalty %
   passingScore                 Int                       @default(50) // Score threshold for auto-resubmit
   deletedAt                    DateTime?
   deletedBy                    String?
@@ -381,6 +389,47 @@ model Recording {
   session          LiveSession @relation(fields: [sessionId], references: [id])
 }
 
+// Online class scheduled for interns. No batch/team assignment — targets
+// all interns or interns in a specific field (targetFieldId = null means all).
+model InternSession {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  scheduledAt   DateTime
+  scheduledEndAt DateTime?
+  joinUrl       String?
+  targetFieldId String? // intern field; null = all interns
+  createdBy     String // Admin user ID
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+  deletedBy     String?
+
+  field InternField? @relation("InternFieldSessions", fields: [targetFieldId], references: [id])
+
+  @@index([targetFieldId])
+}
+
+// Admin-managed internship field of choice (Web Development, Backend,
+// Cybersecurity, UI/UX, ...). Interns pick exactly one field on application.
+model InternField {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  deletedBy   String?
+
+  interns  User[]         @relation("InternField")
+  sessions InternSession[] @relation("InternFieldSessions")
+
+  @@index([isActive])
+  @@index([deletedAt])
+}
+
 model Progress {
   id             String    @id @default(cuid())
   userId         String
@@ -468,9 +517,6 @@ model Quiz {
   order         Int           @default(0)
   dueDate       DateTime?
   daysFromEnrollment        Int?      // If set → dueDate = enrollmentDate + N days
-  lateSubmissionPenaltyPercent Int?   // Overrides batch default. null = use batch default
-  allowLateSubmission       Boolean   @default(false)
-  lateSubmissionGracePeriodHrs Int?   // Max hours past due allowed
   isSpecialExam Boolean       @default(false)
   passingScore  Int           @default(65)
   timeLimitMin  Int?
@@ -514,10 +560,6 @@ model QuizAttempt {
   status              QuizAttemptStatus @default(PENDING)
   createdAt           DateTime          @default(now()) // attempt start time
   submittedAt         DateTime?         // when student submitted (distinct from createdAt)
-  isLate              Boolean           @default(false)
-  latePenaltyPercent  Int?              // penalty % applied
-  latePenaltyAmount   Int?              // points deducted
-  originalPercentage  Float?            // score before penalty
   quiz                Quiz              @relation(fields: [quizId], references: [id], onDelete: Cascade)
   user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -670,9 +712,6 @@ model Assignment {
   order          Int                    @default(0)
   dueDate        DateTime
   daysFromEnrollment        Int?       // If set → dueDate = enrollmentDate + N days
-  lateSubmissionPenaltyPercent Int?    // Overrides batch default. null = use batch default
-  allowLateSubmission       Boolean    @default(false)
-  lateSubmissionGracePeriodHrs Int?    // Max hours past due allowed
   maxPoints      Int                    @default(100)
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt
@@ -701,10 +740,6 @@ model AssignmentSubmission {
   feedback          String?                   @db.Text
   gradedAt          DateTime?
   totalScore        Int? // auto-calculated after MCQ grading
-  isLate            Boolean                   @default(false)
-  latePenaltyPercent Int?
-  latePenaltyAmount  Int? // points deducted
-  originalScore     Int? // score before penalty
   comment           String?                   @db.Text // Student's submission note
   answerFileUrl     String?                   // File uploaded by student (for ASSIGNMENT type)
   assignment        Assignment                @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
@@ -906,14 +941,15 @@ model CourseAssignmentTemplate {
 // === COURSE PACKAGES ===
 
 model CoursePackage {
-  id          String        @id @default(cuid())
-  name        String
-  slug        String        @unique // URL-safe slug for public page (/catalogue/:slug)
-  description String?
-  price       Int? // price in paise (₹500 = 50000); null = free/private
-  status      PackageStatus @default(DRAFT)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id            String        @id @default(cuid())
+  name          String
+  slug          String        @unique // URL-safe slug for public page (/catalogue/:slug)
+  description   String?
+  price         Int? // price in paise (₹500 = 50000); null = free/private
+  status        PackageStatus @default(DRAFT)
+  isInternship  Boolean       @default(false) // flagged as the intern application program
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   courses     PackageCourse[]
   enrollments PackageEnrollment[]

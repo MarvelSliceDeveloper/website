@@ -1,0 +1,106 @@
+{
+  "extracted_at": "2026-07-30T07:22:54.035Z",
+  "totals": {
+    "nav_items": 35,
+    "courses": 80,
+    "tags": 114,
+    "blog_posts": 10,
+    "blog_categories": 4,
+    "home_sections": 12,
+    "course_tabs": 319,
+    "course_faqs": 9,
+    "alumni_companies": 3
+  },
+  "nav_structure": [
+    {
+      "label": "UPSC",
+      "path": "/courses/ce/upsc",
+      "parent_label": "Competitive Exam",
+      "children_count": 2
+    },
+    {
+      "label": "Web Development",
+      "path": "/courses/sl/web-dev",
+      "parent_label": "Software Learning",
+      "children_count": 2
+    },
+    {
+      "label": "AI & Machine Learning",
+      "path": "/courses/sl/ai-ml",
+      "parent_label": "Software Learning",
+      "children_count": 2
+    },
+    {
+      "label": "SSC",
+      "path": "/courses/ce/ssc",
+      "parent_label": "Competitive Exam",
+      "children_count": 2
+    },
+    {
+      "label": "Banking",
+      "path": "/courses/ce/banking",
+      "parent_label": "Competitive Exam",
+      "children_count": 2
+    },
+    {
+      "label": "Data Science & Analytics",
+      "path": "/courses/sl/data-science",
+      "parent_label": "Software Learning",
+      "children_count": 2
+    },
+    {
+      "label": "Cloud Computing & DevOps",
+      "path": "/courses/sl/cloud-devops",
+      "parent_label": "Software Learning",
+      "children_count": 2
+    },
+    {
+      "label": "Railway",
+      "path": "/courses/ce/railway",
+      "parent_label": "Competitive Exam",
+      "children_count": 2
+    },
+    {
+      "label": "Defence",
+      "path": "/courses/ce/defence",
+      "parent_label": "Competitive Exam",
+      "children_count": 2
+    },
+    {
+      "label": "Cybersecurity",
+      "path": "/courses/sl/cybersec",
+      "parent_label": "Software Learning",
+      "children_count": 2
+    },
+    {
+      "label": "Services",
+      "path": "/services",
+      "parent_label": null,
+      "children_count": 0
+    },
+    {
+      "label": "Training",
+      "path": "/training",
+      "parent_label": null,
+      "children_count": 0
+    },
+    {
+      "label": "Career",
+      "path": "/career",
+      "parent_label": null,
+      "children_count": 0
+    },
+    {
+      "label": "About",
+      "path": "/about",
+      "parent_label": null,
+      "children_count": 0
+    },
+    {
+      "label": "Contact",
+      "path": "/contact",
+      "parent_label": null,
+      "children_count": 0
+    }
+  ]
+}

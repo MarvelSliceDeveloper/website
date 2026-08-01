@@ -12,8 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { IconFileZip, IconX } from "@tabler/icons-react";
 
-type TargetType = "ALL_USERS" | "BATCH" | "COURSE";
+type TargetType =
+  | "ALL_USERS"
+  | "BATCH"
+  | "COURSE"
+  | "INTERN"
+  | "INTERN_FIELD";
 type CourseOption = { id: string; title: string };
 type BatchOption = {
   id: string;
@@ -25,6 +31,12 @@ type EmailTemplateOption = {
   name: string;
   subject: string;
 };
+type InternFieldOption = {
+  id: string;
+  name: string;
+  isActive: boolean;
+  _count: { interns: number };
+};
 
 export default function AdminSendNotificationPage() {
   usePageTitle("Send Notification");
@@ -33,14 +45,19 @@ export default function AdminSendNotificationPage() {
   const [targetType, setTargetType] = useState<TargetType>("ALL_USERS");
   const [courses, setCourses] = useState<CourseOption[]>([]);
   const [batches, setBatches] = useState<BatchOption[]>([]);
+  const [internFields, setInternFields] = useState<InternFieldOption[]>([]);
   const [selectedCourseIds, setSelectedCourseIds] = useState<Set<string>>(
     new Set(),
   );
   const [selectedBatchIds, setSelectedBatchIds] = useState<Set<string>>(
     new Set(),
   );
+  const [selectedInternFieldIds, setSelectedInternFieldIds] = useState<
+    Set<string>
+  >(new Set());
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
+  const [attachment, setAttachment] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
   const [confirmShow, setConfirmShow] = useState(false);
 
@@ -62,6 +79,10 @@ export default function AdminSendNotificationPage() {
       .get<EmailTemplateOption[] | { templates: EmailTemplateOption[] }>("/api/admin/email-templates")
       .then((res) => setEmailTemplates(Array.isArray(res) ? res : res.templates ?? []))
       .catch(() => {});
+    api
+      .get<{ fields: InternFieldOption[] }>("/api/admin/interns/fields")
+      .then((res) => setInternFields(res.fields ?? []))
+      .catch(() => {});
   }, []);
 
   const filteredBatches =
@@ -69,41 +90,62 @@ export default function AdminSendNotificationPage() {
       ? batches.filter((b) => selectedCourseIds.has(b.course.id))
       : batches;
 
+  const activeInternFields = internFields.filter((f) => f.isActive);
+
+  function buildTargetIds(): string[] {
+    switch (targetType) {
+      case "BATCH":
+        return Array.from(selectedBatchIds);
+      case "COURSE":
+        return Array.from(selectedCourseIds);
+      case "INTERN_FIELD":
+        return Array.from(selectedInternFieldIds);
+      default:
+        return [];
+    }
+  }
+
   async function handleSend() {
     if (!title.trim() || !message.trim()) {
       toast.error("Title and message are required");
       return;
     }
+    if (attachment && !/\.(zip|pdf)$/i.test(attachment.name)) {
+      toast.error("Attachment must be a ZIP or PDF file");
+      return;
+    }
 
-    const targetIds =
-      targetType === "ALL_USERS"
-        ? []
-        : targetType === "BATCH"
-          ? Array.from(selectedBatchIds)
-          : Array.from(selectedCourseIds);
-
-    if (targetType !== "ALL_USERS" && targetIds.length === 0) {
+    const targetIds = buildTargetIds();
+    if (
+      targetType !== "ALL_USERS" &&
+      targetType !== "INTERN" &&
+      targetIds.length === 0
+    ) {
       toast.error("Select at least one target");
       return;
     }
 
     setSending(true);
     try {
+      const payload = {
+        targetType,
+        targetIds,
+        title: title.trim(),
+        message: message.trim(),
+        ...(selectedTemplateId ? { emailTemplateId: selectedTemplateId } : {}),
+      };
+
       const res = await api.post<{ message: string; count: number }>(
         "/api/notifications/send",
-        {
-          targetType,
-          targetIds,
-          title: title.trim(),
-          message: message.trim(),
-          ...(selectedTemplateId ? { emailTemplateId: selectedTemplateId } : {}),
-        },
+        attachment ? toFormData(payload, attachment) : payload,
       );
       toast.success(res.message || `Sent to ${res.count} users`);
       setTitle("");
       setMessage("");
+      setAttachment(null);
       setSelectedBatchIds(new Set());
       setSelectedCourseIds(new Set());
+      setSelectedInternFieldIds(new Set());
       setConfirmShow(false);
     } catch (err: unknown) {
       toast.error(
@@ -132,6 +174,37 @@ export default function AdminSendNotificationPage() {
     });
   }
 
+  function toggleInternField(id: string) {
+    setSelectedInternFieldIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function onTargetChange(v: string) {
+    setTargetType(v as TargetType);
+    setSelectedBatchIds(new Set());
+    setSelectedCourseIds(new Set());
+    setSelectedInternFieldIds(new Set());
+  }
+
+  function targetSummary(): string {
+    switch (targetType) {
+      case "ALL_USERS":
+        return "all users";
+      case "INTERN":
+        return "all interns";
+      case "BATCH":
+        return `${selectedBatchIds.size} batch(es)`;
+      case "COURSE":
+        return `${selectedCourseIds.size} course(s)`;
+      case "INTERN_FIELD":
+        return `interns in ${selectedInternFieldIds.size} field(s)`;
+    }
+  }
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
@@ -148,8 +221,7 @@ export default function AdminSendNotificationPage() {
           Send Notification
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Send a custom message to all users, specific batches, or entire
-          courses.
+          Send a custom message to all users, batches, courses, or interns.
         </p>
       </div>
 
@@ -159,14 +231,7 @@ export default function AdminSendNotificationPage() {
           <label className="mb-1.5 block text-sm font-medium text-foreground">
             Target Audience <span className="text-danger">*</span>
           </label>
-          <Select
-            value={targetType}
-            onValueChange={(v) => {
-              setTargetType(v as TargetType);
-              setSelectedBatchIds(new Set());
-              setSelectedCourseIds(new Set());
-            }}
-          >
+          <Select value={targetType} onValueChange={onTargetChange}>
             <SelectTrigger className="field">
               <SelectValue />
             </SelectTrigger>
@@ -174,6 +239,10 @@ export default function AdminSendNotificationPage() {
               <SelectItem value="ALL_USERS">All Users</SelectItem>
               <SelectItem value="BATCH">Specific Batches</SelectItem>
               <SelectItem value="COURSE">Specific Courses</SelectItem>
+              <SelectItem value="INTERN">All Interns</SelectItem>
+              <SelectItem value="INTERN_FIELD">
+                Interns by Field
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -250,6 +319,93 @@ export default function AdminSendNotificationPage() {
             </div>
           </div>
         )}
+
+        {/* Intern field multi-select */}
+        {targetType === "INTERN_FIELD" && (
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Select Fields (Interns) <span className="text-danger">*</span>
+            </label>
+            <div className="max-h-48 space-y-1 overflow-y-auto rounded-xl border border-border/60 p-2">
+              {activeInternFields.length === 0 && (
+                <p className="py-4 text-center text-sm text-muted">
+                  No internship fields configured yet.
+                </p>
+              )}
+              {activeInternFields.map((f) => (
+                <label
+                  key={f.id}
+                  className={`flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                    selectedInternFieldIds.has(f.id)
+                      ? "bg-primary/10 text-primary-hover"
+                      : "text-foreground hover:bg-card-hover"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedInternFieldIds.has(f.id)}
+                    onChange={() => toggleInternField(f.id)}
+                    className="h-4 w-4 rounded border-border accent-primary"
+                  />
+                  <span className="flex-1">
+                    {f.name}
+                    <span className="ml-2 text-xs text-muted">
+                      {f._count.interns} intern(s)
+                    </span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Attachment (ZIP / PDF) */}
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
+            Attachment{" "}
+            <span className="text-xs text-muted">(optional — ZIP or PDF)</span>
+          </label>
+          {attachment ? (
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card-hover/30 px-3 py-2.5">
+              <div className="flex min-w-0 items-center gap-2 text-sm">
+                <IconFileZip size={18} className="shrink-0 text-primary" />
+                <span className="truncate font-medium text-foreground">
+                  {attachment.name}
+                </span>
+                <span className="shrink-0 text-xs text-muted">
+                  {(attachment.size / 1024 / 1024).toFixed(2)} MB
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAttachment(null)}
+                className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-danger/10 hover:text-danger"
+                aria-label="Remove attachment"
+              >
+                <IconX size={16} />
+              </button>
+            </div>
+          ) : (
+            <input
+              type="file"
+              accept=".zip,.pdf"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                if (file && !/\.(zip|pdf)$/i.test(file.name)) {
+                  toast.error("Only ZIP or PDF files are allowed");
+                  e.target.value = "";
+                  return;
+                }
+                setAttachment(file);
+              }}
+              className="field file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary-hover"
+            />
+          )}
+          <p className="mt-1 text-xs text-muted">
+            Up to 25 MB. Recipients receive the file with the notification
+            email.
+          </p>
+        </div>
 
         {/* Title */}
         <div>
@@ -352,13 +508,11 @@ export default function AdminSendNotificationPage() {
           <div className="mx-4 w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl">
             <h2 className="text-lg font-bold text-foreground">Confirm Send</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              This will send &quot;{title.trim()}&quot; to{" "}
-              {targetType === "ALL_USERS"
-                ? "all users"
-                : targetType === "BATCH"
-                  ? `${selectedBatchIds.size} batch(es)`
-                  : `${selectedCourseIds.size} course(s)`}
-              . Are you sure?
+              This will send &quot;{title.trim()}&quot; to {targetSummary()}.
+              {attachment
+                ? ` It includes the attachment “${attachment.name}”.`
+                : ""}{" "}
+              Are you sure?
             </p>
             <div className="mt-5 flex justify-end gap-3">
               <button
@@ -381,4 +535,16 @@ export default function AdminSendNotificationPage() {
       )}
     </div>
   );
+}
+
+function toFormData(
+  payload: Record<string, unknown>,
+  attachment: File,
+): FormData {
+  const fd = new FormData();
+  fd.append("attachment", attachment);
+  for (const [key, value] of Object.entries(payload)) {
+    fd.append(key, Array.isArray(value) ? JSON.stringify(value) : String(value));
+  }
+  return fd;
 }

@@ -29,10 +29,6 @@ type Submission = {
   status: "PENDING" | "GRADED";
   grade: string | null;
   totalScore: number | null;
-  originalScore: number | null;
-  latePenaltyPercent: number | null;
-  latePenaltyAmount: number | null;
-  isLate: boolean;
   feedback: string | null;
   comment: string | null;
   submittedAt: string;
@@ -42,20 +38,13 @@ type Submission = {
 
 function PassFailPreview({
   gradeInput,
-  gradeModal,
-  latePenalty,
   passingScore,
 }: {
   gradeInput: string;
-  gradeModal: Submission | null;
-  latePenalty: number;
   passingScore: number;
 }) {
-  if (!gradeModal || !gradeInput || isNaN(parseInt(gradeInput, 10))) return null;
-  const raw = parseInt(gradeInput, 10);
-  const finalScore = gradeModal.isLate
-    ? Math.max(0, raw - Math.round((raw * latePenalty) / 100))
-    : raw;
+  if (!gradeInput || isNaN(parseInt(gradeInput, 10))) return null;
+  const finalScore = parseInt(gradeInput, 10);
   if (finalScore >= passingScore) return null;
   return (
     <p className="text-xs text-warning font-medium mt-1 flex items-center gap-1">
@@ -74,7 +63,6 @@ export default function InstructorAssignmentsPage() {
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const [gradeModal, setGradeModal] = useState<Submission | null>(null);
   const [gradeInput, setGradeInput] = useState("");
-  const [latePenalty, setLatePenalty] = useState(25);
   const [feedbackInput, setFeedbackInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -120,13 +108,11 @@ export default function InstructorAssignmentsPage() {
         {
           grade: score,
           feedback: feedbackInput || undefined,
-          ...(gradeModal.isLate ? { latePenaltyPercent: latePenalty } : {}),
         },
       );
       toast.success("Submission graded successfully");
       setGradeModal(null);
       setGradeInput("");
-      setLatePenalty(25);
       setFeedbackInput("");
       if (selectedAssignment) {
         fetchSubmissions(selectedAssignment.id);
@@ -243,11 +229,6 @@ export default function InstructorAssignmentsPage() {
                             minute: "2-digit",
                           })}
                         </span>
-                        {sub.isLate && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-danger/15 text-danger border border-danger/30">
-                            Late
-                          </span>
-                        )}
                         {sub.answerFileUrl && (
                           <a
                             href={sub.answerFileUrl}
@@ -279,11 +260,6 @@ export default function InstructorAssignmentsPage() {
                           {sub.totalScore ?? sub.grade}
                           <span className="text-xs font-normal text-muted-foreground">/100</span>
                         </p>
-                        {sub.latePenaltyAmount != null && sub.latePenaltyAmount > 0 && (
-                          <p className="text-[11px] text-danger mt-0.5">
-                            -{sub.latePenaltyAmount} late penalty
-                          </p>
-                        )}
                         {sub.feedback && (
                           <p className="text-xs text-muted-foreground mt-0.5 max-w-[200px] truncate">
                             {sub.feedback}
@@ -295,7 +271,6 @@ export default function InstructorAssignmentsPage() {
                         onClick={() => {
                           setGradeModal(sub);
                           setGradeInput("");
-                          setLatePenalty(25);
                           setFeedbackInput("");
                         }}
                         className="btn-primary text-xs"
@@ -355,33 +330,6 @@ export default function InstructorAssignmentsPage() {
                   </div>
                 )}
 
-                {gradeModal.isLate && (
-                  <div className="rounded-lg border border-danger/30 bg-danger/10 p-3">
-                    <p className="text-[11px] font-bold text-danger mb-1">
-                      ⚠ Late Submission
-                    </p>
-                    <p className="text-xs text-muted-foreground mb-3">
-                      This submission was turned in after the due date. Apply a late penalty.
-                    </p>
-                    <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
-                      Late Penalty
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="range"
-                        min={1}
-                        max={25}
-                        value={latePenalty}
-                        onChange={(e) => setLatePenalty(Number(e.target.value))}
-                        className="flex-1 accent-danger"
-                      />
-                      <span className="text-sm font-bold text-danger min-w-[3ch] text-right">
-                        {latePenalty}%
-                      </span>
-                    </div>
-                  </div>
-                )}
-
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
                     Score (0-100)
@@ -396,19 +344,8 @@ export default function InstructorAssignmentsPage() {
                     max={100}
                     required
                   />
-                  {gradeModal.isLate && gradeInput && !isNaN(parseInt(gradeInput, 10)) && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Final score:{" "}
-                      <span className="font-bold text-foreground">
-                        {Math.max(0, parseInt(gradeInput, 10) - Math.round((parseInt(gradeInput, 10) * latePenalty) / 100))}/100
-                      </span>
-                      {" "}(-{latePenalty}% penalty)
-                    </p>
-                  )}
                   <PassFailPreview
                     gradeInput={gradeInput}
-                    gradeModal={gradeModal}
-                    latePenalty={latePenalty}
                     passingScore={selectedAssignment?.batch.passingScore ?? 50}
                   />
                 </div>

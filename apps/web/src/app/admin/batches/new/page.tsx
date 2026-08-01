@@ -38,7 +38,6 @@ type FormState = {
   maxStudents: string;
   description: string;
   defaultDaysToComplete: string;
-  lateSubmissionPenaltyPercent: string;
 };
 
 type CourseInstructor = {
@@ -66,7 +65,6 @@ export default function CreateBatchPage() {
     maxStudents: "",
     description: "",
     defaultDaysToComplete: "",
-    lateSubmissionPenaltyPercent: "25",
   });
 
   // Fetch active packages and instructors on mount
@@ -177,9 +175,6 @@ export default function CreateBatchPage() {
         description: form.description || undefined,
         defaultDaysToComplete: form.defaultDaysToComplete
           ? Number(form.defaultDaysToComplete)
-          : undefined,
-        lateSubmissionPenaltyPercent: form.lateSubmissionPenaltyPercent
-          ? Number(form.lateSubmissionPenaltyPercent)
           : undefined,
       };
 
@@ -419,23 +414,6 @@ export default function CreateBatchPage() {
               />
               <p className="mt-1 text-xs text-muted-foreground">
                 Due dates calculated as enrollment date + N days
-              </p>
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground">
-                Late Submission Penalty %
-              </label>
-              <input
-                type="number"
-                value={form.lateSubmissionPenaltyPercent}
-                onChange={(e) => update("lateSubmissionPenaltyPercent", e.target.value)}
-                placeholder="25"
-                className="field w-full"
-                min={0}
-                max={100}
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                Default penalty for late submissions
               </p>
             </div>
           </div>

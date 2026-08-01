@@ -13,9 +13,6 @@ interface Assignment {
   description: string | null;
   dueDate: string;
   daysFromEnrollment?: number | null;
-  allowLateSubmission?: boolean;
-  lateSubmissionPenaltyPercent?: number | null;
-  lateSubmissionGracePeriodHrs?: number | null;
   maxPoints: number;
   questionPdfUrl: string | null;
 }
@@ -53,15 +50,6 @@ export default function AssignmentCard({
   const [daysFromEnrollment, setDaysFromEnrollment] = useState(
     assignment.daysFromEnrollment?.toString() ?? ""
   );
-  const [allowLateSubmission, setAllowLateSubmission] = useState(
-    assignment.allowLateSubmission ?? false
-  );
-  const [lateSubmissionPenaltyPercent, setLateSubmissionPenaltyPercent] = useState(
-    assignment.lateSubmissionPenaltyPercent ?? 25
-  );
-  const [lateSubmissionGracePeriodHrs, setLateSubmissionGracePeriodHrs] = useState(
-    assignment.lateSubmissionGracePeriodHrs?.toString() ?? ""
-  );
   const [maxPoints, setMaxPoints] = useState(assignment.maxPoints);
   const [questionPdfUrl, setQuestionPdfUrl] = useState(
     assignment.questionPdfUrl || "",
@@ -89,9 +77,6 @@ export default function AssignmentCard({
         description,
         dueDate: dueDateMode === "absolute" && dueDate ? new Date(dueDate).toISOString() : undefined,
         daysFromEnrollment: dueDateMode === "days" && daysFromEnrollment ? Number(daysFromEnrollment) : null,
-        allowLateSubmission,
-        lateSubmissionPenaltyPercent: allowLateSubmission ? lateSubmissionPenaltyPercent : null,
-        lateSubmissionGracePeriodHrs: allowLateSubmission && lateSubmissionGracePeriodHrs ? Number(lateSubmissionGracePeriodHrs) : null,
         maxPoints,
         questionPdfUrl: questionPdfUrl || undefined,
       });
@@ -129,9 +114,6 @@ export default function AssignmentCard({
         : "",
     );
     setDaysFromEnrollment(assignment.daysFromEnrollment?.toString() ?? "");
-    setAllowLateSubmission(assignment.allowLateSubmission ?? false);
-    setLateSubmissionPenaltyPercent(assignment.lateSubmissionPenaltyPercent ?? 25);
-    setLateSubmissionGracePeriodHrs(assignment.lateSubmissionGracePeriodHrs?.toString() ?? "");
     setMaxPoints(assignment.maxPoints);
     setQuestionPdfUrl(assignment.questionPdfUrl || "");
   };
@@ -212,47 +194,6 @@ export default function AssignmentCard({
               className="field"
               min={1}
             />
-          </div>
-        )}
-
-        {/* Late Submission Toggle */}
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="edit-allow-late"
-            checked={allowLateSubmission}
-            onChange={(e) => setAllowLateSubmission(e.target.checked)}
-            className="h-4 w-4 rounded border-hairline"
-          />
-          <label htmlFor="edit-allow-late" className="text-xs font-medium">
-            Allow Late Submission (with penalty)
-          </label>
-        </div>
-
-        {allowLateSubmission && (
-          <div className="grid grid-cols-2 gap-4 pl-6">
-            <div className="space-y-2">
-              <label className="text-xs font-medium">Penalty %</label>
-              <input
-                type="number"
-                value={lateSubmissionPenaltyPercent}
-                onChange={(e) => setLateSubmissionPenaltyPercent(parseInt(e.target.value) || 25)}
-                min={0}
-                max={100}
-                className="field"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-medium">Grace Period (hrs)</label>
-              <input
-                type="number"
-                value={lateSubmissionGracePeriodHrs}
-                onChange={(e) => setLateSubmissionGracePeriodHrs(e.target.value)}
-                placeholder="Optional"
-                min={1}
-                className="field"
-              />
-            </div>
           </div>
         )}
 
@@ -346,11 +287,6 @@ export default function AssignmentCard({
             Due: {new Date(assignment.dueDate).toLocaleDateString()}
           </span>
         ) : null}
-        {assignment.allowLateSubmission && (
-          <span className="text-xs rounded bg-amber-100 text-amber-700 px-1.5 py-0.5">
-            Late OK (-{assignment.lateSubmissionPenaltyPercent ?? 25}%)
-          </span>
-        )}
         {assignment.questionPdfUrl && (
           <a
             href={assignment.questionPdfUrl}

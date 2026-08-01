@@ -88,6 +88,14 @@ export const authService = {
     if (!user || !user.passwordHash)
       throw new AppError(401, "Invalid credentials");
 
+    // Intern accounts have no portal login — admins manage them
+    if (user.role === UserRole.INTERN) {
+      throw new AppError(
+        403,
+        "Intern accounts do not have portal access. Please contact your administrator.",
+      );
+    }
+
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) throw new AppError(401, "Invalid credentials");
 
