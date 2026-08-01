@@ -27,6 +27,7 @@ import {
   ResetPasswordEmail,
 } from "@lms/email-templates";
 import { generateInvoicePdf } from "./invoice.service";
+import { uploadsRoot } from "../utils/uploads";
 
 type EmailTemplateComponent = (
   props: Record<string, unknown>,
@@ -79,10 +80,11 @@ async function resolveAttachment(
 
     const fs = await import("fs");
     const path = await import("path");
-    const apiRoot = __dirname.includes("dist")
-      ? path.resolve(__dirname, "..")
-      : path.resolve(__dirname, "..", "..", "..");
-    const fullPath = path.join(apiRoot, "uploads", "notifications", filename);
+    const fullPath = path.join(
+      uploadsRoot,
+      "notifications",
+      filename,
+    );
 
     if (!fs.existsSync(fullPath)) return undefined;
     const content = fs.readFileSync(fullPath).toString("base64");

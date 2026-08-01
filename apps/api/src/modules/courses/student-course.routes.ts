@@ -4,6 +4,7 @@ import { prisma } from "../../utils/prisma";
 import { quizController } from "./quiz.controller";
 import { getCached, setCache } from "../../utils/memory-cache";
 import { moduleService } from "./module.service";
+import { resolveEffectiveDueDate } from "../../services/due-date.service";
 
 const router = Router();
 
@@ -324,6 +325,7 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
     // Verify user is enrolled (check both individual and package enrollments)
     let batchId: string | null = null;
     let batch: any = null;
+    let enrollmentDate: Date | null = null;
 
     const enrollment = await prisma.enrollmentRequest.findFirst({
       where: { userId, courseId, status: "APPROVED" },
@@ -339,6 +341,7 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
     if (enrollment) {
       batchId = enrollment.batchId;
       batch = enrollment.batch;
+      enrollmentDate = enrollment.appliedAt;
     } else {
       const packageCourse = await prisma.packageEnrollmentCourse.findFirst({
         where: {
@@ -351,6 +354,7 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
               instructor: { select: { id: true, name: true } },
             },
           },
+          enrollment: { select: { createdAt: true } },
         },
       });
 
@@ -360,6 +364,7 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
 
       batchId = packageCourse.batchId;
       batch = packageCourse.batch;
+      enrollmentDate = packageCourse.enrollment.createdAt;
     }
 
     // Check visibility for package-level batches
@@ -413,6 +418,7 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
                 title: true,
                 order: true,
                 dueDate: true,
+                daysFromEnrollment: true,
                 isSpecialExam: true,
                 passingScore: true,
                 timeLimitMin: true,
@@ -430,6 +436,7 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
                 description: true,
                 maxPoints: true,
                 dueDate: true,
+                daysFromEnrollment: true,
                 questionPdfUrl: true,
               },
               orderBy: { dueDate: "asc" },
@@ -560,26 +567,40 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
         completionPercent,
         recordingsCount: moduleRecordings.length,
         sessionsCount: moduleSessions.length,
-        quizzes: m.quizzes.map((q) => ({
-          id: q.id,
-          title: q.title,
-          questionCount: q._count.questions,
-          dueDate: q.dueDate ? q.dueDate.toISOString() : null,
-          isSpecialExam: q.isSpecialExam,
-          passingScore: q.passingScore,
-          timeLimitMin: q.timeLimitMin,
-          maxAttempts: q.maxAttempts,
-          examType: q.examType,
-        })),
-        assignments: m.assignments.map((a) => ({
-          id: a.id,
-          title: a.title,
-          type: a.type,
-          description: a.description,
-          maxPoints: a.maxPoints,
-          dueDate: a.dueDate.toISOString(),
-          questionPdfUrl: a.questionPdfUrl,
-        })),
+        quizzes: m.quizzes.map((q) => {
+          const effectiveDueDate = resolveEffectiveDueDate(
+            q.dueDate,
+            q.daysFromEnrollment,
+            enrollmentDate,
+          );
+          return {
+            id: q.id,
+            title: q.title,
+            questionCount: q._count.questions,
+            dueDate: effectiveDueDate ? effectiveDueDate.toISOString() : null,
+            isSpecialExam: q.isSpecialExam,
+            passingScore: q.passingScore,
+            timeLimitMin: q.timeLimitMin,
+            maxAttempts: q.maxAttempts,
+            examType: q.examType,
+          };
+        }),
+        assignments: m.assignments.map((a) => {
+          const effectiveDueDate = resolveEffectiveDueDate(
+            a.dueDate,
+            a.daysFromEnrollment,
+            enrollmentDate,
+          );
+          return {
+            id: a.id,
+            title: a.title,
+            type: a.type,
+            description: a.description,
+            maxPoints: a.maxPoints,
+            dueDate: effectiveDueDate ? effectiveDueDate.toISOString() : null,
+            questionPdfUrl: a.questionPdfUrl,
+          };
+        }),
         practicals: m.practicals.map((p) => ({
           id: p.id,
           title: p.title,
@@ -720,15 +741,17 @@ router.post(
         return res.status(404).json({ error: "Quiz not found" });
       }
 
-      // Check for existing attempt
+      // Check for existing attempt — allow re-attempt only if previous was failed
       const existing = await prisma.quizAttempt.findFirst({
         where: { quizId, userId },
+        orderBy: { createdAt: "desc" },
       });
 
-      if (existing) {
-        return res
-          .status(400)
-          .json({ error: "Quiz already submitted", attempt: existing });
+      if (existing && existing.isPassed) {
+        return res.status(400).json({
+          error: "You have already passed this quiz",
+          attempt: existing,
+        });
       }
 
       // Timer enforcement: if quiz has timeLimitMin, verify submission is within limit
@@ -773,7 +796,7 @@ router.post(
       );
 
       const total = quiz.questions.length;
-      const passingScore = quiz.passingScore ?? 65;
+      const passingScore = quiz.passingScore ?? 60;
       const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
       const isPassed = percentage >= passingScore;
 
@@ -787,6 +810,7 @@ router.post(
           percentage,
           isPassed,
           status: "SUBMITTED",
+          submittedAt: new Date(),
         },
       });
 
@@ -826,6 +850,7 @@ router.get(
 
       const attempt = await prisma.quizAttempt.findFirst({
         where: { quizId, userId },
+        orderBy: { createdAt: "desc" },
       });
 
       if (!attempt) {

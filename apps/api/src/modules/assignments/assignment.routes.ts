@@ -27,6 +27,10 @@ router.post(
 // GET /api/assignments — list assignments
 router.get("/", assignmentController.list);
 
+// GET /api/assignments/download-proxy — stream external files (e.g. Google Drive)
+// with real download progress; must be registered before /:id routes.
+router.get("/download-proxy", assignmentController.downloadProxy);
+
 // POST /api/assignments/:id/submit/file — submit answer file (student only)
 router.post(
   "/:id/submit/file",

@@ -1,8 +1,7 @@
 import crypto from "crypto";
-import fs from "fs";
-import path from "path";
 import type { Request } from "express";
 import multer from "multer";
+import { ensureUploadsDir } from "../../utils/uploads";
 
 export const COURSE_THUMBNAIL_FIELD = "thumbnail";
 export const MAX_THUMBNAIL_BYTES = 5 * 1024 * 1024;
@@ -14,14 +13,7 @@ const extensionByMime: Record<string, string> = {
   "image/webp": ".webp",
 };
 
-const apiRoot = __dirname.includes("dist")
-  ? path.resolve(__dirname, "..")
-  : path.resolve(__dirname, "..", "..", "..");
-
-const uploadsRoot = path.join(apiRoot, "uploads");
-const courseUploadsDir = path.join(uploadsRoot, "courses");
-
-fs.mkdirSync(courseUploadsDir, { recursive: true });
+const courseUploadsDir = ensureUploadsDir("courses");
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, courseUploadsDir),

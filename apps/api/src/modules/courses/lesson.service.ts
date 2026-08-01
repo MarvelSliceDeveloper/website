@@ -5,6 +5,7 @@ import { parseVideoUrl } from "../../utils/video";
 import * as fs from "fs";
 import * as path from "path";
 import { appendToContentOrder, removeFromContentOrder } from "./module.service";
+import { uploadsRoot } from "../../utils/uploads";
 
 export const CreateLessonSchema = z.object({
   title: z.string().min(2).max(200),
@@ -177,7 +178,6 @@ export const lessonService = {
     if (!resource) throw new Error("Resource not found");
 
     try {
-      const uploadsRoot = path.resolve(__dirname, "..", "..", "..", "uploads");
       const filePath = path.join(
         uploadsRoot,
         (resource as any).url.replace(/^.*\/uploads/, ""),

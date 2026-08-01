@@ -570,8 +570,8 @@ export default function CourseContentView({
 
   if (loading) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center gap-3">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-border border-t-primary" />
+      <div className="flex min-h-[40vh] items-center justify-center gap-3 bg-mist">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-foreground/20 border-t-primary" />
         <p className="text-sm text-muted-foreground">
           Loading course content...
         </p>
@@ -614,7 +614,7 @@ export default function CourseContentView({
     if (selectedQuizId && quizLoading) {
       return (
         <div className="flex items-center justify-center h-full gap-3 py-16">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground/20 border-t-primary" />
           <p className="text-sm text-muted-foreground">Loading quiz...</p>
         </div>
       );
@@ -952,7 +952,7 @@ const renderAccordion = () => (
                         >
                           <IconVideo
                             size={11}
-                            className={active ? "text-ink ml-px" : "text-muted-foreground"}
+                            className={active ? "text-white ml-px" : "text-muted-foreground"}
                           />
                         </span>
                         <span className="min-w-0 flex-1">
@@ -1009,7 +1009,7 @@ const renderAccordion = () => (
                           >
                             <IconClipboardCheck
                             size={12}
-                            className={isActive ? "text-ink" : "text-muted-foreground"}
+                            className={isActive ? "text-white" : "text-muted-foreground"}
                           />
                         </span>
                         <span className="min-w-0 flex-1">
@@ -1059,7 +1059,7 @@ const renderAccordion = () => (
                         >
                           <IconFileSpreadsheet
                             size={12}
-                            className={isActive ? "text-ink" : "text-muted-foreground"}
+                            className={isActive ? "text-white" : "text-muted-foreground"}
                           />
                         </span>
                         <span className="min-w-0 flex-1">
@@ -1072,10 +1072,12 @@ const renderAccordion = () => (
                           </span>
                         </span>
                         <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
-                          {new Date(assignment.dueDate).toLocaleDateString("en-IN", {
-                            day: "numeric",
-                            month: "short",
-                          })}
+                          {assignment.dueDate
+                            ? new Date(assignment.dueDate).toLocaleDateString(
+                                "en-IN",
+                                { day: "numeric", month: "short" },
+                              )
+                            : "No due date"}
                         </span>
                       </button>
                     </li>
@@ -1105,7 +1107,7 @@ const renderAccordion = () => (
                         >
                           <IconDeviceSpeaker
                             size={12}
-                            className={isActive ? "text-ink" : "text-muted-foreground"}
+                            className={isActive ? "text-white" : "text-muted-foreground"}
                           />
                         </span>
                         <span className="min-w-0 flex-1">
@@ -1155,7 +1157,7 @@ const renderAccordion = () => (
                               >
                                 <IconFile
                                   size={12}
-                                  className={isActive ? "text-ink" : "text-muted-foreground"}
+                                  className={isActive ? "text-white" : "text-muted-foreground"}
                                 />
                               </span>
                               <span className="min-w-0 flex-1">
@@ -1374,7 +1376,7 @@ const renderAccordion = () => (
   return (
     <div className="flex h-[calc(100vh-var(--shell-header-height,56px))] gap-0 overflow-hidden">
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-5">{renderMain()}</div>
+        <div className="flex-1 overflow-y-auto p-5 bg-mist">{renderMain()}</div>
 
         <div className="flex items-center gap-3 px-5 py-2.5 bg-card border-t border-border shrink-0">
           <button

@@ -416,6 +416,7 @@ model InternField {
   id          String   @id @default(cuid())
   name        String
   description String?
+  fee         Int      @default(0) // internship fee per field, in paise
   isActive    Boolean  @default(true)
   order       Int      @default(0)
   createdAt   DateTime @default(now())

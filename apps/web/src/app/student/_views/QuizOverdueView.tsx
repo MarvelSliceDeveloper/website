@@ -13,6 +13,8 @@ import {
   IconAward,
   IconCircleCheck,
   IconCircleX,
+  IconRefresh,
+  IconX,
 } from "@tabler/icons-react";
 import type { OverdueAssignment } from "@/lib/api-types";
 import type { ViewState } from "../_types/student-portal";
@@ -46,6 +48,7 @@ type SubmissionResult = {
   grade: string | null;
   feedback: string | null;
   assignment: {
+    id: string;
     title: string;
     maxPoints: number;
     questions: Array<{
@@ -142,6 +145,7 @@ export default function QuizOverdueView({
         grade: null,
         feedback: null,
         assignment: {
+          id: questionsRes.id,
           title: questionsRes.title,
           maxPoints: questionsRes.maxPoints,
           questions: questionsRes.questions.map((q) => ({
@@ -206,6 +210,7 @@ export default function QuizOverdueView({
         grade: null,
         feedback: null,
         assignment: {
+          id: data.id,
           title: data.title,
           maxPoints: data.maxPoints,
           questions: data.questions.map((q) => ({
@@ -432,8 +437,8 @@ export default function QuizOverdueView({
         ? Math.round(((data.totalScore ?? 0) / data.assignment.maxPoints) * 100)
         : 0;
 
-    const isPassed = pct >= 70;
-    const isAverage = pct >= 50 && pct < 70;
+    const isPassed = pct >= 60;
+    const isAverage = pct >= 40 && pct < 60;
 
     return (
       <div className="sp-view-enter space-y-6 max-w-3xl mx-auto">
@@ -604,7 +609,16 @@ export default function QuizOverdueView({
           })}
         </div>
 
-        <div className="flex justify-center pt-2">
+        <div className="flex items-center justify-center gap-3 pt-2">
+          {!isPassed && (
+            <button
+              onClick={() => handleStartQuiz(data.assignment.id)}
+              disabled={loading}
+              className="flex items-center gap-2 btn-primary text-xs px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold shadow-xs hover:shadow-sm transition-all"
+            >
+              <IconRefresh size={14} /> Retake Quiz
+            </button>
+          )}
           <button
             onClick={() => {
               setSubView({ type: "LIST" });
@@ -631,13 +645,9 @@ export default function QuizOverdueView({
   // ── LIST VIEW (DEFAULT) ──
   return (
     <div className="sp-view-enter space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between ">
         <div>
-          <p className="sp-eyebrow">Assessments</p>
           <h1 className="text-2xl font-bold text-foreground">Quizzes</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Test your understanding and complete course assessments.
-          </p>
         </div>
 
         {/* Quick Stat Badges */}
@@ -692,22 +702,25 @@ export default function QuizOverdueView({
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-border/70 bg-muted/30">
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground w-10">
+                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground w-10">
                     #
                   </th>
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground">
                     Quiz Name
                   </th>
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground">
                     Course & Module
                   </th>
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground">
                     Due Date
                   </th>
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground">
+                    Submitted
+                  </th>
+                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground">
                     Status
                   </th>
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-right">
+                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground text-right">
                     Action
                   </th>
                 </tr>
@@ -715,6 +728,11 @@ export default function QuizOverdueView({
               <tbody className="divide-y divide-border/50">
                 {filteredItems.map((quiz, idx) => {
                   const isPending = quiz.status === "PENDING";
+                  const passed =
+                    quiz.isPassed ??
+                    (quiz.percentage == null
+                      ? true
+                      : quiz.percentage >= 60);
                   const dueDateTime = quiz.dueDate
                     ? new Date(quiz.dueDate).getTime()
                     : NaN;
@@ -741,13 +759,17 @@ export default function QuizOverdueView({
                             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${
                               isPending
                                 ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
-                                : "bg-emerald-500/10 border-emerald-500/30 text-emerald-500"
+                                : passed
+                                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500"
+                                  : "bg-danger/10 border-danger/30 text-danger"
                             }`}
                           >
                             {isPending ? (
                               <IconAlertCircle size={16} />
-                            ) : (
+                            ) : passed ? (
                               <IconCheck size={16} />
+                            ) : (
+                              <IconX size={16} />
                             )}
                           </span>
                           <div>
@@ -774,7 +796,7 @@ export default function QuizOverdueView({
                                 ? "text-danger"
                                 : isPending
                                   ? "text-amber-500"
-                                  : "text-emerald-500"
+                                  : "text-muted-foreground"
                             }
                           />
                           <span
@@ -783,7 +805,7 @@ export default function QuizOverdueView({
                                 ? "text-danger font-semibold"
                                 : isPending
                                   ? "text-amber-500"
-                                  : "text-emerald-500"
+                                  : "text-muted-foreground"
                             }`}
                           >
                             {isPending
@@ -795,18 +817,52 @@ export default function QuizOverdueView({
                                       { day: "numeric", month: "short" },
                                     )
                                   : "No due date"
-                              : "Completed"}
+                              : quiz.dueDate
+                                ? new Date(quiz.dueDate).toLocaleDateString(
+                                    "en-IN",
+                                    { day: "numeric", month: "short" },
+                                  )
+                                : "—"}
                           </span>
                         </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        {isPending ? (
+                          <span className="text-xs text-muted-foreground">
+                            —
+                          </span>
+                        ) : (
+                          <span className="text-xs font-medium text-emerald-500">
+                            {quiz.submittedAt
+                              ? new Date(
+                                  quiz.submittedAt,
+                                ).toLocaleDateString("en-IN", {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                })
+                              : "—"}
+                          </span>
+                        )}
                       </td>
                       <td className="px-5 py-4">
                         {isPending ? (
                           <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/25">
                             Pending
                           </span>
-                        ) : (
+                        ) : passed ? (
                           <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
-                            <IconCheck size={12} /> Completed
+                            <IconCheck size={12} />
+                            {quiz.percentage != null
+                              ? `Passed · ${quiz.percentage}%`
+                              : "Passed"}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-danger/15 text-danger border border-danger/25">
+                            <IconX size={12} />
+                            {quiz.percentage != null
+                              ? `Failed · ${quiz.percentage}%`
+                              : "Failed"}
                           </span>
                         )}
                       </td>
@@ -821,13 +877,24 @@ export default function QuizOverdueView({
                               Start Quiz
                             </button>
                           ) : (
-                            <button
-                              onClick={() => handleViewResult(quiz.id)}
-                              disabled={loading}
-                              className="btn-secondary text-xs px-4 py-2 rounded-xl font-medium border border-border hover:border-violet-500/40 hover:text-violet-500 transition-all"
-                            >
-                              View Results
-                            </button>
+                            <>
+                              {!passed && (
+                                <button
+                                  onClick={() => handleStartQuiz(quiz.id)}
+                                  disabled={loading}
+                                  className="btn-primary text-xs px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold shadow-xs hover:shadow-sm transition-all"
+                                >
+                                  Retake Quiz
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleViewResult(quiz.id)}
+                                disabled={loading}
+                                className="btn-secondary text-xs px-4 py-2 rounded-xl font-medium border border-border hover:border-violet-500/40 hover:text-violet-500 transition-all"
+                              >
+                                View Results
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>

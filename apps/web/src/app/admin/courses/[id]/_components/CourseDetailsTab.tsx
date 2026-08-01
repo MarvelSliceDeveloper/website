@@ -65,7 +65,7 @@ export default function CourseDetailsTab({
           Thumbnail
         </label>
         <div className="flex flex-wrap items-center gap-4">
-          <div className="h-20 w-28 overflow-hidden rounded-lg border border-border bg-card flex items-center justify-center text-xl">
+          <div className="relative h-20 w-28 overflow-hidden rounded-lg border border-border bg-card flex items-center justify-center text-xl">
             {course.thumbnailUrl ? (
               <Image
                 src={course.thumbnailUrl}
@@ -77,6 +77,11 @@ export default function CourseDetailsTab({
               />
             ) : (
               "\uD83D\uDCDA"
+            )}
+            {thumbnailUploading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                <span className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              </div>
             )}
           </div>
           <div className="space-y-1">
@@ -91,7 +96,11 @@ export default function CourseDetailsTab({
               className="field"
               disabled={thumbnailUploading}
             />
-            <p className="text-xs text-muted">JPG, PNG, or WebP. Max 5 MB.</p>
+            <p className="text-xs text-muted">
+              {thumbnailUploading
+                ? "Uploading thumbnail..."
+                : "JPG, PNG, or WebP. Max 5 MB."}
+            </p>
           </div>
         </div>
       </div>

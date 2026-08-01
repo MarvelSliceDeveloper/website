@@ -35,17 +35,17 @@ type InternField = {
   id: string;
   name: string;
   description: string | null;
+  fee: number;
   isActive: boolean;
   order: number;
   _count: { interns: number };
 };
 
-type Tab = "interns" | "fields" | "fee";
+type Tab = "interns" | "fields";
 
 const tabs: { value: Tab; label: string }[] = [
   { value: "interns", label: "Interns" },
-  { value: "fields", label: "Fields" },
-  { value: "fee", label: "Program Fee" },
+  { value: "fields", label: "Fields & Fees" },
 ];
 
 const formatPrice = (amount: number) =>
@@ -70,13 +70,9 @@ export default function AdminInternsPage() {
   const [fieldForm, setFieldForm] = useState({
     name: "",
     description: "",
+    fee: "",
     isActive: true,
   });
-
-  // Program fee tab
-  const [programFee, setProgramFee] = useState<number | null>(null);
-  const [feeDraft, setFeeDraft] = useState("");
-  const [savingFee, setSavingFee] = useState(false);
 
   const fetchInterns = () => {
     setLoadingInterns(true);
@@ -105,63 +101,17 @@ export default function AdminInternsPage() {
       .catch(() => setFields([]));
   };
 
-  const fetchProgramFee = () => {
-    api
-      .get<{ program: { id: string; name: string; price: number } | null }>(
-        "/api/interns/program",
-      )
-      .then((res) => {
-        if (res.program && res.program.price > 0) {
-          setProgramFee(res.program.price);
-          setFeeDraft(String(res.program.price / 100));
-        } else {
-          setProgramFee(null);
-          setFeeDraft("");
-        }
-      })
-      .catch(() => {});
-  };
-
   useEffect(() => {
     fetchInterns();
     fetchFields();
-    fetchProgramFee();
   }, [fieldFilter]);
-
-  const handleSaveFee = async () => {
-    const raw = feeDraft.trim();
-    if (!raw) {
-      toast.error("Enter a fee amount");
-      return;
-    }
-    const rupees = Number(raw);
-    if (!Number.isFinite(rupees) || rupees < 0) {
-      toast.error("Enter a valid fee in rupees");
-      return;
-    }
-    const paise = Math.round(rupees * 100);
-
-    setSavingFee(true);
-    try {
-      await api.patch("/api/admin/interns/program-fee", { fee: paise });
-      toast.success(
-        paise > 0
-          ? `Internship program fee set to ${formatPrice(paise)}`
-          : "Internship applications disabled",
-      );
-      fetchProgramFee();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSavingFee(false);
-    }
-  };
 
   const openFieldModal = (field?: InternField) => {
     setEditingField(field ?? null);
     setFieldForm({
       name: field?.name ?? "",
       description: field?.description ?? "",
+      fee: field ? String((field.fee ?? 0) / 100) : "",
       isActive: field?.isActive ?? true,
     });
     setShowFieldModal(true);
@@ -173,12 +123,19 @@ export default function AdminInternsPage() {
       toast.error("Field name is required");
       return;
     }
+    const feeRupees = fieldForm.fee.trim() === "" ? 0 : Number(fieldForm.fee);
+    if (!Number.isFinite(feeRupees) || feeRupees < 0) {
+      toast.error("Enter a valid fee in rupees");
+      return;
+    }
+    const fee = Math.round(feeRupees * 100);
     setSavingFieldId(editingField?.id ?? "__new__");
     try {
       if (editingField) {
         await api.patch(`/api/admin/interns/fields/${editingField.id}`, {
           name: fieldForm.name.trim(),
           description: fieldForm.description || undefined,
+          fee,
           isActive: fieldForm.isActive,
         });
         toast.success("Field updated");
@@ -186,6 +143,7 @@ export default function AdminInternsPage() {
         await api.post("/api/admin/interns/fields", {
           name: fieldForm.name.trim(),
           description: fieldForm.description || undefined,
+          fee,
           isActive: fieldForm.isActive,
         });
         toast.success("Field added");
@@ -307,7 +265,7 @@ export default function AdminInternsPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Interns"
-        description="Manage intern applications, internship fields, and the program fee."
+        description="Manage intern applications, internship fields, and per-field internship fees."
         breadcrumbs={[{ label: "Interns", href: "/admin/interns" }]}
         action={
           <Link
@@ -401,12 +359,12 @@ export default function AdminInternsPage() {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold text-foreground">
-                Internship Fields
+                Internship Fields & Fees
               </h2>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Fields of choice shown on the application form (Web Development,
-                Backend, Cybersecurity, UI/UX, ...). Inactive fields are hidden
-                from new applicants.
+                Each field has its own internship fee charged to applicants (Web
+                Development, Backend, Cybersecurity, UI/UX, ...). Inactive
+                fields are hidden from new applicants.
               </p>
             </div>
             <button
@@ -451,21 +409,33 @@ export default function AdminInternsPage() {
                       {field._count.interns} intern(s)
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => openFieldModal(field)}
-                      className="rounded-md border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
-                      title="Edit field"
-                    >
-                      <IconEdit size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteField(field)}
-                      className="rounded-md border border-danger/20 p-2 text-danger hover:bg-danger/10 transition-colors"
-                      title="Delete field"
-                    >
-                      <IconTrash size={14} />
-                    </button>
+                  <div className="flex items-center gap-3">
+                    {field.fee > 0 ? (
+                      <span className="inline-flex items-center gap-1 rounded bg-success/15 px-2.5 py-1 text-sm font-semibold text-success">
+                        <IconCurrencyRupee size={14} />
+                        {formatPrice(field.fee)}
+                      </span>
+                    ) : (
+                      <span className="rounded bg-warning/15 px-2.5 py-1 text-xs font-medium text-warning">
+                        No fee set
+                      </span>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openFieldModal(field)}
+                        className="rounded-md border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+                        title="Edit field"
+                      >
+                        <IconEdit size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteField(field)}
+                        className="rounded-md border border-danger/20 p-2 text-danger hover:bg-danger/10 transition-colors"
+                        title="Delete field"
+                      >
+                        <IconTrash size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -493,6 +463,31 @@ export default function AdminInternsPage() {
                       placeholder="e.g. Web Development"
                       autoFocus
                     />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-muted">
+                      Internship Fee (₹){" "}
+                      <span className="text-muted-foreground">
+                        — charged per applicant
+                      </span>
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm text-muted-foreground">₹</span>
+                      <input
+                        type="number"
+                        min={0}
+                        step="1"
+                        value={fieldForm.fee}
+                        onChange={(e) =>
+                          setFieldForm({ ...fieldForm, fee: e.target.value })
+                        }
+                        className="field w-full text-sm"
+                        placeholder="e.g. 2999"
+                      />
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      Leave 0 to keep applications for this field closed.
+                    </p>
                   </div>
                   <div>
                     <label className="mb-1 block text-xs font-medium text-muted">
@@ -542,52 +537,6 @@ export default function AdminInternsPage() {
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {tab === "fee" && (
-        <div className="glass-card p-6">
-          <div className="mb-4">
-            <h2 className="text-sm font-semibold text-foreground">
-              Internship Program Fee
-            </h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              One flat fee charged to every intern on application (in ₹). A fee
-              of 0 disables internship applications.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-background px-4 py-4">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-muted">
-                Program Fee (₹)
-              </label>
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm text-muted-foreground">₹</span>
-                <input
-                  type="number"
-                  min={0}
-                  step="1"
-                  placeholder="Fee"
-                  value={feeDraft}
-                  onChange={(e) => setFeeDraft(e.target.value)}
-                  className="field w-40 text-sm"
-                />
-              </div>
-            </div>
-            <button
-              onClick={handleSaveFee}
-              disabled={savingFee}
-              className="btn-primary text-xs px-3 py-1.5"
-            >
-              {savingFee ? "Saving..." : "Save Fee"}
-            </button>
-            {programFee !== null && programFee > 0 && (
-              <p className="text-sm font-semibold text-emerald-600">
-                Current: {formatPrice(programFee)}
-              </p>
-            )}
-          </div>
         </div>
       )}
     </div>

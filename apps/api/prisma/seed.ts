@@ -138,19 +138,20 @@ async function main() {
 
   // ─── Intern Fields (admin-managed field of choice) ───────────────────────────
   const internFieldSeeds = [
-    { name: "Web Development", order: 0 },
-    { name: "Backend Development", order: 1 },
-    { name: "Cybersecurity", order: 2 },
-    { name: "UI/UX Design", order: 3 },
-    { name: "Data Analytics", order: 4 },
+    { name: "Web Development", order: 0, fee: 299900 },
+    { name: "Backend Development", order: 1, fee: 349900 },
+    { name: "Cybersecurity", order: 2, fee: 399900 },
+    { name: "UI/UX Design", order: 3, fee: 279900 },
+    { name: "Data Analytics", order: 4, fee: 249900 },
   ];
   const webDevField = await prisma.internField.upsert({
     where: { id: "ifield-webdev" },
-    update: { name: "Web Development", order: 0 },
+    update: { name: "Web Development", order: 0, fee: 299900 },
     create: {
       id: "ifield-webdev",
       name: "Web Development",
       order: 0,
+      fee: 299900,
     },
   });
   for (const f of internFieldSeeds) {
@@ -159,7 +160,9 @@ async function main() {
       where: { name: f.name, deletedAt: null },
     });
     if (!existing) {
-      await prisma.internField.create({ data: { name: f.name, order: f.order } });
+      await prisma.internField.create({
+        data: { name: f.name, order: f.order, fee: f.fee },
+      });
     }
   }
   console.log("✅ Intern fields seeded");

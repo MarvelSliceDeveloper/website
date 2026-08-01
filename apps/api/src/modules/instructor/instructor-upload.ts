@@ -1,22 +1,15 @@
 import crypto from "crypto";
-import fs from "fs";
 import path from "path";
 import type { Request } from "express";
 import multer from "multer";
+import { ensureUploadsDir } from "../../utils/uploads";
 
 export const PHOTO_FIELD = "photo";
 export const RESUME_FIELD = "resume";
 export const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5 MB
 export const MAX_RESUME_BYTES = 10 * 1024 * 1024; // 10 MB
 
-const apiRoot = __dirname.includes("dist")
-  ? path.resolve(__dirname, "..")
-  : path.resolve(__dirname, "..", "..", "..");
-
-const uploadsRoot = path.join(apiRoot, "uploads");
-const instructorUploadsDir = path.join(uploadsRoot, "instructors");
-
-fs.mkdirSync(instructorUploadsDir, { recursive: true });
+const instructorUploadsDir = ensureUploadsDir("instructors");
 
 const photoMimeTypes = new Set([
   "image/jpeg",

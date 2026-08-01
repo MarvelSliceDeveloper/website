@@ -99,10 +99,11 @@ export const internController = {
   // Admin — create internship field
   async createInternField(req: AuthRequest, res: Response) {
     try {
-      const { name, description, isActive, order } = req.body;
+      const { name, description, fee, isActive, order } = req.body;
       const field = await internService.createInternField({
         name,
         description,
+        fee,
         isActive,
         order,
       });
@@ -117,10 +118,11 @@ export const internController = {
   async updateInternField(req: AuthRequest, res: Response) {
     try {
       const { id } = req.params;
-      const { name, description, isActive, order } = req.body;
+      const { name, description, fee, isActive, order } = req.body;
       const field = await internService.updateInternField(id, {
         name,
         description,
+        fee,
         isActive,
         order,
       });

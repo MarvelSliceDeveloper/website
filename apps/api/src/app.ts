@@ -9,7 +9,6 @@ import cors from "cors";
 import pino from "pino";
 import pinoHttp from "pino-http";
 import rateLimit from "express-rate-limit";
-import fs from "fs";
 import cookieParser from "cookie-parser";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
@@ -94,6 +93,7 @@ import {
   internRouter,
   adminInternRouter,
 } from "./modules/interns/intern.routes";
+import { uploadsRoot, ensureUploadsDir } from "./utils/uploads";
 
 const logger = pino({
   level: process.env.LOG_LEVEL || "info",
@@ -114,8 +114,7 @@ const app = express();
 
 // Sentry v10+ auto-instruments Express — no manual request/tracing handlers needed
 
-const uploadsRoot = path.resolve(__dirname, "..", "uploads");
-fs.mkdirSync(uploadsRoot, { recursive: true });
+ensureUploadsDir(".");
 
 app.use(
   cors({

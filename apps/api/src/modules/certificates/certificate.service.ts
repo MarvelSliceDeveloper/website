@@ -4,6 +4,7 @@ import { jsPDF } from "jspdf";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import path from "path";
 import fs from "fs/promises";
+import { uploadsRoot } from "../../utils/uploads";
 
 type CertificateSummary = {
   id: string;
@@ -262,7 +263,7 @@ export const certificateService = {
     try {
       const absolutePath = path.isAbsolute(templatePath)
         ? templatePath
-        : path.resolve(__dirname, "../../../uploads", templatePath);
+        : path.join(uploadsRoot, templatePath);
       pdfBytes = await fs.readFile(absolutePath);
     } catch {
       return this.generateFromJsPdf(certificate);

@@ -38,7 +38,7 @@ export const internService = {
   async getInternFields() {
     return prisma.internField.findMany({
       where: { isActive: true, deletedAt: null },
-      select: { id: true, name: true, description: true },
+      select: { id: true, name: true, description: true, fee: true },
       orderBy: [{ order: "asc" }, { name: "asc" }],
     });
   },
@@ -53,6 +53,7 @@ export const internService = {
         id: true,
         name: true,
         description: true,
+        fee: true,
         isActive: true,
         order: true,
         _count: {
@@ -66,9 +67,14 @@ export const internService = {
   /**
    * Admin — create an internship field.
    */
-  async createInternField(data: { name: string; description?: string; isActive?: boolean; order?: number }) {
+  async createInternField(data: { name: string; description?: string; fee?: number; isActive?: boolean; order?: number }) {
     const name = data.name.trim();
     if (!name) throw new AppError(400, "Field name is required");
+
+    const fee = data.fee ?? 0;
+    if (!Number.isInteger(fee) || fee < 0) {
+      throw new AppError(400, "fee must be a non-negative integer (paise)");
+    }
 
     const existing = await prisma.internField.findFirst({
       where: { name: { equals: name, mode: "insensitive" }, deletedAt: null },
@@ -79,6 +85,7 @@ export const internService = {
       data: {
         name,
         description: data.description || null,
+        fee,
         isActive: data.isActive ?? true,
         order: data.order ?? 0,
       },
@@ -88,7 +95,7 @@ export const internService = {
   /**
    * Admin — update an internship field.
    */
-  async updateInternField(id: string, data: { name?: string; description?: string; isActive?: boolean; order?: number }) {
+  async updateInternField(id: string, data: { name?: string; description?: string; fee?: number; isActive?: boolean; order?: number }) {
     const field = await prisma.internField.findUnique({ where: { id } });
     if (!field) throw new AppError(404, "Internship field not found");
 
@@ -102,11 +109,16 @@ export const internService = {
       data.name = name;
     }
 
+    if (data.fee !== undefined && (!Number.isInteger(data.fee) || data.fee < 0)) {
+      throw new AppError(400, "fee must be a non-negative integer (paise)");
+    }
+
     return prisma.internField.update({
       where: { id },
       data: {
         name: data.name,
         description: data.description,
+        fee: data.fee,
         isActive: data.isActive,
         order: data.order,
       },
@@ -128,7 +140,7 @@ export const internService = {
   },
 
   /**
-   * Create a Razorpay order for the flat internship program fee. Creates or
+   * Create a Razorpay order for the selected internship field's fee. Creates or
    * updates the intern user (role INTERN) on first application so the Payment
    * record can reference the user; verification marks it PAID.
    */
@@ -143,7 +155,7 @@ export const internService = {
     const normalizedEmail = email.trim().toLowerCase();
 
     const program = await this.getInternshipProgram();
-    if (!program || !program.price || program.price <= 0) {
+    if (!program) {
       throw new AppError(
         503,
         "Internship applications are not currently open. Please try again later.",
@@ -152,10 +164,16 @@ export const internService = {
 
     const field = await prisma.internField.findFirst({
       where: { id: fieldId, isActive: true, deletedAt: null },
-      select: { id: true, name: true },
+      select: { id: true, name: true, fee: true },
     });
     if (!field) {
       throw new AppError(400, "The selected field is not available for internship.");
+    }
+    if (!field.fee || field.fee <= 0) {
+      throw new AppError(
+        503,
+        `The ${field.name} field does not have a fee configured yet. Please try another field.`,
+      );
     }
 
     // Existing intern → reject duplicate in-flight/paid application
@@ -200,7 +218,7 @@ export const internService = {
 
     const razorpay = getRazorpayInstance();
     const order = await razorpay.orders.create({
-      amount: program.price,
+      amount: field.fee,
       currency: "INR",
       receipt: `rcpt_intern_${Date.now().toString(36)}_${intern.id.slice(-8)}`,
     });
@@ -209,7 +227,7 @@ export const internService = {
       data: {
         userId: intern.id,
         packageId: program.id,
-        amount: program.price,
+        amount: field.fee,
         currency: "INR",
         razorpayOrderId: order.id,
         status: "PENDING",
@@ -218,7 +236,7 @@ export const internService = {
 
     return {
       orderId: order.id,
-      amount: program.price,
+      amount: field.fee,
       currency: "INR",
       keyId: process.env.RAZORPAY_KEY_ID,
       paymentId: payment.id,

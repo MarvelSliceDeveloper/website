@@ -24,6 +24,7 @@ import type {
   Certificate,
   CatalogueCourse,
   ContinueLearningItem,
+  StudentResultItem,
 } from "@/lib/api-types";
 
 // Views
@@ -55,6 +56,7 @@ interface PortalData {
   certificates: Certificate[];
   catalogue: CatalogueCourse[];
   continueLearning: ContinueLearningItem[];
+  results: StudentResultItem[];
 }
 
 interface ApiBatchSessionRecord {
@@ -153,6 +155,7 @@ async function fetchPortalData(): Promise<PortalData> {
     catalogue,
     overdueAssignments,
     continueLearningData,
+    resultsData,
   ] = await Promise.all([
     api
       .get<{ courses: EnrolledCourse[] }>("/api/courses/enrolled")
@@ -177,6 +180,9 @@ async function fetchPortalData(): Promise<PortalData> {
       .catch(() => ({ items: [] })),
     api
       .get<{ items: ContinueLearningItem[] }>("/api/student/continue-learning")
+      .catch(() => ({ items: [] })),
+    api
+      .get<{ items: StudentResultItem[] }>("/api/student/results")
       .catch(() => ({ items: [] })),
   ]);
 
@@ -237,6 +243,7 @@ async function fetchPortalData(): Promise<PortalData> {
     certificates: certs.certificates,
     catalogue: catalogue.courses,
     continueLearning: continueLearningData.items,
+    results: resultsData.items,
   };
 }
 
@@ -783,6 +790,7 @@ function StudentPortalContent() {
             stats={portalData.stats}
             overdueAssignments={portalData.overdueAssignments}
             continueLearning={portalData.continueLearning}
+            results={portalData.results}
             liveSessions={portalData.liveSessions}
             openTickets={portalData.mentorshipTickets}
             enrolledCourses={portalData.enrolledCourses}

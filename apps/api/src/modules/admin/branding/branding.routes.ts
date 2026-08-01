@@ -3,6 +3,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { prisma } from "../../../utils/prisma";
+import { ensureUploadsDir } from "../../../utils/uploads";
 import {
   requireAuth,
   requireSuperAdmin,
@@ -26,8 +27,7 @@ const router = Router();
 
 const publicRouter = Router();
 
-const uploadsDir = path.resolve(__dirname, "..", "..", "..", "..", "uploads");
-fs.mkdirSync(uploadsDir, { recursive: true });
+const uploadsDir = ensureUploadsDir(".");
 
 const BRAND_KEY = "branding";
 
