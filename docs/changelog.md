@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-08-02 — Vitest Security Patch (CVE-2026-47429)
+
+### Dependencies
+- Upgraded `vitest` `^2.1.0` → `^3.2.6` (resolved `3.2.7`) in `apps/api` to fix **CVE-2026-47429** (GHSA-5xrq-8626-4rwp, CVSS 9.8). On Windows, the Vitest UI/API server misused `isFileServingAllowed` for `/__vitest_attachment__`, allowing `\\?\..\` path traversal to read files outside the project; the exposed write/rerun API features (`saveTestFile`, `rerun`) could execute arbitrary scripts. Fixed in vitest `>= 3.2.6` (and `>= 4.1.0`). `@vitest/ui` was not installed, so the UI server surface was absent, but the dependency was still flagged.
+- Full API suite re-run after the major-version bump: 291/292 passing (only the pre-existing quiz-submission message mismatch failure remains).
+
 ## 2026-08-02 — Scaling Hardening & Architectural Cleanup
 
 ### Backend API
