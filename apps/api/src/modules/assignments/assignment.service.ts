@@ -356,34 +356,48 @@ export const assignmentService = {
   ) {
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId },
-      include: {
-        batch: {
-          select: {
-            enrollments: {
-              where: { userId: studentId, status: "APPROVED" },
-            },
-          },
-        },
-      },
+      select: { id: true, type: true, courseId: true, batchId: true },
     });
 
     if (!assignment) throw new AppError(404, "Assignment not found");
     if (assignment.type !== "ASSIGNMENT")
       throw new AppError(400, "This is a quiz, not a file-upload assignment");
 
-    if (assignment.batch) {
-      const hasBatchEnrollment = assignment.batch.enrollments.length > 0;
-      const hasPackageEnrollment =
-        !hasBatchEnrollment &&
-        (await prisma.packageEnrollmentCourse.findFirst({
+    // A student may submit an assignment whenever it is displayed to them —
+    // i.e. they have an approved enrollment covering the assignment's course
+    // (or batch). This mirrors the overdue / course-content views.
+    const [courseEnrollment, batchEnrollment, packageEnrollment] =
+      await Promise.all([
+        prisma.enrollmentRequest.findFirst({
           where: {
-            batchId: assignment.batchId!,
+            userId: studentId,
+            courseId: assignment.courseId,
+            status: "APPROVED",
+          },
+          select: { id: true },
+        }),
+        prisma.enrollmentRequest.findFirst({
+          where: {
+            userId: studentId,
+            batchId: assignment.batchId,
+            status: "APPROVED",
+          },
+          select: { id: true },
+        }),
+        prisma.packageEnrollmentCourse.findFirst({
+          where: {
+            courseId: assignment.courseId,
             enrollment: { userId: studentId, status: "APPROVED" },
           },
-        }));
-      if (!hasBatchEnrollment && !hasPackageEnrollment) {
-        throw new AppError(403, "You are not enrolled in the batch for this assignment");
-      }
+          select: { id: true },
+        }),
+      ]);
+
+    if (!courseEnrollment && !batchEnrollment && !packageEnrollment) {
+      throw new AppError(
+        403,
+        "You are not enrolled in the course for this assignment",
+      );
     }
 
     return prisma.assignmentSubmission.upsert({

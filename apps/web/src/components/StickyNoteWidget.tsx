@@ -88,17 +88,17 @@ export default function StickyNoteWidget({
 
       try {
         // 1. Try to find a note flagged as sticky
-        let res = await api.get<{ notes: StickyNote[] }>(
+        let res = await api.get<{ items: StickyNote[] }>(
           `/api/notes?courseId=${courseId}&moduleId=${moduleId}&isSticky=true`,
         );
-        let existingNote = res.notes?.[0];
+        let existingNote = res.items?.[0];
 
         // 2. Fallback: no sticky note yet — take the first note and migrate it
         if (!existingNote) {
-          res = await api.get<{ notes: StickyNote[] }>(
+          res = await api.get<{ items: StickyNote[] }>(
             `/api/notes?courseId=${courseId}&moduleId=${moduleId}`,
           );
-          existingNote = res.notes?.[0];
+          existingNote = res.items?.[0];
 
           if (existingNote && isMountedRef.current) {
             // Migrate existing note to sticky

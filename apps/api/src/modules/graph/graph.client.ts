@@ -2,6 +2,7 @@ import {
   getTokenForUser,
   refreshMsTokenForUser,
   getAppToken,
+  isTokenExpiringSoon,
 } from "./graph.auth";
 import { prisma } from "../../utils/prisma";
 
@@ -76,7 +77,6 @@ const ACTION_MAP: Record<string, string> = {
   "/me/calendar": "getCalendarEvents",
   "/users": "getMsUserProfile",
   "/me": "getMsUserProfile",
-  "/communications/callRecords": "getCallRecords",
   "/subscriptions": "createSubscription",
 };
 
@@ -137,8 +137,13 @@ export class GraphClient {
 
   private async getValidToken(forceRefresh = false): Promise<string> {
     if (this.useAppToken) {
-      // App tokens are cached in memory or fetched every time (we can optimize caching later)
-      if (!this.accessToken || forceRefresh) {
+      // App tokens are cached in-memory (and shared via getAppToken's own
+      // module-level cache). Only re-fetch when missing or about to expire.
+      if (
+        !this.accessToken ||
+        forceRefresh ||
+        isTokenExpiringSoon(this.accessToken)
+      ) {
         this.accessToken = await getAppToken();
       }
       return this.accessToken;
@@ -151,6 +156,11 @@ export class GraphClient {
       }
       if (!this.accessToken) {
         this.accessToken = await getTokenForUser(this.userId);
+        // The stored token may be stale — refresh proactively so we don't
+        // burn a request on a guaranteed 401.
+        if (isTokenExpiringSoon(this.accessToken)) {
+          this.accessToken = await refreshMsTokenForUser(this.userId);
+        }
       }
       return this.accessToken;
     }

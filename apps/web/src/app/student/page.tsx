@@ -175,7 +175,7 @@ async function fetchPortalData(): Promise<PortalData> {
     track("sessions")(api.get<{ sessions: ApiSessionRecord[] }>("/api/sessions")).catch(() => ({ sessions: [] })),
     track("calendar")(api.get<{ events: CalendarEvent[] }>("/api/calendar/events")).catch(() => ({ events: [] })),
     track("mentorship")(api.get<{ tickets: ApiMentorshipTicket[] }>("/api/mentorship/tickets/my")).catch(() => ({ tickets: [] })),
-    track("certificates")(api.get<{ certificates: Certificate[] }>("/api/certificates/my")).catch(() => ({ certificates: [] })),
+    track("certificates")(api.get<{ certificates: Certificate[] }>("/api/certificates")).catch(() => ({ certificates: [] })),
     track("catalogue")(api.get<{ courses: CatalogueCourse[] }>("/api/courses/catalogue")).catch(() => ({ courses: [] })),
     track("overdue")(api.get<{ items: OverdueAssignment[] }>("/api/student/assignments/overdue")).catch(() => ({ items: [] })),
     track("continue-learning")(api.get<{ items: ContinueLearningItem[] }>("/api/student/continue-learning")).catch(() => ({ items: [] })),

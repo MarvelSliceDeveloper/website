@@ -178,6 +178,8 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
       fontFamily,
       titleFontSize,
       nameFontSize,
+      pdfTemplateType,
+      pdfTemplateFields,
     } = req.body;
 
     // If setting as default, unset other defaults
@@ -213,6 +215,15 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
         ...(fontFamily !== undefined && { fontFamily }),
         ...(titleFontSize !== undefined && { titleFontSize }),
         ...(nameFontSize !== undefined && { nameFontSize }),
+        ...(pdfTemplateType !== undefined && { pdfTemplateType }),
+        ...(pdfTemplateType === "jsPdf" && {
+          pdfTemplateUrl: null,
+          pdfTemplateFields: Prisma.JsonNull,
+        }),
+        ...(pdfTemplateType === "uploadedPdf" &&
+          pdfTemplateFields !== undefined && {
+            pdfTemplateFields: pdfTemplateFields as Prisma.InputJsonValue[],
+          }),
       },
     });
 

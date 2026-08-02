@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { PDFDocument } from "pdf-lib";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
@@ -13,6 +14,8 @@ import {
   IconCheck,
   IconTrash,
   IconEdit,
+  IconX,
+  IconCrosshair,
 } from "@tabler/icons-react";
 
 type Certificate = {
@@ -65,6 +68,7 @@ type CertificateTemplate = {
   nameFontSize: number;
   createdAt: string;
   pdfTemplateType?: "jsPdf" | "uploadedPdf";
+  pdfTemplateUrl?: string | null;
   pdfTemplateFields?: PlaceholderField[];
   hasPdfUpload?: boolean;
 };
@@ -128,6 +132,12 @@ const defaultPdfFields: PlaceholderField[] = [
     align: "left",
   },
 ];
+
+// The API stores pdfTemplateType="uploadedPdf" when a PDF has been uploaded.
+// `hasPdfUpload` is not returned by the API, so derive it from the type + URL.
+function hasUploadedPdf(template: CertificateTemplate): boolean {
+  return template.pdfTemplateType === "uploadedPdf" && !!template.pdfTemplateUrl;
+}
 
 export default function AdminCertificatesPage() {
   usePageTitle("Certificates");
@@ -393,6 +403,22 @@ function TemplatesTab() {
   const [pdfTemplateFields, setPdfTemplateFields] = useState<
     PlaceholderField[]
   >([]);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
+  const [pdfPageSize, setPdfPageSize] = useState<{
+    url: string;
+    width: number;
+    height: number;
+  } | null>(null);
+  const [selectedFieldIndex, setSelectedFieldIndex] = useState<number | null>(
+    null,
+  );
+  const previewRef = useRef<HTMLDivElement | null>(null);
+
+  // Ignore a page size that belongs to a previously previewed file.
+  const pageSize =
+    pdfPageSize && pdfPageSize.url === pdfPreviewUrl ? pdfPageSize : null;
+  const pageW = pageSize?.width || 595;
+  const pageH = pageSize?.height || 842;
 
   async function fetchTemplates() {
     setLoading(true);
@@ -412,43 +438,99 @@ function TemplatesTab() {
     fetchTemplates();
   }, []);
 
+  // Load the first page's dimensions so markers can be positioned accurately
+  // (x/y are in PDF points, mapped to the preview as percentages).
+  useEffect(() => {
+    let cancelled = false;
+    if (!pdfPreviewUrl) return;
+    (async () => {
+      try {
+        const res = await fetch(pdfPreviewUrl);
+        const bytes = await res.arrayBuffer();
+        const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+        const page = doc.getPages()[0];
+        if (!cancelled)
+          setPdfPageSize({
+            url: pdfPreviewUrl,
+            width: page.getWidth(),
+            height: page.getHeight(),
+          });
+      } catch {
+        if (!cancelled) setPdfPageSize(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pdfPreviewUrl]);
+
   function openCreateForm() {
     setForm(defaultTemplateValues);
     setEditingId(null);
     setShowForm(true);
     setPdfTemplateFields([]);
     setPdfFile(null);
+    setPdfPreviewUrl("");
+    setPdfPageSize(null);
+    setSelectedFieldIndex(null);
   }
 
-  function openEditForm(template: CertificateTemplate) {
+  async function openEditForm(template: CertificateTemplate) {
+    // Re-fetch fresh data so the saved PDF upload / field positions always
+    // show in the preview (avoids stale list state right after a save).
+    let fresh = template;
+    try {
+      const res = await api.get<{ template: CertificateTemplate }>(
+        `/api/admin/certificate-templates/${template.id}`,
+      );
+      fresh = res.template;
+    } catch {
+      // fall back to the list item if the single fetch fails
+    }
     setForm({
-      name: template.name,
-      primaryColor: template.primaryColor,
-      secondaryColor: template.secondaryColor,
-      backgroundColor: template.backgroundColor,
-      textColor: template.textColor,
-      borderColor: template.borderColor,
-      accentColor: template.accentColor,
-      title: template.title,
-      subtitle: template.subtitle,
-      footerText: template.footerText || "",
-      logoUrl: template.logoUrl || "",
-      backgroundPattern: template.backgroundPattern,
-      layout: template.layout,
-      borderWidth: template.borderWidth,
-      borderRadius: template.borderRadius,
-      showBorder: template.showBorder,
-      showSignatureLine: template.showSignatureLine,
-      showVerificationUrl: template.showVerificationUrl,
-      fontFamily: template.fontFamily,
-      titleFontSize: template.titleFontSize,
-      nameFontSize: template.nameFontSize,
-      pdfTemplateType: template.pdfTemplateType || "jsPdf",
+      name: fresh.name,
+      primaryColor: fresh.primaryColor,
+      secondaryColor: fresh.secondaryColor,
+      backgroundColor: fresh.backgroundColor,
+      textColor: fresh.textColor,
+      borderColor: fresh.borderColor,
+      accentColor: fresh.accentColor,
+      title: fresh.title,
+      subtitle: fresh.subtitle,
+      footerText: fresh.footerText || "",
+      logoUrl: fresh.logoUrl || "",
+      backgroundPattern: fresh.backgroundPattern,
+      layout: fresh.layout,
+      borderWidth: fresh.borderWidth,
+      borderRadius: fresh.borderRadius,
+      showBorder: fresh.showBorder,
+      showSignatureLine: fresh.showSignatureLine,
+      showVerificationUrl: fresh.showVerificationUrl,
+      fontFamily: fresh.fontFamily,
+      titleFontSize: fresh.titleFontSize,
+      nameFontSize: fresh.nameFontSize,
+      pdfTemplateType: fresh.pdfTemplateType || "jsPdf",
     });
-    setEditingId(template.id);
+    setEditingId(fresh.id);
     setShowForm(true);
-    setPdfTemplateFields(template.pdfTemplateFields || []);
+    setPdfTemplateFields(fresh.pdfTemplateFields || []);
     setPdfFile(null);
+    setPdfPreviewUrl(
+      fresh.pdfTemplateType === "uploadedPdf" && fresh.pdfTemplateUrl
+        ? `/uploads/${fresh.pdfTemplateUrl}`
+        : "",
+    );
+    setPdfPageSize(null);
+    setSelectedFieldIndex(null);
+  }
+
+  function closeModal() {
+    setShowForm(false);
+    setPdfTemplateFields([]);
+    setPdfFile(null);
+    setPdfPreviewUrl("");
+    setPdfPageSize(null);
+    setSelectedFieldIndex(null);
   }
 
   async function handleSave() {
@@ -511,12 +593,16 @@ function TemplatesTab() {
       const formData = new FormData();
       formData.append("pdf", pdfFile);
       formData.append("pdfTemplateFields", JSON.stringify(pdfTemplateFields));
-      await api.post(
+      const res = await api.post<{ template: CertificateTemplate }>(
         `/api/admin/certificate-templates/${editingId}/upload-pdf`,
         formData,
       );
       toast.success("PDF template uploaded");
       setPdfFile(null);
+      setForm((f) => ({ ...f, pdfTemplateType: "uploadedPdf" }));
+      if (res.template?.pdfTemplateUrl) {
+        setPdfPreviewUrl(`/uploads/${res.template.pdfTemplateUrl}`);
+      }
       fetchTemplates();
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -532,10 +618,67 @@ function TemplatesTab() {
         `/api/admin/certificate-templates/${templateId}/pdf-template`,
       );
       toast.success("PDF template removed");
+      setForm((f) => ({ ...f, pdfTemplateType: "jsPdf" }));
+      setPdfPreviewUrl("");
+      setPdfPageSize(null);
+      setSelectedFieldIndex(null);
       fetchTemplates();
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
+  }
+
+  function handlePdfFileChange(file: File | null) {
+    setPdfFile(file);
+    setSelectedFieldIndex(null);
+    if (file) {
+      setPdfPreviewUrl(URL.createObjectURL(file));
+    } else if (editingId) {
+      const template = templates.find((t) => t.id === editingId);
+      setPdfPreviewUrl(
+        template?.pdfTemplateType === "uploadedPdf" &&
+          template.pdfTemplateUrl
+          ? `/uploads/${template.pdfTemplateUrl}`
+          : "",
+      );
+    }
+  }
+
+  function scrollToField(index: number) {
+    document
+      .getElementById(`pdf-field-${index}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  // Clicking anywhere on the PDF preview moves the currently selected field.
+  function handlePreviewClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (
+      selectedFieldIndex === null ||
+      selectedFieldIndex < 0 ||
+      selectedFieldIndex >= pdfTemplateFields.length ||
+      !pageSize ||
+      !previewRef.current
+    )
+      return;
+    const rect = previewRef.current.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    const x = Math.round(
+      ((e.clientX - rect.left) / rect.width) * pageSize.width,
+    );
+    const y = Math.round(
+      ((e.clientY - rect.top) / rect.height) * pageSize.height,
+    );
+    setPdfTemplateFields((prev) =>
+      prev.map((f, j) =>
+        j === selectedFieldIndex
+          ? {
+              ...f,
+              x: Math.min(Math.max(0, x), Math.round(pageSize.width)),
+              y: Math.min(Math.max(0, y), Math.round(pageSize.height)),
+            }
+          : f,
+      ),
+    );
   }
 
   return (
@@ -604,7 +747,7 @@ function TemplatesTab() {
                         ? "Uploaded PDF"
                         : "jsPDF"}
                     </span>
-                    {template.hasPdfUpload && (
+                    {hasUploadedPdf(template) && (
                       <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
                         PDF Ready
                       </span>
@@ -729,17 +872,27 @@ function TemplatesTab() {
 
       {/* Template Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-card rounded-2xl border border-border shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-border">
-              <h2 className="text-lg font-bold text-foreground">
-                {editingId ? "Edit Template" : "New Template"}
-              </h2>
-              <p className="text-xs text-muted-foreground mt-1">
-                Customize the certificate appearance.
-              </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-card rounded-2xl border border-border shadow-xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="p-6 border-b border-border flex items-start justify-between gap-4 shrink-0">
+              <div>
+                <h2 className="text-lg font-bold text-foreground">
+                  {editingId ? "Edit Template" : "New Template"}
+                </h2>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Customize the certificate appearance.
+                </p>
+              </div>
+              <button
+                onClick={closeModal}
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors shrink-0"
+                title="Close"
+              >
+                <IconX size={20} />
+              </button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="flex flex-1 min-h-0 flex-col lg:flex-row lg:overflow-hidden overflow-y-auto">
+              <div className="flex-1 p-6 space-y-4 overflow-y-auto">
               {/* Name */}
               <div>
                 <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -1079,8 +1232,16 @@ function TemplatesTab() {
                   <div className="mt-4 space-y-4">
                     {/* Has PDF uploaded indicator */}
                     {editingId &&
-                      templates.find((t) => t.id === editingId)
-                        ?.hasPdfUpload && (
+                      (() => {
+                        const t = templates.find(
+                          (item) => item.id === editingId,
+                        );
+                        return (
+                          !!t &&
+                          t.pdfTemplateType === "uploadedPdf" &&
+                          !!t.pdfTemplateUrl
+                        );
+                      })() && (
                         <div className="flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
                           <div className="flex items-center gap-2">
                             <IconCheck size={16} className="text-emerald-500" />
@@ -1107,7 +1268,7 @@ function TemplatesTab() {
                           type="file"
                           accept=".pdf"
                           onChange={(e) =>
-                            setPdfFile(e.target.files?.[0] || null)
+                            handlePdfFileChange(e.target.files?.[0] || null)
                           }
                           className="flex-1 text-sm text-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-border file:text-xs file:font-semibold file:bg-background file:text-foreground hover:file:bg-card-hover"
                         />
@@ -1134,11 +1295,20 @@ function TemplatesTab() {
                         {pdfTemplateFields.map((field, i) => (
                           <div
                             key={field.key}
-                            className="rounded-xl border border-border bg-background p-3"
+                            id={`pdf-field-${i}`}
+                            onClick={() => setSelectedFieldIndex(i)}
+                            className={`rounded-xl border bg-background p-3 cursor-pointer transition-colors ${
+                              selectedFieldIndex === i
+                                ? "border-primary ring-1 ring-primary/30"
+                                : "border-border hover:border-border-hover"
+                            }`}
                           >
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-xs font-mono font-bold text-foreground">
                                 {field.key}
+                              </span>
+                              <span className="text-[9px] font-mono text-muted-foreground">
+                                ({field.x}, {field.y})
                               </span>
                             </div>
                             <div className="grid grid-cols-6 gap-2">
@@ -1301,95 +1471,175 @@ function TemplatesTab() {
                   </div>
                 )}
               </div>
+              </div>
 
-              {/* Live Preview */}
-              <div className="rounded-xl border border-border/60 p-4">
+              {/* Right: Live Preview Panel */}
+              <div className="shrink-0 lg:w-[420px] border-t lg:border-t-0 lg:border-l border-border bg-background/40 p-6 overflow-y-auto">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
                   Preview
                 </p>
-                <div
-                  className="rounded-lg p-4 text-center"
-                  style={{
-                    backgroundColor: form.backgroundColor,
-                    border: form.showBorder
-                      ? `${form.borderWidth}px solid ${form.borderColor}`
-                      : "none",
-                    borderRadius: form.borderRadius,
-                  }}
-                >
-                  <div
-                    className="h-0.5 w-16 mx-auto mb-2"
-                    style={{ backgroundColor: form.primaryColor }}
-                  />
-                  <p
-                    className="font-bold tracking-wider"
-                    style={{
-                      color: form.textColor,
-                      fontSize: Math.min(form.titleFontSize / 2, 14),
-                      fontFamily:
-                        form.fontFamily === "times"
-                          ? "serif"
-                          : form.fontFamily === "courier"
-                            ? "monospace"
-                            : "sans-serif",
-                    }}
-                  >
-                    {form.title}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    {form.subtitle}
-                  </p>
-                  <p
-                    className="font-bold mt-2"
-                    style={{
-                      color: form.textColor,
-                      fontSize: Math.min(form.nameFontSize / 2, 11),
-                      fontFamily:
-                        form.fontFamily === "times"
-                          ? "serif"
-                          : form.fontFamily === "courier"
-                            ? "monospace"
-                            : "sans-serif",
-                    }}
-                  >
-                    John Doe
-                  </p>
-                  <div
-                    className="h-px w-20 mx-auto mt-1"
-                    style={{ backgroundColor: form.primaryColor }}
-                  />
-                  <p className="text-[10px] text-muted-foreground mt-2">
-                    has successfully completed the course
-                  </p>
-                  <p
-                    className="text-xs font-bold mt-1"
-                    style={{ color: form.textColor }}
-                  >
-                    Web Development Bootcamp
-                  </p>
-                  {form.showSignatureLine && (
-                    <div className="mt-2 pt-2 border-t border-gray-300">
-                      <div className="h-px w-24 mx-auto bg-gray-400" />
-                      <p className="text-[8px] text-muted-foreground mt-1">
-                        Instructor Signature
-                      </p>
-                    </div>
-                  )}
-                  {form.footerText && (
-                    <p className="text-[8px] text-muted-foreground mt-2">
-                      {form.footerText}
+                {form.pdfTemplateType === "uploadedPdf" && pdfPreviewUrl ? (
+                  <div className="space-y-3">
+                    <p className="text-[10px] text-muted-foreground">
+                      Crosshair markers show where each field lands. Click a
+                      marker to select its field, or click directly on the page
+                      to move the selected field. Coordinates are in PDF points
+                      from the top-left.
                     </p>
-                  )}
-                </div>
+                    <div
+                      ref={previewRef}
+                      onClick={handlePreviewClick}
+                      className="relative w-full overflow-hidden rounded-xl border border-border bg-background"
+                      style={{
+                        aspectRatio: pageSize
+                          ? `${pageSize.width} / ${pageSize.height}`
+                          : "595 / 842",
+                      }}
+                    >
+                      <iframe
+                        src={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                        title="Certificate PDF preview"
+                        className="pointer-events-none absolute inset-0 h-full w-full"
+                      />
+                      {pdfTemplateFields.map((field, i) => {
+                        const selected = selectedFieldIndex === i;
+                        return (
+                          <div
+                            key={`${field.key}-${i}`}
+                            className="pointer-events-none absolute"
+                            style={{
+                              left: `${(field.x / pageW) * 100}%`,
+                              top: `${(field.y / pageH) * 100}%`,
+                            }}
+                          >
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedFieldIndex(i);
+                                scrollToField(i);
+                              }}
+                              title={`${field.key}: (${field.x}, ${field.y})`}
+                              className="pointer-events-auto relative flex items-start"
+                            >
+                              <IconCrosshair
+                                size={selected ? 18 : 14}
+                                className={`-translate-x-1/2 -translate-y-1/2 shrink-0 drop-shadow ${
+                                  selected
+                                    ? "text-primary"
+                                    : "text-primary/70"
+                                }`}
+                              />
+                              <span
+                                className={`ml-1 whitespace-nowrap rounded px-1 py-px text-[8px] font-bold font-mono ${
+                                  selected
+                                    ? "bg-primary text-white"
+                                    : "bg-black/70 text-white"
+                                }`}
+                              >
+                                {field.key}
+                              </span>
+                            </button>
+                            {selected && (
+                              <span className="absolute left-1/2 top-1/2 mt-2 -translate-x-1/2 whitespace-nowrap rounded border border-border bg-card px-1 py-px text-[8px] font-mono text-foreground shadow">
+                                ({field.x}, {field.y})
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : form.pdfTemplateType === "uploadedPdf" ? (
+                  <div className="rounded-xl border border-dashed border-border/60 p-10 text-center text-xs text-muted-foreground">
+                    Select a PDF file and click Upload to preview its layout.
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-border/60 p-5">
+                    <div
+                      className="rounded-lg p-8 text-center"
+                      style={{
+                        backgroundColor: form.backgroundColor,
+                        border: form.showBorder
+                          ? `${form.borderWidth}px solid ${form.borderColor}`
+                          : "none",
+                        borderRadius: form.borderRadius,
+                      }}
+                    >
+                      <div
+                        className="h-0.5 w-16 mx-auto mb-3"
+                        style={{ backgroundColor: form.primaryColor }}
+                      />
+                      <p
+                        className="font-bold tracking-wider break-words"
+                        style={{
+                          color: form.textColor,
+                          fontSize: form.titleFontSize,
+                          fontFamily:
+                            form.fontFamily === "times"
+                              ? "serif"
+                              : form.fontFamily === "courier"
+                                ? "monospace"
+                                : "sans-serif",
+                        }}
+                      >
+                        {form.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {form.subtitle}
+                      </p>
+                      <p
+                        className="font-bold mt-3 break-words"
+                        style={{
+                          color: form.textColor,
+                          fontSize: form.nameFontSize,
+                          fontFamily:
+                            form.fontFamily === "times"
+                              ? "serif"
+                              : form.fontFamily === "courier"
+                                ? "monospace"
+                                : "sans-serif",
+                        }}
+                      >
+                        {"<student name>"}
+                      </p>
+                      <div
+                        className="h-px w-20 mx-auto mt-1"
+                        style={{ backgroundColor: form.primaryColor }}
+                      />
+                      <p className="text-xs text-muted-foreground mt-2">
+                        has successfully completed the course
+                      </p>
+                      <p
+                        className="text-sm font-bold mt-1 break-words"
+                        style={{ color: form.textColor }}
+                      >
+                        Web Development Bootcamp
+                      </p>
+                      {form.showSignatureLine && (
+                        <div className="mt-3 pt-2 border-t border-gray-300">
+                          <div className="h-px w-24 mx-auto bg-gray-400" />
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            Instructor Signature
+                          </p>
+                        </div>
+                      )}
+                      {form.footerText && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {form.footerText}
+                        </p>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-3 text-center">
+                      Shown at actual font size.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
             <div className="p-6 border-t border-border flex gap-3">
               <button
-                onClick={() => {
-                  setShowForm(false);
-                  setPdfTemplateFields([]);
-                  setPdfFile(null);
-                }}
+                onClick={closeModal}
                 className="btn-secondary flex-1 text-sm"
               >
                 Cancel

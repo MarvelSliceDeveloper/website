@@ -19,12 +19,10 @@ export { getCalendarView, createCalendarEvent } from "./graph.calendar";
 export type { CalendarEvent, CreateEventRequest } from "./graph.calendar";
 
 export {
-  getCallRecords,
-  getCallRecordSessions,
   getMeetingRecordings,
   getRecordingContent,
 } from "./graph.recordings";
-export type { CallRecord, RecordingSession } from "./graph.recordings";
+export type { RecordingSession } from "./graph.recordings";
 
 export {
   createSubscription,
