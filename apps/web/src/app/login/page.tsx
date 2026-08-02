@@ -15,6 +15,7 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { usePageTitle } from "@/lib/use-page-title";
 import TwoFactorLogin from "@/components/TwoFactorLogin";
+import type { LoginInput } from "@lms/config";
 
 // ── Floating Shape (ambient decoration for left panel) ─────────────────────
 
@@ -94,7 +95,7 @@ export default function LoginPage() {
       }>("/api/auth/login", {
         email: normalizedEmail,
         password,
-      });
+      } satisfies LoginInput);
 
       if (result?.requires2fa && result?.tempToken) {
         setTempToken(result.tempToken);

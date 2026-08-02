@@ -12,6 +12,7 @@ import {
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { usePageTitle } from "@/lib/use-page-title";
+import type { SetPasswordInput } from "@lms/config";
 
 export default function SetPasswordPage() {
   usePageTitle("Set Password");
@@ -80,7 +81,7 @@ export default function SetPasswordPage() {
         "/api/auth/me/set-password",
         {
           newPassword,
-        },
+        } satisfies SetPasswordInput,
       );
 
       toast.success(res.message || "Password set successfully!");

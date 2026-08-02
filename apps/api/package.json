@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@getbrevo/brevo": "^6.0.2",
+    "@lms/config": "workspace:*",
     "@lms/email-templates": "workspace:*",
     "@lms/types": "workspace:*",
     "@prisma/client": "^5.22.0",

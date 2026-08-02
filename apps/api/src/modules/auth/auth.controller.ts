@@ -8,11 +8,19 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { authService, RegisterSchema, LoginSchema } from "./auth.service";
+import { authService } from "./auth.service";
 import { prisma } from "../../utils/prisma";
 import { handleControllerError } from "../../utils/errors";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { emailService } from "../../services/email.service";
+import {
+  RegisterSchema,
+  LoginSchema,
+  ChangePasswordSchema,
+  SetPasswordSchema,
+  ForgotPasswordSchema,
+  ResetPasswordSchema,
+} from "@lms/config";
 
 /**
  * Parses a JWT expiry string (e.g. "7d", "15m", "1h") into milliseconds.
@@ -406,20 +414,9 @@ export const authController = {
       if (!req.user)
         return res.status(401).json({ error: "Authentication required" });
 
-      const { currentPassword, newPassword } = req.body;
-
-      if (!currentPassword || typeof currentPassword !== "string") {
-        return res.status(400).json({ error: "Current password is required" });
-      }
-      if (
-        !newPassword ||
-        typeof newPassword !== "string" ||
-        newPassword.length < 8
-      ) {
-        return res
-          .status(400)
-          .json({ error: "New password must be at least 8 characters" });
-      }
+      const { currentPassword, newPassword } = ChangePasswordSchema.parse(
+        req.body,
+      );
 
       const user = await prisma.user.findUnique({
         where: { id: req.user.userId },
@@ -478,32 +475,7 @@ export const authController = {
       if (!req.user)
         return res.status(401).json({ error: "Authentication required" });
 
-      const { newPassword } = req.body;
-
-      if (
-        !newPassword ||
-        typeof newPassword !== "string" ||
-        newPassword.length < 8
-      ) {
-        return res
-          .status(400)
-          .json({ error: "Password must be at least 8 characters" });
-      }
-      if (!/[A-Z]/.test(newPassword)) {
-        return res.status(400).json({
-          error: "Password must contain at least one uppercase letter",
-        });
-      }
-      if (!/[a-z]/.test(newPassword)) {
-        return res.status(400).json({
-          error: "Password must contain at least one lowercase letter",
-        });
-      }
-      if (!/\d/.test(newPassword)) {
-        return res
-          .status(400)
-          .json({ error: "Password must contain at least one number" });
-      }
+      const { newPassword } = SetPasswordSchema.parse(req.body);
 
       const user = await prisma.user.findUnique({
         where: { id: req.user.userId },
@@ -559,10 +531,7 @@ export const authController = {
   // POST /api/auth/forgot-password — send reset link by email
   async forgotPassword(req: Request, res: Response) {
     try {
-      const { email } = req.body;
-      if (!email || typeof email !== "string") {
-        return res.status(400).json({ error: "Email is required" });
-      }
+      const { email } = ForgotPasswordSchema.parse(req.body);
 
       const user = await prisma.user.findUnique({
         where: { email: email.trim().toLowerCase() },
@@ -605,34 +574,7 @@ export const authController = {
   // POST /api/auth/reset-password — reset password with token
   async resetPassword(req: Request, res: Response) {
     try {
-      const { token, newPassword } = req.body;
-      if (!token || typeof token !== "string") {
-        return res.status(400).json({ error: "Reset token is required" });
-      }
-      if (
-        !newPassword ||
-        typeof newPassword !== "string" ||
-        newPassword.length < 8
-      ) {
-        return res
-          .status(400)
-          .json({ error: "Password must be at least 8 characters" });
-      }
-      if (!/[A-Z]/.test(newPassword)) {
-        return res.status(400).json({
-          error: "Password must contain at least one uppercase letter",
-        });
-      }
-      if (!/[a-z]/.test(newPassword)) {
-        return res.status(400).json({
-          error: "Password must contain at least one lowercase letter",
-        });
-      }
-      if (!/\d/.test(newPassword)) {
-        return res
-          .status(400)
-          .json({ error: "Password must contain at least one number" });
-      }
+      const { token, newPassword } = ResetPasswordSchema.parse(req.body);
 
       let payload: { userId: string; purpose: string };
       try {

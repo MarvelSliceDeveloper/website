@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-08-02 — Scaling Hardening & Architectural Cleanup
+
+### Backend API
+- `apps/api/src/utils/prisma.ts` — Prisma pool size is now env-driven (`DATABASE_CONNECTION_LIMIT`, default 10). Default kept below the Supabase session-mode pooler cap (15). `.env.example` updated.
+- `apps/api/src/utils/single-flight-cache.ts` (new) — zero-dep single-flight (promise memoization) on top of `memory-cache`. `GET /api/courses/:courseId/content` now collapses concurrent cache-miss requests into a single DB fetch (30s TTL).
+- `apps/api/src/app.ts` — `app.set("trust proxy", 1)` in production so the global rate limiter sees real client IPs behind nginx (no false 429s); `/health` now probes Postgres with `SELECT 1` (returns 503 when the DB is down).
+- `apps/api/src/middleware/rate-limits.ts` (new) — per-endpoint `authLimiter` (50/15min/IP, disabled under `NODE_ENV=test`), wired into `/login`, `/register`, `/forgot-password`, `/reset-password`.
+- `apps/api/src/index.ts` — background jobs (`recordingSyncJob`, `reconcileAttendanceJob`) gated behind `ENABLE_BACKGROUND_JOBS` (default true) so worker-only instances can opt out of duplicate execution.
+- `apps/api/src/modules/courses/student-course.service.ts` (new) — extracted `getEnrolledCourses`, `getCatalogue`, `loadCourseContent`, `requestEnrollment` from the route layer. `student-course.routes.ts` went from 979 → 331 lines of thin handlers using `handleControllerError`.
+
+### Frontend
+- `apps/web/src/lib/api.ts` — CSRF refresh deduped with `csrfRefreshing` flag so a burst of 403s triggers a single `/api/csrf-token` fetch.
+- `apps/web/src/app/student/page.tsx` — `fetchPortalData` now tracks per-endpoint failures (`failedSections`); partial failures show a dismissible warning banner instead of being silently masked.
+
+### Shared Package (`packages/config`, new)
+- `@lms/config` — shared Zod schemas + inferred types for auth: `RegisterSchema`, `LoginSchema`, `ChangePasswordSchema`, `SetPasswordSchema`, `ForgotPasswordSchema`, `ResetPasswordSchema`, `passwordSchema`, `emailSchema` (+ `LoginInput`/`RegisterInput`/etc. types).
+- API validates all auth request bodies from these schemas (`auth.controller.ts`, `auth.service.ts`).
+- Web consumes the same types (`LoginInput` on `/login`, `SetPasswordInput` on `/set-password`) so frontend/backend types can't drift.
+
+### Tests
+- All auth suites pass with shared schemas: `auth.test.ts`, `auth-extended.test.ts`, `schemas/auth.schema.test.ts`, `notes.test.ts` (48 tests).
+
 ## 2026-07-31 — Live Session Analytics
 
 ### Database (Schema)

@@ -57,6 +57,7 @@ interface PortalData {
   catalogue: CatalogueCourse[];
   continueLearning: ContinueLearningItem[];
   results: StudentResultItem[];
+  failedSections: string[];
 }
 
 interface ApiBatchSessionRecord {
@@ -145,7 +146,20 @@ function computeSessionStatus(
 }
 
 async function fetchPortalData(): Promise<PortalData> {
-  // Real API calls — run in parallel
+  // Track which endpoints fail so the UI can surface partial failures instead
+  // of silently masking them with empty fallbacks.
+  const failedSections: string[] = [];
+  const track =
+    (section: string) =>
+    <T,>(promise: Promise<T>): Promise<T> =>
+      promise.catch((err: unknown) => {
+        failedSections.push(section);
+        console.error(`[portal] ${section} fetch failed:`, err);
+        throw err;
+      });
+
+  // Real API calls — run in parallel. Each has a fallback so one failing
+  // endpoint doesn't sink the whole portal.
   const [
     enrolled,
     sessionsData,
@@ -157,33 +171,15 @@ async function fetchPortalData(): Promise<PortalData> {
     continueLearningData,
     resultsData,
   ] = await Promise.all([
-    api
-      .get<{ courses: EnrolledCourse[] }>("/api/courses/enrolled")
-      .catch(() => ({ courses: [] })),
-    api
-      .get<{ sessions: ApiSessionRecord[] }>("/api/sessions")
-      .catch(() => ({ sessions: [] })),
-    api
-      .get<{ events: CalendarEvent[] }>("/api/calendar/events")
-      .catch(() => ({ events: [] })),
-    api
-      .get<{ tickets: ApiMentorshipTicket[] }>("/api/mentorship/tickets/my")
-      .catch(() => ({ tickets: [] })),
-    api
-      .get<{ certificates: Certificate[] }>("/api/certificates/my")
-      .catch(() => ({ certificates: [] })),
-    api
-      .get<{ courses: CatalogueCourse[] }>("/api/courses/catalogue")
-      .catch(() => ({ courses: [] })),
-    api
-      .get<{ items: OverdueAssignment[] }>("/api/student/assignments/overdue")
-      .catch(() => ({ items: [] })),
-    api
-      .get<{ items: ContinueLearningItem[] }>("/api/student/continue-learning")
-      .catch(() => ({ items: [] })),
-    api
-      .get<{ items: StudentResultItem[] }>("/api/student/results")
-      .catch(() => ({ items: [] })),
+    track("enrolled")(api.get<{ courses: EnrolledCourse[] }>("/api/courses/enrolled")).catch(() => ({ courses: [] })),
+    track("sessions")(api.get<{ sessions: ApiSessionRecord[] }>("/api/sessions")).catch(() => ({ sessions: [] })),
+    track("calendar")(api.get<{ events: CalendarEvent[] }>("/api/calendar/events")).catch(() => ({ events: [] })),
+    track("mentorship")(api.get<{ tickets: ApiMentorshipTicket[] }>("/api/mentorship/tickets/my")).catch(() => ({ tickets: [] })),
+    track("certificates")(api.get<{ certificates: Certificate[] }>("/api/certificates/my")).catch(() => ({ certificates: [] })),
+    track("catalogue")(api.get<{ courses: CatalogueCourse[] }>("/api/courses/catalogue")).catch(() => ({ courses: [] })),
+    track("overdue")(api.get<{ items: OverdueAssignment[] }>("/api/student/assignments/overdue")).catch(() => ({ items: [] })),
+    track("continue-learning")(api.get<{ items: ContinueLearningItem[] }>("/api/student/continue-learning")).catch(() => ({ items: [] })),
+    track("results")(api.get<{ items: StudentResultItem[] }>("/api/student/results")).catch(() => ({ items: [] })),
   ]);
 
   const mappedSessions: LiveSession[] = (sessionsData.sessions || []).map(
@@ -244,6 +240,7 @@ async function fetchPortalData(): Promise<PortalData> {
     catalogue: catalogue.courses,
     continueLearning: continueLearningData.items,
     results: resultsData.items,
+    failedSections,
   };
 }
 
@@ -450,6 +447,7 @@ function StudentPortalContent() {
   const [studentEmail, setStudentEmail] = useState("demo@student.example.com");
   const [onboardingComplete, setOnboardingComplete] = useState(true);
   const [needsProfile, setNeedsProfile] = useState(false);
+  const [dismissedWarnings, setDismissedWarnings] = useState(false);
 
   // Derive current view from URL search params
   const currentView: ViewState = (() => {
@@ -922,6 +920,30 @@ function StudentPortalContent() {
     >
       {/* View transition wrapper */}
       <div key={currentView.view} className="sp-view-enter">
+        {!dismissedWarnings && portalData.failedSections.length > 0 && (
+          <div className="mb-4 flex items-start justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <div className="flex items-start gap-2">
+              <IconAlertCircle
+                size={18}
+                stroke={1.5}
+                className="mt-0.5 shrink-0"
+              />
+              <span>
+                Some sections couldn&apos;t load
+                {portalData.failedSections.length > 1 ? "s" : ""}:{" "}
+                {portalData.failedSections.join(", ")}. Showing what&apos;s
+                available.
+              </span>
+            </div>
+            <button
+              onClick={() => setDismissedWarnings(true)}
+              className="shrink-0 font-medium text-amber-700 hover:text-amber-900"
+              aria-label="Dismiss warning"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
         {renderView()}
       </div>
     </StudentPortalShell>

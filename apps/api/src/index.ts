@@ -34,11 +34,22 @@ const logger = pino({
 
 const PORT = process.env.PORT || 4000;
 
+// Background jobs are tied to the API process lifecycle. In clustered/multi-
+// instance deployments (PM2, Kubernetes) each instance would run the same
+// setInterval → duplicate recording syncs and attendance reconciles. Default
+// ON for single-instance, but worker-only instances can opt out.
+const enableBackgroundJobs =
+  (process.env.ENABLE_BACKGROUND_JOBS ?? "true").toLowerCase() === "true";
+
 const server = app.listen(PORT, () => {
   logger.info(`API Server running on port ${PORT}`);
   socketService.init(server);
-  recordingSyncJob.start();
-  reconcileAttendanceJob.start();
+  if (enableBackgroundJobs) {
+    recordingSyncJob.start();
+    reconcileAttendanceJob.start();
+  } else {
+    logger.info("Background jobs disabled (ENABLE_BACKGROUND_JOBS=false)");
+  }
 });
 
 const shutdown = async (signal: string) => {

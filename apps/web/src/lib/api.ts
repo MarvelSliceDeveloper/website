@@ -33,6 +33,7 @@ export function formatApiErrorMessage(body: unknown, status?: number): string {
 }
 
 let csrfTokenPromise: Promise<string> | null = null;
+let csrfRefreshing = false;
 let csrfRetryCount = 0;
 
 async function fetchCsrfToken(): Promise<string> {
@@ -44,8 +45,14 @@ async function fetchCsrfToken(): Promise<string> {
 }
 
 function getCsrfToken(forceRefresh = false): Promise<string> {
-  if (!csrfTokenPromise || forceRefresh) {
-    csrfTokenPromise = fetchCsrfToken();
+  // forceRefresh is used on a 403 retry: bypass the cached (stale) token but
+  // still dedupe concurrent refreshes so a burst of 403s triggers a single
+  // /api/csrf-token fetch instead of N parallel ones.
+  if (!csrfTokenPromise || (forceRefresh && !csrfRefreshing)) {
+    csrfRefreshing = true;
+    csrfTokenPromise = fetchCsrfToken().finally(() => {
+      csrfRefreshing = false;
+    });
   }
   return csrfTokenPromise;
 }
