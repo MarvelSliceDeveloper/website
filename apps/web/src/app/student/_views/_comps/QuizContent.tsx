@@ -418,8 +418,6 @@ export default function QuizContent({
 
     return (
       <div className="space-y-5">
-        {renderNavigator()}
-
         <div className="flex flex-col items-center pt-4 pb-2 text-center">
           <ScoreGauge percentage={quizResult.percentage} tier={tier} />
           <p className="text-sm text-foreground mt-2">
@@ -484,107 +482,16 @@ export default function QuizContent({
   }
 
   // ── Active (one question at a time) ─────────────────────────────────
-  function renderNavigator() {
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          {quizData.questions.map((q, i) => {
-            const isAnswered = selectedAnswers[q.id] != null;
-            const isCurrent = i === currentIndex && phase === "active";
-
-            // Once submitted, each dot reflects right/wrong, not just answered.
-            // Source of truth is the GRADED result (quizResult.answers), not
-            // quizData's option.isCorrect — many APIs strip isCorrect from the
-            // pre-submit question payload so it can't be read in devtools, and
-            // only reveal it in the graded response.
-            let markerClass = "border-border text-muted-foreground";
-            if (quizSubmitted) {
-              const graded = quizResult?.answers.find(
-                (a) => a.questionId === q.id,
-              );
-              const wasCorrect = graded?.isCorrect ?? false;
-              markerClass = wasCorrect
-                ? "border-[#158A5C]/60 bg-[#158A5C]/10 text-[#158A5C]"
-                : "border-[#D6293A]/60 bg-[#D6293A]/10 text-[#D6293A]";
-            } else if (isCurrent) {
-              markerClass = "border-primary bg-primary/10 text-primary";
-            } else if (isAnswered) {
-              markerClass = "border-[#158A5C]/60 text-[#158A5C]";
-            }
-
-            return (
-              <button
-                key={q.id}
-                onClick={() => {
-                  setPhase("active");
-                  goToQuestion(i);
-                }}
-                className={`shrink-0 h-7 min-w-7 px-2 rounded-md border text-[11px] font-medium transition-colors ${isCurrent && !quizSubmitted
-                  ? "border-primary bg-primary/10 text-primary"
-                  : markerClass
-                  }`}
-              >
-                Q{i + 1}
-              </button>
-            );
-          })}
-
-          {/* BUG FIX: this used to be permanently disabled once quizSubmitted
-              was true, even though its label said "Result Page" — a dead-end
-              button. It now actually takes you back to the score screen. */}
-          <button
-            onClick={() => {
-              if (quizSubmitted) {
-                setPhase("results");
-              } else if (allAnswered) {
-                onSubmit();
-              }
-            }}
-            disabled={quizSubmitted ? false : !allAnswered || quizSubmitting}
-            className="shrink-0 h-7 px-3 rounded-md text-[11px] font-semibold bg-emerald-500 text-white disabled:opacity-40 transition-opacity inline-flex items-center gap-1"
-          >
-            {quizSubmitted ? (
-              <>
-                <IconChartBar size={12} /> Results
-              </>
-            ) : quizSubmitting ? (
-              "Submitting..."
-            ) : (
-              "Submit"
-            )}
-          </button>
-        </div>
-
-        {!quizSubmitted && phase === "active" && (
-          <ProgressBar answered={answeredCount} total={totalQuestions} />
-        )}
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-2">
-        <button
-          onClick={onBack}
-          className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
-        >
-          ← Back to lesson
-        </button>
-      </div>
-
-      {renderNavigator()}
 
       {currentQuestion && (
-        <div className="space-y-4">
-          <div>
-            <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">
-              Question {currentIndex + 1}
-            </p>
+        <div className="space-y-4 pt-4">
+          <div className="flex items-start justify-between gap-3">
             <p className="text-sm font-semibold text-foreground leading-snug">
-              {currentQuestion.questionText}
+              {currentIndex + 1}. {currentQuestion.questionText}
             </p>
-            <span className="inline-block mt-1 text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded">
+            <span className="shrink-0 mt-0.5 text-[10px] font-bold text-white bg-muted px-2 py-0.5 rounded">
               {currentQuestion.marks}{" "}
               {currentQuestion.marks === 1 ? "mark" : "marks"}
             </span>
@@ -660,11 +567,17 @@ export default function QuizContent({
             })()}
           </div>
 
+          {!quizSubmitted && phase === "active" && (
+            <div className="mx-auto max-w-md pt-1">
+              <ProgressBar answered={answeredCount} total={totalQuestions} />
+            </div>
+          )}
+
           <div className="flex items-center justify-between pt-2">
             <button
               onClick={() => goToQuestion(currentIndex - 1)}
               disabled={currentIndex === 0}
-              className="flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground disabled:opacity-40 transition-colors"
+              className="flex items-center gap-1 text-xs font-semibold px-4 py-2 rounded-lg border-2 border-foreground/25 text-foreground hover:border-foreground/50 hover:bg-foreground/5 disabled:opacity-40 transition-colors"
             >
               <IconChevronLeft size={14} /> Previous
             </button>
@@ -695,7 +608,7 @@ export default function QuizContent({
             ) : (
               <button
                 onClick={() => goToQuestion(currentIndex + 1)}
-                className="flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1 text-xs font-semibold px-4 py-2 rounded-lg bg-primary text-white hover:opacity-90 transition-opacity"
               >
                 Next <IconChevronRight size={14} />
               </button>

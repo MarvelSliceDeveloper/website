@@ -1,6 +1,7 @@
 import { Response } from "express";
+import { Readable } from "stream";
 import { AuthRequest } from "../../middleware/auth.middleware";
-import { handleControllerError } from "../../utils/errors";
+import { AppError, handleControllerError } from "../../utils/errors";
 import {
   assignmentService,
   CreateFileAssignmentSchema,
@@ -51,6 +52,71 @@ export const assignmentController = {
       return res.status(200).json(result);
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
+  // GET /api/assignments/download-proxy — streams an external file (e.g. Google Drive)
+  // through the API so the client can show real download progress without CORS issues.
+  async downloadProxy(req: AuthRequest, res: Response) {
+    const { log } = req as any;
+    try {
+      const rawUrl = req.query.url;
+      if (typeof rawUrl !== "string" || !rawUrl) {
+        throw new AppError(400, "Missing url query parameter");
+      }
+      let target: URL;
+      try {
+        target = new URL(rawUrl);
+      } catch {
+        throw new AppError(400, "Invalid url");
+      }
+      if (!/^https?:$/.test(target.protocol)) {
+        throw new AppError(400, "Only http(s) URLs are allowed");
+      }
+
+      const upstream = await fetch(target, {
+        redirect: "follow",
+        signal: AbortSignal.timeout(30_000),
+      });
+      if (!upstream.ok || !upstream.body) {
+        throw new AppError(
+          upstream.status || 502,
+          `Remote server responded with ${upstream.status}`,
+        );
+      }
+
+      const upstreamDisposition = upstream.headers.get("content-disposition");
+      let filename = "assignment-question";
+      if (upstreamDisposition) {
+        const star = /filename\*=UTF-8''([^;]+)/i.exec(upstreamDisposition);
+        const plain = /filename="?([^";]+)"?/i.exec(upstreamDisposition);
+        if (star?.[1]) filename = decodeURIComponent(star[1]);
+        else if (plain?.[1]) filename = plain[1];
+      }
+      filename = filename.replace(/[^\w.-]+/g, "_").slice(0, 150);
+
+      const contentType = upstream.headers.get("content-type") ?? "application/octet-stream";
+      const contentLength = upstream.headers.get("content-length");
+
+      res.status(200);
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("X-Download-Filename", encodeURIComponent(filename));
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
+      );
+      if (contentLength) res.setHeader("Content-Length", contentLength);
+      res.setHeader("Access-Control-Expose-Headers", "Content-Length, Content-Disposition, X-Download-Filename");
+
+      const body = Readable.fromWeb(upstream.body as never);
+      body.on("error", () => {
+        if (!res.headersSent) res.status(502);
+        res.end();
+      });
+      body.pipe(res);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, log);
       return res.status(statusCode).json(body);
     }
   },

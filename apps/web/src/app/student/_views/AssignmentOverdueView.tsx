@@ -11,6 +11,7 @@ import {
   IconFile,
   IconX,
   IconExternalLink,
+  IconDownload,
 } from "@tabler/icons-react";
 import RichEditor from "@/components/editor/RichEditor";
 import type { OverdueAssignment } from "@/lib/api-types";
@@ -111,6 +112,20 @@ export default function AssignmentOverdueView({
     }
   }
 
+  function handleDownloadSubmission(item: OverdueAssignment) {
+    if (!item.answerFileUrl) {
+      toast.error("No submitted file available.");
+      return;
+    }
+    const anchor = document.createElement("a");
+    anchor.href = item.answerFileUrl;
+    anchor.download = item.answerFileUrl.split("/").pop() ?? "submission";
+    anchor.rel = "noopener";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+  }
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") handleCloseModal();
@@ -149,18 +164,16 @@ export default function AssignmentOverdueView({
   return (
     <div className="sp-view-enter space-y-6">
       <div>
-        <p className="sp-eyebrow">Tasks</p>
+
         <h1 className="text-2xl font-bold text-foreground">Assignments</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Upload your completed assignment files before the deadline.
-        </p>
+ 
       </div>
 
       <input
         ref={fileInputRef}
         type="file"
         className="hidden"
-        accept=".pdf,.zip"
+        accept=".pdf,.zip,.rar,.tar.gz,.py,.java,.cpp,.c,.js,.ts,.html,.css,.docx,.txt"
         onChange={handleFileSelect}
       />
 
@@ -188,28 +201,31 @@ export default function AssignmentOverdueView({
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-border bg-card-hover">
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground w-10">
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground w-10">
                     #
                   </th>
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
                     Assignment Name
                   </th>
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
                     Course
                   </th>
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
                     Module
                   </th>
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
                     Due Date
                   </th>
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
+                    Submitted
+                  </th>
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
                     Mark
                   </th>
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-right">
+                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground text-right">
                     Action
                   </th>
                 </tr>
@@ -217,6 +233,9 @@ export default function AssignmentOverdueView({
               <tbody>
                 {filteredItems.map((assignment, idx) => {
                   const isPending = assignment.status === "PENDING";
+                  const canResubmit =
+                    !isPending &&
+                    new Date(assignment.dueDate).getTime() > new Date().getTime();
                   const daysOverdue = isPending
                     ? Math.floor(
                         (new Date().getTime() -
@@ -256,7 +275,7 @@ export default function AssignmentOverdueView({
                                 ? "text-danger"
                                 : isPending
                                   ? "text-amber-400"
-                                  : "text-emerald-400"
+                                  : "text-muted-foreground"
                             }
                           />
                           <span
@@ -265,7 +284,7 @@ export default function AssignmentOverdueView({
                                 ? "text-danger"
                                 : isPending
                                   ? "text-amber-400"
-                                  : "text-emerald-400"
+                                  : "text-muted-foreground"
                             }`}
                           >
                             {isPending
@@ -277,9 +296,31 @@ export default function AssignmentOverdueView({
                                     day: "numeric",
                                     month: "short",
                                   })
-                              : "—"}
+                              : new Date(
+                                  assignment.dueDate,
+                                ).toLocaleDateString("en-IN", {
+                                  day: "numeric",
+                                  month: "short",
+                                })}
                           </span>
                         </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {isPending ? (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        ) : (
+                          <span className="text-xs font-medium text-emerald-400">
+                            {assignment.submittedAt
+                              ? new Date(
+                                  assignment.submittedAt,
+                                ).toLocaleDateString("en-IN", {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                })
+                              : "—"}
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-xs">
                         {isPending ? (
@@ -307,37 +348,56 @@ export default function AssignmentOverdueView({
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        {assignment.courseId && navigate && (
-                          <button
-                            onClick={() =>
-                              navigate({
-                                view: "COURSE_CONTENT",
-                                params: {
-                                  courseId: assignment.courseId,
-                                  assignmentId: assignment.id,
-                                },
-                              })
-                            }
-                            className="btn-ghost text-xs px-2 py-1.5"
-                            title="View in Course"
-                          >
-                            <IconExternalLink size={13} />
-                          </button>
-                        )}
-                        {isPending ? (
-                          <button
-                            onClick={() => handleOpenModal(assignment.id)}
-                            className="btn-primary text-xs px-3 py-1.5"
-                          >
-                            <IconUpload size={13} className="inline mr-1" />
-                            Submit
-                          </button>
-                        ) : (
-                          <span className="text-[11px] font-medium text-emerald-400">
-                            Done
-                          </span>
-                        )}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {assignment.courseId && navigate && (
+                            <button
+                              onClick={() =>
+                                navigate({
+                                  view: "COURSE_CONTENT",
+                                  params: {
+                                    courseId: assignment.courseId,
+                                    assignmentId: assignment.id,
+                                  },
+                                })
+                              }
+                              className="btn-ghost text-xs px-2 py-1.5"
+                              title="View in Course"
+                            >
+                              <IconExternalLink size={13} />
+                            </button>
+                          )}
+                          {isPending ? (
+                            <button
+                              onClick={() => handleOpenModal(assignment.id)}
+                              className="btn-primary text-xs px-3 py-1.5"
+                            >
+                              <IconUpload size={13} className="inline mr-1" />
+                              Submit
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleDownloadSubmission(assignment)}
+                                className="btn-ghost text-xs px-3 py-1.5"
+                                title="Download submitted file"
+                              >
+                                <IconDownload size={13} className="inline mr-1" />
+                                View
+                              </button>
+                              {canResubmit && (
+                                <button
+                                  onClick={() => handleOpenModal(assignment.id)}
+                                  className="btn-secondary text-xs px-3 py-1.5"
+                                  title="Submit a new file (latest is kept)"
+                                >
+                                  <IconUpload size={13} className="inline mr-1" />
+                                  Resubmit
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -443,7 +503,8 @@ export default function AssignmentOverdueView({
                     Click to upload file
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    PDF or ZIP &middot; Max 25 MB
+                    PDF, ZIP or code file &middot; Max 25 MB &middot; Latest
+                    upload is kept
                   </p>
                   </button>
                 )}

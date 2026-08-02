@@ -9,7 +9,6 @@ import cors from "cors";
 import pino from "pino";
 import pinoHttp from "pino-http";
 import rateLimit from "express-rate-limit";
-import fs from "fs";
 import cookieParser from "cookie-parser";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
@@ -45,6 +44,7 @@ import { quizTemplateRouter } from "./modules/quiz-templates/quiz-template.route
 import { assignmentTemplateRouter } from "./modules/assignment-templates/assignment-template.routes";
 import { superAdminRouter } from "./modules/super-admin/super-admin.routes";
 import { adminHealthRouter } from "./modules/admin/health.routes";
+import { prisma } from "./utils/prisma";
 import { courseTemplateRouter } from "./modules/courses/course-template.routes";
 import { logRouter } from "./modules/logs/log.routes";
 import { loginHistoryRouter } from "./modules/logs/login-history.routes";
@@ -94,6 +94,7 @@ import {
   internRouter,
   adminInternRouter,
 } from "./modules/interns/intern.routes";
+import { uploadsRoot, ensureUploadsDir } from "./utils/uploads";
 
 const logger = pino({
   level: process.env.LOG_LEVEL || "info",
@@ -114,8 +115,7 @@ const app = express();
 
 // Sentry v10+ auto-instruments Express — no manual request/tracing handlers needed
 
-const uploadsRoot = path.resolve(__dirname, "..", "uploads");
-fs.mkdirSync(uploadsRoot, { recursive: true });
+ensureUploadsDir(".");
 
 app.use(
   cors({
@@ -220,6 +220,13 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
 app.use(doubleCsrfProtection);
 app.use(express.json());
 
+// Behind a reverse proxy (nginx/Caddy), trust the first hop so req.ip reflects
+// the real client IP instead of ::ffff:127.0.0.1. Only in production to avoid
+// misattribution during local dev.
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+
 app.use("/uploads", express.static(uploadsRoot));
 
 const publicRoot = path.resolve(__dirname, "..", "..", "..", "public");
@@ -228,6 +235,8 @@ app.use("/images", express.static(path.join(publicRoot, "images")));
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: Number(process.env.RATE_LIMIT_MAX) || 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use(limiter);
 
@@ -245,7 +254,17 @@ app.post("/api/webhooks/events", eventsWebhookController.handleEventsWebhook);
 app.get("/api/csrf-token", (req: Request, res: Response) => {
   res.json({ csrfToken: generateCsrfToken(req, res) });
 });
-app.get("/health", (req: Request, res: Response) => {
+app.get("/health", async (req: Request, res: Response) => {
+  const dbOk = await prisma.$queryRaw`SELECT 1`.then(
+    () => true,
+    () => false,
+  );
+  if (!dbOk) {
+    res
+      .status(503)
+      .json({ status: "degraded", timestamp: new Date().toISOString() });
+    return;
+  }
   res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
 

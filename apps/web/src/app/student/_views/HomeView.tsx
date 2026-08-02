@@ -21,6 +21,9 @@ import {
   IconNotes,
   IconHelp,
   IconUsers,
+  IconClipboardCheck,
+  IconFolderOpen,
+  IconTarget,
 } from "@tabler/icons-react";
 import type { ViewState } from "../_types/student-portal";
 import type {
@@ -31,6 +34,7 @@ import type {
   MentorshipTicket,
   EnrolledCourse,
   CalendarEvent,
+  StudentResultItem,
 } from "@/lib/api-types";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
@@ -42,6 +46,7 @@ interface HomeViewProps {
   stats: DashboardStats;
   overdueAssignments: OverdueAssignment[];
   continueLearning: ContinueLearningItem[];
+  results?: StudentResultItem[];
   liveSessions: LiveSession[];
   openTickets: MentorshipTicket[];
   enrolledCourses?: EnrolledCourse[];
@@ -70,6 +75,7 @@ export default function HomeView({
   stats,
   overdueAssignments,
   continueLearning = [],
+  results = [],
   liveSessions,
   openTickets,
   enrolledCourses = [],
@@ -178,6 +184,9 @@ export default function HomeView({
   const filteredCompletedCourses = enrolledCourses
     .filter((c) => c.status === "COMPLETED")
     .filter((c) => c.title.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const latestAssignment = results.find((r) => r.type === "ASSIGNMENT") ?? null;
+  const latestQuiz = results.find((r) => r.type === "QUIZ") ?? null;
 
   function handleReferralSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -372,61 +381,177 @@ export default function HomeView({
               {/* Left Column: Course Cards */}
               <div className="space-y-4">
                 {innerTab === "results" ? (
-                  filteredCompletedCourses.length === 0 ? (
-                    <div className="glass-card flex flex-col items-center justify-center p-12 text-center border-dashed border-border/80 rounded-2xl">
-                      <IconCertificate
-                        size={40}
-                        className="text-muted/60 mb-2.5"
-                      />
-                      <p className="font-semibold text-foreground">
-                        No completed courses yet
+                  <div className="space-y-6">
+                    {/* ── Result Showcase: Latest Assignment / Quiz / Project ── */}
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-3">
+                        Latest Results
                       </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Completed courses will appear here with your final
-                        grades.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {filteredCompletedCourses.map((c) => (
-                        <div
-                          key={c.id}
-                          className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border border-border bg-card/50"
-                        >
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-success/10 border border-success/20 overflow-hidden">
-                            {c.thumbnail &&
-                            (c.thumbnail.startsWith("/") ||
-                              c.thumbnail.startsWith("http")) ? (
-                              <Image
-                                src={c.thumbnail}
-                                alt={c.title}
-                                width={48}
-                                height={48}
-                                className="h-full w-full object-cover"
-                                unoptimized
-                              />
-                            ) : (
-                              <span className="text-xl">📚</span>
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-bold text-sm text-foreground truncate">
-                              {c.title}
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        {/* Latest Assignment */}
+                        {latestAssignment ? (
+                          <div className="flex flex-col rounded-xl border border-brand-blue/20 bg-gradient-to-br from-white via-brand-blue/[0.04] to-brand-blue/[0.1] p-4">
+                            <div className="flex items-center gap-2 text-brand-blue">
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-blue-tint to-brand-blue/20 text-brand-blue border border-brand-blue/10">
+                                <IconClipboardCheck size={17} />
+                              </div>
+                              <span className="text-[10px] font-bold uppercase tracking-wider">
+                                Latest Assignment
+                              </span>
+                            </div>
+                            <p className="mt-3 text-sm font-bold text-foreground truncate">
+                              {latestAssignment.title}
                             </p>
-                            <p className="text-xs text-muted mt-0.5">
-                              Instructor: {c.instructor} | Completed
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                              {latestAssignment.courseName} ·{" "}
+                              {latestAssignment.moduleName}
+                            </p>
+                            <div className="mt-3 flex items-center justify-between">
+                              <span className="text-lg font-extrabold text-brand-blue">
+                                {latestAssignment.percentage != null
+                                  ? `${latestAssignment.percentage}%`
+                                  : "—"}
+                              </span>
+                              {latestAssignment.grade && (
+                                <span className="rounded-md bg-brand-blue/10 text-brand-blue border border-brand-blue/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                                  {latestAssignment.grade}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/70 bg-card/30 p-4 text-center">
+                            <IconClipboardCheck
+                              size={24}
+                              className="text-muted/50"
+                            />
+                            <p className="mt-2 text-xs font-semibold text-muted-foreground">
+                              No graded assignments yet
                             </p>
                           </div>
-                          <button
-                            onClick={() => navigate({ view: "CERTIFICATES" })}
-                            className="btn-primary py-2 px-4 text-xs font-semibold shrink-0 w-full sm:w-auto"
-                          >
-                            View Certificate
-                          </button>
+                        )}
+
+                        {/* Latest Quiz */}
+                        {latestQuiz ? (
+                          <div className="flex flex-col rounded-xl border border-brand-orange/20 bg-gradient-to-br from-white via-brand-orange/[0.04] to-brand-orange/[0.1] p-4">
+                            <div className="flex items-center gap-2 text-brand-orange">
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-orange-tint to-brand-orange/20 text-brand-orange border border-brand-orange/10">
+                                <IconTarget size={17} />
+                              </div>
+                              <span className="text-[10px] font-bold uppercase tracking-wider">
+                                Latest Quiz
+                              </span>
+                            </div>
+                            <p className="mt-3 text-sm font-bold text-foreground truncate">
+                              {latestQuiz.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                              {latestQuiz.courseName} · {latestQuiz.moduleName}
+                            </p>
+                            <div className="mt-3 flex items-center justify-between">
+                              <span className="text-lg font-extrabold text-brand-orange">
+                                {latestQuiz.percentage != null
+                                  ? `${latestQuiz.percentage}%`
+                                  : "—"}
+                              </span>
+                              {latestQuiz.grade && (
+                                <span
+                                  className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                                    latestQuiz.grade === "PASS"
+                                      ? "bg-success/10 text-success border-success/25"
+                                      : "bg-danger/10 text-danger border-danger/25"
+                                  }`}
+                                >
+                                  {latestQuiz.grade}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/70 bg-card/30 p-4 text-center">
+                            <IconTarget size={24} className="text-muted/50" />
+                            <p className="mt-2 text-xs font-semibold text-muted-foreground">
+                              No quizzes attempted yet
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Projects — coming soon (future feature) */}
+                        <div className="flex flex-col rounded-xl border border-success/20 bg-gradient-to-br from-white via-success/[0.03] to-success/[0.08] p-4">
+                          <div className="flex items-center gap-2 text-success">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-success-tint to-success/20 text-success border border-success/15">
+                              <IconFolderOpen size={17} />
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider">
+                              Projects
+                            </span>
+                          </div>
+                          <div className="mt-3 flex flex-1 flex-col items-center justify-center text-center">
+                            <p className="text-sm font-bold text-foreground">
+                              Coming soon
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              Your submitted projects will appear here.
+                            </p>
+                          </div>
+                          <div className="mt-3 rounded-lg bg-success/10 border border-success/20 px-2 py-1 text-center text-[10px] font-bold text-success uppercase tracking-wider">
+                            New feature
+                          </div>
                         </div>
-                      ))}
+                      </div>
                     </div>
-                  )
+
+                    {/* ── Completed Courses ── */}
+                    {filteredCompletedCourses.length === 0 ? (
+                      <div className="glass-card flex flex-col items-center justify-center p-10 text-center border-dashed border-border/80 rounded-2xl">
+                        <IconCertificate
+                          size={36}
+                          className="text-muted/60 mb-2.5"
+                        />
+                        <p className="font-semibold text-foreground">
+                          No completed courses yet
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Completed courses will appear here with your final
+                          grades.
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-3">
+                          Completed Courses
+                        </p>
+                        <div className="space-y-3">
+                          {filteredCompletedCourses.map((c) => (
+                            <div
+                              key={c.id}
+                              className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border border-border bg-card/50"
+                            >
+                              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-success/10 border border-success/20 overflow-hidden">
+                                <IconBook size={22} className="text-success" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-bold text-sm text-foreground truncate">
+                                  {c.title}
+                                </p>
+                                <p className="text-xs text-muted mt-0.5">
+                                  Instructor: {c.instructor} | Completed
+                                </p>
+                              </div>
+                              <button
+                                onClick={() =>
+                                  navigate({ view: "CERTIFICATES" })
+                                }
+                                className="btn-primary py-2 px-4 text-xs font-semibold shrink-0 w-full sm:w-auto"
+                              >
+                                View Certificate
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <>
                     {searchTerm === "" && continueLearning.length > 0 && (
@@ -517,21 +642,8 @@ export default function HomeView({
                             className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border border-border bg-card/50 hover:bg-card hover:border-primary/30 transition-all duration-200"
                           >
                             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary/10 to-accent/10 border border-border/60 shadow-inner overflow-hidden">
-                              {c.thumbnail &&
-                              (c.thumbnail.startsWith("/") ||
-                                c.thumbnail.startsWith("http")) ? (
-                                <Image
-                                  src={c.thumbnail}
-                                  alt={c.title}
-                                  width={48}
-                                  height={48}
-                                  className="h-full w-full object-cover"
-                                  unoptimized
-                                />
-                              ) : (
-                                <IconBook size={20} className="text-primary" />
-                              )}
-                            </div>
+                            <IconBook size={22} className="text-primary" />
+                          </div>
                             <div className="min-w-0 flex-1">
                               <p className="font-bold text-sm text-foreground truncate">
                                 {c.title}

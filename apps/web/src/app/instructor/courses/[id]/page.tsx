@@ -19,6 +19,9 @@ import {
 } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
 import { Skeleton } from "@/components/shared/Skeleton";
+import InstructorCourseContentView, {
+  type InstructorCourse,
+} from "./_comps/InstructorCourseContentView";
 
 type Resource = {
   id: string;
@@ -79,6 +82,18 @@ type Assignment = {
   questionPdfUrl: string | null;
 };
 
+type Practical = {
+  id: string;
+  title: string;
+  description: string | null;
+  order: number;
+  videoType: string | null;
+  videoUrl: string | null;
+  videoEmbedId: string | null;
+  pdfUrl: string | null;
+  resources: Resource[];
+};
+
 type Module = {
   id: string;
   title: string;
@@ -89,6 +104,7 @@ type Module = {
   lessons: Lesson[];
   quizzes: Quiz[];
   assignments: Assignment[];
+  practicals: Practical[];
 };
 
 type Course = {
@@ -127,6 +143,7 @@ export default function InstructorCourseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [recordingsLoading, setRecordingsLoading] = useState(false);
+  const [viewing, setViewing] = useState(false);
 
   const fetchCourse = useCallback(async () => {
     try {
@@ -237,8 +254,22 @@ export default function InstructorCourseDetailPage() {
             {totalAssignments !== 1 ? "s" : ""}
           </p>
         </div>
+        <button
+          onClick={() => setViewing((v) => !v)}
+          className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/20"
+        >
+          <IconPlayerPlay size={16} />
+          {viewing ? "Exit Content Viewer" : "View Content"}
+        </button>
       </div>
 
+      {viewing ? (
+        <InstructorCourseContentView
+          course={course as unknown as InstructorCourse}
+          onExit={() => setViewing(false)}
+        />
+      ) : (
+        <>
       {course.learningObjectives && course.learningObjectives.length > 0 && (
         <div className="glass-card p-5 space-y-3">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -435,6 +466,8 @@ export default function InstructorCourseDetailPage() {
             </div>
           </div>
         )}
-      </div>
+        </>
+      )}
+    </div>
   );
 }

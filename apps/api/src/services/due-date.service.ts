@@ -19,6 +19,19 @@ export function getEffectiveDueDate(
   return absoluteDueDate;
 }
 
+export function resolveEffectiveDueDate(
+  absoluteDueDate: Date | null | undefined,
+  daysFromEnrollment: number | null | undefined,
+  enrollmentDate: Date | null | undefined,
+  extensionDate?: Date | null,
+): Date | null {
+  if (extensionDate) return extensionDate;
+  if (daysFromEnrollment && enrollmentDate) {
+    return addDays(enrollmentDate, daysFromEnrollment);
+  }
+  return absoluteDueDate ?? null;
+}
+
 export async function getStudentEnrollmentDate(
   studentId: string,
   courseId: string,

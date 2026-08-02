@@ -34,6 +34,8 @@ type Batch = {
   id: string;
   name: string;
   courseId: string | null;
+  course: { id: string; title: string } | null;
+  package: { id: string; name: string } | null;
   _count: { enrollments: number };
   maxStudents: number | null;
 };
@@ -61,7 +63,7 @@ export default function AdminEnrollmentsPage() {
 
   // Approve modal state
   const [approveModal, setApproveModal] = useState<Enrollment | null>(null);
-  const [courseBatches, setCourseBatches] = useState<Batch[]>([]);
+  const [allBatches, setAllBatches] = useState<Batch[]>([]);
   const [loadingBatches, setLoadingBatches] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState("");
   const [processing, setProcessing] = useState(false);
@@ -84,7 +86,8 @@ export default function AdminEnrollmentsPage() {
     fetchEnrollments();
   }, [statusFilter]);
 
-  // Fetch batches when approve modal opens
+  // Fetch all batches when approve modal opens (so any batch can be assigned,
+  // including ones not offered on the payment page)
   useEffect(() => {
     if (!approveModal) return;
     setLoadingBatches(true);
@@ -93,11 +96,11 @@ export default function AdminEnrollmentsPage() {
     (async () => {
       try {
         const data = await api.get<{ batches: Batch[] }>(
-          `/api/admin/batches?courseId=${approveModal.courseId}`,
+          `/api/admin/batches?limit=100`,
         );
-        setCourseBatches(data.batches || []);
+        setAllBatches(data.batches || []);
       } catch {
-        setCourseBatches([]);
+        setAllBatches([]);
       } finally {
         setLoadingBatches(false);
       }
@@ -321,6 +324,10 @@ export default function AdminEnrollmentsPage() {
             <label className="block text-sm font-medium text-foreground">
               Assign a batch:
             </label>
+            <p className="text-xs text-muted-foreground">
+              All batches are listed so you can assign a different batch than
+              the one chosen at payment.
+            </p>
             {loadingBatches ? (
               <div className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border" />
             ) : (
@@ -332,16 +339,21 @@ export default function AdminEnrollmentsPage() {
                   <SelectValue placeholder="-- Select Batch --" />
                 </SelectTrigger>
                 <SelectContent>
-                  {courseBatches.length === 0 ? (
+                  {allBatches.length === 0 ? (
                     <SelectItem value="none" disabled>
-                      No batches for this course
+                      No batches available
                     </SelectItem>
                   ) : (
-                    courseBatches.map((batch) => (
+                    allBatches.map((batch) => (
                       <SelectItem key={batch.id} value={batch.id}>
                         {batch.name} — {batch._count?.enrollments || 0}
                         {batch.maxStudents ? `/${batch.maxStudents}` : ""}{" "}
                         students
+                        {batch.course?.title
+                          ? ` · ${batch.course.title}`
+                          : batch.package?.name
+                            ? ` · ${batch.package.name} (Package)`
+                            : ""}
                       </SelectItem>
                     ))
                   )}

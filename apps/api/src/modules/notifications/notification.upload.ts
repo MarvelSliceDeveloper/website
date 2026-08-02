@@ -1,20 +1,13 @@
 import crypto from "crypto";
-import fs from "fs";
 import path from "path";
 import type { Request } from "express";
 import multer from "multer";
+import { ensureUploadsDir } from "../../utils/uploads";
 
 export const NOTIFICATION_ATTACHMENT_FIELD = "attachment";
 export const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024; // 25 MB
 
-const apiRoot = __dirname.includes("dist")
-  ? path.resolve(__dirname, "..")
-  : path.resolve(__dirname, "..", "..", "..");
-
-const uploadsRoot = path.join(apiRoot, "uploads");
-const notificationUploadsDir = path.join(uploadsRoot, "notifications");
-
-fs.mkdirSync(notificationUploadsDir, { recursive: true });
+const notificationUploadsDir = ensureUploadsDir("notifications");
 
 // Allow zip + PDF (like assignment deliverables)
 const attachmentMimeTypes = new Set([

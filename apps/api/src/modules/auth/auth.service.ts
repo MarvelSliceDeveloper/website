@@ -15,6 +15,10 @@ import { z } from "zod";
 import { AppError } from "../../utils/errors";
 import { UserRole } from "@lms/types";
 import { emailService } from "../../services/email.service";
+import {
+  RegisterSchema,
+  LoginSchema,
+} from "@lms/config";
 
 const JWT_EXPIRY = process.env.JWT_EXPIRY || "7d";
 
@@ -26,24 +30,9 @@ function getJwtSecret(): string {
   return secret;
 }
 
-/** Zod schema for user registration — enforces name length, email format, and password strength */
-export const RegisterSchema = z.object({
-  name: z.string().min(2).max(100),
-  email: z.string().email(),
-  password: z
-    .string()
-    .min(8)
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      "Password must contain at least one uppercase letter, one lowercase letter, and one number",
-    ),
-});
-
-/** Zod schema for user login — requires valid email and password string */
-export const LoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
-});
+// Re-export shared schemas so callers (controller, tests) keep a stable import
+// path while the schema itself lives in packages/config.
+export { RegisterSchema, LoginSchema };
 
 export const authService = {
   async register(data: z.infer<typeof RegisterSchema>) {

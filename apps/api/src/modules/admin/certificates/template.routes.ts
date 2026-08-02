@@ -1,9 +1,9 @@
 import { Router, type Response } from "express";
 import multer from "multer";
 import path from "path";
-import fs from "fs";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../../utils/prisma";
+import { ensureUploadsDir } from "../../../utils/uploads";
 import {
   requireAuth,
   requireRole,
@@ -16,16 +16,7 @@ const router = Router();
 router.use(requireAuth);
 router.use(requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]));
 
-const certificateUploadsDir = path.resolve(
-  __dirname,
-  "..",
-  "..",
-  "..",
-  "..",
-  "uploads",
-  "certificate-templates",
-);
-fs.mkdirSync(certificateUploadsDir, { recursive: true });
+const certificateUploadsDir = ensureUploadsDir("certificate-templates");
 
 const upload = multer({
   storage: multer.diskStorage({

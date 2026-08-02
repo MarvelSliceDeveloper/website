@@ -235,8 +235,27 @@ export interface OverdueAssignment {
   status: "PENDING" | "SUBMITTED";
   type: "QUIZ" | "ASSIGNMENT";
   submissionId?: string | null;
+  answerFileUrl?: string | null;
   grade?: string | null;
   totalScore?: number | null;
   feedback?: string | null;
   submittedAt?: string | null;
+  score?: number | null;
+  total?: number | null;
+  percentage?: number | null;
+  isPassed?: boolean | null;
+}
+
+export interface StudentResultItem {
+  id: string;
+  type: "ASSIGNMENT" | "QUIZ" | "PROJECT";
+  title: string;
+  courseName: string;
+  moduleName: string;
+  score: number | null;
+  total: number | null;
+  percentage: number | null;
+  grade: string | null;
+  feedback: string | null;
+  submittedAt: string | null;
 }

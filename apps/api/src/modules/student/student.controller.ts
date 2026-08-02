@@ -31,6 +31,19 @@ export const studentController = {
     }
   },
 
+  async getResults(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
+
+      const items = await studentService.getResults(req.user.userId);
+      return res.status(200).json({ items });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
   async getPaymentHistory(req: AuthRequest, res: Response) {
     try {
       if (!req.user)

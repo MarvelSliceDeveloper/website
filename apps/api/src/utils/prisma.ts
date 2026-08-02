@@ -9,7 +9,12 @@ function getPrismaUrl(): string {
   if (!baseUrl) return "";
   try {
     const url = new URL(baseUrl);
-    url.searchParams.set("connection_limit", "2");
+    // Pool size is env-driven: default 10. Keep it below the server's max
+    // connections (Supabase session-mode pooler caps at 15) minus headroom.
+    // Self-hosted Postgres can go higher via DATABASE_CONNECTION_LIMIT.
+    const connectionLimit =
+      Number(process.env.DATABASE_CONNECTION_LIMIT) || 10;
+    url.searchParams.set("connection_limit", String(connectionLimit));
     return url.toString();
   } catch {
     return baseUrl;

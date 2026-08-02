@@ -1,8 +1,8 @@
 import crypto from "crypto";
-import fs from "fs";
 import path from "path";
 import type { Request } from "express";
 import multer from "multer";
+import { ensureUploadsDir } from "../../utils/uploads";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -13,14 +13,7 @@ export const MAX_ANSWER_BYTES = 25 * 1024 * 1024; // 25 MB
 
 // ── Directories ──────────────────────────────────────────────────────────────
 
-const apiRoot = __dirname.includes("dist")
-  ? path.resolve(__dirname, "..")
-  : path.resolve(__dirname, "..", "..", "..");
-
-const uploadsRoot = path.join(apiRoot, "uploads");
-const assignmentUploadsDir = path.join(uploadsRoot, "assignments");
-
-fs.mkdirSync(assignmentUploadsDir, { recursive: true });
+const assignmentUploadsDir = ensureUploadsDir("assignments");
 
 // ── Instructor PDF Upload (question paper) ───────────────────────────────────
 

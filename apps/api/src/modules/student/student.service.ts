@@ -1,4 +1,5 @@
 import { prisma } from "../../utils/prisma";
+import { resolveEffectiveDueDate } from "../../services/due-date.service";
 
 export interface OverdueAssignmentItem {
   id: string;
@@ -11,10 +12,15 @@ export interface OverdueAssignmentItem {
   status: "PENDING" | "SUBMITTED";
   type: "QUIZ" | "ASSIGNMENT";
   submissionId?: string | null;
+  answerFileUrl?: string | null;
   grade?: string | null;
   totalScore?: number | null;
   feedback?: string | null;
   submittedAt?: string | null;
+  score?: number | null;
+  total?: number | null;
+  percentage?: number | null;
+  isPassed?: boolean | null;
 }
 
 export interface ContinueLearningItem {
@@ -24,6 +30,20 @@ export interface ContinueLearningItem {
   dayLabel: string;
   watchedPercent: number;
   thumbnail: string;
+}
+
+export interface StudentResultItem {
+  id: string;
+  type: "ASSIGNMENT" | "QUIZ" | "PROJECT";
+  title: string;
+  courseName: string;
+  moduleName: string;
+  score: number | null;
+  total: number | null;
+  percentage: number | null;
+  grade: string | null;
+  feedback: string | null;
+  submittedAt: string | null;
 }
 
 export const studentService = {
@@ -65,6 +85,34 @@ export const studentService = {
     const uniqueBatchIds = [...new Set(batchIds)];
     const uniqueCourseIds = [...new Set(courseIds)];
 
+    // ── Enrollment dates: batchId/courseId → first approved enrollment date ──
+    const batchEnrollDateMap = new Map<string, Date>();
+    const courseEnrollDateMap = new Map<string, Date>();
+
+    for (const pe of packageEnrollments) {
+      for (const pec of pe.courses) {
+        if (pec.batchId && !batchEnrollDateMap.has(pec.batchId)) {
+          batchEnrollDateMap.set(pec.batchId, pe.createdAt);
+        }
+        if (!courseEnrollDateMap.has(pec.courseId)) {
+          courseEnrollDateMap.set(pec.courseId, pe.createdAt);
+        }
+      }
+    }
+
+    const approvedRequests = await prisma.enrollmentRequest.findMany({
+      where: { userId, status: "APPROVED" },
+      select: { courseId: true, batchId: true, appliedAt: true },
+    });
+    for (const er of approvedRequests) {
+      if (er.batchId && !batchEnrollDateMap.has(er.batchId)) {
+        batchEnrollDateMap.set(er.batchId, er.appliedAt);
+      }
+      if (!courseEnrollDateMap.has(er.courseId)) {
+        courseEnrollDateMap.set(er.courseId, er.appliedAt);
+      }
+    }
+
     const result: OverdueAssignmentItem[] = [];
     const seenAssignmentIds = new Set<string>();
 
@@ -80,7 +128,16 @@ export const studentService = {
           module: { select: { title: true } },
           submissions: {
             where: { studentId: userId },
-            select: { id: true, status: true, grade: true, totalScore: true, feedback: true, submittedAt: true },
+            select: {
+              id: true,
+              status: true,
+              grade: true,
+              totalScore: true,
+              feedback: true,
+              submittedAt: true,
+              answerFileUrl: true,
+            },
+            orderBy: { submittedAt: "desc" },
           },
         },
         orderBy: { dueDate: "desc" },
@@ -99,7 +156,16 @@ export const studentService = {
       for (const assignment of assignments) {
         const submission = assignment.submissions[0];
         seenAssignmentIds.add(assignment.id);
-        const effectiveDueDate = extMap.get(assignment.id) ?? assignment.dueDate;
+        const enrollmentDate =
+          batchEnrollDateMap.get(assignment.batchId) ??
+          courseEnrollDateMap.get(assignment.courseId) ??
+          null;
+        const effectiveDueDate = resolveEffectiveDueDate(
+          assignment.dueDate,
+          assignment.daysFromEnrollment,
+          enrollmentDate,
+          extMap.get(assignment.id),
+        );
         result.push({
           id: assignment.id,
           courseId: assignment.courseId,
@@ -107,10 +173,11 @@ export const studentService = {
           moduleName: assignment.module?.title || "—",
           unitName: assignment.type === "QUIZ" ? "Quiz" : "Assignment",
           assignmentName: assignment.title,
-          dueDate: effectiveDueDate.toISOString(),
+          dueDate: effectiveDueDate ? effectiveDueDate.toISOString() : "",
           status: submission ? "SUBMITTED" : "PENDING",
           type: assignment.type as "QUIZ" | "ASSIGNMENT",
           submissionId: submission?.id || null,
+          answerFileUrl: submission?.answerFileUrl || null,
           grade: submission?.grade ?? null,
           totalScore: submission?.totalScore ?? null,
           feedback: submission?.feedback ?? null,
@@ -138,11 +205,22 @@ export const studentService = {
           title: true,
           type: true,
           dueDate: true,
+          daysFromEnrollment: true,
+          batchId: true,
           moduleId: true,
           courseId: true,
           submissions: {
             where: { studentId: userId },
-            select: { id: true, status: true, grade: true, totalScore: true, feedback: true, submittedAt: true },
+            select: {
+              id: true,
+              status: true,
+              grade: true,
+              totalScore: true,
+              feedback: true,
+              submittedAt: true,
+              answerFileUrl: true,
+            },
+            orderBy: { submittedAt: "desc" },
             take: 1,
           },
         },
@@ -156,6 +234,12 @@ export const studentService = {
           : null;
         const courseId = assignment.courseId;
         const submission = (assignment as any).submissions?.[0];
+        const enrollmentDate = courseEnrollDateMap.get(courseId) ?? null;
+        const effectiveDueDate = resolveEffectiveDueDate(
+          assignment.dueDate,
+          assignment.daysFromEnrollment,
+          enrollmentDate,
+        );
         result.push({
           id: assignment.id,
           courseId,
@@ -163,10 +247,11 @@ export const studentService = {
           moduleName: mod?.title ?? "—",
           unitName: assignment.type === "QUIZ" ? "Quiz" : "Assignment",
           assignmentName: assignment.title,
-          dueDate: assignment.dueDate.toISOString(),
+          dueDate: effectiveDueDate ? effectiveDueDate.toISOString() : "",
           status: submission ? "SUBMITTED" : "PENDING",
           type: assignment.type as "QUIZ" | "ASSIGNMENT",
           submissionId: submission?.id ?? null,
+          answerFileUrl: submission?.answerFileUrl ?? null,
           grade: submission?.grade ?? null,
           totalScore: submission?.totalScore ?? null,
           feedback: submission?.feedback ?? null,
@@ -185,28 +270,48 @@ export const studentService = {
           module: { select: { title: true } },
           attempts: {
             where: { userId, status: "SUBMITTED" },
-            select: { id: true },
+            select: {
+              id: true,
+              score: true,
+              total: true,
+              percentage: true,
+              isPassed: true,
+              submittedAt: true,
+            },
+            orderBy: { createdAt: "desc" },
             take: 1,
           },
+          extensions: { select: { extendedDueDate: true } },
         },
         orderBy: { dueDate: "desc" },
       });
 
       for (const quiz of quizModelQuizzes) {
         const attempt = quiz.attempts[0];
+        const courseId = moduleMap.get(quiz.moduleId)?.courseId ?? "";
+        const enrollmentDate = courseEnrollDateMap.get(courseId) ?? null;
+        const effectiveDueDate = resolveEffectiveDueDate(
+          quiz.dueDate,
+          quiz.daysFromEnrollment,
+          enrollmentDate,
+          quiz.extensions[0]?.extendedDueDate,
+        );
         result.push({
           id: quiz.id,
-          courseId: moduleMap.get(quiz.moduleId)?.courseId ?? "",
-          courseName:
-            courseNameMap.get(moduleMap.get(quiz.moduleId)?.courseId ?? "") ??
-            "—",
+          courseId,
+          courseName: courseNameMap.get(courseId) ?? "—",
           moduleName: quiz.module?.title ?? "—",
           unitName: "Quiz",
           assignmentName: quiz.title,
-          dueDate: quiz.dueDate ? quiz.dueDate.toISOString() : "",
+          dueDate: effectiveDueDate ? effectiveDueDate.toISOString() : "",
           status: attempt ? "SUBMITTED" : "PENDING",
           type: "QUIZ",
           submissionId: attempt?.id ?? null,
+          score: attempt?.score ?? null,
+          total: attempt?.total ?? null,
+          percentage: attempt?.percentage ?? null,
+          isPassed: attempt?.isPassed ?? null,
+          submittedAt: attempt?.submittedAt?.toISOString() ?? null,
         });
       }
     }
@@ -304,5 +409,94 @@ export const studentService = {
     }
 
     return { continueLearning: items.slice(0, 10) };
+  },
+
+  async getResults(userId: string): Promise<StudentResultItem[]> {
+    const results: StudentResultItem[] = [];
+
+    // ── Graded assignments (Assignment model with graded submission) ────
+    const gradedSubmissions = await prisma.assignmentSubmission.findMany({
+      where: { studentId: userId, status: "GRADED" },
+      include: {
+        assignment: {
+          select: {
+            id: true,
+            title: true,
+            type: true,
+            maxPoints: true,
+            course: { select: { title: true } },
+            module: { select: { title: true } },
+          },
+        },
+      },
+      orderBy: { gradedAt: "desc" },
+      take: 20,
+    });
+
+    for (const sub of gradedSubmissions) {
+      const total = sub.assignment.maxPoints;
+      results.push({
+        id: sub.id,
+        type: "ASSIGNMENT",
+        title: sub.assignment.title,
+        courseName: sub.assignment.course.title,
+        moduleName: sub.assignment.module?.title ?? "—",
+        score: sub.totalScore ?? null,
+        total: total ?? null,
+        percentage:
+          sub.totalScore != null && total != null
+            ? Math.round((sub.totalScore / total) * 100)
+            : null,
+        grade: sub.grade ?? null,
+        feedback: sub.feedback ?? null,
+        submittedAt: sub.gradedAt?.toISOString() ?? sub.submittedAt.toISOString(),
+      });
+    }
+
+    // ── Submitted quizzes (Quiz model attempts) ─────────────────────────
+    const quizAttempts = await prisma.quizAttempt.findMany({
+      where: { userId, status: { not: "PENDING" } },
+      include: {
+        quiz: {
+          select: {
+            id: true,
+            title: true,
+            module: {
+              select: {
+                title: true,
+                course: { select: { title: true } },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { submittedAt: "desc" },
+      take: 20,
+    });
+
+    for (const attempt of quizAttempts) {
+      results.push({
+        id: attempt.id,
+        type: "QUIZ",
+        title: attempt.quiz.title,
+        courseName: attempt.quiz.module?.course.title ?? "—",
+        moduleName: attempt.quiz.module?.title ?? "—",
+        score: attempt.score ?? null,
+        total: attempt.total ?? null,
+        percentage: attempt.percentage != null ? Math.round(attempt.percentage) : null,
+        grade: attempt.isPassed ? "PASS" : "FAIL",
+        feedback: null,
+        submittedAt: attempt.submittedAt?.toISOString() ?? null,
+      });
+    }
+
+    // ── Projects (future — reserved for upcoming feature) ───────────────
+    // No Project model exists yet; UI shows an empty "coming soon" state.
+
+    results.sort((a, b) =>
+      (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""),
+    );
+
+    return results;
   },
 };
