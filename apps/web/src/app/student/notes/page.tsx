@@ -12,6 +12,7 @@ import {
   IconStar,
   IconPlus,
   IconX,
+  IconDownload,
 } from "@tabler/icons-react";
 import { toast, getErrorMessage } from "@/lib/toast";
 import StudentPortalShell from "@/components/StudentPortalShell";
@@ -41,6 +42,37 @@ function stripHtml(html: string): string {
   return div.textContent || div.innerText || "";
 }
 
+const NOTES_PAGE_SIZE = 100;
+
+function sanitizeFilename(name: string): string {
+  const cleaned = (name || "note").replace(/[^\w\d -]/g, "").trim();
+  return cleaned.replace(/\s+/g, "_") || "note";
+}
+
+function downloadTextFile(filename: string, content: string, mime: string) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(url);
+}
+
+function noteToPlainText(note: NoteItem): string {
+  const course = note.course?.title || "Unknown Course";
+  const updated = new Date(note.updatedAt).toLocaleDateString("en-IN");
+  return [
+    `Title: ${note.title || "Untitled Note"}`,
+    `Course: ${course}`,
+    `Updated: ${updated}`,
+    "",
+    stripHtml(note.body || "").trim(),
+  ].join("\n");
+}
+
 export default function StudentNotesPage() {
   usePageTitle("Notes");
   const router = useRouter();
@@ -66,18 +98,29 @@ export default function StudentNotesPage() {
   const [creating, setCreating] = useState(false);
   const [createErrors, setCreateErrors] = useState<{ courseId?: string; title?: string }>({});
   const [editErrors, setEditErrors] = useState<{ title?: string }>({});
-  const [displayCount, setDisplayCount] = useState(20);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
       try {
-        const params = courseFilter ? `?courseId=${courseFilter}` : "";
-        const data = await api.get<{ notes: NoteItem[] }>(
-          `/api/notes${params}`,
-        );
-        if (!cancelled) setNotes(data.notes || []);
+        const all: NoteItem[] = [];
+        let fetched = 0;
+        let total = 0;
+        do {
+          const params = new URLSearchParams();
+          params.set("page", String(Math.floor(fetched / NOTES_PAGE_SIZE) + 1));
+          params.set("limit", String(NOTES_PAGE_SIZE));
+          const data = await api.get<{ items: NoteItem[]; total: number }>(
+            `/api/notes?${params.toString()}`,
+          );
+          const items = data.items || [];
+          all.push(...items);
+          fetched += items.length;
+          total = data.total || 0;
+          if (cancelled) return;
+        } while (fetched < total);
+        if (!cancelled) setNotes(all);
       } catch (err) {
         toast.error(getErrorMessage(err));
         if (!cancelled) setNotes([]);
@@ -88,7 +131,7 @@ export default function StudentNotesPage() {
     return () => {
       cancelled = true;
     };
-  }, [courseFilter]);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -205,18 +248,52 @@ export default function StudentNotesPage() {
     }
   }
 
-  const filteredNotes = notes.filter((note) => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      note.title.toLowerCase().includes(q) ||
-      stripHtml(note.body).toLowerCase().includes(q) ||
-      note.course?.title.toLowerCase().includes(q)
-    );
-  });
+  function downloadNote(note: NoteItem, format: "txt" | "html") {
+    const date = new Date(note.updatedAt).toISOString().slice(0, 10);
+    const base = `${sanitizeFilename(note.title)}_${date}`;
+    if (format === "txt") {
+      downloadTextFile(
+        `${base}.txt`,
+        noteToPlainText(note),
+        "text/plain;charset=utf-8",
+      );
+    } else {
+      downloadTextFile(`${base}.html`, note.body || "", "text/html;charset=utf-8");
+    }
+    toast.success("Note downloaded");
+  }
 
-  const displayedNotes = filteredNotes.slice(0, displayCount);
-  const hasMore = filteredNotes.length > displayCount;
+  function downloadAllNotes() {
+    if (filteredNotes.length === 0) {
+      toast.error("No notes to download");
+      return;
+    }
+    const separator = "\n\n" + "=".repeat(48) + "\n\n";
+    const content = [
+      `My Notes - ${new Date().toLocaleDateString("en-IN")}`,
+      `Total: ${filteredNotes.length}`,
+      "",
+      filteredNotes.map(noteToPlainText).join(separator),
+    ].join("\n");
+    downloadTextFile(
+      `my-notes_${new Date().toISOString().slice(0, 10)}.txt`,
+      content,
+      "text/plain;charset=utf-8",
+    );
+    toast.success("All notes downloaded");
+  }
+
+  const filteredNotes = notes
+    .filter((note) => !courseFilter || note.course?.id === courseFilter)
+    .filter((note) => {
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        note.title.toLowerCase().includes(q) ||
+        stripHtml(note.body).toLowerCase().includes(q) ||
+        note.course?.title.toLowerCase().includes(q)
+      );
+    });
 
   const stickyCount = notes.filter((n) => n.isSticky).length;
   const notesThisWeek = notes.filter((n) => {
@@ -300,12 +377,20 @@ export default function StudentNotesPage() {
                 My Notes
               </h1>
             </div>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="btn-primary flex items-center gap-1.5 text-sm shrink-0"
-            >
-              <IconPlus size={16} /> New Note
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={downloadAllNotes}
+                className="btn-secondary flex items-center gap-1.5 text-sm shrink-0"
+              >
+                <IconDownload size={16} /> Download All
+              </button>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="btn-primary flex items-center gap-1.5 text-sm shrink-0"
+              >
+                <IconPlus size={16} /> New Note
+              </button>
+            </div>
           </div>
         </div>
 
@@ -388,7 +473,7 @@ export default function StudentNotesPage() {
               </div>
             ) : (
               <>
-              {displayedNotes.map((note) => {
+              {filteredNotes.map((note) => {
                 const borderClass = note.isSticky
                   ? "border-l-warning/40"
                   : note.moduleId
@@ -503,8 +588,28 @@ export default function StudentNotesPage() {
                       </button>
                     )}
                     <div
-                      className={`flex justify-end border-t border-border/40 px-4 py-1.5 ${editingNoteId === note.id ? "hidden" : ""}`}
+                      className={`flex flex-wrap justify-end gap-1 border-t border-border/40 px-4 py-1.5 ${editingNoteId === note.id ? "hidden" : ""}`}
                     >
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          downloadNote(note, "txt");
+                        }}
+                        title="Download as plain text"
+                        className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                      >
+                        <IconDownload size={12} /> .txt
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          downloadNote(note, "html");
+                        }}
+                        title="Download as HTML"
+                        className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                      >
+                        <IconDownload size={12} /> .html
+                      </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -518,14 +623,6 @@ export default function StudentNotesPage() {
                   </div>
                 );
               })}
-              {hasMore && (
-                <button
-                  onClick={() => setDisplayCount((prev) => prev + 20)}
-                  className="w-full py-3 text-sm font-medium text-primary hover:bg-primary/5 rounded-xl transition-colors"
-                >
-                  Load more ({filteredNotes.length - displayCount} remaining)
-                </button>
-              )}
               </>
             )}
           </div>

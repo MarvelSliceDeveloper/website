@@ -70,13 +70,11 @@ export default function CreateBatchPage() {
   // Fetch active packages and instructors on mount
   useEffect(() => {
     api
-      .get<{ packages: Array<{ id: string; name: string; status: string }> }>(
+      .get<{ items: Array<{ id: string; name: string; status: string }> }>(
         "/api/admin/packages",
       )
       .then((res) => {
-        const active = (res.packages ?? []).filter(
-          (p) => p.status === "ACTIVE",
-        );
+        const active = (res.items ?? []).filter((p) => p.status === "ACTIVE");
         setPackages(active.map((p) => ({ id: p.id, name: p.name })));
       })
       .catch(() => {});
@@ -426,7 +424,7 @@ export default function CreateBatchPage() {
           <button
             type="submit"
             className="btn-primary"
-            disabled={submitting || !isValid}
+            disabled={submitting}
           >
             {submitting ? "Adding..." : "Add Batch"}
           </button>

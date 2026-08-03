@@ -1,16 +1,5 @@
 import { GraphClient } from "./graph.client";
 
-export interface CallRecord {
-  id: string;
-  version: number;
-  type: string;
-  modalities: string[];
-  lastModifiedDateTime: string;
-  startDateTime: string;
-  endDateTime: string;
-  joinWebUrl: string;
-}
-
 export interface RecordingSession {
   id: string;
   modalities: string[];
@@ -18,38 +7,6 @@ export interface RecordingSession {
   endDateTime: string;
   caller: { id: string; displayName: string };
   callee: { id: string; displayName: string };
-}
-
-/**
- * Fetch call records for a given date range.
- * Requires Application permission: CallRecords.Read.All
- */
-export async function getCallRecords(
-  startDateTime: string,
-  endDateTime: string,
-): Promise<CallRecord[]> {
-  const client = new GraphClient({ useAppToken: true });
-  // OData filter requires ISO 8601 date strings
-  const filter = `startDateTime ge '${startDateTime}' and startDateTime le '${endDateTime}'`;
-  const response = (await client.get(
-    `/communications/callRecords?$filter=${encodeURIComponent(filter)}`,
-  )) as { value: CallRecord[] };
-  return response.value;
-}
-
-/**
- * Fetch session details for a specific call record.
- * Used to drill into meeting participants and segments.
- * Requires Application permission: CallRecords.Read.All
- */
-export async function getCallRecordSessions(
-  callId: string,
-): Promise<RecordingSession[]> {
-  const client = new GraphClient({ useAppToken: true });
-  const response = (await client.get(
-    `/communications/callRecords/${callId}/sessions`,
-  )) as { value: RecordingSession[] };
-  return response.value;
 }
 
 /**

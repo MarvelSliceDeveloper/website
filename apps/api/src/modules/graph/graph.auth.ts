@@ -3,6 +3,29 @@ import { decryptToken, encryptToken } from "../../utils/encryption";
 
 const TOKEN_URL = `https://login.microsoftonline.com/common/oauth2/v2.0/token`;
 
+// Access tokens are JWTs carrying an `exp` claim. Refresh before the token is
+// actually rejected so we don't burn a request on a guaranteed 401.
+const EXPIRY_BUFFER_MS = 5 * 60 * 1000;
+
+function getTokenExpiryMs(token: string): number | null {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const data = JSON.parse(
+      Buffer.from(payload, "base64url").toString("utf8"),
+    ) as { exp?: number };
+    return typeof data.exp === "number" ? data.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
+export function isTokenExpiringSoon(token: string): boolean {
+  const exp = getTokenExpiryMs(token);
+  if (exp === null) return false;
+  return exp - Date.now() < EXPIRY_BUFFER_MS;
+}
+
 export async function getTokenForUser(userId: string): Promise<string> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -102,7 +125,16 @@ export async function refreshMsTokenForUser(userId: string): Promise<string> {
   return data.access_token;
 }
 
+let cachedAppToken: { token: string; expiresAt: number } | null = null;
+
 export async function getAppToken(): Promise<string> {
+  if (
+    cachedAppToken &&
+    cachedAppToken.expiresAt - Date.now() > EXPIRY_BUFFER_MS
+  ) {
+    return cachedAppToken.token;
+  }
+
   const clientId = process.env.MS_CLIENT_ID;
   const clientSecret = process.env.MS_CLIENT_SECRET;
   const tenantId = process.env.MS_TENANT_ID || "common";
@@ -135,5 +167,10 @@ export async function getAppToken(): Promise<string> {
   }
 
   const data = await response.json();
+  const expiresAt = getTokenExpiryMs(data.access_token);
+  cachedAppToken = {
+    token: data.access_token,
+    expiresAt: expiresAt ?? Date.now() + 55 * 60 * 1000,
+  };
   return data.access_token;
 }
