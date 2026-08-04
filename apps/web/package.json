@@ -23,7 +23,7 @@
     "@tinymce/tinymce-react": "^5.1.1",
     "apexcharts": "^5.16.0",
     "clsx": "^2.1.1",
-    "jose": "^6.2.3",
+    "jose": "^6.2.6",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "next": "16.2.12",
