@@ -13,7 +13,7 @@ export function getEffectiveDueDate(
   extensionDate?: Date | null,
 ): Date {
   if (extensionDate) return extensionDate;
-  if (daysFromEnrollment && enrollmentDate) {
+  if (daysFromEnrollment != null && enrollmentDate) {
     return addDays(enrollmentDate, daysFromEnrollment);
   }
   return absoluteDueDate;
@@ -26,7 +26,7 @@ export function resolveEffectiveDueDate(
   extensionDate?: Date | null,
 ): Date | null {
   if (extensionDate) return extensionDate;
-  if (daysFromEnrollment && enrollmentDate) {
+  if (daysFromEnrollment != null && enrollmentDate) {
     return addDays(enrollmentDate, daysFromEnrollment);
   }
   return absoluteDueDate ?? null;

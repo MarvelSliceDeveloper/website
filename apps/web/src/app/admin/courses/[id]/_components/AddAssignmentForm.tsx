@@ -42,7 +42,7 @@ export default function AddAssignmentForm({
         title,
         description,
         dueDate: dueDateMode === "absolute" && dueDate ? new Date(dueDate).toISOString() : undefined,
-        daysFromEnrollment: dueDateMode === "days" && daysFromEnrollment ? Number(daysFromEnrollment) : undefined,
+        daysFromEnrollment: dueDateMode === "days" && daysFromEnrollment !== "" ? Number(daysFromEnrollment) : undefined,
         maxPoints,
         questionPdfUrl: questionPdfUrl || undefined,
         courseId,

@@ -80,7 +80,7 @@ export default function QuizCard({
   };
   const [title, setTitle] = useState(quiz.title);
   const [dueDateMode, setDueDateMode] = useState<"absolute" | "days">(
-    quiz.daysFromEnrollment ? "days" : "absolute"
+    quiz.daysFromEnrollment != null ? "days" : "absolute"
   );
   const [dueDate, setDueDate] = useState(
     quiz.dueDate ? new Date(quiz.dueDate).toISOString().slice(0, 16) : ""
@@ -211,7 +211,7 @@ export default function QuizCard({
       await api.put(`/api/admin/courses/modules/quizzes/${quiz.id}`, {
         title,
         dueDate: dueDateMode === "absolute" && dueDate ? new Date(dueDate).toISOString() : null,
-        daysFromEnrollment: dueDateMode === "days" && daysFromEnrollment ? Number(daysFromEnrollment) : null,
+        daysFromEnrollment: dueDateMode === "days" && daysFromEnrollment !== "" ? Number(daysFromEnrollment) : null,
         passingScore: Number(passingScore),
         examType:
           hasMcq && hasAssignment && hasCoding ? "ALL_IN_ONE" : examType,
@@ -258,7 +258,7 @@ export default function QuizCard({
   const cancelEdit = () => {
     setEditing(false);
     setTitle(quiz.title);
-    setDueDateMode(quiz.daysFromEnrollment ? "days" : "absolute");
+    setDueDateMode(quiz.daysFromEnrollment != null ? "days" : "absolute");
     setDueDate(quiz.dueDate ? new Date(quiz.dueDate).toISOString().slice(0, 16) : "");
     setDaysFromEnrollment(quiz.daysFromEnrollment?.toString() ?? "");
     setPassingScore(quiz.passingScore ?? 65);
@@ -594,7 +594,7 @@ export default function QuizCard({
             {quiz.id.slice(0, 8)}...
           </span>
         </button>
-        {quiz.daysFromEnrollment ? (
+        {quiz.daysFromEnrollment != null ? (
           <span className="text-[11px] text-amber-600">
             Due: {quiz.daysFromEnrollment}d after enrollment
           </span>

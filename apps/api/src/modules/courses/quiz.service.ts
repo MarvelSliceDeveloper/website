@@ -6,7 +6,7 @@ import { appendToContentOrder, removeFromContentOrder } from "./module.service";
 export const CreateQuizSchema = z.object({
   title: z.string().min(2).max(200),
   dueDate: z.string().datetime().optional().nullable(),
-  daysFromEnrollment: z.number().int().min(1).optional(),
+  daysFromEnrollment: z.number().int().min(0).optional(),
   isSpecialExam: z.boolean().default(false),
   passingScore: z.number().min(0).max(100).default(65),
   timeLimitMin: z.number().min(1).optional().nullable(),
@@ -51,7 +51,7 @@ export const CreateQuizSchema = z.object({
 export const UpdateQuizSchema = z.object({
   title: z.string().min(2).max(200).optional(),
   dueDate: z.string().datetime().optional().nullable(),
-  daysFromEnrollment: z.number().int().min(1).nullable().optional(),
+  daysFromEnrollment: z.number().int().min(0).nullable().optional(),
   isSpecialExam: z.boolean().optional(),
   passingScore: z.number().min(0).max(100).optional(),
   timeLimitMin: z.number().min(1).optional().nullable(),

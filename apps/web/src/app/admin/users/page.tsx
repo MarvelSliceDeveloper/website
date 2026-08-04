@@ -61,6 +61,7 @@ type BatchResponse = {
   name: string;
   course: { title: string } | null;
   package: { name: string } | null;
+  totalStudents: number;
   _count: { enrollments: number } | null;
   maxStudents: number | null;
 };
@@ -223,8 +224,8 @@ export default function AdminUsersPage() {
             id: b.id,
             name: b.name,
             courseTitle: b.course?.title ?? b.package?.name ?? "All Courses",
-            filledCount: b._count?.enrollments ?? 0,
-            maxStudents: b.maxStudents ?? null,
+             filledCount: b.totalStudents ?? b._count?.enrollments ?? 0,
+             maxStudents: b.maxStudents ?? null,
           })),
         );
       })
@@ -248,8 +249,8 @@ export default function AdminUsersPage() {
             id: b.id,
             name: b.name,
             courseTitle: b.course?.title ?? b.package?.name ?? "All Courses",
-            filledCount: b._count?.enrollments ?? 0,
-            maxStudents: b.maxStudents ?? null,
+             filledCount: b.totalStudents ?? b._count?.enrollments ?? 0,
+             maxStudents: b.maxStudents ?? null,
           })),
         );
       })

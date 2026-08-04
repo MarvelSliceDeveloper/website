@@ -166,7 +166,7 @@ export default function AddQuizForm({
       await api.post(`/api/admin/courses/modules/${moduleId}/quizzes`, {
         title,
         dueDate: dueDateMode === "absolute" && dueDate ? new Date(dueDate).toISOString() : undefined,
-        daysFromEnrollment: dueDateMode === "days" && daysFromEnrollment ? Number(daysFromEnrollment) : undefined,
+        daysFromEnrollment: dueDateMode === "days" && daysFromEnrollment !== "" ? Number(daysFromEnrollment) : undefined,
         passingScore: 65,
         examType:
           hasMcq && hasAssignment && hasCoding ? "ALL_IN_ONE" : examType,

@@ -100,12 +100,56 @@ export interface MentorshipTicket {
 
 export interface Certificate {
   id: string;
-  courseTitle: string;
-  batchLabel: string;
+  courseId: string;
+  course: {
+    id: string;
+    title: string;
+    description: string;
+    category: string | null;
+    thumbnailUrl: string | null;
+    coverImageUrl: string | null;
+    updatedAt: string;
+  };
   issuedAt?: string;
   verifyUrl?: string;
-  completionPercent: number;
+  totalRecordings: number;
+  completedRecordings: number;
+  progressPercent: number;
   earned: boolean;
+}
+
+export interface ClaimableCertificate {
+  courseId: string;
+  course: {
+    id: string;
+    title: string;
+    description: string;
+    category: string | null;
+    thumbnailUrl: string | null;
+    coverImageUrl: string | null;
+    updatedAt: string;
+  };
+  totalRecordings: number;
+  completedRecordings: number;
+  progressPercent: number;
+}
+
+export interface CourseProgress {
+  courseId: string;
+  courseTitle: string;
+  totalItems: number;
+  completedItems: number;
+  isComplete: boolean;
+  hasCertificationModule: boolean;
+  certificationQuizPassed: boolean;
+  details: {
+    totalLessons: number;
+    completedLessons: number;
+    totalQuizzes: number;
+    completedQuizzes: number;
+    totalAssignments: number;
+    completedAssignments: number;
+  };
 }
 
 export interface CatalogueCourse {

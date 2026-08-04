@@ -8,7 +8,7 @@ export const CreateAssignmentSchema = z.object({
   type: z.enum(["QUIZ", "ASSIGNMENT"]).default("ASSIGNMENT"),
   description: z.string().optional(),
   dueDate: z.string().datetime().optional(),
-  daysFromEnrollment: z.number().int().min(1).optional(),
+  daysFromEnrollment: z.number().int().min(0).optional(),
   maxPoints: z.number().int().min(1).default(100),
   questionPdfUrl: z.string().url().optional().or(z.literal("")),
 });
@@ -18,7 +18,7 @@ export const UpdateAssignmentSchema = z.object({
   type: z.enum(["QUIZ", "ASSIGNMENT"]).optional(),
   description: z.string().optional(),
   dueDate: z.string().datetime().optional(),
-  daysFromEnrollment: z.number().int().min(1).nullable().optional(),
+  daysFromEnrollment: z.number().int().min(0).nullable().optional(),
   maxPoints: z.number().int().min(1).optional(),
   questionPdfUrl: z.string().url().optional().or(z.literal("")),
 });

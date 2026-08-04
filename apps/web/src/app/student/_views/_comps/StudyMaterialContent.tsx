@@ -1,6 +1,6 @@
 "use client";
 
-import { IconFile, IconFileDownload } from "@tabler/icons-react";
+import { IconFile, IconFileDownload, IconEye } from "@tabler/icons-react";
 
 interface StudyMaterialContentProps {
   name: string;
@@ -36,8 +36,25 @@ export default function StudyMaterialContent({
           </div>
         </div>
 
-        <div className="mt-4">
-          <a href={url} target="_blank" rel="noopener noreferrer" className="btn-secondary text-xs inline-flex items-center gap-1.5">
+        <div className="mt-4 flex items-center gap-2.5">
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-secondary text-xs inline-flex items-center gap-1.5"
+            title="View in new tab"
+          >
+            <IconEye size={14} />
+            View
+          </a>
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            download
+            className="btn-secondary text-xs inline-flex items-center gap-1.5"
+            title="Download"
+          >
             <IconFileDownload size={14} />
             Download
           </a>

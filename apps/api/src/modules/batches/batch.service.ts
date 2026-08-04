@@ -338,8 +338,10 @@ export const batchService = {
 
     const formattedBatches = batches.map((b) => {
       const { packageEnrollmentCourses, ...rest } = b;
+      const enrollmentCount = rest._count.enrollments;
       return {
         ...rest,
+        totalStudents: enrollmentCount + packageEnrollmentCourses.length,
         _count: {
           ...rest._count,
           packageEnrollmentCourses: packageEnrollmentCourses.length,

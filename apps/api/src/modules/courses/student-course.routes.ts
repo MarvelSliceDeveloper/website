@@ -11,6 +11,7 @@ import {
   loadCourseContent,
   requestEnrollment,
 } from "./student-course.service";
+import { getCourseContentProgress } from "../certificates/certificate-completion.service";
 
 const router = Router();
 
@@ -57,6 +58,19 @@ router.get("/:courseId/content", async (req: AuthRequest, res: Response) => {
       30_000,
     );
     return res.status(200).json(body);
+  } catch (err: unknown) {
+    const { statusCode, body } = handleControllerError(err, (req as any).log);
+    return res.status(statusCode).json(body);
+  }
+});
+
+// GET /api/courses/:courseId/progress — certificate completion progress for a course
+router.get("/:courseId/progress", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { courseId } = req.params;
+    const progress = await getCourseContentProgress(courseId, userId);
+    return res.status(200).json(progress);
   } catch (err: unknown) {
     const { statusCode, body } = handleControllerError(err, (req as any).log);
     return res.status(statusCode).json(body);

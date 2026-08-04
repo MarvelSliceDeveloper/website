@@ -10,7 +10,8 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: [
     "automaker-speed-unroasted.ngrok-free.dev",
     "10.147.116.33",
-    "10.122.223.33"
+    "10.122.223.33",
+    "192.168.56.1",
   ],
   async rewrites() {
     return [

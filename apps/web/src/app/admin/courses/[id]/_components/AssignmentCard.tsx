@@ -40,7 +40,7 @@ export default function AssignmentCard({
   const [title, setTitle] = useState(assignment.title);
   const [description, setDescription] = useState(assignment.description || "");
   const [dueDateMode, setDueDateMode] = useState<"absolute" | "days">(
-    assignment.daysFromEnrollment ? "days" : "absolute"
+    assignment.daysFromEnrollment != null ? "days" : "absolute"
   );
   const [dueDate, setDueDate] = useState(
     assignment.dueDate
@@ -76,7 +76,7 @@ export default function AssignmentCard({
         title,
         description,
         dueDate: dueDateMode === "absolute" && dueDate ? new Date(dueDate).toISOString() : undefined,
-        daysFromEnrollment: dueDateMode === "days" && daysFromEnrollment ? Number(daysFromEnrollment) : null,
+        daysFromEnrollment: dueDateMode === "days" && daysFromEnrollment !== "" ? Number(daysFromEnrollment) : null,
         maxPoints,
         questionPdfUrl: questionPdfUrl || undefined,
       });
@@ -107,7 +107,7 @@ export default function AssignmentCard({
     setEditing(false);
     setTitle(assignment.title);
     setDescription(assignment.description || "");
-    setDueDateMode(assignment.daysFromEnrollment ? "days" : "absolute");
+    setDueDateMode(assignment.daysFromEnrollment != null ? "days" : "absolute");
     setDueDate(
       assignment.dueDate
         ? new Date(assignment.dueDate).toISOString().slice(0, 16)
@@ -278,7 +278,7 @@ export default function AssignmentCard({
         <span className="text-xs text-blue-600">
           {assignment.maxPoints} pts
         </span>
-        {assignment.daysFromEnrollment ? (
+        {assignment.daysFromEnrollment != null ? (
           <span className="text-xs text-blue-500">
             Due: {assignment.daysFromEnrollment}d after enrollment
           </span>
