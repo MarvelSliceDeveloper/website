@@ -1,0 +1,60 @@
+{
+  "name": "lms-portal",
+  "version": "1.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev --filter=./apps/api --filter=./apps/web",
+    "dev:web": "turbo dev --filter=./apps/web",
+    "dev:api": "turbo dev --filter=./apps/api",
+    "dev:api:debug": "turbo dev --filter=./apps/api -- --inspect",
+    "dev:landing": "turbo dev --filter=./apps/landing",
+    "build": "turbo build",
+    "build:web": "turbo build --filter=./apps/web",
+    "build:api": "turbo build --filter=./apps/api",
+    "build:landing": "turbo build --filter=./apps/landing",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint -- --fix",
+    "lint:landing": "turbo lint --filter=./apps/landing",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "test:web": "turbo test --filter=./apps/web",
+    "test:api": "turbo test --filter=./apps/api",
+    "test:watch": "turbo test -- --watch",
+    "test:coverage": "turbo test -- --coverage",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:e2e": "turbo test:e2e",
+    "test:e2e:headed": "turbo test:e2e -- --headed",
+    "test:all": "pnpm test && pnpm test:integration && pnpm test:e2e",
+    "test:load": "k6 run apps/api/k6/load.js",
+    "test:load:smoke": "k6 run apps/api/k6/smoke.js",
+    "test:load:scenarios": "k6 run apps/api/k6/scenarios.js",
+    "test:load:heavy": "k6 run apps/api/k6/heavy.js",
+    "prisma:reset": "cd apps/api && npx prisma db push --force-reset && npx prisma db seed",
+    "prisma:migrate": "cd apps/api && npx prisma migrate dev",
+    "prisma:seed": "cd apps/api && npx prisma db seed",
+    "prisma:studio": "cd apps/api && npx prisma studio",
+    "prisma:generate": "cd apps/api && npx prisma generate",
+    "clean": "turbo clean",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.0",
+    "@commitlint/config-conventional": "^21.2.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.2.5",
+    "turbo": "^2.5.0",
+    "typescript": "^5.4.5"
+  },
+  "packageManager": "pnpm@11.1.1",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "core-js"
+    ]
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

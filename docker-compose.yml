@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: lms-postgres
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lms_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lms_password}
+      POSTGRES_DB: ${POSTGRES_DB:-lms_dev}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+  redis:
+    image: redis:7-alpine
+    container_name: lms-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    restart: unless-stopped
+
+
+volumes:
+  pgdata:
+  redisdata:

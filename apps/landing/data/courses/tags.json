@@ -1,0 +1,458 @@
+[
+  {
+    "id": "d72be4dd-9fb2-454e-a007-12e4a2826f92",
+    "name": "3d"
+  },
+  {
+    "id": "1dbbb579-8775-43f7-8176-218ba8ba6bd7",
+    "name": "3d-modeling"
+  },
+  {
+    "id": "d6c8e2f6-ac82-4bf7-a0cc-26b03ca48885",
+    "name": "ai"
+  },
+  {
+    "id": "97c2d737-bc9d-43c3-923f-bdc5a06bcb0a",
+    "name": "algorithms"
+  },
+  {
+    "id": "4f7c588f-fa71-44f2-a52d-7e7f63cfba64",
+    "name": "android"
+  },
+  {
+    "id": "55e51b1d-c404-40d9-b036-56fa60c0c08b",
+    "name": "apis"
+  },
+  {
+    "id": "ae66ddd5-ad51-499e-ba26-342031b1c4b2",
+    "name": "aws"
+  },
+  {
+    "id": "54411608-3858-4647-972c-fc343ba07d63",
+    "name": "azure"
+  },
+  {
+    "id": "5fa4a1d6-5cd7-4312-9118-499eda4da266",
+    "name": "backend"
+  },
+  {
+    "id": "d381487b-df0d-4aec-a2ed-1e0382a4359b",
+    "name": "banking-awareness"
+  },
+  {
+    "id": "a7c6bd5c-255c-4f24-873d-30567634fad8",
+    "name": "banking-exams"
+  },
+  {
+    "id": "12a5b7c6-6f62-4fc7-9c8d-96184db42094",
+    "name": "blockchain"
+  },
+  {
+    "id": "65a61c59-d59b-4e4b-9ad5-cfc5d8a40614",
+    "name": "c-programming"
+  },
+  {
+    "id": "8bfaf68b-5f3e-43d6-9de0-f71963e6a21c",
+    "name": "Career Tips"
+  },
+  {
+    "id": "06711f0c-f6fe-410d-971e-1364eb1c9dc3",
+    "name": "cat"
+  },
+  {
+    "id": "b641bbfa-12b7-4470-bff3-20f2c81f2bbb",
+    "name": "cds"
+  },
+  {
+    "id": "84574def-991c-47d4-814b-51b1b10801e7",
+    "name": "clat"
+  },
+  {
+    "id": "64116546-ff10-49ee-b7b4-03886e1dc525",
+    "name": "Cloud Computing"
+  },
+  {
+    "id": "090c4caf-a3ed-4456-8519-ed537d087b80",
+    "name": "cloud-computing"
+  },
+  {
+    "id": "74e2ba78-4b76-4124-a595-d467bdfced39",
+    "name": "cloud-security"
+  },
+  {
+    "id": "1a92c128-2b0c-487b-a75d-07d429278001",
+    "name": "competitive-exams"
+  },
+  {
+    "id": "3da520c0-98e2-446e-b2c3-897daab38f78",
+    "name": "computer-vision"
+  },
+  {
+    "id": "15847099-70ea-4e94-8248-d529bae3ddd5",
+    "name": "constitutional-law"
+  },
+  {
+    "id": "4eb625d4-87cb-453e-85f3-5dd3c35c91e4",
+    "name": "csharp"
+  },
+  {
+    "id": "5ea34acb-47bd-457c-a5f1-fb76abd8b6e3",
+    "name": "ctet"
+  },
+  {
+    "id": "c15cd500-488f-4ec3-aa37-368dcf61393f",
+    "name": "cybersecurity"
+  },
+  {
+    "id": "a9404afc-048b-4145-82ee-62d02c6fcac3",
+    "name": "Cybersecurity"
+  },
+  {
+    "id": "60874a09-32c2-4120-a7ca-f7a377174fd6",
+    "name": "dart"
+  },
+  {
+    "id": "735a0ae5-e837-4dc7-bc14-d3e6771fa444",
+    "name": "Data Science"
+  },
+  {
+    "id": "592ff2a6-71fb-4636-bb28-58b6841242ca",
+    "name": "data-analysis"
+  },
+  {
+    "id": "c3a5e4af-8970-4b5e-87ab-aff61a44656e",
+    "name": "data-interpretation"
+  },
+  {
+    "id": "a6ae41b0-ad31-41c9-9817-92b45466bb13",
+    "name": "data-science"
+  },
+  {
+    "id": "f64ca4f7-6fac-47fb-aea3-454ffb3be5ff",
+    "name": "data-structures"
+  },
+  {
+    "id": "9d09e376-9798-47ba-8502-9c7f06bb56f8",
+    "name": "databases"
+  },
+  {
+    "id": "1fda04d2-2e2a-4a71-8465-492ce897c3c1",
+    "name": "deep-learning"
+  },
+  {
+    "id": "f1497f81-b88b-400a-a4c2-c9fa07b09739",
+    "name": "defence-exams"
+  },
+  {
+    "id": "25875499-c2e9-4c3e-8d05-e9001475e6ed",
+    "name": "defi"
+  },
+  {
+    "id": "c7d2807c-c72c-47c7-8578-98f74a08b42c",
+    "name": "digital-logic"
+  },
+  {
+    "id": "10a69082-f57a-4dc4-9d61-635a9c03faa8",
+    "name": "django"
+  },
+  {
+    "id": "4411c87c-0e62-4b60-96b5-c3f07af51466",
+    "name": "docker"
+  },
+  {
+    "id": "66ff9dda-1a28-48b6-ab5e-a03add060e61",
+    "name": "economy"
+  },
+  {
+    "id": "579ca476-3ccd-44f5-bf1e-9773ac32a625",
+    "name": "english"
+  },
+  {
+    "id": "f849797d-ae37-4269-ac6b-65f4aee0b11d",
+    "name": "ethical-hacking"
+  },
+  {
+    "id": "af485842-52ba-48d5-94b3-522582bdd9cb",
+    "name": "excel"
+  },
+  {
+    "id": "5329f71d-3294-465a-9a69-bca075412ad5",
+    "name": "financial-awareness"
+  },
+  {
+    "id": "3fe0bda2-9a1b-408f-bf06-a787d3e7bb6a",
+    "name": "flutter"
+  },
+  {
+    "id": "d11d84e6-06e4-4eb9-b256-efee0a05d957",
+    "name": "full-stack-development"
+  },
+  {
+    "id": "8546e9e4-ceeb-4360-9cca-1d74211589e6",
+    "name": "game-design"
+  },
+  {
+    "id": "230631bb-5841-4674-b990-ba7bb1e56eb2",
+    "name": "game-development"
+  },
+  {
+    "id": "bb21a9a1-5841-4bc7-9ca9-ee702a45be97",
+    "name": "gate-cs"
+  },
+  {
+    "id": "7d586b29-798b-4543-bb02-81dbc53a4418",
+    "name": "gate-ec"
+  },
+  {
+    "id": "6b624329-8d3f-40f9-b9cb-a7429f79760f",
+    "name": "gcp"
+  },
+  {
+    "id": "191f00df-7126-4340-bc8b-24adab62dc67",
+    "name": "general-science"
+  },
+  {
+    "id": "31b1aa16-16eb-4134-b5b3-1311ebd916f8",
+    "name": "general-studies"
+  },
+  {
+    "id": "7d069ee8-14bb-4646-a871-20b0c161e74b",
+    "name": "geography"
+  },
+  {
+    "id": "391ec2e9-c4c3-4882-95e5-cf3b6b4ff962",
+    "name": "git"
+  },
+  {
+    "id": "296a66c9-a0f3-45d7-9738-b8a48a61ae3c",
+    "name": "go"
+  },
+  {
+    "id": "c360f8a9-134a-4e72-9fb4-b2bcc49ed326",
+    "name": "graphql"
+  },
+  {
+    "id": "4ae91c23-d13c-48e7-a867-2e011b402276",
+    "name": "history"
+  },
+  {
+    "id": "6d46f5bc-2310-4923-9b72-9638220c95e1",
+    "name": "html-css"
+  },
+  {
+    "id": "7358c4ad-ed5a-4361-889a-481efc6f3c5a",
+    "name": "ibps"
+  },
+  {
+    "id": "e9f8d41a-0973-4b78-bdc5-dc528432425b",
+    "name": "ios"
+  },
+  {
+    "id": "8f958d56-10e0-43b1-8875-f61e233c471f",
+    "name": "java"
+  },
+  {
+    "id": "4103b82a-b9ef-44b6-860e-32d954989124",
+    "name": "javascript"
+  },
+  {
+    "id": "b42baf8c-2c81-4a9f-99e2-f6ff612f163a",
+    "name": "kotlin"
+  },
+  {
+    "id": "34e513da-f236-475c-9334-70aa8122dc04",
+    "name": "kubernetes"
+  },
+  {
+    "id": "5bb9527a-6f6e-4bff-9783-23abf05e8af1",
+    "name": "legal-aptitude"
+  },
+  {
+    "id": "b9f9b6dd-7008-4d26-98a4-183bb854a408",
+    "name": "linux"
+  },
+  {
+    "id": "7d70b400-3017-491c-b2d0-cae31a2fe179",
+    "name": "logical-reasoning"
+  },
+  {
+    "id": "64e2cb69-b10c-4a86-b38e-9b75bab6227b",
+    "name": "Machine Learning"
+  },
+  {
+    "id": "29d1a589-d8a5-4475-ac6b-2392d62aa1fc",
+    "name": "machine-learning"
+  },
+  {
+    "id": "2def8444-3313-4414-89a0-66628aabbb91",
+    "name": "mongodb"
+  },
+  {
+    "id": "de76bfdd-d07a-4c40-b1df-5193205953ed",
+    "name": "nda"
+  },
+  {
+    "id": "9deb4869-0c38-42c2-961e-61d4c91ec5b3",
+    "name": "network-security"
+  },
+  {
+    "id": "9be53b8d-91f1-42dd-b358-19b92e11adb4",
+    "name": "nlp"
+  },
+  {
+    "id": "b431c892-3b53-42d6-9dcb-d3332bb81a9c",
+    "name": "nodejs"
+  },
+  {
+    "id": "61ad1545-2ccb-4682-bfd4-323c5ecb2f65",
+    "name": "penetration-testing"
+  },
+  {
+    "id": "80ecb988-bc1f-4952-86f3-990aac4a7f98",
+    "name": "polity"
+  },
+  {
+    "id": "9c016e3b-022a-4030-93be-564fdfcc8ee0",
+    "name": "power-bi"
+  },
+  {
+    "id": "dbb7550b-a90c-4901-8c44-5ef204de9581",
+    "name": "python"
+  },
+  {
+    "id": "7e2c8691-87eb-44bc-9dfc-7446d59e76c7",
+    "name": "Python"
+  },
+  {
+    "id": "0be0f564-2764-4229-a0f8-d71b783836f6",
+    "name": "python-ml"
+  },
+  {
+    "id": "ee2b0fc4-7782-4b39-86f6-18db4118d1e8",
+    "name": "pytorch"
+  },
+  {
+    "id": "0292a6fb-3294-40c0-ac7c-8b65b990c2ca",
+    "name": "quantitative-aptitude"
+  },
+  {
+    "id": "c7a9eabb-d646-4e60-9f90-fc3025532141",
+    "name": "railway-exams"
+  },
+  {
+    "id": "cab3922f-49a3-4167-9626-5a2f852dc4c1",
+    "name": "react"
+  },
+  {
+    "id": "a363cc3d-f1c3-4cc0-b5af-964dd8b6aa97",
+    "name": "React"
+  },
+  {
+    "id": "208b5c6e-c319-4c77-b865-2fe10321cd23",
+    "name": "reasoning"
+  },
+  {
+    "id": "4e1500d9-1db3-4c36-ae7f-bcaa57ecb2a9",
+    "name": "redis"
+  },
+  {
+    "id": "1a568fed-751c-4113-9269-7c9103931bf2",
+    "name": "rrb"
+  },
+  {
+    "id": "f2ebe076-f8bb-4708-90e0-db4f11a6e016",
+    "name": "rust"
+  },
+  {
+    "id": "b6cb062c-9af5-4c79-b902-b14d1c6465a6",
+    "name": "sbi"
+  },
+  {
+    "id": "1a7c3a43-e211-46dc-a25b-7e2446dc8ddc",
+    "name": "smart-contracts"
+  },
+  {
+    "id": "a96afdf3-85ad-42ae-9499-d81089e0c8c2",
+    "name": "solidity"
+  },
+  {
+    "id": "7f9e6747-62fc-49aa-af0b-7da273ae6784",
+    "name": "spring"
+  },
+  {
+    "id": "3a878ce3-8a70-4c8c-ab34-5529cf6491bb",
+    "name": "sql"
+  },
+  {
+    "id": "4853c232-31ea-4334-a2d3-a9380d2c4a1a",
+    "name": "ssc"
+  },
+  {
+    "id": "d2b0d378-f7ae-40da-a76f-26306a4cd13c",
+    "name": "statistics"
+  },
+  {
+    "id": "8c1160d8-d1f4-48e3-8784-4098ccdee715",
+    "name": "swift"
+  },
+  {
+    "id": "c3cff409-fa58-47f6-980b-00adebac39c3",
+    "name": "tableau"
+  },
+  {
+    "id": "a75ed87b-aee4-474c-8b2b-23e3741671e0",
+    "name": "teaching-aptitude"
+  },
+  {
+    "id": "396698df-f85a-4767-8596-a5d1bccc1529",
+    "name": "tensorflow"
+  },
+  {
+    "id": "e290cedc-9cae-47e1-b9f1-16361dd4ff02",
+    "name": "TNPSC"
+  },
+  {
+    "id": "da35125c-896c-43b0-be3e-20ca0b171766",
+    "name": "typescript"
+  },
+  {
+    "id": "e687014c-ebeb-48d7-8f63-8ac4a0b8094b",
+    "name": "ugc-net"
+  },
+  {
+    "id": "9ee4bf2e-56a2-4dd3-a410-696b714431a6",
+    "name": "unity"
+  },
+  {
+    "id": "3d370fdd-0bd9-47c7-a39a-161b4d25b492",
+    "name": "unreal"
+  },
+  {
+    "id": "4a9f4f7d-0320-4a33-8cb7-5fea22c8821f",
+    "name": "upsc"
+  },
+  {
+    "id": "b9f91e1b-af33-4b2a-8c21-e774361e05f3",
+    "name": "UPSC"
+  },
+  {
+    "id": "b2ddf63c-9dd5-4083-bda1-e8d67b1b8a27",
+    "name": "verbal-ability"
+  },
+  {
+    "id": "9ceec868-22ed-4b39-a4ba-aa402996a8ef",
+    "name": "visualization"
+  },
+  {
+    "id": "6ebda44d-f6b2-4f30-a7e9-16b8b820d52f",
+    "name": "Web Development"
+  },
+  {
+    "id": "8eefcb65-0eb6-433f-8723-d04c568bc3c3",
+    "name": "web3"
+  },
+  {
+    "id": "4aefac43-a4a7-49ab-8dd1-914ba5f2d3bb",
+    "name": "xat"
+  }
+]

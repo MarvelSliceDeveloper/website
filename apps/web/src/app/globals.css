@@ -1,0 +1,695 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #1e2230;
+  --card: #ffffff;
+  --card-hover: #f9fafb;
+  --border: #e1e4ea;
+  --border-hover: #d1d5db;
+  --primary: #5b4fe8;
+  --primary-hover: #4f46e5;
+
+  --brand-orange: #ea5b1f;
+  --brand-orange-dark: #d16033;
+  --brand-orange-tint: #fdece3;
+  --brand-blue: #2551d9;
+  --brand-blue-dark: #1b3aa0;
+  --brand-blue-tint: #eaf0fe;
+  --brand-indigo: #6366f1;
+  --brand-indigo-tint: #eef2ff;
+  --brand-amber: #f59e0b;
+  --brand-amber-tint: #fffbeb;
+  --ink: #1e2230;
+  --slate: #5b6272;
+  --mist: #eef0f3;
+  --hairline: #e1e4ea;
+  --paper: #ffffff;
+
+  --success: #1e9e63;
+  --success-text: #178055;
+  --success-tint: #e7f7ef;
+  --danger: #d63a3a;
+  --danger-tint: #fbeaea;
+  --warning: #f59e0b;
+  --muted: #6b7280;
+  --muted-foreground: #5b6272;
+  --text-secondary: #8a8fa3;
+  --radius: 14px;
+}
+
+/* stylelint-disable at-rule-no-unknown */
+
+[data-theme="light"] {
+  --background: #ffffff;
+  --foreground: #1e2230;
+  --card: #ffffff;
+  --card-hover: #f9fafb;
+  --border: #e1e4ea;
+  --border-hover: #d1d5db;
+  --primary: #5b4fe8;
+  --primary-hover: #4f46e5;
+
+  --brand-orange: #dd6d3d;
+  --brand-orange-dark: #c64614;
+  --brand-orange-tint: #fdece3;
+  --brand-blue: #2551d9;
+  --brand-blue-dark: #1b3aa0;
+  --brand-blue-tint: #eaf0fe;
+  --brand-indigo: #6366f1;
+  --brand-indigo-tint: #eef2ff;
+  --brand-amber: #f59e0b;
+  --brand-amber-tint: #fffbeb;
+  --ink: #1e2230;
+  --slate: #5b6272;
+  --mist: #eef0f3;
+  --hairline: #e1e4ea;
+  --paper: #ffffff;
+
+  --success: #1e9e63;
+  --success-text: #178055;
+  --success-tint: #e7f7ef;
+  --danger: #d63a3a;
+  --danger-tint: #fbeaea;
+  --warning: #f59e0b;
+  --muted: #6b7280;
+  --muted-foreground: #5b6272;
+  --text-secondary: #8a8fa3;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-hover: var(--card-hover);
+  --color-border: var(--border);
+  --color-border-hover: var(--border-hover);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-orange-dark: var(--brand-orange-dark);
+  --color-brand-orange-tint: var(--brand-orange-tint);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-blue-dark: var(--brand-blue-dark);
+  --color-brand-blue-tint: var(--brand-blue-tint);
+  --color-brand-indigo: var(--brand-indigo);
+  --color-brand-indigo-tint: var(--brand-indigo-tint);
+  --color-brand-amber: var(--brand-amber);
+  --color-brand-amber-tint: var(--brand-amber-tint);
+  --color-ink: var(--ink);
+  --color-slate: var(--slate);
+  --color-mist: var(--mist);
+  --color-hairline: var(--hairline);
+  --color-paper: var(--paper);
+  --color-success: var(--success);
+  --color-success-text: var(--success-text);
+  --color-success-tint: var(--success-tint);
+  --color-danger: var(--danger);
+  --color-danger-tint: var(--danger-tint);
+  --color-warning: var(--warning);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-text-secondary: var(--text-secondary);
+  --font-sans: var(--font-body);
+}
+
+/* stylelint-enable at-rule-no-unknown */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    var(--font-body),
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display), var(--font-body), system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+input,
+textarea,
+select,
+button {
+  font: inherit;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.glass-card {
+  background: #ffffff;
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.glass-card:hover {
+  border-color: var(--border-hover);
+  background: #f9fafb;
+}
+
+[data-theme="light"] .glass-card {
+  background: #ffffff;
+  border-color: var(--border);
+}
+
+[data-theme="light"] .glass-card:hover {
+  background: #f9fafb;
+  border-color: var(--border-hover);
+}
+
+.panel {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: var(--radius);
+}
+
+.btn-primary {
+  background: #ff6b04;
+  color: #fff;
+  padding: 0.62rem 1rem;
+  border-radius: 0.72rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.btn-secondary {
+  background: var(--card);
+  color: var(--foreground);
+  padding: 0.62rem 1rem;
+  border-radius: 0.72rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.btn-secondary:hover {
+  background: var(--card-hover);
+  border-color: var(--border-hover);
+}
+
+.btn-danger {
+  background: var(--card);
+  color: var(--danger);
+  padding: 0.62rem 1rem;
+  border-radius: 0.72rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  border-color: var(--danger);
+}
+
+.field {
+  width: 100%;
+  border-radius: 0.72rem;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--foreground);
+  padding: 0.62rem 0.75rem;
+  font-size: 0.875rem;
+  transition: border-color 0.16s ease;
+}
+
+.field::placeholder {
+  color: var(--muted);
+}
+
+.field:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+@keyframes pulse-live {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.55;
+    transform: scale(1.25);
+  }
+}
+
+.live-pulse {
+  animation: pulse-live 1.5s ease-in-out infinite;
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--border) 90%, white);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--border-hover) 90%, white);
+}
+
+/* ─── Dark sidebar (course content) ──────────────────────────────────────── */
+
+[data-sidebar-dark] {
+  --background: #111111;
+  --foreground: #ffffff;
+  --card: #111111;
+  --card-hover: #1a1a1a;
+  --border: #2a2a2a;
+  --border-hover: #3a3a3a;
+  --muted: #9ca3af;
+  --muted-foreground: #9ca3af;
+  --primary: #7c73ff;
+  --primary-hover: #5b4fe8;
+  --success: #22c55e;
+  --danger: #ef4444;
+}
+
+/* ─── Student Portal Utilities ───────────────────────────────────────────── */
+
+/* Eyebrow / section label */
+.sp-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+/* View-stack entrance animation */
+@keyframes sp-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.sp-view-enter {
+  animation: sp-slide-in 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* Section card stagger (children of section grid) */
+@keyframes sp-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sp-fade-up {
+  animation: sp-fade-up 0.3s ease both;
+}
+
+/* Hero shimmer gradient animation */
+@keyframes hero-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.hero-shimmer {
+  background-size: 200% 200%;
+  animation: hero-shimmer 10s ease infinite;
+}
+
+/* Tile shimmer-glow on hover */
+@keyframes tile-glow {
+  0% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Stat tile entrance stagger */
+@keyframes tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tile-stagger {
+  animation: tile-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Horizontal snap scroll */
+.snap-scroll-x {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.snap-scroll-x > * {
+  scroll-snap-align: start;
+}
+
+/* Bento card stagger entrance */
+@keyframes bento-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.bento-card {
+  animation: bento-in 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* Hide scrollbar but keep scroll */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Admin Theme (flat — overrides dark glass for admin/instructor section) ── */
+
+[data-section="admin"] {
+  --background: #ffffff;
+  --foreground: #1a1d29;
+  --card: #ffffff;
+  --card-hover: #f9fafb;
+  --border: #e5e7eb;
+  --border-hover: #d1d5db;
+  --primary: #5b4fe8;
+  --primary-hover: #4f46e5;
+  --accent: #0891b2;
+  --success: #158a5c;
+  --warning: #f59e0b;
+  --danger: #d6293a;
+  --muted: #6b7280;
+  --muted-foreground: #6b7086;
+  --text-secondary: #8a8fa3;
+  --radius: 6px;
+}
+
+[data-theme="dark"] [data-section="admin"] .field {
+  background: #ffffff;
+}
+
+[data-theme="dark"] [data-section="admin"] .btn-danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+[data-theme="dark"] [data-section="admin"] .panel {
+  background: #ffffff;
+}
+
+[data-section="admin"] .min-h-screen.bg-background {
+  background: var(--background);
+  background-image: none;
+}
+
+[data-section="admin"] .glass-card {
+  background: var(--card);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+[data-section="admin"] .glass-card:hover {
+  border-color: var(--border-hover);
+  background: var(--card);
+}
+
+[data-section="admin"] .btn-primary {
+  background: var(--primary);
+  color: #fff;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  font-size: 0.85rem;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  box-shadow: none;
+}
+
+[data-section="admin"] .btn-primary:hover {
+  background: var(--primary-hover);
+  transform: none;
+  box-shadow: none;
+}
+
+[data-section="admin"] .btn-secondary {
+  background: var(--card);
+  color: var(--foreground);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+[data-section="admin"] .btn-secondary:hover {
+  background: var(--card-hover);
+  border-color: var(--border-hover);
+}
+
+[data-section="admin"] .btn-danger {
+  background: var(--card);
+  color: var(--danger);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  font-size: 0.85rem;
+  border: 1px solid rgba(231, 76, 60, 0.25);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+[data-section="admin"] .btn-danger:hover {
+  background: #eef2ff;
+  border-color: var(--danger);
+}
+
+[data-section="admin"] .field {
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--foreground);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+[data-section="admin"] .field::placeholder {
+  color: var(--muted);
+}
+
+[data-section="admin"] .field:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
+}
+
+[data-section="admin"] .field-search {
+  padding-left: 2.25rem !important;
+}
+
+[data-section="admin"] header.sticky {
+  background: var(--card) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[data-section="admin"] .panel {
+  border: 1px solid var(--border);
+  background: #ffffff;
+  border-radius: var(--radius);
+}
+
+[data-section="admin"] [role="dialog"] > div {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ─── Login Page Animations ────────────────────────────────────────────── */
+
+@keyframes login-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes logo-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0px transparent);
+  }
+
+  50% {
+    transform: scale(1.03);
+    filter: drop-shadow(0 4px 12px rgba(37, 99, 235, 0.2));
+  }
+}
+
+@keyframes shimmer-sweep {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes login-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  33% {
+    transform: translateY(-18px) rotate(6deg);
+  }
+
+  66% {
+    transform: translateY(10px) rotate(-4deg);
+  }
+}
+
+@keyframes login-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

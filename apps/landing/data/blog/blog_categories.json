@@ -1,0 +1,26 @@
+[
+  {
+    "id": "14590a61-2eb2-48a6-b149-450f80642934",
+    "name": "Technology",
+    "slug": "technology",
+    "sort_order": 0
+  },
+  {
+    "id": "973e3650-3f1a-4014-a3a7-8c922dcb94af",
+    "name": "Career Guidance",
+    "slug": "career-guidance",
+    "sort_order": 0
+  },
+  {
+    "id": "063c06c8-eee3-42e7-bdab-8db175bdeeef",
+    "name": "Exam Preparation",
+    "slug": "exam-preparation",
+    "sort_order": 0
+  },
+  {
+    "id": "378309f6-8338-4653-a5c8-382e5bb73fd6",
+    "name": "Industry Insights",
+    "slug": "industry-insights",
+    "sort_order": 0
+  }
+]

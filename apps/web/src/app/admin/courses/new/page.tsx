@@ -1,0 +1,238 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { api } from "@/lib/api";
+import { usePageTitle } from "@/lib/use-page-title";
+import { toast } from "sonner";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { IconArrowLeft } from "@tabler/icons-react";
+
+const MAX_THUMBNAIL_BYTES = 5 * 1024 * 1024;
+const ALLOWED_THUMBNAIL_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
+
+export default function CreateCoursePage() {
+  usePageTitle("New Course");
+  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    category: "",
+  });
+
+  const update = (field: string, value: string | number) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
+
+  useEffect(() => {
+    if (!thumbnailFile) {
+      Promise.resolve().then(() => setThumbnailPreview(null));
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(thumbnailFile);
+    Promise.resolve().then(() => setThumbnailPreview(objectUrl));
+
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [thumbnailFile]);
+
+  const handleThumbnailChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0] || null;
+
+    if (!file) {
+      setThumbnailFile(null);
+      return;
+    }
+
+    if (!ALLOWED_THUMBNAIL_TYPES.has(file.type)) {
+      setThumbnailFile(null);
+      toast.error("Thumbnail must be a JPG, PNG, or WebP image.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_THUMBNAIL_BYTES) {
+      setThumbnailFile(null);
+      toast.error("Thumbnail must be 5 MB or smaller.");
+      event.target.value = "";
+      return;
+    }
+
+    setThumbnailFile(file);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    try {
+      const course = await api.post<{ id: string }>("/api/admin/courses", {
+        title: form.title,
+        description: form.description,
+        category: form.category || undefined,
+      });
+
+      if (thumbnailFile) {
+        const uploadData = new FormData();
+        uploadData.append("thumbnail", thumbnailFile);
+        try {
+          await api.post(
+            `/api/admin/courses/${course.id}/thumbnail`,
+            uploadData,
+          );
+        } catch (uploadError: unknown) {
+          toast.error(
+            (uploadError instanceof Error
+              ? uploadError.message
+              : String(uploadError)) ||
+              "Course created, but thumbnail upload failed. You can upload it in the editor.",
+          );
+        }
+      }
+
+      router.push(`/admin/courses/${course.id}`);
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create course",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="max-w-3xl space-y-6">
+      <AdminPageHeader
+        title="Add Course"
+        description="Start with the basics. You can add modules, videos, and design the course page later."
+        breadcrumbs={[
+          { label: "Courses", href: "/admin/courses" },
+          { label: "Add", href: "/admin/courses/new" },
+        ]}
+        action={
+          <Link
+            href="/admin/courses"
+            className="btn-secondary text-sm flex items-center gap-1.5"
+          >
+            <IconArrowLeft size={16} stroke={1.5} />
+            Back
+          </Link>
+        }
+      />
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="glass-card p-6 space-y-4">
+          <h2 className="text-sm font-semibold text-foreground">
+            Course Details
+          </h2>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Course Title <span className="text-danger">*</span>
+            </label>
+            <input
+              type="text"
+              value={form.title}
+              onChange={(e) => update("title", e.target.value)}
+              placeholder="e.g. Advanced TypeScript Patterns"
+              className="field w-full"
+              required
+              minLength={3}
+              maxLength={200}
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Description <span className="text-danger">*</span>
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) => update("description", e.target.value)}
+              placeholder="What will students learn in this course?"
+              className="field w-full min-h-[120px] resize-y"
+              required
+              minLength={10}
+            />
+            <p className="mt-1 text-xs text-muted">
+              You can add rich formatting in the Course Designer later.
+            </p>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Thumbnail
+            </label>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="h-20 w-28 overflow-hidden rounded-lg border border-border bg-card flex items-center justify-center text-xl">
+                {thumbnailPreview ? (
+                  <Image
+                    src={thumbnailPreview}
+                    alt="Course thumbnail preview"
+                    width={112}
+                    height={80}
+                    className="h-full w-full object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  "\ud83d\udcda"
+                )}
+              </div>
+              <div className="space-y-1">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleThumbnailChange}
+                  className="field w-full"
+                />
+                <p className="text-xs text-muted">JPG, PNG, or WebP. Max 5 MB.</p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Category
+            </label>
+            <input
+              type="text"
+              value={form.category}
+              onChange={(e) => update("category", e.target.value)}
+              placeholder="e.g. Programming, Design"
+              className="field w-full"
+            />
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-muted-foreground">
+          <p className="font-medium text-foreground mb-1">What happens next?</p>
+          <p>
+            The course will be created as a <strong>Draft</strong>. You&apos;ll
+            then be taken to the course editor where you can add modules, upload
+            videos, design the landing page, and publish when ready.
+          </p>
+        </div>
+
+        <div className="flex items-center justify-end gap-3">
+          <Link href="/admin/courses" className="btn-secondary text-sm">
+            Cancel
+          </Link>
+          <button type="submit" className="btn-primary" disabled={submitting}>
+            {submitting ? "Adding..." : "Add Course"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

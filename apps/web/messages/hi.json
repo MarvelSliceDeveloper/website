@@ -1,0 +1,65 @@
+{
+  "common": {
+    "login": "Log In",
+    "signup": "Sign Up",
+    "logout": "Log Out",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "search": "Search"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "courses": "Courses",
+    "sessions": "Live Sessions",
+    "assignments": "Assignments",
+    "grades": "Grades",
+    "settings": "Settings",
+    "messages": "Messages",
+    "students": "Students",
+    "instructors": "Instructors",
+    "payments": "Payments",
+    "reports": "Reports"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "sendResetLink": "Send Reset Link",
+    "newPassword": "New Password",
+    "rememberMe": "Remember Me",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?"
+  },
+  "student": {
+    "myCourses": "My Courses",
+    "continueLearning": "Continue Learning",
+    "completed": "Completed",
+    "inProgress": "In Progress",
+    "overdue": "Overdue",
+    "certificates": "Certificates"
+  },
+  "instructor": {
+    "myCourses": "My Courses",
+    "totalStudents": "Total Students",
+    "avgRating": "Average Rating",
+    "courseRevenue": "Course Revenue"
+  },
+  "admin": {
+    "dashboard": "Admin Dashboard",
+    "users": "User Management",
+    "courses": "Course Management",
+    "batches": "Batch Management",
+    "settings": "System Settings",
+    "logs": "Audit Logs"
+  }
+}

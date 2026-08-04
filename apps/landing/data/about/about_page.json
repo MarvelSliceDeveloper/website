@@ -1,0 +1,105 @@
+{
+  "nav_item": {
+    "id": "4a9231a2-47b1-4616-8515-fc76b58ae446",
+    "parent_id": null,
+    "parent_label": null,
+    "label": "About",
+    "path": "/about",
+    "sort_order": 99,
+    "is_active": true,
+    "created_at": "2026-07-02T14:46:07.45681+00:00"
+  },
+  "page": {
+    "id": "0a1422b9-b86c-4824-9c8b-c8f01f499538",
+    "nav_item_id": "4a9231a2-47b1-4616-8515-fc76b58ae446",
+    "heading": "",
+    "subheading": "",
+    "hero_image": null,
+    "sections": [
+      {
+        "items": [
+          {
+            "label": "Students Trained",
+            "number": "10,000+"
+          },
+          {
+            "label": "Placement Rate",
+            "number": "95%"
+          },
+          {
+            "label": "Expert Instructors",
+            "number": "50+"
+          },
+          {
+            "label": "Average Rating",
+            "number": "4.8"
+          }
+        ],
+        "hidden": false,
+        "content": "Marvel Slice was founded with a clear mission: to bridge the gap between academic learning and industry expectations. What began as a small training initiative has grown into a trusted educational platform serving thousands of students across India.\n\nOur programs are designed collaboratively with industry experts to ensure every student gains the practical skills and confidence needed to excel in their chosen field. From technology and data science to competitive exam preparation, we offer comprehensive learning paths tailored to modern career demands.\n\nAt Marvel Slice, we believe education should be accessible, engaging, and outcome-driven. Our team of experienced instructors brings years of real-world expertise to every classroom, creating an environment where students don’t just learn — they thrive.",
+        "heading": "About Marvel Slice",
+        "contentAlign": "center",
+        "headingAlign": "center",
+        "section_type": "text_stats"
+      },
+      {
+        "items": [
+          {
+            "icon": "GraduationCap",
+            "title": "Industry-Aligned Curriculum",
+            "description": "Courses designed with input from hiring managers and industry leaders to ensure you learn what matters most."
+          },
+          {
+            "icon": "Users",
+            "title": "Expert Instructors",
+            "description": "Learn from seasoned professionals with years of hands-on experience in their respective domains."
+          },
+          {
+            "icon": "Briefcase",
+            "title": "Placement Assistance",
+            "description": "Dedicated career support including resume building, mock interviews, and direct referrals to partner companies."
+          },
+          {
+            "icon": "Globe",
+            "title": "Flexible Learning",
+            "description": "Choose from online, offline, or hybrid modes to fit learning around your schedule and preferences."
+          },
+          {
+            "icon": "Zap",
+            "title": "Hands-On Projects",
+            "description": "Apply your knowledge through real-world projects and case studies that build a standout portfolio."
+          },
+          {
+            "icon": "Award",
+            "title": "Certification",
+            "description": "Earn industry-recognised certificates upon completion that add real value to your professional profile."
+          },
+          {
+            "icon": "Clock",
+            "title": "Lifetime Access",
+            "description": "Get lifetime access to course materials, updates, and recordings so you can learn at your own pace."
+          },
+          {
+            "icon": "TrendingUp",
+            "title": "Continuous Growth",
+            "description": "Regular curriculum updates keep pace with changing industry trends and emerging technologies."
+          }
+        ],
+        "heading": "Why Choose Marvel Slice?",
+        "subheading": "We are committed to delivering an education that truly makes a difference. Here’s what sets us apart.",
+        "section_type": "feature_grid"
+      },
+      {
+        "hidden": true,
+        "content": "Take the first step toward a brighter future. Get in touch with our team today.",
+        "heading": "Ready to Start Your Journey?",
+        "cta_link": "/contact",
+        "section_type": "cta"
+      }
+    ],
+    "is_published": true,
+    "created_at": "2026-07-23T14:56:02.192514+00:00",
+    "updated_at": "2026-07-27T04:56:00.559519+00:00",
+    "form_config": {}
+  }
+}
