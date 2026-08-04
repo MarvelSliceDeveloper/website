@@ -565,7 +565,7 @@ export default function HomeView({
                         </p>
                         {continueLearning.slice(0, 1).map((item) => (
                           <div
-                            key={item.recordingId}
+                            key={item.lessonId ?? item.recordingId}
                             className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border border-border bg-card shadow-sm hover:border-primary/40 transition-colors"
                           >
                             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-sm overflow-hidden">
@@ -607,13 +607,22 @@ export default function HomeView({
                             </div>
                             <button
                               onClick={() =>
-                                navigate({
-                                  view: "RECORDING_PLAYER",
-                                  params: {
-                                    batchId: item.batchId,
-                                    sessionId: item.recordingId,
-                                  },
-                                })
+                                item.lessonId
+                                  ? navigate({
+                                      view: "COURSE_CONTENT",
+                                      params: {
+                                        courseId: item.courseId ?? "",
+                                        moduleId: item.moduleId ?? "",
+                                        lessonId: item.lessonId,
+                                      },
+                                    })
+                                  : navigate({
+                                      view: "RECORDING_PLAYER",
+                                      params: {
+                                        batchId: item.batchId,
+                                        sessionId: item.recordingId,
+                                      },
+                                    })
                               }
                               className="btn-primary py-2 px-4.5 text-xs font-semibold shrink-0 w-full sm:w-auto"
                             >

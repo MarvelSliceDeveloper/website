@@ -15,7 +15,21 @@ export async function getEnrolledCourses(userId: string) {
     include: {
       batch: {
         include: {
-          course: true,
+          course: {
+            include: {
+              modules: {
+                include: {
+                  lessons: {
+                    include: {
+                      progress: {
+                        where: { userId },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
           instructor: {
             select: { name: true },
           },
@@ -62,33 +76,54 @@ export async function getEnrolledCourses(userId: string) {
     // Individual enrollment batches always have a course assigned
     const course = batch.course!;
 
-    const sessions = batch.sessions;
-    const totalRecordings = sessions.filter((s) => s.recording).length;
+    const recordings = batch.sessions.filter((s) => s.recording);
+    // Only video lessons participate in progress (text-only lessons can't be watched)
+    const videoLessons = (course?.modules ?? []).flatMap((m) =>
+      m.lessons.filter((l) => l.videoUrl || l.videoEmbedId),
+    );
+    const totalItems = recordings.length + videoLessons.length;
     let progress = 0;
 
-    if (totalRecordings > 0) {
+    if (totalItems > 0) {
       let totalWatchedPercent = 0;
-      for (const session of sessions) {
-        if (session.recording) {
-          const watchProgress = session.recording.progress[0];
-          if (watchProgress) {
-            if (watchProgress.completedAt) {
-              totalWatchedPercent += 100;
-            } else {
-              const percent = Math.min(
-                100,
-                Math.round(
-                  (watchProgress.watchedSeconds /
-                    session.recording.duration) *
-                    100,
-                ),
-              );
-              totalWatchedPercent += percent;
-            }
+      for (const session of recordings) {
+        if (!session.recording) continue;
+        const watchProgress = session.recording.progress[0];
+        if (watchProgress) {
+          if (watchProgress.completedAt) {
+            totalWatchedPercent += 100;
+          } else {
+            const percent = Math.min(
+              100,
+              Math.round(
+                (watchProgress.watchedSeconds /
+                  session.recording.duration) *
+                  100,
+              ),
+            );
+            totalWatchedPercent += percent;
           }
         }
       }
-      progress = Math.round(totalWatchedPercent / totalRecordings);
+      for (const lesson of videoLessons) {
+        const lp = lesson.progress?.[0];
+        if (lp) {
+          if (lp.completedAt) {
+            totalWatchedPercent += 100;
+          } else {
+            const percent = Math.min(
+              100,
+              Math.round(
+                (lp.watchedSeconds /
+                  Math.max(1, lesson.durationSeconds ?? 1)) *
+                  100,
+              ),
+            );
+            totalWatchedPercent += percent;
+          }
+        }
+      }
+      progress = Math.round(totalWatchedPercent / totalItems);
     }
 
     const status = batch.status === "COMPLETED" ? "COMPLETED" : "ACTIVE";
@@ -112,7 +147,21 @@ export async function getEnrolledCourses(userId: string) {
     include: {
       courses: {
         include: {
-          course: true,
+          course: {
+            include: {
+              modules: {
+                include: {
+                  lessons: {
+                    include: {
+                      progress: {
+                        where: { userId },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
           batch: {
             include: {
               instructor: { select: { name: true } },
@@ -164,32 +213,54 @@ export async function getEnrolledCourses(userId: string) {
         const sessions = batch.sessions.filter(
           (s) => !s.courseId || s.courseId === pec.course.id,
         );
-        const totalRecordings = sessions.filter((s) => s.recording).length;
+        const recordings = sessions.filter((s) => s.recording);
+        // Only video lessons participate in progress (text-only lessons can't be watched)
+        const videoLessons = (pec.course.modules ?? []).flatMap((m) =>
+          m.lessons.filter((l) => l.videoUrl || l.videoEmbedId),
+        );
+        const totalItems = recordings.length + videoLessons.length;
         let progress = 0;
 
-        if (totalRecordings > 0) {
+        if (totalItems > 0) {
           let totalWatchedPercent = 0;
-          for (const session of sessions) {
-            if (session.recording) {
-              const watchProgress = session.recording.progress[0];
-              if (watchProgress) {
-                if (watchProgress.completedAt) {
-                  totalWatchedPercent += 100;
-                } else {
-                  const percent = Math.min(
-                    100,
-                    Math.round(
-                      (watchProgress.watchedSeconds /
-                        session.recording.duration) *
-                        100,
-                    ),
-                  );
-                  totalWatchedPercent += percent;
-                }
+          for (const session of recordings) {
+            if (!session.recording) continue;
+            const watchProgress = session.recording.progress[0];
+            if (watchProgress) {
+              if (watchProgress.completedAt) {
+                totalWatchedPercent += 100;
+              } else {
+                const percent = Math.min(
+                  100,
+                  Math.round(
+                    (watchProgress.watchedSeconds /
+                      session.recording.duration) *
+                      100,
+                  ),
+                );
+                totalWatchedPercent += percent;
               }
             }
           }
-          progress = Math.round(totalWatchedPercent / totalRecordings);
+          for (const lesson of videoLessons) {
+            const lp = lesson.progress?.[0];
+            if (lp) {
+              if (lp.completedAt) {
+                totalWatchedPercent += 100;
+              } else {
+                const percent = Math.min(
+                  100,
+                  Math.round(
+                    (lp.watchedSeconds /
+                      Math.max(1, lesson.durationSeconds ?? 1)) *
+                      100,
+                  ),
+                );
+                totalWatchedPercent += percent;
+              }
+            }
+          }
+          progress = Math.round(totalWatchedPercent / totalItems);
         }
 
         const status = batch.status === "COMPLETED" ? "COMPLETED" : "ACTIVE";
@@ -507,6 +578,7 @@ export async function loadCourseContent(userId: string, courseId: string) {
           duration: rec.duration,
           durationLabel: `${Math.floor(rec.duration / 60)}:${String(rec.duration % 60).padStart(2, "0")}`,
           watchedPercent,
+          watchedSeconds: progress?.watchedSeconds ?? 0,
           isCompleted: !!progress?.completedAt,
         };
       });
@@ -542,6 +614,7 @@ export async function loadCourseContent(userId: string, courseId: string) {
         isFreePreview: l.isFreePreview,
         resources: l.resources,
         watchedPercent,
+        watchedSeconds: lp?.watchedSeconds ?? 0,
         isCompleted: !!lp?.completedAt,
       };
     });

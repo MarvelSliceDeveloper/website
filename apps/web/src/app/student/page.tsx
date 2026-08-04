@@ -889,6 +889,7 @@ function StudentPortalContent() {
             goBack={goBack}
             initialQuizId={currentView.params?.quizId}
             initialAssignmentId={currentView.params?.assignmentId}
+            initialLessonId={currentView.params?.lessonId}
             initialResourceUrl={currentView.params?.resourceUrl}
             initialResourceName={currentView.params?.resourceName}
           />

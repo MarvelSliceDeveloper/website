@@ -12,6 +12,7 @@ export interface CourseLesson {
   isFreePreview: boolean;
   resources: Array<{ name: string; url: string }>;
   watchedPercent?: number;
+  watchedSeconds?: number;
   isCompleted?: boolean;
 }
 
@@ -94,6 +95,7 @@ export interface CourseRecording {
   duration: number;
   durationLabel: string;
   watchedPercent: number;
+  watchedSeconds?: number;
   isCompleted: boolean;
   videoUrl?: string;
 }
@@ -126,6 +128,7 @@ export interface CourseContentViewProps {
   goBack: () => void;
   initialQuizId?: string;
   initialAssignmentId?: string;
+  initialLessonId?: string;
   initialResourceUrl?: string;
   initialResourceName?: string;
 }

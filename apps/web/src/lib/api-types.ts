@@ -166,7 +166,10 @@ export interface CatalogueCourse {
 }
 
 export interface ContinueLearningItem {
-  recordingId: string;
+  recordingId?: string;
+  lessonId?: string;
+  courseId?: string;
+  moduleId?: string;
   batchId: string;
   courseTitle: string;
   dayLabel: string;

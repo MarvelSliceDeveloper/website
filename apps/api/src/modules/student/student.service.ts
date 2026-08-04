@@ -24,7 +24,10 @@ export interface OverdueAssignmentItem {
 }
 
 export interface ContinueLearningItem {
-  recordingId: string;
+  recordingId?: string;
+  lessonId?: string;
+  courseId?: string;
+  moduleId?: string;
   batchId: string;
   courseTitle: string;
   dayLabel: string;
@@ -327,24 +330,59 @@ export const studentService = {
   async getContinueLearning(
     userId: string,
   ): Promise<{ continueLearning: ContinueLearningItem[] }> {
-    const packageEnrollments = await prisma.packageEnrollment.findMany({
-      where: { userId, status: "APPROVED" },
-      include: {
-        courses: {
-          select: {
-            courseId: true,
-            batchId: true,
-            course: { select: { title: true, thumbnailUrl: true } },
+    const [packageEnrollments, individualEnrollments] = await Promise.all([
+      prisma.packageEnrollment.findMany({
+        where: { userId, status: "APPROVED" },
+        include: {
+          courses: {
+            select: {
+              courseId: true,
+              batchId: true,
+              course: {
+                select: {
+                  id: true,
+                  title: true,
+                  thumbnailUrl: true,
+                  modules: {
+                    select: {
+                      id: true,
+                      lessons: {
+                        select: {
+                          id: true,
+                          title: true,
+                          videoUrl: true,
+                          videoEmbedId: true,
+                          durationSeconds: true,
+                          progress: {
+                            where: { userId },
+                            select: { watchedSeconds: true, completedAt: true },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
         },
-      },
-    });
+      }),
+      prisma.enrollmentRequest.findMany({
+        where: { userId, status: "APPROVED" },
+        select: { courseId: true, batchId: true },
+      }),
+    ]);
 
     const uniqueBatchIds = [
       ...new Set(
-        packageEnrollments.flatMap((pe) =>
-          pe.courses.map((c) => c.batchId).filter(Boolean),
-        ),
+        [
+          ...packageEnrollments.flatMap((pe) =>
+            pe.courses.map((c) => c.batchId).filter(Boolean),
+          ),
+          ...individualEnrollments
+            .map((e) => e.batchId)
+            .filter((b): b is string => Boolean(b)),
+        ],
       ),
     ] as string[];
 
@@ -352,6 +390,31 @@ export const studentService = {
       where: { id: { in: uniqueBatchIds } },
       select: {
         id: true,
+        course: {
+          select: {
+            id: true,
+            title: true,
+            thumbnailUrl: true,
+            modules: {
+              select: {
+                id: true,
+                lessons: {
+                  select: {
+                    id: true,
+                    title: true,
+                    videoUrl: true,
+                    videoEmbedId: true,
+                    durationSeconds: true,
+                    progress: {
+                      where: { userId },
+                      select: { watchedSeconds: true, completedAt: true },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
         sessions: {
           orderBy: { scheduledAt: "desc" },
           take: 5,
@@ -364,7 +427,7 @@ export const studentService = {
                 duration: true,
                 progress: {
                   where: { userId },
-                  select: { watchedSeconds: true },
+                  select: { watchedSeconds: true, completedAt: true },
                 },
               },
             },
@@ -377,38 +440,147 @@ export const studentService = {
 
     const items: ContinueLearningItem[] = [];
 
+    const pushRecordingItems = (
+      batch: (typeof batchData)[number],
+      batchId: string,
+      courseTitle: string,
+      thumbnail: string,
+    ) => {
+      for (const session of batch.sessions) {
+        if (!session.recording) continue;
+
+        const watchedSeconds =
+          session.recording.progress[0]?.watchedSeconds ?? 0;
+        const totalSeconds = session.recording.duration ?? 1;
+        const watchedPercent = session.recording.progress[0]?.completedAt
+          ? 100
+          : Math.min(
+              100,
+              Math.round((watchedSeconds / totalSeconds) * 100),
+            );
+
+        if (watchedPercent > 0 && watchedPercent < 100) {
+          items.push({
+            recordingId: session.recording.id,
+            batchId,
+            courseTitle,
+            dayLabel: `Day ${
+              items.filter(
+                (i) => i.batchId === batchId && i.recordingId,
+              ).length + 1
+            }`,
+            watchedPercent,
+            thumbnail,
+          });
+        }
+      }
+    };
+
+    const pushLessonItems = (
+      course: {
+        id: string;
+        modules: {
+          id: string;
+          lessons: {
+            id: string;
+            title: string;
+            videoUrl: string | null;
+            videoEmbedId: string | null;
+            durationSeconds: number | null;
+            progress: { watchedSeconds: number; completedAt: Date | null }[];
+          }[];
+        }[];
+      } | null,
+      batchId: string,
+      courseTitle: string,
+      thumbnail: string,
+    ) => {
+      if (!course) return;
+
+      for (const module of course.modules) {
+        for (const lesson of module.lessons) {
+          if (!lesson.videoUrl && !lesson.videoEmbedId) continue;
+
+          const watchedSeconds = lesson.progress[0]?.watchedSeconds ?? 0;
+          const watchedPercent = lesson.progress[0]?.completedAt
+            ? 100
+            : Math.min(
+                100,
+                Math.round(
+                  (watchedSeconds /
+                    Math.max(1, lesson.durationSeconds ?? 1)) *
+                    100,
+                ),
+              );
+
+          if (watchedPercent > 0 && watchedPercent < 100) {
+            items.push({
+              lessonId: lesson.id,
+              courseId: course.id,
+              moduleId: module.id,
+              batchId,
+              courseTitle,
+              dayLabel: lesson.title,
+              watchedPercent,
+              thumbnail,
+            });
+          }
+        }
+      }
+    };
+
     for (const pe of packageEnrollments) {
       for (const pec of pe.courses) {
         if (!pec.batchId) continue;
         const batch = batchMap.get(pec.batchId);
         if (!batch) continue;
 
-        for (const session of batch.sessions) {
-          if (!session.recording) continue;
-
-          const watchedSeconds =
-            session.recording.progress[0]?.watchedSeconds ?? 0;
-          const totalSeconds = session.recording.duration ?? 1;
-          const watchedPercent = Math.min(
-            100,
-            Math.round((watchedSeconds / totalSeconds) * 100),
-          );
-
-          if (watchedPercent > 0 && watchedPercent < 100) {
-            items.push({
-              recordingId: session.recording.id,
-              batchId: pec.batchId,
-              courseTitle: `${pec.course.title} — Batch ${pec.batchId.slice(0, 8)}`,
-              dayLabel: `Day ${items.filter((i) => i.batchId === pec.batchId).length + 1}`,
-              watchedPercent,
-              thumbnail: pec.course.thumbnailUrl || "📚",
-            });
-          }
-        }
+        pushRecordingItems(
+          batch,
+          pec.batchId,
+          `${pec.course.title} — Batch ${pec.batchId.slice(0, 8)}`,
+          pec.course.thumbnailUrl || "📚",
+        );
+        pushLessonItems(
+          pec.course,
+          pec.batchId,
+          `${pec.course.title} — Batch ${pec.batchId.slice(0, 8)}`,
+          pec.course.thumbnailUrl || "📚",
+        );
       }
     }
 
-    return { continueLearning: items.slice(0, 10) };
+    for (const enrollment of individualEnrollments) {
+      if (!enrollment.batchId) continue;
+      const batch = batchMap.get(enrollment.batchId);
+      if (!batch) continue;
+      const courseTitle =
+        batch.course?.title ?? "Course";
+      const thumbnail = batch.course?.thumbnailUrl || "📚";
+
+      pushRecordingItems(
+        batch,
+        enrollment.batchId,
+        `${courseTitle} — Batch ${enrollment.batchId.slice(0, 8)}`,
+        thumbnail,
+      );
+      pushLessonItems(
+        batch.course,
+        enrollment.batchId,
+        `${courseTitle} — Batch ${enrollment.batchId.slice(0, 8)}`,
+        thumbnail,
+      );
+    }
+
+    const seen = new Set<string>();
+    const uniqueItems = items.filter((i) => {
+      const key = i.lessonId ?? i.recordingId;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    return { continueLearning: uniqueItems.slice(0, 10) };
   },
 
   async getResults(userId: string): Promise<StudentResultItem[]> {

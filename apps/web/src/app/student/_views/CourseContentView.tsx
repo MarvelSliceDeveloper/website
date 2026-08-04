@@ -198,6 +198,7 @@ export default function CourseContentView({
   goBack,
   initialQuizId,
   initialAssignmentId,
+  initialLessonId,
   initialResourceUrl,
   initialResourceName,
 }: CourseContentViewProps) {
@@ -289,10 +290,18 @@ export default function CourseContentView({
         setData(res);
         if (res.modules.length > 0) {
           const firstModule = res.modules[0];
-          setSelectedModuleId(firstModule.id);
-          setExpandedModules(new Set([firstModule.id]));
-          if (firstModule.lessons.length > 0) {
-            setSelectedLessonId(firstModule.lessons[0].id);
+          const targetModule = initialLessonId
+            ? (res.modules.find((m) =>
+                m.lessons.some((l) => l.id === initialLessonId),
+              ) ?? firstModule)
+            : firstModule;
+          setSelectedModuleId(targetModule.id);
+          setExpandedModules(new Set([targetModule.id]));
+          const targetLesson = initialLessonId
+            ? targetModule.lessons.find((l) => l.id === initialLessonId)
+            : targetModule.lessons[0];
+          if (targetLesson) {
+            setSelectedLessonId(targetLesson.id);
           }
         }
       } catch (err: unknown) {
@@ -307,7 +316,7 @@ export default function CourseContentView({
     return () => {
       cancelled = true;
     };
-  }, [courseId, retryKey]);
+  }, [courseId, retryKey, initialLessonId]);
 
   // ── Navigation ─────────────────────────────────────────────────────────
 
@@ -936,6 +945,10 @@ export default function CourseContentView({
             lesson={selectedLesson}
             recording={selectedRecording}
             onProgress={handleWatchProgress}
+            initialTime={
+              selectedRecording?.watchedSeconds ??
+              selectedLesson?.watchedSeconds
+            }
           />
         </div>
     <div className="px-1">
@@ -1000,6 +1013,18 @@ export default function CourseContentView({
 
 const renderAccordion = () => (
   <div className="space-y-3 p-3">
+    <div className="px-1">
+      <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
+        <span className="uppercase tracking-wider">Course progress</span>
+        <span className="text-emerald-600">{d.overallProgress}%</span>
+      </div>
+      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-border">
+        <div
+          className="h-full rounded-full bg-emerald-500 transition-all"
+          style={{ width: `${d.overallProgress}%` }}
+        />
+      </div>
+    </div>
     {d.modules.map((module, mIdx) => {
       const isExpanded = expandedModules.has(module.id);
       const isActiveModule = module.id === selectedModuleId;
@@ -1035,6 +1060,19 @@ const renderAccordion = () => (
                 {itemCount} {itemCount === 1 ? "item" : "items"}
                 {totalSeconds ? ` · ${formatMinutes(totalSeconds)}` : ""}
               </span>
+              {module.completionPercent > 0 && (
+                <span className="mt-1.5 flex items-center gap-1.5">
+                  <span className="h-1 w-16 overflow-hidden rounded-full bg-border">
+                    <span
+                      className="block h-full rounded-full bg-emerald-500"
+                      style={{ width: `${module.completionPercent}%` }}
+                    />
+                  </span>
+                  <span className="text-[10px] font-semibold text-emerald-600">
+                    {module.completionPercent}% complete
+                  </span>
+                </span>
+              )}
             </span>
             <IconChevronDown
               size={16}

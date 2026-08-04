@@ -52,6 +52,7 @@ interface SafePlyrProps {
   source: PlyrSource;
   options?: PlyrOpts;
   onProgress?: ProgressCallback;
+  initialTime?: number;
 }
 
 type ProgressCallback = (
@@ -70,7 +71,7 @@ type ProgressCallback = (
  * responded to play clicks after switching lessons. A full unmount/remount
  * per video sidesteps that race entirely.
  */
-function SafePlyr({ source, options, onProgress }: SafePlyrProps) {
+function SafePlyr({ source, options, onProgress, initialTime }: SafePlyrProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<{ destroy: () => void } | null>(null);
   const onProgressRef = useRef<ProgressCallback | undefined>(onProgress);
@@ -112,6 +113,16 @@ function SafePlyr({ source, options, onProgress }: SafePlyrProps) {
           // in StrictMode double-mount. Ignore — Plyr still works.
         }
         instanceRef.current = plyr;
+
+        if (initialTime && initialTime > 0) {
+          plyr.on("ready", () => {
+            try {
+              plyr.currentTime = initialTime;
+            } catch {
+              // resume seek can race with provider metadata load
+            }
+          });
+        }
 
         plyr.on("timeupdate", (event: CustomEvent) => {
           const current = event.detail?.plyr?.currentTime;
@@ -174,11 +185,14 @@ function SafePlyr({ source, options, onProgress }: SafePlyrProps) {
 function RecordingVideo({
   recording,
   onProgress,
+  initialTime,
 }: {
   recording: CourseRecording;
   onProgress?: ProgressCallback;
+  initialTime?: number;
 }) {
   const lastReportedRef = useRef(0);
+  const resumedRef = useRef(false);
 
   return (
     <div className="absolute inset-0 bg-black">
@@ -186,6 +200,12 @@ function RecordingVideo({
         className="h-full w-full"
         controls
         src={recording.videoUrl}
+        onLoadedMetadata={(e) => {
+          if (!resumedRef.current && initialTime && initialTime > 0) {
+            resumedRef.current = true;
+            e.currentTarget.currentTime = initialTime;
+          }
+        }}
         onTimeUpdate={(e) => {
           const current = e.currentTarget.currentTime;
           if (current - lastReportedRef.current >= 10) {
@@ -205,6 +225,7 @@ interface Props {
   lesson: CourseLesson | null;
   recording: CourseRecording | null;
   onProgress?: ProgressCallback;
+  initialTime?: number;
 }
 
 /**
@@ -282,10 +303,21 @@ function getVideoSource(lesson: CourseLesson): PlyrSource | null {
   return null;
 }
 
-export function VideoPlayer({ lesson, recording, onProgress }: Props) {
+export function VideoPlayer({
+  lesson,
+  recording,
+  onProgress,
+  initialTime,
+}: Props) {
   if (recording) {
     if (recording.videoUrl) {
-      return <RecordingVideo recording={recording} onProgress={onProgress} />;
+      return (
+        <RecordingVideo
+          recording={recording}
+          onProgress={onProgress}
+          initialTime={initialTime}
+        />
+      );
     }
 
     return (
@@ -333,6 +365,7 @@ export function VideoPlayer({ lesson, recording, onProgress }: Props) {
           key={lesson.id}
           source={source}
           onProgress={onProgress}
+          initialTime={initialTime}
         />
       </div>
     );

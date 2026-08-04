@@ -41,6 +41,7 @@ export interface ViewState {
     ticketId?: string;
     quizId?: string;
     assignmentId?: string;
+    lessonId?: string;
     resourceUrl?: string;
     resourceName?: string;
   };
