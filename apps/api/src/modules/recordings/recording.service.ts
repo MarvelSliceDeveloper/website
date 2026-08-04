@@ -203,6 +203,7 @@ export const recordingService = {
     userId: string,
     recordingId: string,
     watchedSeconds: number,
+    completed?: boolean,
   ) {
     // 1. Get recording to check duration
     const recording = await prisma.recording.findUnique({
@@ -212,7 +213,16 @@ export const recordingService = {
 
     if (!recording) throw new Error("Recording not found");
 
-    // 2. Update progress record
+    const safeSeconds = Math.max(0, Math.floor(Number(watchedSeconds) || 0));
+
+    // 2. Monotonic: never regress on seek-back
+    const existing = await prisma.progress.findUnique({
+      where: { userId_recordingId: { userId, recordingId } },
+      select: { watchedSeconds: true },
+    });
+    const nextSeconds = Math.max(existing?.watchedSeconds ?? 0, safeSeconds);
+
+    // 3. Update progress record
     const progress = await prisma.progress.upsert({
       where: {
         userId_recordingId: { userId, recordingId },
@@ -220,26 +230,29 @@ export const recordingService = {
       create: {
         userId,
         recordingId,
-        watchedSeconds,
+        watchedSeconds: nextSeconds,
       },
       update: {
-        watchedSeconds,
+        watchedSeconds: nextSeconds,
       },
     });
 
-    // 3. Check for completion (90% threshold)
-    // If duration is 0, we can't mark as complete automatically yet
-    if (recording.duration > 0 && !progress.completedAt) {
-      const completionThreshold = recording.duration * 0.9;
-      if (watchedSeconds >= completionThreshold) {
-        await prisma.progress.update({
-          where: { id: progress.id },
-          data: { completedAt: new Date() },
-        });
-      }
+    // 4. Check for completion (90% threshold, or explicit completed flag for
+    // recordings without a known duration)
+    const isComplete =
+      completed === true ||
+      (recording.duration > 0 && nextSeconds >= recording.duration * 0.9);
+
+    if (isComplete && !progress.completedAt) {
+      await prisma.progress.update({
+        where: { id: progress.id },
+        data: { completedAt: new Date() },
+      });
     }
 
-    return progress;
+    return prisma.progress.findUnique({
+      where: { id: progress.id },
+    });
   },
 
   // Fetches a fresh playback URL from Microsoft Graph

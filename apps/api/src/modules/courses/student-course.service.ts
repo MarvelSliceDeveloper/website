@@ -386,6 +386,10 @@ export async function loadCourseContent(userId: string, courseId: string) {
               durationSeconds: true,
               isFreePreview: true,
               resources: true,
+              progress: {
+                where: { userId },
+                select: { watchedSeconds: true, completedAt: true },
+              },
             },
           },
           quizzes: {
@@ -512,25 +516,44 @@ export async function loadCourseContent(userId: string, courseId: string) {
   const modules = course.modules.map((m) => {
     const moduleRecordings = recordings.filter((r) => r.moduleId === m.id);
     const moduleSessions = sessions.filter((s) => s.moduleId === m.id);
-    const totalItems = moduleRecordings.length || 1;
-    const completedItems = moduleRecordings.filter(
-      (r) => r.isCompleted,
-    ).length;
+
+    const lessons = m.lessons.map((l) => {
+      const lp = l.progress?.[0];
+      const watchedPercent = lp
+        ? lp.completedAt
+          ? 100
+          : Math.min(
+              100,
+              Math.round(
+                (lp.watchedSeconds / Math.max(1, l.durationSeconds ?? 1)) *
+                  100,
+              ),
+            )
+        : 0;
+      return {
+        id: l.id,
+        title: l.title,
+        description: l.description,
+        order: l.order,
+        videoType: l.videoType,
+        videoUrl: l.videoUrl,
+        videoEmbedId: l.videoEmbedId,
+        durationSeconds: l.durationSeconds,
+        isFreePreview: l.isFreePreview,
+        resources: l.resources,
+        watchedPercent,
+        isCompleted: !!lp?.completedAt,
+      };
+    });
+
+    // Only video lessons participate in progress (text-only lessons can't be watched)
+    const videoLessons = lessons.filter((l) => l.videoUrl || l.videoEmbedId);
+    const totalItems = moduleRecordings.length + videoLessons.length;
+    const completedItems =
+      moduleRecordings.filter((r) => r.isCompleted).length +
+      videoLessons.filter((l) => l.isCompleted).length;
     const completionPercent =
       totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
-
-    const lessons = m.lessons.map((l) => ({
-      id: l.id,
-      title: l.title,
-      description: l.description,
-      order: l.order,
-      videoType: l.videoType,
-      videoUrl: l.videoUrl,
-      videoEmbedId: l.videoEmbedId,
-      durationSeconds: l.durationSeconds,
-      isFreePreview: l.isFreePreview,
-      resources: l.resources,
-    }));
 
     return {
       id: m.id,
@@ -592,12 +615,19 @@ export async function loadCourseContent(userId: string, courseId: string) {
   });
 
   // Overall progress
-  const totalRecordings = recordings.length;
+  const progressPercentages = [
+    ...recordings.map((r) => r.watchedPercent),
+    ...modules.flatMap((m) =>
+      m.lessons
+        .filter((l) => l.videoUrl || l.videoEmbedId)
+        .map((l) => l.watchedPercent),
+    ),
+  ];
   const overallProgress =
-    totalRecordings > 0
+    progressPercentages.length > 0
       ? Math.round(
-          recordings.reduce((sum, r) => sum + r.watchedPercent, 0) /
-            totalRecordings,
+          progressPercentages.reduce((sum, p) => sum + p, 0) /
+            progressPercentages.length,
         )
       : 0;
 
@@ -671,4 +701,56 @@ export async function requestEnrollment(userId: string, courseId: string) {
       "Enrollment request submitted. Admin will review and assign you to a batch.",
     enrollment,
   };
+}
+
+// POST /api/courses/lessons/:lessonId/progress — save a student's watch
+// progress for a course-content lesson. watchedSeconds is monotonic (never
+// regresses on seek-back); completedAt is set when the student has watched
+// >=90% of the lesson or explicitly reports completion (videos with unknown
+// duration).
+export async function updateLessonProgress(
+  userId: string,
+  lessonId: string,
+  watchedSeconds: number,
+  completed?: boolean,
+) {
+  const lesson = await prisma.lesson.findUnique({
+    where: { id: lessonId },
+    select: { id: true, durationSeconds: true },
+  });
+
+  if (!lesson) {
+    throw new AppError(404, "Lesson not found");
+  }
+
+  const safeSeconds = Math.max(0, Math.floor(Number(watchedSeconds) || 0));
+
+  const existing = await prisma.lessonProgress.findUnique({
+    where: { userId_lessonId: { userId, lessonId } },
+    select: { watchedSeconds: true },
+  });
+  const nextSeconds = Math.max(existing?.watchedSeconds ?? 0, safeSeconds);
+
+  const progress = await prisma.lessonProgress.upsert({
+    where: { userId_lessonId: { userId, lessonId } },
+    create: { userId, lessonId, watchedSeconds: nextSeconds },
+    update: { watchedSeconds: nextSeconds },
+  });
+
+  const isComplete =
+    completed === true ||
+    (lesson.durationSeconds != null &&
+      lesson.durationSeconds > 0 &&
+      nextSeconds >= lesson.durationSeconds * 0.9);
+
+  if (isComplete && !progress.completedAt) {
+    await prisma.lessonProgress.update({
+      where: { id: progress.id },
+      data: { completedAt: new Date() },
+    });
+  }
+
+  return prisma.lessonProgress.findUnique({
+    where: { id: progress.id },
+  });
 }

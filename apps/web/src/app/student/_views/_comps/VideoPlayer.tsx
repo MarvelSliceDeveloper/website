@@ -51,7 +51,13 @@ const DEFAULT_OPTIONS: PlyrOpts = {
 interface SafePlyrProps {
   source: PlyrSource;
   options?: PlyrOpts;
+  onProgress?: ProgressCallback;
 }
+
+type ProgressCallback = (
+  watchedSeconds: number,
+  completed?: boolean,
+) => void;
 
 /**
  * NOTE: this component is intentionally remounted (via a `key` prop from the
@@ -64,9 +70,14 @@ interface SafePlyrProps {
  * responded to play clicks after switching lessons. A full unmount/remount
  * per video sidesteps that race entirely.
  */
-function SafePlyr({ source, options }: SafePlyrProps) {
+function SafePlyr({ source, options, onProgress }: SafePlyrProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<{ destroy: () => void } | null>(null);
+  const onProgressRef = useRef<ProgressCallback | undefined>(onProgress);
+  useEffect(() => {
+    onProgressRef.current = onProgress;
+  }, [onProgress]);
+  const lastReportedRef = useRef(0);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
   );
@@ -101,6 +112,22 @@ function SafePlyr({ source, options }: SafePlyrProps) {
           // in StrictMode double-mount. Ignore — Plyr still works.
         }
         instanceRef.current = plyr;
+
+        plyr.on("timeupdate", (event: CustomEvent) => {
+          const current = event.detail?.plyr?.currentTime;
+          if (
+            typeof current === "number" &&
+            current - lastReportedRef.current >= 10
+          ) {
+            lastReportedRef.current = current;
+            onProgressRef.current?.(Math.floor(current));
+          }
+        });
+        plyr.on("ended", () => {
+          const duration =
+            typeof plyr.duration === "number" ? Math.floor(plyr.duration) : 0;
+          onProgressRef.current?.(duration, true);
+        });
 
         if (!cancelled) setStatus("ready");
       } catch (err) {
@@ -144,9 +171,40 @@ function SafePlyr({ source, options }: SafePlyrProps) {
   );
 }
 
+function RecordingVideo({
+  recording,
+  onProgress,
+}: {
+  recording: CourseRecording;
+  onProgress?: ProgressCallback;
+}) {
+  const lastReportedRef = useRef(0);
+
+  return (
+    <div className="absolute inset-0 bg-black">
+      <video
+        className="h-full w-full"
+        controls
+        src={recording.videoUrl}
+        onTimeUpdate={(e) => {
+          const current = e.currentTarget.currentTime;
+          if (current - lastReportedRef.current >= 10) {
+            lastReportedRef.current = current;
+            onProgress?.(Math.floor(current));
+          }
+        }}
+        onEnded={(e) =>
+          onProgress?.(Math.floor(e.currentTarget.duration || 0), true)
+        }
+      />
+    </div>
+  );
+}
+
 interface Props {
   lesson: CourseLesson | null;
   recording: CourseRecording | null;
+  onProgress?: ProgressCallback;
 }
 
 /**
@@ -224,8 +282,12 @@ function getVideoSource(lesson: CourseLesson): PlyrSource | null {
   return null;
 }
 
-export function VideoPlayer({ lesson, recording }: Props) {
+export function VideoPlayer({ lesson, recording, onProgress }: Props) {
   if (recording) {
+    if (recording.videoUrl) {
+      return <RecordingVideo recording={recording} onProgress={onProgress} />;
+    }
+
     return (
       <div className="absolute inset-0 flex flex-col bg-gradient-to-br from-[hsl(230,25%,12%)] to-[hsl(230,25%,8%)]">
         <div className="absolute inset-0 flex items-center justify-center">
@@ -267,7 +329,11 @@ export function VideoPlayer({ lesson, recording }: Props) {
       <div className="absolute inset-0 bg-black">
         {/* `key` forces a full unmount/remount when the video changes,
             avoiding the Plyr embed race condition described in SafePlyr. */}
-        <SafePlyr key={lesson.id} source={source} />
+        <SafePlyr
+          key={lesson.id}
+          source={source}
+          onProgress={onProgress}
+        />
       </div>
     );
   }

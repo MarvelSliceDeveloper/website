@@ -111,6 +111,7 @@ model User {
   restoredBy              String?
   enrollments             EnrollmentRequest[]
   progress                Progress[]
+  lessonProgress          LessonProgress[]
   certificates            Certificate[]
   instructorOf            Batch[]                  @relation("BatchInstructor")
   ticketsCreated          MentorshipTicket[]       @relation("TicketStudent")
@@ -217,6 +218,7 @@ model Lesson {
   isFreePreview   Boolean @default(false)
   resources       Json? // [{name, url}]
   module          Module  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress        LessonProgress[]
 
   @@index([moduleId])
 }
@@ -443,6 +445,23 @@ model Progress {
   @@unique([userId, recordingId])
   @@index([userId])
   @@index([recordingId])
+}
+
+// Per-student watch progress for course content lessons (YouTube/Vimeo/upload
+// videos in modules). Mirrors the Recording `Progress` model but is keyed to a
+// Lesson. `completedAt` is set once the student watches >=90% of the lesson.
+model LessonProgress {
+  id             String    @id @default(cuid())
+  userId         String
+  lessonId       String
+  watchedSeconds Int       @default(0)
+  completedAt    DateTime?
+  user           User      @relation(fields: [userId], references: [id])
+  lesson         Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([lessonId])
 }
 
 model CalendarEvent {

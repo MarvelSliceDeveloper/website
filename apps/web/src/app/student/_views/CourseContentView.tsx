@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import {
   IconBook2,
@@ -560,6 +560,122 @@ export default function CourseContentView({
     selectedModule?.lessons.find((l) => l.id === selectedLessonId) ?? null;
   const selectedRecording =
     data?.recordings.find((r) => r.id === selectedRecordingId) ?? null;
+
+  const applyProgress = useCallback(
+    (patch: {
+      lesson?: { id: string; watchedPercent: number; isCompleted: boolean };
+      recording?: { id: string; watchedPercent: number; isCompleted: boolean };
+    }) => {
+      setData((prev) => {
+        if (!prev) return prev;
+
+        const recordings = patch.recording
+          ? prev.recordings.map((r) =>
+              r.id === patch.recording!.id
+                ? { ...r, ...patch.recording! }
+                : r,
+            )
+          : prev.recordings;
+
+        const modules = prev.modules.map((m) => {
+          const lessons = patch.lesson
+            ? m.lessons.map((l) =>
+                l.id === patch.lesson!.id ? { ...l, ...patch.lesson! } : l,
+              )
+            : m.lessons;
+          const moduleRecordings = recordings.filter(
+            (r) => r.moduleId === m.id,
+          );
+          const videoLessons = lessons.filter(
+            (l) => l.videoUrl || l.videoEmbedId,
+          );
+          const totalItems = moduleRecordings.length + videoLessons.length;
+          const completedItems =
+            moduleRecordings.filter((r) => r.isCompleted).length +
+            videoLessons.filter((l) => l.isCompleted).length;
+          return {
+            ...m,
+            lessons,
+            completionPercent:
+              totalItems > 0
+                ? Math.round((completedItems / totalItems) * 100)
+                : 0,
+          };
+        });
+
+        const progressPercentages = [
+          ...recordings.map((r) => r.watchedPercent),
+          ...modules.flatMap((m) =>
+            m.lessons
+              .filter((l) => l.videoUrl || l.videoEmbedId)
+              .map((l) => l.watchedPercent ?? 0),
+          ),
+        ];
+        const overallProgress =
+          progressPercentages.length > 0
+            ? Math.round(
+                progressPercentages.reduce((s, p) => s + p, 0) /
+                  progressPercentages.length,
+              )
+            : 0;
+
+        return { ...prev, modules, recordings, overallProgress };
+      });
+    },
+    [],
+  );
+
+  const handleWatchProgress = (
+    watchedSeconds: number,
+    completed?: boolean,
+  ) => {
+    if (selectedRecording) {
+      api
+        .post("/api/recordings/progress", {
+          recordingId: selectedRecording.id,
+          watchedSeconds,
+          completed,
+        })
+        .catch((err: unknown) => {
+          console.error("Failed to save recording progress:", err);
+        });
+      const duration = selectedRecording.duration || 1;
+      const watchedPercent = completed
+        ? 100
+        : Math.min(100, Math.round((watchedSeconds / duration) * 100));
+      applyProgress({
+        recording: {
+          id: selectedRecording.id,
+          watchedPercent,
+          isCompleted: completed || watchedPercent >= 90,
+        },
+      });
+      return;
+    }
+
+    if (selectedLesson) {
+      api
+        .post(`/api/courses/lessons/${selectedLesson.id}/progress`, {
+          watchedSeconds,
+          completed,
+        })
+        .catch((err: unknown) => {
+          console.error("Failed to save lesson progress:", err);
+        });
+      const duration = selectedLesson.durationSeconds || 1;
+      const watchedPercent = completed
+        ? 100
+        : Math.min(100, Math.round((watchedSeconds / duration) * 100));
+      applyProgress({
+        lesson: {
+          id: selectedLesson.id,
+          watchedPercent,
+          isCompleted: completed || watchedPercent >= 90,
+        },
+      });
+    }
+  };
+
   const currentModuleIndex =
     data?.modules.findIndex((m) => m.id === selectedModuleId) ?? -1;
   const currentLessonIndex =
@@ -816,7 +932,11 @@ export default function CourseContentView({
     return (
       <>
         <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-card border border-border shadow-sm">
-          <VideoPlayer lesson={selectedLesson} recording={selectedRecording} />
+          <VideoPlayer
+            lesson={selectedLesson}
+            recording={selectedRecording}
+            onProgress={handleWatchProgress}
+          />
         </div>
     <div className="px-1">
       <h2 className="text-base font-semibold text-foreground mt-4">
@@ -947,13 +1067,19 @@ const renderAccordion = () => (
                           className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
                               active
                                 ? "bg-brand-blue border-brand-blue"
-                                : "border-border bg-transparent"
+                                : lesson.isCompleted
+                                  ? "bg-emerald-500 border-emerald-500"
+                                  : "border-border bg-transparent"
                           }`}
                         >
-                          <IconVideo
-                            size={11}
-                            className={active ? "text-white ml-px" : "text-muted-foreground"}
-                          />
+                          {lesson.isCompleted ? (
+                            <IconCheck size={12} className="text-white" />
+                          ) : (
+                            <IconVideo
+                              size={11}
+                              className={active ? "text-white ml-px" : "text-muted-foreground"}
+                            />
+                          )}
                         </span>
                         <span className="min-w-0 flex-1">
                           <span
@@ -963,6 +1089,16 @@ const renderAccordion = () => (
                           >
                             {idx + 1}. {lesson.title}
                           </span>
+                          {!lesson.isCompleted &&
+                          typeof lesson.watchedPercent === "number" &&
+                          lesson.watchedPercent > 0 ? (
+                            <span className="mt-1 block h-1 w-full overflow-hidden rounded-full bg-muted">
+                              <span
+                                className="block h-full rounded-full bg-primary"
+                                style={{ width: `${lesson.watchedPercent}%` }}
+                              />
+                            </span>
+                          ) : null}
                         </span>
                         {lesson.durationSeconds ? (
                           <span className="text-[10px] shrink-0 text-muted-foreground/70">

@@ -10,6 +10,7 @@ import {
   getCatalogue,
   loadCourseContent,
   requestEnrollment,
+  updateLessonProgress,
 } from "./student-course.service";
 import { getCourseContentProgress } from "../certificates/certificate-completion.service";
 
@@ -71,6 +72,32 @@ router.get("/:courseId/progress", async (req: AuthRequest, res: Response) => {
     const { courseId } = req.params;
     const progress = await getCourseContentProgress(courseId, userId);
     return res.status(200).json(progress);
+  } catch (err: unknown) {
+    const { statusCode, body } = handleControllerError(err, (req as any).log);
+    return res.status(statusCode).json(body);
+  }
+});
+
+// POST /api/courses/lessons/:lessonId/progress — save watch progress for a lesson
+router.post("/lessons/:lessonId/progress", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { lessonId } = req.params;
+    const { watchedSeconds, completed } = req.body ?? {};
+
+    if (watchedSeconds === undefined && completed !== true) {
+      return res
+        .status(400)
+        .json({ error: "watchedSeconds is required (or pass completed: true)" });
+    }
+
+    const progress = await updateLessonProgress(
+      userId,
+      lessonId,
+      watchedSeconds,
+      completed === true,
+    );
+    return res.status(200).json({ progress });
   } catch (err: unknown) {
     const { statusCode, body } = handleControllerError(err, (req as any).log);
     return res.status(statusCode).json(body);

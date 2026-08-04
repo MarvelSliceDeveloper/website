@@ -11,6 +11,8 @@ export interface CourseLesson {
   durationSeconds: number | null;
   isFreePreview: boolean;
   resources: Array<{ name: string; url: string }>;
+  watchedPercent?: number;
+  isCompleted?: boolean;
 }
 
 export interface QuizInfo {
@@ -93,6 +95,7 @@ export interface CourseRecording {
   durationLabel: string;
   watchedPercent: number;
   isCompleted: boolean;
+  videoUrl?: string;
 }
 
 export interface CourseContentData {

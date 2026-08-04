@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { api } from "@/lib/api";
+import { toast } from "@/lib/toast";
 import type { Batch } from "@/lib/api-types";
 
 interface RecordingPlayerViewProps {
@@ -16,19 +18,39 @@ export default function RecordingPlayerView({
 }: RecordingPlayerViewProps) {
   const recording =
     batch.recordings.find((r) => r.id === recordingId) ?? batch.recordings[0];
-  const [watchedSecs, setWatchedSecs] = useState(0);
   const [openModuleId, setOpenModuleId] = useState(batch.modules[0]?.id ?? "");
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [progressMap, setProgressMap] = useState<Record<string, number>>({});
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const lastReportedRef = useRef(0);
 
-  // Simulated playback timer (auto-save every 10s)
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      setWatchedSecs((s) => s + 10);
-    }, 10_000);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
+  const persistProgress = (watchedSeconds: number, completed?: boolean) => {
+    if (!recording) return;
+    const now = Date.now();
+    if (!completed && now - lastReportedRef.current < 10_000) return;
+    lastReportedRef.current = now;
+
+    api
+      .post("/api/recordings/progress", {
+        recordingId: recording.id,
+        watchedSeconds,
+        completed,
+      })
+      .catch((err: unknown) => {
+        console.error("Failed to save recording progress:", err);
+      });
+
+    const video = videoRef.current;
+    const total = video?.duration ?? 0;
+    const current = progressMap[recording.id] ?? recording.watchedPercent;
+    const percent = completed
+      ? 100
+      : total > 0
+        ? Math.min(100, Math.round((watchedSeconds / total) * 100))
+        : current;
+    if (percent > current) {
+      setProgressMap((prev) => ({ ...prev, [recording.id]: percent }));
+    }
+  };
 
   if (!recording) {
     return (
@@ -39,7 +61,7 @@ export default function RecordingPlayerView({
     );
   }
 
-  const watchedPct = recording.watchedPercent;
+  const watchedPct = progressMap[recording.id] ?? recording.watchedPercent;
   const modules =
     batch.modules.length > 0
       ? batch.modules
@@ -81,7 +103,19 @@ export default function RecordingPlayerView({
       <div className="space-y-4">
         <div className="glass-card overflow-hidden">
           {recording.videoUrl ? (
-            <video className="w-full" controls src={recording.videoUrl} />
+            <video
+              ref={videoRef}
+              className="w-full"
+              controls
+              src={recording.videoUrl}
+              onTimeUpdate={(e) => persistProgress(e.currentTarget.currentTime)}
+              onEnded={(e) =>
+                persistProgress(
+                  e.currentTarget.duration || e.currentTarget.currentTime,
+                  true,
+                )
+              }
+            />
           ) : (
             <div className="relative flex aspect-video w-full flex-col items-center justify-center bg-linear-to-br from-card to-background">
               <div className="absolute inset-0 flex items-center justify-center">
@@ -120,17 +154,21 @@ export default function RecordingPlayerView({
               {batch.courseTitle} · {batch.batchLabel} · Duration:{" "}
               {recording.duration}
             </p>
-            {watchedSecs > 0 ? (
-              <p className="mt-1 text-xs text-success">
-                ✅ Progress auto-saving every 10 seconds
-              </p>
-            ) : null}
           </div>
           <div className="flex flex-wrap gap-2">
             <button className="btn-secondary text-sm">
               Download Attachment
             </button>
-            <button className="btn-primary text-sm">Mark as Complete</button>
+            <button
+              className="btn-primary text-sm"
+              onClick={() => {
+                const video = videoRef.current;
+                persistProgress(video?.duration ?? 0, true);
+                toast.success("Recording marked as complete");
+              }}
+            >
+              Mark as Complete
+            </button>
           </div>
         </div>
       </div>
@@ -184,12 +222,16 @@ export default function RecordingPlayerView({
                                 {rec.dayLabel} — {rec.title}
                               </span>
                               <span className="mt-0.5 block text-xs text-muted-foreground">
-                                {rec.duration} · {rec.watchedPercent}% watched
+                                {rec.duration} ·{" "}
+                                {progressMap[rec.id] ?? rec.watchedPercent}%
+                                watched
                               </span>
                               <span className="mt-1 block h-1.5 w-full overflow-hidden rounded-full bg-border">
                                 <span
                                   className="block h-full rounded-full bg-linear-to-r from-primary to-accent"
-                                  style={{ width: `${rec.watchedPercent}%` }}
+                                  style={{
+                                    width: `${progressMap[rec.id] ?? rec.watchedPercent}%`,
+                                  }}
                                 />
                               </span>
                             </span>
