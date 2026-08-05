@@ -8,6 +8,7 @@ import type { DashboardChartData } from "@/lib/api-types";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import QuickActionCard from "@/components/admin/QuickActionCard";
 import {
   IconBook,
   IconCalendar,
@@ -354,44 +355,34 @@ function SuperAdminDashboard() {
           Quick Actions
         </h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Link
+          <QuickActionCard
+            label="System Settings"
             href="/admin/settings/system"
-            className="rounded-2xl border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
-          >
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-danger/15 text-danger border border-danger/20 group-hover:scale-110 transition-transform">
-              <IconSettings size={20} stroke={1.8} />
-            </div>
-            <p className="text-sm font-medium text-foreground">
-              System Settings
-            </p>
-          </Link>
-          <Link
+            icon={IconSettings}
+            variant="red"
+            description="Configure platform settings"
+          />
+          <QuickActionCard
+            label="API Keys"
             href="/admin/settings/api-keys"
-            className="rounded-2xl border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
-          >
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-warning/15 text-warning border border-warning/20 group-hover:scale-110 transition-transform">
-              <IconKey size={20} stroke={1.8} />
-            </div>
-            <p className="text-sm font-medium text-foreground">API Keys</p>
-          </Link>
-          <Link
+            icon={IconKey}
+            variant="amber"
+            description="Manage API credentials"
+          />
+          <QuickActionCard
+            label="Trash"
             href="/admin/trash"
-            className="rounded-2xl border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
-          >
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-warning/15 text-warning border border-warning/20 group-hover:scale-110 transition-transform">
-              <IconTrash size={20} stroke={1.8} />
-            </div>
-            <p className="text-sm font-medium text-foreground">Trash</p>
-          </Link>
-          <Link
+            icon={IconTrash}
+            variant="amber"
+            description="Restore or delete items"
+          />
+          <QuickActionCard
+            label="Login History"
             href="/admin/users/login-history"
-            className="rounded-2xl border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
-          >
-            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent border border-accent/20 group-hover:scale-110 transition-transform">
-              <IconHistory size={20} stroke={1.8} />
-            </div>
-            <p className="text-sm font-medium text-foreground">Login History</p>
-          </Link>
+            icon={IconHistory}
+            variant="teal"
+            description="View recent login logs"
+          />
         </div>
       </div>
     </div>
@@ -502,31 +493,36 @@ function AdminDashboard() {
       label: "Add Course",
       href: "/admin/courses/new",
       icon: IconEdit,
-      color: "bg-primary/15 text-primary border border-primary/20",
+      variant: "blue" as const,
+      description: "Create a new course",
     },
     {
       label: "Manage Batches",
       href: "/admin/batches",
       icon: IconUsersGroup,
-      color: "bg-accent/15 text-accent border border-accent/20",
+      variant: "teal" as const,
+      description: "View and manage batches",
     },
     {
       label: "Calendar",
       href: "/admin/calendar",
       icon: IconCalendar,
-      color: "bg-primary/15 text-primary border border-primary/20",
+      variant: "blue" as const,
+      description: "Schedule and view events",
     },
     {
       label: "View Sessions",
       href: "/admin/sessions",
       icon: IconVideo,
-      color: "bg-success/15 text-success border border-success/20",
+      variant: "green" as const,
+      description: "Monitor live sessions",
     },
     {
       label: "Mentorship Tickets",
       href: "/admin/mentorship",
       icon: IconTicket,
-      color: "bg-warning/15 text-warning border border-warning/20",
+      variant: "amber" as const,
+      description: "Review mentorship requests",
     },
   ];
 
@@ -872,22 +868,16 @@ function AdminDashboard() {
         <h2 className="text-base font-semibold text-foreground mb-4">
           Quick Actions
         </h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
           {quickActions.map((action) => (
-            <Link
-              key={action.label}
+            <QuickActionCard
+              key={action.href}
+              label={action.label}
               href={action.href}
-              className="rounded-2xl border border-border bg-card p-4 text-center hover:border-primary/30 transition-all group cursor-pointer"
-            >
-              <div
-                className={`mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${action.color} group-hover:scale-110 transition-transform`}
-              >
-                <action.icon size={20} stroke={1.8} />
-              </div>
-              <p className="text-sm font-medium text-foreground">
-                {action.label}
-              </p>
-            </Link>
+              icon={action.icon}
+              variant={action.variant}
+              description={action.description}
+            />
           ))}
         </div>
       </div>

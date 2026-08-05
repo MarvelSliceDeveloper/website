@@ -2,6 +2,7 @@ import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { internService } from "./intern.service";
 import { notificationService } from "../notifications/notification.service";
+import { googleSheetsService, type SavedSheet } from "../../services/google-sheets.service";
 import { handleControllerError } from "../../utils/errors";
 
 export const internController = {
@@ -224,6 +225,101 @@ export const internController = {
       const { id } = req.params;
       const session = await internService.deleteInternSession(id, req.user!.userId);
       return res.status(200).json(session);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
+  // Admin — list saved assignment-tracker sheet IDs
+  async listSavedSheets(_req: AuthRequest, res: Response) {
+    try {
+      const sheets = await googleSheetsService.getSavedSheets();
+      return res.status(200).json({ sheets });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (_req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
+  // Admin — save a new assignment-tracker sheet ID (with optional gid)
+  async saveSheet(req: AuthRequest, res: Response) {
+    try {
+      const { id, name, gid } = req.body;
+      if (!id || typeof id !== "string") {
+        return res.status(400).json({ error: "Sheet ID is required" });
+      }
+      const sheets = await googleSheetsService.saveSheet({
+        id: id.trim(),
+        name: (name || `Sheet ${id.slice(-8)}`).trim(),
+        gid: typeof gid === "string" ? gid : undefined,
+      });
+      return res.status(200).json({ sheets });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
+  // Admin — delete a saved sheet ID (optionally narrow by gid)
+  async deleteSavedSheet(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { gid } = req.query;
+      const sheetGid = typeof gid === "string" ? gid : undefined;
+      const sheets = await googleSheetsService.removeSheet(id, sheetGid);
+      return res.status(200).json({ sheets });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+// REPLACE these two handlers inside your existing intern.controller.ts
+// (the rest of the file — listInterns, createInternField, etc. — stays
+// exactly as it is; only getAssignmentSheet and listSheetTabs change).
+// ─────────────────────────────────────────────────────────────────────────
+
+  // Admin — fetch assignment tracker data for a given sheet ID + optional gid
+  async getAssignmentSheet(req: AuthRequest, res: Response) {
+    try {
+      const { sheetId, gid } = req.query;
+      const id = typeof sheetId === "string" ? sheetId.trim() : null;
+
+      if (!id) {
+        return res.status(400).json({
+          error: "sheetId query parameter is required",
+        });
+      }
+
+      // If no gid param, try to find saved sheet's gid
+      let sheetGid = typeof gid === "string" ? gid : "0";
+      if (!gid) {
+        const saved = await googleSheetsService.getSavedSheets();
+        const match = saved.find((s) => s.id === id);
+        if (match?.gid) sheetGid = match.gid;
+      }
+
+      const data = await googleSheetsService.fetchSheet(id, sheetGid);
+      return res.status(200).json(data);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
+  // Admin — list available tabs (gid + real title) in a spreadsheet, plus
+  // the spreadsheet's own title.
+  async listSheetTabs(req: AuthRequest, res: Response) {
+    try {
+      const { sheetId } = req.query;
+      const id = typeof sheetId === "string" ? sheetId.trim() : null;
+      if (!id) {
+        return res.status(400).json({ error: "sheetId query parameter is required" });
+      }
+      const metadata = await googleSheetsService.listSheetTabs(id);
+      return res.status(200).json(metadata); // { spreadsheetTitle, tabs: [{gid,title}] }
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
       return res.status(statusCode).json(body);

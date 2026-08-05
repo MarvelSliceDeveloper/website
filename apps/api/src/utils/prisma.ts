@@ -1,8 +1,32 @@
 import { PrismaClient } from "@prisma/client";
+import * as dotenv from "dotenv";
+import * as fs from "fs";
+import * as path from "path";
 
 declare global {
   var prisma: PrismaClient | undefined;
 }
+
+// The Prisma client below is constructed at module-load time, but this module
+// can be evaluated before index.ts/app.ts have called dotenv.config() (ESM
+// import hoisting / require order). If DATABASE_URL isn't loaded yet the
+// client is built with an empty URL and every query fails with
+// "You must provide a nonempty URL". Load .env here too, walking up from this
+// file so it works in dev (src/utils), built output (dist), and tests. dotenv
+// never overrides already-set vars, so the nearest .env with the value wins.
+function loadEnv(): void {
+  let dir = __dirname;
+  while (true) {
+    const envPath = path.join(dir, ".env");
+    if (fs.existsSync(envPath)) {
+      dotenv.config({ path: envPath });
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+}
+loadEnv();
 
 function getPrismaUrl(): string {
   const baseUrl = process.env.DATABASE_URL;

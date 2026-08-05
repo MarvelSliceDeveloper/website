@@ -30,3 +30,27 @@ adminInternRouter.patch("/program-fee", internController.updateProgramFee);
 adminInternRouter.get("/sessions", internController.listInternSessions);
 adminInternRouter.post("/sessions", internController.createInternSession);
 adminInternRouter.delete("/sessions/:id", internController.deleteInternSession);
+
+// GET /api/admin/interns/assignments/sheets — list saved sheet IDs
+adminInternRouter.get("/assignments/sheets", internController.listSavedSheets);
+
+// POST /api/admin/interns/assignments/sheets — save a sheet ID
+adminInternRouter.post("/assignments/sheets", internController.saveSheet);
+
+// DELETE /api/admin/interns/assignments/sheets/:id — remove a saved sheet
+adminInternRouter.delete(
+  "/assignments/sheets/:id",
+  internController.deleteSavedSheet,
+);
+
+// GET /api/admin/interns/assignments?sheetId=... — fetch sheet data
+adminInternRouter.get(
+  "/assignments",
+  internController.getAssignmentSheet,
+);
+
+// GET /api/admin/interns/assignments/tabs?sheetId=... — list available tabs
+adminInternRouter.get(
+  "/assignments/tabs",
+  internController.listSheetTabs,
+);

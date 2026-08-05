@@ -428,6 +428,7 @@ export default function AdminSidebar({
                 children: [
                   { label: "Manage Interns", href: "/admin/interns" },
                   { label: "Schedule Class", href: "/admin/interns/schedule" },
+                  { label: "Assignment Tracker", href: "/admin/interns/assignments" },
                 ],
               },
             ],
@@ -624,6 +625,7 @@ export default function AdminSidebar({
                 children: [
                   { label: "Manage Interns", href: "/admin/interns" },
                   { label: "Schedule Class", href: "/admin/interns/schedule" },
+                  { label: "Assignment Tracker", href: "/admin/interns/assignments" },
                 ],
               },
             ],
