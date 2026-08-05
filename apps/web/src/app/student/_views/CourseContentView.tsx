@@ -56,7 +56,6 @@ const CertificationExamView = dynamic(
 
 type ContentPanel = "content" | "live";
 
-
 function ResizableSidebar({
   children,
   defaultWidth = 320,
@@ -274,6 +273,7 @@ export default function CourseContentView({
   const [joiningSessionId, setJoiningSessionId] = useState<string | null>(null);
   const presence = useLiveSessionPresence();
   const [showCertificationExam, setShowCertificationExam] = useState(false);
+  const [certQuizPassed, setCertQuizPassed] = useState(false);
 
   // ── Data fetching ──────────────────────────────────────────────────────
 
@@ -288,6 +288,14 @@ export default function CourseContentView({
         );
         if (cancelled) return;
         setData(res);
+        if (res.modules.find((m) => m.isCertificationModule)) {
+          const certRes = await api.get<{
+            attempt: { isPassed: boolean } | null;
+          }>(`/api/courses/${courseId}/certification`);
+          if (!cancelled) {
+            setCertQuizPassed(certRes.attempt?.isPassed ?? false);
+          }
+        }
         if (res.modules.length > 0) {
           const firstModule = res.modules[0];
           const targetModule = initialLessonId
@@ -580,9 +588,7 @@ export default function CourseContentView({
 
         const recordings = patch.recording
           ? prev.recordings.map((r) =>
-              r.id === patch.recording!.id
-                ? { ...r, ...patch.recording! }
-                : r,
+              r.id === patch.recording!.id ? { ...r, ...patch.recording! } : r,
             )
           : prev.recordings;
 
@@ -634,10 +640,7 @@ export default function CourseContentView({
     [],
   );
 
-  const handleWatchProgress = (
-    watchedSeconds: number,
-    completed?: boolean,
-  ) => {
+  const handleWatchProgress = (watchedSeconds: number, completed?: boolean) => {
     if (selectedRecording) {
       api
         .post("/api/recordings/progress", {
@@ -805,11 +808,11 @@ export default function CourseContentView({
           <div className="space-y-4">
             <div className="bg-white border border-border/60 rounded-xl p-4 shadow-sm">
               <div className="flex items-center gap-2.5 mb-3">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-blue-tint text-brand-blue">
-                    <IconDeviceSpeaker size={17} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-blue">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-blue-tint text-brand-blue">
+                  <IconDeviceSpeaker size={17} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-blue">
                     Hands-On / Practical
                   </p>
                   <p className="text-sm font-medium text-foreground">
@@ -900,7 +903,7 @@ export default function CourseContentView({
                           href={r.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted/50"
+                          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors hover:bg-primary/10"
                         >
                           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                             <IconFile size={14} />
@@ -951,418 +954,458 @@ export default function CourseContentView({
             }
           />
         </div>
-    <div className="px-1">
-      <h2 className="text-base font-semibold text-foreground mt-4">
-        {selectedRecording?.title ??
-          selectedLesson?.title ??
-          selectedModule?.title ??
-          "Select a lesson"}
-      </h2>
-      <p className="text-xs text-muted-foreground mt-0.5">
-        {selectedRecording ? (
-          "Recorded live session"
-        ) : (
-          <>
-            {currentLessonIndex >= 0
-              ? `Lesson ${currentLessonIndex + 1}`
-              : ""}
-            {currentModuleIndex >= 0
-              ? ` · Module ${currentModuleIndex + 1}`
-              : ""}
-            {selectedLesson?.durationSeconds
-              ? ` · ${Math.floor(selectedLesson.durationSeconds / 60)} min`
-              : ""}
-          </>
-        )}
-      </p>
-      {d.batch?.instructor && (
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Instructor: {d.batch.instructor}
-        </p>
-      )}
-      {selectedRecording && (
-        <button
-          onClick={clearRecording}
-          className="text-xs font-medium text-primary hover:underline mt-2"
-        >
-          ← Back to current lesson
-        </button>
-      )}
-    </div>
-    <div className="bg-card border border-border rounded-xl p-4 mt-4 shadow-sm">
-      <div className="flex items-center gap-2.5 mb-1.5">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
-          {selectedRecording ? (
-            <IconVideo size={15} />
-          ) : (
-            <IconBook2 size={15} />
+        <div className="px-1">
+          <h2 className="text-base font-semibold text-foreground mt-4">
+            {selectedRecording?.title ??
+              selectedLesson?.title ??
+              selectedModule?.title ??
+              "Select a lesson"}
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {selectedRecording ? (
+              "Recorded live session"
+            ) : (
+              <>
+                {currentLessonIndex >= 0
+                  ? `Lesson ${currentLessonIndex + 1}`
+                  : ""}
+                {currentModuleIndex >= 0
+                  ? ` · Module ${currentModuleIndex + 1}`
+                  : ""}
+                {selectedLesson?.durationSeconds
+                  ? ` · ${Math.floor(selectedLesson.durationSeconds / 60)} min`
+                  : ""}
+              </>
+            )}
+          </p>
+          {d.batch?.instructor && (
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Instructor: {d.batch.instructor}
+            </p>
           )}
-        </span>
-        <h3 className="text-sm font-semibold text-foreground">
-          {selectedRecording ? "About this session" : "About this lesson"}
-        </h3>
-      </div>
-      <p className="text-xs text-muted-foreground leading-relaxed pl-[38px]">
-        {selectedLesson?.description ??
-          "Select a lesson from the sidebar to view details."}
-      </p>
-    </div>
+          {selectedRecording && (
+            <button
+              onClick={clearRecording}
+              className="text-xs font-medium text-primary hover:underline mt-2"
+            >
+              ← Back to current lesson
+            </button>
+          )}
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4 mt-4 shadow-sm">
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
+              {selectedRecording ? (
+                <IconVideo size={15} />
+              ) : (
+                <IconBook2 size={15} />
+              )}
+            </span>
+            <h3 className="text-sm font-semibold text-foreground">
+              {selectedRecording ? "About this session" : "About this lesson"}
+            </h3>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed pl-[38px]">
+            {selectedLesson?.description ??
+              "Select a lesson from the sidebar to view details."}
+          </p>
+        </div>
       </>
     );
   };
 
-const renderAccordion = () => (
-  <div className="space-y-3 p-3">
-    <div className="px-1">
-      <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
-        <span className="uppercase tracking-wider">Course progress</span>
-        <span className="text-emerald-600">{d.overallProgress}%</span>
+  const renderAccordion = () => (
+    <div className="space-y-3 p-3">
+      <div className="px-1">
+        <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
+          <span className="uppercase tracking-wider">Course progress</span>
+          <span className="text-emerald-600">{d.overallProgress}%</span>
+        </div>
+        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-border">
+          <div
+            className="h-full rounded-full bg-emerald-500 transition-all"
+            style={{ width: `${d.overallProgress}%` }}
+          />
+        </div>
       </div>
-      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-border">
-        <div
-          className="h-full rounded-full bg-emerald-500 transition-all"
-          style={{ width: `${d.overallProgress}%` }}
-        />
-      </div>
-    </div>
-    {d.modules.map((module, mIdx) => {
-      const isExpanded = expandedModules.has(module.id);
-      const isActiveModule = module.id === selectedModuleId;
-      const totalSeconds = module.lessons.reduce(
-        (s, l) => s + (l.durationSeconds ?? 0),
-        0,
-      );
-      const itemCount =
-        module.lessons.length +
-        module.quizzes.length +
-        module.assignments.length +
-        (module.practicals?.length ?? 0);
+      {d.modules.map((module, mIdx) => {
+        const isExpanded = expandedModules.has(module.id);
+        const isActiveModule = module.id === selectedModuleId;
+        const totalSeconds = module.lessons.reduce(
+          (s, l) => s + (l.durationSeconds ?? 0),
+          0,
+        );
+        const itemCount =
+          module.lessons.length +
+          module.quizzes.length +
+          module.assignments.length +
+          (module.practicals?.length ?? 0);
 
-      return (
-        <div
-          key={module.id}
-          className={`rounded-xl border overflow-hidden transition-colors ${
-            isExpanded || isActiveModule ? "border-primary/40" : "border-border"
-          }`}
-        >
-          <button
-            onClick={() => toggleModule(module.id)}
-            className={`w-full flex items-start justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
-              isActiveModule ? "bg-primary/5" : ""
+        return (
+          <div
+            key={module.id}
+            className={`rounded-xl border overflow-hidden transition-colors ${
+              isExpanded || isActiveModule
+                ? "border-primary/40"
+                : "border-border"
             }`}
-            aria-expanded={isExpanded}
           >
-            <span className="min-w-0">
-              <span className="block text-[13px] font-semibold leading-snug text-foreground">
-                Module {mIdx + 1} – {module.title}
-              </span>
-              <span className="block text-[11px] mt-0.5 text-muted-foreground">
-                {itemCount} {itemCount === 1 ? "item" : "items"}
-                {totalSeconds ? ` · ${formatMinutes(totalSeconds)}` : ""}
-              </span>
-              {module.completionPercent > 0 && (
-                <span className="mt-1.5 flex items-center gap-1.5">
-                  <span className="h-1 w-16 overflow-hidden rounded-full bg-border">
-                    <span
-                      className="block h-full rounded-full bg-emerald-500"
-                      style={{ width: `${module.completionPercent}%` }}
-                    />
-                  </span>
-                  <span className="text-[10px] font-semibold text-emerald-600">
-                    {module.completionPercent}% complete
-                  </span>
-                </span>
-              )}
-            </span>
-            <IconChevronDown
-              size={16}
-              className={`shrink-0 mt-0.5 text-muted-foreground transition-transform duration-200 ${
-                isExpanded ? "rotate-180" : ""
+            <button
+              onClick={() => toggleModule(module.id)}
+              className={`w-full flex items-start justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                isActiveModule ? "bg-primary/5" : ""
               }`}
-            />
-          </button>
+              aria-expanded={isExpanded}
+            >
+              <span className="min-w-0">
+                <span className="block text-[13px] font-semibold leading-snug text-foreground">
+                  Module {mIdx + 1} – {module.title}
+                </span>
+                <span className="block text-[11px] mt-0.5 text-muted-foreground">
+                  {itemCount} {itemCount === 1 ? "item" : "items"}
+                  {totalSeconds ? ` · ${formatMinutes(totalSeconds)}` : ""}
+                </span>
+                {module.completionPercent > 0 && (
+                  <span className="mt-1.5 flex items-center gap-1.5">
+                    <span className="h-1 w-16 overflow-hidden rounded-full bg-border">
+                      <span
+                        className="block h-full rounded-full bg-emerald-500"
+                        style={{ width: `${module.completionPercent}%` }}
+                      />
+                    </span>
+                    <span className="text-[10px] font-semibold text-emerald-600">
+                      {module.completionPercent}% complete
+                    </span>
+                  </span>
+                )}
+              </span>
+              <IconChevronDown
+                size={16}
+                className={`shrink-0 mt-0.5 text-muted-foreground transition-transform duration-200 ${
+                  isExpanded ? "rotate-180" : ""
+                }`}
+              />
+            </button>
 
-          {isExpanded && (
-            <ul className="pb-2 pt-1 border-t border-border/60">
-              {buildUnifiedList(module).map((item, idx) => {
-                if (item.type === "LESSON") {
-                  const lesson = item.data;
-                  const active =
-                    lesson.id === selectedLessonId && !selectedRecordingId;
-                  const isBookmarked = bookmarks.includes(lesson.id);
-                  return (
-                    <li key={lesson.id} className="px-2 py-0.5">
-                      <button
-                        onClick={() => selectLesson(lesson, module.id)}
-                        className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
-                          active
-                            ? "bg-primary/10 border-primary/30 font-medium"
-                            : "border-border hover:bg-muted/50"
-                        }`}
-                        aria-current={active ? "page" : undefined}
-                      >
-                        <span
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+            {isExpanded && (
+              <ul className="pb-2 pt-1 border-t border-border/60">
+                {buildUnifiedList(module).map((item, idx) => {
+                  if (item.type === "LESSON") {
+                    const lesson = item.data;
+                    const active =
+                      lesson.id === selectedLessonId && !selectedRecordingId;
+                    const isBookmarked = bookmarks.includes(lesson.id);
+                    return (
+                      <li key={lesson.id} className="px-2 py-0.5">
+                        <button
+                          onClick={() => selectLesson(lesson, module.id)}
+                          className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                            active
+                              ? "bg-primary/10 border-primary/30 font-medium"
+                              : "border-border hover:bg-primary/10"
+                          }`}
+                          aria-current={active ? "page" : undefined}
+                        >
+                          <span
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
                               active
                                 ? "bg-brand-blue border-brand-blue"
                                 : lesson.isCompleted
                                   ? "bg-emerald-500 border-emerald-500"
                                   : "border-border bg-transparent"
-                          }`}
-                        >
-                          {lesson.isCompleted ? (
-                            <IconCheck size={12} className="text-white" />
-                          ) : (
-                            <IconVideo
-                              size={11}
-                              className={active ? "text-white ml-px" : "text-muted-foreground"}
-                            />
-                          )}
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span
-                            className={`block text-xs truncate ${
-                              active ? "text-foreground font-medium" : "text-muted-foreground"
                             }`}
                           >
-                            {idx + 1}. {lesson.title}
-                          </span>
-                          {!lesson.isCompleted &&
-                          typeof lesson.watchedPercent === "number" &&
-                          lesson.watchedPercent > 0 ? (
-                            <span className="mt-1 block h-1 w-full overflow-hidden rounded-full bg-muted">
-                              <span
-                                className="block h-full rounded-full bg-primary"
-                                style={{ width: `${lesson.watchedPercent}%` }}
+                            {lesson.isCompleted ? (
+                              <IconCheck size={12} className="text-white" />
+                            ) : (
+                              <IconVideo
+                                size={11}
+                                className={
+                                  active
+                                    ? "text-white ml-px"
+                                    : "text-muted-foreground"
+                                }
                               />
+                            )}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span
+                              className={`block text-xs truncate ${
+                                active
+                                  ? "text-foreground font-medium"
+                                  : "text-muted-foreground"
+                              }`}
+                            >
+                              {idx + 1}. {lesson.title}
+                            </span>
+                            {!lesson.isCompleted &&
+                            typeof lesson.watchedPercent === "number" &&
+                            lesson.watchedPercent > 0 ? (
+                              <span className="mt-1 block h-1 w-full overflow-hidden rounded-full bg-muted">
+                                <span
+                                  className="block h-full rounded-full bg-primary"
+                                  style={{ width: `${lesson.watchedPercent}%` }}
+                                />
+                              </span>
+                            ) : null}
+                          </span>
+                          {lesson.durationSeconds ? (
+                            <span className="text-[10px] shrink-0 text-muted-foreground/70">
+                              {formatMinutes(lesson.durationSeconds)}
                             </span>
                           ) : null}
-                        </span>
-                        {lesson.durationSeconds ? (
-                          <span className="text-[10px] shrink-0 text-muted-foreground/70">
-                            {formatMinutes(lesson.durationSeconds)}
+                          <span
+                            role="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleBookmark(lesson.id);
+                            }}
+                            className={`text-[10px] shrink-0 ${
+                              isBookmarked ? "text-primary" : "text-transparent"
+                            }`}
+                          >
+                            ●
                           </span>
-                        ) : null}
-                        <span
-                          role="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleBookmark(lesson.id);
-                          }}
-                          className={`text-[10px] shrink-0 ${
-                            isBookmarked ? "text-primary" : "text-transparent"
-                          }`}
-                        >
-                          ●
-                        </span>
-                      </button>
-                    </li>
-                  );
-                }
+                        </button>
+                      </li>
+                    );
+                  }
 
-                if (item.type === "QUIZ") {
-                  const quiz = item.data;
-                  const isActive = selectedQuizId === quiz.id;
-                  return (
-                    <li key={quiz.id} className="px-2 py-0.5">
-                      <button
-                        onClick={() => selectQuiz(quiz.id)}
-                        className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
-                          isActive
-                            ? "bg-primary/10 border-primary/30 font-medium"
-                            : "border-border hover:bg-muted/50"
-                        }`}
-                        aria-current={isActive ? "page" : undefined}
-                      >
-                        <span
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                  if (item.type === "QUIZ") {
+                    const quiz = item.data;
+                    const isActive = selectedQuizId === quiz.id;
+                    return (
+                      <li key={quiz.id} className="px-2 py-0.5">
+                        <button
+                          onClick={() => selectQuiz(quiz.id)}
+                          className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
                             isActive
-                              ? "bg-brand-blue border-brand-blue"
-                              : "border-border bg-transparent"
+                              ? "bg-primary/10 border-primary/30 font-medium"
+                              : "border-border hover:bg-primary/10"
+                          }`}
+                          aria-current={isActive ? "page" : undefined}
+                        >
+                          <span
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                              isActive
+                                ? "bg-brand-blue border-brand-blue"
+                                : "border-border bg-transparent"
                             }`}
                           >
                             <IconClipboardCheck
-                            size={12}
-                            className={isActive ? "text-white" : "text-muted-foreground"}
-                          />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span
-                            className={`block text-xs truncate ${
-                              isActive ? "text-foreground font-medium" : "text-muted-foreground"
-                            }`}
-                          >
-                            {idx + 1}. {quiz.title}
-                          </span>
-                        </span>
-                        {quiz.dueDate && new Date(quiz.dueDate).getTime() < Date.now() ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-danger/10 text-danger shrink-0">
-                            <IconClock size={9} />
-                            Due
-                          </span>
-                        ) : (
-                          <span className="text-[10px] shrink-0 text-muted-foreground/70">
-                            {quiz.questionCount}Q
-                          </span>
-                        )}
-                      </button>
-                    </li>
-                  );
-                }
-
-                if (item.type === "ASSIGNMENT") {
-                  const assignment = item.data;
-                  const isActive = selectedAssignmentId === assignment.id;
-                  return (
-                    <li key={assignment.id} className="px-2 py-0.5">
-                      <button
-                        onClick={() => selectAssignment(assignment)}
-                        className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
-                          isActive
-                            ? "bg-primary/10 border-primary/30 font-medium"
-                            : "border-border hover:bg-muted/50"
-                        }`}
-                        aria-current={isActive ? "page" : undefined}
-                      >
-                        <span
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
-                            isActive
-                              ? "bg-brand-blue border-brand-blue"
-                              : "border-border bg-transparent"
-                          }`}
-                        >
-                          <IconFileSpreadsheet
-                            size={12}
-                            className={isActive ? "text-white" : "text-muted-foreground"}
-                          />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span
-                            className={`block text-xs truncate ${
-                              isActive ? "text-foreground font-medium" : "text-muted-foreground"
-                            }`}
-                          >
-                            {idx + 1}. {assignment.title}
-                          </span>
-                        </span>
-                        <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
-                          {assignment.dueDate
-                            ? new Date(assignment.dueDate).toLocaleDateString(
-                                "en-IN",
-                                { day: "numeric", month: "short" },
-                              )
-                            : "No due date"}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                }
-
-                if (item.type === "PRACTICAL") {
-                  const practical = item.data;
-                  const isActive = selectedPracticalId === practical.id;
-                  return (
-                    <li key={practical.id} className="px-2 py-0.5">
-                      <button
-                        onClick={() => selectPractical(practical.id)}
-                        className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
-                          isActive
-                            ? "bg-primary/10 border-primary/30 font-medium"
-                            : "border-border hover:bg-muted/50"
-                        }`}
-                        aria-current={isActive ? "page" : undefined}
-                      >
-                        <span
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
-                            isActive
-                              ? "bg-brand-blue border-brand-blue"
-                              : "border-border bg-transparent"
-                          }`}
-                        >
-                          <IconDeviceSpeaker
-                            size={12}
-                            className={isActive ? "text-white" : "text-muted-foreground"}
-                          />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span
-                            className={`block text-xs truncate ${
-                              isActive ? "text-foreground font-medium" : "text-muted-foreground"
-                            }`}
-                          >
-                            {idx + 1}. {practical.title}
-                          </span>
-                        </span>
-                        <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
-                          Practical
-                        </span>
-                      </button>
-                    </li>
-                  );
-                }
-
-                return null;
-              })}
-
-              {module.lessons.some((l) => l.resources && l.resources.length > 0) && (
-                <>
-                  {module.lessons
-                    .filter((l) => l.resources && l.resources.length > 0)
-                    .flatMap((l) =>
-                      l.resources.map((r) => {
-                        const isActive = selectedResource?.url === r.url;
-                        return (
-                          <li key={`${l.id}-resource-${r.url}`} className="px-2 py-0.5">
-                            <button
-                              onClick={() => selectResource(r.name, r.url)}
-                              className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                              size={12}
+                              className={
                                 isActive
-                                  ? "bg-primary/10 border-success/30 font-medium"
-                                  : "border-border hover:bg-muted/50"
+                                  ? "text-white"
+                                  : "text-muted-foreground"
+                              }
+                            />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span
+                              className={`block text-xs truncate ${
+                                isActive
+                                  ? "text-foreground font-medium"
+                                  : "text-muted-foreground"
                               }`}
-                              aria-current={isActive ? "page" : undefined}
                             >
-                              <span
-                                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                              {idx + 1}. {quiz.title}
+                            </span>
+                          </span>
+                          {quiz.dueDate &&
+                          new Date(quiz.dueDate).getTime() < Date.now() ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-danger/10 text-danger shrink-0">
+                              <IconClock size={9} />
+                              Due
+                            </span>
+                          ) : (
+                            <span className="text-[10px] shrink-0 text-muted-foreground/70">
+                              {quiz.questionCount}Q
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  }
+
+                  if (item.type === "ASSIGNMENT") {
+                    const assignment = item.data;
+                    const isActive = selectedAssignmentId === assignment.id;
+                    return (
+                      <li key={assignment.id} className="px-2 py-0.5">
+                        <button
+                          onClick={() => selectAssignment(assignment)}
+                          className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                            isActive
+                              ? "bg-primary/10 border-primary/30 font-medium"
+                              : "border-border hover:bg-primary/10"
+                          }`}
+                          aria-current={isActive ? "page" : undefined}
+                        >
+                          <span
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                              isActive
+                                ? "bg-brand-blue border-brand-blue"
+                                : "border-border bg-transparent"
+                            }`}
+                          >
+                            <IconFileSpreadsheet
+                              size={12}
+                              className={
+                                isActive
+                                  ? "text-white"
+                                  : "text-muted-foreground"
+                              }
+                            />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span
+                              className={`block text-xs truncate ${
+                                isActive
+                                  ? "text-foreground font-medium"
+                                  : "text-muted-foreground"
+                              }`}
+                            >
+                              {idx + 1}. {assignment.title}
+                            </span>
+                          </span>
+                          <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
+                            {assignment.dueDate
+                              ? new Date(assignment.dueDate).toLocaleDateString(
+                                  "en-IN",
+                                  { day: "numeric", month: "short" },
+                                )
+                              : "No due date"}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  }
+
+                  if (item.type === "PRACTICAL") {
+                    const practical = item.data;
+                    const isActive = selectedPracticalId === practical.id;
+                    return (
+                      <li key={practical.id} className="px-2 py-0.5">
+                        <button
+                          onClick={() => selectPractical(practical.id)}
+                          className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                            isActive
+                              ? "bg-primary/10 border-primary/30 font-medium"
+                              : "border-border hover:bg-primary/10"
+                          }`}
+                          aria-current={isActive ? "page" : undefined}
+                        >
+                          <span
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                              isActive
+                                ? "bg-brand-blue border-brand-blue"
+                                : "border-border bg-transparent"
+                            }`}
+                          >
+                            <IconDeviceSpeaker
+                              size={12}
+                              className={
+                                isActive
+                                  ? "text-white"
+                                  : "text-muted-foreground"
+                              }
+                            />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span
+                              className={`block text-xs truncate ${
+                                isActive
+                                  ? "text-foreground font-medium"
+                                  : "text-muted-foreground"
+                              }`}
+                            >
+                              {idx + 1}. {practical.title}
+                            </span>
+                          </span>
+                          <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
+                            Practical
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  }
+
+                  return null;
+                })}
+
+                {module.lessons.some(
+                  (l) => l.resources && l.resources.length > 0,
+                ) && (
+                  <>
+                    {module.lessons
+                      .filter((l) => l.resources && l.resources.length > 0)
+                      .flatMap((l) =>
+                        l.resources.map((r) => {
+                          const isActive = selectedResource?.url === r.url;
+                          return (
+                            <li
+                              key={`${l.id}-resource-${r.url}`}
+                              className="px-2 py-0.5"
+                            >
+                              <button
+                                onClick={() => selectResource(r.name, r.url)}
+                                className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
                                   isActive
-                                    ? "bg-success border-success"
-                                    : "border-border bg-transparent"
+                                    ? "bg-primary/10 border-primary/30 font-medium"
+                                    : "border-border hover:bg-primary/10"
                                 }`}
+                                aria-current={isActive ? "page" : undefined}
                               >
-                                <IconFile
-                                  size={12}
-                                  className={isActive ? "text-white" : "text-muted-foreground"}
-                                />
-                              </span>
-                              <span className="min-w-0 flex-1">
                                 <span
-                                  className={`block text-xs truncate ${
-                                    isActive ? "text-foreground font-medium" : "text-muted-foreground"
+                                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                                    isActive
+                                      ? "bg-brand-blue border-brand-blue"
+                                      : "border-border bg-transparent"
                                   }`}
                                 >
-                                  {r.name}
+                                  <IconFile
+                                    size={12}
+                                    className={
+                                      isActive
+                                        ? "text-white"
+                                        : "text-muted-foreground"
+                                    }
+                                  />
                                 </span>
-                              </span>
-                            </button>
-                          </li>
-                        );
-                      }),
-                    )}
-                </>
-              )}
-            </ul>
-          )}
-        </div>
-      );
-    })}
-    {renderCertificationSection()}
-  </div>
-);
+                                <span className="min-w-0 flex-1">
+                                  <span
+                                    className={`block text-xs truncate ${
+                                      isActive
+                                        ? "text-foreground font-medium"
+                                        : "text-muted-foreground"
+                                    }`}
+                                  >
+                                    {r.name}
+                                  </span>
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        }),
+                      )}
+                  </>
+                )}
+              </ul>
+            )}
+          </div>
+        );
+      })}
+      {renderCertificationSection()}
+    </div>
+  );
 
   const certModule = d?.modules.find((m) => m.isCertificationModule);
 
   const renderCertificationSection = () => {
     if (!certModule) return null;
+    if (d?.batch?.examEnabled === false) return null;
+    if (certQuizPassed) return null;
     return (
       <div className="p-3">
         <div className="rounded-xl border border-amber-500/30 overflow-hidden">
@@ -1496,10 +1539,16 @@ const renderAccordion = () => (
                         <button
                           onClick={() => selectRecording(rec.id)}
                           className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
-                            active ? "bg-white/10 font-medium" : "hover:bg-white/5"
+                            active
+                              ? "bg-white/10 font-medium"
+                              : "hover:bg-white/5"
                           }`}
                           aria-current={active ? "page" : undefined}
-                          style={active ? { boxShadow: "inset 3px 0 0 #7C73FF" } : undefined}
+                          style={
+                            active
+                              ? { boxShadow: "inset 3px 0 0 #2551d9" }
+                              : undefined
+                          }
                         >
                           <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white/15 text-muted-foreground">
                             <IconVideo size={16} />
@@ -1627,10 +1676,10 @@ const renderAccordion = () => (
           </button>
           <div className="flex-1" />
           <span className="text-xs text-muted-foreground">
-              {selectedModule &&
-                !selectedResource &&
-                (() => {
-                  const unified = buildUnifiedList(selectedModule!);
+            {selectedModule &&
+              !selectedResource &&
+              (() => {
+                const unified = buildUnifiedList(selectedModule!);
                 const curIdx = unified.findIndex(
                   (item) =>
                     (item.type === "LESSON" &&
@@ -1747,8 +1796,10 @@ const renderAccordion = () => (
 
       <button
         onClick={() => setShowStickyWidget((v) => !v)}
-        className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl transition-transform hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-[#a9a3f8] focus-visible:outline-offset-2"
-        aria-label={showStickyWidget ? "Close sticky notes" : "Open sticky notes"}
+        className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl transition-transform hover:scale-105 active:scale-95         focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
+        aria-label={
+          showStickyWidget ? "Close sticky notes" : "Open sticky notes"
+        }
         title={showStickyWidget ? "Close sticky notes" : "Open sticky notes"}
       >
         <IconNotes size={22} />

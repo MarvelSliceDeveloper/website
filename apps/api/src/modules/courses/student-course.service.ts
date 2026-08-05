@@ -96,8 +96,7 @@ export async function getEnrolledCourses(userId: string) {
             const percent = Math.min(
               100,
               Math.round(
-                (watchProgress.watchedSeconds /
-                  session.recording.duration) *
+                (watchProgress.watchedSeconds / session.recording.duration) *
                   100,
               ),
             );
@@ -114,8 +113,7 @@ export async function getEnrolledCourses(userId: string) {
             const percent = Math.min(
               100,
               Math.round(
-                (lp.watchedSeconds /
-                  Math.max(1, lesson.durationSeconds ?? 1)) *
+                (lp.watchedSeconds / Math.max(1, lesson.durationSeconds ?? 1)) *
                   100,
               ),
             );
@@ -597,8 +595,7 @@ export async function loadCourseContent(userId: string, courseId: string) {
           : Math.min(
               100,
               Math.round(
-                (lp.watchedSeconds / Math.max(1, l.durationSeconds ?? 1)) *
-                  100,
+                (lp.watchedSeconds / Math.max(1, l.durationSeconds ?? 1)) * 100,
               ),
             )
         : 0;
@@ -720,6 +717,7 @@ export async function loadCourseContent(userId: string, courseId: string) {
           startDate: batch.startDate,
           endDate: batch.endDate,
           instructor: batch.instructor?.name || "TBD",
+          examEnabled: batch.examEnabled,
         }
       : null,
     modules,

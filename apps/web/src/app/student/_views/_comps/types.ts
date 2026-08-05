@@ -115,6 +115,7 @@ export interface CourseContentData {
     startDate: string;
     endDate: string;
     instructor: string;
+    examEnabled?: boolean;
   } | null;
   modules: CourseModule[];
   sessions: CourseSession[];

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
@@ -19,6 +19,7 @@ import {
   IconPlus,
   IconEdit,
   IconTrash,
+  IconDownload,
 } from "@tabler/icons-react";
 
 type Intern = {
@@ -50,6 +51,58 @@ const tabs: { value: Tab; label: string }[] = [
 
 const formatPrice = (amount: number) =>
   `₹${(amount / 100).toLocaleString("en-IN")}`;
+
+const toCsvValue = (value: unknown): string => {
+  if (value === null || value === undefined) return "";
+  const str = String(value);
+  if (/[",\n\r]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+};
+
+const downloadCSV = (rows: Intern[], filename = "interns.csv") => {
+  const headers = [
+    "Name",
+    "Email",
+    "Phone",
+    "Designation",
+    "Field",
+    "Payment Status",
+    "Payment Amount",
+  ];
+  const lines = [
+    headers.map(toCsvValue).join(","),
+    ...rows.map((i) =>
+      [
+        i.name,
+        i.email,
+        i.phone ?? "",
+        i.designation ?? "",
+        i.internField?.name ?? "",
+        i.payments[0]
+          ? i.payments[0].status === "PAID"
+            ? "Paid"
+            : "Pending"
+          : "",
+        i.payments[0] ? formatPrice(i.payments[0].amount) : "",
+      ]
+        .map(toCsvValue)
+        .join(","),
+    ),
+  ];
+  const csv = lines.join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+};
 
 export default function AdminInternsPage() {
   usePageTitle("Interns");
@@ -168,16 +221,20 @@ export default function AdminInternsPage() {
     }
   };
 
-  const filteredInterns = interns.filter((i) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      i.name.toLowerCase().includes(q) ||
-      i.email.toLowerCase().includes(q) ||
-      (i.phone || "").toLowerCase().includes(q) ||
-      (i.internField?.name || "").toLowerCase().includes(q)
-    );
-  });
+  const filteredInterns = useMemo(
+    () =>
+      interns.filter((i) => {
+        if (!search) return true;
+        const q = search.toLowerCase();
+        return (
+          i.name.toLowerCase().includes(q) ||
+          i.email.toLowerCase().includes(q) ||
+          (i.phone || "").toLowerCase().includes(q) ||
+          (i.internField?.name || "").toLowerCase().includes(q)
+        );
+      }),
+    [interns, search],
+  );
 
   const internColumns: DataTableColumn<Intern>[] = [
     {
@@ -315,7 +372,9 @@ export default function AdminInternsPage() {
                 .map((f) => (
                   <button
                     key={f.id}
-                    onClick={() => setFieldFilter(fieldFilter === f.id ? "" : f.id)}
+                    onClick={() =>
+                      setFieldFilter(fieldFilter === f.id ? "" : f.id)
+                    }
                     className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
                       fieldFilter === f.id
                         ? "bg-primary text-white border-primary"
@@ -334,6 +393,14 @@ export default function AdminInternsPage() {
               value={search}
               onChange={setSearch}
             />
+            <button
+              onClick={() => downloadCSV(filteredInterns)}
+              disabled={filteredInterns.length === 0}
+              className="btn-secondary text-xs flex items-center gap-1.5 whitespace-nowrap"
+              title="Download visible interns as CSV"
+            >
+              <IconDownload size={13} /> Export CSV
+            </button>
           </div>
 
           <DataTable
@@ -511,7 +578,10 @@ export default function AdminInternsPage() {
                       type="checkbox"
                       checked={fieldForm.isActive}
                       onChange={(e) =>
-                        setFieldForm({ ...fieldForm, isActive: e.target.checked })
+                        setFieldForm({
+                          ...fieldForm,
+                          isActive: e.target.checked,
+                        })
                       }
                       className="accent-primary"
                     />

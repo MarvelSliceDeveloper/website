@@ -18,7 +18,7 @@ type BrandingConfig = {
 };
 
 const defaultConfig: BrandingConfig = {
-  primaryColor: "#3b82f6",
+  primaryColor: "#2551d9",
   secondaryColor: "#1e40af",
   accentColor: "#10b981",
   logoUrl: "",

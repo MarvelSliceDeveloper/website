@@ -635,7 +635,7 @@ export default function SettingsPage() {
             <div className="glass-card p-5 space-y-4">
               <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
                 <div className="group relative shrink-0">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-linear-to-br from-primary to-violet-600 text-xl font-bold text-white shadow-md transition-transform group-hover:scale-105">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-linear-to-br from-primary to-primary-hover text-xl font-bold text-white shadow-md transition-transform group-hover:scale-105">
                     {studentName.charAt(0).toUpperCase()}
                   </div>
                   <button className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white shadow-sm hover:bg-primary-hover transition-colors text-[10px]">

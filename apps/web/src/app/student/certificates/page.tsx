@@ -220,7 +220,7 @@ export default function CertificatesPage() {
           label="Programs In Progress"
           value={String(packageProgresses.length)}
           icon="📚"
-          color="from-primary to-violet-500"
+          color="from-primary to-primary-hover"
         />
       </div>
 

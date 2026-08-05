@@ -504,11 +504,11 @@ model CertificateTemplate {
   id              String   @id @default(cuid())
   name            String
   isDefault       Boolean  @default(false)
-  primaryColor    String   @default("#3b82f6")
+  primaryColor    String   @default("#2551d9")
   secondaryColor  String   @default("#93c5fd")
   backgroundColor String   @default("#f8fafc")
   textColor       String   @default("#1e293b")
-  borderColor     String   @default("#3b82f6")
+  borderColor     String   @default("#2551d9")
   accentColor     String   @default("#93c5fd")
   title           String   @default("CERTIFICATE OF COMPLETION")
   subtitle        String   @default("This certifies that")

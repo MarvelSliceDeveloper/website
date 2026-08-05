@@ -333,10 +333,7 @@ export const certificateService = {
       const g = parseInt(hexColor.slice(3, 5), 16) / 255;
       const b = parseInt(hexColor.slice(5, 7), 16) / 255;
 
-      const width = helveticaFont.widthOfTextAtSize(
-        text,
-        field.fontSize || 22,
-      );
+      const width = helveticaFont.widthOfTextAtSize(text, field.fontSize || 22);
       const pageWidth = firstPage.getWidth();
       let xPos = field.x;
 
@@ -380,11 +377,11 @@ export const certificateService = {
         : { r: 0, g: 0, b: 0 };
     };
 
-    const primaryRgb = hexToRgb(template?.primaryColor || "#3b82f6");
+    const primaryRgb = hexToRgb(template?.primaryColor || "#2551d9");
     const bgRgb = hexToRgb(template?.backgroundColor || "#f8fafc");
     const textRgb = hexToRgb(template?.textColor || "#1e293b");
     const borderRgb = hexToRgb(
-      template?.borderColor || template?.primaryColor || "#3b82f6",
+      template?.borderColor || template?.primaryColor || "#2551d9",
     );
     const accentRgb = hexToRgb(
       template?.accentColor || template?.secondaryColor || "#93c5fd",
@@ -472,7 +469,9 @@ export const certificateService = {
       try {
         doc.addImage(template.logoUrl, "PNG", pageWidth / 2 - 15, 18, 30, 30);
         contentStartY = 55;
-      } catch { /* ignore logo load errors */ }
+      } catch {
+        /* ignore logo load errors */
+      }
     }
 
     doc.setFillColor(primaryRgb.r, primaryRgb.g, primaryRgb.b);

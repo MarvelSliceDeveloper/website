@@ -29,7 +29,9 @@ export default function AssignmentOverdueView({
   const [uploading, setUploading] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [comment, setComment] = useState("");
-  const [modalAssignmentId, setModalAssignmentId] = useState<string | null>(null);
+  const [modalAssignmentId, setModalAssignmentId] = useState<string | null>(
+    null,
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const [locallySubmittedIds, setLocallySubmittedIds] = useState<string[]>([]);
@@ -151,7 +153,8 @@ export default function AssignmentOverdueView({
   useEffect(() => {
     if (!modalAssignmentId) return;
     document.addEventListener("keydown", handleKeyDown);
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = "hidden";
     document.body.style.paddingRight = `${scrollbarWidth}px`;
     return () => {
@@ -164,9 +167,7 @@ export default function AssignmentOverdueView({
   return (
     <div className="sp-view-enter space-y-6">
       <div>
-
         <h1 className="text-2xl font-bold text-foreground">Assignments</h1>
- 
       </div>
 
       <input
@@ -184,8 +185,8 @@ export default function AssignmentOverdueView({
             onClick={() => setListFilter(tab)}
             className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
               listFilter === tab
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-primary text-primary-foreground hover:bg-primary-hover"
+                : "text-muted-foreground hover:text-primary hover:bg-primary/5"
             }`}
           >
             {tab === "all" && `All (${allItems.length})`}
@@ -235,7 +236,8 @@ export default function AssignmentOverdueView({
                   const isPending = assignment.status === "PENDING";
                   const canResubmit =
                     !isPending &&
-                    new Date(assignment.dueDate).getTime() > new Date().getTime();
+                    new Date(assignment.dueDate).getTime() >
+                      new Date().getTime();
                   const daysOverdue = isPending
                     ? Math.floor(
                         (new Date().getTime() -
@@ -246,7 +248,10 @@ export default function AssignmentOverdueView({
                   const isOverdue = daysOverdue > 0;
 
                   return (
-                    <tr key={assignment.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
+                    <tr
+                      key={assignment.id}
+                      className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                    >
                       <td className="px-4 py-3 text-xs text-muted-foreground text-center">
                         {idx + 1}
                       </td>
@@ -296,18 +301,21 @@ export default function AssignmentOverdueView({
                                     day: "numeric",
                                     month: "short",
                                   })
-                              : new Date(
-                                  assignment.dueDate,
-                                ).toLocaleDateString("en-IN", {
-                                  day: "numeric",
-                                  month: "short",
-                                })}
+                              : new Date(assignment.dueDate).toLocaleDateString(
+                                  "en-IN",
+                                  {
+                                    day: "numeric",
+                                    month: "short",
+                                  },
+                                )}
                           </span>
                         </div>
                       </td>
                       <td className="px-4 py-3">
                         {isPending ? (
-                          <span className="text-xs text-muted-foreground">—</span>
+                          <span className="text-xs text-muted-foreground">
+                            —
+                          </span>
                         ) : (
                           <span className="text-xs font-medium text-emerald-400">
                             {assignment.submittedAt
@@ -378,11 +386,16 @@ export default function AssignmentOverdueView({
                           ) : (
                             <>
                               <button
-                                onClick={() => handleDownloadSubmission(assignment)}
+                                onClick={() =>
+                                  handleDownloadSubmission(assignment)
+                                }
                                 className="btn-ghost text-xs px-3 py-1.5"
                                 title="Download submitted file"
                               >
-                                <IconDownload size={13} className="inline mr-1" />
+                                <IconDownload
+                                  size={13}
+                                  className="inline mr-1"
+                                />
                                 View
                               </button>
                               {canResubmit && (
@@ -391,7 +404,10 @@ export default function AssignmentOverdueView({
                                   className="btn-secondary text-xs px-3 py-1.5"
                                   title="Submit a new file (latest is kept)"
                                 >
-                                  <IconUpload size={13} className="inline mr-1" />
+                                  <IconUpload
+                                    size={13}
+                                    className="inline mr-1"
+                                  />
                                   Resubmit
                                 </button>
                               )}
@@ -499,13 +515,13 @@ export default function AssignmentOverdueView({
                     <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform">
                       <IconUpload size={24} />
                     </div>
-                  <p className="text-sm font-semibold text-foreground">
-                    Click to upload file
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    PDF, ZIP or code file &middot; Max 25 MB &middot; Latest
-                    upload is kept
-                  </p>
+                    <p className="text-sm font-semibold text-foreground">
+                      Click to upload file
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      PDF, ZIP or code file &middot; Max 25 MB &middot; Latest
+                      upload is kept
+                    </p>
                   </button>
                 )}
 

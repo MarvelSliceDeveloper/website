@@ -362,7 +362,7 @@ export default function StudentPortalShell({
                     className="flex items-center gap-2 rounded-xl bg-mist px-3 py-1.5 text-slate transition-colors hover:bg-hairline hover:text-ink"
                     aria-label="Profile menu"
                   >
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-violet-600 text-[12px] font-bold text-white">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-hover text-[12px] font-bold text-white">
                       {studentName.charAt(0).toUpperCase()}
                     </div>
                     <span className="hidden text-[13px] font-medium sm:inline">

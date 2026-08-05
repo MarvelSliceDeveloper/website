@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo, memo } from "react";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
@@ -47,6 +47,65 @@ type SheetMetadata = {
   tabs: SheetTab[];
 };
 
+type ColumnFlags = { isStatus: boolean; isName: boolean }[];
+
+const TrackerRow = memo(function TrackerRow({
+  row,
+  colFlags,
+}: {
+  row: string[];
+  colFlags: ColumnFlags;
+}) {
+  return (
+    <tr className="border-b border-border/30 hover:bg-card-hover/30 transition-colors">
+      {row.map((cell, cIdx) => {
+        const isStatusCol = colFlags[cIdx]?.isStatus ?? false;
+        const isNameCol = colFlags[cIdx]?.isName ?? false;
+
+        const isCompleted =
+          isStatusCol &&
+          cell &&
+          (cell.toLowerCase().includes("complete") ||
+            cell.toLowerCase().includes("done"));
+        const isPending =
+          isStatusCol &&
+          cell &&
+          (cell.toLowerCase().includes("pending") ||
+            cell.toLowerCase().includes("incomplete"));
+
+        return (
+          <td
+            key={cIdx}
+            className={`px-3 py-2 whitespace-nowrap text-sm ${
+              isNameCol ? "font-medium text-foreground" : ""
+            }`}
+          >
+            {isStatusCol ? (
+              isCompleted ? (
+                <span className="inline-flex items-center gap-1 rounded bg-success/15 px-2 py-0.5 text-xs font-semibold text-success">
+                  <IconCircleCheck size={12} />
+                  {cell || "Completed"}
+                </span>
+              ) : isPending ? (
+                <span className="inline-flex items-center gap-1 rounded bg-warning/15 px-2 py-0.5 text-xs font-semibold text-warning">
+                  <IconCircleX size={12} />
+                  {cell || "Pending"}
+                </span>
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  {cell || "—"}
+                </span>
+              )
+            ) : (
+              cell || "—"
+            )}
+          </td>
+        );
+      })}
+    </tr>
+  );
+});
+
 export default function InternAssignmentsPage() {
   usePageTitle("Assignment Tracker");
 
@@ -61,8 +120,11 @@ export default function InternAssignmentsPage() {
   const [loadingSheets, setLoadingSheets] = useState(true);
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
-  const [sheetMetadata, setSheetMetadata] = useState<SheetMetadata | null>(null);
+  const [sheetMetadata, setSheetMetadata] = useState<SheetMetadata | null>(
+    null,
+  );
   const [loadingTabs, setLoadingTabs] = useState(false);
+  const tabsLoadedForRef = useRef<string | null>(null);
 
   const fetchSavedSheets = () => {
     setLoadingSheets(true);
@@ -83,15 +145,13 @@ export default function InternAssignmentsPage() {
       .finally(() => setLoadingSheets(false));
   };
 
-  const fetchSheet = useCallback((compositeKey: string) => {
+  const fetchSheet = useCallback((compositeKey: string, force = false) => {
     const [sheetId, gid] = compositeKey.split("|");
     if (!sheetId) return;
     setLoading(true);
-    setData(null);
+    const query = `/api/admin/interns/assignments?sheetId=${encodeURIComponent(sheetId)}&gid=${encodeURIComponent(gid ?? "0")}`;
     api
-      .get<SheetData>(
-        `/api/admin/interns/assignments?sheetId=${encodeURIComponent(sheetId)}&gid=${encodeURIComponent(gid ?? "0")}`,
-      )
+      .get<SheetData>(force ? `${query}&refresh=1` : query)
       .then((res) => setData(res))
       .catch((err: unknown) => {
         toast.error(getErrorMessage(err));
@@ -153,30 +213,56 @@ export default function InternAssignmentsPage() {
     if (selectedSheetId) {
       const [sheetId] = selectedSheetId.split("|");
       fetchSheet(selectedSheetId);
-      // Fetch real spreadsheet + tab names
-      setLoadingTabs(true);
-      api
-        .get<SheetMetadata>(
-          `/api/admin/interns/assignments/tabs?sheetId=${encodeURIComponent(sheetId)}`,
-        )
-        .then((res) => setSheetMetadata(res))
-        .catch(() => setSheetMetadata(null))
-        .finally(() => setLoadingTabs(false));
+      // Tab lists are per-spreadsheet, not per-tab — fetch them only once.
+      if (tabsLoadedForRef.current !== sheetId) {
+        setLoadingTabs(true);
+        api
+          .get<SheetMetadata>(
+            `/api/admin/interns/assignments/tabs?sheetId=${encodeURIComponent(sheetId)}`,
+          )
+          .then((res) => {
+            setSheetMetadata(res);
+            tabsLoadedForRef.current = sheetId;
+          })
+          .catch(() => {
+            setSheetMetadata(null);
+            tabsLoadedForRef.current = null;
+          })
+          .finally(() => setLoadingTabs(false));
+      }
     } else {
       setData(null);
       setLoading(false);
       setSheetMetadata(null);
+      tabsLoadedForRef.current = null;
     }
   }, [selectedSheetId, fetchSheet]);
 
-  const filteredRows =
-    data && data.rows
-      ? data.rows.filter((row) => {
-          if (!search.trim()) return true;
-          const q = search.toLowerCase();
-          return row.some((cell) => cell && cell.toLowerCase().includes(q));
-        })
-      : [];
+  const colFlags = useMemo<ColumnFlags>(
+    () =>
+      data
+        ? data.headers.map((header, idx) => {
+            const h = header.toLowerCase();
+            return {
+              isStatus: h.includes("status") || h.includes("complete"),
+              isName: idx === 0,
+            };
+          })
+        : [],
+    [data],
+  );
+
+  const filteredRows = useMemo(
+    () =>
+      data && data.rows
+        ? data.rows.filter((row) => {
+            if (!search.trim()) return true;
+            const q = search.toLowerCase();
+            return row.some((cell) => cell && cell.toLowerCase().includes(q));
+          })
+        : [],
+    [data, search],
+  );
 
   const selectedSheet = selectedSheetId
     ? savedSheets.find((s) => {
@@ -186,12 +272,17 @@ export default function InternAssignmentsPage() {
     : undefined;
 
   const handleTabSwitch = (compositeKey: string) => {
+    // The selectedSheetId effect handles the fetch — calling fetchSheet here
+    // too would double every tab switch request.
     setSelectedSheetId(compositeKey);
-    fetchSheet(compositeKey);
   };
 
-  const currentGid = selectedSheetId ? selectedSheetId.split("|")[1] ?? "0" : "0";
-  const currentTabTitle = sheetMetadata?.tabs.find((t) => t.gid === currentGid)?.title;
+  const currentGid = selectedSheetId
+    ? (selectedSheetId.split("|")[1] ?? "0")
+    : "0";
+  const currentTabTitle = sheetMetadata?.tabs.find(
+    (t) => t.gid === currentGid,
+  )?.title;
 
   return (
     <div className="space-y-6">
@@ -206,11 +297,16 @@ export default function InternAssignmentsPage() {
           !data ? null : (
             <div className="flex items-center gap-3">
               <button
-                onClick={() => selectedSheetId && fetchSheet(selectedSheetId)}
+                onClick={() =>
+                  selectedSheetId && fetchSheet(selectedSheetId, true)
+                }
                 disabled={loading}
                 className="btn-secondary text-sm flex items-center gap-1.5"
               >
-                <IconRefresh size={14} className={loading ? "animate-spin" : ""} />
+                <IconRefresh
+                  size={14}
+                  className={loading ? "animate-spin" : ""}
+                />
                 Refresh
               </button>
               <span className="text-xs text-muted-foreground">
@@ -226,30 +322,37 @@ export default function InternAssignmentsPage() {
       />
 
       {/* Spreadsheet + tab name banner */}
-      {selectedSheetId && (sheetMetadata?.spreadsheetTitle || currentTabTitle) && (
-        <div className="text-sm text-muted-foreground">
-          {sheetMetadata?.spreadsheetTitle && (
-            <span className="font-medium text-foreground">
-              {sheetMetadata.spreadsheetTitle}
-            </span>
-          )}
-          {currentTabTitle && (
-            <>
-              {sheetMetadata?.spreadsheetTitle && <span className="mx-1.5">·</span>}
-              <span>{currentTabTitle}</span>
-            </>
-          )}
-        </div>
-      )}
+      {selectedSheetId &&
+        (sheetMetadata?.spreadsheetTitle || currentTabTitle) && (
+          <div className="text-sm text-muted-foreground">
+            {sheetMetadata?.spreadsheetTitle && (
+              <span className="font-medium text-foreground">
+                {sheetMetadata.spreadsheetTitle}
+              </span>
+            )}
+            {currentTabTitle && (
+              <>
+                {sheetMetadata?.spreadsheetTitle && (
+                  <span className="mx-1.5">·</span>
+                )}
+                <span>{currentTabTitle}</span>
+              </>
+            )}
+          </div>
+        )}
 
       {/* Sheet selector + add/remove */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-foreground">Active Sheet:</label>
+          <label className="text-sm font-medium text-foreground">
+            Active Sheet:
+          </label>
           {loadingSheets ? (
             <span className="text-sm text-muted-foreground">Loading...</span>
           ) : savedSheets.length === 0 ? (
-            <span className="text-sm text-muted-foreground">No sheets saved yet</span>
+            <span className="text-sm text-muted-foreground">
+              No sheets saved yet
+            </span>
           ) : (
             <>
               <select
@@ -259,7 +362,10 @@ export default function InternAssignmentsPage() {
               >
                 {savedSheets.map((s) => {
                   const key = `${s.id}|${s.gid ?? "0"}`;
-                  const label = s.gid && s.gid !== "0" ? `${s.name} (tab ${s.gid})` : s.name;
+                  const label =
+                    s.gid && s.gid !== "0"
+                      ? `${s.name} (tab ${s.gid})`
+                      : s.name;
                   return (
                     <option key={key} value={key}>
                       {label}
@@ -267,7 +373,10 @@ export default function InternAssignmentsPage() {
                   );
                 })}
               </select>
-              <IconChevronDown size={14} className="text-muted-foreground pointer-events-none" />
+              <IconChevronDown
+                size={14}
+                className="text-muted-foreground pointer-events-none"
+              />
             </>
           )}
         </div>
@@ -315,9 +424,11 @@ export default function InternAssignmentsPage() {
               </div>
               <p className="mt-1 text-[11px] text-muted-foreground">
                 Paste the full URL (e.g.{" "}
-                <code className="font-mono">docs.google.com/spreadsheets/d/.../edit</code>) or
-                just the ID. The sheet must be publicly readable (Share → "Anyone with the link
-                can view").
+                <code className="font-mono">
+                  docs.google.com/spreadsheets/d/.../edit
+                </code>
+                ) or just the ID. The sheet must be publicly readable (Share →
+                "Anyone with the link can view").
               </p>
             </div>
             <div>
@@ -344,8 +455,9 @@ export default function InternAssignmentsPage() {
                 className="field w-full text-sm"
               />
               <p className="mt-1 text-[11px] text-muted-foreground">
-                "0" is the first tab. Not sure of the gid? Save with "0" first, then use the Tab
-                dropdown below (once real tab names load) to switch to the right one.
+                "0" is the first tab. Not sure of the gid? Save with "0" first,
+                then use the Tab dropdown below (once real tab names load) to
+                switch to the right one.
               </p>
             </div>
           </div>
@@ -376,18 +488,23 @@ export default function InternAssignmentsPage() {
       {!selectedSheetId && !loading && (
         <div className="border border-border bg-card p-8 text-center">
           <IconAlertCircle size={48} className="mx-auto mb-4 text-warning/50" />
-          <h3 className="text-lg font-semibold text-foreground mb-2">No Sheet Selected</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            No Sheet Selected
+          </h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Add a Google Sheet ID above to start tracking intern assignment completion. The sheet
-            must be publicly readable.
+            Add a Google Sheet ID above to start tracking intern assignment
+            completion. The sheet must be publicly readable.
           </p>
         </div>
       )}
 
-      {loading && selectedSheetId && (
+      {loading && selectedSheetId && !data && (
         <div className="border border-border bg-card">
           <div className="p-4 border-b border-border flex items-center gap-2">
-            <IconRefresh size={18} className="text-muted-foreground animate-spin" />
+            <IconRefresh
+              size={18}
+              className="text-muted-foreground animate-spin"
+            />
             <span className="text-sm font-medium text-foreground">
               Loading assignment data...
             </span>
@@ -397,7 +514,10 @@ export default function InternAssignmentsPage() {
               <thead>
                 <tr>
                   {Array.from({ length: 8 }).map((_, i) => (
-                    <th key={i} className="border-b border-border px-3 py-2 text-left">
+                    <th
+                      key={i}
+                      className="border-b border-border px-3 py-2 text-left"
+                    >
                       <div className="h-3 w-16 animate-pulse bg-border rounded" />
                     </th>
                   ))}
@@ -429,34 +549,42 @@ export default function InternAssignmentsPage() {
                 onChange={setSearch}
                 className="max-w-md"
               />
-              {/* Tab switcher — real tab names from spreadsheet metadata */}
-              {selectedSheetId && selectedSheet && (() => {
-                const [sheetId] = selectedSheetId.split("|");
-                return (
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-foreground">Tab:</label>
-                    <select
-                      value={currentGid}
-                      onChange={(e) => {
-                        const key = `${sheetId}|${e.target.value}`;
-                        handleTabSwitch(key);
-                      }}
-                      disabled={loadingTabs || !sheetMetadata}
-                      className="appearance-none rounded-lg border border-border bg-background px-2 py-1 text-sm outline-none focus:border-primary disabled:opacity-50"
-                    >
-                      {loadingTabs || !sheetMetadata ? (
-                        <option>Loading tabs...</option>
-                      ) : (
-                        sheetMetadata.tabs.map((tab) => (
-                          <option key={tab.gid} value={tab.gid}>
-                            {tab.title}
-                          </option>
-                        ))
-                      )}
-                    </select>
-                  </div>
-                );
-              })()}
+              {/* Tab switcher — real tab names from spreadsheet metadata.
+                   Visible whenever a sheet is active; NOT gated on the current
+                   gid being a savedSheets record (tab gids come from live
+                   metadata and aren't necessarily saved). Gating on
+                   `selectedSheet` here unmounted the dropdown after switching
+                   to an unsaved tab, making it impossible to switch back. */}
+              {selectedSheetId &&
+                (() => {
+                  const [sheetId] = selectedSheetId.split("|");
+                  return (
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium text-foreground">
+                        Tab:
+                      </label>
+                      <select
+                        value={currentGid}
+                        onChange={(e) => {
+                          const key = `${sheetId}|${e.target.value}`;
+                          handleTabSwitch(key);
+                        }}
+                        disabled={loadingTabs || !sheetMetadata}
+                        className="appearance-none rounded-lg border border-border bg-background px-2 py-1 text-sm outline-none focus:border-primary disabled:opacity-50"
+                      >
+                        {loadingTabs || !sheetMetadata ? (
+                          <option>Loading tabs...</option>
+                        ) : (
+                          sheetMetadata.tabs.map((tab) => (
+                            <option key={tab.gid} value={tab.gid}>
+                              {tab.title}
+                            </option>
+                          ))
+                        )}
+                      </select>
+                    </div>
+                  );
+                })()}
             </div>
             <p className="text-xs text-muted-foreground">
               {filteredRows.length} of {data.rows.length} interns
@@ -489,56 +617,7 @@ export default function InternAssignmentsPage() {
               </thead>
               <tbody>
                 {filteredRows.map((row, rIdx) => (
-                  <tr
-                    key={rIdx}
-                    className="border-b border-border/30 hover:bg-card-hover/30 transition-colors"
-                  >
-                    {row.map((cell, cIdx) => {
-                      const header = data.headers[cIdx] || "";
-                      const isStatusCol =
-                        header.toLowerCase().includes("status") ||
-                        header.toLowerCase().includes("complete");
-                      const isNameCol = cIdx === 0;
-
-                      const isCompleted =
-                        isStatusCol &&
-                        cell &&
-                        (cell.toLowerCase().includes("complete") ||
-                          cell.toLowerCase().includes("done"));
-                      const isPending =
-                        isStatusCol &&
-                        cell &&
-                        (cell.toLowerCase().includes("pending") ||
-                          cell.toLowerCase().includes("incomplete"));
-
-                      return (
-                        <td
-                          key={cIdx}
-                          className={`px-3 py-2 whitespace-nowrap text-sm ${
-                            isNameCol ? "font-medium text-foreground" : ""
-                          }`}
-                        >
-                          {isStatusCol ? (
-                            isCompleted ? (
-                              <span className="inline-flex items-center gap-1 rounded bg-success/15 px-2 py-0.5 text-xs font-semibold text-success">
-                                <IconCircleCheck size={12} />
-                                {cell || "Completed"}
-                              </span>
-                            ) : isPending ? (
-                              <span className="inline-flex items-center gap-1 rounded bg-warning/15 px-2 py-0.5 text-xs font-semibold text-warning">
-                                <IconCircleX size={12} />
-                                {cell || "Pending"}
-                              </span>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">{cell || "—"}</span>
-                            )
-                          ) : (
-                            cell || "—"
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
+                  <TrackerRow key={rIdx} row={row} colFlags={colFlags} />
                 ))}
               </tbody>
             </table>

@@ -109,11 +109,11 @@ router.post("/", async (req: AuthRequest, res: Response) => {
     const template = await prisma.certificateTemplate.create({
       data: {
         name,
-        primaryColor: primaryColor || "#3b82f6",
+        primaryColor: primaryColor || "#2551d9",
         secondaryColor: secondaryColor || "#93c5fd",
         backgroundColor: backgroundColor || "#f8fafc",
         textColor: textColor || "#1e293b",
-        borderColor: borderColor || primaryColor || "#3b82f6",
+        borderColor: borderColor || primaryColor || "#2551d9",
         accentColor: accentColor || secondaryColor || "#93c5fd",
         title: title || "CERTIFICATE OF COMPLETION",
         subtitle: subtitle || "This certifies that",
@@ -291,7 +291,9 @@ router.post(
           ? JSON.parse(req.body.pdfTemplateFields)
           : null;
       } catch {
-        return res.status(400).json({ error: "Invalid PDF template fields JSON" });
+        return res
+          .status(400)
+          .json({ error: "Invalid PDF template fields JSON" });
       }
       if (!pdfTemplateFields) {
         pdfTemplateFields = [

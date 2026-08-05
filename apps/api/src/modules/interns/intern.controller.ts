@@ -301,7 +301,8 @@ export const internController = {
         if (match?.gid) sheetGid = match.gid;
       }
 
-      const data = await googleSheetsService.fetchSheet(id, sheetGid);
+      const bypassCache = String(req.query.refresh ?? "") === "1";
+      const data = await googleSheetsService.fetchSheet(id, sheetGid, bypassCache);
       return res.status(200).json(data);
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
@@ -318,7 +319,10 @@ export const internController = {
       if (!id) {
         return res.status(400).json({ error: "sheetId query parameter is required" });
       }
-      const metadata = await googleSheetsService.listSheetTabs(id);
+      const metadata = await googleSheetsService.listSheetTabs(
+        id,
+        String(req.query.refresh ?? "") === "1",
+      );
       return res.status(200).json(metadata); // { spreadsheetTitle, tabs: [{gid,title}] }
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);

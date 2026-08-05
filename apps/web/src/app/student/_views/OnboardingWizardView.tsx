@@ -175,7 +175,7 @@ export default function OnboardingWizardView({
                       i < step
                         ? "bg-primary text-white shadow-md shadow-primary/20 cursor-pointer hover:scale-105"
                         : i === step
-                          ? "bg-gradient-to-tr from-primary to-indigo-600 text-white ring-4 ring-primary/25 shadow-lg scale-105"
+                          ? "bg-gradient-to-tr from-primary to-primary-hover text-white ring-4 ring-primary/25 shadow-lg scale-105"
                           : "bg-muted/15 border border-border text-muted-foreground"
                     }`}
                   >
@@ -198,7 +198,7 @@ export default function OnboardingWizardView({
                   <div
                     className={`h-1 w-12 sm:w-20 rounded-full transition-all duration-500 -mt-4 sm:mt-0 ${
                       i < step
-                        ? "bg-gradient-to-r from-primary to-indigo-500"
+                        ? "bg-gradient-to-r from-primary to-primary-hover"
                         : "bg-border/60"
                     }`}
                   />
@@ -278,15 +278,15 @@ function WelcomeStep() {
     <div className="flex flex-col items-center text-center">
       {/* Icon Badge */}
       <div className="relative mb-6">
-        <div className="absolute inset-0 rounded-3xl bg-indigo-500/20 blur-xl animate-pulse" />
-        <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-600 via-primary to-violet-600 text-white shadow-xl shadow-indigo-500/25">
+        <div className="absolute inset-0 rounded-3xl bg-primary/20 blur-xl animate-pulse" />
+        <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-primary-hover via-primary to-primary-hover text-white shadow-xl shadow-primary/25">
           <IconSparkles size={48} stroke={1.5} />
         </div>
       </div>
 
       <h1 className="mb-3 text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
         Welcome to your{" "}
-        <span className="bg-gradient-to-r from-indigo-500 via-primary to-violet-500 bg-clip-text text-transparent">
+        <span className="bg-gradient-to-r from-primary-hover via-primary to-primary-hover bg-clip-text text-transparent">
           Learning Portal!
         </span>
       </h1>
