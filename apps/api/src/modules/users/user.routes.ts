@@ -57,6 +57,7 @@ router.get("/", async (req: Request, res: Response) => {
           email: true,
           role: true,
           phone: true,
+          createdAt: true,
           designation: true,
           internFieldId: true,
           internField: { select: { id: true, name: true } },
@@ -104,6 +105,81 @@ router.get("/", async (req: Request, res: Response) => {
       limit: currentLimit,
       packages: Array.from(packageMap.values()),
     });
+  } catch (error) {
+    return handleError(res, error);
+  }
+});
+
+// GET /api/users/:id — user detail with quiz attempts + assignment submissions for students (admin only)
+router.get("/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        phone: true,
+        createdAt: true,
+        designation: true,
+        internFieldId: true,
+        internField: { select: { id: true, name: true } },
+        isSuspended: true,
+        packageEnrollments: {
+          select: {
+            id: true,
+            status: true,
+            package: { select: { id: true, name: true } },
+            courses: { select: { courseId: true, batchId: true } },
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const quizAttempts =
+      user.role === UserRole.STUDENT
+        ? await prisma.quizAttempt.findMany({
+            where: { userId: id },
+            select: {
+              id: true,
+              score: true,
+              total: true,
+              percentage: true,
+              isPassed: true,
+              status: true,
+              submittedAt: true,
+              quiz: { select: { id: true, title: true } },
+            },
+            orderBy: { createdAt: "desc" },
+          })
+        : [];
+
+    const assignmentSubmissions =
+      user.role === UserRole.STUDENT
+        ? await prisma.assignmentSubmission.findMany({
+            where: { studentId: id },
+            select: {
+              id: true,
+              submittedAt: true,
+              status: true,
+              grade: true,
+              feedback: true,
+              gradedAt: true,
+              totalScore: true,
+              assignment: { select: { id: true, title: true, type: true } },
+            },
+            orderBy: { submittedAt: "desc" },
+          })
+        : [];
+
+    return res.json({ ...user, quizAttempts, assignmentSubmissions });
   } catch (error) {
     return handleError(res, error);
   }
