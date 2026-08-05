@@ -212,6 +212,17 @@ export const batchController = {
     }
   },
 
+  // Toggles batch-level exam enablement
+  async toggleExamEnabled(req: AuthRequest, res: Response) {
+    try {
+      const result = await batchService.toggleExamEnabled(req.params.id);
+      return res.json(result);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
   // Gets batch details for an enrolled student
   async getByIdForStudent(req: AuthRequest, res: Response) {
     try {

@@ -295,6 +295,13 @@ export async function getPackageSpecialExamProgress(
     }
   }
 
+  const batch = batchId
+    ? await prisma.batch.findUnique({
+        where: { id: batchId },
+        select: { examEnabled: true },
+      })
+    : null;
+
   const courseStatuses = pkg.courses.map((pc) => {
     const c = pc.course;
     const isExamRequired = batchVisibilityMap.get(c.id) ?? true;
@@ -321,7 +328,9 @@ export async function getPackageSpecialExamProgress(
 
   const requiredCourses = courseStatuses.filter((cs) => cs.isExamRequired);
   const allPassed =
-    requiredCourses.length > 0 && requiredCourses.every((cs) => cs.isPassed);
+    requiredCourses.length > 0 &&
+    requiredCourses.every((cs) => cs.isPassed) &&
+    batch?.examEnabled !== false;
 
   return {
     packageId: pkg.id,

@@ -20,6 +20,12 @@ import {
   IconEdit,
   IconTrash,
   IconCheck,
+  IconDownload,
+  IconEye,
+  IconX,
+  IconMail,
+  IconPhone,
+  IconCalendar,
 } from "@tabler/icons-react";
 import {
   Select,
@@ -35,6 +41,7 @@ type User = {
   email: string;
   role: "STUDENT" | "INSTRUCTOR" | "ADMIN" | "SUPER_ADMIN" | "INTERN";
   phone?: string | null;
+  createdAt?: string;
   designation?: "WORKING" | "STUDYING" | null;
   internField?: { id: string; name: string } | null;
   isSuspended?: boolean;
@@ -50,6 +57,32 @@ type PackageSummary = {
   count: number;
 };
 
+type QuizAttemptSummary = {
+  id: string;
+  score: number;
+  total: number;
+  percentage: number;
+  isPassed: boolean;
+  status: string;
+  submittedAt: string | null;
+  quiz: { id: string; title: string } | null;
+};
+
+type AssignmentSubmissionSummary = {
+  id: string;
+  submittedAt: string;
+  status: string;
+  grade: string | null;
+  feedback: string | null;
+  gradedAt: string | null;
+  totalScore: number | null;
+  assignment: { id: string; title: string; type: string } | null;
+};
+
+type UserDetail = User & {
+  quizAttempts: QuizAttemptSummary[];
+  assignmentSubmissions: AssignmentSubmissionSummary[];
+};
 type AdminPackage = {
   id: string;
   name: string;
@@ -136,6 +169,11 @@ export default function AdminUsersPage() {
   // Delete confirmation
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Profile viewer
+  const [viewUser, setViewUser] = useState<User | null>(null);
+  const [profileDetail, setProfileDetail] = useState<UserDetail | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   // Active packages for create modal
   const [activePackages, setActivePackages] = useState<
@@ -382,6 +420,21 @@ export default function AdminUsersPage() {
     }
   };
 
+  const openProfile = async (user: User) => {
+    setViewUser(user);
+    setProfileDetail(null);
+    if (user.role !== "STUDENT") return;
+    setProfileLoading(true);
+    try {
+      const data = await api.get<UserDetail>(`/api/users/${user.id}`);
+      setProfileDetail(data);
+    } catch {
+      setProfileDetail(null);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
   const handleApproveInstructor = async (userId: string) => {
     try {
       await api.put(`/api/admin/users/${userId}/approve`);
@@ -390,6 +443,48 @@ export default function AdminUsersPage() {
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     }
+  };
+
+  const handleDownloadCsv = () => {
+    const escapeCsv = (value: unknown): string => {
+      const str = String(value ?? "");
+      return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+    };
+
+    const header = [
+      "S.No",
+      "Name",
+      "Email",
+      "Phone",
+      "Role",
+      "Designation",
+      "Intern Field",
+      "Package(s)",
+      "Status",
+    ];
+    const rows = filtered.map((u, index) => [
+      index + 1,
+      u.name,
+      u.email,
+      u.phone ?? "",
+      u.role,
+      u.role === "INTERN" ? (u.designation ?? "") : "",
+      u.internField?.name ?? "",
+      u.packageEnrollments?.map((pe) => pe.package.name).join("; ") ?? "",
+      u.isSuspended ? "Suspended" : "Active",
+    ]);
+    const csv = [header, ...rows]
+      .map((row) => row.map(escapeCsv).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `users-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   useEffect(() => {
@@ -511,6 +606,13 @@ export default function AdminUsersPage() {
               </button>
             )}
           <button
+            onClick={() => openProfile(user)}
+            className="rounded-md border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+            title="View profile"
+          >
+            <IconEye size={16} />
+          </button>
+          <button
             onClick={() => openEditModal(user)}
             className="rounded-md border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
             title="Edit user"
@@ -608,15 +710,26 @@ export default function AdminUsersPage() {
           )}
         </div>
 
-        <div className="max-w-sm">
-          <SearchInput
-            placeholder="Search by name or email..."
-            value={search}
-            onChange={(value) => {
-              setSearch(value);
-              setPage(1);
-            }}
-          />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleDownloadCsv}
+            disabled={filtered.length === 0}
+            className="btn-secondary text-sm flex items-center gap-1.5 disabled:opacity-50"
+            title="Download filtered users as CSV"
+          >
+            <IconDownload size={16} />
+            Download CSV
+          </button>
+          <div className="max-w-sm">
+            <SearchInput
+              placeholder="Search by name or email..."
+              value={search}
+              onChange={(value) => {
+                setSearch(value);
+                setPage(1);
+              }}
+            />
+          </div>
         </div>
       </div>
 
@@ -1091,6 +1204,260 @@ export default function AdminUsersPage() {
           )}
         </form>
       </FormModal>
+
+      {/* User Profile Panel */}
+      {viewUser && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40"
+          onClick={() => setViewUser(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${viewUser.name}'s profile`}
+        >
+          <div
+            className="absolute right-0 top-0 h-full w-full max-w-md border-l border-border bg-card shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="border-b border-border p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xl font-bold text-primary">
+                    {viewUser.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-bold text-foreground truncate">
+                      {viewUser.name}
+                    </h3>
+                    <div className="mt-1 flex items-center gap-2">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium ${roleStyles[viewUser.role]}`}
+                      >
+                        {roleIcons[viewUser.role]}
+                        {viewUser.role}
+                      </span>
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium ${
+                          viewUser.isSuspended
+                            ? "bg-danger/10 text-danger"
+                            : "bg-success/10 text-success"
+                        }`}
+                      >
+                        {viewUser.isSuspended ? "Suspended" : "Active"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setViewUser(null)}
+                  className="text-muted hover:text-foreground"
+                  aria-label="Close profile"
+                >
+                  <IconX size={20} stroke={1.5} />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5 space-y-6">
+              <section className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wide text-muted">
+                  Contact
+                </h4>
+                <div className="space-y-2.5">
+                  <div className="flex items-center gap-2.5 text-sm text-foreground">
+                    <IconMail size={16} className="shrink-0 text-muted" />
+                    <span className="truncate">{viewUser.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 text-sm text-foreground">
+                    <IconPhone size={16} className="shrink-0 text-muted" />
+                    <span>{viewUser.phone || "—"}</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 text-sm text-foreground">
+                    <IconCalendar size={16} className="shrink-0 text-muted" />
+                    <span>
+                      Member since{" "}
+                      {viewUser.createdAt
+                        ? new Date(viewUser.createdAt).toLocaleDateString(
+                            "en-US",
+                            { year: "numeric", month: "long", day: "numeric" },
+                          )
+                        : "—"}
+                    </span>
+                  </div>
+                </div>
+              </section>
+
+              {viewUser.role === "INTERN" && (
+                <section className="space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wide text-muted">
+                    Internship Details
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg border border-border bg-card-hover/40 p-3">
+                      <p className="text-[11px] text-muted">Designation</p>
+                      <p className="mt-0.5 text-sm font-medium text-foreground capitalize">
+                        {viewUser.designation?.toLowerCase() === "working"
+                          ? "Working"
+                          : viewUser.designation?.toLowerCase() === "studying"
+                            ? "Studying"
+                            : "—"}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-border bg-card-hover/40 p-3">
+                      <p className="text-[11px] text-muted">Field of Study</p>
+                      <p className="mt-0.5 text-sm font-medium text-foreground">
+                        {viewUser.internField?.name || "—"}
+                      </p>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              <section className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wide text-muted">
+                  Package Enrollments
+                </h4>
+                {viewUser.packageEnrollments &&
+                viewUser.packageEnrollments.length > 0 ? (
+                  <div className="space-y-2.5">
+                    {viewUser.packageEnrollments.map((pe, idx) => (
+                      <div
+                        key={`${pe.package.id}-${idx}`}
+                        className="rounded-lg border border-border bg-card-hover/40 p-3"
+                      >
+                        <p className="text-sm font-semibold text-foreground">
+                          {pe.package.name}
+                        </p>
+                        <p className="mt-1 text-xs text-muted">
+                          {pe.courses.length > 0
+                            ? `${pe.courses.length} course${pe.courses.length === 1 ? "" : "s"} enrolled`
+                            : "No courses"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No packages</p>
+                )}
+              </section>
+
+              {viewUser.role === "STUDENT" && (
+                <>
+                  <section className="space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wide text-muted">
+                      Quiz Attempts
+                    </h4>
+                    {profileLoading ? (
+                      <p className="text-sm text-muted animate-pulse">
+                        Loading...
+                      </p>
+                    ) : profileDetail?.quizAttempts &&
+                      profileDetail.quizAttempts.length > 0 ? (
+                      <div className="space-y-2.5">
+                        {profileDetail.quizAttempts.map((qa) => (
+                          <div
+                            key={qa.id}
+                            className="rounded-lg border border-border bg-card-hover/40 p-3"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="truncate text-sm font-medium text-foreground">
+                                {qa.quiz?.title || "Quiz"}
+                              </p>
+                              <span
+                                className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                  qa.isPassed
+                                    ? "bg-success/10 text-success"
+                                    : "bg-danger/10 text-danger"
+                                }`}
+                              >
+                                {qa.isPassed ? "Passed" : "Failed"}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs text-muted">
+                              Score: {qa.score}/{qa.total} ({qa.percentage}%) ·{" "}
+                              {qa.status === "PENDING"
+                                ? "Pending"
+                                : qa.submittedAt
+                                  ? new Date(qa.submittedAt).toLocaleDateString()
+                                  : "Not submitted"}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        No quiz attempts
+                      </p>
+                    )}
+                  </section>
+
+                  <section className="space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wide text-muted">
+                      Assignment Submissions
+                    </h4>
+                    {profileLoading ? (
+                      <p className="text-sm text-muted animate-pulse">
+                        Loading...
+                      </p>
+                    ) : profileDetail?.assignmentSubmissions &&
+                      profileDetail.assignmentSubmissions.length > 0 ? (
+                      <div className="space-y-2.5">
+                        {profileDetail.assignmentSubmissions.map((sub) => (
+                          <div
+                            key={sub.id}
+                            className="rounded-lg border border-border bg-card-hover/40 p-3"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="truncate text-sm font-medium text-foreground">
+                                {sub.assignment?.title || "Assignment"}
+                              </p>
+                              <span
+                                className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                  sub.status === "GRADED"
+                                    ? "bg-success/10 text-success"
+                                    : sub.status === "PENDING"
+                                      ? "bg-warning/10 text-warning"
+                                      : "bg-muted/15 text-muted-foreground"
+                                }`}
+                              >
+                                {sub.status}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs text-muted">
+                              {new Date(sub.submittedAt).toLocaleDateString()}
+                              {sub.grade
+                                ? ` · Grade: ${sub.grade}`
+                                : sub.totalScore != null
+                                  ? ` · Score: ${sub.totalScore}`
+                                  : ""}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        No submissions
+                      </p>
+                    )}
+                  </section>
+                </>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 border-t border-border p-4">
+              <button
+                onClick={() => {
+                  setViewUser(null);
+                  openEditModal(viewUser);
+                }}
+                className="btn-secondary text-sm flex items-center gap-1.5"
+              >
+                <IconEdit size={15} />
+                Edit User
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation */}
       <ConfirmModal

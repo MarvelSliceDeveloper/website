@@ -10,6 +10,7 @@ import { z } from "zod";
 import { prisma } from "../../utils/prisma";
 import { UserRole } from "@lms/types";
 import { paginate } from "../../utils/paginate";
+import { AppError } from "../../utils/errors";
 
 // --- Zod Schemas ---
 
@@ -749,6 +750,27 @@ export const batchService = {
       isVisible: result.isVisible,
       isExamRequired: result.isExamRequired,
       course: course!,
+    };
+  },
+
+  // Toggles batch-level exam enablement (controls certificate visibility for students)
+  async toggleExamEnabled(batchId: string) {
+    const batch = await prisma.batch.findUnique({ where: { id: batchId } });
+    if (!batch) {
+      throw new AppError(404, "Batch not found");
+    }
+
+    const newExamEnabled = !batch.examEnabled;
+
+    const updated = await prisma.batch.update({
+      where: { id: batchId },
+      data: { examEnabled: newExamEnabled },
+    });
+
+    return {
+      id: updated.id,
+      name: updated.name,
+      examEnabled: updated.examEnabled,
     };
   },
 };

@@ -36,7 +36,7 @@ type ClaimableCertificate = {
 async function buildCourseCompletionMap(userId: string) {
   const enrollments = await prisma.enrollmentRequest.findMany({
     where: { userId, status: "APPROVED" },
-    select: { courseId: true },
+    select: { courseId: true, batchId: true },
   });
 
   const courseIds = [
@@ -53,7 +53,7 @@ async function buildCourseCompletionMap(userId: string) {
   const [certificates, courses, pkgCourseRows] = await Promise.all([
     prisma.certificate.findMany({
       where: { userId, courseId: { in: courseIds } },
-      select: { id: true, courseId: true, issuedAt: true },
+      select: { id: true, courseId: true, batchId: true, issuedAt: true },
       orderBy: { issuedAt: "desc" },
     }),
     prisma.course.findMany({
@@ -86,8 +86,12 @@ async function buildCourseCompletionMap(userId: string) {
           : []),
       ],
     },
-    select: { id: true, courseId: true },
+    select: { id: true, courseId: true, examEnabled: true },
   });
+
+  const disabledBatchIds = new Set(
+    batches.filter((batch) => !batch.examEnabled).map((batch) => batch.id),
+  );
 
   const batchIds = batches.map((batch) => batch.id);
 
@@ -137,6 +141,15 @@ async function buildCourseCompletionMap(userId: string) {
   const issued = certificates
     .map((certificate) => {
       if (!certificate.courseId) return null;
+      // Hide certificates when the course's batch has exams disabled
+      const enrollment = enrollments.find(
+        (enrollment) =>
+          enrollment.courseId === certificate.courseId && enrollment.batchId,
+      );
+      const effectiveBatchId = certificate.batchId ?? enrollment?.batchId;
+      if (effectiveBatchId && disabledBatchIds.has(effectiveBatchId)) {
+        return null;
+      }
       const course = courseById.get(certificate.courseId);
       if (!course) return null;
 
@@ -168,6 +181,14 @@ async function buildCourseCompletionMap(userId: string) {
     if (!course || !stats || stats.total === 0) continue;
     if (issuedCourseIds.has(courseId)) continue;
     if (stats.completed !== stats.total) continue;
+
+    // Hide claimable when the course's batch has exams disabled
+    const enrollment = enrollments.find(
+      (enrollment) => enrollment.courseId === courseId && enrollment.batchId,
+    );
+    if (enrollment?.batchId && disabledBatchIds.has(enrollment.batchId)) {
+      continue;
+    }
 
     claimable.push({
       courseId,

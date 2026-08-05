@@ -15,6 +15,7 @@ import {
   IconTrash,
   IconPlus,
   IconEdit,
+  IconCertificate,
 } from "@tabler/icons-react";
 
 type BatchCourse = {
@@ -48,6 +49,7 @@ type Batch = {
   startDate: string;
   endDate: string;
   isActive: boolean;
+  examEnabled: boolean;
   maxStudents: number | null;
   description: string | null;
   course: { id: string; title: string } | null;
@@ -82,6 +84,7 @@ export default function BatchDetailPage() {
   const [courses, setCourses] = useState<BatchCourse[]>([]);
   const [toggling, setToggling] = useState<string | null>(null);
   const [togglingExam, setTogglingExam] = useState<string | null>(null);
+  const [togglingExamEnabled, setTogglingExamEnabled] = useState(false);
 
   // Extensions state
   const [extensions, setExtensions] = useState<any[]>([]);
@@ -221,6 +224,27 @@ export default function BatchDetailPage() {
     }
   };
 
+  const handleToggleExamEnabled = async () => {
+    setTogglingExamEnabled(true);
+    try {
+      const result = await api.put<{ id: string; examEnabled: boolean }>(
+        `/api/admin/batches/${id}/exam-enabled`,
+      );
+      setBatch((prev) =>
+        prev ? { ...prev, examEnabled: result.examEnabled } : prev,
+      );
+      toast.success(
+        result.examEnabled
+          ? "Exams enabled — certificates are shown to students"
+          : "Exams disabled — certificates are hidden from students",
+      );
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setTogglingExamEnabled(false);
+    }
+  };
+
   const uniqueStudents = useMemo(() => {
     if (!batch) return [];
     const map = new Map<
@@ -287,11 +311,29 @@ export default function BatchDetailPage() {
           { label: batch.name, href: "#" },
         ]}
         action={
-          <span
-            className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[batch.status] || ""}`}
-          >
-            {batch.status}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleToggleExamEnabled}
+              disabled={togglingExamEnabled}
+              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all disabled:opacity-50 ${
+                batch.examEnabled
+                  ? "border-success/30 text-success hover:bg-success/10"
+                  : "border-border text-muted-foreground hover:bg-card-hover"
+              }`}
+            >
+              {togglingExamEnabled ? (
+                <span className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
+              ) : (
+                <IconCertificate size={14} />
+              )}
+              {batch.examEnabled ? "EXAM ENABLE" : "EXAM DISABLE"}
+            </button>
+            <span
+              className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[batch.status] || ""}`}
+            >
+              {batch.status}
+            </span>
+          </div>
         }
       />
 

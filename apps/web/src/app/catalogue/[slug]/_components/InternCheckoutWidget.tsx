@@ -21,6 +21,8 @@ import {
   IconPhone,
   IconStar,
   IconArrowRight,
+  IconReceipt,
+  IconRefresh,
 } from "@tabler/icons-react";
 
 type Step =
@@ -116,28 +118,85 @@ function fieldColor(name: string): string {
   return "from-indigo-500 to-violet-600";
 }
 
-function CheckoutLogoHeader({ pkg }: { pkg: PackageDetail }) {
+function SecureCheckoutHeader() {
   return (
-    <div className="mb-6 px-5 py-4 border-b border-border">
-      <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
-          <Image
-            src="/images/logo.svg"
-            alt="Marvel Slice"
-            width={28}
-            height={28}
-            className="h-7 w-auto"
-          />
-        </div>
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            Marvel Slice
-          </p>
-          <p className="text-sm font-bold text-foreground">
-            {pkg.name || "Internship Program"}
-          </p>
-        </div>
+    <div className="flex items-center justify-between border-b border-border px-6 py-4">
+      <div className="flex items-center gap-2.5">
+        <Image
+          src="/images/logo.svg"
+          alt="Marvel Slice"
+          width={28}
+          height={28}
+          className="h-7 w-auto"
+        />
+        <span className="text-sm font-extrabold tracking-tight">
+          <span className="text-blue-600">Marvel</span>{" "}
+          <span className="text-blue-500">Slice</span>
+        </span>
       </div>
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/10 px-3 py-1 text-[11px] font-semibold text-muted-foreground">
+        <IconShieldLock size={12} />
+        Secure Checkout
+      </span>
+    </div>
+  );
+}
+
+function StepIndicator({ active }: { active: number }) {
+  const steps = ["Your Information", "Payment", "Confirmation"] as const;
+  return (
+    <div className="mb-5 flex items-center gap-2">
+      {steps.map((label, i) => {
+        const n = i + 1;
+        const isActive = n === active;
+        const isDone = n < active;
+        return (
+          <div key={label} className="flex flex-1 items-center gap-2">
+            <div className="flex items-center gap-2">
+              <div
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
+                  isActive
+                    ? "bg-primary text-white ring-2 ring-primary ring-offset-2"
+                    : isDone
+                      ? "bg-primary/15 text-primary"
+                      : "bg-muted text-white"
+                }`}
+              >
+                {isDone ? <IconCheck size={12} stroke={3} /> : n}
+              </div>
+              <span
+                className={`hidden truncate text-xs font-medium sm:inline ${
+                  isActive ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                {label}
+              </span>
+            </div>
+            {n < steps.length && (
+              <div className="h-0.5 flex-1 rounded bg-border" />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function TrustRow() {
+  return (
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-border pt-4 text-muted-foreground">
+      <span className="flex items-center gap-1.5 text-xs font-medium">
+        <IconBuildingBank size={14} className="text-primary" />
+        Razorpay Secure
+      </span>
+      <span className="flex items-center gap-1.5 text-xs font-medium">
+        <IconReceipt size={14} className="text-primary" />
+        Email Invoice
+      </span>
+      <span className="flex items-center gap-1.5 text-xs font-medium">
+        <IconRefresh size={14} className="text-primary" />
+        Money-back Guarantee
+      </span>
     </div>
   );
 }
@@ -269,30 +328,10 @@ export function InternCheckoutWidget({ pkg }: Props) {
   if (step === "form" || step === "error") {
     return (
       <div className="sticky top-24 overflow-hidden rounded-xl border border-border bg-card shadow-lg shadow-primary/5">
-        <CheckoutLogoHeader pkg={pkg} />
+        <SecureCheckoutHeader />
 
         <div className="px-6 pb-6">
-          {/* Step indicator */}
-          <div className="mb-5 flex items-center gap-2">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="flex flex-1 items-center gap-2">
-                <div
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
-                    n === 1
-                      ? "bg-primary text-white"
-                      : "bg-muted text-white"
-                  }`}
-                >
-                  {n}
-                </div>
-                <div
-                  className={`h-0.5 flex-1 rounded ${
-                    n < 3 ? "bg-border" : ""
-                  }`}
-                />
-              </div>
-            ))}
-          </div>
+          <StepIndicator active={1} />
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Personal details */}
@@ -497,10 +536,7 @@ export function InternCheckoutWidget({ pkg }: Props) {
               {!loading && <IconArrowRight size={16} />}
             </button>
 
-            <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
-              <IconBuildingBank size={13} />
-              Powered by Razorpay · Your details are safe with us
-            </div>
+            <TrustRow />
           </form>
         </div>
       </div>
@@ -514,8 +550,9 @@ export function InternCheckoutWidget({ pkg }: Props) {
   ) {
     return (
       <div className="sticky top-24 overflow-hidden rounded-xl border border-border bg-card">
-        <CheckoutLogoHeader pkg={pkg} />
+        <SecureCheckoutHeader />
         <div className="px-6 pb-6">
+          <StepIndicator active={2} />
           <div className="py-8 text-center">
             <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
             <p className="text-sm font-medium text-foreground">
@@ -535,7 +572,7 @@ export function InternCheckoutWidget({ pkg }: Props) {
   if (step === "complete") {
     return (
       <div className="sticky top-24 overflow-hidden rounded-xl border border-border bg-card">
-        <CheckoutLogoHeader pkg={pkg} />
+        <SecureCheckoutHeader />
         <div className="px-6 pb-6">
           <div className="py-6 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/20">
@@ -570,7 +607,7 @@ export function InternCheckoutWidget({ pkg }: Props) {
 
   return (
     <div className="sticky top-24 overflow-hidden rounded-xl border border-border bg-card">
-      <CheckoutLogoHeader pkg={pkg} />
+      <SecureCheckoutHeader />
       <div className="px-6 pb-6">
         <div className="py-6 text-center">
           <p className="text-sm text-danger">

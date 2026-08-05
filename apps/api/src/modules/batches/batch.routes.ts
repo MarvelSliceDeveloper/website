@@ -81,6 +81,13 @@ router.put(
   batchController.toggleExamRequired,
 );
 
+// PUT /api/admin/batches/:id/exam-enabled — toggle batch-level exam enablement (controls certificate visibility)
+router.put(
+  "/:id/exam-enabled",
+  requireRole([UserRole.ADMIN]),
+  batchController.toggleExamEnabled,
+);
+
 // --- Extension management (batch-level) ---
 
 // GET /api/admin/batches/:batchId/extensions — list extensions

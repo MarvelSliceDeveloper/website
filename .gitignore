@@ -12,6 +12,7 @@
 .opencode/
 node_modules/
 .pnpm-store/
+
 # ─────────────────────────────────
 # Environment Variables
 # ─────────────────────────────────
@@ -52,8 +53,9 @@ packages/*/build/
 apps/api/node_modules/.prisma/
 
 # SQLite dev database (if used for local testing)
-*.db
-*.db-journal
+# Anchored to prisma dirs only — avoids catching intentional fixture/seed .db files elsewhere
+apps/api/prisma/*.db
+apps/api/prisma/*.db-journal
 
 # ─────────────────────────────────
 # Testing
@@ -74,10 +76,10 @@ blob-report/
 # ─────────────────────────────────
 # Docker
 # ─────────────────────────────────
-# Docker data volumes (local dev)
-docker-data/
-pgdata/
-redisdata/
+# Docker data volumes (local dev) — anchored to root
+/docker-data/
+/pgdata/
+/redisdata/
 
 # ─────────────────────────────────
 # IDE / Editor
@@ -153,10 +155,13 @@ lerna-debug.log*
 *.rar
 
 # Generated certificates/invoices (stored in cloud, not in repo)
-invoices/
+# Anchored to root only — won't catch a Next.js route folder named "invoices"
+/invoices/
 
 # Uploaded files (stored in cloud, not in repo)
-uploads/
+# Anchored to root and to the api app specifically — won't catch a Next.js
+# route folder named "uploads" anywhere else in the tree
+/uploads/
 apps/api/uploads/
 
 # ngrok config
@@ -172,7 +177,13 @@ stats.html
 # TypeScript build info
 *.tsbuildinfo
 
-# Lock files (keep root pnpm-lock.yaml, ignore others)
+# ─────────────────────────────────
+# Lock files
+# ─────────────────────────────────
+# Keep the root pnpm-lock.yaml (not ignored).
+# Ignore npm/yarn lock files anywhere (shouldn't exist in a pnpm workspace).
+# Ignore any *nested* pnpm-lock.yaml (apps/*, packages/*) — only the root one is authoritative.
 package-lock.json
 yarn.lock
-apps/web/pnpm-lock.yaml
+apps/*/pnpm-lock.yaml
+packages/*/pnpm-lock.yaml
