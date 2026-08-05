@@ -20,17 +20,13 @@ if (process.env.DATABASE_URL) {
   console.debug("[config] DATABASE_URL not set");
 }
 
-import pino from "pino";
+import { logger } from "./utils/logger";
 import { app } from "./app";
 import { recordingSyncJob } from "./jobs/recording-sync.job";
 import { reconcileAttendanceJob } from "./jobs/reconcile-attendance.job";
 import { prisma } from "./utils/prisma";
 
 import { socketService } from "./services/socket.service";
-
-const logger = pino({
-  level: process.env.LOG_LEVEL || "info",
-});
 
 const PORT = process.env.PORT || 4000;
 
@@ -66,3 +62,15 @@ const shutdown = async (signal: string) => {
 
 process.on("SIGINT", () => shutdown("SIGINT"));
 process.on("SIGTERM", () => shutdown("SIGTERM"));
+
+// Safety net: prevent unhandled promise rejections or unexpected errors from
+// crashing the API process. Background jobs (recording sync, attendance
+// reconciliation) should fail gracefully and retry on the next interval
+// rather than taking down the entire server.
+process.on("unhandledRejection", (reason) => {
+  logger.error({ err: reason }, "Unhandled promise rejection — ignored");
+});
+
+process.on("uncaughtException", (err) => {
+  logger.error({ err }, "Uncaught exception — logging (process NOT exiting)");
+});
