@@ -112,6 +112,21 @@ export default function SuperAdminPage() {
       href: "/admin/trash",
       desc: "Soft-deleted items with restore",
     },
+    {
+      label: "Backup & Restore",
+      href: "/admin/settings/backup",
+      desc: "Create, download, and restore database backups",
+    },
+    {
+      label: "Maintenance Mode",
+      href: "/admin/maintenance",
+      desc: "Toggle platform-wide maintenance mode",
+    },
+    {
+      label: "Session Management",
+      href: "/admin/session-management",
+      desc: "Monitor and terminate admin sessions (kill button)",
+    },
   ];
 
   return (

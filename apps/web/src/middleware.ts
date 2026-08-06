@@ -6,13 +6,16 @@ const protectedPrefixes = ["/admin", "/instructor", "/student"];
 
 const superAdminPrefixes = [
   "/admin/super-admin",
-  "/admin/logs",
+  "/admin/audit-logs",
   "/admin/trash",
   "/admin/announcements",
   "/admin/consent-logs",
   "/admin/settings/api-keys",
   "/admin/settings/permissions",
   "/admin/settings/system",
+  "/admin/settings/backup",
+  "/admin/maintenance",
+  "/admin/session-management",
   "/admin/users/login-history",
 ];
 

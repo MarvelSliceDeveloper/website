@@ -26,6 +26,7 @@ import {
   IconServer,
   IconShield,
   IconRefresh,
+  IconAlarmSmoke,
 } from "@tabler/icons-react";
 
 import type { NavItem, NavItemChild } from "@/components/shared/SidebarTypes";
@@ -431,6 +432,14 @@ export default function AdminSidebar({
                   { label: "Assignment Tracker", href: "/admin/interns/assignments" },
                 ],
               },
+              {
+                label: "Session Management",
+                href: "/admin/session-management",
+                icon: IconShield,
+                children: [
+                  { label: "Active Sessions", href: "/admin/session-management" },
+                ],
+              },
             ],
           },
           {
@@ -460,6 +469,15 @@ export default function AdminSidebar({
                 label: "Health",
                 href: "/admin/health",
                 icon: IconServer as React.ComponentType<{
+                  size?: number | string;
+                  stroke?: number | string;
+                  className?: string;
+                }>,
+              },
+              {
+                label: "Maintenance Mode",
+                href: "/admin/maintenance",
+                icon: IconAlarmSmoke as React.ComponentType<{
                   size?: number | string;
                   stroke?: number | string;
                   className?: string;

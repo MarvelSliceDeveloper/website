@@ -90,6 +90,7 @@ import alertingWebhooksRouter from "./modules/admin/webhooks/alerting-webhooks.r
 import { refundsRouter } from "./modules/admin/refunds/refunds.routes";
 import { assignmentReviewRouter } from "./modules/admin/assignments/review.routes";
 import { instructorsRouter } from "./modules/admin/instructors/instructors.routes";
+import { sessionsRouter } from "./modules/admin/sessions/sessions.routes";
 import {
   internRouter,
   adminInternRouter,
@@ -361,6 +362,9 @@ app.use("/api/admin/gdpr", gdprRouter);
 
 // ── Database Backup / Restore ──
 app.use("/api/admin/backup", backupRouter);
+
+// ── Admin Session Management (kill / terminate) ──
+app.use("/api/admin/sessions", sessionsRouter);
 
 // ── Alerting Webhooks ──
 app.use("/api/admin/alerting-webhooks", alertingWebhooksRouter);

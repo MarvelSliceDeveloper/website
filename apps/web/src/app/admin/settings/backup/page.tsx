@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { IconDatabase, IconDownload, IconUpload, IconTrash, IconRefresh, IconAlertTriangle } from "@tabler/icons-react";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 
 type Backup = { filename: string; size: number; createdAt: string };
@@ -20,8 +20,8 @@ export default function BackupPage() {
     try {
       const res = await api.get<{ backups: Backup[] }>("/api/admin/backup/list");
       setBackups(res.backups || []);
-    } catch {
-      toast.error("Failed to fetch backups");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -35,8 +35,8 @@ export default function BackupPage() {
       const res = await api.post<{ filename: string; size: number }>("/api/admin/backup", {});
       toast.success(`Backup created: ${res.filename}`);
       fetchBackups();
-    } catch {
-      toast.error("Failed to create backup");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     } finally {
       setCreating(false);
     }
@@ -60,8 +60,8 @@ export default function BackupPage() {
         );
         toast.success(res.message);
         fetchBackups();
-      } catch {
-        toast.error("Failed to restore backup");
+      } catch (err: unknown) {
+        toast.error(getErrorMessage(err));
       } finally {
         setRestoring(false);
       }
@@ -75,8 +75,8 @@ export default function BackupPage() {
       await api.delete(`/api/admin/backup/${filename}`);
       toast.success("Backup deleted");
       fetchBackups();
-    } catch {
-      toast.error("Failed to delete backup");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     }
   };
 
