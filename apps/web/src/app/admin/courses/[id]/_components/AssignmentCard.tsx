@@ -3,7 +3,15 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
-import { IconX, IconExternalLink, IconGripVertical, IconCopy, IconCheck } from "@tabler/icons-react";
+import {
+  IconX,
+  IconExternalLink,
+  IconGripVertical,
+  IconCopy,
+  IconCheck,
+  IconFileText,
+  IconTrash,
+} from "@tabler/icons-react";
 import RichEditor from "@/components/editor/RichEditor";
 
 interface Assignment {
@@ -120,12 +128,14 @@ export default function AssignmentCard({
 
   if (editing) {
     return (
-      <div className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+      <div className="ml-6 space-y-4 rounded-xl border border-[#e4e2f5] bg-[#f8f7fd] p-4">
         <div className="flex items-center justify-between">
-          <h4 className="font-medium text-sm">Edit Assignment</h4>
+          <h4 className="text-sm font-medium text-[#1f2233]">
+            Edit Assignment
+          </h4>
           <button
             onClick={cancelEdit}
-            className="p-1 text-muted hover:text-foreground"
+            className="p-1 text-[#8b8da3] hover:text-[#1f2233]"
           >
             <IconX size={16} />
           </button>
@@ -159,14 +169,14 @@ export default function AssignmentCard({
             <button
               type="button"
               onClick={() => setDueDateMode("absolute")}
-              className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${dueDateMode === "absolute" ? "bg-primary text-white border-primary" : "bg-paper text-ink border-hairline"}`}
+              className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${dueDateMode === "absolute" ? "border-[#4f63f0] bg-[#4f63f0] text-white" : "border-[#e4e2f5] bg-white text-[#1f2233]"}`}
             >
               Absolute Date
             </button>
             <button
               type="button"
               onClick={() => setDueDateMode("days")}
-              className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${dueDateMode === "days" ? "bg-primary text-white border-primary" : "bg-paper text-ink border-hairline"}`}
+              className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${dueDateMode === "days" ? "border-[#4f63f0] bg-[#4f63f0] text-white" : "border-[#e4e2f5] bg-white text-[#1f2233]"}`}
             >
               Days from Enrollment
             </button>
@@ -219,19 +229,22 @@ export default function AssignmentCard({
             placeholder="https://drive.google.com/file/d/.../preview"
             className="field text-xs"
           />
-          <p className="text-[10px] text-muted">
+          <p className="text-[10px] text-[#8b8da3]">
             Paste a Google Drive embed URL to render the PDF inline for students
           </p>
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
-          <button onClick={cancelEdit} className="btn-secondary text-xs">
+          <button
+            onClick={cancelEdit}
+            className="rounded-full border border-[#e4e2f5] bg-white px-3.5 py-1.5 text-xs font-medium text-[#1f2233] hover:bg-[#f5f4fd]"
+          >
             Cancel
           </button>
           <button
             onClick={handleUpdate}
             disabled={loading}
-            className="btn-primary text-xs"
+            className="rounded-full bg-[#4f63f0] px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#3f52e0] disabled:opacity-50"
           >
             {loading ? "Saving..." : "Save Changes"}
           </button>
@@ -239,6 +252,13 @@ export default function AssignmentCard({
       </div>
     );
   }
+
+  const dueLabel =
+    assignment.daysFromEnrollment != null
+      ? `Due ${assignment.daysFromEnrollment}d after enrollment`
+      : assignment.dueDate
+        ? `Due ${new Date(assignment.dueDate).toLocaleDateString()}`
+        : null;
 
   return (
     <div
@@ -250,68 +270,74 @@ export default function AssignmentCard({
         e.preventDefault();
         onDrop?.();
       }}
-      className={`flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 px-3 py-2 transition-all duration-200 ${isDragging ? "opacity-40 scale-[0.98]" : ""}`}
+      className={`group flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-all duration-200 ${
+        isDragging ? "scale-[0.98] opacity-40" : "hover:bg-[#f8f7fd]"
+      }`}
     >
-      <div className="flex items-center gap-2">
-        {onDragStart && (
-          <span className="cursor-grab active:cursor-grabbing text-blue-400 hover:text-blue-600 transition-colors">
-            <IconGripVertical size={12} />
-          </span>
-        )}
-        <span className="text-sm font-medium text-blue-700">
-          {assignment.title}
+      {onDragStart && (
+        <span className="shrink-0 cursor-grab text-[#c7c6dd] transition-colors hover:text-[#a3a1c9] active:cursor-grabbing">
+          <IconGripVertical size={13} />
         </span>
-        <button
-          onClick={copyId}
-          className="group relative inline-flex items-center gap-1 text-[10px] font-mono text-muted-foreground/60 hover:text-foreground transition-colors"
-          title="Copy assignment ID"
-        >
-          {copied ? (
-            <IconCheck size={10} className="text-emerald-500" />
-          ) : (
-            <IconCopy size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-          )}
-          <span className="opacity-60 group-hover:opacity-100 transition-opacity">
-            {assignment.id.slice(0, 8)}...
-          </span>
-        </button>
-        <span className="text-xs text-blue-600">
-          {assignment.maxPoints} pts
-        </span>
-        {assignment.daysFromEnrollment != null ? (
-          <span className="text-xs text-blue-500">
-            Due: {assignment.daysFromEnrollment}d after enrollment
-          </span>
-        ) : assignment.dueDate ? (
-          <span className="text-xs text-blue-500">
-            Due: {new Date(assignment.dueDate).toLocaleDateString()}
-          </span>
-        ) : null}
-        {assignment.questionPdfUrl && (
-          <a
-            href={assignment.questionPdfUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-500 hover:text-blue-700 underline"
+      )}
+
+      <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg bg-[#eff6ff] text-[#2563eb]">
+        <IconFileText size={13} />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <p className="truncate text-[13px] font-medium text-[#1f2233]">
+            {assignment.title}
+          </p>
+          <button
+            onClick={copyId}
+            className="group/copy relative inline-flex items-center gap-1 text-[10px] font-mono text-[#8b8da3]/70 transition-colors hover:text-[#1f2233]"
+            title="Copy assignment ID"
           >
-            <IconExternalLink size={12} /> PDF
-          </a>
+            {copied ? (
+              <IconCheck size={10} className="text-emerald-500" />
+            ) : (
+              <IconCopy
+                size={10}
+                className="opacity-0 transition-opacity group-hover/copy:opacity-100"
+              />
+            )}
+          </button>
+          {assignment.questionPdfUrl && (
+            <a
+              href={assignment.questionPdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-0.5 text-[9.5px] font-medium text-[#2563eb] underline hover:text-blue-700"
+            >
+              <IconExternalLink size={11} /> PDF
+            </a>
+          )}
+        </div>
+        {dueLabel && (
+          <p className="mt-0.5 text-[10.5px] text-[#8b8da3]">{dueLabel}</p>
         )}
       </div>
-      <div className="flex gap-1">
-        <button
-          onClick={() => setEditing(true)}
-          className="text-xs text-primary hover:text-primary-hover px-2 py-1"
-        >
-          Edit
-        </button>
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="text-xs text-danger hover:text-danger px-2 py-1"
-        >
-          {deleting ? "..." : "Delete"}
-        </button>
+
+      <div className="flex shrink-0 items-center gap-2">
+        <span className="whitespace-nowrap text-[11.5px] text-[#8b8da3]">
+          {assignment.maxPoints} Pts
+        </span>
+        <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+          <button
+            onClick={() => setEditing(true)}
+            className="rounded-md px-1.5 py-1 text-[10px] font-medium text-[#4f63f0] transition-colors hover:bg-[#4f63f0]/10"
+          >
+            Edit
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="rounded-md p-1 text-[#8b8da3] transition-colors hover:bg-danger/12 hover:text-danger"
+          >
+            <IconTrash size={12} />
+          </button>
+        </div>
       </div>
     </div>
   );

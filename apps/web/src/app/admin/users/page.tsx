@@ -25,6 +25,7 @@ import {
   IconX,
   IconMail,
   IconPhone,
+  IconHome,
   IconCalendar,
 } from "@tabler/icons-react";
 import {
@@ -41,6 +42,7 @@ type User = {
   email: string;
   role: "STUDENT" | "INSTRUCTOR" | "ADMIN" | "SUPER_ADMIN" | "INTERN";
   phone?: string | null;
+  address?: string | null;
   createdAt?: string;
   designation?: "WORKING" | "STUDYING" | null;
   internField?: { id: string; name: string } | null;
@@ -605,13 +607,15 @@ export default function AdminUsersPage() {
                 <IconCheck size={16} />
               </button>
             )}
-          <button
-            onClick={() => openProfile(user)}
-            className="rounded-md border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
-            title="View profile"
-          >
-            <IconEye size={16} />
-          </button>
+          {user.role === "STUDENT" && (
+            <button
+              onClick={() => openProfile(user)}
+              className="rounded-md border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+              title="View profile"
+            >
+              <IconEye size={16} />
+            </button>
+          )}
           <button
             onClick={() => openEditModal(user)}
             className="rounded-md border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
@@ -652,65 +656,32 @@ export default function AdminUsersPage() {
         }
       />
 
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Role filter chips */}
           <div className="flex flex-wrap gap-2">
-            {(["STUDENT", "INSTRUCTOR", "INTERN", "ADMIN", "SUPER_ADMIN"] as const)
-              .filter(
-                (role) =>
-                  currentUserRole === "SUPER_ADMIN" ||
-                  (role !== "ADMIN" && role !== "SUPER_ADMIN"),
-              )
-              .map((role) => (
-                <button
-                  key={role}
-                  onClick={() =>
-                    router.replace(
-                      roleFilter === role
-                        ? "/admin/users"
-                        : `/admin/users?role=${role}`,
-                    )
-                  }
-                  className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+            {(["STUDENT", "INTERN"] as const).map((role) => (
+              <button
+                key={role}
+                onClick={() =>
+                  router.replace(
                     roleFilter === role
-                      ? roleStyles[role]
-                      : "border-border text-muted-foreground hover:bg-card-hover"
-                  }`}
-                >
-                  <span>{roleIcons[role]}</span>
-                  {role} · {counts[role]}
-                </button>
-              ))}
+                      ? "/admin/users"
+                      : `/admin/users?role=${role}`,
+                  )
+                }
+                className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+                  roleFilter === role
+                    ? roleStyles[role]
+                    : "border-border text-muted-foreground hover:bg-card-hover"
+                }`}
+              >
+                <span>{roleIcons[role]}</span>
+                {role} · {counts[role]}
+              </button>
+            ))}
           </div>
 
-          {/* Package filter chips — only visible when STUDENT filter is active */}
-          {roleFilter === "STUDENT" && packages.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {packages.map((pkg) => (
-                <button
-                  key={pkg.id}
-                  onClick={() =>
-                    router.replace(
-                      packageFilter === pkg.id
-                        ? `/admin/users?role=STUDENT`
-                        : `/admin/users?role=STUDENT&packageId=${pkg.id}`,
-                    )
-                  }
-                  className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-                    packageFilter === pkg.id
-                      ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                      : "border-border text-muted-foreground hover:bg-card-hover"
-                  }`}
-                >
-                  {pkg.name} · {pkg.count}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
           <button
             onClick={handleDownloadCsv}
             disabled={filtered.length === 0}
@@ -720,16 +691,17 @@ export default function AdminUsersPage() {
             <IconDownload size={16} />
             Download CSV
           </button>
-          <div className="max-w-sm">
-            <SearchInput
-              placeholder="Search by name or email..."
-              value={search}
-              onChange={(value) => {
-                setSearch(value);
-                setPage(1);
-              }}
-            />
-          </div>
+        </div>
+
+        <div className="max-w-sm">
+          <SearchInput
+            placeholder="Search by name or email..."
+            value={search}
+            onChange={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+          />
         </div>
       </div>
 
@@ -1270,6 +1242,10 @@ export default function AdminUsersPage() {
                   <div className="flex items-center gap-2.5 text-sm text-foreground">
                     <IconPhone size={16} className="shrink-0 text-muted" />
                     <span>{viewUser.phone || "—"}</span>
+                  </div>
+                  <div className="flex items-start gap-2.5 text-sm text-foreground">
+                    <IconHome size={16} className="shrink-0 text-muted mt-0.5" />
+                    <span>{viewUser.address || "—"}</span>
                   </div>
                   <div className="flex items-center gap-2.5 text-sm text-foreground">
                     <IconCalendar size={16} className="shrink-0 text-muted" />

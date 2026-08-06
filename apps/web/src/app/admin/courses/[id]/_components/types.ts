@@ -87,6 +87,7 @@ export type Module = {
   description: string | null;
   order: number;
   isFreePreview: boolean;
+  isCertificationModule: boolean;
   contentOrder: ContentOrderItem[] | null;
   lessons: Lesson[];
   quizzes: Quiz[];

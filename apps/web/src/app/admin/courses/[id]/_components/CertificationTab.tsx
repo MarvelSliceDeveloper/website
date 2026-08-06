@@ -5,15 +5,26 @@ import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { getErrorMessage } from "@/lib/toast";
 import {
-  IconAward,
   IconClock,
   IconCheck,
   IconLoader2,
+  IconPlus,
+  IconX,
   IconSettings,
+  IconClipboardText,
 } from "@tabler/icons-react";
+import type { Module } from "./types";
+import ModuleCard from "./ModuleCard";
+import RichEditor from "@/components/editor/RichEditor";
+
+interface CertQuestion {
+  id?: string;
+  text: string;
+  options: { label: string; isCorrect: boolean }[];
+}
 
 interface CertificationData {
-  module: { id: string; title: string } | null;
+  module: Module | null;
   quiz: {
     id: string;
     title: string;
@@ -23,6 +34,7 @@ interface CertificationData {
     hasAssignment: boolean;
     assignmentInstructions: string | null;
     questionCount: number;
+    questions?: CertQuestion[];
   } | null;
 }
 
@@ -31,76 +43,182 @@ interface CertificationTabProps {
 }
 
 export default function CertificationTab({ courseId }: CertificationTabProps) {
+  const [courseData, setCourseData] = useState<{ modules: Module[] } | null>(
+    null,
+  );
   const [data, setData] = useState<CertificationData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState("Certification Exam");
   const [passingScore, setPassingScore] = useState(60);
-  const [timeLimitMin, setTimeLimitMin] = useState("");
+  const [timeLimitMin, setTimeLimitMin] = useState("30");
+  const [questions, setQuestions] = useState<CertQuestion[]>([
+    { text: "", options: [{ label: "", isCorrect: false }] },
+  ]);
   const [hasAssignment, setHasAssignment] = useState(false);
   const [assignmentInstructions, setAssignmentInstructions] = useState("");
+  const [showQuestions, setShowQuestions] = useState(false);
+  const [questionSaving, setQuestionSaving] = useState(false);
 
   const applyData = (result: CertificationData) => {
     setData(result);
     if (result.quiz) {
       setTitle(result.module?.title ?? "Certification Exam");
       setPassingScore(result.quiz.passingScore);
-      setTimeLimitMin(result.quiz.timeLimitMin?.toString() ?? "");
-      setHasAssignment(result.quiz.hasAssignment);
+      setTimeLimitMin(result.quiz.timeLimitMin?.toString() ?? "30");
+      setHasAssignment(result.quiz.hasAssignment ?? false);
       setAssignmentInstructions(result.quiz.assignmentInstructions ?? "");
+      setQuestions(
+        result.quiz.questions && result.quiz.questions.length > 0
+          ? (result.quiz.questions as CertQuestion[]).map((q) => ({
+              ...q,
+              options: q.options.map((o) => ({ ...o })),
+            }))
+          : [{ text: "", options: [{ label: "", isCorrect: false }] }],
+      );
     }
   };
 
   const reload = async () => {
     try {
-      const result = await api.get<CertificationData>(
-        `/api/admin/courses/${courseId}/certification`,
-      );
-      applyData(result);
-    } catch {
-      toast.error("Failed to load certification data");
+      const [courseRes, certRes] = await Promise.all([
+        api.get<{ modules: Module[] }>(`/api/admin/courses/${courseId}`),
+        api.get<CertificationData>(
+          `/api/admin/courses/${courseId}/certification`,
+        ),
+      ]);
+      setCourseData(courseRes);
+      applyData(certRes);
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
     }
   };
 
   useEffect(() => {
     let cancelled = false;
-    api
-      .get<CertificationData>(
-        `/api/admin/courses/${courseId}/certification`,
-      )
-      .then((result) => {
-        if (cancelled) return;
-        applyData(result);
+    const loadCourse = api
+      .get<{ modules: Module[] }>(`/api/admin/courses/${courseId}`)
+      .then((res) => {
+        if (!cancelled) setCourseData(res);
       })
       .catch(() => {
-        if (!cancelled) toast.error("Failed to load certification data");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+        /* course data is non-critical here */
       });
+    const loadCert = api
+      .get<CertificationData>(`/api/admin/courses/${courseId}/certification`)
+      .then((res) => {
+        if (!cancelled) applyData(res);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) toast.error(getErrorMessage(err));
+      });
+    Promise.all([loadCourse, loadCert]).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
     return () => {
       cancelled = true;
     };
   }, [courseId]);
 
-  const handleSave = async () => {
-    setSaving(true);
+  // ── Question helpers (immutable updates) ────────────────────────
+  const addQuestion = () => {
+    setQuestions((prev) => [
+      ...prev,
+      { text: "", options: [{ label: "", isCorrect: false }] },
+    ]);
+  };
+
+  const removeQuestion = (index: number) => {
+    if (questions.length > 1) {
+      setQuestions(questions.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateQuestionText = (index: number, text: string) => {
+    setQuestions((prev) =>
+      prev.map((q, i) => (i === index ? { ...q, text } : q)),
+    );
+  };
+
+  const addOption = (qIndex: number) => {
+    setQuestions((prev) =>
+      prev.map((q, i) =>
+        i === qIndex
+          ? { ...q, options: [...q.options, { label: "", isCorrect: false }] }
+          : q,
+      ),
+    );
+  };
+
+  const removeOption = (qIndex: number, oIndex: number) => {
+    setQuestions((prev) =>
+      prev.map((q, i) =>
+        i === qIndex && q.options.length > 1
+          ? { ...q, options: q.options.filter((_, oi) => oi !== oIndex) }
+          : q,
+      ),
+    );
+  };
+
+  const updateOptionLabel = (qIndex: number, oIndex: number, label: string) => {
+    setQuestions((prev) =>
+      prev.map((q, i) =>
+        i === qIndex
+          ? {
+              ...q,
+              options: q.options.map((opt, oi) =>
+                oi === oIndex ? { ...opt, label } : opt,
+              ),
+            }
+          : q,
+      ),
+    );
+  };
+
+  const markCorrectOption = (qIndex: number, oIndex: number) => {
+    setQuestions((prev) =>
+      prev.map((q, i) =>
+        i === qIndex
+          ? {
+              ...q,
+              options: q.options.map((opt, oi) => ({
+                ...opt,
+                isCorrect: oi === oIndex,
+              })),
+            }
+          : q,
+      ),
+    );
+  };
+
+  const handleSaveQuestion = async () => {
+    setQuestionSaving(true);
     try {
       await api.put(`/api/admin/courses/${courseId}/certification`, {
         title,
         passingScore,
         timeLimitMin: timeLimitMin ? parseInt(timeLimitMin) : null,
         hasAssignment,
-        assignmentInstructions: assignmentInstructions || null,
+        assignmentInstructions: hasAssignment
+          ? assignmentInstructions
+          : null,
+        questions: questions.map((q) => ({
+          text: q.text,
+          options: q.options.map((o) => ({
+            label: o.label,
+            isCorrect: o.isCorrect,
+          })),
+        })),
       });
       toast.success("Certification settings saved");
       reload();
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
-      setSaving(false);
+      setQuestionSaving(false);
     }
   };
+
+  const certModule = courseData?.modules.find((m) => m.isCertificationModule);
 
   if (loading) {
     return (
@@ -110,56 +228,55 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
     );
   }
 
-  if (!data?.module) {
-    return (
-      <div className="glass-card p-8 text-center">
-        <IconAward className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-foreground mb-2">
-          Certification Exam
-        </h3>
-        <p className="text-sm text-muted mb-6 max-w-md mx-auto">
-          Enable a certification exam for this course. Students must pass this
-          exam (with 60% or higher) to receive their certificate.
-        </p>
-        <button
-          onClick={async () => {
-            setSaving(true);
-            try {
-              await api.put(`/api/admin/courses/${courseId}/certification`, {
-                title: "Certification Exam",
-                passingScore: 60,
-              });
-              toast.success("Certification exam enabled");
-              reload();
-            } catch (err: unknown) {
-              toast.error(getErrorMessage(err));
-            } finally {
-              setSaving(false);
-            }
-          }}
-          className="btn-primary inline-flex items-center gap-2"
-          disabled={saving}
-        >
-          <IconAward className="h-4 w-4" />
-          Enable Certification Exam
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <div className="glass-card p-6">
+      {certModule ? (
+        <ModuleCard
+          key={certModule.id}
+          module={certModule}
+          index={0}
+          courseId={courseId}
+          onChanged={reload}
+          certModule
+          onAddQuestion={() => {
+            setShowQuestions(true);
+            document
+              .getElementById("cert-exam-settings")
+              ?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
+          onAddAssignment={() => {
+            setHasAssignment(true);
+            setShowQuestions(false);
+            document
+              .getElementById("cert-exam-settings")
+              ?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
+          passingScore={passingScore}
+          timeLimitMin={timeLimitMin ? parseInt(timeLimitMin) : null}
+        />
+      ) : (
+        <div className="glass-card flex items-start gap-3 p-5">
+          <IconSettings className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+          <p className="text-sm text-muted">
+            No certification module exists for this course yet. Configure the
+            exam below and click <span className="font-medium text-foreground">Save Settings</span> to
+            create it — it will always appear as the last module.
+          </p>
+        </div>
+      )}
+
+      {/* Exam Settings */}
+      <div id="cert-exam-settings" className="glass-card p-6 scroll-mt-24">
         <div className="flex items-center gap-3 mb-6">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
-            <IconAward className="h-5 w-5 text-amber-500" />
+            <IconSettings className="h-5 w-5 text-amber-500" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-foreground">
-              Certification Exam Settings
+              Exam Settings
             </h3>
             <p className="text-xs text-muted">
-              Configure the final certification exam for this course
+              Configure the certification exam parameters
             </p>
           </div>
         </div>
@@ -197,7 +314,7 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
             <div className="field">
               <label className="label flex items-center gap-2">
                 <IconClock className="h-4 w-4 text-blue-500" />
-                Time Limit (minutes)
+                Time Limit (minutes) *
               </label>
               <input
                 type="number"
@@ -205,60 +322,176 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
                 value={timeLimitMin}
                 onChange={(e) => setTimeLimitMin(e.target.value)}
                 className="input"
-                placeholder="No limit"
               />
               <p className="text-xs text-muted mt-1">
-                Leave empty for no time limit
+                The exam runs a countdown timer and auto-submits when it hits 0
               </p>
             </div>
           </div>
 
-          <div className="border-t border-border/50 pt-4">
-            <label className="flex items-center gap-3 cursor-pointer">
+          {/* Assignment Section */}
+          <div className="rounded-xl border border-border/70 p-4">
+            <label className="flex cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
                 checked={hasAssignment}
                 onChange={(e) => setHasAssignment(e.target.checked)}
-                className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                className="h-4 w-4 accent-primary"
               />
-              <div>
-                <span className="text-sm font-medium text-foreground">
-                  Include Assignment Section
-                </span>
-                <p className="text-xs text-muted">
-                  Allow students to submit a file assignment as part of the exam
-                </p>
-              </div>
+              <span className="text-sm font-medium text-foreground">
+                Include Assignment
+              </span>
+              <span className="text-xs text-muted">
+                Students must submit an assignment along with the exam
+              </span>
             </label>
+            {hasAssignment && (
+              <div className="mt-3 space-y-2">
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  Assignment Instructions
+                </label>
+                <RichEditor
+                  content={assignmentInstructions}
+                  onChange={setAssignmentInstructions}
+                  placeholder="Enter assignment instructions..."
+                  minHeight="150px"
+                />
+              </div>
+            )}
           </div>
 
-          {hasAssignment && (
-            <div className="field">
-              <label className="label">Assignment Instructions</label>
-              <textarea
-                value={assignmentInstructions}
-                onChange={(e) => setAssignmentInstructions(e.target.value)}
-                className="input min-h-[100px]"
-                placeholder="Describe the assignment task..."
-              />
-            </div>
-          )}
+          <div className="flex justify-end mt-4">
+            <button
+              onClick={handleSaveQuestion}
+              className="btn-primary inline-flex items-center gap-2"
+              disabled={questionSaving}
+            >
+              {questionSaving ? (
+                <IconLoader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <IconSettings className="h-4 w-4" />
+              )}
+              Save Settings
+            </button>
+          </div>
         </div>
+      </div>
 
-        <div className="flex justify-end mt-6">
+      {/* Exam Questions Builder */}
+      <div className="glass-card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
+              <IconClipboardText className="h-5 w-5 text-amber-500" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">
+                Exam Questions
+              </h3>
+              <p className="text-xs text-muted">
+                {questions.length} MCQ question{questions.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+          </div>
           <button
-            onClick={handleSave}
-            className="btn-primary inline-flex items-center gap-2"
-            disabled={saving}
+            onClick={() => setShowQuestions((v) => !v)}
+            className="btn-secondary text-xs"
           >
-            {saving ? (
-              <IconLoader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <IconSettings className="h-4 w-4" />
-            )}
-            Save Settings
+            {showQuestions ? "Hide" : "Edit Questions"}
           </button>
         </div>
+
+        {showQuestions && (
+          <div className="space-y-4">
+            {questions.map((q, qIndex) => (
+              <div
+                key={qIndex}
+                className="space-y-2 rounded-lg border border-border/70 p-3 bg-muted/20"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Question {qIndex + 1}
+                  </span>
+                  {questions.length > 1 && (
+                    <button
+                      onClick={() => removeQuestion(qIndex)}
+                      className="p-1 text-muted hover:text-danger"
+                    >
+                      <IconX size={14} />
+                    </button>
+                  )}
+                </div>
+
+                <input
+                  type="text"
+                  value={q.text}
+                  onChange={(e) => updateQuestionText(qIndex, e.target.value)}
+                  placeholder="Enter question prompt"
+                  className="input text-sm"
+                />
+
+                <div className="space-y-2">
+                  <label className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                    Options
+                  </label>
+                  {q.options.map((opt, oIndex) => (
+                    <div key={oIndex} className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name={`correct-${qIndex}`}
+                        checked={opt.isCorrect}
+                        onChange={() => markCorrectOption(qIndex, oIndex)}
+                        className="h-4 w-4 accent-primary"
+                      />
+                      <input
+                        type="text"
+                        value={opt.label}
+                        onChange={(e) =>
+                          updateOptionLabel(qIndex, oIndex, e.target.value)
+                        }
+                        placeholder={`Option ${oIndex + 1}`}
+                        className="input flex-1"
+                      />
+                      {q.options.length > 1 && (
+                        <button
+                          onClick={() => removeOption(qIndex, oIndex)}
+                          className="p-1 text-muted hover:text-danger"
+                        >
+                          <IconX size={14} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => addOption(qIndex)}
+                    className="text-xs text-primary hover:text-primary-hover flex items-center gap-1 mt-1"
+                  >
+                    <IconPlus size={12} /> Add Option
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            <div className="flex items-center justify-between">
+              <button
+                onClick={addQuestion}
+                className="text-xs text-primary hover:text-primary-hover flex items-center gap-1"
+              >
+                <IconPlus size={14} /> Add Question
+              </button>
+              <button
+                onClick={handleSaveQuestion}
+                className="btn-primary text-xs inline-flex items-center gap-1"
+                disabled={questionSaving}
+              >
+                {questionSaving && (
+                  <IconLoader2 className="h-3 w-3 animate-spin" />
+                )}
+                Save Questions
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {data.quiz && (
@@ -282,16 +515,17 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
               </p>
             </div>
             <div className="rounded-lg bg-muted/30 p-3">
-              <p className="text-xs text-muted">Sections</p>
+              <p className="text-xs text-muted">Questions</p>
               <p className="text-lg font-bold text-foreground">
-                {[
-                  data.quiz.hasMcq && "MCQ",
-                  data.quiz.hasAssignment && "Assignment",
-                ]
-                  .filter(Boolean)
-                  .join(" + ") || "MCQ"}
+                {data.quiz.questionCount}
               </p>
             </div>
+          </div>
+          <div className="mt-3 rounded-lg bg-muted/30 p-3">
+            <p className="text-xs text-muted">Assignment</p>
+            <p className="text-sm font-medium text-foreground">
+              {data.quiz.hasAssignment ? "Included" : "Not included"}
+            </p>
           </div>
         </div>
       )}

@@ -120,16 +120,26 @@ export default function ModuleCard({
   onDragLeave,
   onDrop,
   isDragging,
+  certModule,
+  onAddQuestion,
+  onAddAssignment,
+  passingScore,
+  timeLimitMin,
 }: {
   module: Module;
   index: number;
   courseId: string;
   onChanged: () => void;
-  onDragStart: () => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragLeave: () => void;
-  onDrop: () => void;
-  isDragging: boolean;
+  onDragStart?: () => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragLeave?: () => void;
+  onDrop?: () => void;
+  isDragging?: boolean;
+  certModule?: boolean;
+  onAddQuestion?: () => void;
+  onAddAssignment?: () => void;
+  passingScore?: number;
+  timeLimitMin?: number | null;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -341,18 +351,18 @@ export default function ModuleCard({
     mod.assignments.length +
     (mod.practicals?.length ?? 0);
 
-  const hasContent = itemCount > 0;
+  const hasContent = itemCount > 0 || certModule === true;
 
   return (
     <div
       className={`rounded-xl border border-border bg-card shadow-sm transition-all duration-200 ${isDragging ? "opacity-40 scale-[0.97]" : "hover:shadow-md hover:border-border-hover"}`}
-      draggable
+      draggable={!!onDragStart}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={(e) => {
         e.preventDefault();
-        onDrop();
+        onDrop?.();
       }}
       onDragEnd={() => {}}
     >
@@ -418,6 +428,17 @@ export default function ModuleCard({
                   {mod.description}
                 </p>
               )}
+              {certModule && (
+                <div className="flex items-center gap-3 mt-1 text-[10px]">
+                  <span className="text-amber-600 font-medium">
+                    Passing: {passingScore ?? 60}%
+                  </span>
+                  <span className="text-muted-foreground">|</span>
+                  <span className="text-blue-600">
+                    {timeLimitMin ?? 30} min
+                  </span>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -435,56 +456,83 @@ export default function ModuleCard({
                 aria-expanded={addContentPopoverOpen}
               >
                 <IconPlus size={14} />
-                Add Content
+                {certModule ? "Add Exam Content" : "Add Content"}
               </button>
               {addContentPopoverOpen && (
                 <div
                   className="absolute right-0 z-20 mt-1 w-48 origin-top-right rounded-md border border-border bg-card shadow-xl ring-1 ring-black ring-opacity-10 focus:outline-none"
                 >
                   <div className="py-1 text-xs">
-                    <div
-                      onClick={() => {
-                        setAddContentPopoverOpen(false);
-                        setShowAddQuiz(true);
-                      }}
-                      className="flex items-center gap-2 w-full px-3 py-2 text-left text-amber-600 hover:bg-amber-50 cursor-pointer"
-                    >
-                      <IconClipboardText size={14} />
-                      Quiz
-                    </div>
-                    <div
-                      onClick={() => {
-                        setAddContentPopoverOpen(false);
-                        setShowAddAssignment(true);
-                      }}
-                      className="flex items-center gap-2 w-full px-3 py-2 text-left text-blue-600 hover:bg-blue-50 cursor-pointer"
-                    >
-                      <IconFileText size={14} />
-                      Assignment
-                    </div>
-                    <div
-                      onClick={() => {
-                        setAddContentPopoverOpen(false);
-                        setShowAddPractical(true);
-                      }}
-                      className="flex items-center gap-2 w-full px-3 py-2 text-left text-violet-600 hover:bg-violet-50 cursor-pointer"
-                    >
-                      <IconBrain size={14} />
-                      Practical
-                    </div>
-                    <div
-                      onClick={() => {
-                        setAddContentPopoverOpen(false);
-                        setShowStudyMaterialUpload(true);
-                      }}
-                      className="flex items-center gap-2 w-full px-3 py-2 text-left text-emerald-600 hover:bg-emerald-50 cursor-pointer"
-                    >
-                      <IconFile size={14} />
+                    {certModule ? (
+                      <>
+                        <div
+                          onClick={() => {
+                            setAddContentPopoverOpen(false);
+                            onAddQuestion?.();
+                          }}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-left text-amber-600 hover:bg-amber-50 cursor-pointer"
+                        >
+                          <IconClipboardText size={14} />
+                          Add Question
+                        </div>
+                        <div
+                          onClick={() => {
+                            setAddContentPopoverOpen(false);
+                            onAddAssignment?.();
+                          }}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-left text-blue-600 hover:bg-blue-50 cursor-pointer"
+                        >
+                          <IconFileText size={14} />
+                          Add Assignment
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          onClick={() => {
+                            setAddContentPopoverOpen(false);
+                            setShowAddQuiz(true);
+                          }}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-left text-amber-600 hover:bg-amber-50 cursor-pointer"
+                        >
+                          <IconClipboardText size={14} />
+                          Quiz
+                        </div>
+                        <div
+                          onClick={() => {
+                            setAddContentPopoverOpen(false);
+                            setShowAddAssignment(true);
+                          }}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-left text-blue-600 hover:bg-blue-50 cursor-pointer"
+                        >
+                          <IconFileText size={14} />
+                          Assignment
+                        </div>
+                        <div
+                          onClick={() => {
+                            setAddContentPopoverOpen(false);
+                            setShowAddPractical(true);
+                          }}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-left text-violet-600 hover:bg-violet-50 cursor-pointer"
+                        >
+                          <IconBrain size={14} />
+                          Practical
+                        </div>
+                        <div
+                          onClick={() => {
+                            setAddContentPopoverOpen(false);
+                            setShowStudyMaterialUpload(true);
+                          }}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-left text-emerald-600 hover:bg-emerald-50 cursor-pointer"
+                        >
+<IconFile size={14} />
                       Study Material
-                    </div>
-                   </div>
-                 </div>
-               )}
+                      </div>
+                    </>
+                  )}
+                  </div>
+                </div>
+              )}
              </div>
             )}
             <button

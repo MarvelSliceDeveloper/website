@@ -121,6 +121,82 @@ export default function LessonCard({
         ? "video"
         : "text";
 
+  const durationLabel =
+    lesson.durationSeconds != null
+      ? `${Math.floor(lesson.durationSeconds / 60)} mins`
+      : null;
+
+  if (editing) {
+    return (
+      <div className="ml-6 space-y-1.5 rounded-xl border border-[#e4e2f5] bg-[#f8f7fd] px-3.5 py-3">
+        <input
+          type="text"
+          value={editForm.title}
+          onChange={(e) =>
+            setEditForm((p) => ({ ...p, title: e.target.value }))
+          }
+          className="field text-xs"
+          autoFocus
+        />
+        <RichEditor
+          content={editForm.description}
+          onChange={(html) =>
+            setEditForm((p) => ({ ...p, description: html }))
+          }
+          placeholder="Description"
+          minHeight="150px"
+        />
+        <div className="flex items-center gap-1.5">
+          <div className="relative flex-1">
+            <input
+              type="url"
+              value={editForm.videoUrl}
+              onChange={(e) =>
+                setEditForm((p) => ({ ...p, videoUrl: e.target.value }))
+              }
+              onBlur={() => handleFetchVideoInfo(editForm.videoUrl)}
+              placeholder="Video URL (YouTube...)"
+              className="field w-full pr-6 text-[11px]"
+            />
+            {fetchingInfo && (
+              <IconRefresh
+                size={11}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 animate-spin text-[#8b8da3]"
+              />
+            )}
+          </div>
+          <label className="flex items-center gap-1.5 whitespace-nowrap text-[10px] text-[#8b8da3]">
+            <input
+              type="checkbox"
+              checked={editForm.isFreePreview}
+              onChange={(e) =>
+                setEditForm((p) => ({
+                  ...p,
+                  isFreePreview: e.target.checked,
+                }))
+              }
+              className="h-3 w-3 accent-[#4f63f0]"
+            />
+            Free preview
+          </label>
+          <button
+            onClick={handleSave}
+            disabled={fetchingInfo}
+            className="rounded-full bg-[#4f63f0] px-2.5 py-1.5 text-white transition-colors hover:bg-[#3f52e0]"
+          >
+            <IconDeviceFloppy size={12} />
+          </button>
+          <button
+            onClick={() => setEditing(false)}
+            className="rounded-full border border-[#e4e2f5] bg-white px-2.5 py-1.5 text-[#8b8da3] transition-colors hover:bg-[#f5f4fd]"
+          >
+            <IconX size={12} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       draggable
@@ -132,140 +208,59 @@ export default function LessonCard({
         onDrop();
       }}
       onDragEnd={() => {}}
-      className={`flex items-start gap-2.5 px-3.5 py-2.5 rounded-lg transition-all duration-200 ml-6 ${
-        isDragging ? "opacity-40 scale-[0.98]" : "hover:bg-card/50"
+      className={`group flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-all duration-200 ${
+        isDragging ? "scale-[0.98] opacity-40" : "hover:bg-[#f8f7fd]"
       }`}
     >
-      <div className="pt-1 cursor-grab active:cursor-grabbing text-muted hover:text-foreground transition-colors">
-        <IconGripVertical size={12} />
-      </div>
+      <span className="shrink-0 cursor-grab text-[#c7c6dd] transition-colors hover:text-[#a3a1c9] active:cursor-grabbing">
+        <IconGripVertical size={13} />
+      </span>
 
-      <div className="flex flex-col items-center gap-1 shrink-0">
-        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-muted/20 text-[10px] font-bold text-muted-foreground">
-          {index + 1}
-        </div>
+      <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg bg-[#e8ecff] text-[#4f63f0]">
         {contentType === "youtube" ? (
-          <IconBrandYoutube size={12} className="text-danger/70" />
-        ) : contentType === "video" ? (
-          <IconPlayerPlay size={11} className="text-primary/60" />
-        ) : null}
-      </div>
-
-      <div className="flex-1 min-w-0">
-        {editing ? (
-          <div className="space-y-1.5">
-            <input
-              type="text"
-              value={editForm.title}
-              onChange={(e) =>
-                setEditForm((p) => ({ ...p, title: e.target.value }))
-              }
-              className="field text-xs"
-              autoFocus
-            />
-            <RichEditor
-              content={editForm.description}
-              onChange={(html) =>
-                setEditForm((p) => ({ ...p, description: html }))
-              }
-              placeholder="Description"
-              minHeight="150px"
-            />
-            <div className="flex items-center gap-1.5">
-              <div className="relative flex-1">
-                <input
-                  type="url"
-                  value={editForm.videoUrl}
-                  onChange={(e) =>
-                    setEditForm((p) => ({ ...p, videoUrl: e.target.value }))
-                  }
-                  onBlur={() => handleFetchVideoInfo(editForm.videoUrl)}
-                  placeholder="Video URL (YouTube...)"
-                  className="field text-[11px] w-full pr-6"
-                />
-                {fetchingInfo && (
-                  <IconRefresh
-                    size={11}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin"
-                  />
-                )}
-              </div>
-              <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground whitespace-nowrap">
-                <input
-                  type="checkbox"
-                  checked={editForm.isFreePreview}
-                  onChange={(e) =>
-                    setEditForm((p) => ({
-                      ...p,
-                      isFreePreview: e.target.checked,
-                    }))
-                  }
-                  className="h-3 w-3 accent-primary"
-                />
-                Free preview
-              </label>
-              <button
-                onClick={handleSave}
-                disabled={fetchingInfo}
-                className="btn-primary text-[10px] px-2 py-1"
-              >
-                <IconDeviceFloppy size={12} />
-              </button>
-              <button
-                onClick={() => setEditing(false)}
-                className="btn-secondary text-[10px] px-2 py-1"
-              >
-                <IconX size={12} />
-              </button>
-            </div>
-          </div>
+          <IconBrandYoutube size={14} />
         ) : (
-          <>
-            <p className="text-xs font-medium text-foreground leading-tight">
-              {lesson.title}
-            </p>
-            {lesson.description && (
-              <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
-                {lesson.description}
-              </p>
-            )}
-          </>
-        )}
-        {!editing && (
-          <div className="flex items-center gap-2 mt-1 text-[9px] text-muted">
-            {lesson.durationSeconds != null && (
-              <span>{Math.floor(lesson.durationSeconds / 60)} min</span>
-            )}
-            {lesson.videoType && (
-              <span className="capitalize bg-muted/10 px-1 py-0.5 rounded">
-                {lesson.videoType}
-              </span>
-            )}
-            {lesson.isFreePreview && (
-              <span className="bg-primary/10 text-primary px-1 py-0.5 rounded font-medium">
-                Free
-              </span>
-            )}
-          </div>
+          <IconPlayerPlay size={13} fill="currentColor" />
         )}
       </div>
 
-      {!editing && (
-        <div className="flex items-center gap-0.5 shrink-0">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[13px] font-medium text-[#1f2233]">
+          {lesson.title}
+        </p>
+        {lesson.description && (
+          <p className="mt-0.5 truncate text-[10.5px] text-[#8b8da3]">
+            {lesson.description}
+          </p>
+        )}
+      </div>
+
+      <div className="flex shrink-0 items-center gap-2">
+        {lesson.isFreePreview && (
+          <span className="whitespace-nowrap rounded-full bg-[#e8ecff] px-2 py-0.5 text-[9.5px] font-semibold text-[#4f63f0]">
+            Free
+          </span>
+        )}
+        {durationLabel && (
+          <span className="whitespace-nowrap text-[11.5px] text-[#8b8da3]">
+            {durationLabel}
+          </span>
+        )}
+        <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
           <button
             onClick={startEditing}
-            className="text-[10px] font-medium text-primary hover:text-primary-hover transition-colors px-1.5 py-1 rounded hover:bg-primary/12"
+            className="rounded-md px-1.5 py-1 text-[10px] font-medium text-[#4f63f0] transition-colors hover:bg-[#4f63f0]/10"
           >
             Edit
           </button>
           <button
             onClick={handleDelete}
-            className="p-1 text-muted hover:text-danger transition-colors rounded hover:bg-danger/12"
+            className="rounded-md p-1 text-[#8b8da3] transition-colors hover:bg-danger/12 hover:text-danger"
           >
             <IconTrash size={12} />
           </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }

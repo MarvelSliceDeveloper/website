@@ -8,12 +8,14 @@ import { toast } from "sonner";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
+  IconPlus,
   IconCalendar,
   IconVideo,
   IconUsersGroup,
   IconBook,
-  IconLink,
-  IconArrowLeft,
+  IconUpload,
+  IconFileText,
+  IconDownload,
 } from "@tabler/icons-react";
 import {
   Select,
@@ -23,23 +25,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface Course {
-  id: string;
-  title: string;
-  category?: string;
-  status: string;
-}
-
 interface Batch {
   id: string;
   name: string;
   courseId: string | null;
-  packageId: string | null;
-  package?: { name: string } | null;
-  instructor: {
-    id: string;
-    name: string;
-  };
+  course: { id: string; title: string } | null;
+  instructor: { id: string; name: string } | null;
+  package: { id: string; name: string } | null;
 }
 
 interface Module {
@@ -58,42 +50,41 @@ interface Instructor {
 export default function ScheduleSessionPage() {
   usePageTitle("New Session");
   const router = useRouter();
-  const [submitting, setSubmitting] = useState(false);
 
   // Data lists
-  const [courses, setCourses] = useState<Course[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
   const [instructors, setInstructors] = useState<Instructor[]>([]);
 
   // Loading states
-  const [loadingCourses, setLoadingCourses] = useState(true);
   const [loadingBatches, setLoadingBatches] = useState(false);
   const [loadingModules, setLoadingModules] = useState(false);
-  const [loadingInstructors, setLoadingInstructors] = useState(true);
+  const [loadingInstructors, setLoadingInstructors] = useState(false);
 
   // Form state
-  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [selectedBatchId, setSelectedBatchId] = useState("");
+  const [selectedInstructorId, setSelectedInstructorId] = useState("");
   const [form, setForm] = useState({
-    batchId: "",
     moduleId: "",
-    instructorOverride: "",
-    customJoinUrl: "",
     title: "",
     startDateTime: "",
     endDateTime: "",
+    customJoinUrl: "",
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [excelFile, setExcelFile] = useState<File | null>(null);
 
-  // Fetch courses and instructors on mount
+  // Fetch all batches + instructors on mount
   useEffect(() => {
+    setLoadingBatches(true);
     api
-      .get<{ courses: Course[] }>("/api/admin/courses?limit=100")
-      .then((data) => setCourses(data.courses || []))
+      .get<{ batches: Batch[] }>("/api/admin/batches?limit=500")
+      .then((data) => setBatches(data.batches || []))
       .catch((err: unknown) => {
-        console.error("Failed to load courses:", err);
-        toast.error("Failed to load courses. Please refresh.");
+        console.error("Failed to load batches:", err);
+        toast.error("Failed to load batches");
       })
-      .finally(() => setLoadingCourses(false));
+      .finally(() => setLoadingBatches(false));
 
     api
       .get<Instructor[]>("/api/admin/batches/instructors")
@@ -104,53 +95,39 @@ export default function ScheduleSessionPage() {
       .finally(() => setLoadingInstructors(false));
   }, []);
 
-  // Fetch batches and modules when course changes
+  // Fetch modules when a batch is selected
   useEffect(() => {
-    if (!selectedCourseId) {
-      Promise.resolve().then(() => {
-        setBatches([]);
-        setModules([]);
-        setForm((prev) => ({
-          ...prev,
-          batchId: "",
-          moduleId: "",
-          instructorOverride: "",
-          customJoinUrl: "",
-        }));
-      });
+    const selectedBatch = batches.find((b) => b.id === selectedBatchId);
+    if (!selectedBatch) {
+      setModules([]);
+      setForm((prev) => ({ ...prev, moduleId: "" }));
       return;
     }
 
-    Promise.resolve().then(() => {
-      setLoadingBatches(true);
-      setLoadingModules(true);
-      setForm((prev) => ({
-        ...prev,
-        batchId: "",
-        moduleId: "",
-        instructorOverride: "",
-        customJoinUrl: "",
-      }));
-    });
+    const courseId = selectedBatch.courseId;
+    if (!courseId) {
+      setModules([]);
+      setForm((prev) => ({ ...prev, moduleId: "" }));
+      return;
+    }
 
+    setLoadingModules(true);
     api
-      .get<{ batches: Batch[] }>(`/api/admin/batches?courseId=${selectedCourseId}`)
-      .then((data) => setBatches(data.batches || []))
-      .catch((err: unknown) => {
-        console.error("Failed to load course batches:", err);
-        setBatches([]);
-      })
-      .finally(() => setLoadingBatches(false));
-
-    api
-      .get<{ modules: Module[] }>(`/api/admin/courses/${selectedCourseId}`)
+      .get<{ modules: Module[] }>(`/api/admin/courses/${courseId}`)
       .then((data) => setModules(data.modules || []))
       .catch((err: unknown) => {
-        console.error("Failed to load course modules:", err);
+        console.error("Failed to load modules:", err);
         setModules([]);
       })
       .finally(() => setLoadingModules(false));
-  }, [selectedCourseId]);
+  }, [selectedBatchId, batches]);
+
+  // Auto-select the batch's instructor by default
+  const selectedBatch = batches.find((b) => b.id === selectedBatchId);
+  const defaultInstructorId = selectedBatch?.instructor?.id || "";
+
+  const effectiveInstructorId =
+    selectedInstructorId || defaultInstructorId;
 
   const update = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -158,17 +135,16 @@ export default function ScheduleSessionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCourseId) {
-      toast.error("Please select a Course first.");
+    if (!form.title.trim()) {
+      toast.error("Please enter a session title");
       return;
     }
 
-    if (!form.batchId) {
-      toast.error("Please select a Batch.");
+    if (!selectedBatchId) {
+      toast.error("Please select a Batch");
       return;
     }
 
-    // Validate times
     const start = new Date(form.startDateTime);
     const end = new Date(form.endDateTime);
 
@@ -182,28 +158,63 @@ export default function ScheduleSessionPage() {
       return;
     }
 
-    // Check if selected batch is a package batch (courseId=null → send explicit courseId)
-    const selectedBatch = batches.find((b) => b.id === form.batchId);
-    const isPackageBatch = selectedBatch && !selectedBatch.courseId;
-
     setSubmitting(true);
     try {
+      const courseId = selectedBatch?.courseId || undefined;
       await api.post("/api/sessions", {
-        batchId: form.batchId,
-        courseId: isPackageBatch ? selectedCourseId : undefined,
+        batchId: selectedBatchId,
+        courseId,
         moduleId: form.moduleId || undefined,
         title: form.title,
         startDateTime: start.toISOString(),
         endDateTime: end.toISOString(),
         customJoinUrl: form.customJoinUrl || undefined,
-        instructorOverride: form.instructorOverride || undefined,
+        instructorOverride:
+          effectiveInstructorId &&
+          effectiveInstructorId !== defaultInstructorId
+            ? effectiveInstructorId
+            : undefined,
       });
 
+      toast.success("Session scheduled successfully!");
       router.push("/admin/sessions");
       router.refresh();
     } catch (err: unknown) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to schedule live session.",
+        err instanceof Error ? err.message : "Failed to schedule session.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleExcelUpload = async () => {
+    if (!excelFile) {
+      toast.error("Please select an Excel file");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", excelFile);
+
+      const result = await api.post<{
+        created: number;
+        errors: string[];
+        sessions: unknown[];
+      }>("/api/sessions/bulk-upload", formData);
+
+      if (result.errors && result.errors.length > 0) {
+        result.errors.forEach((e: string) => toast.error(e));
+      }
+
+      toast.success(`${result.created} session(s) created successfully!`);
+      router.push("/admin/sessions");
+      router.refresh();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to upload Excel file",
       );
     } finally {
       setSubmitting(false);
@@ -211,10 +222,10 @@ export default function ScheduleSessionPage() {
   };
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-4xl space-y-6">
       <AdminPageHeader
         title="Schedule Session"
-        description="Select a course, assign the session to an active student batch, and schedule the online meeting."
+        description="Select a batch first, then set the date/time and instructor."
         breadcrumbs={[
           { label: "Sessions", href: "/admin/sessions" },
           { label: "Schedule", href: "/admin/sessions/new" },
@@ -224,250 +235,261 @@ export default function ScheduleSessionPage() {
             href="/admin/sessions"
             className="btn-secondary text-sm flex items-center gap-1.5"
           >
-            <IconArrowLeft size={16} stroke={1.5} />
             Back
           </Link>
         }
       />
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Session Details Card */}
         <div className="glass-card p-6 space-y-4">
           <h2 className="text-sm font-semibold text-foreground">
             Session Details
           </h2>
-        {/* Course Selector */}
-        <div>
-          <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
-            <IconBook size={16} className="text-primary" />
-            Select Course <span className="text-danger">*</span>
-          </label>
-          {loadingCourses ? (
-            <div className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border" />
-          ) : (
-            <Select
-              value={selectedCourseId}
-              onValueChange={setSelectedCourseId}
-            >
-              <SelectTrigger className="field w-full">
-                <SelectValue placeholder="-- Choose a Course --" />
-              </SelectTrigger>
-              <SelectContent>
-                {courses.map((course) => (
-                  <SelectItem key={course.id} value={course.id}>
-                    {course.title} ({course.status})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
 
-        {/* Batch Selector (Conditional on Course selection) */}
-        {selectedCourseId && (
+          {/* Batch Selector — FIRST */}
           <div>
             <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
-              <IconUsersGroup size={16} className="text-accent" />
+              <IconUsersGroup size={16} />
               Select Batch <span className="text-danger">*</span>
             </label>
             {loadingBatches ? (
               <div className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border" />
-            ) : batches.length === 0 ? (
-              <div className="rounded-xl border border-warning/20 bg-warning/5 px-4 py-3 text-xs text-warning">
-                No active student batches found for this course. Please create a
-                batch for this course first.
-              </div>
             ) : (
               <Select
-                value={form.batchId}
-                onValueChange={(v) => update("batchId", v)}
+                value={selectedBatchId}
+                onValueChange={(v) => {
+                  setSelectedBatchId(v);
+                  setForm((prev) => ({ ...prev, moduleId: "" }));
+                  setSelectedInstructorId("");
+                }}
               >
                 <SelectTrigger className="field w-full">
-                  <SelectValue placeholder="-- Choose a Student Batch --" />
+                  <SelectValue placeholder="-- Choose a Batch --" />
                 </SelectTrigger>
                 <SelectContent>
                   {batches.map((batch) => (
                     <SelectItem key={batch.id} value={batch.id}>
-                      {batch.name}
-                      {batch.courseId
-                        ? ` — Instructor: ${batch.instructor?.name || "TBD"}`
-                        : ` (Package: ${batch.package?.name || "N/A"})`}
+                      {batch.name} —{" "}
+                      {batch.course?.title ??
+                        (batch.package?.name ? `${batch.package.name} Package` : "N/A")}
+                      {batch.instructor
+                        ? ` (Instructor: ${batch.instructor.name})`
+                        : " (No instructor)"}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             )}
-          </div>
-        )}
-
-        {/* Module Selector (Conditional on Course selection) */}
-        {selectedCourseId && (
-          <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
-              <IconBook size={16} className="text-accent" />
-              Link to Module
-            </label>
-            {loadingModules ? (
-              <div className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border" />
-            ) : (
-              <Select
-                value={form.moduleId}
-                onValueChange={(v) => update("moduleId", v)}
-              >
-                <SelectTrigger className="field w-full">
-                  <SelectValue placeholder="-- General / Introductory Session (No specific module) --" />
-                </SelectTrigger>
-                <SelectContent>
-                  {modules.map((mod) => (
-                    <SelectItem key={mod.id} value={mod.id}>
-                      Module {mod.order}: {mod.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {!loadingBatches && batches.length === 0 && (
+              <div className="rounded-xl border border-warning/20 bg-warning/5 px-4 py-3 text-xs text-warning mt-2">
+                No batches found. Please create a batch first.
+              </div>
             )}
-            <p className="mt-1 text-xs text-muted">
-              Optional. Linking to a module organizes the session under that
-              course section.
-            </p>
           </div>
-        )}
 
-        {/* Instructor Override (optional — defaults to batch instructor) */}
-        {selectedCourseId && (
-          <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
-              <IconUsersGroup size={16} className="text-primary" />
-              Session Instructor
-            </label>
-            {loadingInstructors ? (
-              <div className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border" />
-            ) : (
-              <Select
-                value={form.instructorOverride || ""}
-                onValueChange={(v) => update("instructorOverride", v)}
-              >
-                <SelectTrigger className="field w-full">
-                  <SelectValue placeholder="— Use batch instructor (default)" />
-                </SelectTrigger>
-                <SelectContent>
-                  {instructors.map((inst) => (
-                    <SelectItem key={inst.id} value={inst.id}>
-                      {inst.name} ({inst.email}){" "}
-                      {inst.role === "SUPER_ADMIN"
-                        ? "🛡️ Super Admin"
-                        : inst.role === "ADMIN"
-                          ? "🛡️ Admin"
-                          : "👨‍🏫 Instructor"}
+          {/* Course Info (display only, derived from batch) */}
+          {selectedBatch && (
+            <div className="rounded-lg bg-card/50 p-3">
+              <div className="flex text-sm">
+                <span className="text-muted min-w-[100px]">Course</span>
+                <span className="text-foreground font-medium">
+                  {selectedBatch.course?.title ??
+                    selectedBatch.package?.name ??
+                    "Not linked to a specific course"}
+                </span>
+              </div>
+              {selectedBatch.course && (
+                <div className="flex text-sm mt-1">
+                  <span className="text-muted min-w-[100px]">Instructor</span>
+                  <span className="text-foreground">
+                    {selectedBatch.instructor?.name ?? "Not assigned"}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Instructor Override */}
+          {selectedBatchId && (
+            <div>
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
+                <IconUsersGroup size={16} className="text-primary" />
+                Session Instructor
+              </label>
+              {loadingInstructors ? (
+                <div className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border" />
+              ) : (
+                <Select
+                  value={selectedInstructorId || "__default__"}
+                  onValueChange={setSelectedInstructorId}
+                >
+                  <SelectTrigger className="field w-full">
+                    <SelectValue placeholder="— Use batch instructor (default) —" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__default__">
+                      — Use batch instructor (default) —
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            <p className="mt-1 text-xs text-muted">
-              Optional. Override the batch&apos;s default instructor — useful if
-              you (admin) want to lead the session yourself.
-            </p>
-          </div>
-        )}
+                    {instructors.map((inst) => (
+                      <SelectItem key={inst.id} value={inst.id}>
+                        {inst.name} ({inst.email})
+                        {inst.role === "ADMIN"
+                          ? " 🛡️ Admin"
+                          : inst.role === "SUPER_ADMIN"
+                            ? " 🛡️ Super Admin"
+                            : " 👨‍🏫 Instructor"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <p className="mt-1 text-xs text-muted">
+                Optional. Override the batch&apos;s default instructor.
+              </p>
+            </div>
+          )}
 
-        {/* Custom Join URL (Optional) */}
-        {selectedCourseId && (
+          {/* Module Selector (only when batch has a course) */}
+          {selectedBatchId && selectedBatch?.course && (
+            <div>
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
+                <IconBook size={16} className="text-accent" />
+                Link to Module
+              </label>
+              {loadingModules ? (
+                <div className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border" />
+              ) : (
+                <Select
+                  value={form.moduleId}
+                  onValueChange={(v) => update("moduleId", v)}
+                >
+                  <SelectTrigger className="field w-full">
+                    <SelectValue placeholder="-- General / Introductory Session (no module) --" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">
+                      -- General / Introductory Session (no module) --
+                    </SelectItem>
+                    {modules.map((mod) => (
+                      <SelectItem key={mod.id} value={mod.id}>
+                        Module {mod.order}: {mod.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <p className="mt-1 text-xs text-muted">
+                Optional. Link this session to a specific course module.
+              </p>
+            </div>
+          )}
+
+          {/* Session Title */}
           <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
-              <IconLink size={16} className="text-primary" />
-              Custom Join URL (Optional)
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Session Title <span className="text-danger">*</span>
             </label>
             <input
-              type="url"
-              value={form.customJoinUrl || ""}
-              onChange={(e) => update("customJoinUrl", e.target.value)}
-              placeholder="e.g. https://teams.microsoft.com/l/meetup-join/... or Google Meet URL"
-              className="field w-full"
-            />
-            <p className="mt-1 text-xs text-muted">
-              Paste a Google Meet, Zoom, or Teams link here. Leave blank to
-              auto-create a Teams meeting via Graph API (requires a Teams
-              license).
-            </p>
-          </div>
-        )}
-
-        {/* Session Title */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Session Title <span className="text-danger">*</span>
-          </label>
-          <input
-            type="text"
-            value={form.title}
-            onChange={(e) => update("title", e.target.value)}
-            placeholder="e.g. Session 1: Orientation & Setup"
-            className="field"
-            required
-            minLength={3}
-            maxLength={200}
-            disabled={!selectedCourseId}
-          />
-        </div>
-
-        {/* Start & End Times */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
-              <IconCalendar size={16} className="text-primary" />
-              Start Date & Time <span className="text-danger">*</span>
-            </label>
-            <input
-              type="datetime-local"
-              value={form.startDateTime}
-              onChange={(e) => update("startDateTime", e.target.value)}
+              type="text"
+              value={form.title}
+              onChange={(e) => update("title", e.target.value)}
+              placeholder="e.g. Session 1: Orientation & Setup"
               className="field w-full"
               required
-              disabled={!selectedCourseId}
+              minLength={3}
+              maxLength={200}
+              disabled={!selectedBatchId}
             />
           </div>
 
-          <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
-              <IconCalendar size={16} className="text-danger" />
-              End Date & Time <span className="text-danger">*</span>
-            </label>
-            <input
-              type="datetime-local"
-              value={form.endDateTime}
-              onChange={(e) => update("endDateTime", e.target.value)}
-              className="field w-full"
-              required
-              disabled={!selectedCourseId}
-            />
+          {/* Start & End Times */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
+                <IconCalendar size={16} className="text-primary" />
+                Start Date & Time <span className="text-danger">*</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={form.startDateTime}
+                onChange={(e) => update("startDateTime", e.target.value)}
+                className="field w-full"
+                required
+                disabled={!selectedBatchId}
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
+                <IconCalendar size={16} className="text-danger" />
+                End Date & Time <span className="text-danger">*</span>
+              </label>
+              <input
+                type="datetime-local"
+                value={form.endDateTime}
+                onChange={(e) => update("endDateTime", e.target.value)}
+                className="field w-full"
+                required
+                disabled={!selectedBatchId}
+              />
+            </div>
           </div>
+
+          {/* Custom Join URL */}
+          {selectedBatchId && (
+            <div>
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
+                <IconVideo size={16} className="text-primary" />
+                Custom Join URL <span className="text-muted">(Optional)</span>
+              </label>
+              <input
+                type="url"
+                value={form.customJoinUrl}
+                onChange={(e) => update("customJoinUrl", e.target.value)}
+                placeholder="e.g. https://teams.microsoft.com/l/meetup-join/... or Google Meet URL"
+                className="field w-full"
+                disabled={!selectedBatchId}
+              />
+              <p className="mt-1 text-xs text-muted">
+                Paste a Google Meet, Zoom, or Teams link here. Leave blank to
+                auto-create a Teams meeting via Microsoft Graph (requires a
+                Teams license).
+              </p>
+            </div>
+          )}
+
+          {/* Teams Notice */}
+          {selectedBatchId && (
+            <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-muted-foreground flex gap-3 items-start">
+              <IconVideo size={20} className="text-primary shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-foreground mb-0.5">
+                  Meeting Link
+                </p>
+                <p>
+                  Provide a Custom Join URL above (Google Meet, Zoom, etc.) — or
+                  leave it blank to auto-create a Teams meeting via Microsoft
+                  Graph (requires a Teams license). Students receive the link in
+                  their dashboard.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Teams Notice Box */}
-        <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-muted-foreground flex gap-3 items-start">
-          <IconVideo size={20} className="text-primary shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-foreground mb-0.5">Meeting Link</p>
-            <p>
-              Provide a Custom Join URL above (Google Meet, Zoom, etc.) — or
-              leave it blank to auto-create a Teams meeting via Microsoft Graph
-              (requires a Teams license). Students receive the link in their
-              dashboard.
-            </p>
-          </div>
-        </div>
-        </div>
-
+        {/* Submit Buttons */}
         <div className="flex items-center justify-end gap-3">
-          <Link href="/admin/sessions" className="btn-secondary text-sm">
+          <Link
+            href="/admin/sessions"
+            className="btn-secondary text-sm"
+          >
             Cancel
           </Link>
           <button
             type="submit"
             className="btn-primary flex items-center gap-2"
-            disabled={
-              submitting || loadingCourses || !selectedCourseId || !form.batchId
-            }
+            disabled={submitting || !selectedBatchId || !form.title}
           >
             {submitting ? (
               <>
@@ -475,11 +497,80 @@ export default function ScheduleSessionPage() {
                 Scheduling...
               </>
             ) : (
-              "Schedule Session"
+              <>
+                <IconCalendar size={16} />
+                Schedule Session
+              </>
             )}
           </button>
         </div>
       </form>
+
+      {/* Excel Upload Section */}
+      <div className="glass-card p-6 space-y-4">
+        <h2 className="text-sm font-semibold flex items-center gap-2">
+          <IconFileText size={16} />
+          Bulk Upload Sessions
+        </h2>
+        <p className="text-xs text-muted">
+          Upload an Excel (.xlsx) file to create multiple sessions at once.
+          Required columns: <strong>batchId</strong>, <strong>title</strong>,
+          <strong>startDateTime</strong>, <strong>endDateTime</strong>
+          <br />
+          Optional columns: <strong>moduleId</strong>,{" "}
+          <strong>customJoinUrl</strong>, <strong>instructorOverride</strong>
+        </p>
+
+        <div className="flex items-center gap-3">
+          <label className="btn-secondary text-sm flex items-center gap-2 cursor-pointer">
+            <IconUpload size={14} />
+            Choose File
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={(e) => setExcelFile(e.target.files?.[0] ?? null)}
+              className="hidden"
+            />
+          </label>
+          {excelFile && (
+            <span className="text-sm text-foreground">
+              {excelFile.name}
+            </span>
+          )}
+        </div>
+
+        <div className="border border-dashed border-border rounded-lg p-4 bg-card/50">
+          <p className="text-xs text-muted mb-2">
+            Tip: Download a template file to get started quickly.
+          </p>
+          <div className="flex gap-4 text-xs">
+            <a
+              href="/templates/session-bulk-template.csv"
+              download="session-bulk-template.csv"
+              className="text-primary hover:text-primary-hover flex items-center gap-1"
+            >
+              <IconDownload size={12} />
+              Download CSV Template
+            </a>
+            <a
+              href="/api/sessions/template"
+              download="sessions-template.xlsx"
+              className="text-primary hover:text-primary-hover flex items-center gap-1"
+            >
+              <IconDownload size={12} />
+              Download Excel Template
+            </a>
+          </div>
+        </div>
+
+        <button
+          onClick={handleExcelUpload}
+          className="btn-primary text-sm flex items-center gap-2"
+          disabled={submitting || !excelFile}
+        >
+          {submitting ? "Uploading..." : "Upload & Create Sessions"}
+        </button>
+      </div>
     </div>
   );
 }

@@ -441,6 +441,7 @@ export async function loadCourseContent(userId: string, courseId: string) {
           description: true,
           order: true,
           isFreePreview: true,
+          isCertificationModule: true,
           contentOrder: true,
           lessons: {
             orderBy: { order: "asc" },
@@ -631,6 +632,7 @@ export async function loadCourseContent(userId: string, courseId: string) {
       description: m.description,
       order: m.order,
       isFreePreview: m.isFreePreview,
+      isCertificationModule: m.isCertificationModule,
       contentOrder: m.contentOrder,
       lessons,
       completionPercent,

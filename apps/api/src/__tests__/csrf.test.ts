@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import request from "supertest";
 import { app } from "../app";
+import { resetMaintenanceCache } from "../middleware/maintenance.middleware";
 
 describe("CSRF Token", () => {
   it("GET /api/csrf-token returns a token", async () => {
@@ -21,6 +22,10 @@ describe("CSRF Token", () => {
 });
 
 describe("CSRF Protection", () => {
+  beforeEach(() => {
+    resetMaintenanceCache();
+  });
+
   it("blocks POST to protected route without CSRF token", async () => {
     const res = await request(app)
       .post("/api/notes")

@@ -163,6 +163,7 @@ const csrfExemptPaths = [
   "/api/auth/2fa/challenge",
   "/api/webhooks/",
   "/api/csrf-token",
+  "/api/maintenance-status",
   "/health",
   "/api/payments/create-order",
   "/api/payments/verify",
@@ -267,6 +268,28 @@ app.get("/health", async (req: Request, res: Response) => {
     return;
   }
   res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+// ── Public maintenance status (no auth) ──
+// Returns maintenance status without auth — used by the web middleware to
+// decide whether to show a maintenance page to unauthenticated visitors.
+const MAINTENANCE_KEY = "maintenance_mode";
+app.get("/api/maintenance-status", async (_req: Request, res: Response) => {
+  try {
+    const setting = await prisma.systemSetting.findUnique({
+      where: { key: MAINTENANCE_KEY },
+    });
+    if (setting) {
+      const parsed = JSON.parse(setting.value);
+      return res.json({
+        enabled: !!parsed.enabled,
+        message: parsed.message || "",
+      });
+    }
+    return res.json({ enabled: false, message: "" });
+  } catch {
+    return res.json({ enabled: false, message: "" });
+  }
 });
 
 // ── Public routes (no auth) ──

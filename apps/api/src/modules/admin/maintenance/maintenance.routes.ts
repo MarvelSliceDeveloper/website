@@ -6,6 +6,7 @@ import {
   type AuthRequest,
 } from "../../../middleware/auth.middleware";
 import { UserRole } from "@lms/types";
+import { resetMaintenanceCache } from "../../../middleware/maintenance.middleware";
 
 const router = Router();
 const MAINTENANCE_KEY = "maintenance_mode";
@@ -41,6 +42,7 @@ router.put("/", async (req: AuthRequest, res: Response) => {
       update: { value },
       create: { key: MAINTENANCE_KEY, value, type: "json", description: "Maintenance mode toggle" },
     });
+    resetMaintenanceCache();
     return res.json({ enabled: !!enabled, message: typeof message === "string" ? message : "" });
   } catch (error: unknown) {
     return res.status(500).json({

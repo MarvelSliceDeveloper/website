@@ -21,8 +21,16 @@ export async function maintenanceMiddleware(
 
   const isAuthRoute =
     req.path.startsWith("/api/auth/login") ||
-    req.path.startsWith("/api/auth/logout");
+    req.path.startsWith("/api/auth/logout") ||
+    req.path.startsWith("/api/auth/register") ||
+    req.path.startsWith("/api/auth/me") ||
+    req.path.startsWith("/api/auth/forgot-password") ||
+    req.path.startsWith("/api/auth/reset-password") ||
+    req.path.startsWith("/api/auth/azure-ad/callback") ||
+    req.path.startsWith("/api/csrf-token");
   if (isAuthRoute) return next();
+
+  if (req.path.startsWith("/api/maintenance-status")) return next();
 
   try {
     if (now() >= cache.expiresAt) {

@@ -70,6 +70,32 @@ export const ReorderContentSchema = z.object({
   ),
 });
 
+// Ensures the certification module is always the LAST module in a course.
+// Re-orders all modules so regular modules come first and any certification
+// modules land at the end (preserving relative order among non-cert modules).
+export async function ensureCertificationModuleLast(courseId: string) {
+  const modules = await prisma.module.findMany({
+    where: { courseId },
+    orderBy: { order: "asc" },
+  });
+
+  const regular = modules.filter((m) => !m.isCertificationModule);
+  const cert = modules.filter((m) => m.isCertificationModule);
+
+  const ordered = [...regular, ...cert];
+
+  await Promise.all(
+    ordered.map((m, index) =>
+      prisma.module.update({
+        where: { id: m.id },
+        data: { order: index },
+      }),
+    ),
+  );
+
+  return ordered;
+}
+
 export const moduleService = {
   // Adds a module (container) to a course with auto-assigned order
   async addModule(courseId: string, data: z.infer<typeof CreateModuleSchema>) {
@@ -77,12 +103,12 @@ export const moduleService = {
     if (!course) throw new Error("Course not found");
 
     const lastModule = await prisma.module.findFirst({
-      where: { courseId },
+      where: { courseId, isCertificationModule: false },
       orderBy: { order: "desc" },
     });
     const nextOrder = (lastModule?.order ?? -1) + 1;
 
-    return prisma.module.create({
+    const module = await prisma.module.create({
       data: {
         courseId,
         title: data.title,
@@ -91,6 +117,9 @@ export const moduleService = {
         isFreePreview: data.isFreePreview ?? false,
       },
     });
+
+    await ensureCertificationModuleLast(courseId);
+    return module;
   },
 
   // Updates a module's title/description
@@ -116,20 +145,8 @@ export const moduleService = {
 
     await prisma.module.delete({ where: { id: moduleId } });
 
-    // Re-order remaining modules
-    const remaining = await prisma.module.findMany({
-      where: { courseId: module.courseId },
-      orderBy: { order: "asc" },
-    });
-
-    await Promise.all(
-      remaining.map((m, index) =>
-        prisma.module.update({
-          where: { id: m.id },
-          data: { order: index },
-        }),
-      ),
-    );
+    // Ensure certification module stays last
+    await ensureCertificationModuleLast(module.courseId);
 
     return { deleted: true };
   },
@@ -142,7 +159,7 @@ export const moduleService = {
     // Verify all moduleIds belong to this course
     const modules = await prisma.module.findMany({
       where: { courseId },
-      select: { id: true },
+      select: { id: true, isCertificationModule: true },
     });
 
     const existingIds = new Set(modules.map((m) => m.id));
@@ -150,9 +167,20 @@ export const moduleService = {
     if (!allBelong)
       throw new Error("Some module IDs do not belong to this course");
 
+    const certIds = new Set(
+      modules.filter((m) => m.isCertificationModule).map((m) => m.id),
+    );
+
+    // Certification module(s) must always be last — strip them from the
+    // provided order and append them at the end.
+    const reorderedIds = [
+      ...moduleIds.filter((id) => !certIds.has(id)),
+      ...moduleIds.filter((id) => certIds.has(id)),
+    ];
+
     // Update order for each module
     await Promise.all(
-      moduleIds.map((id, index) =>
+      reorderedIds.map((id, index) =>
         prisma.module.update({
           where: { id },
           data: { order: index },
@@ -251,12 +279,15 @@ export const moduleService = {
         title: "Certification Exam",
         isSpecialExam: true,
         passingScore: 60,
+        timeLimitMin: 30,
         hasMcq: true,
         hasAssignment: false,
         hasCoding: false,
         examType: "MCQ",
       },
     });
+
+    await ensureCertificationModuleLast(courseId);
 
     return certModule;
   },
@@ -275,6 +306,10 @@ export const moduleService = {
       timeLimitMin?: number | null;
       hasAssignment?: boolean;
       assignmentInstructions?: string | null;
+      questions?: Array<{
+        text: string;
+        options: Array<{ label: string; isCorrect: boolean }>;
+      }>;
     },
   ) {
     const certModule = await this.getCertificationModule(courseId);
@@ -291,6 +326,17 @@ export const moduleService = {
       await prisma.module.update({
         where: { id: certModule.id },
         data: { title: data.title },
+      });
+    }
+
+    if (data.questions !== undefined) {
+      await prisma.question.deleteMany({ where: { quizId: quiz.id } });
+      await prisma.question.createMany({
+        data: data.questions.map((q) => ({
+          quizId: quiz.id,
+          text: q.text,
+          options: q.options,
+        })),
       });
     }
 
@@ -312,6 +358,8 @@ export const moduleService = {
         }),
       },
     });
+
+    await ensureCertificationModuleLast(courseId);
 
     return this.getCertificationModule(courseId);
   },

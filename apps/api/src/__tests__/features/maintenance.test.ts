@@ -82,4 +82,56 @@ describe("Maintenance Middleware", () => {
     await maintenanceMiddleware(req, res, next);
     expect(res.status).toHaveBeenCalledWith(503);
   });
+
+  it("allows CSRF token endpoint during maintenance", async () => {
+    (prisma.systemSetting.findUnique as any).mockResolvedValue({
+      key: "maintenance_mode",
+      value: JSON.stringify({ enabled: true, message: "" }),
+    });
+    const req = mockReq("/api/csrf-token");
+    const res = mockRes();
+    const next = mockNext();
+
+    await maintenanceMiddleware(req, res, next);
+    expect(next).toHaveBeenCalled();
+  });
+
+  it("allows login endpoint during maintenance", async () => {
+    (prisma.systemSetting.findUnique as any).mockResolvedValue({
+      key: "maintenance_mode",
+      value: JSON.stringify({ enabled: true, message: "" }),
+    });
+    const req = mockReq("/api/auth/login");
+    const res = mockRes();
+    const next = mockNext();
+
+    await maintenanceMiddleware(req, res, next);
+    expect(next).toHaveBeenCalled();
+  });
+
+  it("allows maintenance-status endpoint during maintenance", async () => {
+    (prisma.systemSetting.findUnique as any).mockResolvedValue({
+      key: "maintenance_mode",
+      value: JSON.stringify({ enabled: true, message: "" }),
+    });
+    const req = mockReq("/api/maintenance-status");
+    const res = mockRes();
+    const next = mockNext();
+
+    await maintenanceMiddleware(req, res, next);
+    expect(next).toHaveBeenCalled();
+  });
+
+  it("allows super-admin routes during maintenance", async () => {
+    (prisma.systemSetting.findUnique as any).mockResolvedValue({
+      key: "maintenance_mode",
+      value: JSON.stringify({ enabled: true, message: "" }),
+    });
+    const req = mockReq("/api/admin/users/pending");
+    const res = mockRes();
+    const next = mockNext();
+
+    await maintenanceMiddleware(req, res, next);
+    expect(next).toHaveBeenCalled();
+  });
 });

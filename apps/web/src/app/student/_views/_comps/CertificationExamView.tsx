@@ -65,6 +65,7 @@ export default function CertificationExamView({
   const [result, setResult] = useState<CertAttempt | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const submitRef = useRef<() => void>(() => {});
 
   const fetchData = useCallback(async () => {
     try {
@@ -93,38 +94,12 @@ export default function CertificationExamView({
     fetchData();
   }, [fetchData]);
 
-  useEffect(() => {
-    if (phase !== "active" || !data?.quiz?.timeLimitMin) return;
-
-    const totalSeconds = data.quiz.timeLimitMin * 60;
-    setTimeLeft(totalSeconds);
-
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev === null || prev <= 1) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          handleSubmit();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [phase, data?.quiz?.timeLimitMin]);
-
-  const handleAnswerSelect = (questionId: string, optionId: string) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
-  };
-
-  const handleSubmit = async () => {
+  const handleSubmit = async (force = false) => {
     if (submitting || !data?.quiz) return;
     if (timerRef.current) clearInterval(timerRef.current);
 
     const unanswered = data.quiz.questions.filter((q) => !answers[q.id]);
-    if (unanswered.length > 0) {
+    if (!force && unanswered.length > 0) {
       toast.error(
         `Please answer all ${unanswered.length} remaining question(s)`,
       );
@@ -162,6 +137,8 @@ export default function CertificationExamView({
 
       if (res.isPassed) {
         toast.success("Congratulations! You passed the certification exam!");
+      } else if (force) {
+        toast.error("Time is up! Your exam has been auto-submitted.");
       }
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
@@ -169,6 +146,38 @@ export default function CertificationExamView({
       setSubmitting(false);
     }
   };
+
+  const handleAnswerSelect = (questionId: string, optionId: string) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
+  };
+
+  // Keep the latest handleSubmit accessible to the timer interval without
+  // restarting it on every answer change.
+  useEffect(() => {
+    submitRef.current = () => handleSubmit(true);
+  });
+
+  useEffect(() => {
+    if (phase !== "active" || !data?.quiz?.timeLimitMin) return;
+
+    const totalSeconds = data.quiz.timeLimitMin * 60;
+    setTimeLeft(totalSeconds);
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev === null || prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          submitRef.current();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [phase, data?.quiz?.timeLimitMin]);
 
   const startExam = () => {
     setPhase("active");
@@ -420,7 +429,7 @@ export default function CertificationExamView({
 
         <div className="flex justify-end mt-6 pt-4 border-t border-border/50">
           <button
-            onClick={handleSubmit}
+            onClick={() => handleSubmit()}
             disabled={submitting}
             className="btn-primary inline-flex items-center gap-2 px-6"
           >

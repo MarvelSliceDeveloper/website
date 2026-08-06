@@ -22,12 +22,17 @@ function handleError(res: Response, error: unknown) {
 }
 
 // GET /api/users — list non-admin users (admin only)
-// Lists STUDENT and INSTRUCTOR users only
+// Lists STUDENT and INSTRUCTOR users only (ADMIN/SUPER_ADMIN users only visible to super admins)
 router.get("/", async (req: Request, res: Response) => {
   try {
     const { packageId, page, limit } = req.query;
 
     const where: any = { deletedAt: null };
+
+    // Admin users are only visible to super admins
+    if ((req as AuthRequest).user?.role !== UserRole.SUPER_ADMIN) {
+      where.role = { in: [UserRole.STUDENT, UserRole.INSTRUCTOR, UserRole.INTERN] };
+    }
 
     // If packageId is provided, filter users who have a PackageEnrollment for that package
     if (packageId && typeof packageId === "string") {
@@ -57,6 +62,7 @@ router.get("/", async (req: Request, res: Response) => {
           email: true,
           role: true,
           phone: true,
+          address: true,
           createdAt: true,
           designation: true,
           internFieldId: true,
@@ -123,6 +129,7 @@ router.get("/:id", async (req: Request, res: Response) => {
         email: true,
         role: true,
         phone: true,
+        address: true,
         createdAt: true,
         designation: true,
         internFieldId: true,

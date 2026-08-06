@@ -1,12 +1,33 @@
 import { Router } from "express";
+import multer from "multer";
 import { sessionController } from "./session.controller";
 import { requireAuth, requireRole } from "../../middleware/auth.middleware";
 import { UserRole } from "@lms/types";
 
 const router = Router();
 
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
+
 // All session routes require authentication
 router.use(requireAuth);
+
+// GET /api/sessions/template — download Excel template
+router.get(
+  "/template",
+  requireRole([UserRole.ADMIN]),
+  sessionController.downloadTemplate,
+);
+
+// POST /api/sessions/bulk-upload — bulk create sessions from Excel
+router.post(
+  "/bulk-upload",
+  requireRole([UserRole.ADMIN]),
+  upload.single("file"),
+  sessionController.bulkUpload,
+);
 
 // POST /api/sessions — create a new session (admins + instructors)
 router.post(

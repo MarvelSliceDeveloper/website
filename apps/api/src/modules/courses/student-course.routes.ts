@@ -157,19 +157,6 @@ router.post(
         });
       }
 
-      // Timer enforcement: if quiz has timeLimitMin, verify submission is within limit
-      if (quiz.timeLimitMin && quiz.timeLimitMin > 0) {
-        const submitTime = new Date();
-        const attemptStartTime = submitTime;
-        const elapsedMinutes =
-          (submitTime.getTime() - attemptStartTime.getTime()) / (1000 * 60);
-        if (elapsedMinutes > quiz.timeLimitMin + 1) {
-          return res.status(400).json({
-            error: `Time limit exceeded. You had ${quiz.timeLimitMin} minutes.`,
-          });
-        }
-      }
-
       // Score the answers
       let score = 0;
       const enrichedAnswers = answers.map(

@@ -21,14 +21,19 @@ export default function ContentTab({
   const [overIndex, setOverIndex] = useState<number | null>(null);
   const [dragOrder, setDragOrder] = useState<string[] | null>(null);
 
+  const regularModules = useMemo(
+    () => modules.filter((m) => !m.isCertificationModule),
+    [modules],
+  );
+
   const items = useMemo(() => {
     if (dragOrder) {
       return dragOrder
-        .map((id) => modules.find((m) => m.id === id)!)
+        .map((id) => regularModules.find((m) => m.id === id)!)
         .filter(Boolean);
     }
-    return modules;
-  }, [modules, dragOrder]);
+    return regularModules;
+  }, [regularModules, dragOrder]);
 
   const handleDragStart = (index: number) => {
     setDragIndex(index);
@@ -78,6 +83,13 @@ export default function ContentTab({
           {items.length} module{items.length !== 1 ? "s" : ""}
         </span>
       </div>
+
+      {modules.some((m) => m.isCertificationModule) && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-2.5 text-xs text-amber-600">
+          The certification exam module is configured in the{" "}
+          <strong>Certification</strong> tab and is always placed last.
+        </div>
+      )}
 
       {items.length === 0 ? (
         <div className="border-2 border-dashed border-border/60 rounded-xl hover:border-primary/30 transition-colors flex flex-col items-center justify-center gap-3 py-10">

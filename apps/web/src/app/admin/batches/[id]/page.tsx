@@ -15,7 +15,6 @@ import {
   IconTrash,
   IconPlus,
   IconEdit,
-  IconCertificate,
 } from "@tabler/icons-react";
 
 type BatchCourse = {
@@ -49,7 +48,6 @@ type Batch = {
   startDate: string;
   endDate: string;
   isActive: boolean;
-  examEnabled: boolean;
   maxStudents: number | null;
   description: string | null;
   course: { id: string; title: string } | null;
@@ -84,7 +82,6 @@ export default function BatchDetailPage() {
   const [courses, setCourses] = useState<BatchCourse[]>([]);
   const [toggling, setToggling] = useState<string | null>(null);
   const [togglingExam, setTogglingExam] = useState<string | null>(null);
-  const [togglingExamEnabled, setTogglingExamEnabled] = useState(false);
 
   // Extensions state
   const [extensions, setExtensions] = useState<any[]>([]);
@@ -214,34 +211,13 @@ export default function BatchDetailPage() {
       );
       toast.success(
         result.isExamRequired
-          ? "Special Exam is now required for certificate"
-          : "Special Exam is now optional for certificate",
+          ? "Course certificate enabled"
+          : "Course certificate disabled",
       );
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {
       setTogglingExam(null);
-    }
-  };
-
-  const handleToggleExamEnabled = async () => {
-    setTogglingExamEnabled(true);
-    try {
-      const result = await api.put<{ id: string; examEnabled: boolean }>(
-        `/api/admin/batches/${id}/exam-enabled`,
-      );
-      setBatch((prev) =>
-        prev ? { ...prev, examEnabled: result.examEnabled } : prev,
-      );
-      toast.success(
-        result.examEnabled
-          ? "Exams enabled — certificates are shown to students"
-          : "Exams disabled — certificates are hidden from students",
-      );
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setTogglingExamEnabled(false);
     }
   };
 
@@ -312,22 +288,6 @@ export default function BatchDetailPage() {
         ]}
         action={
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleToggleExamEnabled}
-              disabled={togglingExamEnabled}
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all disabled:opacity-50 ${
-                batch.examEnabled
-                  ? "border-success/30 text-success hover:bg-success/10"
-                  : "border-border text-muted-foreground hover:bg-card-hover"
-              }`}
-            >
-              {togglingExamEnabled ? (
-                <span className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
-              ) : (
-                <IconCertificate size={14} />
-              )}
-              {batch.examEnabled ? "EXAM ENABLE" : "EXAM DISABLE"}
-            </button>
             <span
               className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[batch.status] || ""}`}
             >
@@ -881,7 +841,7 @@ export default function BatchDetailPage() {
                       Course Visibility
                     </th>
                     <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
-                      Special Exam Status
+                      Certificate
                     </th>
                     <th className="px-5 py-3 text-xs font-medium uppercase text-muted text-right">
                       Actions
@@ -920,11 +880,11 @@ export default function BatchDetailPage() {
                       <td className="px-5 py-3">
                         {bc.isExamRequired !== false ? (
                           <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-medium text-amber-400">
-                            Required
+                            Enabled
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 rounded-full border border-muted/30 bg-muted/10 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
-                            Exempt / Optional
+                            Disabled
                           </span>
                         )}
                       </td>
@@ -944,9 +904,9 @@ export default function BatchDetailPage() {
                             {togglingExam === bc.courseId ? (
                               <span className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
                             ) : bc.isExamRequired !== false ? (
-                              "Exempt Exam"
+                              "Disable Course Certificate"
                             ) : (
-                              "Require Exam"
+                              "Enable Course Certificate"
                             )}
                           </button>
                           <button

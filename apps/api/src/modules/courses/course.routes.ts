@@ -346,6 +346,14 @@ router.get(
               assignmentInstructions:
                 certModule.quizzes[0].assignmentInstructions,
               questionCount: certModule.quizzes[0].questions.length,
+              questions: certModule.quizzes[0].questions.map((q) => ({
+                id: q.id,
+                text: q.text,
+                options: (q.options as Array<{
+                  label: string;
+                  isCorrect: boolean;
+                }>) ?? [],
+              })),
             }
           : null,
       });
@@ -362,11 +370,14 @@ router.put(
   requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
   async (req: AuthRequest, res: Response) => {
     try {
-      const certModule = await moduleService.updateCertificationModule(
+      const certModule = await moduleService.ensureCertificationModule(
+        req.params.courseId,
+      );
+      const updated = await moduleService.updateCertificationModule(
         req.params.courseId,
         req.body,
       );
-      return res.json(certModule);
+      return res.json(updated || certModule);
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
       return res.status(statusCode).json(body);

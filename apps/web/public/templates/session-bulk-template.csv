@@ -1,0 +1,4 @@
+batchId,title,startDateTime,endDateTime,moduleId,customJoinUrl,instructorOverride
+batch_abc123,Session 1: Orientation & Setup,2025-01-15T10:00:00,2025-01-15T11:00:00,module_xyz,,
+batch_abc123,Session 2: Q&A,2025-01-22T10:00:00,2025-01-22T11:30:00,,,user_instructor123
+batch_def456,Session 3: Advanced Topics,2025-02-05T14:00:00,2025-02-05T15:30:00,module_abc,https://meet.google.com/xyz,

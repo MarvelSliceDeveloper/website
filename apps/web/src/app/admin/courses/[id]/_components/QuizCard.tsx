@@ -10,6 +10,7 @@ import {
   IconTrash,
   IconCopy,
   IconCheck,
+  IconClipboardText,
 } from "@tabler/icons-react";
 import RichEditor from "@/components/editor/RichEditor";
 
@@ -283,12 +284,12 @@ export default function QuizCard({
 
   if (editing) {
     return (
-      <div className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+      <div className="ml-6 space-y-4 rounded-xl border border-[#e4e2f5] bg-[#f8f7fd] p-4">
         <div className="flex items-center justify-between">
-          <h4 className="font-medium text-sm">Edit Quiz</h4>
+          <h4 className="text-sm font-medium text-[#1f2233]">Edit Quiz</h4>
           <button
             onClick={cancelEdit}
-            className="p-1 text-muted hover:text-foreground"
+            className="p-1 text-[#8b8da3] hover:text-[#1f2233]"
           >
             <IconX size={16} />
           </button>
@@ -312,14 +313,14 @@ export default function QuizCard({
             <button
               type="button"
               onClick={() => setDueDateMode("absolute")}
-              className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${dueDateMode === "absolute" ? "bg-primary text-white border-primary" : "bg-paper text-ink border-hairline"}`}
+              className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${dueDateMode === "absolute" ? "border-[#4f63f0] bg-[#4f63f0] text-white" : "border-[#e4e2f5] bg-white text-[#1f2233]"}`}
             >
               Absolute Date
             </button>
             <button
               type="button"
               onClick={() => setDueDateMode("days")}
-              className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${dueDateMode === "days" ? "bg-primary text-white border-primary" : "bg-paper text-ink border-hairline"}`}
+              className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${dueDateMode === "days" ? "border-[#4f63f0] bg-[#4f63f0] text-white" : "border-[#e4e2f5] bg-white text-[#1f2233]"}`}
             >
               Days from Enrollment
             </button>
@@ -352,23 +353,23 @@ export default function QuizCard({
 
         {/* MCQ Section */}
         {hasMcq && (
-          <div className="space-y-4 rounded-md border border-border p-3 bg-card">
-            <h5 className="text-xs font-semibold uppercase tracking-wider text-primary">
+          <div className="space-y-4 rounded-xl border border-[#e4e2f5] bg-white p-3">
+            <h5 className="text-xs font-semibold uppercase tracking-wider text-[#4f63f0]">
               MCQ Questions
             </h5>
             {questions.map((q, qIndex) => (
               <div
                 key={qIndex}
-                className="space-y-2 rounded-md border border-border p-3"
+                className="space-y-2 rounded-lg border border-[#e4e2f5] p-3"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">
+                  <span className="text-xs font-medium text-[#8b8da3]">
                     Question {qIndex + 1}
                   </span>
                   {questions.length > 1 && (
                     <button
                       onClick={() => removeQuestion(qIndex)}
-                      className="p-1 text-muted hover:text-danger"
+                      className="p-1 text-[#8b8da3] hover:text-danger"
                     >
                       <IconX size={14} />
                     </button>
@@ -392,7 +393,7 @@ export default function QuizCard({
                 />
 
                 <div className="space-y-2">
-                  <label className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  <label className="text-[10px] uppercase tracking-wider text-[#8b8da3]">
                     Options
                   </label>
                   {q.options.map((opt, oIndex) => (
@@ -402,7 +403,7 @@ export default function QuizCard({
                         name={`edit-correct-${qIndex}`}
                         checked={opt.isCorrect}
                         onChange={() => setCorrectOption(qIndex, oIndex)}
-                        className="h-4 w-4 accent-primary"
+                        className="h-4 w-4 accent-[#4f63f0]"
                       />
                       <input
                         type="text"
@@ -430,7 +431,7 @@ export default function QuizCard({
                       {q.options.length > 1 && (
                         <button
                           onClick={() => removeOption(qIndex, oIndex)}
-                          className="p-1 text-muted hover:text-danger"
+                          className="p-1 text-[#8b8da3] hover:text-danger"
                         >
                           <IconX size={14} />
                         </button>
@@ -439,7 +440,7 @@ export default function QuizCard({
                   ))}
                   <button
                     onClick={() => addOption(qIndex)}
-                    className="text-xs text-primary hover:text-primary-hover flex items-center gap-1 mt-1"
+                    className="mt-1 flex items-center gap-1 text-xs text-[#4f63f0] hover:text-[#3f52e0]"
                   >
                     <IconPlus size={12} /> Add Option
                   </button>
@@ -448,7 +449,7 @@ export default function QuizCard({
             ))}
             <button
               onClick={addQuestion}
-              className="text-xs text-primary hover:text-primary-hover flex items-center gap-1"
+              className="flex items-center gap-1 text-xs text-[#4f63f0] hover:text-[#3f52e0]"
             >
               <IconPlus size={12} /> Add Question
             </button>
@@ -457,8 +458,8 @@ export default function QuizCard({
 
         {/* Assignment Section */}
         {hasAssignment && (
-          <div className="space-y-3 rounded-md border border-border p-3 bg-card">
-            <h5 className="text-xs font-semibold uppercase tracking-wider text-blue-400">
+          <div className="space-y-3 rounded-xl border border-[#e4e2f5] bg-white p-3">
+            <h5 className="text-xs font-semibold uppercase tracking-wider text-blue-500">
               Assignment / Practical Task
             </h5>
             <RichEditor
@@ -479,8 +480,8 @@ export default function QuizCard({
 
         {/* Coding Test Cases Section */}
         {hasCoding && (
-          <div className="space-y-3 rounded-md border border-border p-3 bg-card">
-            <h5 className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
+          <div className="space-y-3 rounded-xl border border-[#e4e2f5] bg-white p-3">
+            <h5 className="text-xs font-semibold uppercase tracking-wider text-emerald-500">
               Coding Problem & Testcases
             </h5>
             <RichEditor
@@ -492,7 +493,7 @@ export default function QuizCard({
             {testCases.map((tc, tcIdx) => (
               <div
                 key={tcIdx}
-                className="grid grid-cols-1 md:grid-cols-2 gap-2 p-2 rounded border border-border/60"
+                className="grid grid-cols-1 gap-2 rounded-lg border border-[#e4e2f5]/80 p-2 md:grid-cols-2"
               >
                 <input
                   type="text"
@@ -521,12 +522,12 @@ export default function QuizCard({
                       );
                     }}
                     placeholder="Expected Output"
-                    className="field text-xs flex-1"
+                    className="field flex-1 text-xs"
                   />
                   {testCases.length > 1 && (
                     <button
                       onClick={() => removeTestCase(tcIdx)}
-                      className="p-1 text-muted hover:text-danger"
+                      className="p-1 text-[#8b8da3] hover:text-danger"
                     >
                       <IconTrash size={14} />
                     </button>
@@ -536,7 +537,7 @@ export default function QuizCard({
             ))}
             <button
               onClick={addTestCase}
-              className="text-xs text-emerald-400 flex items-center gap-1"
+              className="flex items-center gap-1 text-xs text-emerald-500"
             >
               <IconPlus size={12} /> Add Test Case
             </button>
@@ -544,13 +545,16 @@ export default function QuizCard({
         )}
 
         <div className="flex justify-end gap-2 pt-2">
-          <button onClick={cancelEdit} className="btn-secondary text-xs">
+          <button
+            onClick={cancelEdit}
+            className="rounded-full border border-[#e4e2f5] bg-white px-3.5 py-1.5 text-xs font-medium text-[#1f2233] hover:bg-[#f5f4fd]"
+          >
             Cancel
           </button>
           <button
             onClick={handleUpdate}
             disabled={loading}
-            className="btn-primary text-xs"
+            className="rounded-full bg-[#4f63f0] px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#3f52e0] disabled:opacity-50"
           >
             {loading ? "Saving..." : "Save Changes"}
           </button>
@@ -558,6 +562,15 @@ export default function QuizCard({
       </div>
     );
   }
+
+  const dueLabel =
+    quiz.daysFromEnrollment != null
+      ? `Due ${quiz.daysFromEnrollment}d after enrollment`
+      : quiz.dueDate
+        ? `Due ${new Date(quiz.dueDate).toLocaleDateString()}`
+        : null;
+
+  const questionCount = quiz.hasMcq !== false ? quiz.questions?.length ?? 0 : 0;
 
   return (
     <div
@@ -569,72 +582,76 @@ export default function QuizCard({
         e.preventDefault();
         onDrop?.();
       }}
-      className={`flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-3 py-2 transition-all duration-200 ${
-        isDragging ? "opacity-40 scale-[0.98]" : ""
+      className={`group flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-all duration-200 ${
+        isDragging ? "scale-[0.98] opacity-40" : "hover:bg-[#f8f7fd]"
       }`}
     >
-      <div className="flex items-center gap-2 flex-wrap">
-        {onDragStart && (
-          <span className="cursor-grab active:cursor-grabbing text-amber-400 hover:text-amber-600 transition-colors">
-            <IconGripVertical size={12} />
-          </span>
-        )}
-        <span className="text-sm font-medium text-amber-700">{quiz.title}</span>
-        <button
-          onClick={copyId}
-          className="group relative inline-flex items-center gap-1 text-[10px] font-mono text-muted-foreground/60 hover:text-foreground transition-colors"
-          title="Copy quiz ID"
-        >
-          {copied ? (
-            <IconCheck size={10} className="text-emerald-500" />
-          ) : (
-            <IconCopy size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-          )}
-          <span className="opacity-60 group-hover:opacity-100 transition-opacity">
-            {quiz.id.slice(0, 8)}...
-          </span>
-        </button>
-        {quiz.daysFromEnrollment != null ? (
-          <span className="text-[11px] text-amber-600">
-            Due: {quiz.daysFromEnrollment}d after enrollment
-          </span>
-        ) : quiz.dueDate ? (
-          <span className="text-[11px] text-amber-600">
-            Due: {new Date(quiz.dueDate).toLocaleDateString()}
-          </span>
-        ) : null}
-        <div className="flex items-center gap-1 text-[11px] text-amber-600">
-          {quiz.hasMcq !== false && (
-            <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded">
-              {quiz.questions?.length ?? 0} MCQs
-            </span>
-          )}
+      {onDragStart && (
+        <span className="shrink-0 cursor-grab text-[#c7c6dd] transition-colors hover:text-[#a3a1c9] active:cursor-grabbing">
+          <IconGripVertical size={13} />
+        </span>
+      )}
+
+      <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg bg-[#f0eaff] text-[#8b5cf6]">
+        <IconClipboardText size={13} />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <p className="truncate text-[13px] font-medium text-[#1f2233]">
+            {quiz.title}
+          </p>
+          <button
+            onClick={copyId}
+            className="group/copy relative inline-flex items-center gap-1 text-[10px] font-mono text-[#8b8da3]/70 transition-colors hover:text-[#1f2233]"
+            title="Copy quiz ID"
+          >
+            {copied ? (
+              <IconCheck size={10} className="text-emerald-500" />
+            ) : (
+              <IconCopy
+                size={10}
+                className="opacity-0 transition-opacity group-hover/copy:opacity-100"
+              />
+            )}
+          </button>
           {quiz.hasAssignment && (
-            <span className="bg-blue-500/10 text-blue-500 px-1.5 py-0.5 rounded">
+            <span className="whitespace-nowrap rounded-full bg-blue-50 px-1.5 py-0.5 text-[9px] font-semibold text-blue-500">
               Assignment
             </span>
           )}
           {quiz.hasCoding && (
-            <span className="bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded">
-              Coding ({quiz.testCases?.length ?? 0} Testcases)
+            <span className="whitespace-nowrap rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-500">
+              Coding
             </span>
           )}
         </div>
+        {dueLabel && (
+          <p className="mt-0.5 text-[10.5px] text-[#8b8da3]">{dueLabel}</p>
+        )}
       </div>
-      <div className="flex gap-1">
-        <button
-          onClick={() => setEditing(true)}
-          className="text-xs text-primary hover:text-primary-hover px-2 py-1"
-        >
-          Edit
-        </button>
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="text-xs text-danger hover:text-danger px-2 py-1"
-        >
-          {deleting ? "..." : "Delete"}
-        </button>
+
+      <div className="flex shrink-0 items-center gap-2">
+        {quiz.hasMcq !== false && (
+          <span className="whitespace-nowrap text-[11.5px] text-[#8b8da3]">
+            {questionCount} Questions
+          </span>
+        )}
+        <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+          <button
+            onClick={() => setEditing(true)}
+            className="rounded-md px-1.5 py-1 text-[10px] font-medium text-[#4f63f0] transition-colors hover:bg-[#4f63f0]/10"
+          >
+            Edit
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="rounded-md p-1 text-[#8b8da3] transition-colors hover:bg-danger/12 hover:text-danger"
+          >
+            <IconTrash size={12} />
+          </button>
+        </div>
       </div>
     </div>
   );
