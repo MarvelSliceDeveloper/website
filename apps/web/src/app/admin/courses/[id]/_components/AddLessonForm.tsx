@@ -1,21 +1,23 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
-import { IconPlus, IconRefresh } from "@tabler/icons-react";
+import { IconRefresh } from "@tabler/icons-react";
 import RichEditor from "@/components/editor/RichEditor";
+import { FormModal } from "@/components/admin/FormModal";
 
 export default function AddLessonForm({
   moduleId,
-  courseId,
   onAdded,
+  open,
+  onClose,
 }: {
   moduleId: string;
-  courseId: string;
   onAdded: () => void;
+  open: boolean;
+  onClose: () => void;
 }) {
-  const [show, setShow] = useState(false);
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
@@ -26,34 +28,33 @@ export default function AddLessonForm({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (show) inputRef.current?.focus();
-  }, [show]);
+    if (open) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [open]);
 
-  const handleFetchVideoInfo = useCallback(
-    async (url: string) => {
-      if (!url.trim()) {
-        setDurationSeconds(null);
-        return;
-      }
-      setFetchingInfo(true);
-      try {
-        const data = await api.get<{
-          videoId: string;
-          title: string;
-          durationSeconds: number;
-          thumbnail: string;
-        }>(`/api/youtube/video-info?url=${encodeURIComponent(url)}`);
-        setDurationSeconds(data.durationSeconds);
-        if (data.title && !title) setTitle(data.title);
-      } catch {
-        setDurationSeconds(null);
-        toast.error("Failed to fetch video info. Check the URL or API key.");
-      } finally {
-        setFetchingInfo(false);
-      }
-    },
-    [title],
-  );
+  const handleFetchVideoInfo = async (url: string) => {
+    if (!url.trim()) {
+      setDurationSeconds(null);
+      return;
+    }
+    setFetchingInfo(true);
+    try {
+      const data = await api.get<{
+        videoId: string;
+        title: string;
+        durationSeconds: number;
+        thumbnail: string;
+      }>(`/api/youtube/video-info?url=${encodeURIComponent(url)}`);
+      setDurationSeconds(data.durationSeconds);
+      if (data.title && !title) setTitle(data.title);
+    } catch {
+      setDurationSeconds(null);
+      toast.error("Failed to fetch video info. Check the URL or API key.");
+    } finally {
+      setFetchingInfo(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,12 +67,7 @@ export default function AddLessonForm({
         durationSeconds: durationSeconds ?? undefined,
         isFreePreview,
       });
-      setTitle("");
-      setDesc("");
-      setVideoUrl("");
-      setDurationSeconds(null);
-      setIsFreePreview(false);
-      setShow(false);
+      onClose();
       toast.success("Lesson added");
       onAdded();
     } catch (err: unknown) {
@@ -82,32 +78,71 @@ export default function AddLessonForm({
   };
 
   return (
-    <div className="border-t border-border/30 ml-6">
-      {show ? (
-        <form onSubmit={handleSubmit} className="p-3 space-y-2">
+    <FormModal
+      open={open}
+      onClose={onClose}
+      title="Add Lesson"
+      size="lg"
+      footer={
+        <>
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn-secondary text-xs px-3 py-1.5"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={adding}
+            className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1"
+            form="add-lesson-form"
+          >
+            {adding ? "Adding..." : "Add Lesson"}
+          </button>
+        </>
+      }
+    >
+      <form id="add-lesson-form" onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground">
+            Title
+          </label>
           <input
             ref={inputRef}
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Lesson title (required)"
-            className="field text-xs"
+            placeholder="Enter lesson title"
+            className="field w-full"
             required
           />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground">
+            Description (optional)
+          </label>
           <RichEditor
             content={desc}
             onChange={setDesc}
-            placeholder="Short description (optional)"
-            minHeight="150px"
+            placeholder="Lesson description or notes..."
+            minHeight="120px"
           />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground">
+            Video URL (optional)
+          </label>
           <div className="relative">
             <input
               type="url"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
               onBlur={() => handleFetchVideoInfo(videoUrl)}
-              placeholder="Video URL — YouTube (optional)"
-              className="field text-xs pr-7"
+              placeholder="YouTube, Vimeo, etc. (auto-fetches metadata)"
+              className="field w-full pr-7"
             />
             {fetchingInfo && (
               <IconRefresh
@@ -121,46 +156,18 @@ export default function AddLessonForm({
               Duration: {Math.floor(durationSeconds / 60)} min
             </p>
           )}
-          <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <input
-              type="checkbox"
-              checked={isFreePreview}
-              onChange={(e) => setIsFreePreview(e.target.checked)}
-              className="h-3 w-3 accent-primary"
-            />
-            Free preview
-          </label>
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              disabled={adding}
-              className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1"
-            >
-              {adding ? (
-                "Adding..."
-              ) : (
-                <>
-                  <IconPlus size={14} /> Add Lesson
-                </>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShow(false)}
-              className="btn-secondary text-xs px-3 py-1.5"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      ) : (
-        <button
-          onClick={() => setShow(true)}
-          className="flex items-center justify-center gap-1.5 w-full py-2.5 text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors"
-        >
-          <IconPlus size={14} /> Add Lesson
-        </button>
-      )}
-    </div>
+        </div>
+
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={isFreePreview}
+            onChange={(e) => setIsFreePreview(e.target.checked)}
+            className="h-3.5 w-3.5 accent-primary"
+          />
+          <span>Free preview (accessible without enrollment)</span>
+        </label>
+      </form>
+    </FormModal>
   );
 }

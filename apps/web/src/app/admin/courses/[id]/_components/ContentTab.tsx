@@ -80,16 +80,13 @@ export default function ContentTab({
       </div>
 
       {items.length === 0 ? (
-        <div className="glass-card p-10 text-center space-y-3">
-          <div className="flex justify-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 border border-primary/20">
-              <IconPlus size={24} className="text-primary" />
-            </div>
+        <div className="border-2 border-dashed border-border/60 rounded-xl hover:border-primary/30 transition-colors flex flex-col items-center justify-center gap-3 py-10">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 border border-primary/20">
+            <IconPlus size={24} className="text-primary" />
           </div>
           <p className="text-sm font-medium text-foreground">No modules yet</p>
           <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-            Add your first module to start building the course content. Drag to
-            reorder anytime.
+            Add your first module to start building the course content.
           </p>
         </div>
       ) : (

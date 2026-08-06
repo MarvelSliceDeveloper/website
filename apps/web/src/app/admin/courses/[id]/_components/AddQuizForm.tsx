@@ -3,8 +3,13 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
-import { IconPlus, IconX, IconTrash } from "@tabler/icons-react";
+import {
+  IconPlus,
+  IconX,
+  IconTrash,
+} from "@tabler/icons-react";
 import RichEditor from "@/components/editor/RichEditor";
+import { FormModal } from "@/components/admin/FormModal";
 
 interface QuizOption {
   label: string;
@@ -26,12 +31,14 @@ interface AddQuizFormProps {
   moduleId: string;
   onSuccess: () => void;
   onCancel: () => void;
+  open: boolean;
 }
 
 export default function AddQuizForm({
   moduleId,
   onSuccess,
   onCancel,
+  open,
 }: AddQuizFormProps) {
   const [title, setTitle] = useState("");
   const [dueDateMode, setDueDateMode] = useState<"absolute" | "days">("absolute");
@@ -58,6 +65,29 @@ export default function AddQuizForm({
   ]);
 
   const [loading, setLoading] = useState(false);
+
+  const resetForm = () => {
+    setTitle("");
+    setDueDateMode("absolute");
+    setDueDate("");
+    setDaysFromEnrollment("");
+    setExamType("MCQ");
+    setHasMcq(true);
+    setHasAssignment(false);
+    setHasCoding(false);
+    setQuestions([
+      { text: "", options: [{ label: "", isCorrect: false }] },
+    ]);
+    setAssignmentInstructions("");
+    setAssignmentPdfUrl("");
+    setCodingPrompt("");
+    setTestCases([{ input: "", expectedOutput: "", isHidden: false }]);
+  };
+
+  const close = () => {
+    resetForm();
+    onCancel();
+  };
 
   const addQuestion = () => {
     setQuestions([
@@ -124,7 +154,8 @@ export default function AddQuizForm({
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!title.trim()) {
       toast.error("Please enter a title");
       return;
@@ -151,16 +182,6 @@ export default function AddQuizForm({
       }
     }
 
-    if (hasAssignment && !assignmentInstructions.trim()) {
-      toast.error("Please enter assignment instructions");
-      return;
-    }
-
-    if (hasCoding && !codingPrompt.trim()) {
-      toast.error("Please enter coding challenge prompt");
-      return;
-    }
-
     setLoading(true);
     try {
       await api.post(`/api/admin/courses/modules/${moduleId}/quizzes`, {
@@ -182,6 +203,7 @@ export default function AddQuizForm({
         questions: hasMcq ? questions : [],
       });
       toast.success("Quiz added successfully");
+      resetForm();
       onSuccess();
     } catch (error) {
       console.error("Failed to add quiz:", error);
@@ -193,33 +215,43 @@ export default function AddQuizForm({
     }
   };
 
-  return (
-    <div className="space-y-4 rounded-lg border border-border bg-card p-4">
-      <div className="flex items-center justify-between">
-        <h4 className="font-medium text-sm">Add Quiz</h4>
-        <button
-          onClick={onCancel}
-          className="p-1 text-muted hover:text-foreground"
-        >
-          <IconX size={16} />
-        </button>
-      </div>
+  const footer = (
+    <>
+      <button onClick={close} className="btn-secondary text-xs px-3 py-1.5">
+        Cancel
+      </button>
+      <button
+        type="submit"
+        disabled={loading}
+        className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1"
+        form="add-quiz-form"
+      >
+        {loading ? "Adding..." : "Add Quiz"}
+      </button>
+    </>
+  );
 
+  const formContent = (
+    <form id="add-quiz-form" onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
       <div className="space-y-2">
-        <label className="text-xs font-medium">Title</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Title
+        </label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Enter quiz title"
-          className="field"
+          className="field w-full"
         />
       </div>
 
       {/* Due Date Mode */}
-      <div className="space-y-2">
-        <label className="text-xs font-medium">Due Date</label>
-        <div className="flex gap-2">
+      <div className="sticky top-0 bg-card py-2 z-10 border-b border-border/40">
+        <label className="text-xs font-medium text-muted-foreground">
+          Due Date
+        </label>
+        <div className="flex gap-2 mt-1">
           <button
             type="button"
             onClick={() => setDueDateMode("absolute")}
@@ -239,23 +271,27 @@ export default function AddQuizForm({
 
       {dueDateMode === "absolute" ? (
         <div className="space-y-2">
-          <label className="text-xs font-medium">Due Date</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            Due Date
+          </label>
           <input
             type="datetime-local"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="field"
+            className="field w-full"
           />
         </div>
       ) : (
         <div className="space-y-2">
-          <label className="text-xs font-medium">Days After Enrollment</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            Days After Enrollment
+          </label>
           <input
             type="number"
             value={daysFromEnrollment}
             onChange={(e) => setDaysFromEnrollment(e.target.value)}
             placeholder="e.g. 10"
-            className="field"
+            className="field w-full"
             min={1}
           />
         </div>
@@ -278,6 +314,7 @@ export default function AddQuizForm({
                 </span>
                 {questions.length > 1 && (
                   <button
+                    type="button"
                     onClick={() => removeQuestion(qIndex)}
                     className="p-1 text-muted hover:text-danger"
                   >
@@ -299,7 +336,7 @@ export default function AddQuizForm({
                   );
                 }}
                 placeholder="Enter question prompt"
-                className="field"
+                className="field text-xs"
               />
 
               <div className="space-y-2">
@@ -339,6 +376,7 @@ export default function AddQuizForm({
                     />
                     {q.options.length > 1 && (
                       <button
+                        type="button"
                         onClick={() => removeOption(qIndex, oIndex)}
                         className="p-1 text-muted hover:text-danger"
                       >
@@ -348,6 +386,7 @@ export default function AddQuizForm({
                   </div>
                 ))}
                 <button
+                  type="button"
                   onClick={() => addOption(qIndex)}
                   className="text-xs text-primary hover:text-primary-hover flex items-center gap-1 mt-1"
                 >
@@ -358,6 +397,7 @@ export default function AddQuizForm({
           ))}
 
           <button
+            type="button"
             onClick={addQuestion}
             className="text-xs text-primary hover:text-primary-hover flex items-center gap-1"
           >
@@ -373,8 +413,8 @@ export default function AddQuizForm({
             2. Assignment / Practical Task
           </h5>
           <div className="space-y-1">
-            <label className="text-xs font-medium">
-              Assignment Instructions
+            <label className="text-xs font-medium text-muted-foreground">
+              Instructions
             </label>
             <RichEditor
               content={assignmentInstructions}
@@ -384,15 +424,15 @@ export default function AddQuizForm({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium">
+            <label className="text-xs font-medium text-muted-foreground">
               Question PDF URL (optional)
             </label>
             <input
               type="text"
               value={assignmentPdfUrl}
               onChange={(e) => setAssignmentPdfUrl(e.target.value)}
-              placeholder="https://.../question.pdf or /uploads/assignments/question.pdf"
-              className="field"
+              placeholder="https://drive.google.com/file/d/.../preview"
+              className="field text-xs"
             />
           </div>
         </div>
@@ -405,7 +445,7 @@ export default function AddQuizForm({
             3. Coding Problem & Testcases
           </h5>
           <div className="space-y-1">
-            <label className="text-xs font-medium">
+            <label className="text-xs font-medium text-muted-foreground">
               Coding Problem Description
             </label>
             <RichEditor
@@ -417,7 +457,7 @@ export default function AddQuizForm({
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-medium">
+            <label className="text-xs font-medium text-muted-foreground">
               Test Cases (Input & Output Pairs)
             </label>
             {testCases.map((tc, tcIdx) => (
@@ -466,8 +506,9 @@ export default function AddQuizForm({
                   </div>
                   {testCases.length > 1 && (
                     <button
+                      type="button"
                       onClick={() => removeTestCase(tcIdx)}
-                      className="p-1 mt-3 text-muted hover:text-danger"
+                      className="p-1 text-muted hover:text-danger"
                     >
                       <IconTrash size={14} />
                     </button>
@@ -477,6 +518,7 @@ export default function AddQuizForm({
             ))}
 
             <button
+              type="button"
               onClick={addTestCase}
               className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 mt-1"
             >
@@ -485,19 +527,12 @@ export default function AddQuizForm({
           </div>
         </div>
       )}
+    </form>
+  );
 
-      <div className="flex justify-end gap-2 pt-2">
-        <button onClick={onCancel} className="btn-secondary text-xs">
-          Cancel
-        </button>
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          className="btn-primary text-xs"
-        >
-          {loading ? "Adding..." : "Add Quiz"}
-        </button>
-      </div>
-    </div>
+  return (
+    <FormModal open={open} onClose={close} title="Add Quiz" size="lg" footer={footer}>
+      {formContent}
+    </FormModal>
   );
 }

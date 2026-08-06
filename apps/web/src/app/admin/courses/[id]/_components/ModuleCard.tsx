@@ -1,16 +1,20 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import {
   IconGripVertical,
-  IconDeviceFloppy,
   IconTrash,
   IconPlus,
   IconFile,
   IconDownload,
   IconX,
+  IconDeviceFloppy,
+  IconClipboardText,
+  IconFileText,
+  IconBrain,
+  IconVideo,
 } from "@tabler/icons-react";
 import type {
   Module,
@@ -33,7 +37,6 @@ const ALLOWED_RESOURCE_TYPES = new Set([
   "application/pdf",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-powerpoint",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   "application/vnd.ms-excel",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -81,9 +84,7 @@ function buildUnifiedList(mod: Module): UnifiedItem[] {
     }
     for (const assignment of mod.assignments) {
       if (
-        !items.some(
-          (i) => i.type === "ASSIGNMENT" && i.data.id === assignment.id,
-        )
+        !items.some((i) => i.type === "ASSIGNMENT" && i.data.id === assignment.id)
       ) {
         items.push({ type: "ASSIGNMENT", data: assignment });
       }
@@ -130,7 +131,7 @@ export default function ModuleCard({
   onDrop: () => void;
   isDragging: boolean;
 }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({
     title: mod.title,
@@ -139,16 +140,18 @@ export default function ModuleCard({
   const [contentDragIdx, setContentDragIdx] = useState<number | null>(null);
   const [contentOverIdx, setContentOverIdx] = useState<number | null>(null);
   const [resourceDragIdx, setResourceDragIdx] = useState<number | null>(null);
-  const [resourceOverIdx, setResourceOverIdx] = useState<number | null>(null);
   const [showAddQuiz, setShowAddQuiz] = useState(false);
   const [showAddAssignment, setShowAddAssignment] = useState(false);
   const [showAddPractical, setShowAddPractical] = useState(false);
+  const [showAddLesson, setShowAddLesson] = useState(false);
+  const [addLessonKey, setAddLessonKey] = useState(0);
   const [showStudyMaterialUpload, setShowStudyMaterialUpload] = useState(false);
   const [resourceLessonId, setResourceLessonId] = useState<string>(
     mod.lessons[0]?.id || "",
   );
   const [uploadingResource, setUploadingResource] = useState(false);
   const [resourceError, setResourceError] = useState("");
+  const [addContentPopoverOpen, setAddContentPopoverOpen] = useState(false);
 
   const unifiedItems = useMemo(() => buildUnifiedList(mod), [mod]);
 
@@ -161,6 +164,25 @@ export default function ModuleCard({
       lessonId: lesson.id,
     })),
   );
+
+  // Close popover when clicking outside
+  const toggleAddContent = () => {
+    setAddContentPopoverOpen((prev) => !prev);
+  };
+
+  // Click-away handler for popover
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".add-content-popover-container")) {
+        setAddContentPopoverOpen(false);
+      }
+    };
+    if (addContentPopoverOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [addContentPopoverOpen]);
 
   const handleSave = async () => {
     try {
@@ -222,14 +244,12 @@ export default function ModuleCard({
   const handleResourceDrop = async (dropIdx: number) => {
     if (resourceDragIdx === null || resourceDragIdx === dropIdx) {
       setResourceDragIdx(null);
-      setResourceOverIdx(null);
       return;
     }
     const reordered = [...allResources];
     const [moved] = reordered.splice(resourceDragIdx, 1);
     reordered.splice(dropIdx, 0, moved);
     setResourceDragIdx(null);
-    setResourceOverIdx(null);
 
     const groupedByLesson: Record<string, string[]> = {};
     for (const r of reordered) {
@@ -321,31 +341,31 @@ export default function ModuleCard({
     mod.assignments.length +
     (mod.practicals?.length ?? 0);
 
+  const hasContent = itemCount > 0;
+
   return (
     <div
-      className={`glass-card overflow-hidden transition-all duration-200 ${isDragging ? "opacity-40 scale-[0.97]" : "hover:border-primary/30"}`}
+      className={`rounded-xl border border-border bg-card shadow-sm transition-all duration-200 ${isDragging ? "opacity-40 scale-[0.97]" : "hover:shadow-md hover:border-border-hover"}`}
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={(e) => {
+        e.preventDefault();
+        onDrop();
+      }}
+      onDragEnd={() => {}}
     >
-      <div className="p-3.5 flex items-start gap-3">
-        <div
-          className="flex flex-col items-center gap-1 pt-1.5 cursor-grab active:cursor-grabbing text-muted hover:text-foreground transition-colors"
-          onDragStart={onDragStart}
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={(e) => {
-            e.preventDefault();
-            onDrop();
-          }}
-          onDragEnd={() => {}}
-        >
-          <IconGripVertical size={16} />
-        </div>
-
-        <div className="flex flex-col items-center gap-1.5 shrink-0">
+      {/* Module Header */}
+      <div className="flex items-start gap-3 p-4">
+        {/* Module number badge */}
+        <div className="flex items-center justify-center shrink-0">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
             {index + 1}
           </div>
         </div>
 
+        {/* Module title / edit form */}
         <div className="flex-1 min-w-0">
           {editing ? (
             <div className="space-y-2">
@@ -355,7 +375,7 @@ export default function ModuleCard({
                 onChange={(e) =>
                   setEditForm((p) => ({ ...p, title: e.target.value }))
                 }
-                className="field text-sm"
+                className="field text-sm w-full"
                 autoFocus
               />
               <input
@@ -365,14 +385,15 @@ export default function ModuleCard({
                   setEditForm((p) => ({ ...p, description: e.target.value }))
                 }
                 placeholder="Short description"
-                className="field text-xs"
+                className="field text-xs w-full"
               />
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleSave}
                   className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1"
                 >
-                  <IconDeviceFloppy size={14} /> Save
+                  <IconDeviceFloppy size={14} />
+                  Save
                 </button>
                 <button
                   onClick={() => setEditing(false)}
@@ -387,6 +408,11 @@ export default function ModuleCard({
               <p className="text-sm font-semibold text-foreground leading-tight">
                 {mod.title}
               </p>
+              <div className="flex items-center gap-3 mt-1 text-[10px] text-muted">
+                <span>
+                  {itemCount} {itemCount === 1 ? "item" : "items"}
+                </span>
+              </div>
               {mod.description && (
                 <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
                   {mod.description}
@@ -394,20 +420,77 @@ export default function ModuleCard({
               )}
             </>
           )}
-          {!editing && (
-            <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted">
-              <span>
-                {itemCount} {itemCount === 1 ? "item" : "items"}
-              </span>
-            </div>
-          )}
         </div>
 
+        {/* Action buttons: add content / expand/edit/reorder/delete */}
         {!editing && (
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
+            {/* Add Content popover trigger */}
+            {hasContent && (
+            <div className="relative add-content-popover-container">
+              <button
+                onClick={toggleAddContent}
+                className="flex items-center gap-1 text-xs font-medium text-amber-600 hover:text-amber-700 transition-colors px-2.5 py-1.5 rounded-md hover:bg-amber-50"
+                aria-haspopup="menu"
+                aria-expanded={addContentPopoverOpen}
+              >
+                <IconPlus size={14} />
+                Add Content
+              </button>
+              {addContentPopoverOpen && (
+                <div
+                  className="absolute right-0 z-20 mt-1 w-48 origin-top-right rounded-md border border-border bg-card shadow-xl ring-1 ring-black ring-opacity-10 focus:outline-none"
+                >
+                  <div className="py-1 text-xs">
+                    <div
+                      onClick={() => {
+                        setAddContentPopoverOpen(false);
+                        setShowAddQuiz(true);
+                      }}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-left text-amber-600 hover:bg-amber-50 cursor-pointer"
+                    >
+                      <IconClipboardText size={14} />
+                      Quiz
+                    </div>
+                    <div
+                      onClick={() => {
+                        setAddContentPopoverOpen(false);
+                        setShowAddAssignment(true);
+                      }}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-left text-blue-600 hover:bg-blue-50 cursor-pointer"
+                    >
+                      <IconFileText size={14} />
+                      Assignment
+                    </div>
+                    <div
+                      onClick={() => {
+                        setAddContentPopoverOpen(false);
+                        setShowAddPractical(true);
+                      }}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-left text-violet-600 hover:bg-violet-50 cursor-pointer"
+                    >
+                      <IconBrain size={14} />
+                      Practical
+                    </div>
+                    <div
+                      onClick={() => {
+                        setAddContentPopoverOpen(false);
+                        setShowStudyMaterialUpload(true);
+                      }}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-left text-emerald-600 hover:bg-emerald-50 cursor-pointer"
+                    >
+                      <IconFile size={14} />
+                      Study Material
+                    </div>
+                   </div>
+                 </div>
+               )}
+             </div>
+            )}
             <button
               onClick={() => setExpanded(!expanded)}
-              className="text-muted hover:text-foreground transition-colors p-1"
+              className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-muted/20"
+              title={expanded ? "Collapse" : "Expand"}
             >
               <span
                 className={`inline-block transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}
@@ -417,13 +500,13 @@ export default function ModuleCard({
             </button>
             <button
               onClick={() => setEditing(true)}
-              className="text-xs font-medium text-primary hover:text-primary-hover transition-colors px-2 py-1 rounded-md hover:bg-primary/12"
+              className="text-xs font-medium text-primary hover:text-primary-hover transition-colors px-2.5 py-1 rounded-md hover:bg-primary/12"
             >
               Edit
             </button>
             <button
               onClick={handleDelete}
-              className="p-1.5 text-muted hover:text-danger transition-colors rounded-md hover:bg-danger/12"
+              className="p-1.5 text-muted hover:text-danger transition-colors rounded-md hover:bg-danger/10"
               title="Delete module"
             >
               <IconTrash size={15} />
@@ -432,16 +515,58 @@ export default function ModuleCard({
         )}
       </div>
 
+      {/* Module Content (expanded) */}
       {expanded && (
-        <div className="border-t border-border/40">
-          {unifiedItems.length === 0 ? (
-            <div className="px-4 py-4 text-center">
-              <p className="text-xs text-muted-foreground">
+        <div className="border-t border-border/40 bg-card">
+          {!hasContent ? (
+            <div className="p-4 text-center" onClick={() => setExpanded(true)}>
+              <p className="text-xs text-muted-foreground mb-3">
                 No content yet. Add lessons, quizzes, or assignments below.
               </p>
+              {/* Inline Add Content buttons for empty module */}
+              <div className="flex flex-wrap gap-1.5 justify-center">
+                <button
+                  onClick={() => {
+                    setShowAddLesson(true);
+                    setAddLessonKey((k) => k + 1);
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted/20"
+                >
+                  <IconVideo size={14} />
+                  Add Lesson
+                </button>
+                <button
+                  onClick={() => setShowAddQuiz(true)}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 hover:text-amber-700 transition-colors px-3 py-1.5 rounded-md hover:bg-amber-50"
+                >
+                  <IconClipboardText size={14} />
+                  Quiz
+                </button>
+                <button
+                  onClick={() => setShowAddAssignment(true)}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors px-3 py-1.5 rounded-md hover:bg-blue-50"
+                >
+                  <IconFileText size={14} />
+                  Assignment
+                </button>
+                <button
+                  onClick={() => setShowAddPractical(true)}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 hover:text-violet-700 transition-colors px-3 py-1.5 rounded-md hover:bg-violet-50"
+                >
+                  <IconBrain size={14} />
+                  Practical
+                </button>
+                <button
+                  onClick={() => setShowStudyMaterialUpload(true)}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors px-3 py-1.5 rounded-md hover:bg-emerald-50"
+                >
+                  <IconFile size={14} />
+                  Study Material
+                </button>
+              </div>
             </div>
           ) : (
-            <div className="py-2 px-2 space-y-1">
+            <div className="px-3 py-2 space-y-1">
               {unifiedItems.map((item, idx) => (
                 <div key={`${item.type}-${item.data.id}`}>
                   {contentOverIdx === idx &&
@@ -534,13 +659,90 @@ export default function ModuleCard({
             </div>
           )}
 
+          {/* Study Materials Section */}
           {mod.lessons.length > 0 && (
-            <div className="py-2 px-2 border-t border-border/40">
-              <div className="px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-emerald-600 mb-2">
-                Study Materials ({allResources.length})
+            <div className="px-3 py-2 border-t border-border/40">
+              <div className="px-1 py-1.5 text-[10px] font-medium uppercase tracking-wider text-emerald-600 mb-2 flex items-center justify-between">
+                <span>Study Materials ({allResources.length})</span>
+                {!showStudyMaterialUpload && (
+                  <button
+                    onClick={() => setShowStudyMaterialUpload(true)}
+                    className="text-xs font-medium text-emerald-600 hover:text-emerald-700 underline"
+                  >
+                    + Upload
+                  </button>
+                )}
               </div>
 
-              {allResources.length > 0 ? (
+              {showStudyMaterialUpload ? (
+                <div className="rounded-lg border border-success/20 bg-success/5 p-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-success">
+                      Add Study Material
+                    </h4>
+                    <button
+                      onClick={() => setShowStudyMaterialUpload(false)}
+                      className="p-1 text-muted hover:text-foreground"
+                    >
+                      <IconX size={14} />
+                    </button>
+                  </div>
+
+                  {mod.lessons.length === 0 ? (
+                    <p className="text-xs text-muted">
+                      Add a lesson first to attach study materials.
+                    </p>
+                  ) : (
+                    <>
+                      {mod.lessons.length > 1 && (
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium">
+                            Attach to Lesson
+                          </label>
+                          <select
+                            value={resourceLessonId}
+                            onChange={(e) => setResourceLessonId(e.target.value)}
+                            className="w-full text-xs border border-border rounded-md px-2 py-1.5 bg-background"
+                          >
+                            {mod.lessons.map((lesson) => (
+                              <option key={lesson.id} value={lesson.id}>
+                                {lesson.title}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      <label className="flex items-center justify-center gap-2 w-full p-3 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-success/10 transition-colors text-xs text-success">
+                        <IconPlus size={14} />
+                        {uploadingResource ? "Uploading..." : "Choose File"}
+                        <input
+                          type="file"
+                          onChange={(e) => {
+                            handleResourceUpload(e);
+                            if (!e.target.files?.[0]) return;
+                            setTimeout(
+                              () => setShowStudyMaterialUpload(false),
+                              500,
+                            );
+                          }}
+                          disabled={uploadingResource}
+                          className="hidden"
+                          accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.webp"
+                        />
+                      </label>
+
+                      {resourceError && (
+                        <p className="text-[10px] text-danger">{resourceError}</p>
+                      )}
+
+                      <p className="text-[10px] text-muted">
+                        Accepted: PDF, DOCX, PPTX, XLSX, Images (max 50 MB)
+                      </p>
+                    </>
+                  )}
+                </div>
+              ) : allResources.length > 0 ? (
                 <div className="space-y-1">
                   {allResources.map((resource, rIdx) => (
                     <div
@@ -549,9 +751,8 @@ export default function ModuleCard({
                       onDragStart={() => setResourceDragIdx(rIdx)}
                       onDragOver={(e) => {
                         e.preventDefault();
-                        setResourceOverIdx(rIdx);
                       }}
-                      onDragLeave={() => setResourceOverIdx(null)}
+                      onDragLeave={() => {}}
                       onDrop={(e) => {
                         e.preventDefault();
                         handleResourceDrop(rIdx);
@@ -595,153 +796,54 @@ export default function ModuleCard({
                 </div>
               ) : (
                 <p className="text-[10px] text-muted text-center">
-                  No study materials yet. Click &ldquo;Study Material&rdquo;
-                  below to upload.
+                  No study materials yet. Click &ldquo;Upload&rdquo; to add.
                 </p>
               )}
             </div>
           )}
-
-          <div className="px-2 py-2 space-y-2">
-            {showAddQuiz ? (
-              <AddQuizForm
-                moduleId={mod.id}
-                onSuccess={() => {
-                  setShowAddQuiz(false);
-                  onChanged();
-                }}
-                onCancel={() => setShowAddQuiz(false)}
-              />
-            ) : showAddAssignment ? (
-              <AddAssignmentForm
-                moduleId={mod.id}
-                courseId={courseId}
-                batchId=""
-                onSuccess={() => {
-                  setShowAddAssignment(false);
-                  onChanged();
-                }}
-                onCancel={() => setShowAddAssignment(false)}
-              />
-            ) : showAddPractical ? (
-              <AddPracticalForm
-                moduleId={mod.id}
-                courseId={courseId}
-                onSuccess={() => {
-                  setShowAddPractical(false);
-                  onChanged();
-                }}
-                onCancel={() => setShowAddPractical(false)}
-              />
-            ) : showStudyMaterialUpload ? (
-              <div className="rounded-lg border border-success/20 bg-success/5 p-3 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-semibold text-success">
-                    Add Study Material
-                  </h4>
-                  <button
-                    onClick={() => setShowStudyMaterialUpload(false)}
-                    className="p-1 text-muted hover:text-foreground"
-                  >
-                    <IconX size={14} />
-                  </button>
-                </div>
-
-                {mod.lessons.length === 0 ? (
-                  <p className="text-xs text-muted">
-                    Add a lesson first to attach study materials.
-                  </p>
-                ) : (
-                  <>
-                    {mod.lessons.length > 1 && (
-                      <div className="space-y-1">
-                        <label className="text-xs font-medium">
-                          Attach to Lesson
-                        </label>
-                        <select
-                          value={resourceLessonId}
-                          onChange={(e) => setResourceLessonId(e.target.value)}
-                          className="w-full text-xs border border-border rounded-md px-2 py-1.5 bg-background"
-                        >
-                          {mod.lessons.map((lesson) => (
-                            <option key={lesson.id} value={lesson.id}>
-                              {lesson.title}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-
-                    <label className="flex items-center justify-center gap-2 w-full p-3 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-success/10 transition-colors text-xs text-success">
-                      <IconPlus size={14} />
-                      {uploadingResource ? "Uploading..." : "Choose File"}
-                      <input
-                        type="file"
-                        onChange={(e) => {
-                          handleResourceUpload(e);
-                          if (!e.target.files?.[0]) return;
-                          setTimeout(
-                            () => setShowStudyMaterialUpload(false),
-                            500,
-                          );
-                        }}
-                        disabled={uploadingResource}
-                        className="hidden"
-                        accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.webp"
-                      />
-                    </label>
-
-                    {resourceError && (
-                      <p className="text-[10px] text-danger">{resourceError}</p>
-                    )}
-
-                    <p className="text-[10px] text-muted">
-                      Accepted: PDF, DOCX, PPTX, XLSX, Images (max 50 MB)
-                    </p>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="flex gap-2 px-2">
-                <button
-                  onClick={() => setShowAddQuiz(true)}
-                  className="text-xs font-medium text-amber-600 hover:text-amber-700 transition-colors px-2 py-1 rounded-md hover:bg-amber-50 flex items-center gap-1"
-                >
-                  <IconPlus size={12} />
-                  Add Quiz
-                </button>
-                <button
-                  onClick={() => setShowAddAssignment(true)}
-                  className="text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors px-2 py-1 rounded-md hover:bg-blue-50 flex items-center gap-1"
-                >
-                  <IconPlus size={12} />
-                  Add Assignment
-                </button>
-                <button
-                  onClick={() => setShowAddPractical(true)}
-                  className="text-xs font-medium text-violet-600 hover:text-violet-700 transition-colors px-2 py-1 rounded-md hover:bg-violet-50 flex items-center gap-1"
-                >
-                  <IconPlus size={12} />
-                  Practical
-                </button>
-                <button
-                  onClick={() => setShowStudyMaterialUpload(true)}
-                  className="text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors px-2 py-1 rounded-md hover:bg-emerald-50 flex items-center gap-1"
-                >
-                  <IconPlus size={12} />
-                  Study Material
-                </button>
-              </div>
-            )}
-          </div>
-
-          <AddLessonForm
-            moduleId={mod.id}
-            courseId={courseId}
-            onAdded={onChanged}
-          />
         </div>
       )}
+
+      {/* Modal Forms - controlled by parent state */}
+      <AddQuizForm
+        moduleId={mod.id}
+        open={showAddQuiz}
+        onSuccess={() => {
+          setShowAddQuiz(false);
+          onChanged();
+        }}
+        onCancel={() => setShowAddQuiz(false)}
+      />
+      <AddAssignmentForm
+        moduleId={mod.id}
+        courseId={courseId}
+        batchId=""
+        open={showAddAssignment}
+        onSuccess={() => {
+          setShowAddAssignment(false);
+          onChanged();
+        }}
+        onCancel={() => setShowAddAssignment(false)}
+      />
+      <AddPracticalForm
+        moduleId={mod.id}
+        courseId={courseId}
+        open={showAddPractical}
+        onSuccess={() => {
+          setShowAddPractical(false);
+          onChanged();
+        }}
+        onCancel={() => setShowAddPractical(false)}
+      />
+
+      {/* Add Lesson Modal */}
+      <AddLessonForm
+        key={addLessonKey}
+        moduleId={mod.id}
+        open={showAddLesson}
+        onAdded={onChanged}
+        onClose={() => setShowAddLesson(false)}
+      />
     </div>
   );
 }

@@ -40,28 +40,47 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
   const [hasAssignment, setHasAssignment] = useState(false);
   const [assignmentInstructions, setAssignmentInstructions] = useState("");
 
-  const fetchData = async () => {
+  const applyData = (result: CertificationData) => {
+    setData(result);
+    if (result.quiz) {
+      setTitle(result.module?.title ?? "Certification Exam");
+      setPassingScore(result.quiz.passingScore);
+      setTimeLimitMin(result.quiz.timeLimitMin?.toString() ?? "");
+      setHasAssignment(result.quiz.hasAssignment);
+      setAssignmentInstructions(result.quiz.assignmentInstructions ?? "");
+    }
+  };
+
+  const reload = async () => {
     try {
       const result = await api.get<CertificationData>(
         `/api/admin/courses/${courseId}/certification`,
       );
-      setData(result);
-      if (result.quiz) {
-        setTitle(result.module?.title ?? "Certification Exam");
-        setPassingScore(result.quiz.passingScore);
-        setTimeLimitMin(result.quiz.timeLimitMin?.toString() ?? "");
-        setHasAssignment(result.quiz.hasAssignment);
-        setAssignmentInstructions(result.quiz.assignmentInstructions ?? "");
-      }
+      applyData(result);
     } catch {
       toast.error("Failed to load certification data");
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    let cancelled = false;
+    api
+      .get<CertificationData>(
+        `/api/admin/courses/${courseId}/certification`,
+      )
+      .then((result) => {
+        if (cancelled) return;
+        applyData(result);
+      })
+      .catch(() => {
+        if (!cancelled) toast.error("Failed to load certification data");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [courseId]);
 
   const handleSave = async () => {
@@ -75,7 +94,7 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
         assignmentInstructions: assignmentInstructions || null,
       });
       toast.success("Certification settings saved");
-      fetchData();
+      reload();
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -111,7 +130,7 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
                 passingScore: 60,
               });
               toast.success("Certification exam enabled");
-              fetchData();
+              reload();
             } catch (err: unknown) {
               toast.error(getErrorMessage(err));
             } finally {

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import RichEditor from "@/components/editor/RichEditor";
-import { IconX } from "@tabler/icons-react";
+import { FormModal } from "@/components/admin/FormModal";
 
 interface AddAssignmentFormProps {
   moduleId: string;
@@ -12,6 +12,7 @@ interface AddAssignmentFormProps {
   batchId: string;
   onSuccess: () => void;
   onCancel: () => void;
+  open: boolean;
 }
 
 export default function AddAssignmentForm({
@@ -20,6 +21,7 @@ export default function AddAssignmentForm({
   batchId,
   onSuccess,
   onCancel,
+  open,
 }: AddAssignmentFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -30,7 +32,23 @@ export default function AddAssignmentForm({
   const [questionPdfUrl, setQuestionPdfUrl] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async () => {
+  const resetForm = () => {
+    setTitle("");
+    setDescription("");
+    setDueDateMode("absolute");
+    setDueDate("");
+    setDaysFromEnrollment("");
+    setMaxPoints(100);
+    setQuestionPdfUrl("");
+  };
+
+  const close = () => {
+    resetForm();
+    onCancel();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!title.trim()) {
       toast.error("Please enter an assignment title");
       return;
@@ -49,6 +67,7 @@ export default function AddAssignmentForm({
         batchId,
       });
       toast.success("Assignment added successfully");
+      resetForm();
       onSuccess();
     } catch {
       toast.error("Failed to add assignment");
@@ -57,41 +76,51 @@ export default function AddAssignmentForm({
     }
   };
 
-  return (
-    <div className="space-y-4 rounded-lg border border-border bg-card p-4">
-      <div className="flex items-center justify-between">
-        <h4 className="font-medium text-sm">Add Assignment</h4>
-        <button
-          onClick={onCancel}
-          className="p-1 text-muted hover:text-foreground"
-        >
-          <IconX size={16} />
-        </button>
-      </div>
+  const footer = (
+    <>
+      <button onClick={close} className="btn-secondary text-xs px-3 py-1.5">
+        Cancel
+      </button>
+      <button
+        type="submit"
+        disabled={loading}
+        className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1"
+        form="add-assignment-form"
+      >
+        {loading ? "Adding..." : "Add Assignment"}
+      </button>
+    </>
+  );
 
+  const formContent = (
+    <form id="add-assignment-form" onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <label className="text-xs font-medium">Title</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Title
+        </label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Enter assignment title"
-          className="field"
+          className="field w-full"
         />
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-medium">Description (optional)</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Description (optional)
+        </label>
         <RichEditor
           content={description}
           onChange={setDescription}
           placeholder="Enter description"
-          minHeight="150px"
+          minHeight="120px"
         />
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-medium">
+        <label className="text-xs font-medium text-muted-foreground">
           Google Drive PDF Link (optional)
         </label>
         <input
@@ -99,13 +128,15 @@ export default function AddAssignmentForm({
           value={questionPdfUrl}
           onChange={(e) => setQuestionPdfUrl(e.target.value)}
           placeholder="https://drive.google.com/file/d/.../preview"
-          className="field text-xs"
+          className="field text-xs w-full"
         />
       </div>
 
       {/* Due Date Mode */}
       <div className="space-y-2">
-        <label className="text-xs font-medium">Due Date</label>
+        <label className="text-xs font-medium text-muted-foreground">
+          Due Date
+        </label>
         <div className="flex gap-2">
           <button
             type="button"
@@ -126,23 +157,27 @@ export default function AddAssignmentForm({
 
       {dueDateMode === "absolute" ? (
         <div className="space-y-2">
-          <label className="text-xs font-medium">Due Date</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            Due Date
+          </label>
           <input
             type="datetime-local"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="field"
+            className="field w-full"
           />
         </div>
       ) : (
         <div className="space-y-2">
-          <label className="text-xs font-medium">Days After Enrollment</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            Days After Enrollment
+          </label>
           <input
             type="number"
             value={daysFromEnrollment}
             onChange={(e) => setDaysFromEnrollment(e.target.value)}
             placeholder="e.g. 10"
-            className="field"
+            className="field w-full"
             min={1}
           />
         </div>
@@ -150,29 +185,24 @@ export default function AddAssignmentForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="text-xs font-medium">Max Points</label>
+          <label className="text-xs font-medium text-muted-foreground">
+            Max Points
+          </label>
           <input
             type="number"
             value={maxPoints}
             onChange={(e) => setMaxPoints(parseInt(e.target.value) || 100)}
             min={1}
-            className="field"
+            className="field w-full"
           />
         </div>
       </div>
+    </form>
+  );
 
-      <div className="flex justify-end gap-2 pt-2">
-        <button onClick={onCancel} className="btn-secondary text-xs">
-          Cancel
-        </button>
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          className="btn-primary text-xs"
-        >
-          {loading ? "Adding..." : "Add Assignment"}
-        </button>
-      </div>
-    </div>
+  return (
+    <FormModal open={open} onClose={close} title="Add Assignment" size="lg" footer={footer}>
+      {formContent}
+    </FormModal>
   );
 }

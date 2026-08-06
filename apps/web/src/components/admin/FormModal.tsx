@@ -15,7 +15,7 @@ interface FormModalProps {
 const sizeMap = {
   sm: "max-w-sm",
   md: "max-w-md",
-  lg: "max-w-lg",
+  lg: "max-w-3xl",
 } as const;
 
 export function FormModal({
@@ -78,7 +78,7 @@ export function FormModal({
     >
       <div
         ref={dialogRef}
-        className={`w-full ${sizeMap[size]} border border-border bg-card p-5 space-y-4`}
+        className={`w-full ${sizeMap[size]} max-h-[calc(100vh-2rem)] overflow-y-auto border border-border bg-card p-5 space-y-4`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-border pb-3">

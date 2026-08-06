@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
@@ -78,7 +78,7 @@ function CoursesPageContent() {
   const [purging, setPurging] = useState<string | null>(null);
   const [recovering, setRecovering] = useState<string | null>(null);
 
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     setLoading(true);
     try {
       const params: Record<string, string> = {};
@@ -96,7 +96,7 @@ function CoursesPageContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, search]);
 
   useEffect(() => {
     Promise.resolve().then(() => setStatusFilter(statusParam));
@@ -104,7 +104,7 @@ function CoursesPageContent() {
 
   useEffect(() => {
     Promise.resolve().then(() => fetchCourses());
-  }, [statusFilter, search]);
+  }, [fetchCourses]);
 
   const handleDelete = async (id: string, title: string) => {
     if (!confirm(`Archive "${title}"? Students will lose access.`)) return;

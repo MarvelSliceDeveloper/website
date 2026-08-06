@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { api } from "@/lib/api";
 import {
   Select,
@@ -83,8 +83,12 @@ export default function ModuleStudyMaterialsSection({
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(
     modules[0]?.id || null,
   );
-  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
-  const [resources, setResources] = useState<Resource[]>([]);
+  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(
+    modules[0]?.lessons[0]?.id ?? null,
+  );
+  const [resources, setResources] = useState<Resource[]>(
+    modules[0]?.lessons[0]?.resources ?? [],
+  );
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState("");
@@ -92,26 +96,18 @@ export default function ModuleStudyMaterialsSection({
 
   const selectedModule = modules.find((m) => m.id === selectedModuleId);
 
-  useEffect(() => {
-    const lesson = selectedModule?.lessons[0] ?? null;
-    if (lesson) {
-      setSelectedLessonId(lesson.id);
-      setResources(lesson.resources || []);
-    } else {
-      setSelectedLessonId(null);
-      setResources([]);
-    }
-  }, [selectedModule]);
+  const handleModuleChange = (moduleId: string) => {
+    setSelectedModuleId(moduleId);
+    const lesson = modules.find((m) => m.id === moduleId)?.lessons[0] ?? null;
+    setSelectedLessonId(lesson?.id ?? null);
+    setResources(lesson?.resources ?? []);
+  };
 
-  useEffect(() => {
-    if (!selectedLessonId || !selectedModule) return;
-    const lesson = selectedModule.lessons.find(
-      (l) => l.id === selectedLessonId,
-    );
-    if (lesson) {
-      setResources(lesson.resources || []);
-    }
-  }, [selectedLessonId, selectedModule]);
+  const handleLessonChange = (lessonId: string) => {
+    setSelectedLessonId(lessonId);
+    const lesson = selectedModule?.lessons.find((l) => l.id === lessonId);
+    setResources(lesson?.resources ?? []);
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -192,7 +188,7 @@ export default function ModuleStudyMaterialsSection({
         </label>
         <Select
           value={selectedModuleId || ""}
-          onValueChange={setSelectedModuleId}
+          onValueChange={handleModuleChange}
         >
           <SelectTrigger className="field">
             <SelectValue placeholder="-- Choose a module --" />
@@ -216,7 +212,7 @@ export default function ModuleStudyMaterialsSection({
               </label>
               <Select
                 value={selectedLessonId || ""}
-                onValueChange={setSelectedLessonId}
+                onValueChange={handleLessonChange}
               >
                 <SelectTrigger className="field">
                   <SelectValue placeholder="-- Choose a lesson --" />

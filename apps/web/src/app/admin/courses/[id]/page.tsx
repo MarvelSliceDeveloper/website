@@ -13,8 +13,6 @@ import type {
 } from "./_components/types";
 import CourseDetailsTab from "./_components/CourseDetailsTab";
 import ContentTab from "./_components/ContentTab";
-import SessionsTab from "./_components/SessionsTab";
-import RecordingsTab from "./_components/RecordingsTab";
 import CertificationTab from "./_components/CertificationTab";
 import { usePageTitle } from "@/lib/use-page-title";
 import TabButton from "./_components/TabButton";
@@ -44,7 +42,7 @@ export default function CourseDetailPage() {
   const [thumbnailUploading, setThumbnailUploading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<
-    "details" | "content" | "sessions" | "recordings" | "certification"
+    "details" | "content" | "certification"
   >("details");
 
   const [form, setForm] = useState<CourseFormData>({
@@ -74,7 +72,7 @@ export default function CourseDetailPage() {
   }, [id]);
 
   useEffect(() => {
-    fetchCourse();
+    Promise.resolve().then(() => fetchCourse());
   }, [fetchCourse]);
 
   const handleSaveCourse = async () => {
@@ -248,16 +246,6 @@ export default function CourseDetailPage() {
           active={activeTab === "content"}
           onClick={() => setActiveTab("content")}
         />
-        <TabButton
-          label="Live Sessions"
-          active={activeTab === "sessions"}
-          onClick={() => setActiveTab("sessions")}
-        />
-        <TabButton
-          label="Recordings"
-          active={activeTab === "recordings"}
-          onClick={() => setActiveTab("recordings")}
-        />
         <button
           onClick={() => setActiveTab("certification")}
           className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
@@ -290,10 +278,6 @@ export default function CourseDetailPage() {
           onContentChanged={fetchCourse}
         />
       )}
-
-      {activeTab === "sessions" && <SessionsTab courseId={id} />}
-
-      {activeTab === "recordings" && <RecordingsTab courseId={id} />}
 
       {activeTab === "certification" && <CertificationTab courseId={id} />}
     </div>
