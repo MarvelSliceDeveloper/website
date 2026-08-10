@@ -8,6 +8,7 @@ import { IconShield, IconArrowLeft, IconRefresh } from "@tabler/icons-react";
 interface TwoFactorLoginProps {
   tempToken: string;
   email: string;
+  rememberMe?: boolean;
   onComplete: (result: { token: string; user: any }) => void;
   onCancel: () => void;
 }
@@ -15,6 +16,7 @@ interface TwoFactorLoginProps {
 export default function TwoFactorLogin({
   tempToken,
   email,
+  rememberMe = false,
   onComplete,
   onCancel,
 }: TwoFactorLoginProps) {
@@ -39,7 +41,7 @@ export default function TwoFactorLogin({
     try {
       const result = await api.post<{ token: string; user: any }>(
         "/api/auth/2fa/challenge",
-        { tempToken, code: trimmed },
+        { tempToken, code: trimmed, rememberMe },
       );
       toast.success("Verified successfully");
       onComplete(result);

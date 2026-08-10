@@ -2,6 +2,7 @@ import { Response } from "express";
 import { Readable } from "stream";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { AppError, handleControllerError } from "../../utils/errors";
+import { ssrfSafeFetch } from "../../utils/ssrf";
 import {
   assignmentService,
   CreateFileAssignmentSchema,
@@ -75,8 +76,7 @@ export const assignmentController = {
         throw new AppError(400, "Only http(s) URLs are allowed");
       }
 
-      const upstream = await fetch(target, {
-        redirect: "follow",
+      const upstream = await ssrfSafeFetch(rawUrl, {
         signal: AbortSignal.timeout(30_000),
       });
       if (!upstream.ok || !upstream.body) {

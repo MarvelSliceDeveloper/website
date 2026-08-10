@@ -172,7 +172,7 @@ export const twoFactorController = {
 
   async challenge(req: Request, res: Response) {
     try {
-      const { tempToken, code } = req.body;
+      const { tempToken, code, rememberMe } = req.body;
 
       if (!tempToken || typeof tempToken !== "string") {
         return res
@@ -257,7 +257,7 @@ export const twoFactorController = {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
-        maxAge: ACCESS_TOKEN_MAX_AGE,
+        ...(rememberMe ? { maxAge: ACCESS_TOKEN_MAX_AGE } : {}),
       });
 
       return res.json({ token: tokens.accessToken, user: tokens.user });

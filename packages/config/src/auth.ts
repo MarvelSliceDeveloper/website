@@ -23,6 +23,7 @@ export const RegisterSchema = z.object({
 export const LoginSchema = z.object({
   email: emailSchema,
   password: z.string(),
+  rememberMe: z.boolean().optional(),
 });
 
 /** Zod schema for changing an existing password (requires the current one) */

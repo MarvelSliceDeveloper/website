@@ -95,6 +95,7 @@ export default function LoginPage() {
       }>("/api/auth/login", {
         email: normalizedEmail,
         password,
+        rememberMe,
       } satisfies LoginInput);
 
       if (result?.requires2fa && result?.tempToken) {
@@ -330,6 +331,7 @@ export default function LoginPage() {
                   <TwoFactorLogin
                     tempToken={tempToken}
                     email={twoFactorEmail}
+                    rememberMe={rememberMe}
                     onComplete={handleTwoFactorComplete}
                     onCancel={handleCancelTwoFactor}
                   />

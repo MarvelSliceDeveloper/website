@@ -111,26 +111,54 @@ const FEATURES = [
   },
 ];
 
+const DEFAULT_PROFILE: ProfileData = {
+  phone: "",
+  timezone: "Asia/Kolkata",
+  address: "",
+  state: "",
+  country: "India",
+};
+
+const REQUIRED_FIELDS: Record<keyof ProfileData, string> = {
+  phone: "Phone Number",
+  timezone: "Time Zone",
+  address: "Address",
+  state: "State",
+  country: "Country",
+};
+
 export default function OnboardingWizardView({
   onComplete,
 }: OnboardingWizardViewProps) {
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const [profile, setProfile] = useState<ProfileData>({
-    phone: "",
-    timezone: "",
-    address: "",
-    state: "",
-    country: "",
-  });
+  const [errors, setErrors] = useState<Partial<Record<keyof ProfileData, string>>>({});
+  const [profile, setProfile] = useState<ProfileData>(DEFAULT_PROFILE);
 
   function update<K extends keyof ProfileData>(key: K, value: ProfileData[K]) {
     setProfile((prev) => ({ ...prev, [key]: value }));
+    setErrors((prev) => (prev[key] ? { ...prev, [key]: undefined } : prev));
+  }
+
+  function validateProfile() {
+    const nextErrors: Partial<Record<keyof ProfileData, string>> = {};
+    (Object.keys(REQUIRED_FIELDS) as (keyof ProfileData)[]).forEach((key) => {
+      if (!profile[key].trim()) {
+        nextErrors[key] = `${REQUIRED_FIELDS[key]} is required`;
+      }
+    });
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   }
 
   async function handleNext() {
+    if (step === 2 && !validateProfile()) {
+      toast.error("Please fill in all required fields to continue.");
+      return;
+    }
     if (step < STEPS.length - 1) {
       setStep(step + 1);
+      setErrors({});
     } else {
       setSubmitting(true);
       try {
@@ -212,7 +240,7 @@ export default function OnboardingWizardView({
         <div className="relative z-10 min-h-[500px] w-full sp-view-enter">
           {step === 0 && <WelcomeStep />}
           {step === 1 && <FeatureTourStep />}
-          {step === 2 && <ProfileStep profile={profile} update={update} />}
+          {step === 2 && <ProfileStep profile={profile} update={update} errors={errors} />}
           {step === 3 && <AllSetStep />}
         </div>
 
@@ -248,7 +276,7 @@ export default function OnboardingWizardView({
             )}
             <button
               onClick={handleNext}
-              disabled={submitting || (step === 2 && !profile.phone.trim())}
+              disabled={submitting}
               className="btn-primary px-7 py-2.5 text-xs font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
             >
               {submitting ? (
@@ -594,9 +622,11 @@ function SearchableSelect({
 function ProfileStep({
   profile,
   update,
+  errors,
 }: {
   profile: ProfileData;
   update: (key: keyof ProfileData, value: string) => void;
+  errors: Partial<Record<keyof ProfileData, string>>;
 }) {
   const selectedCountry = COUNTRIES.find((c) => c.name === profile.country);
   const states = selectedCountry?.states || [];
@@ -616,7 +646,7 @@ function ProfileStep({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="mb-1.5 block text-xs font-medium text-foreground">
-              Phone Number
+              Phone Number <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <IconPhone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
@@ -624,15 +654,22 @@ function ProfileStep({
                 type="tel"
                 value={profile.phone}
                 onChange={(e) => update("phone", e.target.value)}
-                className="w-full rounded-xl border border-border bg-muted/5 pl-9 pr-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20"
+                className={`w-full rounded-xl border bg-muted/5 pl-9 pr-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:bg-card focus:ring-4 focus:ring-primary/20 ${
+                  errors.phone
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                    : "border-border focus:border-primary"
+                }`}
                 placeholder="+1 234 567 890"
               />
             </div>
+            {errors.phone && (
+              <p className="mt-1 text-xs text-red-500">{errors.phone}</p>
+            )}
           </div>
 
           <div>
             <label className="mb-1.5 block text-xs font-medium text-foreground">
-              Time Zone
+              Time Zone <span className="text-red-500">*</span>
             </label>
             <SearchableSelect
               value={profile.timezone}
@@ -642,12 +679,15 @@ function ProfileStep({
               searchPlaceholder="Search time zones..."
               icon={<IconClockHour4 size={16} />}
             />
+            {errors.timezone && (
+              <p className="mt-1 text-xs text-red-500">{errors.timezone}</p>
+            )}
           </div>
         </div>
 
         <div>
           <label className="mb-1.5 block text-xs font-medium text-foreground">
-            Address
+            Address <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <IconMapPin size={16} className="absolute left-3 top-3 text-muted-foreground z-10" />
@@ -655,16 +695,23 @@ function ProfileStep({
               value={profile.address}
               onChange={(e) => update("address", e.target.value)}
               rows={2}
-              className="w-full rounded-xl border border-border bg-muted/5 pl-9 pr-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20"
+              className={`w-full rounded-xl border bg-muted/5 pl-9 pr-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:bg-card focus:ring-4 focus:ring-primary/20 ${
+                errors.address
+                  ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                  : "border-border focus:border-primary"
+              }`}
               placeholder="Street address"
             />
           </div>
+          {errors.address && (
+            <p className="mt-1 text-xs text-red-500">{errors.address}</p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="mb-1.5 block text-xs font-medium text-foreground">
-              Country
+              Country <span className="text-red-500">*</span>
             </label>
             <SearchableSelect
               value={profile.country}
@@ -674,11 +721,14 @@ function ProfileStep({
               searchPlaceholder="Search countries..."
               icon={<IconFlag size={16} />}
             />
+            {errors.country && (
+              <p className="mt-1 text-xs text-red-500">{errors.country}</p>
+            )}
           </div>
 
           <div>
             <label className="mb-1.5 block text-xs font-medium text-foreground">
-              State
+              State <span className="text-red-500">*</span>
             </label>
             {states.length > 0 ? (
               <SearchableSelect
@@ -696,10 +746,17 @@ function ProfileStep({
                   type="text"
                   value={profile.state}
                   onChange={(e) => update("state", e.target.value)}
-                  className="w-full rounded-xl border border-border bg-muted/5 pl-9 pr-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20"
+                  className={`w-full rounded-xl border bg-muted/5 pl-9 pr-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:bg-card focus:ring-4 focus:ring-primary/20 ${
+                    errors.state
+                      ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                      : "border-border focus:border-primary"
+                  }`}
                   placeholder="State / Region"
                 />
               </div>
+            )}
+            {errors.state && (
+              <p className="mt-1 text-xs text-red-500">{errors.state}</p>
             )}
           </div>
         </div>
