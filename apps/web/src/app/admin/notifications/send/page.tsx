@@ -19,7 +19,9 @@ type TargetType =
   | "BATCH"
   | "COURSE"
   | "INTERN"
-  | "INTERN_FIELD";
+  | "INTERN_FIELD"
+  | "INSTRUCTORS"
+  | "STUDENTS";
 type CourseOption = { id: string; title: string };
 type BatchOption = {
   id: string;
@@ -30,6 +32,7 @@ type EmailTemplateOption = {
   id: string;
   name: string;
   subject: string;
+  body?: string;
 };
 type InternFieldOption = {
   id: string;
@@ -87,7 +90,7 @@ export default function AdminSendNotificationPage() {
 
   const filteredBatches =
     targetType === "COURSE" && selectedCourseIds.size > 0
-      ? batches.filter((b) => selectedCourseIds.has(b.course.id))
+      ? batches.filter((b) => b.course && selectedCourseIds.has(b.course.id))
       : batches;
 
   const activeInternFields = internFields.filter((f) => f.isActive);
@@ -119,6 +122,8 @@ export default function AdminSendNotificationPage() {
     if (
       targetType !== "ALL_USERS" &&
       targetType !== "INTERN" &&
+      targetType !== "INSTRUCTORS" &&
+      targetType !== "STUDENTS" &&
       targetIds.length === 0
     ) {
       toast.error("Select at least one target");
@@ -194,6 +199,10 @@ export default function AdminSendNotificationPage() {
     switch (targetType) {
       case "ALL_USERS":
         return "all users";
+      case "INSTRUCTORS":
+        return "all instructors";
+      case "STUDENTS":
+        return "all students";
       case "INTERN":
         return "all interns";
       case "BATCH":
@@ -205,8 +214,27 @@ export default function AdminSendNotificationPage() {
     }
   }
 
+  const selectedTemplate = emailTemplates.find(
+    (t) => t.id === selectedTemplateId,
+  );
+  const previewSubject = (selectedTemplate?.subject ?? "New Notification")
+    .replaceAll("{{notificationTitle}}", title.trim() || "Notification Title")
+    .replaceAll(
+      "{{notificationMessage}}",
+      message.trim() || "Notification message",
+    );
+
+  const previewHtml = selectedTemplate?.body
+    ? selectedTemplate.body
+        .replaceAll("{{notificationTitle}}", title.trim() || "Notification Title")
+        .replaceAll(
+          "{{notificationMessage}}",
+          message.trim() || "Notification message",
+        )
+    : "";
+
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6">
       <div>
         <button
           onClick={() => router.back()}
@@ -225,7 +253,8 @@ export default function AdminSendNotificationPage() {
         </p>
       </div>
 
-      <div className="glass-card space-y-5 p-6">
+      <div className="grid gap-6 lg:grid-cols-5">
+        <div className="glass-card space-y-5 p-6 lg:col-span-3">
         {/* Target Type */}
         <div>
           <label className="mb-1.5 block text-sm font-medium text-foreground">
@@ -237,6 +266,8 @@ export default function AdminSendNotificationPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL_USERS">All Users</SelectItem>
+              <SelectItem value="INSTRUCTORS">All Instructors</SelectItem>
+              <SelectItem value="STUDENTS">All Students</SelectItem>
               <SelectItem value="BATCH">Specific Batches</SelectItem>
               <SelectItem value="COURSE">Specific Courses</SelectItem>
               <SelectItem value="INTERN">All Interns</SelectItem>
@@ -310,9 +341,11 @@ export default function AdminSendNotificationPage() {
                   />
                   <span className="flex-1">
                     {b.name}
-                    <span className="ml-2 text-xs text-muted">
-                      {b.course.title}
-                    </span>
+                    {b.course && (
+                      <span className="ml-2 text-xs text-muted">
+                        {b.course.title}
+                      </span>
+                    )}
                   </span>
                 </label>
               ))}
@@ -500,6 +533,91 @@ export default function AdminSendNotificationPage() {
             {sending ? "Sending..." : "Send Notification"}
           </button>
         </div>
+      </div>
+
+      {/* Live Email Preview */}
+      <div className="lg:col-span-2">
+        <div className="glass-card overflow-hidden lg:sticky lg:top-6">
+          <div className="flex items-center justify-between border-b border-border px-5 py-3">
+            <p className="text-sm font-semibold text-foreground">
+              Email Preview
+            </p>
+            <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
+              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+              Live
+            </span>
+          </div>
+          <div className="p-5">
+            {selectedTemplate?.body ? (
+              <div>
+                <iframe
+                  title="Email template preview"
+                  srcDoc={previewHtml}
+                  sandbox=""
+                  className="min-h-[360px] w-full rounded-xl border border-border/60 bg-background/60"
+                />
+                <p className="mt-2 text-[10px] text-muted">
+                  Live preview of &quot;{selectedTemplate.name}&quot; template
+                  with real colors.
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-border/60 bg-background/60">
+                <div className="flex items-center gap-3 border-b border-border/40 px-4 py-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[11px] font-bold text-primary">
+                    MS
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-semibold text-foreground">
+                      Marvel Slice
+                    </p>
+                    <p className="truncate text-[10px] text-muted">
+                      to {targetSummary()}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-3 px-4 py-4">
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">
+                      Subject
+                    </p>
+                    <p className="mt-0.5 text-sm font-semibold text-foreground">
+                      {previewSubject}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">
+                      Title
+                    </p>
+                    <p className="mt-0.5 text-sm font-semibold text-primary">
+                      {title.trim() || "(Notification title)"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">
+                      Message
+                    </p>
+                    <p className="mt-0.5 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                      {message.trim() || "(Notification message)"}
+                    </p>
+                  </div>
+                  {attachment && (
+                    <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-card px-3 py-2">
+                      <IconFileZip size={14} className="shrink-0 text-primary" />
+                      <span className="truncate text-xs font-medium text-foreground">
+                        {attachment.name}
+                      </span>
+                      <span className="ml-auto shrink-0 text-[10px] text-muted">
+                        {(attachment.size / 1024 / 1024).toFixed(2)} MB
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
       </div>
 
       {/* Confirmation modal */}

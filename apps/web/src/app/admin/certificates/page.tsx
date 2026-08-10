@@ -73,6 +73,16 @@ type CertificateTemplate = {
   hasPdfUpload?: boolean;
 };
 
+// The API stores a relative on-disk path (forward- or backslash-separated, and
+// for legacy uploads may contain spaces/commas). For the browser we must serve
+// it under /uploads/ with a proper URL: backslashes -> forward slashes and the
+// whole thing percent-encoded so the iframe / Open-PDF link actually fetches the
+// file instead of 404-ing on malformed paths.
+function uploadsPublicUrl(relative?: string | null): string {
+  if (!relative) return "";
+  return encodeURI(`/uploads/${relative.replace(/\\/g, "/")}`);
+}
+
 const defaultTemplateValues = {
   name: "",
   primaryColor: "#2551d9",
@@ -95,7 +105,7 @@ const defaultTemplateValues = {
   fontFamily: "helvetica",
   titleFontSize: 28,
   nameFontSize: 22,
-  pdfTemplateType: "jsPdf",
+  pdfTemplateType: "uploadedPdf",
 };
 
 const defaultPdfFields: PlaceholderField[] = [
@@ -132,6 +142,24 @@ const defaultPdfFields: PlaceholderField[] = [
     align: "left",
   },
 ];
+
+// Sample values used to preview how real field data will look/fit once a
+// certificate is actually issued. Falls back to "Sample <key>" for any
+// custom placeholder keys a template author might add.
+const SAMPLE_FIELD_DATA: Record<string, string> = {
+  studentName: "Jordan Smith",
+  courseName: "Web Development Bootcamp",
+  date: new Date().toLocaleDateString("en-IN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }),
+  certificateNumber: "CERT-2026-00123",
+};
+
+function getSampleFieldValue(key: string): string {
+  return SAMPLE_FIELD_DATA[key] ?? `Sample ${key}`;
+}
 
 // The API stores pdfTemplateType="uploadedPdf" when a PDF has been uploaded.
 // `hasPdfUpload` is not returned by the API, so derive it from the type + URL.
@@ -416,6 +444,9 @@ function TemplatesTab() {
   const [selectedFieldIndex, setSelectedFieldIndex] = useState<number | null>(
     null,
   );
+  // Shows rendered sample data (name/course/date/etc.) at each field's real
+  // position/size/color instead of just a bare crosshair + key label.
+  const [showSampleText, setShowSampleText] = useState(true);
   const previewRef = useRef<HTMLDivElement | null>(null);
 
   // Ignore a page size that belongs to a previously previewed file.
@@ -472,7 +503,7 @@ function TemplatesTab() {
     setForm(defaultTemplateValues);
     setEditingId(null);
     setShowForm(true);
-    setPdfTemplateFields([]);
+    setPdfTemplateFields(defaultPdfFields);
     setPdfFile(null);
     setPdfPreviewUrl("");
     setPdfPageSize(null);
@@ -513,7 +544,7 @@ function TemplatesTab() {
       fontFamily: fresh.fontFamily,
       titleFontSize: fresh.titleFontSize,
       nameFontSize: fresh.nameFontSize,
-      pdfTemplateType: fresh.pdfTemplateType || "jsPdf",
+      pdfTemplateType: "uploadedPdf",
     });
     setEditingId(fresh.id);
     setShowForm(true);
@@ -521,7 +552,7 @@ function TemplatesTab() {
     setPdfFile(null);
     setPdfPreviewUrl(
       fresh.pdfTemplateType === "uploadedPdf" && fresh.pdfTemplateUrl
-        ? `/uploads/${fresh.pdfTemplateUrl}`
+        ? uploadsPublicUrl(fresh.pdfTemplateUrl)
         : "",
     );
     setPdfPageSize(null);
@@ -548,18 +579,42 @@ function TemplatesTab() {
         ...form,
         footerText: form.footerText || null,
         logoUrl: form.logoUrl || null,
-        pdfTemplateType: form.pdfTemplateType || "jsPdf",
-        pdfTemplateFields:
-          form.pdfTemplateType === "uploadedPdf" ? pdfTemplateFields : [],
+        pdfTemplateType: "uploadedPdf",
+        pdfTemplateFields,
       };
 
-      if (editingId) {
-        await api.put(`/api/admin/certificate-templates/${editingId}`, payload);
-        toast.success("Template updated");
+      let templateId = editingId;
+      if (templateId) {
+        await api.put(
+          `/api/admin/certificate-templates/${templateId}`,
+          payload,
+        );
       } else {
-        await api.post("/api/admin/certificate-templates", payload);
-        toast.success("Template created");
+        const res = await api.post<{ template: CertificateTemplate }>(
+          "/api/admin/certificate-templates",
+          payload,
+        );
+        templateId = res.template.id;
       }
+
+      // A picked PDF is only persisted via /upload-pdf — upload it as part of
+      // Save so a file selected but not separately "Uploaded" isn't silently
+      // dropped (the uploaded template then takes effect on generated certs).
+      if (form.pdfTemplateType === "uploadedPdf" && pdfFile && templateId) {
+        const fd = new FormData();
+        fd.append("pdf", pdfFile);
+        fd.append("pdfTemplateFields", JSON.stringify(pdfTemplateFields));
+        const up = await api.post<{ template: CertificateTemplate }>(
+          `/api/admin/certificate-templates/${templateId}/upload-pdf`,
+          fd,
+        );
+        if (up.template?.pdfTemplateUrl) {
+          setPdfPreviewUrl(uploadsPublicUrl(up.template.pdfTemplateUrl));
+        }
+        setPdfFile(null);
+      }
+
+      toast.success(editingId ? "Template updated" : "Template created");
       setShowForm(false);
       fetchTemplates();
     } catch (err) {
@@ -605,7 +660,7 @@ function TemplatesTab() {
       setPdfFile(null);
       setForm((f) => ({ ...f, pdfTemplateType: "uploadedPdf" }));
       if (res.template?.pdfTemplateUrl) {
-        setPdfPreviewUrl(`/uploads/${res.template.pdfTemplateUrl}`);
+        setPdfPreviewUrl(uploadsPublicUrl(res.template.pdfTemplateUrl));
       }
       fetchTemplates();
     } catch (err) {
@@ -622,7 +677,7 @@ function TemplatesTab() {
         `/api/admin/certificate-templates/${templateId}/pdf-template`,
       );
       toast.success("PDF template removed");
-      setForm((f) => ({ ...f, pdfTemplateType: "jsPdf" }));
+      setForm((f) => ({ ...f, pdfTemplateType: "uploadedPdf" }));
       setPdfPreviewUrl("");
       setPdfPageSize(null);
       setSelectedFieldIndex(null);
@@ -641,7 +696,7 @@ function TemplatesTab() {
       const template = templates.find((t) => t.id === editingId);
       setPdfPreviewUrl(
         template?.pdfTemplateType === "uploadedPdf" && template.pdfTemplateUrl
-          ? `/uploads/${template.pdfTemplateUrl}`
+          ? uploadsPublicUrl(template.pdfTemplateUrl)
           : "",
       );
     }
@@ -812,53 +867,61 @@ function TemplatesTab() {
                 <span className="text-[10px] text-muted ml-1">Colors</span>
               </div>
 
-              {/* Certificate Preview Mockup */}
-              <div
-                className="mt-3 rounded-lg border border-border/60 p-3 text-center"
-                style={{
-                  backgroundColor: template.backgroundColor,
-                  border: template.showBorder
-                    ? `${template.borderWidth}px solid ${template.borderColor}`
-                    : `${template.borderWidth}px solid ${template.borderColor}`,
-                  borderRadius: template.borderRadius,
-                }}
-              >
-                <p
-                  className="text-[10px] font-bold tracking-wider"
-                  style={{
-                    color: template.textColor,
-                    fontFamily:
-                      template.fontFamily === "times"
-                        ? "serif"
-                        : template.fontFamily === "courier"
-                          ? "monospace"
-                          : "sans-serif",
-                  }}
-                >
-                  {template.title}
-                </p>
-                <p className="text-[8px] text-muted-foreground mt-1">
-                  {template.subtitle}
-                </p>
-                <p
-                  className="text-[11px] font-bold mt-1"
-                  style={{
-                    color: template.textColor,
-                    fontFamily:
-                      template.fontFamily === "times"
-                        ? "serif"
-                        : template.fontFamily === "courier"
-                          ? "monospace"
-                          : "sans-serif",
-                  }}
-                >
-                  Student Name
-                </p>
+            {/* Certificate Preview */}
+              {hasUploadedPdf(template) ? (
+                <div className="mt-3 relative w-full aspect-[1.414/1] min-h-[180px] overflow-hidden rounded-lg border border-border/60 bg-white">
+                  <iframe
+                    src={`${uploadsPublicUrl(template.pdfTemplateUrl)}#toolbar=0&view=Fit`}
+                    title={`${template.name} preview`}
+                    className="pointer-events-none absolute inset-0 h-full w-full"
+                  />
+                </div>
+              ) : (
                 <div
-                  className="h-px w-16 mx-auto mt-1"
-                  style={{ backgroundColor: template.primaryColor }}
-                />
-              </div>
+                  className="mt-3 rounded-lg border border-border/60 p-6 text-center min-h-[180px] flex flex-col items-center justify-center"
+                  style={{
+                    backgroundColor: template.backgroundColor,
+                    border: `${template.borderWidth}px solid ${template.borderColor}`,
+                    borderRadius: template.borderRadius,
+                  }}
+                >
+                  <p
+                    className="text-sm font-bold tracking-wider"
+                    style={{
+                      color: template.textColor,
+                      fontFamily:
+                        template.fontFamily === "times"
+                          ? "serif"
+                          : template.fontFamily === "courier"
+                            ? "monospace"
+                            : "sans-serif",
+                    }}
+                  >
+                    {template.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    {template.subtitle}
+                  </p>
+                  <p
+                    className="text-base font-bold mt-2"
+                    style={{
+                      color: template.textColor,
+                      fontFamily:
+                        template.fontFamily === "times"
+                          ? "serif"
+                          : template.fontFamily === "courier"
+                            ? "monospace"
+                            : "sans-serif",
+                    }}
+                  >
+                    Student Name
+                  </p>
+                  <div
+                    className="h-px w-24 mx-auto mt-2"
+                    style={{ backgroundColor: template.primaryColor }}
+                  />
+                </div>
+              )}
 
               {!template.isDefault && (
                 <button
@@ -876,7 +939,7 @@ function TemplatesTab() {
       {/* Template Form Modal */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-card rounded-2xl border border-border shadow-xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden">
+          <div className="bg-card rounded-2xl border border-border shadow-xl w-full max-w-[1600px] max-h-[92vh] flex flex-col overflow-hidden">
             <div className="p-6 border-b border-border flex items-start justify-between gap-4 shrink-0">
               <div>
                 <h2 className="text-lg font-bold text-foreground">
@@ -913,581 +976,266 @@ function TemplatesTab() {
                 </div>
 
                 {/* Colors - Section 1: Core Colors */}
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-3">
-                    Colors
-                  </p>
-                  <div className="grid grid-cols-2 gap-4">
-                    {(
-                      [
-                        ["primaryColor", "Primary Color"],
-                        ["secondaryColor", "Secondary Color"],
-                        ["backgroundColor", "Background Color"],
-                        ["textColor", "Text Color"],
-                        ["borderColor", "Border Color"],
-                        ["accentColor", "Accent Color"],
-                      ] as const
-                    ).map(([key, label]) => (
-                      <div key={key}>
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                          {label}
-                        </label>
-                        <div className="mt-1 flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={form[key]}
-                            onChange={(e) =>
-                              setForm((f) => ({ ...f, [key]: e.target.value }))
-                            }
-                            className="h-8 w-8 rounded border border-border cursor-pointer"
-                          />
-                          <input
-                            type="text"
-                            value={form[key]}
-                            onChange={(e) =>
-                              setForm((f) => ({ ...f, [key]: e.target.value }))
-                            }
-                            className="flex-1 rounded-lg border border-border bg-background px-2 py-1 text-xs font-mono text-foreground focus:border-primary focus:outline-none"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Layout & Style */}
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-3">
-                    Layout & Style
-                  </p>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Layout
-                      </label>
-                      <select
-                        value={form.layout}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, layout: e.target.value }))
-                        }
-                        className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-                      >
-                        <option value="classic">Classic</option>
-                        <option value="modern">Modern</option>
-                        <option value="elegant">Elegant</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Background Pattern
-                      </label>
-                      <select
-                        value={form.backgroundPattern}
-                        onChange={(e) =>
-                          setForm((f) => ({
-                            ...f,
-                            backgroundPattern: e.target.value,
-                          }))
-                        }
-                        className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-                      >
-                        <option value="none">None</option>
-                        <option value="dots">Dots</option>
-                        <option value="lines">Lines</option>
-                        <option value="corners">Corners</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Font Family
-                      </label>
-                      <select
-                        value={form.fontFamily}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, fontFamily: e.target.value }))
-                        }
-                        className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-                      >
-                        <option value="helvetica">Helvetica</option>
-                        <option value="times">Times Roman</option>
-                        <option value="courier">Courier</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Border Width (px)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="20"
-                        value={form.borderWidth}
-                        onChange={(e) =>
-                          setForm((f) => ({
-                            ...f,
-                            borderWidth: parseInt(e.target.value) || 0,
-                          }))
-                        }
-                        className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Border Radius (px)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="20"
-                        value={form.borderRadius}
-                        onChange={(e) =>
-                          setForm((f) => ({
-                            ...f,
-                            borderRadius: parseInt(e.target.value) || 0,
-                          }))
-                        }
-                        className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Title Font Size (pt)
-                      </label>
-                      <input
-                        type="number"
-                        min="12"
-                        max="48"
-                        value={form.titleFontSize}
-                        onChange={(e) =>
-                          setForm((f) => ({
-                            ...f,
-                            titleFontSize: parseInt(e.target.value) || 28,
-                          }))
-                        }
-                        className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Name Font Size (pt)
-                      </label>
-                      <input
-                        type="number"
-                        min="12"
-                        max="48"
-                        value={form.nameFontSize}
-                        onChange={(e) =>
-                          setForm((f) => ({
-                            ...f,
-                            nameFontSize: parseInt(e.target.value) || 22,
-                          }))
-                        }
-                        className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Toggle Options */}
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-3">
-                    Display Options
-                  </p>
-                  <div className="space-y-2">
-                    {(
-                      [
-                        ["showBorder", "Show Border"],
-                        ["showSignatureLine", "Show Signature Line"],
-                        ["showVerificationUrl", "Show Verification URL"],
-                      ] as const
-                    ).map(([key, label]) => (
-                      <label
-                        key={key}
-                        className="flex items-center gap-3 cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={form[key]}
-                          onChange={(e) =>
-                            setForm((f) => ({ ...f, [key]: e.target.checked }))
-                          }
-                          className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                        />
-                        <span className="text-sm text-foreground">{label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Text Content */}
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-3">
-                    Text Content
-                  </p>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Certificate Title
-                      </label>
-                      <input
-                        type="text"
-                        value={form.title}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, title: e.target.value }))
-                        }
-                        className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Subtitle
-                      </label>
-                      <input
-                        type="text"
-                        value={form.subtitle}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, subtitle: e.target.value }))
-                        }
-                        className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Footer Text (optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={form.footerText}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, footerText: e.target.value }))
-                        }
-                        placeholder="e.g., Powered by Marvel Slice"
-                        className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Logo URL (optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={form.logoUrl}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, logoUrl: e.target.value }))
-                        }
-                        placeholder="https://example.com/logo.png"
-                        className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                </div>
 
                 {/* PDF Template */}
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-3">
                     PDF Template
                   </p>
-                  <div className="flex gap-4">
-                    {[
-                      { value: "jsPdf", label: "Built-in (jsPDF)" },
-                      { value: "uploadedPdf", label: "Uploaded PDF" },
-                    ].map((opt) => (
-                      <label
-                        key={opt.value}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer transition-colors ${
-                          form.pdfTemplateType === opt.value
-                            ? "border-primary bg-primary/5 text-foreground"
-                            : "border-border bg-background text-muted-foreground hover:border-border-hover"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="pdfTemplateType"
-                          value={opt.value}
-                          checked={form.pdfTemplateType === opt.value}
-                          onChange={(e) => {
-                            setForm((f) => ({
-                              ...f,
-                              pdfTemplateType: e.target.value,
-                            }));
-                            if (
-                              e.target.value === "uploadedPdf" &&
-                              pdfTemplateFields.length === 0
-                            ) {
-                              setPdfTemplateFields(defaultPdfFields);
-                            }
-                          }}
-                          className="sr-only"
-                        />
-                        <div
-                          className={`w-3 h-3 rounded-full border-2 ${
-                            form.pdfTemplateType === opt.value
-                              ? "border-primary bg-primary"
-                              : "border-muted-foreground"
-                          }`}
-                        />
-                        <span className="text-sm">{opt.label}</span>
-                      </label>
-                    ))}
-                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Upload your certificate design as a PDF and position the
+                    dynamic fields (name, course, date, etc.) on it.
+                  </p>
 
-                  {form.pdfTemplateType === "uploadedPdf" && (
-                    <div className="mt-4 space-y-4">
-                      {/* Has PDF uploaded indicator */}
-                      {editingId &&
-                        (() => {
-                          const t = templates.find(
-                            (item) => item.id === editingId,
-                          );
-                          return (
-                            !!t &&
-                            t.pdfTemplateType === "uploadedPdf" &&
-                            !!t.pdfTemplateUrl
-                          );
-                        })() && (
-                          <div className="flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <IconCheck
-                                size={16}
-                                className="text-emerald-500"
-                              />
-                              <span className="text-sm text-foreground">
-                                PDF template uploaded
-                              </span>
-                            </div>
-                            <button
-                              onClick={() => handleRemovePdf(editingId!)}
-                              className="text-xs text-danger hover:text-danger-hover font-semibold"
-                            >
-                              Remove
-                            </button>
+                  <div className="mt-4 space-y-4">
+                    {/* Has PDF uploaded indicator */}
+                    {editingId &&
+                      (() => {
+                        const t = templates.find(
+                          (item) => item.id === editingId,
+                        );
+                        return (
+                          !!t &&
+                          t.pdfTemplateType === "uploadedPdf" &&
+                          !!t.pdfTemplateUrl
+                        );
+                      })() && (
+                        <div className="flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <IconCheck size={16} className="text-emerald-500" />
+                            <span className="text-sm text-foreground">
+                              PDF template uploaded
+                            </span>
                           </div>
-                        )}
-
-                      {/* File upload */}
-                      <div>
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                          Upload PDF File
-                        </label>
-                        <div className="mt-1 flex items-center gap-2">
-                          <input
-                            type="file"
-                            accept=".pdf"
-                            onChange={(e) =>
-                              handlePdfFileChange(e.target.files?.[0] || null)
-                            }
-                            className="flex-1 text-sm text-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-border file:text-xs file:font-semibold file:bg-background file:text-foreground hover:file:bg-card-hover"
-                          />
                           <button
-                            onClick={handleUploadPdf}
-                            disabled={!pdfFile || uploading}
-                            className="btn-primary text-xs py-2 px-4 disabled:opacity-60"
+                            onClick={() => handleRemovePdf(editingId!)}
+                            className="text-xs text-danger hover:text-danger-hover font-semibold"
                           >
-                            {uploading ? "Uploading..." : "Upload"}
+                            Remove
                           </button>
                         </div>
-                      </div>
+                      )}
 
-                      {/* Placeholder Fields Editor */}
-                      <div>
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                          Placeholder Fields
-                        </label>
-                        <p className="text-[10px] text-muted-foreground mt-0.5 mb-2">
-                          Configure position and style for each placeholder on
-                          the PDF.
-                        </p>
-                        <div className="space-y-3">
-                          {pdfTemplateFields.map((field, i) => (
-                            <div
-                              key={field.key}
-                              id={`pdf-field-${i}`}
-                              onClick={() => setSelectedFieldIndex(i)}
-                              className={`rounded-xl border bg-background p-3 cursor-pointer transition-colors ${
-                                selectedFieldIndex === i
-                                  ? "border-primary ring-1 ring-primary/30"
-                                  : "border-border hover:border-border-hover"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-mono font-bold text-foreground">
-                                  {field.key}
-                                </span>
-                                <span className="text-[9px] font-mono text-muted-foreground">
-                                  ({field.x}, {field.y})
-                                </span>
-                              </div>
-                              <div className="grid grid-cols-6 gap-2">
-                                <div>
-                                  <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
-                                    X
-                                  </label>
-                                  <input
-                                    type="number"
-                                    value={field.x}
-                                    onChange={(e) =>
-                                      setPdfTemplateFields((prev) =>
-                                        prev.map((f, j) =>
-                                          j === i
-                                            ? {
-                                                ...f,
-                                                x:
-                                                  parseInt(e.target.value) || 0,
-                                              }
-                                            : f,
-                                        ),
-                                      )
-                                    }
-                                    className="mt-0.5 w-full rounded-lg border border-border bg-background px-1.5 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
-                                    Y
-                                  </label>
-                                  <input
-                                    type="number"
-                                    value={field.y}
-                                    onChange={(e) =>
-                                      setPdfTemplateFields((prev) =>
-                                        prev.map((f, j) =>
-                                          j === i
-                                            ? {
-                                                ...f,
-                                                y:
-                                                  parseInt(e.target.value) || 0,
-                                              }
-                                            : f,
-                                        ),
-                                      )
-                                    }
-                                    className="mt-0.5 w-full rounded-lg border border-border bg-background px-1.5 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
-                                    Font Size
-                                  </label>
-                                  <input
-                                    type="number"
-                                    min="6"
-                                    max="48"
-                                    value={field.fontSize}
-                                    onChange={(e) =>
-                                      setPdfTemplateFields((prev) =>
-                                        prev.map((f, j) =>
-                                          j === i
-                                            ? {
-                                                ...f,
-                                                fontSize:
-                                                  parseInt(e.target.value) ||
-                                                  10,
-                                              }
-                                            : f,
-                                        ),
-                                      )
-                                    }
-                                    className="mt-0.5 w-full rounded-lg border border-border bg-background px-1.5 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
-                                    Color
-                                  </label>
-                                  <div className="mt-0.5 flex items-center gap-1">
-                                    <input
-                                      type="color"
-                                      value={field.color}
-                                      onChange={(e) =>
-                                        setPdfTemplateFields((prev) =>
-                                          prev.map((f, j) =>
-                                            j === i
-                                              ? { ...f, color: e.target.value }
-                                              : f,
-                                          ),
-                                        )
-                                      }
-                                      className="h-6 w-6 rounded border border-border cursor-pointer"
-                                    />
-                                    <input
-                                      type="text"
-                                      value={field.color}
-                                      onChange={(e) =>
-                                        setPdfTemplateFields((prev) =>
-                                          prev.map((f, j) =>
-                                            j === i
-                                              ? { ...f, color: e.target.value }
-                                              : f,
-                                          ),
-                                        )
-                                      }
-                                      className="flex-1 rounded-lg border border-border bg-background px-1.5 py-1 text-[10px] font-mono text-foreground focus:border-primary focus:outline-none"
-                                    />
-                                  </div>
-                                </div>
-                                <div>
-                                  <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
-                                    Align
-                                  </label>
-                                  <select
-                                    value={field.align}
-                                    onChange={(e) =>
-                                      setPdfTemplateFields((prev) =>
-                                        prev.map((f, j) =>
-                                          j === i
-                                            ? {
-                                                ...f,
-                                                align: e.target.value as
-                                                  | "left"
-                                                  | "center"
-                                                  | "right",
-                                              }
-                                            : f,
-                                        ),
-                                      )
-                                    }
-                                    className="mt-0.5 w-full rounded-lg border border-border bg-background px-1.5 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
-                                  >
-                                    <option value="left">Left</option>
-                                    <option value="center">Center</option>
-                                    <option value="right">Right</option>
-                                  </select>
-                                </div>
-                                <div>
-                                  <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
-                                    Key
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={field.key}
-                                    onChange={(e) =>
-                                      setPdfTemplateFields((prev) =>
-                                        prev.map((f, j) =>
-                                          j === i
-                                            ? { ...f, key: e.target.value }
-                                            : f,
-                                        ),
-                                      )
-                                    }
-                                    className="mt-0.5 w-full rounded-lg border border-border bg-background px-1.5 py-1 text-xs font-mono text-foreground focus:border-primary focus:outline-none"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                    {/* File upload */}
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Upload PDF File
+                      </label>
+                      <div className="mt-1 flex items-center gap-2">
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          onChange={(e) =>
+                            handlePdfFileChange(e.target.files?.[0] || null)
+                          }
+                          className="flex-1 text-sm text-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-border file:text-xs file:font-semibold file:bg-background file:text-foreground hover:file:bg-card-hover"
+                        />
+                        <button
+                          onClick={handleUploadPdf}
+                          disabled={!pdfFile || uploading}
+                          className="btn-primary text-xs py-2 px-4 disabled:opacity-60"
+                        >
+                          {uploading ? "Uploading..." : "Upload"}
+                        </button>
                       </div>
                     </div>
-                  )}
+
+                    {/* Placeholder Fields Editor */}
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Placeholder Fields
+                      </label>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 mb-2">
+                        Configure position and style for each placeholder on the
+                        PDF.
+                      </p>
+                      <div className="space-y-3">
+                        {pdfTemplateFields.map((field, i) => (
+                          <div
+                            key={field.key}
+                            id={`pdf-field-${i}`}
+                            onClick={() => setSelectedFieldIndex(i)}
+                            className={`rounded-xl border bg-background p-3 cursor-pointer transition-colors ${
+                              selectedFieldIndex === i
+                                ? "border-primary ring-1 ring-primary/30"
+                                : "border-border hover:border-border-hover"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-mono font-bold text-foreground">
+                                {field.key}
+                              </span>
+                              <span className="text-[9px] font-mono text-muted-foreground">
+                                ({field.x}, {field.y})
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-6 gap-2">
+                              <div>
+                                <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+                                  X
+                                </label>
+                                <input
+                                  type="number"
+                                  value={field.x}
+                                  onChange={(e) =>
+                                    setPdfTemplateFields((prev) =>
+                                      prev.map((f, j) =>
+                                        j === i
+                                          ? {
+                                              ...f,
+                                              x: parseInt(e.target.value) || 0,
+                                            }
+                                          : f,
+                                      ),
+                                    )
+                                  }
+                                  className="mt-0.5 w-full rounded-lg border border-border bg-background px-1.5 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+                                  Y
+                                </label>
+                                <input
+                                  type="number"
+                                  value={field.y}
+                                  onChange={(e) =>
+                                    setPdfTemplateFields((prev) =>
+                                      prev.map((f, j) =>
+                                        j === i
+                                          ? {
+                                              ...f,
+                                              y: parseInt(e.target.value) || 0,
+                                            }
+                                          : f,
+                                      ),
+                                    )
+                                  }
+                                  className="mt-0.5 w-full rounded-lg border border-border bg-background px-1.5 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+                                  Font Size
+                                </label>
+                                <input
+                                  type="number"
+                                  min="6"
+                                  max="48"
+                                  value={field.fontSize}
+                                  onChange={(e) =>
+                                    setPdfTemplateFields((prev) =>
+                                      prev.map((f, j) =>
+                                        j === i
+                                          ? {
+                                              ...f,
+                                              fontSize:
+                                                parseInt(e.target.value) || 10,
+                                            }
+                                          : f,
+                                      ),
+                                    )
+                                  }
+                                  className="mt-0.5 w-full rounded-lg border border-border bg-background px-1.5 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+                                  Color
+                                </label>
+                                <div className="mt-0.5 flex items-center gap-1">
+                                  <input
+                                    type="color"
+                                    value={field.color}
+                                    onChange={(e) =>
+                                      setPdfTemplateFields((prev) =>
+                                        prev.map((f, j) =>
+                                          j === i
+                                            ? { ...f, color: e.target.value }
+                                            : f,
+                                        ),
+                                      )
+                                    }
+                                    className="h-6 w-6 rounded border border-border cursor-pointer"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={field.color}
+                                    onChange={(e) =>
+                                      setPdfTemplateFields((prev) =>
+                                        prev.map((f, j) =>
+                                          j === i
+                                            ? { ...f, color: e.target.value }
+                                            : f,
+                                        ),
+                                      )
+                                    }
+                                    className="flex-1 rounded-lg border border-border bg-background px-1.5 py-1 text-[10px] font-mono text-foreground focus:border-primary focus:outline-none"
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+                                  Align
+                                </label>
+                                <select
+                                  value={field.align}
+                                  onChange={(e) =>
+                                    setPdfTemplateFields((prev) =>
+                                      prev.map((f, j) =>
+                                        j === i
+                                          ? {
+                                              ...f,
+                                              align: e.target.value as
+                                                | "left"
+                                                | "center"
+                                                | "right",
+                                            }
+                                          : f,
+                                      ),
+                                    )
+                                  }
+                                  className="mt-0.5 w-full rounded-lg border border-border bg-background px-1.5 py-1 text-xs text-foreground focus:border-primary focus:outline-none"
+                                >
+                                  <option value="left">Left</option>
+                                  <option value="center">Center</option>
+                                  <option value="right">Right</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+                                  Key
+                                </label>
+                                <input
+                                  type="text"
+                                  value={field.key}
+                                  onChange={(e) =>
+                                    setPdfTemplateFields((prev) =>
+                                      prev.map((f, j) =>
+                                        j === i
+                                          ? { ...f, key: e.target.value }
+                                          : f,
+                                      ),
+                                    )
+                                  }
+                                  className="mt-0.5 w-full rounded-lg border border-border bg-background px-1.5 py-1 text-xs font-mono text-foreground focus:border-primary focus:outline-none"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Right: Live Preview Panel */}
-              <div className="shrink-0 lg:w-[420px] border-t lg:border-t-0 lg:border-l border-border bg-background/40 p-6 overflow-y-auto">
+              <div className="shrink-0 lg:w-[920px] border-t lg:border-t-0 lg:border-l border-border bg-background/40 p-6 overflow-y-auto">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
                   Preview
                 </p>
-                {form.pdfTemplateType === "uploadedPdf" && pdfPreviewUrl ? (
+                {pdfPreviewUrl ? (
                   <div className="space-y-3">
                     <p className="text-[10px] text-muted-foreground">
                       Crosshair markers show where each field lands. Click a
@@ -1495,21 +1243,94 @@ function TemplatesTab() {
                       to move the selected field. Coordinates are in PDF points
                       from the top-left.
                     </p>
+
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="flex items-center gap-1.5 cursor-pointer text-[10px] font-semibold text-muted-foreground">
+                        <input
+                          type="checkbox"
+                          checked={showSampleText}
+                          onChange={(e) => setShowSampleText(e.target.checked)}
+                          className="h-3.5 w-3.5 rounded border-border text-primary focus:ring-primary"
+                        />
+                        Show sample text
+                      </label>
+                      {pdfPreviewUrl.startsWith("/uploads/") && (
+                        <a
+                          href={pdfPreviewUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-secondary text-[10px] py-1 px-2.5 inline-flex items-center gap-1"
+                          title="View the uploaded certificate at full size in a new tab"
+                        >
+                          Open PDF
+                        </a>
+                      )}
+                    </div>
+
                     <div
-                      ref={previewRef}
-                      onClick={handlePreviewClick}
-                      className="relative w-full overflow-hidden rounded-xl border border-border bg-background"
-                      style={{
-                        aspectRatio: pageSize
-                          ? `${pageSize.width} / ${pageSize.height}`
-                          : "595 / 842",
-                      }}
-                    >
+                       ref={previewRef}
+                       onClick={handlePreviewClick}
+                       className="relative w-full max-h-[75vh] mx-auto overflow-hidden rounded-xl border border-border bg-white shadow-sm"
+                       style={{
+                         aspectRatio: pageSize
+                           ? `${pageSize.width} / ${pageSize.height}`
+                           : "595 / 842",
+                          // let height drive width when the page is portrait and
+                         // the panel is wide enough that width-first sizing
+                          // would overflow max-h
+                         width: pageSize && pageSize.height > pageSize.width
+                            ? "auto"
+                            : "100%",
+                          height: pageSize && pageSize.height > pageSize.width
+                            ? "75vh"
+                            : "auto",
+                       }}
+                     >
                       <iframe
-                        src={`${pdfPreviewUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                        src={`${pdfPreviewUrl}#toolbar=0&view=Fit`}
                         title="Certificate PDF preview"
                         className="pointer-events-none absolute inset-0 h-full w-full"
                       />
+                      {pdfPreviewUrl.startsWith("/uploads/") && (
+                        <p className="absolute bottom-1.5 right-2 z-10 max-w-[70%] truncate rounded bg-black/70 px-1.5 py-0.5 text-[9px] font-mono text-white">
+                          {decodeURIComponent(
+                            pdfPreviewUrl.split("/").pop() || "",
+                          )}
+                        </p>
+                      )}
+                      {showSampleText && (
+                        <svg
+                          className="pointer-events-none absolute inset-0 h-full w-full"
+                          viewBox={`0 0 ${pageW} ${pageH}`}
+                          preserveAspectRatio="none"
+                        >
+                          {pdfTemplateFields.map((field, i) => (
+                            <text
+                              key={`sample-${field.key}-${i}`}
+                              x={field.x}
+                              y={field.y}
+                              fontSize={field.fontSize}
+                              fill={field.color}
+                              textAnchor={
+                                field.align === "center"
+                                  ? "middle"
+                                  : field.align === "right"
+                                    ? "end"
+                                    : "start"
+                              }
+                              fontFamily={
+                                form.fontFamily === "times"
+                                  ? "Times New Roman, serif"
+                                  : form.fontFamily === "courier"
+                                    ? "Courier New, monospace"
+                                    : "Helvetica, Arial, sans-serif"
+                              }
+                            >
+                              {getSampleFieldValue(field.key)}
+                            </text>
+                          ))}
+                        </svg>
+                      )}
                       {pdfTemplateFields.map((field, i) => {
                         const selected = selectedFieldIndex === i;
                         return (
@@ -1557,89 +1378,9 @@ function TemplatesTab() {
                       })}
                     </div>
                   </div>
-                ) : form.pdfTemplateType === "uploadedPdf" ? (
+                ) : (
                   <div className="rounded-xl border border-dashed border-border/60 p-10 text-center text-xs text-muted-foreground">
                     Select a PDF file and click Upload to preview its layout.
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-border/60 p-5">
-                    <div
-                      className="rounded-lg p-8 text-center"
-                      style={{
-                        backgroundColor: form.backgroundColor,
-                        border: form.showBorder
-                          ? `${form.borderWidth}px solid ${form.borderColor}`
-                          : "none",
-                        borderRadius: form.borderRadius,
-                      }}
-                    >
-                      <div
-                        className="h-0.5 w-16 mx-auto mb-3"
-                        style={{ backgroundColor: form.primaryColor }}
-                      />
-                      <p
-                        className="font-bold tracking-wider break-words"
-                        style={{
-                          color: form.textColor,
-                          fontSize: form.titleFontSize,
-                          fontFamily:
-                            form.fontFamily === "times"
-                              ? "serif"
-                              : form.fontFamily === "courier"
-                                ? "monospace"
-                                : "sans-serif",
-                        }}
-                      >
-                        {form.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {form.subtitle}
-                      </p>
-                      <p
-                        className="font-bold mt-3 break-words"
-                        style={{
-                          color: form.textColor,
-                          fontSize: form.nameFontSize,
-                          fontFamily:
-                            form.fontFamily === "times"
-                              ? "serif"
-                              : form.fontFamily === "courier"
-                                ? "monospace"
-                                : "sans-serif",
-                        }}
-                      >
-                        {"<student name>"}
-                      </p>
-                      <div
-                        className="h-px w-20 mx-auto mt-1"
-                        style={{ backgroundColor: form.primaryColor }}
-                      />
-                      <p className="text-xs text-muted-foreground mt-2">
-                        has successfully completed the course
-                      </p>
-                      <p
-                        className="text-sm font-bold mt-1 break-words"
-                        style={{ color: form.textColor }}
-                      >
-                        Web Development Bootcamp
-                      </p>
-                      {form.showSignatureLine && (
-                        <div className="mt-3 pt-2 border-t border-gray-300">
-                          <div className="h-px w-24 mx-auto bg-gray-400" />
-                          <p className="text-[10px] text-muted-foreground mt-1">
-                            Instructor Signature
-                          </p>
-                        </div>
-                      )}
-                      {form.footerText && (
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {form.footerText}
-                        </p>
-                      )}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-3 text-center">
-                      Shown at actual font size.
-                    </p>
                   </div>
                 )}
               </div>

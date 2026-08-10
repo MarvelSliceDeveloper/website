@@ -295,8 +295,10 @@ export async function getCatalogue(userId: string) {
     where: { status: "PUBLISHED" },
     include: {
       modules: {
-        include: {
-          sessions: true,
+        select: {
+          id: true,
+          title: true,
+          _count: { select: { sessions: true } },
         },
       },
       batches: {
@@ -356,13 +358,89 @@ export async function getCatalogue(userId: string) {
       tags,
       curriculum: course.modules.map((m) => ({
         title: m.title,
-        sessions: m.sessions.length || 1,
+        sessions: m._count.sessions || 1,
       })),
       whatYouLearn: learningObjectives,
     };
   });
 
   return { courses: catalogue };
+}
+
+// GET /api/courses/:courseId — single published course for the student's
+// on-demand COURSE_DETAIL view. Lightweight (no full catalogue scan).
+export async function getCourseDetail(userId: string, courseId: string) {
+  const course = await prisma.course.findFirst({
+    where: { id: courseId, status: "PUBLISHED" },
+    include: {
+      modules: {
+        select: {
+          id: true,
+          title: true,
+          _count: { select: { sessions: true } },
+        },
+      },
+      batches: {
+        where: {
+          status: { in: ["UPCOMING", "ACTIVE"] },
+        },
+        orderBy: {
+          startDate: "asc",
+        },
+        take: 1,
+        include: {
+          instructor: {
+            select: { name: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!course) {
+    throw new AppError(404, "Course not found or not published");
+  }
+
+  const [userEnrollments, packageCourseEnrollments] = await Promise.all([
+    prisma.enrollmentRequest.findMany({ where: { userId } }),
+    prisma.packageEnrollmentCourse.findMany({
+      where: { enrollment: { userId, status: "APPROVED" } },
+      select: { courseId: true },
+    }),
+  ]);
+  const enrolledCourseIds = new Set([
+    ...userEnrollments.map((e) => e.courseId),
+    ...packageCourseEnrollments.map((p) => p.courseId),
+  ]);
+
+  const nextBatch = course.batches[0];
+  const instructorName = nextBatch?.instructor?.name || "TBD";
+  const nextBatchLabel = nextBatch
+    ? nextBatch.startDate.toLocaleDateString("en-IN", {
+        month: "short",
+        year: "numeric",
+      })
+    : "TBD";
+
+  const durationHours = course.durationMinutes
+    ? `${Math.ceil(course.durationMinutes / 60)} weeks`
+    : `${course.modules.length * 2} weeks`;
+
+  return {
+    id: course.id,
+    title: course.title,
+    thumbnail: course.thumbnailUrl || "📚",
+    duration: durationHours,
+    instructor: instructorName,
+    nextBatch: nextBatchLabel,
+    isEnrolled: enrolledCourseIds.has(course.id),
+    tags: (course.tags as string[]) || [],
+    curriculum: course.modules.map((m) => ({
+      title: m.title,
+      sessions: m._count.sessions || 1,
+    })),
+    whatYouLearn: (course.learningObjectives as string[]) || [],
+  };
 }
 
 // GET /api/courses/:courseId/content — full course content for enrolled student.

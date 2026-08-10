@@ -101,7 +101,7 @@ export default function CreateCoursePage() {
         }
       }
 
-      router.push(`/admin/courses/${course.id}`);
+      router.push(`/admin/courses/${course.slug || course.id}`);
     } catch (err: unknown) {
       toast.error(
         err instanceof Error ? err.message : "Failed to create course",

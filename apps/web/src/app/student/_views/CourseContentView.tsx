@@ -1028,7 +1028,7 @@ export default function CourseContentView({
           />
         </div>
       </div>
-      {d.modules.map((module, mIdx) => {
+      {d.modules.filter((m) => !m.isCertificationModule).map((module, mIdx) => {
         const isExpanded = expandedModules.has(module.id);
         const isActiveModule = module.id === selectedModuleId;
         const totalSeconds = module.lessons.reduce(

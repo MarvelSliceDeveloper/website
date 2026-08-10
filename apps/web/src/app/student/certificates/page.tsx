@@ -37,6 +37,17 @@ type CertificateItem = {
   } | null;
 };
 
+type ProgressDetails = {
+  totalLessons: number;
+  completedLessons: number;
+  totalQuizzes: number;
+  completedQuizzes: number;
+  totalAssignments: number;
+  completedAssignments: number;
+  isExamRequired: boolean;
+  isExamPassed: boolean;
+};
+
 type CertificatesResponse = {
   certificates: CertificateItem[];
   claimable: Array<{
@@ -45,6 +56,15 @@ type CertificatesResponse = {
     completedRecordings: number;
     progressPercent: number;
     course: NonNullable<CertificateItem["course"]>;
+    details?: ProgressDetails;
+  }>;
+  inProgress?: Array<{
+    courseId: string;
+    totalRecordings: number;
+    completedRecordings: number;
+    progressPercent: number;
+    course: NonNullable<CertificateItem["course"]>;
+    details?: ProgressDetails;
   }>;
 };
 
@@ -200,11 +220,10 @@ export default function CertificatesPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
-                    Certificates & Certification Exams
+            Certificates & Certification Exams
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-                Complete all required certification exams in your enrolled program to
-            unlock and claim your official Package Certification.
+            To claim your certificate, you must complete all quizzes, assignments, and certification exams in your course. For package-level certification, all enrolled courses in the package must be completed.
           </p>
         </div>
       </div>
@@ -441,42 +460,165 @@ export default function CertificatesPage() {
         </div>
       </section>
 
-      {data.claimable.length > 0 && (
+      {((data.inProgress && data.inProgress.length > 0) ||
+        data.claimable.length > 0) && (
         <section className="glass-card overflow-hidden">
-          <div className="border-b border-border px-6 py-4">
-            <h2 className="text-base font-semibold text-foreground">
-              Courses In Progress
+          <div className="border-b border-border px-6 py-4 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+              <IconClock className="text-primary" size={20} />
+              Courses In Progress & Requirements Checklist
             </h2>
           </div>
           <div className="p-6">
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              {data.claimable.map((item) => (
-                <div
-                  key={item.courseId}
-                  className="rounded-2xl border border-primary/20 bg-primary/5 p-5"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.14em] text-primary">
-                        In Progress
-                      </p>
-                      <h3 className="mt-1 text-lg font-semibold text-foreground">
-                        {item.course.title}
-                      </h3>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {item.course.category || "General"}
-                      </p>
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              {[...(data.claimable || []), ...(data.inProgress || [])].map(
+                (item) => {
+                  const d = item.details;
+                  const lessonsLeft = d
+                    ? Math.max(0, d.totalLessons - d.completedLessons)
+                    : 0;
+                  const quizzesLeft = d
+                    ? Math.max(0, d.totalQuizzes - d.completedQuizzes)
+                    : 0;
+                  const assignmentsLeft = d
+                    ? Math.max(0, d.totalAssignments - d.completedAssignments)
+                    : 0;
+                  const examDone = d?.isExamRequired ? d.isExamPassed : true;
+
+                  const isClaimable = item.progressPercent === 100 && examDone;
+
+                  return (
+                    <div
+                      key={item.courseId}
+                      className="rounded-2xl border border-border bg-card/60 p-5 space-y-4 shadow-sm"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <span
+                            className={`inline-block text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-md ${
+                              isClaimable
+                                ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
+                                : "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+                            }`}
+                          >
+                            {isClaimable ? "Ready to Claim" : "In Progress"}
+                          </span>
+                          <h3 className="mt-1.5 text-lg font-bold text-foreground">
+                            {item.course.title}
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            {item.course.category || "General"}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xl font-extrabold text-foreground">
+                            {item.progressPercent}%
+                          </span>
+                          <p className="text-[10px] text-muted-foreground">
+                            Complete
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="space-y-1">
+                        <div className="h-2 w-full rounded-full bg-muted/40 overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-primary to-primary-hover transition-all duration-500 rounded-full"
+                            style={{ width: `${item.progressPercent}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Requirements Checklist / Missing Items */}
+                      <div className="rounded-xl border border-border/50 bg-background/50 p-3.5 space-y-2 text-xs">
+                        <p className="font-semibold text-foreground text-[11px] uppercase tracking-wider">
+                          Remaining Requirements
+                        </p>
+                        {d ? (
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="flex items-center gap-1.5">
+                              {d.completedLessons >= d.totalLessons ? (
+                                <IconCheck size={14} className="text-emerald-500 shrink-0" />
+                              ) : (
+                                <IconX size={14} className="text-rose-500 shrink-0" />
+                              )}
+                              <span
+                                className={
+                                  d.completedLessons >= d.totalLessons
+                                    ? "text-muted-foreground"
+                                    : "text-foreground font-medium"
+                                }
+                              >
+                                Lessons ({d.completedLessons}/{d.totalLessons})
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              {d.completedQuizzes >= d.totalQuizzes ? (
+                                <IconCheck size={14} className="text-emerald-500 shrink-0" />
+                              ) : (
+                                <IconX size={14} className="text-rose-500 shrink-0" />
+                              )}
+                              <span
+                                className={
+                                  d.completedQuizzes >= d.totalQuizzes
+                                    ? "text-muted-foreground"
+                                    : "text-foreground font-medium"
+                                }
+                              >
+                                Quizzes ({d.completedQuizzes}/{d.totalQuizzes})
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              {d.completedAssignments >= d.totalAssignments ? (
+                                <IconCheck size={14} className="text-emerald-500 shrink-0" />
+                              ) : (
+                                <IconX size={14} className="text-rose-500 shrink-0" />
+                              )}
+                              <span
+                                className={
+                                  d.completedAssignments >= d.totalAssignments
+                                    ? "text-muted-foreground"
+                                    : "text-foreground font-medium"
+                                }
+                              >
+                                Assignments ({d.completedAssignments}/
+                                {d.totalAssignments})
+                              </span>
+                            </div>
+
+                            {d.isExamRequired && (
+                              <div className="flex items-center gap-1.5">
+                                {d.isExamPassed ? (
+                                  <IconCheck size={14} className="text-emerald-500 shrink-0" />
+                                ) : (
+                                  <IconX size={14} className="text-rose-500 shrink-0" />
+                                )}
+                                <span
+                                  className={
+                                    d.isExamPassed
+                                      ? "text-muted-foreground"
+                                      : "text-foreground font-medium"
+                                  }
+                                >
+                                  Exam {d.isExamPassed ? "(Passed)" : "(Pending)"}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-muted-foreground text-xs">
+                            {item.completedRecordings} of {item.totalRecordings}{" "}
+                            sessions completed.
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <span className="rounded-full border border-primary/20 bg-background/60 px-3 py-1 text-[11px] font-medium text-primary">
-                      {item.progressPercent}%
-                    </span>
-                  </div>
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    Complete all lessons and certification exams to receive your
-                    certificate.
-                  </p>
-                </div>
-              ))}
+                  );
+                },
+              )}
             </div>
           </div>
         </section>

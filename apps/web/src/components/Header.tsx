@@ -74,7 +74,7 @@ export default function Header({
     };
 
     doFetch();
-    const interval = setInterval(doFetch, 30000);
+    const interval = setInterval(doFetch, 120000);
     return () => clearInterval(interval);
   }, []);
 

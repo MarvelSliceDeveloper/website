@@ -27,6 +27,7 @@ import {
   IconShield,
   IconRefresh,
   IconAlarmSmoke,
+  IconHeartHandshake,
 } from "@tabler/icons-react";
 
 import type { NavItem, NavItemChild } from "@/components/shared/SidebarTypes";
@@ -399,6 +400,15 @@ export default function AdminSidebar({
                 }>,
               },
               {
+                label: "Refund Approvals",
+                href: "/admin/refunds/approvals",
+                icon: IconRefresh as React.ComponentType<{
+                  size?: number | string;
+                  stroke?: number | string;
+                  className?: string;
+                }>,
+              },
+              {
                 label: "Coupons",
                 href: "/admin/coupons",
                 icon: IconClipboardCheck as React.ComponentType<{
@@ -406,6 +416,12 @@ export default function AdminSidebar({
                   stroke?: number | string;
                   className?: string;
                 }>,
+              },
+              {
+                label: "Mentorship",
+                href: "/admin/mentorship",
+                icon: IconHeartHandshake,
+                unreadKey: "mentorship",
               },
             ],
           },
@@ -556,6 +572,12 @@ export default function AdminSidebar({
                 href: "/admin/assignments/review",
                 icon: IconClipboardCheck,
               },
+              {
+                label: "Mentorship",
+                href: "/admin/mentorship",
+                icon: IconHeartHandshake,
+                unreadKey: "mentorship",
+              },
             ],
           },
           {
@@ -574,11 +596,6 @@ export default function AdminSidebar({
                   },
                   { label: "Send Notification", href: "/admin/notifications/send" },
                   { label: "Support", href: "/admin/inbox/support" },
-                  {
-                    label: "Messages",
-                    href: "/admin/inbox/messages",
-                    unreadKey: "messages",
-                  },
                 ],
               },
             ],
@@ -632,7 +649,6 @@ export default function AdminSidebar({
                 icon: IconUsers,
                 children: [
                   { label: "View Users", href: "/admin/users" },
-                  { label: "Import Users", href: "/admin/users/import" },
                   { label: "Instructors", href: "/admin/instructors" },
                 ],
               },

@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import {
   syncCalendarForUser,
@@ -28,7 +28,11 @@ export const calendarController = {
       const startDate = (start as string) || defaultStart;
       const endDate = (end as string) || defaultEnd;
 
-      const events = await getEventsForUser(startDate, endDate);
+      const events = await getEventsForUser(
+        startDate,
+        endDate,
+        req.user?.userId,
+      );
       return res.status(200).json({ events });
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);

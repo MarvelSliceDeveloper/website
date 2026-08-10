@@ -12,6 +12,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  IconRefresh,
+  IconHeartHandshake,
+  IconUserPlus,
+  IconUserCheck,
+  IconCalendarEvent,
+  IconClipboardCheck,
+  IconX,
+  IconCalendar,
+  IconUser,
+} from "@tabler/icons-react";
 
 interface Ticket {
   id: string;
@@ -45,11 +56,19 @@ interface Mentor {
 }
 
 const statusColors: Record<string, string> = {
-  OPEN: "bg-warning/15 text-warning border-warning/20",
-  ASSIGNED: "bg-primary/15 text-primary-hover border-primary/20",
-  SCHEDULED: "bg-success/15 text-success border-success/20",
-  COMPLETED: "bg-muted/20 text-muted-foreground border-border",
-  CANCELLED: "bg-danger/15 text-danger border-danger/20",
+  OPEN: "bg-warning/10 text-warning border-warning/25",
+  ASSIGNED: "bg-primary/10 text-primary-hover border-primary/25",
+  SCHEDULED: "bg-success/10 text-success border-success/25",
+  COMPLETED: "bg-muted/10 text-muted-foreground border-border",
+  CANCELLED: "bg-danger/10 text-danger border-danger/25",
+};
+
+const statusDots: Record<string, string> = {
+  OPEN: "bg-warning",
+  ASSIGNED: "bg-primary",
+  SCHEDULED: "bg-success",
+  COMPLETED: "bg-muted",
+  CANCELLED: "bg-danger",
 };
 
 const statusLabels: Record<string, string> = {
@@ -59,6 +78,18 @@ const statusLabels: Record<string, string> = {
   COMPLETED: "Completed",
   CANCELLED: "Cancelled",
 };
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString();
+}
 
 export default function AdminMentorshipPage() {
   usePageTitle("Mentorship");
@@ -73,7 +104,6 @@ export default function AdminMentorshipPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const [filter, setFilter] = useState<string>("all");
 
   const fetchData = async () => {
     try {
@@ -104,173 +134,197 @@ export default function AdminMentorshipPage() {
     Promise.resolve().then(() => fetchData());
   }, []);
 
-  const filteredTickets =
-    filter === "all" ? tickets : tickets.filter((t) => t.status === filter);
+  const visibleTickets = tickets;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <AdminPageHeader
         title="Mentorship Management"
         description="Manage 1-on-1 mentorship requests and assign mentors to students"
         breadcrumbs={[{ label: "Mentorship", href: "/admin/mentorship" }]}
         action={
-          <button onClick={fetchData} className="btn-secondary">
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-            Refresh
+          <button
+            onClick={fetchData}
+            className="btn-secondary text-xs py-2 flex items-center gap-1.5"
+          >
+            <IconRefresh size={14} /> Refresh
           </button>
         }
       />
 
-      <div className="grid grid-cols-2 gap-4 xl:grid-cols-5">
-        <StatCard label="Total" value={stats.total} color="bg-primary" />
-        <StatCard label="Pending" value={stats.open} color="bg-warning" />
-        <StatCard label="Assigned" value={stats.assigned} color="bg-accent" />
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+        <StatCard
+          label="Total Requests"
+          value={stats.total}
+          icon={<IconHeartHandshake size={20} stroke={1.5} />}
+          color="text-primary"
+          chip="bg-primary/15 text-primary border-primary/25"
+          hover="hover:border-primary/50"
+        />
+        <StatCard
+          label="Pending Review"
+          value={stats.open}
+          icon={<IconUserPlus size={20} stroke={1.5} />}
+          color="text-warning"
+          chip="bg-warning/15 text-warning border-warning/25"
+          hover="hover:border-warning/50"
+        />
+        <StatCard
+          label="Mentor Assigned"
+          value={stats.assigned}
+          icon={<IconUserCheck size={20} stroke={1.5} />}
+          color="text-indigo-500"
+          chip="bg-indigo-500/15 text-indigo-500 border-indigo-500/25"
+          hover="hover:border-indigo-500/50"
+        />
         <StatCard
           label="Scheduled"
           value={stats.scheduled}
-          color="bg-success"
+          icon={<IconCalendarEvent size={20} stroke={1.5} />}
+          color="text-success"
+          chip="bg-success/15 text-success border-success/25"
+          hover="hover:border-success/50"
         />
-        <StatCard label="Completed" value={stats.completed} color="bg-muted" />
+        <StatCard
+          label="Completed"
+          value={stats.completed}
+          icon={<IconClipboardCheck size={20} stroke={1.5} />}
+          color="text-muted-foreground"
+          chip="bg-muted/15 text-muted-foreground border-border"
+          hover="hover:border-border/60"
+        />
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {[
-          { key: "all", label: "All Requests" },
-          { key: "OPEN", label: "Pending Review" },
-          { key: "ASSIGNED", label: "Assigned" },
-          { key: "SCHEDULED", label: "Scheduled" },
-          { key: "COMPLETED", label: "Completed" },
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setFilter(tab.key)}
-            className={`rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
-              filter === tab.key
-                ? "border-primary/30 bg-primary/20 text-primary-hover"
-                : "border-border bg-card text-muted hover:bg-card-hover hover:text-foreground"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="glass-card overflow-hidden">
-        <div className="border-b border-border px-6 py-4">
-          <h2 className="text-base font-semibold text-foreground">
-            Mentorship Requests ({filteredTickets.length})
+      {/* Requests Table */}
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <h2 className="text-sm font-semibold text-foreground">
+            Mentorship Requests
+            <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">
+              {visibleTickets.length}
+            </span>
           </h2>
         </div>
 
         {isLoading ? (
-          <div className="p-8 space-y-4">
+          <div className="space-y-3 p-6">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-16 rounded-lg bg-border animate-pulse"
+                className="h-16 animate-pulse rounded-xl bg-border/60"
               />
             ))}
           </div>
-        ) : filteredTickets.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-muted">No mentorship requests found</p>
+        ) : visibleTickets.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-2 p-12 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <IconHeartHandshake size={22} stroke={1.5} />
+            </div>
+            <p className="text-sm font-medium text-foreground">
+              No mentorship requests found
+            </p>
+            <p className="text-xs text-muted">
+              New student requests will appear here automatically.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[860px]">
-              <thead className="bg-card-hover">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+              <thead>
+                <tr className="border-b border-border bg-card-hover/50">
+                  <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted">
                     Student
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                  <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted">
                     Topic
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                  <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                  <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted">
                     Mentor
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                  <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted">
                     Submitted
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-muted uppercase tracking-wider">
+                  <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-muted">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
-                {filteredTickets.map((ticket) => (
+              <tbody className="divide-y divide-border/60">
+                {visibleTickets.map((ticket) => (
                   <tr
                     key={ticket.id}
-                    className="hover:bg-card-hover/50 transition-colors"
+                    className="group transition-colors hover:bg-card-hover/40"
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-primary text-sm font-semibold">
-                          {ticket.student.name.charAt(0)}
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-sm font-bold text-white shadow-sm">
+                          {ticket.student.name.charAt(0).toUpperCase()}
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-foreground">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-foreground">
                             {ticket.student.name}
                           </p>
-                          <p className="text-xs text-muted">
+                          <p className="truncate text-xs text-muted">
                             {ticket.student.email}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm text-foreground line-clamp-1">
+                    <td className="max-w-[260px] px-5 py-4">
+                      <p className="truncate text-sm font-medium text-foreground">
                         {ticket.title}
                       </p>
-                      <p className="text-xs text-muted line-clamp-1">
-                        {ticket.description.substring(0, 50)}...
+                      <p className="truncate text-xs text-muted">
+                        {ticket.description}
                       </p>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-4">
                       <span
-                        className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${
                           statusColors[ticket.status]
                         }`}
                       >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            statusDots[ticket.status]
+                          }`}
+                        />
                         {statusLabels[ticket.status]}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-4">
                       {ticket.mentor ? (
                         <div className="flex items-center gap-2">
-                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-success/20 text-success text-xs font-semibold">
-                            {ticket.mentor.name.charAt(0)}
+                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-success/15 text-success text-[10px] font-bold">
+                            {ticket.mentor.name.charAt(0).toUpperCase()}
                           </div>
                           <span className="text-sm text-foreground">
                             {ticket.mentor.name}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-sm text-muted">Not assigned</span>
+                        <span className="text-xs text-muted">Not assigned</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-muted">
-                      {new Date(ticket.createdAt).toLocaleDateString()}
+                    <td className="px-5 py-4">
+                      <p className="text-sm text-foreground">
+                        {timeAgo(ticket.createdAt)}
+                      </p>
+                      {ticket.preferredDate && (
+                        <p className="text-[11px] text-muted">
+                          {new Date(ticket.preferredDate).toLocaleDateString()}
+                          {ticket.preferredTime && ` · ${ticket.preferredTime}`}
+                        </p>
+                      )}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-5 py-4 text-right">
                       <button
                         onClick={() => setSelectedTicket(ticket)}
-                        className="text-sm font-medium text-primary hover:text-primary-hover transition-colors"
+                        className="rounded-lg border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 cursor-pointer"
                       >
                         Manage
                       </button>
@@ -299,19 +353,37 @@ export default function AdminMentorshipPage() {
 function StatCard({
   label,
   value,
+  icon,
   color,
+  chip,
+  hover,
 }: {
   label: string;
   value: number;
+  icon: React.ReactNode;
   color: string;
+  chip: string;
+  hover: string;
 }) {
   return (
-    <div className="border border-border bg-card p-4">
-      <div className={`mb-3 h-1 w-full rounded-full ${color}`} />
-      <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted">
-        {label}
-      </p>
-      <p className="mt-1 text-2xl font-bold text-foreground">{value}</p>
+    <div
+      className={`rounded-2xl border border-border bg-card p-4 transition-all duration-300 ${hover}`}
+    >
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+            {label}
+          </p>
+          <p className={`mt-1.5 text-2xl font-extrabold tracking-tight ${color}`}>
+            {value}
+          </p>
+        </div>
+        <div
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${chip}`}
+        >
+          {icon}
+        </div>
+      </div>
     </div>
   );
 }
@@ -422,30 +494,67 @@ function TicketManageModal({
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-2xl rounded-xl border border-border bg-card p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-2xl rounded-2xl border border-border bg-card shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-foreground">
-            Manage Mentorship Request
-          </h2>
-          <p className="text-sm text-muted mt-1">
-            From: {ticket.student.name} ({ticket.student.email})
-          </p>
+        <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-base font-bold text-white shadow-sm">
+              {ticket.student.name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-foreground">
+                {ticket.student.name}
+              </h2>
+              <p className="text-xs text-muted">{ticket.student.email}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${
+                statusColors[ticket.status]
+              }`}
+            >
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${statusDots[ticket.status]}`}
+              />
+              {statusLabels[ticket.status]}
+            </span>
+            <button
+              onClick={onClose}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-card-hover hover:text-foreground cursor-pointer"
+              aria-label="Close"
+            >
+              <IconX size={18} />
+            </button>
+          </div>
         </div>
 
-        {/* Ticket Details */}
-        <div className="mb-6 p-4 bg-card-hover rounded-lg">
-          <h3 className="text-sm font-medium text-foreground mb-2">
-            {ticket.title}
-          </h3>
-          <p className="text-sm text-muted">{ticket.description}</p>
-          {ticket.preferredDate && (
-            <p className="text-xs text-muted mt-2">
-              Preferred: {new Date(ticket.preferredDate).toLocaleDateString()}
-              {ticket.preferredTime && ` (${ticket.preferredTime})`}
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {/* Ticket Details */}
+          <div className="mb-6 rounded-xl border border-border bg-card-hover/40 p-4">
+            <p className="text-sm font-semibold text-foreground mb-1.5">
+              {ticket.title}
             </p>
-          )}
-        </div>
+            <p className="text-sm leading-relaxed text-muted">
+              {ticket.description}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {ticket.preferredDate && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs text-foreground">
+                  <IconCalendar size={13} className="text-muted" />
+                  {new Date(ticket.preferredDate).toLocaleDateString()}
+                  {ticket.preferredTime && ` · ${ticket.preferredTime}`}
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-xs text-muted">
+                <IconUser size={13} />
+                {ticket.mentor
+                  ? `Mentor: ${ticket.mentor.name}`
+                  : "No mentor assigned yet"}
+              </span>
+            </div>
+          </div>
 
         {/* Actions */}
         <div className="space-y-6">
@@ -583,28 +692,21 @@ function TicketManageModal({
               <button
                 onClick={handleComplete}
                 disabled={isSubmitting}
-                className="flex-1 rounded-lg bg-success px-4 py-2 text-sm font-medium text-white hover:bg-success/90 disabled:opacity-50 transition-colors"
+                className="flex-1 rounded-lg bg-success px-4 py-2 text-sm font-medium text-white hover:bg-success/90 disabled:opacity-50 transition-colors cursor-pointer"
               >
                 Mark Complete
               </button>
               <button
                 onClick={handleCancel}
                 disabled={isSubmitting}
-                className="flex-1 rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white hover:bg-danger/90 disabled:opacity-50 transition-colors"
+                className="flex-1 rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white hover:bg-danger/90 disabled:opacity-50 transition-colors cursor-pointer"
               >
                 Cancel Request
               </button>
             </div>
           )}
+          </div>
         </div>
-
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="mt-6 w-full rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-card-hover transition-colors"
-        >
-          Close
-        </button>
       </div>
     </div>
   );

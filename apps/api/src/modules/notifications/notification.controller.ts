@@ -133,18 +133,26 @@ export const notificationController = {
 
       if (
         !targetType ||
-        !["ALL_USERS", "BATCH", "COURSE", "INTERN", "INTERN_FIELD"].includes(
-          targetType,
-        )
+        ![
+          "ALL_USERS",
+          "BATCH",
+          "COURSE",
+          "INTERN",
+          "INTERN_FIELD",
+          "INSTRUCTORS",
+          "STUDENTS",
+        ].includes(targetType)
       ) {
         return res.status(400).json({
           error:
-            "targetType must be ALL_USERS, BATCH, COURSE, INTERN, or INTERN_FIELD",
+            "targetType must be ALL_USERS, BATCH, COURSE, INTERN, INTERN_FIELD, INSTRUCTORS, or STUDENTS",
         });
       }
       if (
         targetType !== "ALL_USERS" &&
         targetType !== "INTERN" &&
+        targetType !== "INSTRUCTORS" &&
+        targetType !== "STUDENTS" &&
         (!targetIds || !Array.isArray(targetIds) || targetIds.length === 0)
       ) {
         return res.status(400).json({

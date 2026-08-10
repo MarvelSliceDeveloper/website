@@ -14,7 +14,7 @@ import { paginate, PaginationParams } from "../../utils/paginate";
 import { emailService } from "../../services/email.service";
 import { authService } from "../auth/auth.service";
 
-function getRazorpayInstance() {
+export function getRazorpayInstance() {
   return new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET,

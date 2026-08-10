@@ -17,6 +17,7 @@ const superAdminPrefixes = [
   "/admin/maintenance",
   "/admin/session-management",
   "/admin/users/login-history",
+  "/admin/refunds/approvals",
 ];
 
 const bypassRoutes = [

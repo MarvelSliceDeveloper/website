@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { usePageTitle } from "@/lib/use-page-title";
 import { IconPackage, IconPlus, IconEye, IconTrash } from "@tabler/icons-react";
+import { AdminWorkflowGuide } from "@/components/admin/AdminWorkflowGuide";
 
 type Package = {
   id: string;
@@ -82,7 +83,7 @@ export default function AdminPackagesPage() {
 
   return (
     <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
-<AdminPageHeader
+      <AdminPageHeader
         title="Packages"
         description="Create and manage course bundles for students."
         breadcrumbs={[
@@ -98,6 +99,8 @@ export default function AdminPackagesPage() {
           </Link>
         }
       />
+
+      <AdminWorkflowGuide activeStep={2} />
 
       <FilterTabs
         tabs={[

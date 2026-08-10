@@ -23,6 +23,7 @@ import type { DataTableColumn } from "@/components/admin/DataTable";
 import { TableSkeleton } from "@/components/admin/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SearchInput } from "@/components/ui/SearchInput";
+import { AdminWorkflowGuide } from "@/components/admin/AdminWorkflowGuide";
 
 type Course = {
   id: string;
@@ -205,7 +206,7 @@ function CoursesPageContent() {
           </div>
           <div className="min-w-0">
             <Link
-              href={`/admin/courses/${course.id}`}
+              href={`/admin/courses/${course.slug || course.id}`}
               className="text-sm font-semibold text-foreground hover:text-primary-hover transition-colors truncate block"
             >
               {course.title}
@@ -265,7 +266,7 @@ function CoursesPageContent() {
       render: (_, course) => (
         <div className="flex items-center justify-center gap-1">
           <Link
-            href={`/admin/courses/${course.id}`}
+            href={`/admin/courses/${course.slug || course.id}`}
             className="rounded-md border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
             title="Edit course"
           >
@@ -350,6 +351,8 @@ function CoursesPageContent() {
           </Link>
         }
       />
+
+      <AdminWorkflowGuide activeStep={1} />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <FilterTabs

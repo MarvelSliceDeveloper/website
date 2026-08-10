@@ -1,14 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
-  IconPlus,
   IconCalendar,
   IconVideo,
   IconUsersGroup,
@@ -16,6 +15,8 @@ import {
   IconUpload,
   IconFileText,
   IconDownload,
+  IconCopy,
+  IconCheck,
 } from "@tabler/icons-react";
 import {
   Select,
@@ -73,6 +74,32 @@ export default function ScheduleSessionPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [excelFile, setExcelFile] = useState<File | null>(null);
+  const [copiedBatchId, setCopiedBatchId] = useState<string | null>(null);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const copyBatchId = async (batchId: string) => {
+    if (!batchId) {
+      toast.error("Select a batch first");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(batchId);
+      setCopiedBatchId(batchId);
+      toast.success("Batch ID copied to clipboard");
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopiedBatchId(null), 2000);
+    } catch {
+      // Fallback for non-HTTPS contexts
+      const textarea = document.createElement("textarea");
+      textarea.value = batchId;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopiedBatchId(batchId);
+      toast.success("Batch ID copied to clipboard");
+    }
+  };
 
   // Fetch all batches + instructors on mount
   useEffect(() => {
@@ -520,6 +547,51 @@ export default function ScheduleSessionPage() {
           Optional columns: <strong>moduleId</strong>,{" "}
           <strong>customJoinUrl</strong>, <strong>instructorOverride</strong>
         </p>
+
+        {/* Copy Batch ID helper — Excel requires the batchId column */}
+        {!loadingBatches && batches.length > 0 && (
+          <div className="rounded-xl border border-border/60 bg-card/50 p-4 space-y-3">
+            <p className="text-xs font-medium text-foreground flex items-center gap-1.5">
+              <IconCopy size={14} className="text-primary" />
+              Copy a Batch ID
+              <span className="font-normal text-muted">
+                — paste it into the <strong>batchId</strong> column
+              </span>
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={selectedBatchId} onValueChange={setSelectedBatchId}>
+                <SelectTrigger className="w-72">
+                  <SelectValue placeholder="Select a batch..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {batches.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.name} — {b.id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <button
+                type="button"
+                onClick={() => copyBatchId(selectedBatchId)}
+                disabled={!selectedBatchId}
+                className="btn-secondary text-sm flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {copiedBatchId === selectedBatchId ? (
+                  <>
+                    <IconCheck size={14} className="text-success" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <IconCopy size={14} />
+                    {selectedBatchId ? "Copy" : "Select a batch"}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center gap-3">
           <label className="btn-secondary text-sm flex items-center gap-2 cursor-pointer">

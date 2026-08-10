@@ -13,7 +13,7 @@ async function safeGet<T>(url: string): Promise<T | null> {
   }
 }
 
-export function useUnreadCounts(pollIntervalMs = 30000): UnreadCounts {
+export function useUnreadCounts(pollIntervalMs = 120000): UnreadCounts {
   const [counts, setCounts] = useState<UnreadCounts>({});
 
   const fetchCounts = useCallback(async () => {

@@ -124,3 +124,37 @@ export function buildLessonResourceUrl(
   const protocol = req.protocol;
   return `${protocol}://${host}/uploads/modules/${courseId}/lessons/${lessonId}/${filename}`;
 }
+
+const certPdfStorage = multer.diskStorage({
+  destination: (req, _file, cb) => {
+    const courseId = req.params.courseId || "unknown";
+    const dir = path.join(
+      ensureUploadsDir("courses"),
+      courseId,
+      "certification",
+      "pdfs",
+    );
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (_req, file, cb) => {
+    const ext = extensionByMime[file.mimetype] || ".pdf";
+    cb(null, `${crypto.randomUUID()}${ext}`);
+  },
+});
+
+export const uploadCertificationPdf = multer({
+  storage: certPdfStorage,
+  fileFilter: pdfFilter,
+  limits: { fileSize: MAX_RESOURCE_BYTES },
+}).single("pdf");
+
+export function buildCertificationPdfUrl(
+  req: Request,
+  courseId: string,
+  filename: string,
+) {
+  const host = req.get("host");
+  const protocol = req.protocol;
+  return `${protocol}://${host}/uploads/courses/${courseId}/certification/pdfs/${filename}`;
+}

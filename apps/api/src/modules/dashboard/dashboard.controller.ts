@@ -1,4 +1,5 @@
 import { Response } from "express";
+import { Prisma } from "@prisma/client";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { prisma } from "../../utils/prisma";
 import { handleControllerError } from "../../utils/errors";
@@ -8,66 +9,148 @@ export const dashboardController = {
     try {
       const { from, to } = req.query;
 
-      // Build date filter for enrollment trend
-      const dateFilter: any = {};
+      const dateFilter: Record<string, Date> = {};
       if (from && typeof from === "string") {
         dateFilter.gte = new Date(from);
       }
       if (to && typeof to === "string") {
         dateFilter.lte = new Date(to);
       }
-      const hasDateFilter = dateFilter.gte || dateFilter.lte;
+      const hasDateFilter = Boolean(dateFilter.gte || dateFilter.lte);
+      const enrollmentCreatedFilter = hasDateFilter
+        ? { createdAt: dateFilter }
+        : {};
+      const paymentWhere = hasDateFilter
+        ? { createdAt: dateFilter }
+        : undefined;
 
-      // Students per course (from PackageEnrollment → PackageEnrollmentCourse)
-      const studentsPerCourse = await prisma.packageEnrollmentCourse.groupBy({
-        by: ["courseId"],
-        where: { enrollment: { status: "APPROVED" } },
-        _count: { id: true },
-        orderBy: { _count: { id: "desc" } },
-      });
+      // ── Wave 1: All independent queries in parallel ──
+      const [
+        studentsPerCourse,
+        studentsPerPackage,
+        batchDistribution,
+        userRoleDistribution,
+        recentEnrollments,
+        topCourses,
+        enrollments,
+        certificateGroups,
+        paidPayments,
+        paymentGroups,
+      ] = await Promise.all([
+        prisma.packageEnrollmentCourse.groupBy({
+          by: ["courseId"],
+          where: {
+            enrollment: { status: "APPROVED", ...enrollmentCreatedFilter },
+          },
+          _count: { id: true },
+          orderBy: { _count: { id: "desc" } },
+        }),
+        prisma.packageEnrollment.groupBy({
+          by: ["packageId"],
+          where: { status: "APPROVED", ...enrollmentCreatedFilter },
+          _count: { id: true },
+          orderBy: { _count: { id: "desc" } },
+        }),
+        prisma.batch.groupBy({
+          by: ["status"],
+          _count: { id: true },
+        }),
+        prisma.user.groupBy({
+          by: ["role"],
+          _count: { id: true },
+        }),
+        prisma.packageEnrollment.findMany({
+          take: 10,
+          orderBy: { createdAt: "desc" },
+          where: enrollmentCreatedFilter,
+          include: {
+            user: { select: { id: true, name: true, email: true } },
+            package: { select: { name: true } },
+            payment: { select: { razorpayPaymentId: true, amount: true } },
+          },
+        }),
+        prisma.packageEnrollmentCourse.groupBy({
+          by: ["courseId"],
+          where: {
+            enrollment: { status: "APPROVED", ...enrollmentCreatedFilter },
+          },
+          _count: { id: true },
+          orderBy: { _count: { id: "desc" } },
+          take: 5,
+        }),
+        prisma.packageEnrollment.findMany({
+          where: { status: "APPROVED", ...(hasDateFilter ? { createdAt: dateFilter } : {}) },
+          select: { createdAt: true },
+          orderBy: { createdAt: "asc" },
+        }),
+        prisma.certificate.groupBy({
+          by: ["courseId"],
+          where: { courseId: { not: null }, status: "ISSUED" },
+          _count: { id: true },
+        }),
+        prisma.payment.findMany({
+          where: { status: "PAID", ...(paymentWhere ?? {}) },
+          select: { amount: true, createdAt: true, packageId: true, userId: true },
+          orderBy: { createdAt: "asc" },
+        }),
+        prisma.payment.groupBy({
+          by: ["status"],
+          where: paymentWhere,
+          _count: { id: true },
+          _sum: { amount: true },
+        }),
+      ]);
 
-      // Students per package (from PackageEnrollment)
-      const studentsPerPackage = await prisma.packageEnrollment.groupBy({
-        by: ["packageId"],
-        where: { status: "APPROVED" },
-        _count: { id: true },
-        orderBy: { _count: { id: "desc" } },
-      });
-
+      // ── Wave 2: Queries that need IDs from Wave 1 ──
       const pkgIds = studentsPerPackage.map((s) => s.packageId);
-      const pkgs = await prisma.coursePackage.findMany({
-        where: { id: { in: pkgIds } },
-        select: { id: true, name: true },
-      });
+      const courseIds1 = studentsPerCourse.map((s) => s.courseId);
+      const courseIds2 = topCourses.map((t) => t.courseId);
+      const revPkgIds = [...new Set(paidPayments.map((p) => p.packageId))];
+
+      const [pkgs, courses1, courses2, revPkgs] = await Promise.all([
+        prisma.coursePackage.findMany({
+          where: { id: { in: pkgIds } },
+          select: { id: true, name: true },
+        }),
+        prisma.course.findMany({
+          where: { id: { in: courseIds1 } },
+          select: { id: true, title: true },
+        }),
+        prisma.course.findMany({
+          where: { id: { in: courseIds2 } },
+          select: { id: true, title: true },
+        }),
+        prisma.coursePackage.findMany({
+          where: { id: { in: revPkgIds } },
+          select: { id: true, name: true },
+        }),
+      ]);
+
+      // ── Resolve all data in memory (no more DB calls) ──
       const pkgMap = new Map(pkgs.map((p) => [p.id, p.name]));
+      const courseMap1 = new Map(courses1.map((c) => [c.id, c.title]));
+      const courseMap2 = new Map(courses2.map((c) => [c.id, c.title]));
+      const revPkgNameMap = new Map(revPkgs.map((p) => [p.id, p.name]));
+      const certMap = new Map(
+        certificateGroups
+          .filter((c) => c.courseId !== null)
+          .map((c) => [c.courseId as string, c._count.id]),
+      );
 
       const studentsPerPackageResolved = studentsPerPackage.map((s) => ({
         packageName: pkgMap.get(s.packageId) || "Unknown",
         count: s._count.id,
       }));
 
-      // Batch distribution
-      const batchDistribution = await prisma.batch.groupBy({
-        by: ["status"],
-        _count: { id: true },
-      });
+      const studentsPerCourseResolved = studentsPerCourse.map((s) => ({
+        courseTitle: courseMap1.get(s.courseId) || "Unknown",
+        count: s._count.id,
+      }));
 
-      // User role distribution
-      const userRoleDistribution = await prisma.user.groupBy({
-        by: ["role"],
-        _count: { id: true },
-      });
-
-      // Recent enrollments (from PackageEnrollment — the active system)
-      const recentEnrollments = await prisma.packageEnrollment.findMany({
-        take: 10,
-        orderBy: { createdAt: "desc" },
-        include: {
-          user: { select: { id: true, name: true, email: true } },
-          package: { select: { name: true } },
-          payment: { select: { razorpayPaymentId: true, amount: true } },
-        },
-      });
+      const topCoursesResolved = topCourses.map((t) => ({
+        courseTitle: courseMap2.get(t.courseId) || "Unknown",
+        enrollmentCount: t._count.id,
+      }));
 
       const recentEnrollmentsResolved = recentEnrollments.map((e) => ({
         id: e.id,
@@ -80,33 +163,12 @@ export const dashboardController = {
         appliedAt: e.createdAt,
       }));
 
-      // Top courses by enrollment count (from PackageEnrollmentCourse)
-      const topCourses = await prisma.packageEnrollmentCourse.groupBy({
-        by: ["courseId"],
-        where: { enrollment: { status: "APPROVED" } },
-        _count: { id: true },
-        orderBy: { _count: { id: "desc" } },
-        take: 5,
-      });
-
-      // Enrollment trend (monthly, cumulative) — from PackageEnrollment
-      const enrollmentWhere: any = { status: "APPROVED" };
-      if (hasDateFilter) {
-        enrollmentWhere.createdAt = dateFilter;
-      }
-      const enrollments = await prisma.packageEnrollment.findMany({
-        where: enrollmentWhere,
-        select: { createdAt: true },
-        orderBy: { createdAt: "asc" },
-      });
-
-      // Group by month in JS
+      // Enrollment trend (monthly, cumulative)
       const monthMap = new Map<string, number>();
       for (const e of enrollments) {
-        const key = e.createdAt.toISOString().slice(0, 7); // "YYYY-MM"
+        const key = e.createdAt.toISOString().slice(0, 7);
         monthMap.set(key, (monthMap.get(key) || 0) + 1);
       }
-
       let cumulative = 0;
       const enrollmentTrendResolved = Array.from(monthMap.entries())
         .sort(([a], [b]) => a.localeCompare(b))
@@ -115,37 +177,13 @@ export const dashboardController = {
           return { month, count: cumulative };
         });
 
-      // Resolve course IDs to titles
-      const courseIds1 = studentsPerCourse.map((s) => s.courseId);
-      const courses1 = await prisma.course.findMany({
-        where: { id: { in: courseIds1 } },
-        select: { id: true, title: true },
-      });
-      const courseMap1 = new Map(courses1.map((c) => [c.id, c.title]));
-
-      const studentsPerCourseResolved = studentsPerCourse.map((s) => ({
-        courseTitle: courseMap1.get(s.courseId) || "Unknown",
-        count: s._count.id,
-      }));
-
-      const courseIds2 = topCourses.map((t) => t.courseId);
-      const courses2 = await prisma.course.findMany({
-        where: { id: { in: courseIds2 } },
-        select: { id: true, title: true },
-      });
-      const courseMap2 = new Map(courses2.map((c) => [c.id, c.title]));
-
-      const topCoursesResolved = topCourses.map((t) => ({
-        courseTitle: courseMap2.get(t.courseId) || "Unknown",
-        enrollmentCount: t._count.id,
-      }));
-
-      // ── Revenue data (PAID payments only) ──
-      const paidPayments = await prisma.payment.findMany({
-        where: { status: "PAID" },
-        select: { amount: true, createdAt: true, packageId: true },
-        orderBy: { createdAt: "asc" },
-      });
+      const courseCompletion = studentsPerCourse
+        .map((s) => ({
+          courseTitle: courseMap1.get(s.courseId) || "Unknown",
+          enrolled: s._count.id,
+          completed: certMap.get(s.courseId) ?? 0,
+        }))
+        .sort((a, b) => b.enrolled - a.enrolled);
 
       // Monthly revenue
       const revenueMonthMap = new Map<string, number>();
@@ -165,18 +203,37 @@ export const dashboardController = {
           (revenuePkgMap.get(p.packageId) || 0) + p.amount,
         );
       }
-      const revPkgIds = [...revenuePkgMap.keys()];
-      const revPkgs = await prisma.coursePackage.findMany({
-        where: { id: { in: revPkgIds } },
-        select: { id: true, name: true },
-      });
-      const revPkgNameMap = new Map(revPkgs.map((p) => [p.id, p.name]));
       const revenueByPackage = Array.from(revenuePkgMap.entries())
         .map(([packageId, total]) => ({
           packageName: revPkgNameMap.get(packageId) || "Unknown",
           total,
         }))
         .sort((a, b) => b.total - a.total);
+
+      const paymentStatusDistribution = paymentGroups.map((g) => ({
+        status: g.status,
+        count: g._count.id,
+        amount: g._sum.amount ?? 0,
+      }));
+
+      const totalRevenue = paidPayments.reduce((sum, p) => sum + p.amount, 0);
+      const payingUserCount = new Set(paidPayments.map((p) => p.userId)).size;
+      const arpu =
+        totalRevenue > 0 && payingUserCount > 0
+          ? Math.round(totalRevenue / payingUserCount)
+          : 0;
+
+      const totalPayments = paymentStatusDistribution.reduce(
+        (sum, p) => sum + p.count,
+        0,
+      );
+      const refundedPayments =
+        paymentStatusDistribution.find((p) => p.status === "REFUNDED")?.count ??
+        0;
+      const refundRate =
+        totalPayments > 0
+          ? Math.round((refundedPayments / totalPayments) * 100)
+          : 0;
 
       res.json({
         studentsPerCourse: studentsPerCourseResolved,
@@ -194,6 +251,10 @@ export const dashboardController = {
         recentEnrollments: recentEnrollmentsResolved,
         monthlyRevenue,
         revenueByPackage,
+        courseCompletion,
+        paymentStatusDistribution,
+        arpu,
+        refundRate,
       });
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
@@ -203,118 +264,94 @@ export const dashboardController = {
 
   async getAnalytics(req: AuthRequest, res: Response) {
     try {
-      // 1. Course Completion Rates
-      const courses = await prisma.course.findMany({
-        select: {
-          id: true,
-          title: true,
-          modules: {
-            select: {
-              lessons: { select: { id: true, durationSeconds: true } },
-            },
-          },
-        },
-      });
-
-      const completionRates = await Promise.all(
-        courses.map(async (c) => {
-          const totalLessons = c.modules.reduce(
-            (sum, m) => sum + m.lessons.length,
-            0,
-          );
-          const enrolledCount = await prisma.enrollmentRequest.count({
-            where: { courseId: c.id, status: "APPROVED" },
-          });
-
-          const rate =
-            enrolledCount > 0
-              ? Math.min(100, Math.round(75 + (c.id.charCodeAt(0) % 20)))
-              : 82;
-
-          return {
-            courseId: c.id,
-            courseTitle: c.title,
-            completionRate: rate,
-            enrolledCount,
-          };
-        }),
-      );
-
-      // 2. Active Student Retention (LoginLogs over past 6 months)
       const sixMonthsAgo = new Date();
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-      const loginLogs = await prisma.loginLog.findMany({
-        where: { loginAt: { gte: sixMonthsAgo } },
-        select: { userId: true, loginAt: true },
+      // Wave 1: All independent queries in parallel
+      const [courses, enrollmentsByCourse, loginByMonth, quizAgg] =
+        await Promise.all([
+          prisma.course.findMany({
+            select: {
+              id: true,
+              title: true,
+              modules: {
+                select: {
+                  lessons: { select: { id: true } },
+                },
+              },
+            },
+          }),
+          prisma.enrollmentRequest.groupBy({
+            by: ["courseId"],
+            where: { status: "APPROVED" },
+            _count: { id: true },
+          }),
+          prisma.$queryRaw<Array<{ month: string; activeStudents: bigint }>>(
+            Prisma.sql`SELECT TO_CHAR("loginAt", 'YYYY-MM') as month, COUNT(DISTINCT "userId") as "activeStudents" FROM "loginLog" WHERE "loginAt" >= ${sixMonthsAgo} GROUP BY TO_CHAR("loginAt", 'YYYY-MM') ORDER BY month ASC`
+          ),
+          prisma.quizAttempt.groupBy({
+            by: ["quizId"],
+            _avg: { score: true, total: true },
+            _count: { id: true },
+          }),
+        ]);
+
+      // Wave 2: Quiz titles (needs quizIds from Wave 1)
+      const quizIds = quizAgg.map((q) => q.quizId);
+      const quizzes = await prisma.quiz.findMany({
+        where: { id: { in: quizIds } },
+        select: { id: true, title: true },
       });
+      const quizTitleMap = new Map(quizzes.map((q) => [q.id, q.title]));
 
-      const retentionMap = new Map<string, Set<string>>();
-      for (const log of loginLogs) {
-        const month = log.loginAt.toISOString().slice(0, 7);
-        if (!retentionMap.has(month)) retentionMap.set(month, new Set());
-        retentionMap.get(month)!.add(log.userId);
-      }
-
-      const activeRetention = Array.from(retentionMap.entries())
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([month, userSet]) => ({
-          month,
-          activeStudents: userSet.size,
-        }));
-
-      // 3. Drop-off Rates in Video Lessons
-      const totalProgress = await prisma.progress.findMany({
-        include: { recording: { select: { duration: true } } },
-      });
-
-      let bucket0_25 = 0;
-      let bucket25_50 = 0;
-      let bucket50_75 = 0;
-      let bucket75_100 = 0;
-
-      for (const p of totalProgress) {
-        const dur = p.recording?.duration || 600;
-        const pct = (p.watchedSeconds / dur) * 100;
-        if (pct < 25) bucket0_25++;
-        else if (pct < 50) bucket25_50++;
-        else if (pct < 75) bucket50_75++;
-        else bucket75_100++;
-      }
-
-      const videoDropOff = [
-        { bucket: "0 - 25%", count: bucket0_25 || 14 },
-        { bucket: "25 - 50%", count: bucket25_50 || 22 },
-        { bucket: "50 - 75%", count: bucket50_75 || 38 },
-        { bucket: "75 - 100% (Completed)", count: bucket75_100 || 94 },
-      ];
-
-      // 4. Quiz Score Averages
-      const quizAttempts = await prisma.quizAttempt.findMany({
-        include: { quiz: { select: { title: true } } },
-      });
-
-      const quizMap = new Map<
-        string,
-        { title: string; totalPct: number; count: number }
-      >();
-      for (const qa of quizAttempts) {
-        const pct = qa.total > 0 ? (qa.score / qa.total) * 100 : 0;
-        const existing = quizMap.get(qa.quizId) || {
-          title: qa.quiz.title,
-          totalPct: 0,
-          count: 0,
+      // Resolve completion rates (N+1 replaced with groupBy)
+      const enrollMap = new Map(
+        enrollmentsByCourse.map((e) => [e.courseId, e._count.id]),
+      );
+      const completionRates = courses.map((c) => {
+        const enrolledCount = enrollMap.get(c.id) ?? 0;
+        const rate =
+          enrolledCount > 0
+            ? Math.min(100, Math.round(75 + (c.id.charCodeAt(0) % 20)))
+            : 82;
+        return {
+          courseId: c.id,
+          courseTitle: c.title,
+          completionRate: rate,
+          enrolledCount,
         };
-        existing.totalPct += pct;
-        existing.count += 1;
-        quizMap.set(qa.quizId, existing);
-      }
+      });
 
-      const quizScoreAverages = Array.from(quizMap.values()).map((q) => ({
-        quizTitle: q.title,
-        averageScorePct: Math.round(q.totalPct / q.count),
-        attemptsCount: q.count,
+      const activeRetention = loginByMonth.map((r) => ({
+        month: r.month,
+        activeStudents: Number(r.activeStudents),
       }));
+
+      const quizScoreAverages = quizAgg.map((q) => ({
+        quizTitle: quizTitleMap.get(q.quizId) || "Unknown",
+        averageScorePct:
+          q._avg.total && q._avg.total > 0
+            ? Math.round(((q._avg.score ?? 0) / q._avg.total) * 100)
+            : 0,
+        attemptsCount: q._count.id,
+      }));
+
+      // Video drop-off via DB bucket computation
+      const videoDropOffRaw = await prisma.$queryRaw<
+        Array<{ bucket: string; count: bigint }>
+      >(
+        Prisma.sql`SELECT CASE WHEN ("watchedSeconds"::float / NULLIF(r."duration", 0) * 100) < 25 THEN '0-25' WHEN ("watchedSeconds"::float / NULLIF(r."duration", 0) * 100) < 50 THEN '25-50' WHEN ("watchedSeconds"::float / NULLIF(r."duration", 0) * 100) < 75 THEN '50-75' ELSE '75-100' END as bucket, COUNT(*) as count FROM "progress" p LEFT JOIN "recording" r ON p."recordingId" = r."id" GROUP BY 1`
+      );
+
+      const videoDropOffMap = new Map(
+        videoDropOffRaw.map((r) => [r.bucket, Number(r.count)]),
+      );
+      const videoDropOff = [
+        { bucket: "0 - 25%", count: videoDropOffMap.get("0-25") || 0 },
+        { bucket: "25 - 50%", count: videoDropOffMap.get("25-50") || 0 },
+        { bucket: "50 - 75%", count: videoDropOffMap.get("50-75") || 0 },
+        { bucket: "75 - 100% (Completed)", count: videoDropOffMap.get("75-100") || 0 },
+      ];
 
       res.json({
         completionRates,
@@ -334,21 +371,9 @@ export const dashboardController = {
           quizScoreAverages.length > 0
             ? quizScoreAverages
             : [
-                {
-                  quizTitle: "Intro to Python Quiz",
-                  averageScorePct: 84,
-                  attemptsCount: 42,
-                },
-                {
-                  quizTitle: "React Fundamentals MCQ",
-                  averageScorePct: 78,
-                  attemptsCount: 35,
-                },
-                {
-                  quizTitle: "Database Design Assessment",
-                  averageScorePct: 91,
-                  attemptsCount: 29,
-                },
+                { quizTitle: "Intro to Python Quiz", averageScorePct: 84, attemptsCount: 42 },
+                { quizTitle: "React Fundamentals MCQ", averageScorePct: 78, attemptsCount: 35 },
+                { quizTitle: "Database Design Assessment", averageScorePct: 91, attemptsCount: 29 },
               ],
       });
     } catch (err: unknown) {

@@ -213,6 +213,8 @@ export default function LoginPage() {
                 alt="Marvel Slice"
                 width={28}
                 height={28}
+                priority
+                loading="eager"
                 className="h-7 w-auto object-contain"
               />
             </div>
@@ -291,6 +293,8 @@ export default function LoginPage() {
                   alt="Marvel Slice"
                   width={44}
                   height={44}
+                  priority
+                  loading="eager"
                   className="h-11 w-auto object-contain"
                 />
                 <span className="text-2xl font-extrabold tracking-tight">

@@ -217,8 +217,8 @@ export default function PracticalCard({
 
   return (
     <div
-      className={`group flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-all duration-200 ${
-        isDragging ? "scale-[0.98] opacity-40" : "hover:bg-[#f8f7fd]"
+      className={`group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 ${
+        isDragging ? "scale-[0.98] opacity-40" : "hover:border-[#cfcbe8] hover:bg-[#f8f7fd]"
       }`}
       draggable
       onDragStart={(e) => {

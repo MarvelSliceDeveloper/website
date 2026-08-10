@@ -132,10 +132,10 @@ export const packageService = {
     return { items, total, page: currentPage, limit: currentLimit };
   },
 
-  // Get a single package by ID
-  async getPackageById(packageId: string) {
-    const pkg = await prisma.coursePackage.findUnique({
-      where: { id: packageId },
+  // Get a single package by ID or slug
+  async getPackageById(idOrSlug: string) {
+    const pkg = await prisma.coursePackage.findFirst({
+      where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
       include: {
         courses: {
           include: {

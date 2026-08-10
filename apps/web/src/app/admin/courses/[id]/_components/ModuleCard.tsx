@@ -15,6 +15,7 @@ import {
   IconFileText,
   IconBrain,
   IconVideo,
+  IconChevronDown,
 } from "@tabler/icons-react";
 import type {
   Module,
@@ -32,6 +33,7 @@ import AssignmentCard from "./AssignmentCard";
 import AddAssignmentForm from "./AddAssignmentForm";
 import PracticalCard from "./PracticalCard";
 import AddPracticalForm from "./AddPracticalForm";
+import AddStudyMaterialForm from "./AddStudyMaterialForm";
 
 const ALLOWED_RESOURCE_TYPES = new Set([
   "application/pdf",
@@ -237,16 +239,24 @@ export default function ModuleCard({
     reordered.splice(dropIdx, 0, moved);
     setContentDragIdx(null);
     setContentOverIdx(null);
-    try {
-      await api.patch(`/api/admin/courses/modules/${mod.id}/content/reorder`, {
+    const promise = api.patch(
+      `/api/admin/courses/modules/${mod.id}/content/reorder`,
+      {
         contentOrder: reordered.map((item) => ({
           type: item.type,
           id: item.data.id,
         })),
-      });
+      },
+    );
+    toast.promise(promise, {
+      loading: "Saving order...",
+      success: "Content order saved",
+      error: "Failed to reorder content",
+    });
+    try {
+      await promise;
       onChanged();
     } catch {
-      toast.error("Failed to reorder content");
       onChanged();
     }
   };
@@ -267,20 +277,25 @@ export default function ModuleCard({
       groupedByLesson[r.lessonId].push(r.id);
     }
 
-    try {
-      await Promise.all(
-        Object.entries(groupedByLesson).map(([lessonId, resourceIds]) =>
-          api.patch(
-            `/api/admin/courses/lessons/${lessonId}/resources/reorder`,
-            {
-              resourceIds,
-            },
-          ),
+    const promise = Promise.all(
+      Object.entries(groupedByLesson).map(([lessonId, resourceIds]) =>
+        api.patch(
+          `/api/admin/courses/lessons/${lessonId}/resources/reorder`,
+          {
+            resourceIds,
+          },
         ),
-      );
+      ),
+    );
+    toast.promise(promise, {
+      loading: "Saving order...",
+      success: "Study material order saved",
+      error: "Failed to reorder resources",
+    });
+    try {
+      await promise;
       onChanged();
     } catch {
-      toast.error("Failed to reorder resources");
       onChanged();
     }
   };
@@ -443,108 +458,78 @@ export default function ModuleCard({
           )}
         </div>
 
-        {/* Action buttons: add content / expand/edit/reorder/delete */}
+        {/* Action buttons: direct inline options & expand/edit/delete */}
         {!editing && (
-          <div className="flex items-center gap-1 shrink-0">
-            {/* Add Content popover trigger */}
-            {hasContent && (
-            <div className="relative add-content-popover-container">
-              <button
-                onClick={toggleAddContent}
-                className="flex items-center gap-1 text-xs font-medium text-amber-600 hover:text-amber-700 transition-colors px-2.5 py-1.5 rounded-md hover:bg-amber-50"
-                aria-haspopup="menu"
-                aria-expanded={addContentPopoverOpen}
-              >
-                <IconPlus size={14} />
-                {certModule ? "Add Exam Content" : "Add Content"}
-              </button>
-              {addContentPopoverOpen && (
-                <div
-                  className="absolute right-0 z-20 mt-1 w-48 origin-top-right rounded-md border border-border bg-card shadow-xl ring-1 ring-black ring-opacity-10 focus:outline-none"
+          <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+            {certModule ? (
+              <>
+                <button
+                  onClick={onAddQuestion}
+                  className="flex items-center gap-1.5 rounded-lg border border-amber-300/60 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-amber-400/70 hover:bg-amber-100 hover:shadow"
                 >
-                  <div className="py-1 text-xs">
-                    {certModule ? (
-                      <>
-                        <div
-                          onClick={() => {
-                            setAddContentPopoverOpen(false);
-                            onAddQuestion?.();
-                          }}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-left text-amber-600 hover:bg-amber-50 cursor-pointer"
-                        >
-                          <IconClipboardText size={14} />
-                          Add Question
-                        </div>
-                        <div
-                          onClick={() => {
-                            setAddContentPopoverOpen(false);
-                            onAddAssignment?.();
-                          }}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-left text-blue-600 hover:bg-blue-50 cursor-pointer"
-                        >
-                          <IconFileText size={14} />
-                          Add Assignment
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div
-                          onClick={() => {
-                            setAddContentPopoverOpen(false);
-                            setShowAddQuiz(true);
-                          }}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-left text-amber-600 hover:bg-amber-50 cursor-pointer"
-                        >
-                          <IconClipboardText size={14} />
-                          Quiz
-                        </div>
-                        <div
-                          onClick={() => {
-                            setAddContentPopoverOpen(false);
-                            setShowAddAssignment(true);
-                          }}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-left text-blue-600 hover:bg-blue-50 cursor-pointer"
-                        >
-                          <IconFileText size={14} />
-                          Assignment
-                        </div>
-                        <div
-                          onClick={() => {
-                            setAddContentPopoverOpen(false);
-                            setShowAddPractical(true);
-                          }}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-left text-violet-600 hover:bg-violet-50 cursor-pointer"
-                        >
-                          <IconBrain size={14} />
-                          Practical
-                        </div>
-                        <div
-                          onClick={() => {
-                            setAddContentPopoverOpen(false);
-                            setShowStudyMaterialUpload(true);
-                          }}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-left text-emerald-600 hover:bg-emerald-50 cursor-pointer"
-                        >
-<IconFile size={14} />
-                      Study Material
-                      </div>
-                    </>
-                  )}
-                  </div>
-                </div>
-              )}
-             </div>
+                  <IconClipboardText size={14} />
+                  Add Question
+                </button>
+                <button
+                  data-cert-add-assignment={mod.id}
+                  onClick={() => setShowAddAssignment(true)}
+                  className="flex items-center gap-1.5 rounded-lg border border-blue-300/60 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-blue-400/70 hover:bg-blue-100 hover:shadow"
+                >
+                  <IconFileText size={14} />
+                  Add Assignment
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    setShowAddLesson(true);
+                    setAddLessonKey((k) => k + 1);
+                  }}
+                  className="flex items-center gap-1.5 rounded-lg border border-indigo-300/60 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-indigo-400/70 hover:bg-indigo-100 hover:shadow"
+                >
+                  <IconVideo size={14} />
+                  Lesson
+                </button>
+                <button
+                  onClick={() => setShowAddQuiz(true)}
+                  className="flex items-center gap-1.5 rounded-lg border border-amber-300/60 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-amber-400/70 hover:bg-amber-100 hover:shadow"
+                >
+                  <IconClipboardText size={14} />
+                  Quiz
+                </button>
+                <button
+                  onClick={() => setShowAddAssignment(true)}
+                  className="flex items-center gap-1.5 rounded-lg border border-blue-300/60 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-blue-400/70 hover:bg-blue-100 hover:shadow"
+                >
+                  <IconFileText size={14} />
+                  Assignment
+                </button>
+                <button
+                  onClick={() => setShowAddPractical(true)}
+                  className="flex items-center gap-1.5 rounded-lg border border-violet-300/60 bg-violet-50 px-2.5 py-1.5 text-xs font-semibold text-violet-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-violet-400/70 hover:bg-violet-100 hover:shadow"
+                >
+                  <IconBrain size={14} />
+                  Practical
+                </button>
+                <button
+                  onClick={() => setShowStudyMaterialUpload(true)}
+                  className="flex items-center gap-1.5 rounded-lg border border-emerald-300/60 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-emerald-400/70 hover:bg-emerald-100 hover:shadow"
+                >
+                  <IconFile size={14} />
+                  Study Material
+                </button>
+              </>
             )}
             <button
               onClick={() => setExpanded(!expanded)}
-              className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-md hover:bg-muted/20"
+              className="p-1.5 rounded-lg border border-border/80 bg-muted/20 text-foreground hover:bg-muted/50 hover:border-border transition-all duration-200"
               title={expanded ? "Collapse" : "Expand"}
             >
-              <span
-                className={`inline-block transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}
-              >
-                &#x25B6;
-              </span>
+              <IconChevronDown
+                size={18}
+                className={`transition-transform duration-200 ${expanded ? "rotate-180 text-primary" : "text-muted-foreground"}`}
+              />
             </button>
             <button
               onClick={() => setEditing(true)}
@@ -578,35 +563,35 @@ export default function ModuleCard({
                     setShowAddLesson(true);
                     setAddLessonKey((k) => k + 1);
                   }}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted/20"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-300/60 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-indigo-400/70 hover:bg-indigo-100 hover:shadow"
                 >
                   <IconVideo size={14} />
                   Add Lesson
                 </button>
                 <button
                   onClick={() => setShowAddQuiz(true)}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 hover:text-amber-700 transition-colors px-3 py-1.5 rounded-md hover:bg-amber-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300/60 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-amber-400/70 hover:bg-amber-100 hover:shadow"
                 >
                   <IconClipboardText size={14} />
                   Quiz
                 </button>
                 <button
                   onClick={() => setShowAddAssignment(true)}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors px-3 py-1.5 rounded-md hover:bg-blue-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-blue-300/60 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-blue-400/70 hover:bg-blue-100 hover:shadow"
                 >
                   <IconFileText size={14} />
                   Assignment
                 </button>
                 <button
                   onClick={() => setShowAddPractical(true)}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-600 hover:text-violet-700 transition-colors px-3 py-1.5 rounded-md hover:bg-violet-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-violet-300/60 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-violet-400/70 hover:bg-violet-100 hover:shadow"
                 >
                   <IconBrain size={14} />
                   Practical
                 </button>
                 <button
                   onClick={() => setShowStudyMaterialUpload(true)}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors px-3 py-1.5 rounded-md hover:bg-emerald-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300/60 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-emerald-400/70 hover:bg-emerald-100 hover:shadow"
                 >
                   <IconFile size={14} />
                   Study Material
@@ -712,85 +697,15 @@ export default function ModuleCard({
             <div className="px-3 py-2 border-t border-border/40">
               <div className="px-1 py-1.5 text-[10px] font-medium uppercase tracking-wider text-emerald-600 mb-2 flex items-center justify-between">
                 <span>Study Materials ({allResources.length})</span>
-                {!showStudyMaterialUpload && (
-                  <button
-                    onClick={() => setShowStudyMaterialUpload(true)}
-                    className="text-xs font-medium text-emerald-600 hover:text-emerald-700 underline"
-                  >
-                    + Upload
-                  </button>
-                )}
+                <button
+                  onClick={() => setShowStudyMaterialUpload(true)}
+                  className="text-xs font-medium text-emerald-600 hover:text-emerald-700 underline"
+                >
+                  + Upload
+                </button>
               </div>
 
-              {showStudyMaterialUpload ? (
-                <div className="rounded-lg border border-success/20 bg-success/5 p-3 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-semibold text-success">
-                      Add Study Material
-                    </h4>
-                    <button
-                      onClick={() => setShowStudyMaterialUpload(false)}
-                      className="p-1 text-muted hover:text-foreground"
-                    >
-                      <IconX size={14} />
-                    </button>
-                  </div>
-
-                  {mod.lessons.length === 0 ? (
-                    <p className="text-xs text-muted">
-                      Add a lesson first to attach study materials.
-                    </p>
-                  ) : (
-                    <>
-                      {mod.lessons.length > 1 && (
-                        <div className="space-y-1">
-                          <label className="text-xs font-medium">
-                            Attach to Lesson
-                          </label>
-                          <select
-                            value={resourceLessonId}
-                            onChange={(e) => setResourceLessonId(e.target.value)}
-                            className="w-full text-xs border border-border rounded-md px-2 py-1.5 bg-background"
-                          >
-                            {mod.lessons.map((lesson) => (
-                              <option key={lesson.id} value={lesson.id}>
-                                {lesson.title}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-
-                      <label className="flex items-center justify-center gap-2 w-full p-3 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-success/10 transition-colors text-xs text-success">
-                        <IconPlus size={14} />
-                        {uploadingResource ? "Uploading..." : "Choose File"}
-                        <input
-                          type="file"
-                          onChange={(e) => {
-                            handleResourceUpload(e);
-                            if (!e.target.files?.[0]) return;
-                            setTimeout(
-                              () => setShowStudyMaterialUpload(false),
-                              500,
-                            );
-                          }}
-                          disabled={uploadingResource}
-                          className="hidden"
-                          accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.webp"
-                        />
-                      </label>
-
-                      {resourceError && (
-                        <p className="text-[10px] text-danger">{resourceError}</p>
-                      )}
-
-                      <p className="text-[10px] text-muted">
-                        Accepted: PDF, DOCX, PPTX, XLSX, Images (max 50 MB)
-                      </p>
-                    </>
-                  )}
-                </div>
-              ) : allResources.length > 0 ? (
+              {allResources.length > 0 ? (
                 <div className="space-y-1">
                   {allResources.map((resource, rIdx) => (
                     <div
@@ -805,10 +720,10 @@ export default function ModuleCard({
                         e.preventDefault();
                         handleResourceDrop(rIdx);
                       }}
-                      className={`flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-card/50 text-xs transition-all duration-200 cursor-grab active:cursor-grabbing ${
+                      className={`flex items-center gap-2 rounded-md border border-[#e4e2f5] bg-white px-2 py-1.5 text-xs transition-all duration-200 cursor-grab active:cursor-grabbing ${
                         resourceDragIdx === rIdx
                           ? "opacity-40 scale-[0.98]"
-                          : ""
+                          : "hover:border-[#cfcbe8] hover:bg-card/50"
                       }`}
                     >
                       <IconGripVertical
@@ -882,6 +797,16 @@ export default function ModuleCard({
           onChanged();
         }}
         onCancel={() => setShowAddPractical(false)}
+      />
+      <AddStudyMaterialForm
+        courseId={courseId}
+        lessons={mod.lessons}
+        open={showStudyMaterialUpload}
+        onSuccess={() => {
+          setShowStudyMaterialUpload(false);
+          onChanged();
+        }}
+        onCancel={() => setShowStudyMaterialUpload(false)}
       />
 
       {/* Add Lesson Modal */}

@@ -273,13 +273,13 @@ export default function CourseDetailPage() {
 
       {activeTab === "content" && (
         <ContentTab
-          courseId={id}
+          courseId={course.id}
           modules={sortedModules}
           onContentChanged={fetchCourse}
         />
       )}
 
-      {activeTab === "certification" && <CertificationTab courseId={id} />}
+      {activeTab === "certification" && <CertificationTab courseId={course.id} />}
     </div>
   );
 }

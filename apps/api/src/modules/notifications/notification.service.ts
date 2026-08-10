@@ -876,8 +876,8 @@ export const notificationService = {
 
   /**
    * Send a custom notification to a targeted audience.
-   * - ADMIN can target ALL_USERS, BATCH, COURSE, INTERN (all interns),
-   *   or INTERN_FIELD (interns in a specific field)
+   * - ADMIN can target ALL_USERS, INSTRUCTORS, STUDENTS, BATCH, COURSE,
+   *   INTERN (all interns), or INTERN_FIELD (interns in a specific field)
    * - INSTRUCTOR can only target BATCH and must be the assigned instructor
    * Optional attachment (zip/pdf) is included in emails.
    */
@@ -890,7 +890,9 @@ export const notificationService = {
         | "BATCH"
         | "COURSE"
         | "INTERN"
-        | "INTERN_FIELD";
+        | "INTERN_FIELD"
+        | "INSTRUCTORS"
+        | "STUDENTS";
       targetIds: string[];
       title: string;
       message: string;
@@ -937,6 +939,20 @@ export const notificationService = {
       if (senderRole !== UserRole.ADMIN) return { count: 0 };
       const users = await prisma.user.findMany({
         where: { role: "INTERN", deletedAt: null },
+        select: { id: true },
+      });
+      userIds = users.map((u) => u.id);
+    } else if (targetType === "INSTRUCTORS") {
+      if (senderRole !== UserRole.ADMIN) return { count: 0 };
+      const users = await prisma.user.findMany({
+        where: { role: UserRole.INSTRUCTOR, deletedAt: null },
+        select: { id: true },
+      });
+      userIds = users.map((u) => u.id);
+    } else if (targetType === "STUDENTS") {
+      if (senderRole !== UserRole.ADMIN) return { count: 0 };
+      const users = await prisma.user.findMany({
+        where: { role: UserRole.STUDENT, deletedAt: null },
         select: { id: true },
       });
       userIds = users.map((u) => u.id);

@@ -211,8 +211,8 @@ export default function QuizCard({
     try {
       await api.put(`/api/admin/courses/modules/quizzes/${quiz.id}`, {
         title,
-        dueDate: dueDateMode === "absolute" && dueDate ? new Date(dueDate).toISOString() : null,
-        daysFromEnrollment: dueDateMode === "days" && daysFromEnrollment !== "" ? Number(daysFromEnrollment) : null,
+        dueDate: null,
+        daysFromEnrollment: daysFromEnrollment !== "" ? Number(daysFromEnrollment) : null,
         passingScore: Number(passingScore),
         examType:
           hasMcq && hasAssignment && hasCoding ? "ALL_IN_ONE" : examType,
@@ -306,50 +306,19 @@ export default function QuizCard({
           />
         </div>
 
-        {/* Due Date Mode */}
-        <div className="space-y-2">
-          <label className="text-xs font-medium">Due Date</label>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setDueDateMode("absolute")}
-              className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${dueDateMode === "absolute" ? "border-[#4f63f0] bg-[#4f63f0] text-white" : "border-[#e4e2f5] bg-white text-[#1f2233]"}`}
-            >
-              Absolute Date
-            </button>
-            <button
-              type="button"
-              onClick={() => setDueDateMode("days")}
-              className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${dueDateMode === "days" ? "border-[#4f63f0] bg-[#4f63f0] text-white" : "border-[#e4e2f5] bg-white text-[#1f2233]"}`}
-            >
-              Days from Enrollment
-            </button>
-          </div>
-        </div>
-
-        {dueDateMode === "absolute" ? (
-          <div className="space-y-2">
-            <label className="text-xs font-medium">Due Date</label>
-            <input
-              type="datetime-local"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="field"
-            />
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <label className="text-xs font-medium">Days After Enrollment</label>
-            <input
-              type="number"
-              value={daysFromEnrollment}
-              onChange={(e) => setDaysFromEnrollment(e.target.value)}
-              placeholder="e.g. 10"
-              className="field"
-              min={1}
-            />
-          </div>
-        )}
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">
+          Due Date (Days After Enrollment)
+        </label>
+        <input
+          type="number"
+          value={daysFromEnrollment}
+          onChange={(e) => setDaysFromEnrollment(e.target.value)}
+          placeholder="e.g. 10"
+          className="field w-full"
+          min={1}
+        />
+      </div>
 
         {/* MCQ Section */}
         {hasMcq && (
@@ -582,8 +551,8 @@ export default function QuizCard({
         e.preventDefault();
         onDrop?.();
       }}
-      className={`group flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-all duration-200 ${
-        isDragging ? "scale-[0.98] opacity-40" : "hover:bg-[#f8f7fd]"
+      className={`group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 ${
+        isDragging ? "scale-[0.98] opacity-40" : "hover:border-[#cfcbe8] hover:bg-[#f8f7fd]"
       }`}
     >
       {onDragStart && (

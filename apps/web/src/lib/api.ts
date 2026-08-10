@@ -37,11 +37,17 @@ let csrfRefreshing = false;
 let csrfRetryCount = 0;
 
 async function fetchCsrfToken(): Promise<string> {
-  const res = await fetch(`${API_BASE}/api/csrf-token`, {
-    credentials: "include",
-  });
-  const data = await res.json();
-  return data.csrfToken;
+  try {
+    const res = await fetch(`${API_BASE}/api/csrf-token`, {
+      credentials: "include",
+    });
+    if (!res.ok) return "";
+    const data = await res.json();
+    return data.csrfToken || "";
+  } catch (err) {
+    console.warn("[api] CSRF token fetch failed (server offline or proxy error):", err);
+    return "";
+  }
 }
 
 function getCsrfToken(forceRefresh = false): Promise<string> {

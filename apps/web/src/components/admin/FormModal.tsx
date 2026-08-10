@@ -13,9 +13,9 @@ interface FormModalProps {
 }
 
 const sizeMap = {
-  sm: "max-w-sm",
-  md: "max-w-md",
-  lg: "max-w-3xl",
+  sm: "max-w-md",
+  md: "max-w-2xl",
+  lg: "max-w-4xl",
 } as const;
 
 export function FormModal({
@@ -70,32 +70,35 @@ export function FormModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={onClose}
+      className="fixed inset-0 z-50 flex flex-col bg-background"
       role="dialog"
       aria-modal="true"
       aria-label={title}
     >
       <div
         ref={dialogRef}
-        className={`w-full ${sizeMap[size]} max-h-[calc(100vh-2rem)] overflow-y-auto border border-border bg-card p-5 space-y-4`}
+        className="flex h-full w-full flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-border pb-3">
+        <div className="flex shrink-0 items-center justify-between border-b border-border bg-card px-5 py-3">
           <h3 className="text-base font-bold text-foreground">{title}</h3>
           <button
             onClick={onClose}
-            className="text-muted hover:text-foreground"
+            className="rounded-md p-1.5 text-muted transition-colors hover:bg-muted/20 hover:text-foreground"
             aria-label="Close dialog"
           >
-            <IconX size={18} stroke={1.5} />
+            <IconX size={20} stroke={1.5} />
           </button>
         </div>
 
-        <div className="space-y-4">{children}</div>
+        <div className="flex-1 overflow-y-auto px-5 py-5">
+          <div className={`mx-auto w-full ${sizeMap[size]} space-y-4`}>
+            {children}
+          </div>
+        </div>
 
         {footer && (
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/50">
+          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border/50 bg-card px-5 py-3">
             {footer}
           </div>
         )}

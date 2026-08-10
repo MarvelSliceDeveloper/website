@@ -2,6 +2,8 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../../utils/prisma";
 import { moduleService } from "../courses/module.service";
 
+import { AppError } from "../../utils/errors";
+
 interface CourseProgress {
   courseId: string;
   courseTitle: string;
@@ -118,35 +120,61 @@ export async function getCourseContentProgress(
     contentItems.length > 0 &&
     contentItems.every((c) => c.completed >= c.total);
 
-  let certificationQuizPassed = false;
+  let certificationPassed = false;
   if (certModule) {
-    const certQuiz = (
-      await prisma.quiz.findMany({
+    const [certQuizzes, certAssignments] = await Promise.all([
+      prisma.quiz.findMany({
         where: { moduleId: certModule.id },
         select: { id: true, passingScore: true },
-      })
-    )[0];
+      }),
+      prisma.assignment.findMany({
+        where: { moduleId: certModule.id },
+        select: { id: true },
+      }),
+    ]);
 
-    if (certQuiz) {
-      const certAttempt = await prisma.quizAttempt.findFirst({
-        where: {
-          userId,
-          quizId: certQuiz.id,
-          status: { not: "PENDING" },
-        },
-        orderBy: { createdAt: "desc" },
-      });
-      if (certAttempt) {
-        certificationQuizPassed =
-          certAttempt.isPassed ||
-          certAttempt.percentage >= (certQuiz.passingScore ?? 60);
+    let quizOk = true;
+    if (certQuizzes.length > 0) {
+      for (const certQuiz of certQuizzes) {
+        const certAttempt = await prisma.quizAttempt.findFirst({
+          where: {
+            userId,
+            quizId: certQuiz.id,
+            status: { not: "PENDING" },
+          },
+          orderBy: { createdAt: "desc" },
+        });
+        const isPassed =
+          certAttempt &&
+          (certAttempt.isPassed ||
+            certAttempt.percentage >= (certQuiz.passingScore ?? 60));
+        if (!isPassed) {
+          quizOk = false;
+          break;
+        }
       }
     }
+
+    let assignmentOk = true;
+    if (certAssignments.length > 0) {
+      const submissions = await prisma.assignmentSubmission.findMany({
+        where: {
+          studentId: userId,
+          assignmentId: { in: certAssignments.map((a) => a.id) },
+          status: "GRADED",
+        },
+        select: { assignmentId: true },
+      });
+      const gradedSet = new Set(submissions.map((s) => s.assignmentId));
+      assignmentOk = certAssignments.every((a) => gradedSet.has(a.id));
+    }
+
+    certificationPassed = quizOk && assignmentOk;
   }
 
   const hasCertificationModule = !!certModule;
   const isComplete = hasCertificationModule
-    ? regularComplete && certificationQuizPassed
+    ? regularComplete && certificationPassed
     : regularComplete;
 
   return {
@@ -156,7 +184,7 @@ export async function getCourseContentProgress(
     completedItems,
     isComplete,
     hasCertificationModule,
-    certificationQuizPassed,
+    certificationQuizPassed: certificationPassed,
     details: {
       totalLessons,
       completedLessons: totalLessons,
@@ -282,7 +310,7 @@ export async function getPackageSpecialExamProgress(
     },
   });
 
-  if (!pkg) throw new Error("Package not found");
+  if (!pkg) throw new AppError(404, "Package not found");
 
   const batchVisibilityMap = new Map<string, boolean>();
   if (batchId) {

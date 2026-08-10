@@ -100,7 +100,8 @@ export interface MentorshipTicket {
 
 export interface Certificate {
   id: string;
-  courseId: string;
+  courseId: string | null;
+  packageId?: string | null;
   course: {
     id: string;
     title: string;
@@ -109,7 +110,12 @@ export interface Certificate {
     thumbnailUrl: string | null;
     coverImageUrl: string | null;
     updatedAt: string;
-  };
+  } | null;
+  package?: {
+    id: string;
+    name: string;
+  } | null;
+  autoIssued?: boolean;
   issuedAt?: string;
   verifyUrl?: string;
   totalRecordings: number;
@@ -203,6 +209,14 @@ export interface DashboardChartData {
   }[];
   monthlyRevenue: { month: string; amount: number }[];
   revenueByPackage: { packageName: string; total: number }[];
+  courseCompletion: {
+    courseTitle: string;
+    enrolled: number;
+    completed: number;
+  }[];
+  paymentStatusDistribution: { status: string; count: number; amount: number }[];
+  arpu: number;
+  refundRate: number;
 }
 
 export interface CataloguePackage {

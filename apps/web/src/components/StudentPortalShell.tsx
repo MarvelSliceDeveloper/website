@@ -96,13 +96,13 @@ export default function StudentPortalShell({
 
   useEffect(() => {
     Promise.resolve().then(() => fetchNotifications());
-    let interval = setInterval(fetchNotifications, 30000);
+    let interval = setInterval(fetchNotifications, 120000);
     function handleVisibility() {
       if (document.hidden) {
         clearInterval(interval);
       } else {
         fetchNotifications();
-        interval = setInterval(fetchNotifications, 30000);
+        interval = setInterval(fetchNotifications, 120000);
       }
     }
     document.addEventListener("visibilitychange", handleVisibility);

@@ -141,10 +141,13 @@ model User {
   batchCourseMentors      BatchCourseMentor[]
   grantedExtensions       BatchAssignmentExtension[]
   refundsInitiated        Refund[]                   @relation("RefundInitiator")
+  refundsApproved         Refund[]                   @relation("RefundApprover")
   twoFactorAuth           TwoFactorAuth?
   instructorProfile       InstructorProfile?
-  instructorVerifications InstructorProfile[]        @relation("InstructorVerifier")
-  internField            InternField?               @relation("InternField", fields: [internFieldId], references: [id])
+   instructorVerifications InstructorProfile[]        @relation("InstructorVerifier")
+   internField            InternField?               @relation("InternField", fields: [internFieldId], references: [id])
+
+   @@index([role])
 }
 
 model Course {
@@ -250,7 +253,7 @@ model Batch {
   startDate                    DateTime
   endDate                      DateTime
   isActive                     Boolean                   @default(true)
-  examEnabled                  Boolean                   @default(true) // Certificates shown to students only when exams enabled
+  examEnabled                  Boolean                   @default(false) // Certificates shown to students only when exams enabled
   maxStudents                  Int?
   status                       BatchStatus               @default(UPCOMING)
   description                  String?
@@ -272,8 +275,9 @@ model Batch {
   extensions                   BatchAssignmentExtension[]
   courseMentors                BatchCourseMentor[]
 
-  @@index([packageId])
-  @@index([courseId])
+   @@index([packageId])
+   @@index([courseId])
+   @@index([status])
 }
 
 // Tracks which courses are visible to batch members (manual toggle per batch)
@@ -283,7 +287,7 @@ model BatchCourseVisibility {
   batchId        String
   courseId       String
   isVisible      Boolean @default(false)
-  isExamRequired Boolean @default(true)
+  isExamRequired Boolean @default(false)
 
   batch  Batch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -343,6 +347,7 @@ model EnrollmentRequest {
   batch      Batch?           @relation(fields: [batchId], references: [id])
 
   @@index([userId])
+  @@index([userId, status])
   @@index([courseId])
   @@index([batchId])
 }
@@ -496,8 +501,9 @@ model Certificate {
   batch               Batch?            @relation(fields: [batchId], references: [id])
   uploadedTemplate    CertificateTemplate? @relation(fields: [uploadedTemplateId], references: [id])
 
-  @@unique([userId, courseId])
-  @@unique([userId, packageId])
+   @@unique([userId, courseId])
+   @@unique([userId, packageId])
+   @@index([courseId, status])
 }
 
 model CertificateTemplate {
@@ -557,6 +563,7 @@ model Quiz {
   extensions    BatchAssignmentExtension[]
 
   @@index([moduleId])
+  @@index([moduleId, dueDate])
 }
 
 model Question {
@@ -587,6 +594,7 @@ model QuizAttempt {
 
   @@index([quizId])
   @@index([userId])
+  @@index([userId, status])
 }
 
 // One-on-one mentorship ticket - student requests, admin assigns mentor
@@ -704,10 +712,12 @@ model Attendance {
 }
 
 enum RefundStatus {
-  PENDING
+  PENDING // Admin submitted, awaiting superadmin approval
+  APPROVED // Superadmin approved, Razorpay refund being processed
   PROCESSING
   COMPLETED
   FAILED
+  REJECTED // Superadmin rejected the refund request
   CANCELLED
 }
 
@@ -744,6 +754,7 @@ model Assignment {
   @@index([courseId])
   @@index([batchId])
   @@index([moduleId])
+  @@index([batchId, dueDate])
   deletedAt      DateTime?
   deletedBy      String?
   restoredAt     DateTime?
@@ -770,6 +781,7 @@ model AssignmentSubmission {
   gradedByUser      User?                     @relation("GradedSubmissions", fields: [gradedById], references: [id], onDelete: SetNull)
 
   @@unique([assignmentId, studentId])
+  @@index([studentId, status])
 }
 
 model GraphApiLog {
@@ -838,9 +850,10 @@ model LoginLog {
   deviceInfo String?
   loginAt    DateTime  @default(now())
   logoutAt   DateTime?
-  user       User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+   user       User      @relation(fields: [userId], references: [id], onDelete: Restrict)
 
-  @@index([userId])
+   @@index([userId])
+   @@index([loginAt])
 }
 
 model AdminSession {
@@ -1012,9 +1025,10 @@ model Payment {
   enrollment PackageEnrollment?
   refunds    Refund[]
 
-  @@index([userId])
-  @@index([couponId])
-  @@index([status])
+   @@index([userId])
+   @@index([couponId])
+   @@index([status])
+   @@index([status, createdAt])
 }
 
 model Refund {
@@ -1025,6 +1039,9 @@ model Refund {
   status           RefundStatus @default(PENDING)
   reason           String?
   initiatedById    String       // Admin who initiated
+  approvedById     String?      // Superadmin who approved the refund
+  approvedAt       DateTime?
+  rejectionReason  String?      // Reason given by superadmin when rejecting
   razorpayRefundId String?      @unique
   metadata         Json?
   createdAt        DateTime     @default(now())
@@ -1032,9 +1049,11 @@ model Refund {
 
   payment    Payment @relation(fields: [paymentId], references: [id])
   initiatedBy User    @relation("RefundInitiator", fields: [initiatedById], references: [id])
+  approvedBy User?   @relation("RefundApprover", fields: [approvedById], references: [id])
 
   @@index([paymentId])
   @@index([initiatedById])
+  @@index([approvedById])
   @@index([status])
 }
 
@@ -1061,20 +1080,24 @@ model Coupon {
 }
 
 model PackageEnrollment {
-  id        String           @id @default(cuid())
-  userId    String
-  packageId String
-  status    EnrollmentStatus @default(PENDING)
-  paymentId String?          @unique
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+   id        String           @id @default(cuid())
+   userId    String
+   packageId String
+   status    EnrollmentStatus @default(PENDING)
+   paymentId String?          @unique
+   createdAt DateTime         @default(now())
+   updatedAt DateTime         @updatedAt
 
-  user    User                      @relation(fields: [userId], references: [id])
-  package CoursePackage             @relation(fields: [packageId], references: [id])
-  courses PackageEnrollmentCourse[]
-  payment Payment?                  @relation(fields: [paymentId], references: [id])
+   user    User                      @relation(fields: [userId], references: [id])
+   package CoursePackage             @relation(fields: [packageId], references: [id])
+   courses PackageEnrollmentCourse[]
+   payment Payment?                  @relation(fields: [paymentId], references: [id])
 
-  @@index([userId])
+   @@index([userId])
+   @@index([userId, status])
+   @@index([status])
+   @@index([status, createdAt])
+   @@index([packageId])
 }
 
 model PackageEnrollmentCourse {

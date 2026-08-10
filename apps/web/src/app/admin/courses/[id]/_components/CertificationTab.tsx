@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { getErrorMessage } from "@/lib/toast";
@@ -12,10 +12,15 @@ import {
   IconX,
   IconSettings,
   IconClipboardText,
+  IconUpload,
+  IconFile,
+  IconTrash,
+  IconExternalLink,
 } from "@tabler/icons-react";
 import type { Module } from "./types";
 import ModuleCard from "./ModuleCard";
 import RichEditor from "@/components/editor/RichEditor";
+import { FormModal } from "@/components/admin/FormModal";
 
 interface CertQuestion {
   id?: string;
@@ -33,6 +38,7 @@ interface CertificationData {
     hasMcq: boolean;
     hasAssignment: boolean;
     assignmentInstructions: string | null;
+    assignmentPdfUrl: string | null;
     questionCount: number;
     questions?: CertQuestion[];
   } | null;
@@ -56,8 +62,11 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
   ]);
   const [hasAssignment, setHasAssignment] = useState(false);
   const [assignmentInstructions, setAssignmentInstructions] = useState("");
-  const [showQuestions, setShowQuestions] = useState(false);
+  const [assignmentPdfUrl, setAssignmentPdfUrl] = useState("");
+  const [showQuestionsModal, setShowQuestionsModal] = useState(false);
   const [questionSaving, setQuestionSaving] = useState(false);
+  const [pdfUploading, setPdfUploading] = useState(false);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
 
   const applyData = (result: CertificationData) => {
     setData(result);
@@ -67,6 +76,7 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
       setTimeLimitMin(result.quiz.timeLimitMin?.toString() ?? "30");
       setHasAssignment(result.quiz.hasAssignment ?? false);
       setAssignmentInstructions(result.quiz.assignmentInstructions ?? "");
+      setAssignmentPdfUrl(result.quiz.assignmentPdfUrl ?? "");
       setQuestions(
         result.quiz.questions && result.quiz.questions.length > 0
           ? (result.quiz.questions as CertQuestion[]).map((q) => ({
@@ -190,7 +200,7 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
     );
   };
 
-  const handleSaveQuestion = async () => {
+  const handleSaveSettings = async () => {
     setQuestionSaving(true);
     try {
       await api.put(`/api/admin/courses/${courseId}/certification`, {
@@ -201,6 +211,7 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
         assignmentInstructions: hasAssignment
           ? assignmentInstructions
           : null,
+        assignmentPdfUrl: hasAssignment ? (assignmentPdfUrl || null) : null,
         questions: questions.map((q) => ({
           text: q.text,
           options: q.options.map((o) => ({
@@ -218,6 +229,67 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
     }
   };
 
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      toast.error("Only PDF files are allowed");
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("File too large. Maximum size is 50 MB.");
+      e.target.value = "";
+      return;
+    }
+
+    setPdfUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("pdf", file);
+      const result = await api.post<{ url: string }>(
+        `/api/admin/courses/${courseId}/certification/pdf`,
+        formData,
+      );
+      setAssignmentPdfUrl(result.url);
+      toast.success("Assignment PDF uploaded");
+      reload();
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setPdfUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleRemovePdf = async () => {
+    setAssignmentPdfUrl("");
+    // Save immediately to clear the URL on server
+    try {
+      await api.put(`/api/admin/courses/${courseId}/certification`, {
+        title,
+        passingScore,
+        timeLimitMin: timeLimitMin ? parseInt(timeLimitMin) : null,
+        hasAssignment,
+        assignmentInstructions: hasAssignment ? assignmentInstructions : null,
+        assignmentPdfUrl: null,
+        questions: questions.map((q) => ({
+          text: q.text,
+          options: q.options.map((o) => ({
+            label: o.label,
+            isCorrect: o.isCorrect,
+          })),
+        })),
+      });
+      toast.success("Assignment PDF removed");
+      reload();
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err));
+    }
+  };
+
   const certModule = courseData?.modules.find((m) => m.isCertificationModule);
 
   if (loading) {
@@ -227,6 +299,31 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
       </div>
     );
   }
+
+  // ── Questions Modal Content ────────────────────────────────────
+  const questionsModalFooter = (
+    <>
+      <button
+        onClick={() => setShowQuestionsModal(false)}
+        className="btn-secondary text-xs px-3 py-1.5"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={async () => {
+          await handleSaveSettings();
+          setShowQuestionsModal(false);
+        }}
+        className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1"
+        disabled={questionSaving}
+      >
+        {questionSaving && (
+          <IconLoader2 className="h-3 w-3 animate-spin" />
+        )}
+        Save Questions
+      </button>
+    </>
+  );
 
   return (
     <div className="space-y-6">
@@ -238,18 +335,14 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
           courseId={courseId}
           onChanged={reload}
           certModule
-          onAddQuestion={() => {
-            setShowQuestions(true);
-            document
-              .getElementById("cert-exam-settings")
-              ?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }}
+          onAddQuestion={() => setShowQuestionsModal(true)}
           onAddAssignment={() => {
-            setHasAssignment(true);
-            setShowQuestions(false);
-            document
-              .getElementById("cert-exam-settings")
-              ?.scrollIntoView({ behavior: "smooth", block: "start" });
+            const addAssignmentBtn = document.querySelector<HTMLButtonElement>(
+              `[data-cert-add-assignment="${certModule.id}"]`,
+            );
+            if (addAssignmentBtn) {
+              addAssignmentBtn.click();
+            }
           }}
           passingScore={passingScore}
           timeLimitMin={timeLimitMin ? parseInt(timeLimitMin) : null}
@@ -283,7 +376,7 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
 
         <div className="space-y-4">
           <div className="field">
-            <label className="label">Exam Title</label>
+            <label className="label">Exam Title <span className="text-danger">*</span></label>
             <input
               type="text"
               value={title}
@@ -296,7 +389,7 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
             <div className="field">
               <label className="label flex items-center gap-2">
                 <IconCheck className="h-4 w-4 text-green-500" />
-                Passing Score (%)
+                Passing Score (%) <span className="text-danger">*</span>
               </label>
               <input
                 type="number"
@@ -314,7 +407,7 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
             <div className="field">
               <label className="label flex items-center gap-2">
                 <IconClock className="h-4 w-4 text-blue-500" />
-                Time Limit (minutes) *
+                Time Limit (minutes) <span className="text-danger">*</span>
               </label>
               <input
                 type="number"
@@ -329,40 +422,9 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
             </div>
           </div>
 
-          {/* Assignment Section */}
-          <div className="rounded-xl border border-border/70 p-4">
-            <label className="flex cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                checked={hasAssignment}
-                onChange={(e) => setHasAssignment(e.target.checked)}
-                className="h-4 w-4 accent-primary"
-              />
-              <span className="text-sm font-medium text-foreground">
-                Include Assignment
-              </span>
-              <span className="text-xs text-muted">
-                Students must submit an assignment along with the exam
-              </span>
-            </label>
-            {hasAssignment && (
-              <div className="mt-3 space-y-2">
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                  Assignment Instructions
-                </label>
-                <RichEditor
-                  content={assignmentInstructions}
-                  onChange={setAssignmentInstructions}
-                  placeholder="Enter assignment instructions..."
-                  minHeight="150px"
-                />
-              </div>
-            )}
-          </div>
-
           <div className="flex justify-end mt-4">
             <button
-              onClick={handleSaveQuestion}
+              onClick={handleSaveSettings}
               className="btn-primary inline-flex items-center gap-2"
               disabled={questionSaving}
             >
@@ -377,7 +439,7 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
         </div>
       </div>
 
-      {/* Exam Questions Builder */}
+      {/* Exam Questions Summary Card */}
       <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -389,112 +451,47 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
                 Exam Questions
               </h3>
               <p className="text-xs text-muted">
-                {questions.length} MCQ question{questions.length !== 1 ? "s" : ""}
+                {questions.filter((q) => q.text.trim()).length} MCQ question{questions.filter((q) => q.text.trim()).length !== 1 ? "s" : ""} configured
               </p>
             </div>
           </div>
           <button
-            onClick={() => setShowQuestions((v) => !v)}
-            className="btn-secondary text-xs"
+            onClick={() => setShowQuestionsModal(true)}
+            className="btn-primary text-xs inline-flex items-center gap-1.5"
           >
-            {showQuestions ? "Hide" : "Edit Questions"}
+            <IconClipboardText size={14} />
+            Edit Questions
           </button>
         </div>
 
-        {showQuestions && (
-          <div className="space-y-4">
-            {questions.map((q, qIndex) => (
+        {/* Quick preview of questions */}
+        {questions.filter((q) => q.text.trim()).length > 0 && (
+          <div className="space-y-1.5">
+            {questions.filter((q) => q.text.trim()).slice(0, 5).map((q, idx) => (
               <div
-                key={qIndex}
-                className="space-y-2 rounded-lg border border-border/70 p-3 bg-muted/20"
+                key={idx}
+                className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/20 text-xs"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">
-                    Question {qIndex + 1}
-                  </span>
-                  {questions.length > 1 && (
-                    <button
-                      onClick={() => removeQuestion(qIndex)}
-                      className="p-1 text-muted hover:text-danger"
-                    >
-                      <IconX size={14} />
-                    </button>
-                  )}
-                </div>
-
-                <input
-                  type="text"
-                  value={q.text}
-                  onChange={(e) => updateQuestionText(qIndex, e.target.value)}
-                  placeholder="Enter question prompt"
-                  className="input text-sm"
-                />
-
-                <div className="space-y-2">
-                  <label className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                    Options
-                  </label>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name={`correct-${qIndex}`}
-                        checked={opt.isCorrect}
-                        onChange={() => markCorrectOption(qIndex, oIndex)}
-                        className="h-4 w-4 accent-primary"
-                      />
-                      <input
-                        type="text"
-                        value={opt.label}
-                        onChange={(e) =>
-                          updateOptionLabel(qIndex, oIndex, e.target.value)
-                        }
-                        placeholder={`Option ${oIndex + 1}`}
-                        className="input flex-1"
-                      />
-                      {q.options.length > 1 && (
-                        <button
-                          onClick={() => removeOption(qIndex, oIndex)}
-                          className="p-1 text-muted hover:text-danger"
-                        >
-                          <IconX size={14} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  <button
-                    onClick={() => addOption(qIndex)}
-                    className="text-xs text-primary hover:text-primary-hover flex items-center gap-1 mt-1"
-                  >
-                    <IconPlus size={12} /> Add Option
-                  </button>
-                </div>
+                <span className="flex h-5 w-5 items-center justify-center rounded bg-amber-500/10 text-[10px] font-bold text-amber-600 shrink-0">
+                  {idx + 1}
+                </span>
+                <span className="text-foreground truncate">{q.text}</span>
+                <span className="text-muted ml-auto shrink-0">
+                  {q.options.length} opts
+                </span>
               </div>
             ))}
-
-            <div className="flex items-center justify-between">
-              <button
-                onClick={addQuestion}
-                className="text-xs text-primary hover:text-primary-hover flex items-center gap-1"
-              >
-                <IconPlus size={14} /> Add Question
-              </button>
-              <button
-                onClick={handleSaveQuestion}
-                className="btn-primary text-xs inline-flex items-center gap-1"
-                disabled={questionSaving}
-              >
-                {questionSaving && (
-                  <IconLoader2 className="h-3 w-3 animate-spin" />
-                )}
-                Save Questions
-              </button>
-            </div>
+            {questions.filter((q) => q.text.trim()).length > 5 && (
+              <p className="text-[10px] text-muted text-center pt-1">
+                +{questions.filter((q) => q.text.trim()).length - 5} more questions
+              </p>
+            )}
           </div>
         )}
       </div>
 
-      {data.quiz && (
+      {/* Current Configuration Summary */}
+      {data?.quiz && (
         <div className="glass-card p-6">
           <h4 className="text-sm font-semibold text-foreground mb-3">
             Current Configuration
@@ -521,14 +518,125 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
               </p>
             </div>
           </div>
-          <div className="mt-3 rounded-lg bg-muted/30 p-3">
-            <p className="text-xs text-muted">Assignment</p>
-            <p className="text-sm font-medium text-foreground">
-              {data.quiz.hasAssignment ? "Included" : "Not included"}
-            </p>
+          <div className="mt-3 grid grid-cols-2 gap-4">
+            <div className="rounded-lg bg-muted/30 p-3">
+              <p className="text-xs text-muted">Assignment</p>
+              <p className="text-sm font-medium text-foreground">
+                {data.quiz.hasAssignment ? "Included" : "Not included"}
+              </p>
+            </div>
+            <div className="rounded-lg bg-muted/30 p-3">
+              <p className="text-xs text-muted">Question Paper PDF</p>
+              <p className="text-sm font-medium text-foreground">
+                {data.quiz.assignmentPdfUrl ? (
+                  <a
+                    href={data.quiz.assignmentPdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline flex items-center gap-1"
+                  >
+                    <IconExternalLink size={12} /> View PDF
+                  </a>
+                ) : (
+                  "None"
+                )}
+              </p>
+            </div>
           </div>
         </div>
       )}
+
+      {/* Questions Modal */}
+      <FormModal
+        open={showQuestionsModal}
+        onClose={() => setShowQuestionsModal(false)}
+        title="Edit Exam Questions"
+        size="lg"
+        footer={questionsModalFooter}
+      >
+        <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-2">
+          {questions.map((q, qIndex) => (
+            <div
+              key={qIndex}
+              className="space-y-2 rounded-lg border border-border/70 p-3 bg-muted/20"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Question {qIndex + 1}
+                </span>
+                {questions.length > 1 && (
+                  <button
+                    onClick={() => removeQuestion(qIndex)}
+                    className="p-1 text-muted hover:text-danger"
+                  >
+                    <IconX size={14} />
+                  </button>
+                )}
+              </div>
+
+              <input
+                type="text"
+                value={q.text}
+                onChange={(e) => updateQuestionText(qIndex, e.target.value)}
+                placeholder="Enter question prompt"
+                className="input text-sm"
+              />
+
+              <div className="space-y-2">
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  Options
+                </label>
+                {q.options.map((opt, oIndex) => (
+                  <div key={oIndex} className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name={`correct-${qIndex}`}
+                      checked={opt.isCorrect}
+                      onChange={() => markCorrectOption(qIndex, oIndex)}
+                      className="h-4 w-4 accent-primary"
+                    />
+                    <input
+                      type="text"
+                      value={opt.label}
+                      onChange={(e) =>
+                        updateOptionLabel(qIndex, oIndex, e.target.value)
+                      }
+                      placeholder={`Option ${oIndex + 1}`}
+                      className="input flex-1"
+                    />
+                    {q.options.length > 1 && (
+                      <button
+                        onClick={() => removeOption(qIndex, oIndex)}
+                        className="p-1 text-muted hover:text-danger"
+                      >
+                        <IconX size={14} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  onClick={() => addOption(qIndex)}
+                  className="text-xs text-primary hover:text-primary-hover flex items-center gap-1 mt-1"
+                >
+                  <IconPlus size={12} /> Add Option
+                </button>
+              </div>
+            </div>
+          ))}
+
+          <div className="flex items-center justify-between pt-2 border-t border-border/40">
+            <button
+              onClick={addQuestion}
+              className="text-xs text-primary hover:text-primary-hover flex items-center gap-1"
+            >
+              <IconPlus size={14} /> Add Question
+            </button>
+            <span className="text-[10px] text-muted">
+              {questions.length} question{questions.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+        </div>
+      </FormModal>
     </div>
   );
 }

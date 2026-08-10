@@ -108,13 +108,65 @@ export async function syncCalendarForUser(
 
 /**
  * Get calendar events for a user within a date range.
+ * When `userId` is provided, only events tied to the user's enrolled batches
+ * and their own mentorship sessions are returned (prevents leaking events from
+ * other batches/users and cuts down the payload).
  */
-export async function getEventsForUser(startDate: string, endDate: string) {
+export async function getEventsForUser(
+  startDate: string,
+  endDate: string,
+  userId?: string,
+) {
+  const where: Prisma.CalendarEventWhereInput = {
+    startAt: { lte: new Date(endDate) },
+    endAt: { gte: new Date(startDate) },
+  };
+
+  if (userId) {
+    // Gather the batches the student is approved into (individual + package)
+    const [enrollments, packageCourseEnrollments] = await Promise.all([
+      prisma.enrollmentRequest.findMany({
+        where: { userId, status: "APPROVED" },
+        select: { batchId: true },
+      }),
+      prisma.packageEnrollmentCourse.findMany({
+        where: { enrollment: { userId, status: "APPROVED" } },
+        select: { batchId: true },
+      }),
+    ]);
+
+    const batchIds = Array.from(
+      new Set(
+        [
+          ...enrollments.map((e) => e.batchId),
+          ...packageCourseEnrollments.map((p) => p.batchId),
+        ].filter(Boolean),
+      ),
+    ) as string[];
+
+    // Own mentorship sessions are matched via the linked ticket
+    const mentorshipTicketIds = (
+      await prisma.mentorshipTicket.findMany({
+        where: { studentId: userId },
+        select: { id: true },
+      })
+    ).map((t) => t.id);
+
+    const or: Prisma.CalendarEventWhereInput[] = [];
+    if (batchIds.length > 0) {
+      or.push({ session: { batchId: { in: batchIds } } });
+    }
+    if (mentorshipTicketIds.length > 0) {
+      or.push({ session: { mentorshipTicketId: { in: mentorshipTicketIds } } });
+    }
+    // No visible batches/tickets → nothing to show
+    if (or.length === 0) return [];
+
+    where.OR = or;
+  }
+
   return prisma.calendarEvent.findMany({
-    where: {
-      startAt: { lte: new Date(endDate) },
-      endAt: { gte: new Date(startDate) },
-    },
+    where,
     include: {
       session: {
         select: {

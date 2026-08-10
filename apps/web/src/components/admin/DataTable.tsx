@@ -85,18 +85,18 @@ export default function DataTable<T>({
 
   const renderTableHeader = () => (
     <thead>
-      <tr className="border-b-2 border-border text-left">
+      <tr className="border-b-2 border-border text-left bg-slate-100/70">
         {showSerialNumber && (
-          <th className="px-4 py-3 text-xs font-bold uppercase text-muted w-12">
+          <th className="px-4 py-3 text-xs font-extrabold uppercase text-black w-12">
             {serialNumberLabel}
           </th>
         )}
         {columns.map((col) => (
           <th
             key={col.key}
-            className={`px-4 py-3 text-xs font-bold uppercase text-muted ${
+            className={`px-4 py-3 text-xs font-extrabold uppercase text-black ${
               col.sortable
-                ? "cursor-pointer select-none hover:text-foreground transition-colors"
+                ? "cursor-pointer select-none hover:text-primary transition-colors"
                 : ""
             }`}
             onClick={() => col.sortable && handleSort(col.key)}
@@ -106,14 +106,14 @@ export default function DataTable<T>({
               {col.sortable &&
                 sortKey === col.key &&
                 (sortDir === "asc" ? (
-                  <IconChevronUp size={14} className="text-muted" />
+                  <IconChevronUp size={14} className="text-black" />
                 ) : (
-                  <IconChevronDown size={14} className="text-muted" />
+                  <IconChevronDown size={14} className="text-black" />
                 ))}
               {col.filterable && (
                 <IconFilter
                   size={13}
-                  className="text-muted hover:text-foreground cursor-pointer"
+                  className="text-black hover:text-primary cursor-pointer"
                 />
               )}
             </span>

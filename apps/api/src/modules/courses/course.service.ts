@@ -171,10 +171,12 @@ export const courseService = {
     return { courses, total, page, limit };
   },
 
-  // Gets a single course by ID with its modules
-  async getCourseById(courseId: string) {
-    const course = await prisma.course.findUnique({
-      where: { id: courseId },
+  // Gets a single course by ID or slug with its modules
+  async getCourseById(idOrSlug: string) {
+    const course = await prisma.course.findFirst({
+      where: {
+        OR: [{ id: idOrSlug }, { slug: idOrSlug }],
+      },
       include: {
         modules: {
           orderBy: { order: "asc" },
@@ -203,13 +205,14 @@ export const courseService = {
 
   // Updates course fields
   async updateCourse(
-    courseId: string,
+    idOrSlug: string,
     data: z.infer<typeof UpdateCourseSchema>,
   ) {
-    const existing = await prisma.course.findUnique({
-      where: { id: courseId },
+    const existing = await prisma.course.findFirst({
+      where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
     });
     if (!existing) throw new AppError(404, "Course not found");
+    const courseId = existing.id;
 
     const { tagIds, ...restData } = data;
     const updateData: any = { ...restData };

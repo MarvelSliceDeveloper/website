@@ -9,6 +9,7 @@ const router = Router();
 router.use(requireAuth);
 router.use(requireRole([UserRole.STUDENT]));
 
+router.get("/summary", studentController.getDashboardSummary);
 router.get("/assignments/overdue", studentController.listOverdueAssignments);
 router.get("/continue-learning", studentController.getContinueLearning);
 router.get("/results", studentController.getResults);

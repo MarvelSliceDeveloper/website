@@ -123,6 +123,11 @@ export default function SuperAdminPage() {
       desc: "Toggle platform-wide maintenance mode",
     },
     {
+      label: "Refund Approvals",
+      href: "/admin/refunds/approvals",
+      desc: "Approve or reject refund requests from admins",
+    },
+    {
       label: "Session Management",
       href: "/admin/session-management",
       desc: "Monitor and terminate admin sessions (kill button)",

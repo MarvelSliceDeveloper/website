@@ -6,7 +6,7 @@ import { quizController } from "./quiz.controller";
 import { assignmentController } from "./assignment.controller";
 import { practicalController } from "./practical.controller";
 import { uploadCourseThumbnail } from "./course.upload";
-import { uploadLessonResource, uploadPracticalPdf } from "./modules.upload";
+import { uploadLessonResource, uploadPracticalPdf, uploadCertificationPdf, buildCertificationPdfUrl } from "./modules.upload";
 import { requireAuth, requireRole, AuthRequest } from "../../middleware/auth.middleware";
 import { UserRole } from "@lms/types";
 import { prisma } from "../../utils/prisma";
@@ -345,6 +345,8 @@ router.get(
               hasAssignment: certModule.quizzes[0].hasAssignment,
               assignmentInstructions:
                 certModule.quizzes[0].assignmentInstructions,
+              assignmentPdfUrl:
+                certModule.quizzes[0].assignmentPdfUrl,
               questionCount: certModule.quizzes[0].questions.length,
               questions: certModule.quizzes[0].questions.map((q) => ({
                 id: q.id,
@@ -378,6 +380,46 @@ router.put(
         req.body,
       );
       return res.json(updated || certModule);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+);
+
+// POST /api/admin/courses/:courseId/certification/pdf — upload assignment PDF for certification exam
+router.post(
+  "/:courseId/certification/pdf",
+  requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
+  (req: Request, res: Response, next: NextFunction) =>
+    uploadCertificationPdf(req, res, (err) => {
+      if (err) return res.status(400).json({ error: err.message });
+      return next();
+    }),
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const file = (req as any).file;
+      if (!file) {
+        return res.status(400).json({ error: "No PDF file uploaded" });
+      }
+      const url = buildCertificationPdfUrl(
+        req,
+        req.params.courseId,
+        file.filename,
+      );
+
+      // Update the certification quiz's assignmentPdfUrl
+      const certModule = await moduleService.getCertificationModule(
+        req.params.courseId,
+      );
+      if (certModule?.quizzes[0]) {
+        await prisma.quiz.update({
+          where: { id: certModule.quizzes[0].id },
+          data: { assignmentPdfUrl: url },
+        });
+      }
+
+      return res.json({ url });
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
       return res.status(statusCode).json(body);

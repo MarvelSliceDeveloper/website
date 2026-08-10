@@ -234,12 +234,12 @@ export const batchService = {
       }
     }
 
-    // Create BatchCourseVisibility for each course (hidden by default)
+    // Create BatchCourseVisibility for each course (hidden by default, exam not required by default)
     const visibilityData = packageCourses.map((pc) => ({
       batchId: batch.id,
       courseId: pc.course.id,
       isVisible: false,
-      isExamRequired: true,
+      isExamRequired: false,
     }));
 
     await prisma.batchCourseVisibility.createMany({
@@ -679,7 +679,7 @@ export const batchService = {
         courseId: pc.course.id,
         order: pc.order,
         isVisible: rec?.isVisible ?? false,
-        isExamRequired: rec?.isExamRequired ?? true,
+        isExamRequired: rec?.isExamRequired ?? false,
         course: pc.course,
       };
     });
@@ -700,7 +700,7 @@ export const batchService = {
         batchId,
         courseId,
         isVisible: newIsVisible,
-        isExamRequired: true,
+        isExamRequired: false,
       },
     });
 

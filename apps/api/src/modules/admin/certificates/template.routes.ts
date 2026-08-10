@@ -21,8 +21,15 @@ const certificateUploadsDir = ensureUploadsDir("certificate-templates");
 const upload = multer({
   storage: multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, certificateUploadsDir),
-    filename: (_req, file, cb) =>
-      cb(null, `template-${Date.now()}-${file.originalname}`),
+    filename: (_req, file, cb) => {
+      // Strip spaces, commas and other URL/hostile characters from the name so
+      // the relative path we store on the template (and later serve at
+      // /uploads/...) stays clean. Disk paths and web URLs then stay in sync.
+      const safe = file.originalname
+        .replace(/[^a-zA-Z0-9._-]/g, "_")
+        .replace(/_+/g, "_");
+      cb(null, `template-${Date.now()}-${safe}`);
+    },
   }),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) =>
@@ -281,7 +288,7 @@ router.post(
         return res.status(400).json({ error: "PDF file is required" });
       }
 
-      const relativePath = path.join(
+      const relativePath = path.posix.join(
         "certificate-templates",
         req.file.filename,
       );

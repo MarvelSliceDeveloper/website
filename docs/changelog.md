@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-08-07 - Student Portal Performance Optimization
+
+### Backend API
+- `GET /api/student/summary` slimmed to a **lightweight core** (enrolled, sessions, calendar, tickets, cheap certificate count). Heavy sections (overdue, results, continue-learning) are no longer added; they have their own endpoints and load progressively on the client.
+- `getDashboardSummary` is single-flight cached per-user (`student-summary:${userId}`, 15s TTL).
+- `GET /api/courses/:courseId` (new `getCourseDetail`) — on-demand single-course detail for COURSE_DETAIL; replaces pre-loading the full catalogue.
+- `getOverdueAssignments` capped at 50 items per batch; `getContinueLearning` now filters to lessons/sessions the user has started (`progress: some`), cutting the nested payload.
+- New composite indexes: `QuizAttempt(userId,status)`, `Quiz(moduleId,dueDate)`, `Assignment(batchId,dueDate)`, `AssignmentSubmission(studentId,status)`, `EnrollmentRequest(userId,status)`, `PackageEnrollment(userId,status)`.
+
+### Frontend
+- `student/page.tsx` — core summary loads first, heavy sections fetched in parallel from their own endpoints (progressive rendering).
+- Removed eager `catalogue` + `certificates` pre-fetch from the summary path.
+- COURSE_DETAIL fetches `GET /api/courses/:courseId` on demand into a `courseDetailCache`.
+- `CertificatesView` self-fetches `GET /api/certificates` on mount with a loading skeleton — the heavy completion map is off the initial load path.
+
+### Cleanup
+- Removed the unused `recommended` widget (backend `getRecommendedCourses` + summary field + frontend type).
+- Removed the unused `certificate?: any` response field in `CertificatesView` (also clears a lint error).
+- Removed the ~100-line legacy fallback block in `fetchPortalData` — summary failure now yields an empty core + the existing `failedSections` warning banner.
+
 ## 2026-08-02 — Vitest Security Patch (CVE-2026-47429)
 
 ### Dependencies

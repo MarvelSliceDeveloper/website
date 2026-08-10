@@ -8,6 +8,7 @@ import { moduleService } from "./module.service";
 import {
   getEnrolledCourses,
   getCatalogue,
+  getCourseDetail,
   loadCourseContent,
   requestEnrollment,
   updateLessonProgress,
@@ -36,6 +37,20 @@ router.get("/catalogue", async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
     const result = await getCatalogue(userId);
     return res.status(200).json(result);
+  } catch (err: unknown) {
+    const { statusCode, body } = handleControllerError(err, (req as any).log);
+    return res.status(statusCode).json(body);
+  }
+});
+
+// GET /api/courses/:courseId — single published course for the student's
+// on-demand COURSE_DETAIL view (avoids loading the full catalogue).
+router.get("/:courseId", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const { courseId } = req.params;
+    const course = await getCourseDetail(userId, courseId);
+    return res.status(200).json({ course });
   } catch (err: unknown) {
     const { statusCode, body } = handleControllerError(err, (req as any).log);
     return res.status(statusCode).json(body);

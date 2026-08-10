@@ -306,6 +306,7 @@ export const moduleService = {
       timeLimitMin?: number | null;
       hasAssignment?: boolean;
       assignmentInstructions?: string | null;
+      assignmentPdfUrl?: string | null;
       questions?: Array<{
         text: string;
         options: Array<{ label: string; isCorrect: boolean }>;
@@ -355,6 +356,9 @@ export const moduleService = {
         }),
         ...(data.assignmentInstructions !== undefined && {
           assignmentInstructions: data.assignmentInstructions,
+        }),
+        ...(data.assignmentPdfUrl !== undefined && {
+          assignmentPdfUrl: data.assignmentPdfUrl,
         }),
       },
     });

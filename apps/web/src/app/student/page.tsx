@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
 import { IconAlertCircle, IconSearch } from "@tabler/icons-react";
 import StudentPortalShell, {
@@ -21,28 +22,46 @@ import type {
   LiveSession,
   CalendarEvent,
   MentorshipTicket,
-  Certificate,
-  ClaimableCertificate,
   CatalogueCourse,
   ContinueLearningItem,
   StudentResultItem,
 } from "@/lib/api-types";
 
-// Views
+// Views — heavy ones are lazy-loaded to keep the initial bundle small
 import HomeView from "./_views/HomeView";
 import CoursesView from "./_views/CoursesView";
-import BatchDetailView from "./_views/BatchDetailView";
-import RecordingPlayerView from "./_views/RecordingPlayerView";
 import LiveSessionsView from "./_views/LiveSessionsView";
 import CalendarView from "./_views/CalendarView";
 import MentorshipView from "./_views/MentorshipView";
-import CertificatesView from "./_views/CertificatesView";
-import CourseDetailView from "./_views/CourseDetailView";
-import CourseContentView from "./_views/CourseContentView";
-import AssignmentOverdueView from "./_views/AssignmentOverdueView";
-import QuizOverdueView from "./_views/QuizOverdueView";
 import CourseCompletedView from "./_views/CourseCompletedView";
-import OnboardingWizardView from "./_views/OnboardingWizardView";
+
+const BatchDetailView = dynamic(() => import("./_views/BatchDetailView"), {
+  loading: () => <LoadingView message="Loading batch details…" />,
+});
+const RecordingPlayerView = dynamic(
+  () => import("./_views/RecordingPlayerView"),
+  { loading: () => <LoadingView message="Loading recording…" /> },
+);
+const CertificatesView = dynamic(() => import("./_views/CertificatesView"), {
+  loading: () => <LoadingView message="Loading certificates…" />,
+});
+const CourseDetailView = dynamic(() => import("./_views/CourseDetailView"), {
+  loading: () => <LoadingView message="Loading course…" />,
+});
+const CourseContentView = dynamic(() => import("./_views/CourseContentView"), {
+  loading: () => <LoadingView message="Loading course content…" />,
+});
+const AssignmentOverdueView = dynamic(
+  () => import("./_views/AssignmentOverdueView"),
+  { loading: () => <LoadingView message="Loading assignments…" /> },
+);
+const QuizOverdueView = dynamic(() => import("./_views/QuizOverdueView"), {
+  loading: () => <LoadingView message="Loading quizzes…" />,
+});
+const OnboardingWizardView = dynamic(
+  () => import("./_views/OnboardingWizardView"),
+  { loading: () => <LoadingView message="Loading…" /> },
+);
 
 // ─── Portal data store ────────────────────────────────────────────────────────
 
@@ -54,8 +73,6 @@ interface PortalData {
   liveSessions: LiveSession[];
   calendarEvents: CalendarEvent[];
   mentorshipTickets: MentorshipTicket[];
-  certificates: Certificate[];
-  catalogue: CatalogueCourse[];
   continueLearning: ContinueLearningItem[];
   results: StudentResultItem[];
   failedSections: string[];
@@ -78,13 +95,16 @@ interface ApiBatchSessionRecord {
 interface ApiSessionRecord {
   id: string;
   title: string;
+  status?: string;
   scheduledAt: string;
   scheduledEndAt: string;
   joinUrl: string;
   recording: { id: string } | null;
+  course?: { id: string; title: string } | null;
   batch?: {
     name: string;
     course?: { title: string };
+    package?: { name: string };
     instructor?: { name: string };
   };
   module?: { title: string } | null;
@@ -114,6 +134,22 @@ interface ApiBatchDetailResponse {
   };
 }
 
+interface ApiEnrolledCourse {
+  id: string;
+  courseId?: string;
+  course?: { id: string; title: string; thumbnailUrl?: string | null };
+  batchId?: string | null;
+  batch?: { id: string; name: string } | null;
+}
+
+interface ApiSummaryResponse {
+  enrolled?: ApiEnrolledCourse[];
+  sessions?: ApiSessionRecord[];
+  calendarEvents?: CalendarEvent[];
+  tickets?: ApiMentorshipTicket[];
+  certificatesCount?: number;
+}
+
 interface ApiRecordingResponse {
   recordings: Array<{
     id: string;
@@ -133,7 +169,9 @@ interface ApiRecordingResponse {
 function computeSessionStatus(
   scheduledAt: string,
   endDateTime: string | null | undefined,
+  backendStatus?: string,
 ): "LIVE" | "UPCOMING" | "PAST" {
+  if (backendStatus === "LIVE") return "LIVE";
   const now = Date.now();
   const start = new Date(scheduledAt).getTime();
   // Fallback: if no end time, assume 2 hours from start
@@ -147,113 +185,141 @@ function computeSessionStatus(
 }
 
 async function fetchPortalData(): Promise<PortalData> {
-  // Track which endpoints fail so the UI can surface partial failures instead
-  // of silently masking them with empty fallbacks.
   const failedSections: string[] = [];
-  const track =
-    (section: string) =>
-    <T,>(promise: Promise<T>): Promise<T> =>
-      promise.catch((err: unknown) => {
-        failedSections.push(section);
-        console.error(`[portal] ${section} fetch failed:`, err);
-        throw err;
-      });
+  let summaryData: ApiSummaryResponse | null = null;
 
-  // Real API calls — run in parallel. Each has a fallback so one failing
-  // endpoint doesn't sink the whole portal.
+  try {
+    // Lightweight core summary only — enrolled, sessions, calendar, tickets,
+    // cheap certificate count. Heavy sections load in parallel afterwards so
+    // the dashboard renders progressively.
+    summaryData = await api.get<ApiSummaryResponse>("/api/student/summary");
+  } catch (err) {
+    console.warn("[portal] Core summary fetch failed, falling back to legacy queries:", err);
+    failedSections.push("summary");
+  }
+
+  // Heavy sections fetched once core is ready. Each has its own endpoint and
+  // is already independently cached/optimized server-side.
   const [
-    enrolled,
-    sessionsData,
-    calEvents,
-    tickets,
-    certs,
-    catalogue,
-    overdueAssignments,
-    continueLearningData,
-    resultsData,
+    overdueSection,
+    continueLearningSection,
+    resultsSection,
   ] = await Promise.all([
-    track("enrolled")(api.get<{ courses: EnrolledCourse[] }>("/api/courses/enrolled")).catch(() => ({ courses: [] })),
-    track("sessions")(api.get<{ sessions: ApiSessionRecord[] }>("/api/sessions")).catch(() => ({ sessions: [] })),
-    track("calendar")(api.get<{ events: CalendarEvent[] }>("/api/calendar/events")).catch(() => ({ events: [] })),
-    track("mentorship")(api.get<{ tickets: ApiMentorshipTicket[] }>("/api/mentorship/tickets/my")).catch(() => ({ tickets: [] })),
-    track("certificates")(api.get<{ certificates: Certificate[]; claimable: ClaimableCertificate[] }>("/api/certificates")).catch(() => ({ certificates: [], claimable: [] })),
-    track("catalogue")(api.get<{ courses: CatalogueCourse[] }>("/api/courses/catalogue")).catch(() => ({ courses: [] })),
-    track("overdue")(api.get<{ items: OverdueAssignment[] }>("/api/student/assignments/overdue")).catch(() => ({ items: [] })),
-    track("continue-learning")(api.get<{ items: ContinueLearningItem[] }>("/api/student/continue-learning")).catch(() => ({ items: [] })),
-    track("results")(api.get<{ items: StudentResultItem[] }>("/api/student/results")).catch(() => ({ items: [] })),
+    api
+      .get<{ items: OverdueAssignment[] }>("/api/student/assignments/overdue")
+      .catch(() => ({ items: [] })),
+    api
+      .get<{ items: ContinueLearningItem[] }>("/api/student/continue-learning")
+      .catch(() => ({ items: [] })),
+    api
+      .get<{ items: StudentResultItem[] }>("/api/student/results")
+      .catch(() => ({ items: [] })),
   ]);
 
-  const mappedSessions: LiveSession[] = (sessionsData.sessions || []).map(
-    (s: ApiSessionRecord) => ({
-      id: s.id,
-      title:
-        s.title ||
-        (s.module
-          ? `Module ${s.module.title} — ${s.batch?.course?.title}`
-          : `Live Session — ${s.batch?.course?.title}`),
-      courseTitle: s.batch?.course?.title || "Unknown Course",
-      instructor: s.batch?.instructor?.name || "TBD",
-      batchLabel: s.batch?.name || "—",
-      status: computeSessionStatus(s.scheduledAt, s.scheduledEndAt),
-      scheduledAt: s.scheduledAt,
-      endDateTime:
-        s.scheduledEndAt ||
-        new Date(
-          new Date(s.scheduledAt).getTime() + 2 * 60 * 60 * 1000,
-        ).toISOString(),
-      joinUrl: s.joinUrl,
-      recordingSyncingIn:
-        s.scheduledEndAt &&
-        new Date(s.scheduledEndAt) <= new Date() &&
-        !s.recording
-          ? "~20 min"
-          : undefined,
-    }),
-  );
+  if (summaryData) {
+    const enrolledCourses: EnrolledCourse[] = (summaryData.enrolled || []).map(
+      (req: ApiEnrolledCourse) => {
+        const c = req.course;
+        return {
+          id: c?.id || req.id,
+          title: c?.title || "Untitled Course",
+          thumbnail: c?.thumbnailUrl || "📚",
+          batchId: req.batchId || "",
+          batchLabel: req.batch?.name || "Standard Batch",
+          instructor: "—",
+          progress: 0,
+          status: "ACTIVE" as const,
+          source: "enrollment" as const,
+        };
+      },
+    );
 
+    const mappedSessions: LiveSession[] = (summaryData.sessions || []).map(
+      (s: ApiSessionRecord) => {
+        const courseTitle =
+          s.course?.title ||
+          s.batch?.course?.title ||
+          s.batch?.package?.name ||
+          s.batch?.name ||
+          "Live Class";
+
+        return {
+          id: s.id,
+          title:
+            s.title ||
+            (s.module
+              ? `Module ${s.module.title} — ${courseTitle}`
+              : `Live Session — ${courseTitle}`),
+          courseTitle,
+          instructor: s.batch?.instructor?.name || "TBD",
+          batchLabel: s.batch?.name || "—",
+          status: computeSessionStatus(s.scheduledAt, s.scheduledEndAt, s.status),
+          scheduledAt: s.scheduledAt,
+          endDateTime:
+            s.scheduledEndAt ||
+            new Date(
+              new Date(s.scheduledAt).getTime() + 2 * 60 * 60 * 1000,
+            ).toISOString(),
+          joinUrl: s.joinUrl,
+          recordingSyncingIn:
+            s.scheduledEndAt &&
+            new Date(s.scheduledEndAt) <= new Date() &&
+            !s.recording
+              ? "~20 min"
+              : undefined,
+        };
+      },
+    );
+
+    return {
+      stats: {
+        enrolledCount: enrolledCourses.length,
+        completedCount: 0,
+        liveTodayCount: mappedSessions.filter((s) => s.status === "LIVE").length,
+        certificatesCount: summaryData.certificatesCount ?? 0,
+      },
+      overdueAssignments: overdueSection.items,
+      enrolledCourses,
+      batches: {},
+      liveSessions: mappedSessions,
+      calendarEvents: summaryData.calendarEvents || [],
+      mentorshipTickets: (summaryData.tickets || []).map(
+        (t: ApiMentorshipTicket) => ({
+          id: t.id,
+          courseTitle: t.course?.title || "General",
+          topic: t.title,
+          status: t.status as MentorshipTicket["status"],
+          createdAt: t.createdAt,
+          preferredTime: t.preferredTime || undefined,
+          notes: t.notes || undefined,
+          instructor: t.mentor?.name || undefined,
+          joinUrl: t.joinUrl || undefined,
+        }),
+      ),
+      continueLearning: continueLearningSection.items,
+      results: resultsSection.items,
+      failedSections,
+    };
+  }
+
+  // Summary endpoint unavailable — render the sections that did load. The
+  // heavy sections (overdue/results/continue-learning) already fall back to
+  // empty arrays on their own, so a failed summary just yields an empty core.
   return {
     stats: {
-      enrolledCount: enrolled.courses.length,
-      completedCount: enrolled.courses.filter((c) => c.status === "COMPLETED")
-        .length,
-      liveTodayCount: mappedSessions.filter((s) => s.status === "LIVE").length,
-      certificatesCount: (certs.certificates ?? []).length,
+      enrolledCount: 0,
+      completedCount: 0,
+      liveTodayCount: 0,
+      certificatesCount: 0,
     },
-    overdueAssignments: overdueAssignments.items,
-    enrolledCourses: enrolled.courses,
-    batches: {}, // batches loaded on demand via API
-    liveSessions: mappedSessions,
-    calendarEvents: calEvents.events,
-    mentorshipTickets: (tickets.tickets || []).map(
-      (t: ApiMentorshipTicket) => ({
-        id: t.id,
-        courseTitle: t.course?.title || "General",
-        topic: t.title,
-        status: t.status as MentorshipTicket["status"],
-        createdAt: t.createdAt,
-        preferredTime: t.preferredTime || undefined,
-        notes: t.notes || undefined,
-        instructor: t.mentor?.name || undefined,
-        joinUrl: t.joinUrl || undefined,
-      }),
-    ),
-    certificates: [
-      ...(certs.certificates ?? []).map((c) => ({ ...c, earned: true })),
-      ...(certs.claimable ?? []).map((c) => ({
-        id: c.courseId,
-        courseId: c.courseId,
-        course: c.course,
-        issuedAt: undefined,
-        verifyUrl: undefined,
-        totalRecordings: c.totalRecordings,
-        completedRecordings: c.completedRecordings,
-        progressPercent: c.progressPercent,
-        earned: false,
-      })),
-    ],
-    catalogue: catalogue.courses,
-    continueLearning: continueLearningData.items,
-    results: resultsData.items,
+    overdueAssignments: overdueSection.items,
+    enrolledCourses: [],
+    batches: {},
+    liveSessions: [],
+    calendarEvents: [],
+    mentorshipTickets: [],
+    continueLearning: continueLearningSection.items,
+    results: resultsSection.items,
     failedSections,
   };
 }
@@ -358,6 +424,7 @@ function buildBreadcrumbs(
   currentView: ViewState,
   navigate: (v: ViewState) => void,
   data: PortalData | null,
+  courseDetailCache: Record<string, CatalogueCourse>,
 ): Breadcrumb[] {
   const home: Breadcrumb = {
     label: "Home",
@@ -402,8 +469,8 @@ function buildBreadcrumbs(
         },
         {
           label:
-            data?.catalogue.find((c) => c.id === currentView.params?.courseId)
-              ?.title ?? "Course",
+            courseDetailCache[currentView.params?.courseId ?? ""]?.title ??
+            "Course",
         },
       ];
     case "COURSE_CONTENT":
@@ -454,6 +521,9 @@ function StudentPortalContent() {
   const router = useRouter();
   const [data, setData] = useState<PortalData | null>(null);
   const [batchCache, setBatchCache] = useState<Record<string, Batch>>({});
+  const [courseDetailCache, setCourseDetailCache] = useState<
+    Record<string, CatalogueCourse>
+  >({});
   const [loadingBatch, setLoadingBatch] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -691,12 +761,33 @@ function StudentPortalContent() {
     };
   }, [currentView, batchCache]);
 
+  // Fetch course detail on-demand (not in the summary) when opening COURSE_DETAIL
+  useEffect(() => {
+    const courseId = currentView.params?.courseId;
+    if (!courseId || currentView.view !== "COURSE_DETAIL") return;
+    if (courseDetailCache[courseId]) return;
+    let active = true;
+    api
+      .get<{ course: CatalogueCourse }>(`/api/courses/${courseId}`)
+      .then((res) => {
+        if (!active || !res?.course) return;
+        setCourseDetailCache((prev) => ({ ...prev, [courseId]: res.course }));
+      })
+      .catch(() => {
+        // Leave missing — NotFoundView will render
+      });
+    return () => {
+      active = false;
+    };
+  }, [currentView, courseDetailCache]);
+
   // ── Breadcrumbs ───────────────────────────────────────────────────────────
 
   const breadcrumbs = buildBreadcrumbs(
     currentView,
     navigate,
     data ? { ...data, batches: batchCache } : null,
+    courseDetailCache,
   );
 
   // ── Mentorship submit handler ─────────────────────────────────────────────
@@ -870,12 +961,14 @@ function StudentPortalContent() {
         );
 
       case "CERTIFICATES":
-        return <CertificatesView certificates={portalData.certificates} />;
+        return (
+          <CertificatesView onCertificateClaimed={loadData} />
+        );
 
       case "COURSE_DETAIL": {
         const courseId = currentView.params?.courseId ?? "";
-        const course = portalData.catalogue.find((c) => c.id === courseId);
-        if (!course) return <NotFoundView />;
+        const course = courseDetailCache[courseId];
+        if (!course) return <LoadingView message="Loading course…" />;
         return <CourseDetailView course={course} onEnroll={handleEnroll} />;
       }
 

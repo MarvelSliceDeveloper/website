@@ -9,6 +9,7 @@ import { FormModal } from "@/components/admin/FormModal";
 import {
   IconClipboardCheck,
   IconFileDescription,
+  IconFileUpload,
   IconUser,
   IconCheck,
   IconX,
@@ -108,10 +109,7 @@ export default function AssignmentReviewPage() {
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
 
-  const [searchAssignment, setSearchAssignment] = useState("");
-  const [searchInstructor, setSearchInstructor] = useState("");
-  const [searchCourse, setSearchCourse] = useState("");
-  const [searchStudent, setSearchStudent] = useState("");
+  const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
 
   const [gradeModalOpen, setGradeModalOpen] = useState(false);
@@ -188,30 +186,22 @@ export default function AssignmentReviewPage() {
     }
   }
 
+  const query = search.trim().toLowerCase();
   const filteredSubmissions = submissions.filter((s) => {
     if (filterStatus !== "ALL" && s.status !== filterStatus) return false;
-    if (
-      searchAssignment &&
-      !s.assignment.title.toLowerCase().includes(searchAssignment.toLowerCase())
-    )
-      return false;
-    if (
-      searchInstructor &&
-      !s.instructor?.name.toLowerCase().includes(searchInstructor.toLowerCase())
-    )
-      return false;
-    if (
-      searchCourse &&
-      !s.course.title.toLowerCase().includes(searchCourse.toLowerCase())
-    )
-      return false;
-    if (
-      searchStudent &&
-      !s.student.name.toLowerCase().includes(searchStudent.toLowerCase()) &&
-      !s.student.email.toLowerCase().includes(searchStudent.toLowerCase())
-    )
-      return false;
-    return true;
+    if (!query) return true;
+    const haystack = [
+      s.student.name,
+      s.student.email,
+      s.instructor?.name ?? "",
+      s.assignment.id,
+      s.assignment.title,
+      s.course.title,
+      s.batch?.name ?? "",
+    ]
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(query);
   });
 
   return (
@@ -239,7 +229,7 @@ export default function AssignmentReviewPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:border-primary/50 bg-gradient-to-br from-primary/15 via-primary/8 to-accent/5">
+        <div className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:border-primary/50">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
@@ -258,7 +248,7 @@ export default function AssignmentReviewPage() {
             </div>
           </div>
         </div>
-        <div className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:border-success/50 bg-gradient-to-br from-success/15 via-success/8 to-success/5">
+        <div className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:border-success/50">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
@@ -277,7 +267,7 @@ export default function AssignmentReviewPage() {
             </div>
           </div>
         </div>
-        <div className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:border-accent/50 bg-gradient-to-br from-accent/15 via-accent/8 to-accent/5">
+        <div className="rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:border-accent/50">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
@@ -292,7 +282,7 @@ export default function AssignmentReviewPage() {
               </p>
             </div>
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/20 text-accent border border-accent/25">
-              <IconFileDescription size={20} stroke={1.5} />
+              <IconFileUpload size={20} stroke={1.5} />
             </div>
           </div>
         </div>
@@ -355,52 +345,16 @@ export default function AssignmentReviewPage() {
 
       {/* Filter Bar */}
       <div className="rounded-xl border border-border bg-card p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          <div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="sm:col-span-2">
             <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted mb-1">
-              Assignment
+              Search
             </label>
             <input
               type="text"
-              placeholder="Search assignments..."
-              value={searchAssignment}
-              onChange={(e) => setSearchAssignment(e.target.value)}
-              className="input text-xs w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted mb-1">
-              Instructor
-            </label>
-            <input
-              type="text"
-              placeholder="Search instructor..."
-              value={searchInstructor}
-              onChange={(e) => setSearchInstructor(e.target.value)}
-              className="input text-xs w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted mb-1">
-              Course
-            </label>
-            <input
-              type="text"
-              placeholder="Search course..."
-              value={searchCourse}
-              onChange={(e) => setSearchCourse(e.target.value)}
-              className="input text-xs w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted mb-1">
-              Student
-            </label>
-            <input
-              type="text"
-              placeholder="Search student..."
-              value={searchStudent}
-              onChange={(e) => setSearchStudent(e.target.value)}
+              placeholder="Search by student, instructor, assignment ID, or assignment title..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               className="input text-xs w-full"
             />
           </div>

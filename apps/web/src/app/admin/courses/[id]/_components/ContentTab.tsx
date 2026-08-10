@@ -55,14 +55,19 @@ export default function ContentTab({
     const [moved] = reordered.splice(dragIndex, 1);
     reordered.splice(dropIdx, 0, moved);
     setDragOrder(reordered.map((m) => m.id));
+    const promise = api.patch(`/api/admin/courses/${courseId}/modules/reorder`, {
+      moduleIds: reordered.map((m) => m.id),
+    });
+    toast.promise(promise, {
+      loading: "Saving order...",
+      success: "Module order saved",
+      error: "Failed to reorder",
+    });
     try {
-      await api.patch(`/api/admin/courses/${courseId}/modules/reorder`, {
-        moduleIds: reordered.map((m) => m.id),
-      });
+      await promise;
       setDragOrder(null);
       onContentChanged();
     } catch {
-      toast.error("Failed to reorder");
       setDragOrder(null);
       onContentChanged();
     }

@@ -218,6 +218,33 @@ cp .env.example .env
 
 See `apps/landing/README.md` for DB schema, seed data, and first admin user.
 
+### Updating the landing site from upstream
+
+The landing site (`apps/landing/`) is a **git subtree** vendored from [Lethinkj/marvel-slice](https://github.com/Lethinkj/marvel-slice). To pull updates:
+
+```bash
+# From the repo root
+git fetch marvel-slice
+git subtree pull --prefix apps/landing marvel-slice master --squash
+```
+
+If conflicts arise (usually in `apps/landing/` files), accept upstream versions:
+
+```bash
+git checkout --theirs apps/landing/<conflicted-file>
+git add -A
+git commit --no-edit
+```
+
+Then reinstall dependencies and verify the build:
+
+```bash
+pnpm install
+pnpm build:landing
+```
+
+**Important:** Do **not** modify files in `apps/landing/` directly — treat it as read-only. If you need customizations, fork the upstream repo and merge from your fork instead.
+
 ---
 
 ## Seed Logins

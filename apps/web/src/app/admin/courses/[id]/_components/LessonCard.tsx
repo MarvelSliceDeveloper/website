@@ -208,8 +208,8 @@ export default function LessonCard({
         onDrop();
       }}
       onDragEnd={() => {}}
-      className={`group flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-all duration-200 ${
-        isDragging ? "scale-[0.98] opacity-40" : "hover:bg-[#f8f7fd]"
+      className={`group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 ${
+        isDragging ? "scale-[0.98] opacity-40" : "hover:border-[#cfcbe8] hover:bg-[#f8f7fd]"
       }`}
     >
       <span className="shrink-0 cursor-grab text-[#c7c6dd] transition-colors hover:text-[#a3a1c9] active:cursor-grabbing">
@@ -225,7 +225,7 @@ export default function LessonCard({
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-medium text-[#1f2233]">
+        <p className="truncate text-[13px] font-semibold text-black dark:text-white">
           {lesson.title}
         </p>
         {lesson.description && (

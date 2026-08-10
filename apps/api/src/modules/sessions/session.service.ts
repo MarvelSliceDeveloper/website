@@ -201,22 +201,31 @@ export const sessionService = {
     const where: any = {};
 
     if (filters.studentId) {
-      // Find batches where student is enrolled
-      const enrollments = await prisma.enrollmentRequest.findMany({
-        where: { userId: filters.studentId, status: "APPROVED" },
-        select: { batchId: true },
-      });
-      const batchIds = enrollments
-        .map((e: (typeof enrollments)[number]) => e.batchId)
-        .filter(Boolean) as string[];
+      // Find batches where student is enrolled (both individual and package enrollments)
+      const [individualEnrollments, packageEnrollments] = await Promise.all([
+        prisma.enrollmentRequest.findMany({
+          where: { userId: filters.studentId, status: "APPROVED" },
+          select: { batchId: true },
+        }),
+        prisma.packageEnrollmentCourse.findMany({
+          where: { enrollment: { userId: filters.studentId, status: "APPROVED" } },
+          select: { batchId: true },
+        }),
+      ]);
 
-      // If student is not in any approved batch, they shouldn't see anything
+      const batchIds = Array.from(
+        new Set([
+          ...individualEnrollments.map((e) => e.batchId),
+          ...packageEnrollments.map((p) => p.batchId),
+        ]),
+      ).filter(Boolean) as string[];
+
+      // If student is not in any approved batch, return empty list
       if (batchIds.length === 0) {
         return [];
       }
 
       if (filters.batchId) {
-        // If they requested a specific batch, ensure they are enrolled in it
         if (!batchIds.includes(filters.batchId)) {
           return [];
         }
@@ -247,19 +256,30 @@ export const sessionService = {
       where.batch = batchFilter;
     }
 
-    // Status filter
+    // Status filter — LiveSession has no `status` column; derive state from timestamps
     const now = new Date();
     const bufferMs = 15 * 60 * 1000;
     if (filters.status === "scheduled") {
       where.scheduledAt = { gt: now };
     } else if (filters.status === "live") {
-      where.scheduledAt = { lte: now };
-      where.endedAt = null;
-      where.scheduledEndAt = { gte: new Date(now.getTime() - bufferMs) };
+      where.OR = [
+        ...(Array.isArray(where.OR) ? where.OR : []),
+        {
+          scheduledAt: { lte: now },
+          endedAt: null,
+          scheduledEndAt: { gte: new Date(now.getTime() - bufferMs) },
+        },
+      ];
     } else if (filters.status === "completed") {
       where.OR = [
+        ...(Array.isArray(where.OR) ? where.OR : []),
         { endedAt: { not: null } },
         { scheduledEndAt: { lt: new Date(now.getTime() - bufferMs) } },
+      ];
+    } else if (filters.status === "cancelled") {
+      where.OR = [
+        ...(Array.isArray(where.OR) ? where.OR : []),
+        { endedAt: { not: null }, deletedAt: { not: null } },
       ];
     }
 
@@ -272,12 +292,14 @@ export const sessionService = {
       skip,
       take: limit,
       include: {
+        course: { select: { id: true, title: true } },
         batch: {
           select: {
             id: true,
             name: true,
             courseId: true,
             course: { select: { id: true, title: true } },
+            package: { select: { id: true, name: true } },
             instructor: { select: { id: true, name: true } },
           },
         },

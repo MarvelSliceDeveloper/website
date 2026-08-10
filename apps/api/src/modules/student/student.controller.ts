@@ -137,4 +137,17 @@ export const studentController = {
       return res.status(statusCode).json(body);
     }
   },
+
+  async getDashboardSummary(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
+
+      const summary = await studentService.getDashboardSummary(req.user.userId);
+      return res.status(200).json(summary);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
 };

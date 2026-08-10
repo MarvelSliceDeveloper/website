@@ -1,5 +1,8 @@
 import { prisma } from "../../utils/prisma";
 import { resolveEffectiveDueDate } from "../../services/due-date.service";
+import { sessionService } from "../sessions/session.service";
+import { getEventsForUser } from "../calendar/calendar.service";
+import { getCachedSingleFlight } from "../../utils/single-flight-cache";
 
 export interface OverdueAssignmentItem {
   id: string;
@@ -125,6 +128,7 @@ export const studentService = {
         where: {
           batchId: { in: uniqueBatchIds },
         },
+        take: 50,
         include: {
           course: { select: { title: true } },
           batch: { select: { name: true } },
@@ -203,6 +207,7 @@ export const studentService = {
         where: {
           moduleId: { in: moduleIds },
         },
+        take: 50,
         select: {
           id: true,
           title: true,
@@ -269,6 +274,7 @@ export const studentService = {
         where: {
           moduleId: { in: moduleIds },
         },
+        take: 50,
         include: {
           module: { select: { title: true } },
           attempts: {
@@ -347,6 +353,7 @@ export const studentService = {
                     select: {
                       id: true,
                       lessons: {
+                        where: { progress: { some: { userId } } },
                         select: {
                           id: true,
                           title: true,
@@ -399,6 +406,7 @@ export const studentService = {
               select: {
                 id: true,
                 lessons: {
+                  where: { progress: { some: { userId } } },
                   select: {
                     id: true,
                     title: true,
@@ -416,6 +424,7 @@ export const studentService = {
           },
         },
         sessions: {
+          where: { recording: { progress: { some: { userId } } } },
           orderBy: { scheduledAt: "desc" },
           take: 5,
           select: {
@@ -455,20 +464,19 @@ export const studentService = {
         const watchedPercent = session.recording.progress[0]?.completedAt
           ? 100
           : Math.min(
-              100,
-              Math.round((watchedSeconds / totalSeconds) * 100),
-            );
+            100,
+            Math.round((watchedSeconds / totalSeconds) * 100),
+          );
 
         if (watchedPercent > 0 && watchedPercent < 100) {
           items.push({
             recordingId: session.recording.id,
             batchId,
             courseTitle,
-            dayLabel: `Day ${
-              items.filter(
-                (i) => i.batchId === batchId && i.recordingId,
-              ).length + 1
-            }`,
+            dayLabel: `Day ${items.filter(
+              (i) => i.batchId === batchId && i.recordingId,
+            ).length + 1
+              }`,
             watchedPercent,
             thumbnail,
           });
@@ -505,13 +513,13 @@ export const studentService = {
           const watchedPercent = lesson.progress[0]?.completedAt
             ? 100
             : Math.min(
+              100,
+              Math.round(
+                (watchedSeconds /
+                  Math.max(1, lesson.durationSeconds ?? 1)) *
                 100,
-                Math.round(
-                  (watchedSeconds /
-                    Math.max(1, lesson.durationSeconds ?? 1)) *
-                    100,
-                ),
-              );
+              ),
+            );
 
           if (watchedPercent > 0 && watchedPercent < 100) {
             items.push({
@@ -670,5 +678,176 @@ export const studentService = {
     );
 
     return results;
+  },
+
+  async getEnrolledSummary(userId: string) {
+    const [approvedEnrollments, packageEnrollments] = await Promise.all([
+      prisma.enrollmentRequest.findMany({
+        where: { userId, status: "APPROVED" },
+        select: {
+          id: true,
+          courseId: true,
+          batchId: true,
+          appliedAt: true,
+          batch: { select: { id: true, name: true, courseId: true } },
+        },
+      }),
+      prisma.packageEnrollment.findMany({
+        where: { userId, status: "APPROVED" },
+        select: {
+          id: true,
+          courses: {
+            select: {
+              courseId: true,
+              batchId: true,
+              batch: {
+                select: {
+                  id: true,
+                  name: true,
+                  courseVisibility: {
+                    where: { isVisible: true },
+                    select: { courseId: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }),
+    ]);
+
+    const allCourseIds = new Set<string>();
+    for (const e of approvedEnrollments) {
+      const cId = e.batch?.courseId || e.courseId;
+      if (cId) allCourseIds.add(cId);
+    }
+    for (const pe of packageEnrollments) {
+      for (const pec of pe.courses) {
+        // Only include package courses that are visible in the batch
+        if (!pec.batch || pec.batch.courseVisibility.some((cv) => cv.courseId === pec.courseId)) {
+          if (pec.courseId) allCourseIds.add(pec.courseId);
+        }
+      }
+    }
+
+    const courses = await prisma.course.findMany({
+      where: { id: { in: Array.from(allCourseIds) } },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        thumbnailUrl: true,
+      },
+    });
+
+    const courseMap = new Map(courses.map((c) => [c.id, c]));
+
+    const result: Array<{
+      id: string;
+      batchId?: string;
+      appliedAt?: Date;
+      course: any;
+      batch: { id: string; name: string } | null;
+    }> = [];
+
+    for (const e of approvedEnrollments) {
+      const cId = e.batch?.courseId || e.courseId;
+      const courseObj = courseMap.get(cId);
+      if (courseObj) {
+        result.push({
+          id: e.id,
+          batchId: e.batchId || undefined,
+          appliedAt: e.appliedAt,
+          course: courseObj,
+          batch: e.batch ? { id: e.batch.id, name: e.batch.name } : null,
+        });
+      }
+    }
+
+    const existingCourseIds = new Set(result.map((r) => r.course.id));
+    for (const pe of packageEnrollments) {
+      for (const pec of pe.courses) {
+        // Skip hidden courses — must pass visibility check
+        if (pec.batch && !pec.batch.courseVisibility.some((cv) => cv.courseId === pec.courseId)) {
+          continue;
+        }
+        if (!existingCourseIds.has(pec.courseId)) {
+          const courseObj = courseMap.get(pec.courseId);
+          if (courseObj) {
+            existingCourseIds.add(pec.courseId);
+            result.push({
+              id: `${pe.id}_${pec.courseId}`,
+              batchId: pec.batchId || undefined,
+              course: courseObj,
+              batch: pec.batch ? { id: pec.batch.id, name: pec.batch.name } : null,
+            });
+          }
+        }
+      }
+    }
+
+    return result;
+  },
+
+  async getDashboardSummary(userId: string) {
+    // The summary fans out into several heavy queries. Cache per-user so
+    // repeat loads and concurrent requests are served from memory (15s TTL).
+    // The key is per-user (student-summary:${userId}) so no cross-user
+    // leakage — every user's summary is isolated in the single-flight cache.
+    const key = `student-summary:${userId}`;
+    return getCachedSingleFlight(
+      key,
+      () => this.buildDashboardSummary(userId),
+      15_000,
+    );
+  },
+
+  async buildDashboardSummary(userId: string) {
+    // Core, fast sections only. Heavy sections (overdue assignments, results,
+    // continue learning) are served by their own endpoints and fetched on the
+    // client in parallel so the dashboard renders progressively.
+    const [
+      enrolled,
+      sessions,
+      calendarEvents,
+      tickets,
+      certificatesCount,
+    ] = await Promise.all([
+      // Enrolled courses
+      this.getEnrolledSummary(userId).catch(() => []),
+
+      // Live sessions
+      sessionService.listSessions({ studentId: userId }).catch(() => []),
+
+      // Calendar events (scoped to the student's own batches/mentorship)
+      getEventsForUser(
+        new Date().toISOString(),
+        new Date(Date.now() + 30 * 86400000).toISOString(),
+        userId,
+      ).catch(() => []),
+
+      // Mentorship tickets
+      prisma.mentorshipTicket
+        .findMany({
+          where: { studentId: userId },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+        })
+        .catch(() => []),
+
+      // Cheap certificate count — the heavy completion map lives on-demand in
+      // GET /api/certificates (CertificatesView fetches it on mount).
+      prisma.certificate
+        .count({ where: { userId } })
+        .catch(() => 0),
+    ]);
+
+    return {
+      enrolled: Array.isArray(enrolled) ? enrolled : [],
+      sessions: Array.isArray(sessions) ? sessions : [],
+      calendarEvents: Array.isArray(calendarEvents) ? calendarEvents : [],
+      tickets: Array.isArray(tickets) ? tickets : [],
+      certificatesCount: typeof certificatesCount === "number" ? certificatesCount : 0,
+    };
   },
 };

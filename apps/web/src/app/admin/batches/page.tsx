@@ -11,6 +11,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FilterTabs } from "@/components/shared/FilterTabs";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { AdminWorkflowGuide } from "@/components/admin/AdminWorkflowGuide";
 
 type Batch = {
   id: string;
@@ -113,6 +114,8 @@ function BatchesPageContent() {
           </Link>
         }
       />
+
+      <AdminWorkflowGuide activeStep={3} />
 
       <FilterTabs
         tabs={[

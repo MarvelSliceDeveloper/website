@@ -21,10 +21,17 @@ function getSessionStatus(
   upcomingWindowMinutes: number,
   nowMs: number,
 ): "live" | "scheduled" | "hidden" {
+  if (session.status === "COMPLETED" || session.status === "PAST" || session.status === "CANCELLED") {
+    return "hidden";
+  }
   if (!session.scheduledAt) return "hidden";
   const start = new Date(session.scheduledAt).getTime();
   const end = resolveEndTime(session);
 
+  // If current time has reached or passed the end time, strictly hide the banner
+  if (nowMs >= end) return "hidden";
+
+  if (session.status === "LIVE") return "live";
   if (nowMs >= start && nowMs < end) return "live";
   if (nowMs < start && start - nowMs <= upcomingWindowMinutes * 60 * 1000)
     return "scheduled";
@@ -36,6 +43,13 @@ function pickBestSession(
   upcomingWindowMinutes: number,
   nowMs: number,
 ): LiveSession | null {
+  // First check if there is an ongoing live session
+  const ongoing = sessions.find(
+    (s) => getSessionStatus(s, upcomingWindowMinutes, nowMs) === "live",
+  );
+  if (ongoing) return ongoing;
+
+  // Otherwise pick any upcoming scheduled session starting within window
   for (const s of sessions) {
     if (getSessionStatus(s, upcomingWindowMinutes, nowMs) !== "hidden")
       return s;
@@ -95,52 +109,90 @@ export default function LiveSessionBanner({
   const isLive = status === "live";
   const start = new Date(bestSession.scheduledAt).getTime();
   const msUntilStart = start - now;
+  const hasUrl = !!bestSession.joinUrl;
 
   const handleJoin = () => {
+    if (!hasUrl && !onJoin) return;
     if (onJoin) onJoin(bestSession);
     else if (bestSession.joinUrl)
       window.open(bestSession.joinUrl, "_blank", "noopener,noreferrer");
   };
 
-  const bg = isLive ? "bg-danger" : "bg-warning";
-  const textAccent = isLive ? "text-danger" : "text-warning";
+  const cardBg = isLive
+    ? "bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 shadow-lg shadow-red-500/20 border border-red-400/30"
+    : "bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 shadow-lg shadow-amber-500/20 border border-amber-300/30";
 
   return (
     <div
-      className={`w-full rounded-2xl px-5 py-4.5 text-white flex items-center gap-4 ${bg}`}
+      className={`w-full rounded-2xl p-4 sm:p-5 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-300 ${cardBg}`}
     >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20">
-        {isLive ? (
-          <IconRadio className="w-5 h-5" />
-        ) : (
-          <IconClock className="w-5 h-5" />
-        )}
-      </div>
+      <div className="flex items-center gap-3.5 min-w-0">
+        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md border border-white/20 shadow-inner">
+          {isLive ? (
+            <>
+              <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-white"></span>
+              </span>
+              <IconRadio className="w-6 h-6 animate-pulse" />
+            </>
+          ) : (
+            <IconClock className="w-6 h-6" />
+          )}
+        </div>
 
-      <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-extrabold uppercase tracking-wide opacity-90 mb-0.5">
-          {isLive ? "Live now" : "Starting soon"}
-          {bestSession.courseTitle
-            ? ` · ${bestSession.courseTitle}`
-            : ""}
-        </p>
-        <p className="text-[15px] font-bold truncate">{bestSession.title}</p>
-        {!isLive && (
-          <p className="text-xs opacity-90 mt-0.5">
-            Starts in {formatCountdown(msUntilStart)}
-          </p>
-        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-white/20 backdrop-blur-sm border border-white/25">
+              {isLive && (
+                <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping" />
+              )}
+              {isLive ? "Live Session" : "Upcoming Class"}
+            </span>
+            {bestSession.courseTitle && (
+              <span className="text-xs font-semibold opacity-90 truncate max-w-[240px]">
+                · {bestSession.courseTitle}
+              </span>
+            )}
+          </div>
+
+          <h4 className="text-base sm:text-lg font-bold tracking-tight truncate drop-shadow-sm">
+            {bestSession.title}
+          </h4>
+
+          {!isLive && (
+            <p className="text-xs font-medium opacity-90 mt-0.5 flex items-center gap-1.5">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/80" />
+              Starts in{" "}
+              <span className="font-mono font-bold">{formatCountdown(msUntilStart)}</span>
+            </p>
+          )}
+        </div>
       </div>
 
       <button
         onClick={handleJoin}
-        className={`shrink-0 inline-flex items-center gap-1.5 bg-white ${textAccent} rounded-xl px-4 py-2.5 text-sm font-extrabold active:scale-95 transition-transform`}
+        disabled={!hasUrl && !onJoin}
+        className={`shrink-0 inline-flex items-center justify-center gap-2 bg-white text-slate-900 hover:bg-slate-50 font-extrabold rounded-xl px-5 py-2.5 text-sm shadow-md transition-all duration-200 active:scale-95 ${
+          !hasUrl && !onJoin
+            ? "opacity-75 cursor-not-allowed"
+            : "cursor-pointer hover:shadow-lg hover:translate-y-[-1px]"
+        }`}
+        title={!hasUrl ? "Meeting link pending instructor release" : undefined}
       >
         {isLive ? (
-          "Join now"
+          hasUrl ? (
+            <>
+              Join Live Class
+              <IconArrowRight className="w-4 h-4 text-red-600" />
+            </>
+          ) : (
+            "Link Pending"
+          )
         ) : (
           <>
-            Join <IconArrowRight className="w-4 h-4" />
+            {hasUrl ? "Join Class" : "Link Pending"}
+            {hasUrl && <IconArrowRight className="w-4 h-4 text-amber-600" />}
           </>
         )}
       </button>

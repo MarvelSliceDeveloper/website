@@ -61,6 +61,7 @@ router.get("/", async (req: AuthRequest, res: Response) => {
         include: {
           user: { select: { id: true, name: true, email: true } },
           course: { select: { id: true, title: true } },
+          package: { select: { id: true, name: true } },
         },
       }),
       prisma.certificate.count(),
@@ -70,7 +71,9 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       certificates: certificates.map((c) => ({
         id: c.id,
         studentName: c.user.name,
-        courseName: c.course?.title ?? "N/A",
+        courseName: c.package
+          ? `[Package] ${c.package.name}`
+          : (c.course?.title ?? "N/A"),
         certificateNumber: c.certificateNumber,
         issuedAt: c.issuedAt,
         status: c.status,

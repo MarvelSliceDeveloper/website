@@ -59,8 +59,8 @@ export default function AddAssignmentForm({
       await api.post(`/api/admin/courses/modules/${moduleId}/assignments`, {
         title,
         description,
-        dueDate: dueDateMode === "absolute" && dueDate ? new Date(dueDate).toISOString() : undefined,
-        daysFromEnrollment: dueDateMode === "days" && daysFromEnrollment !== "" ? Number(daysFromEnrollment) : undefined,
+        dueDate: undefined,
+        daysFromEnrollment: daysFromEnrollment !== "" ? Number(daysFromEnrollment) : undefined,
         maxPoints,
         questionPdfUrl: questionPdfUrl || undefined,
         courseId,
@@ -132,56 +132,22 @@ export default function AddAssignmentForm({
         />
       </div>
 
-      {/* Due Date Mode */}
       <div className="space-y-2">
         <label className="text-xs font-medium text-muted-foreground">
-          Due Date
+          Due Date (Days After Enrollment)
         </label>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setDueDateMode("absolute")}
-            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${dueDateMode === "absolute" ? "bg-primary text-white border-primary" : "bg-paper text-ink border-hairline"}`}
-          >
-            Absolute Date
-          </button>
-          <button
-            type="button"
-            onClick={() => setDueDateMode("days")}
-            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${dueDateMode === "days" ? "bg-primary text-white border-primary" : "bg-paper text-ink border-hairline"}`}
-          >
-            Days from Enrollment
-          </button>
-        </div>
+        <input
+          type="number"
+          value={daysFromEnrollment}
+          onChange={(e) => setDaysFromEnrollment(e.target.value)}
+          placeholder="e.g. 10"
+          className="field w-full"
+          min={1}
+        />
+        <p className="text-[10px] text-muted-foreground">
+          Number of days after student enrollment when this assignment becomes due.
+        </p>
       </div>
-
-      {dueDateMode === "absolute" ? (
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-muted-foreground">
-            Due Date
-          </label>
-          <input
-            type="datetime-local"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-            className="field w-full"
-          />
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-muted-foreground">
-            Days After Enrollment
-          </label>
-          <input
-            type="number"
-            value={daysFromEnrollment}
-            onChange={(e) => setDaysFromEnrollment(e.target.value)}
-            placeholder="e.g. 10"
-            className="field w-full"
-            min={1}
-          />
-        </div>
-      )}
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
