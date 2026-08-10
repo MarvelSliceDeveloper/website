@@ -81,7 +81,7 @@ export default function HeroSection({ section }) {
       )}
 
       {showGradient && (
-        <div style={{ background: 'linear-gradient(135deg, #F7941D 50%, #1B3A6B 50%)' }}>
+        <div style={{ background: 'linear-gradient(135deg, #f59e0b 50%, #1B3A6B 50%)' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 text-center">
             {bannerHeading && <h1 className="text-[clamp(1.75rem,4vw,3.25rem)] font-extrabold text-white leading-[1.15] text-pretty">{bannerHeading}</h1>}
             {bannerDescription && <p className="mt-4 text-base sm:text-lg text-white/85 leading-relaxed max-w-2xl mx-auto">{bannerDescription}</p>}
@@ -98,7 +98,7 @@ export default function HeroSection({ section }) {
       )}
 
       {(bannerImage || showGradient) && headline && (
-        <div className="bg-white">
+        <div className="bg-neutral-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-dark-navy leading-[1.15] text-pretty">
               {headline}
@@ -109,7 +109,7 @@ export default function HeroSection({ section }) {
 
       {!bannerImage && !showGradient && (headline || description || featureBullets.length > 0 || buttons.length > 0 || studentImageUrl) && (
         <>
-          <div style={{ background: 'linear-gradient(135deg, #F7941D 50%, #1B3A6B 50%)' }}>
+          <div style={{ background: 'linear-gradient(135deg, #f59e0b 50%, #1B3A6B 50%)' }}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24">
               <div className="grid lg:grid-cols-2 gap-10 sm:gap-12 lg:gap-16">
                 <motion.div variants={container} {...mount} className="flex flex-col justify-center">
@@ -149,7 +149,7 @@ export default function HeroSection({ section }) {
                         btn.link ? (
                           <Link key={i} to={btn.link}
                             className="inline-flex items-center justify-center px-6 py-3 rounded-full text-white font-semibold text-sm transition-colors"
-                            style={{ backgroundColor: btn.color || '#F7941D' }}
+                            style={{ backgroundColor: btn.color || '#f59e0b' }}
                           >
                             {btn.label}
                           </Link>
@@ -173,7 +173,7 @@ export default function HeroSection({ section }) {
           {stats.length > 0 && (
             <div className="bg-dark-navy">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <Stagger className="grid grid-cols-3 gap-4">
+                <Stagger className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {stats.map((stat, i) => (
                     <StaggerItem key={i} className="text-center">
                       <p className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white">{stat.value}</p>

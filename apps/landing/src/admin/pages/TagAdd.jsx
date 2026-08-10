@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { useQueryClient } from '@tanstack/react-query';
-import { FiPlus, FiTag, FiX, FiArrowLeft } from 'react-icons/fi';
+import { FiTag, FiX, FiArrowLeft } from 'react-icons/fi';
 import PageShell from "../components/ui/PageShell";
-import AdminButton from "../components/AdminButton";
+import AddButton from "../components/AddButton";
+import { SubmitButton } from "../components/FormButtons";
 
 export default function TagAdd() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -48,15 +49,11 @@ export default function TagAdd() {
     >
       <div className="bg-white border border-gray-300 rounded-xl p-6" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
         <div className="flex items-center justify-center py-20">
-          <AdminButton 
-            onClick={() => { setModalOpen(true); setSuccess(false); setName(''); }} 
-            size="lg" 
-            variant="primary"
-            className="shadow-md hover:shadow-lg"
-          >
-            <FiPlus className="w-5 h-5 mr-1" />
-            Add a tag
-          </AdminButton>
+          <AddButton
+            onClick={() => { setModalOpen(true); setSuccess(false); setName(''); }}
+            size="lg"
+            label="Add a Tag"
+          />
         </div>
       </div>
 
@@ -93,13 +90,7 @@ export default function TagAdd() {
                     className="w-full h-10 px-3 rounded-lg border border-admin-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" 
                   />
                 </div>
-                <button 
-                  type="submit"
-                  disabled={loading || !name.trim()}
-                  className="w-full h-10 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-                >
-                  {loading ? 'Adding...' : 'Add Tag'}
-                </button>
+                <SubmitButton type="submit" saving={loading} label="Add Tag" savingLabel="Adding..." disabled={!name.trim()} className="w-full" />
               </form>
             ) : (
               <div className="space-y-4 text-center">

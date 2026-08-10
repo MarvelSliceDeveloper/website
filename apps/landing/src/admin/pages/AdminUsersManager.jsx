@@ -4,14 +4,15 @@ import PageShell from "../components/ui/PageShell";
 import AdminButton from "../components/AdminButton";
 import Badge from "../components/Badge";
 import EmptyState from "../components/EmptyState";
+import { SubmitButton, CancelButton } from "../components/FormButtons";
 import { useAuth } from "../context/AuthContext";
 import {
-  FiPlus,
   FiUsers,
   FiCheck,
   FiEye,
   FiEyeOff,
   FiX,
+  FiEdit3,
   FiArrowLeft,
 } from "react-icons/fi";
 import useConfirm from "../hooks/useConfirm";
@@ -183,7 +184,7 @@ const [confirm, confirmDialog] = useConfirm();
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="rounded-lg border border-admin-200 bg-white p-5 mb-6">
+      <form onSubmit={handleSubmit} autoComplete="off" className="rounded-lg border border-admin-200 bg-white p-5 mb-6">
         <h3 className="text-sm font-semibold text-black mb-4">
           {editingId ? "Edit Admin" : "Add New Admin"}
         </h3>
@@ -191,13 +192,13 @@ const [confirm, confirmDialog] = useConfirm();
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-neutral-700 mb-1 uppercase tracking-wider">Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="off"
                 className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all"
                 placeholder="admin@example.com" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-neutral-700 mb-1 uppercase tracking-wider">Full Name</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required autoComplete="off"
                 className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all"
                 placeholder="John Doe" />
             </div>
@@ -219,7 +220,7 @@ const [confirm, confirmDialog] = useConfirm();
               </label>
               <div className="relative">
                 <input type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)}
-                  minLength={editingId ? 0 : 6} required={!editingId}
+                  minLength={editingId ? 0 : 6} required={!editingId} autoComplete="new-password"
                   className="w-full px-3 py-2 pr-10 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all"
                   placeholder={editingId ? "Leave blank to keep" : "Min 6 characters"} />
                 <button type="button" onClick={() => setShowPw(!showPw)}
@@ -230,14 +231,9 @@ const [confirm, confirmDialog] = useConfirm();
             </div>
           </div>
           <div className="flex gap-3 pt-2">
-            <AdminButton type="submit" variant="primary" size="md" disabled={saving}>
-              <FiPlus className="w-4 h-4" />
-              {saving ? "Saving..." : editingId ? "Update Admin" : "Add Admin"}
-            </AdminButton>
+            <SubmitButton type="submit" saving={saving} savingLabel="Saving..." label={editingId ? 'Save' : 'Submit'} />
             {editingId && (
-              <AdminButton type="button" variant="secondary" size="md" onClick={resetForm}>
-                <FiX className="w-4 h-4" /> Cancel
-              </AdminButton>
+              <CancelButton onClick={resetForm} />
             )}
             <AdminButton type="button" variant="ghost" size="md" onClick={resetForm}>Clear</AdminButton>
           </div>
@@ -264,8 +260,8 @@ const [confirm, confirmDialog] = useConfirm();
                 {((ROLE_RANK[u.role] || 0) < userRank || currentUser?.role === 'master_admin') && currentUser?.id !== u.id && (
                   <>
                     <button onClick={() => startEdit(u)}
-                      className="px-3 py-1.5 text-xs font-medium text-admin-600 bg-white hover:bg-admin-100 rounded-md transition-colors">
-                      Edit
+                      className="p-1.5 text-blue-500 hover:text-white hover:bg-blue-600 rounded transition-colors" title="Edit">
+                      <FiEdit3 className="w-4 h-4" />
                     </button>
                     <button onClick={() => deleteUser(u.id)}
                       className="px-3 py-1.5 text-xs font-medium text-destructive-600 bg-destructive-50 hover:bg-destructive-100 rounded-md transition-colors">

@@ -3,10 +3,11 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from "../../lib/supabaseClient";
 import ImageUploader from "../components/ImageUploader";
-import AdminButton from "../components/AdminButton";
-import { FiPlus, FiTrash2, FiMove, FiArrowLeft, FiLayers, FiCheck, FiClock, FiVideo, FiCode, FiAward, FiCalendar, FiRefreshCw, FiMessageCircle, FiUsers, FiStar, FiBarChart2, FiBookOpen, FiBriefcase, FiTarget, FiGlobe, FiCpu, FiDatabase, FiZap, FiShield, FiTrendingUp, FiChevronDown, FiChevronUp, FiSettings, FiFileText, FiTag, FiImage, FiHeart, FiAlertCircle, FiSave, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import AddButton from "../components/AddButton";
+import { FiTrash2, FiMove, FiArrowLeft, FiLayers, FiCheck, FiClock, FiVideo, FiCode, FiAward, FiCalendar, FiRefreshCw, FiMessageCircle, FiUsers, FiStar, FiBarChart2, FiBookOpen, FiBriefcase, FiTarget, FiGlobe, FiCpu, FiDatabase, FiZap, FiShield, FiTrendingUp, FiChevronDown, FiChevronUp, FiSettings, FiFileText, FiTag, FiImage, FiHeart, FiAlertCircle, FiSave, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import PageShell from '../components/ui/PageShell';
+import SectionSelect from '../components/ui/SectionSelect';
 import SaveBar from '../components/SaveBar';
 import SaveCancelBar from '../components/SaveCancelBar';
 import useDirty from '../hooks/useDirty';
@@ -73,9 +74,7 @@ function ListEditor({ items, onChange, fields, labelKey = "label" }) {
           ))}
         </div>
       ))}
-      <AdminButton onClick={addItem} variant="ghost" size="sm">
-        <FiPlus className="w-4 h-4" /> Add {labelKey}
-      </AdminButton>
+      <AddButton onClick={addItem} label={`Add ${labelKey}`} />
     </div>
   );
 }
@@ -211,7 +210,6 @@ export default function ServiceEditor() {
     eligibility: "",
     requirements: [],
     learning_outcomes: [],
-    highlights: [],
     curriculum: [],
     seo_title: "",
     seo_description: "",
@@ -366,7 +364,6 @@ export default function ServiceEditor() {
         eligibility: service.eligibility,
         requirements: service.requirements || [],
         learning_outcomes: service.learning_outcomes || [],
-        highlights: service.highlights || [],
         curriculum: service.curriculum || [],
         seo_title: service.seo_title,
         seo_description: service.seo_description,
@@ -425,7 +422,7 @@ export default function ServiceEditor() {
 
       {message && (
         <div className="fixed top-6 right-6 z-50 flex flex-col gap-3 pointer-events-none">
-          <div className={`p-4 rounded-xl flex items-center gap-3 text-sm shadow-xl animate-fade-in-up pointer-events-auto min-w-[300px] ${
+          <div className={`p-4 rounded-xl flex items-center gap-3 text-sm shadow-xl animate-fade-in-up pointer-events-auto min-w-[300px] max-w-[calc(100vw-2rem)] ${
             message.includes("successfully") || message.includes("success")
               ? "bg-success-50 border border-success-500 text-success-700"
               : "bg-destructive-50 border border-destructive-500 text-destructive-700"
@@ -440,10 +437,10 @@ export default function ServiceEditor() {
         </div>
       )}
 
-      <div className="flex gap-6 items-start">
-        <div className="transition-all duration-200 w-[240px] shrink-0">
+      <div className="flex flex-col lg:flex-row gap-[15px] items-start">
+        <div className="hidden lg:block transition-all duration-200 lg:w-[240px] lg:shrink-0">
           <nav className="sticky top-6 self-start max-h-[calc(100vh-80px)] overflow-visible">
-            <div className="bg-white rounded-md flex flex-col overflow-visible ring-1 ring-gray-300" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
+            <div className="bg-white rounded-xl flex flex-col overflow-visible border border-gray-300" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
               {editorTabs.map((t, index) => {
                 const meta = tabMeta[t];
                 const isActive = tab === t;
@@ -452,19 +449,20 @@ export default function ServiceEditor() {
                     key={t}
                     type="button"
                     onClick={() => setTab(t)}
-                    className={`relative w-full flex flex-col text-left px-4 py-3 border-b border-gray-100 last:border-b-0 focus:outline-none ${
-                      index === 0 ? 'rounded-t-md' : ''
+                    className={`relative w-full flex items-center gap-2.5 text-left px-4 py-3 border-b border-gray-200 last:border-b-0 focus:outline-none transition-colors ${
+                      index === 0 ? 'rounded-t-xl' : ''
                     } ${
-                      index === editorTabs.length - 1 ? 'rounded-b-md' : ''
+                      index === editorTabs.length - 1 ? 'rounded-b-xl' : ''
                     } ${
-                      isActive ? 'bg-admin-600 text-white shadow-md z-10' : 'bg-white text-gray-600 hover:bg-gray-50'
+                      isActive ? 'bg-admin-600 text-white shadow-md z-10' : 'bg-white text-gray-600 hover:bg-gray-100'
                     }`}
                   >
+                    <meta.Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-neutral-400'}`} />
                     <div className="font-semibold text-sm">
                       {meta.label}
                     </div>
                     {isActive && (
-                      <div className="absolute top-1/2 -translate-y-1/2 -right-[15px] w-0 h-0 border-y-[15px] border-y-transparent border-l-[30px] border-l-admin-600" />
+                      <div className="hidden lg:block absolute top-1/2 -translate-y-1/2 -right-[15px] w-0 h-0 border-y-[15px] border-y-transparent border-l-[27px] border-l-admin-600" />
                     )}
                   </button>
                 );
@@ -474,6 +472,7 @@ export default function ServiceEditor() {
         </div>
 
         <div className="flex-1 min-w-0">
+          <SectionSelect items={editorTabs.map(t => ({ key: t, label: tabMeta[t].label }))} value={tab} onChange={setTab} label="Section" />
           <SaveBar saving={saving} saved={saved} saveError={saveError} label="Page" top />
           <div className="bg-white border border-gray-300 rounded-xl p-6" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
           {tab === "basic" && (
@@ -535,7 +534,7 @@ export default function ServiceEditor() {
                   className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-black mb-1">
                     Duration
@@ -565,7 +564,7 @@ export default function ServiceEditor() {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-black mb-1">
                     Price
@@ -589,7 +588,7 @@ export default function ServiceEditor() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-black mb-1">
                     Badge
@@ -621,7 +620,7 @@ export default function ServiceEditor() {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-black mb-1">
                     Language
@@ -804,24 +803,12 @@ export default function ServiceEditor() {
                 />
               </div>
               <div>
-                <h4 className="text-sm font-semibold text-neutral-700 mb-2">Highlights</h4>
-                <ListEditor
-                  items={service.highlights || []}
-                  onChange={(val) => update("highlights", val)}
-                  fields={[{ key: "item", label: "Highlight" }]}
-                  labelKey="Highlight"
-                />
-              </div>
-              <div>
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-sm font-semibold text-neutral-700">Curriculum</h4>
-                  <AdminButton
+                  <AddButton
                     onClick={() => update("curriculum", [...service.curriculum, { title: "", items: [] }])}
-                    variant="ghost"
-                    size="sm"
-                  >
-                    <FiPlus className="w-4 h-4" /> Add Module
-                  </AdminButton>
+                    label="Add Module"
+                  />
                 </div>
                 {service.curriculum.length === 0 && (
                   <div className="text-center py-8 text-neutral-400 bg-white rounded-xl border-2 border-dashed border-admin-200">
@@ -880,17 +867,15 @@ export default function ServiceEditor() {
                             </button>
                           </div>
                         ))}
-                        <AdminButton
+                        <AddButton
                           onClick={() => {
                             const n = [...service.curriculum];
                             n[i] = { ...n[i], items: [...(n[i].items || []), ""] };
                             update("curriculum", n);
                           }}
-                          variant="ghost"
                           size="xs"
-                        >
-                          <FiPlus className="w-3 h-3" /> Add Item
-                        </AdminButton>
+                          label="Add Item"
+                        />
                       </div>
                     </div>
                   ))}
@@ -946,13 +931,10 @@ export default function ServiceEditor() {
                     </div>
                   </div>
                 ))}
-                <AdminButton
+                <AddButton
                   onClick={() => update("benefits", [...service.benefits, { icon: "", title: "", description: "" }])}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Add Benefit
-                </AdminButton>
+                  label="Add Benefit"
+                />
               </div>
             </div>
           )}
@@ -1004,13 +986,10 @@ export default function ServiceEditor() {
                     </div>
                   </div>
                 ))}
-                <AdminButton
+                <AddButton
                   onClick={() => update("steps", [...service.steps, { icon: "", title: "", description: "" }])}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Add Step
-                </AdminButton>
+                  label="Add Step"
+                />
               </div>
             </div>
           )}
@@ -1052,7 +1031,7 @@ export default function ServiceEditor() {
                         className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-semibold text-black mb-1">Category</label>
                         <input
@@ -1084,13 +1063,10 @@ export default function ServiceEditor() {
                     </div>
                   </div>
                 ))}
-                <AdminButton
+                <AddButton
                   onClick={() => update("faqs", [...service.faqs, { question: "", answer: "", category: "", is_active: true }])}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Add FAQ
-                </AdminButton>
+                  label="Add FAQ"
+                />
               </div>
             </div>
           )}
@@ -1131,7 +1107,7 @@ export default function ServiceEditor() {
                         }}
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-semibold text-black mb-1">Course / Role</label>
                         <input
@@ -1188,13 +1164,10 @@ export default function ServiceEditor() {
                     </div>
                   </div>
                 ))}
-                <AdminButton
+                <AddButton
                   onClick={() => update("testimonials", [...service.testimonials, { student_name: "", photo: "", course: "", company: "", rating: 5, review: "" }])}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Add Testimonial
-                </AdminButton>
+                  label="Add Testimonial"
+                />
               </div>
             </div>
           )}
@@ -1252,13 +1225,10 @@ export default function ServiceEditor() {
                     </div>
                   </div>
                 ))}
-                <AdminButton
+                <AddButton
                   onClick={() => update("gallery", [...service.gallery, { image: "", caption: "", type: "image" }])}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Add Gallery Item
-                </AdminButton>
+                  label="Add Gallery Item"
+                />
               </div>
             </div>
           )}
@@ -1283,7 +1253,7 @@ export default function ServiceEditor() {
                         update("statistics", n);
                       }}
                     />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-semibold text-black mb-1">Title</label>
                         <input
@@ -1313,13 +1283,10 @@ export default function ServiceEditor() {
                     </div>
                   </div>
                 ))}
-                <AdminButton
+                <AddButton
                   onClick={() => update("statistics", [...service.statistics, { title: "", value: "", icon: "" }])}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Add Statistic
-                </AdminButton>
+                  label="Add Statistic"
+                />
               </div>
             </div>
           )}

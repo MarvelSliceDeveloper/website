@@ -5,7 +5,7 @@ import PageShell from "../components/ui/PageShell";
 import DataTable from '../components/ui/DataTable';
 import Badge from '../components/Badge';
 import EmptyState from '../components/EmptyState';
-import AdminButton from '../components/AdminButton';
+import { SubmitButton, CancelButton } from '../components/FormButtons';
 import { FiFolder, FiArrowLeft, FiEdit3, FiTrash2 } from 'react-icons/fi';
 import useConfirm from '../hooks/useConfirm';
 
@@ -122,14 +122,9 @@ const [confirm, confirmDialog] = useConfirm();
           <input type="text" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })}
             placeholder="slug"
             className="w-40 px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-transparent transition-all font-mono text-xs" />
-          <AdminButton type="submit" variant="primary" size="sm" disabled={!form.name.trim()}>
-            {editingId ? 'Update' : 'Add'}
-          </AdminButton>
+          <SubmitButton type="submit" label={editingId ? 'Save' : 'Submit'} disabled={!form.name.trim()} />
           {editingId && (
-            <button type="button" onClick={resetForm}
-              className="px-3 py-2 rounded-lg text-sm text-admin-600 hover:bg-admin-100 transition-colors">
-              Cancel
-            </button>
+            <CancelButton onClick={resetForm} label="Cancel" />
           )}
         </div>
       </form>

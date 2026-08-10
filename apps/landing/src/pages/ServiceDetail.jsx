@@ -384,15 +384,15 @@ export default function ServiceDetail() {
 
   async function handleEnquirySubmit(e) {
     e.preventDefault();
-    if (!enquiryForm.name.trim() || !enquiryForm.email.trim()) return;
+    if (!enquiryForm.name.trim() || !enquiryForm.email.trim() || !enquiryForm.phone.trim() || !enquiryForm.message.trim()) return;
     setEnquirySubmitting(true);
     setEnquiryError('');
 
     const payload = {
       name: enquiryForm.name.trim(),
       email: enquiryForm.email.trim(),
-      phone: enquiryForm.phone.trim() || null,
-      message: enquiryForm.message.trim() || null,
+      phone: enquiryForm.phone.trim(),
+      message: enquiryForm.message.trim(),
       service_id: service.id,
       service_title: service.title,
     };
@@ -960,22 +960,24 @@ export default function ServiceDetail() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Phone *</label>
                   <input
                     type="tel"
                     value={enquiryForm.phone}
                     onChange={(e) => setEnquiryForm((p) => ({ ...p, phone: e.target.value }))}
                     placeholder="Your phone number"
+                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Message</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Message *</label>
                   <textarea
                     value={enquiryForm.message}
                     onChange={(e) => setEnquiryForm((p) => ({ ...p, message: e.target.value }))}
                     placeholder="Your message or question"
                     rows={3}
+                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all resize-none"
                   />
                 </div>

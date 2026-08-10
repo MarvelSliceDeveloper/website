@@ -2,8 +2,8 @@ import { Link } from "react-router-dom";
 
 const sizes = {
   xs: "px-2 py-1 text-xs rounded-lg",
-  sm: "px-3 py-1.5 text-sm rounded-md",
-  md: "px-4 py-2 text-sm rounded-lg",
+  sm: "px-3 py-2 lg:py-1.5 text-sm rounded-md",
+  md: "px-4 py-2.5 lg:py-2 text-sm rounded-lg",
   lg: "px-5 py-2.5 text-base rounded-lg",
 };
 

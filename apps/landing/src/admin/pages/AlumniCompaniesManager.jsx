@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabaseClient';
 import PageShell from "../components/ui/PageShell";
-import AdminButton from '../components/AdminButton';
+import AddButton from '../components/AddButton';
 import EmptyState from '../components/EmptyState';
-import { FiPlus, FiBriefcase, FiArrowLeft } from 'react-icons/fi';
+import { FiBriefcase, FiArrowLeft } from 'react-icons/fi';
 import useConfirm from '../hooks/useConfirm';
 
 export default function AlumniCompaniesManager() {
@@ -56,10 +56,7 @@ const [confirm, confirmDialog] = useConfirm();
             className="flex-1 px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500"
             onKeyDown={(e) => e.key === 'Enter' && addCompany()}
           />
-          <AdminButton onClick={addCompany} size="md">
-            <FiPlus className="w-4 h-4" />
-            Add
-          </AdminButton>
+          <AddButton onClick={addCompany} label="Add Company" size="md" />
         </div>
 
         {companies.length === 0 ? (

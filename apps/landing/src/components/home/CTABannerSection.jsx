@@ -58,12 +58,12 @@ export default function CTABannerSection({ section }) {
           </div>
         )}
 
-        <div className="relative max-w-7xl mx-auto px-10 sm:px-16 lg:px-20 py-16 sm:py-20">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-16 lg:px-20 py-16 sm:py-20">
           <Reveal>
             <div className="flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-16">
               {/* Left Column */}
               <div className="flex-1 text-center lg:text-left">
-                <h2 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold leading-tight text-white">
+                <h2 className="text-2xl sm:text-4xl lg:text-[2.75rem] font-bold leading-tight text-white">
                   {heading || (
                     <>
                       Ready to start your{' '}
@@ -79,19 +79,19 @@ export default function CTABannerSection({ section }) {
               </div>
 
               {/* Right Column */}
-              <div className="shrink-0 flex flex-col items-center lg:items-end gap-3">
-                <div className="flex items-center gap-5 px-7 py-5 rounded-2xl bg-white/[0.12] backdrop-blur-md border border-white/15">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-white uppercase tracking-widest">
+              <div className="w-full sm:w-auto shrink-0 flex flex-col items-center lg:items-end gap-3">
+                <div className="w-full max-w-[340px] sm:w-auto flex items-center justify-between gap-4 sm:gap-5 px-5 sm:px-7 py-4 sm:py-5 rounded-2xl bg-white/[0.12] backdrop-blur-md border border-white/15">
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[10px] sm:text-xs font-semibold text-white uppercase tracking-widest">
                       {ctaText || 'Request a Call Back'}
                     </span>
-                    <span className="mt-1.5 text-xl font-bold text-white tracking-wide">
+                    <span className="mt-1.5 text-lg sm:text-xl font-bold text-white tracking-wide break-words">
                       {phone || ''}
                     </span>
                   </div>
                   <motion.a
                       href={`tel:${(phone || '').replace(/[^0-9+]/g, '')}`}
-                    className="flex items-center justify-center w-14 h-14 rounded-full bg-[#F7941D] text-white shrink-0 shadow-lg"
+                    className="flex items-center justify-center w-14 h-14 rounded-full bg-[#f59e0b] text-white shrink-0 shadow-lg"
                     whileHover={{ scale: 1.08 }}
                     whileTap={{ scale: 0.95 }}
                   >

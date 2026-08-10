@@ -8,6 +8,7 @@ import {
   FiDownload, FiLoader, FiFileText, FiSend, FiTrash2, FiCheck, FiMail,
 } from 'react-icons/fi';
 import useConfirm from '../../hooks/useConfirm';
+import { CancelButton, SubmitButton } from '../FormButtons';
 
 function ReplyModal({ row, onClose, pageTitle }) {
   const [subject, setSubject] = useState(`Re: ${pageTitle || 'Your Submission'}`);
@@ -77,13 +78,8 @@ function ReplyModal({ row, onClose, pageTitle }) {
           {error && <p className="text-xs text-destructive-500 bg-destructive-50 px-3 py-2 rounded-lg">{error}</p>}
         </div>
         <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-admin-100 bg-white/50">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-100 transition-all">Cancel</button>
-          <button onClick={handleSend} disabled={sending || !subject.trim() || !message.trim()}
-            className="flex items-center gap-2 px-5 py-2 rounded-lg bg-admin-600 text-white text-sm font-medium hover:bg-admin-700 transition-all disabled:opacity-50 shadow-sm"
-          >
-            {sending ? <FiLoader className="w-4 h-4 animate-spin" /> : <FiSend className="w-4 h-4" />}
-            {sending ? 'Sending...' : 'Send Reply'}
-          </button>
+          <CancelButton onClick={onClose} />
+          <SubmitButton onClick={handleSend} saving={sending} savingLabel="Sending..." label="Send" icon={FiSend} disabled={!subject.trim() || !message.trim()} />
         </div>
       </div>
     </div>
@@ -329,10 +325,11 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-xl font-bold text-black">{title}</h1>
-          <p className="text-sm text-neutral-400 mt-0.5">{data.length} total{unreadCount > 0 ? ` · ${unreadCount} unread` : ''}</p>
+          <h1 className="text-xl font-bold text-black">
+            {title} <span className="text-neutral-400 font-medium text-sm">({data.length} total{unreadCount > 0 ? ` · ${unreadCount} unread` : ''})</span>
+          </h1>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setExportModal('csv')} disabled={filtered.length === 0}
@@ -372,11 +369,11 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
             </div>
           </div>
 
-          <div className="flex items-end gap-3 w-full">
+          <div className="flex flex-wrap items-end gap-3 w-full">
           {!disableReply && <div className="flex-1">
             <div className="relative">
               <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-                className="h-9 px-3 pl-0 border border-admin-200 bg-white text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all w-full"
+                className="h-9 px-3 border border-admin-200 bg-white text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all w-full"
               >
                 <option value="all">All</option>
                 <option value="unread">Unread</option>
@@ -386,10 +383,10 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
           </div>}
 
           {extraFilters && extraFilters.map((f, i) => (
-            <div key={i} className="flex-1">
+            <div key={i} className="flex-1 min-w-[140px]">
               <div className="relative">
                 <select value={f.value} onChange={e => { f.onChange(e.target.value); setPage(1); }}
-                  className="h-9 px-3 pl-0 border border-admin-200 bg-white text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all"
+                  className="h-9 px-3 border border-admin-200 bg-white text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all w-full"
                 >
                   {f.options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
@@ -397,10 +394,10 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
             </div>
           ))}
 
-          <div className="flex-1">
+          <div className="flex-1 min-w-[140px]">
             <div className="relative">
               <select value={dateFilter} onChange={e => { setDateFilter(e.target.value); setPage(1); }}
-                className="h-9 px-3 pl-0 border border-admin-200 bg-white text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all w-full"
+                className="h-9 px-3 border border-admin-200 bg-white text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all w-full"
               >
                 <option value="all">All time</option>
                 <option value="today">Today</option>
@@ -413,12 +410,12 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
 
           {dateFilter === 'custom' && (
             <>
-              <div className="flex-1">
+              <div className="flex-1 min-w-[120px]">
                 <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)}
                   className="h-9 px-3 border border-admin-200 bg-white text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all"
                 />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-[120px]">
                 <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)}
                   className="h-9 px-3 border border-admin-200 bg-white text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all"
                 />
@@ -444,7 +441,7 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-gray-200 bg-blue-600">
+                    <tr className="border-b border-admin-100 bg-blue-600">
                       <th className="w-10 text-left text-xs font-semibold text-white uppercase tracking-wider px-4 py-3">#</th>
                       {columns.map((col, i) => (
                         <th key={i} className={`text-left text-xs font-semibold text-white uppercase tracking-wider px-4 py-3 ${col.className || ''}`}>
@@ -524,7 +521,7 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
               <DetailRow label="Submitted" value={formatDate(selected.created_at)} />
             </div>
             <div className="flex items-center justify-between px-5 py-4 border-t border-admin-100 bg-white/50">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {!disableReply && <button onClick={() => selected.is_read ? markUnread(selected) : markRead(selected)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${selected.is_read ? 'bg-success-50 text-success-700' : 'bg-neutral-100 text-neutral-500'}`}
                 >

@@ -3,7 +3,6 @@ create table if not exists contact_submissions (
   full_name text not null,
   email text not null,
   phone text,
-  subject text,
   message text,
   is_read boolean default false,
   created_at timestamptz default now()

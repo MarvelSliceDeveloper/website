@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { trackLogin } from '../../lib/analytics';
-import AdminButton from '../components/AdminButton';
+import { SubmitButton } from '../components/FormButtons';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 export default function Login() {
@@ -84,22 +84,7 @@ export default function Login() {
             </div>
           </div>
 
-          <AdminButton
-            type="submit"
-            variant="primary"
-            size="md"
-            disabled={loading}
-            className="w-full"
-          >
-            {loading ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              'Sign In'
-            )}
-          </AdminButton>
+          <SubmitButton type="submit" saving={loading} savingLabel="Signing in..." label="Sign In" className="w-full" />
         </form>
       </div>
     </div>

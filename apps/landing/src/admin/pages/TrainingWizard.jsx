@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
-import AdminButton from "../components/AdminButton";
+import AddButton from "../components/AddButton";
 import ImageUploader from "../components/ImageUploader";
 import { useQueryClient } from '@tanstack/react-query';
+import { CancelButton, SubmitButton } from "../components/FormButtons";
 import {
-  FiPlus, FiTrash2, FiArrowLeft, FiCheck, FiBookOpen,
+  FiTrash2, FiArrowLeft, FiCheck, FiBookOpen,
   FiMonitor, FiLayers, FiAward, FiCode, FiStar, FiClock,
   FiBarChart2, FiVideo, FiCalendar, FiRefreshCw,
   FiMessageCircle, FiBriefcase, FiGlobe, FiCpu, FiDatabase,
@@ -134,9 +135,7 @@ function ListEditor({ items, onChange, fields, labelKey = "label" }) {
           ))}
         </div>
       ))}
-      <AdminButton onClick={addItem} variant="ghost" size="sm" className="text-admin-600 border-admin-200 hover:bg-admin-50 hover:border-admin-300">
-        <FiPlus className="w-4 h-4" /> Add {labelKey}
-      </AdminButton>
+      <AddButton onClick={addItem} label={`Add ${labelKey}`} />
     </div>
   );
 }
@@ -282,9 +281,6 @@ export default function TrainingWizard() {
         meta_image: t.meta_image,
         eligibility: t.eligibility,
         learning_outcomes: t.learning_outcomes || [],
-        modules: t.modules || [],
-        skills: t.skills || [],
-        benefits: t.benefits || [],
         placement_support: t.placement_support,
         assessment: t.assessment,
         seo_title: t.seo_title,
@@ -502,7 +498,7 @@ export default function TrainingWizard() {
                <div>
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold text-black">Modules</h3>
-                    <AdminButton onClick={() => u("trainingModules", [...t.trainingModules, { title: "", duration: "", content: "" }])} variant="ghost" size="sm" className="text-admin-600 border-admin-200 hover:bg-admin-50 hover:border-admin-300"><FiPlus className="w-4 h-4" /> Add Module</AdminButton>
+                    <AddButton onClick={() => u("trainingModules", [...t.trainingModules, { title: "", duration: "", content: "" }])} label="Add Module" />
                   </div>
                   <div className="space-y-3">
                     {t.trainingModules.map((mod, i) => (
@@ -513,7 +509,7 @@ export default function TrainingWizard() {
                             <FiTrash2 className="w-4 h-4" />
                           </button>
                         </div>
-                        <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                           <input
                             value={mod.title || ""}
                             onChange={(e) => { const n = [...t.trainingModules]; n[i] = { ...n[i], title: e.target.value }; u("trainingModules", n); }}
@@ -591,12 +587,7 @@ export default function TrainingWizard() {
           <div className="flex justify-between items-center mt-8 pt-6 border-t border-admin-200">
             <div></div>
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate(-1)}
-                className="inline-flex items-center gap-1.5 px-6 py-2.5 text-sm font-medium text-red-600 bg-white border border-red-200 hover:bg-red-50 rounded-lg transition-colors shadow-sm"
-              >
-                Cancel
-              </button>
+              <CancelButton onClick={() => navigate(-1)} />
               {step > 0 && (
                 <button
                   onClick={() => setStep(step - 1)}
@@ -615,13 +606,7 @@ export default function TrainingWizard() {
                   Next Step
                 </button>
               ) : (
-                <button
-                  onClick={handleSave}
-                  disabled={saving || !canNext()}
-                  className="inline-flex items-center gap-1.5 px-6 py-2.5 text-sm font-medium text-white bg-admin-600 hover:bg-admin-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                >
-                  {saving ? "Saving..." : "Save Training Program"}
-                </button>
+                <SubmitButton onClick={handleSave} saving={saving} savingLabel="Saving..." label="Submit" />
               )}
             </div>
           </div>

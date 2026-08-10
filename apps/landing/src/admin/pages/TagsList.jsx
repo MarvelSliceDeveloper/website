@@ -3,8 +3,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabaseClient';
 import DataTable from '../components/ui/DataTable';
 import EmptyState from '../components/EmptyState';
-import { FiEdit3, FiTrash2, FiTag, FiArrowLeft, FiX, FiSave } from 'react-icons/fi';
+import { FiEdit3, FiTrash2, FiTag, FiArrowLeft, FiX } from 'react-icons/fi';
 import PageShell from "../components/ui/PageShell";
+import { SubmitButton, CancelButton } from '../components/FormButtons';
 import useConfirm from '../hooks/useConfirm';
 
 export default function TagsList() {
@@ -109,12 +110,8 @@ export default function TagsList() {
               />
             </div>
             <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-admin-100 bg-gray-50/50">
-              <button onClick={() => setEditTag(null)} className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-100 transition-all">
-                Cancel
-              </button>
-              <button onClick={saveTag} className="flex items-center gap-2 px-5 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-all shadow-sm">
-                <FiSave className="w-4 h-4" /> Save
-              </button>
+              <CancelButton onClick={() => setEditTag(null)} />
+              <SubmitButton onClick={saveTag} label="Save" />
             </div>
           </div>
         </div>

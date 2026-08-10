@@ -7,7 +7,7 @@ import EmptyState from '../components/EmptyState';
 import Card from '../components/ui/Card';
 import DataTable from '../components/ui/DataTable';
 import {
-  FiPlus, FiTrash2, FiSearch, FiChevronDown, FiPackage, FiEdit3,
+  FiTrash2, FiSearch, FiChevronDown, FiPackage, FiEdit3,
 } from 'react-icons/fi';
 import PageShell from '../components/ui/PageShell';
 import useConfirm from '../hooks/useConfirm';
@@ -236,7 +236,7 @@ const [confirm, confirmDialog] = useConfirm();
             icon={FiPackage}
             title="No services yet"
             description="Get started by adding your first service."
-            action={{ to: '/admin/services/new', icon: <FiPlus className="w-4 h-4" />, label: 'Add your first service' }}
+            action={{ to: '/admin/services/new', label: 'Add your first service' }}
           />
         </div>
       ) : filtered.length === 0 ? (

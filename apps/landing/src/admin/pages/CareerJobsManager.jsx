@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import AdminButton from '../components/AdminButton';
+import AddButton from '../components/AddButton';
 import DataTable from '../components/ui/DataTable';
 import EmptyState from '../components/EmptyState';
-import { FiPlus, FiEdit2, FiTrash2, FiBriefcase, FiX, FiArrowLeft } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiBriefcase, FiX, FiArrowLeft } from 'react-icons/fi';
 import PageShell from '../components/ui/PageShell';
+import { SubmitButton, CancelButton } from '../components/FormButtons';
 import useConfirm from '../hooks/useConfirm';
 
 export default function CareerJobsManager() {
@@ -90,29 +91,23 @@ const [jobs, setJobs] = useState([]);
   }
 
   async function deleteJob(id) {
-    if (await confirmDialog('Delete Job', 'Are you sure you want to delete this job opening? This cannot be undone.', 'Delete', 'destructive')) {
-      await supabase.from('job_openings').delete().eq('id', id);
-      loadData();
-    }
+    if (!(await confirm('Delete this job opening? This cannot be undone.'))) return;
+    await supabase.from('job_openings').delete().eq('id', id);
+    loadData();
   }
 
   const columns = [
-    { header: 'SL NO', key: 'slno', render: (_, __, i) => <span className="text-neutral-500 font-medium">{i + 1}</span>, width: '80px' },
-    { header: 'Job Title', key: 'title', render: (val) => <span className="font-semibold text-black">{val}</span> },
-    { header: 'Category', key: 'role_categories', render: (val) => val?.name || <span className="text-neutral-400 italic">Uncategorized</span> },
-    { header: 'Location', key: 'location', render: (val) => val || '-' },
-    { header: 'Type', key: 'type', render: (val) => val || '-' },
-    { header: 'Status', key: 'is_active', render: (val) => (
-        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${val ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-          {val ? 'Active' : 'Inactive'}
+    { header: 'SL NO', accessor: 'slno', cell: (_, i) => <span className="text-neutral-500 font-medium">{i + 1}</span>, width: '80px' },
+    { header: 'Job Title', accessor: 'title', cell: (row) => <span className="font-semibold text-black">{row.title}</span> },
+    { header: 'Category', accessor: 'role_categories', cell: (row) => row.role_categories?.name || <span className="text-neutral-400 italic">Uncategorized</span> },
+    { header: 'Location', accessor: 'location', cell: (row) => row.location || '-' },
+    { header: 'Type', accessor: 'type', cell: (row) => row.type || '-' },
+    { header: 'Status', accessor: 'is_active', cell: (row) => (
+        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${row.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+          {row.is_active ? 'Active' : 'Inactive'}
         </span>
       ) 
     },
-  ];
-
-  const actions = [
-    { icon: <FiEdit2 className="w-4 h-4" />, onClick: openJobForm, variant: 'primary', className: 'text-blue-500 hover:text-blue-600 hover:bg-blue-50' },
-    { icon: <FiTrash2 className="w-4 h-4" />, onClick: (job) => deleteJob(job.id), variant: 'ghost', className: 'text-red-500 hover:text-red-600 hover:bg-red-50' }
   ];
 
   return (
@@ -121,18 +116,16 @@ const [jobs, setJobs] = useState([]);
       description="Manage your company's career opportunities"
       actions={
         <div className="flex items-center gap-3 self-start sm:self-auto">
-<AdminButton onClick={() => openJobForm()} variant="primary" size="md">
-            <FiPlus className="w-4 h-4" /> Add Job
-          </AdminButton>
+<AddButton onClick={() => openJobForm()} label="Add Job" size="md" />
         </div>
       }
     >
       <div className="bg-white shadow-sm border border-admin-200 overflow-hidden">
         {jobs.length > 0 ? (
-          <DataTable data={jobs} columns={columns} actions={actions} />
+          <DataTable data={jobs} columns={columns} />
         ) : (
           <EmptyState icon={FiBriefcase} title="No jobs added" description="Get started by creating your first job opening."
-            action={{ onClick: () => openJobForm(), icon: <FiPlus className="w-4 h-4" />, label: 'Add Job Opening' }}
+            action={{ onClick: () => openJobForm(), label: 'Add Job Opening' }}
           />
         )}
       </div>
@@ -205,15 +198,13 @@ const [jobs, setJobs] = useState([]);
               </form>
             </div>
             <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-admin-200 bg-gray-50/50 shrink-0">
-              <AdminButton type="button" onClick={closeJobForm} variant="ghost" size="md">Cancel</AdminButton>
-              <AdminButton type="submit" form="jobForm" variant="primary" size="md" isLoading={jobSaving}>
-                {editingJob ? 'Save Changes' : 'Add Job'}
-              </AdminButton>
+              <CancelButton onClick={closeJobForm} />
+              <SubmitButton type="submit" form="jobForm" saving={jobSaving} savingLabel="Saving..." label={editingJob ? 'Save' : 'Submit'} />
             </div>
           </div>
         </div>
       )}
-      {confirm}
+      {confirmDialog}
     </PageShell>
   );
 }

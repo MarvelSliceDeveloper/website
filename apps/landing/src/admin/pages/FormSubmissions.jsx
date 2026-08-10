@@ -16,7 +16,7 @@ const detailFields = [
 
 export default function FormSubmissions() {
 return (
-    <PageShell backTo="/admin" title="Form Submissions"
+    <PageShell backTo="/admin"
     >
       <SubmissionsInbox
         table="form_submissions"

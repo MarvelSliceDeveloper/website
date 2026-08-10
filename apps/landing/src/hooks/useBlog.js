@@ -92,7 +92,7 @@ export function useRecentPosts(limit = 5) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('blog_posts')
-        .select('id, title, slug, published_at')
+        .select('id, title, slug, excerpt, image_url, published_at, blog_categories(name, slug)')
         .eq('is_published', true)
         .order('published_at', { ascending: false })
         .limit(limit);

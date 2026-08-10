@@ -3,11 +3,11 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabaseClient';
 import { useNavPage } from '../../hooks/useSupabase';
-import AdminButton from '../components/AdminButton';
+import AddButton from '../components/AddButton';
 import SaveBar from '../components/SaveBar';
 import SaveCancelBar from '../components/SaveCancelBar';
 import useDirty from '../hooks/useDirty';
-import { FiPlus, FiTrash2, FiChevronUp, FiChevronDown, FiArrowLeft, FiUpload, FiSave, FiCheck, FiFileText, FiSearch, FiBookOpen } from 'react-icons/fi';
+import { FiTrash2, FiChevronUp, FiChevronDown, FiArrowLeft, FiUpload, FiSave, FiCheck, FiFileText, FiSearch, FiBookOpen } from 'react-icons/fi';
 import PageShell from '../components/ui/PageShell';
 import SectionAccordion from '../components/ui/SectionAccordion';
 
@@ -261,10 +261,7 @@ export default function NavPageEditor() {
 
         <SectionAccordion title="Content Sections" defaultExpanded={false}>
           <div className="flex justify-end mb-4">
-            <button type="button" onClick={addSection} className="flex items-center gap-2 px-3 py-2 border rounded-lg text-sm font-medium text-admin-600 border-admin-200 hover:bg-admin-50 hover:border-admin-300 transition-colors">
-              <FiPlus className="w-4 h-4" />
-              Add Section
-            </button>
+            <AddButton onClick={addSection} label="Add Section" />
           </div>
 
           {sections.length === 0 && (

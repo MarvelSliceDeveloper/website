@@ -3,13 +3,16 @@ import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom"
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from "../../lib/supabaseClient";
 import ImageUploader from "../components/ImageUploader";
-import AdminButton from "../components/AdminButton";
-import { FiPlus, FiTrash2, FiMove, FiArrowLeft, FiLayers, FiCheck, FiClock, FiVideo, FiCode, FiAward, FiCalendar, FiRefreshCw, FiMessageCircle, FiUsers, FiStar, FiBarChart2, FiBookOpen, FiBriefcase, FiTarget, FiGlobe, FiCpu, FiDatabase, FiZap, FiShield, FiTrendingUp, FiChevronDown, FiChevronUp, FiSettings, FiFileText, FiTag, FiAlertCircle, FiSave, FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
+import AddButton from "../components/AddButton";
+import { FiTrash2, FiMove, FiArrowLeft, FiLayers, FiCheck, FiClock, FiVideo, FiCode, FiAward, FiCalendar, FiRefreshCw, FiMessageCircle, FiUsers, FiStar, FiBarChart2, FiBookOpen, FiBriefcase, FiTarget, FiGlobe, FiCpu, FiDatabase, FiZap, FiShield, FiTrendingUp, FiChevronDown, FiChevronUp, FiSettings, FiFileText, FiTag, FiAlertCircle, FiSave, FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import PageShell from '../components/ui/PageShell';
+import SectionSelect from '../components/ui/SectionSelect';
 import SaveBar from '../components/SaveBar';
 import SaveCancelBar from '../components/SaveCancelBar';
 import useDirty from '../hooks/useDirty';
+import { toDateTimeLocal, fromDateTimeLocal } from '../../lib/datetime';
+import DateTimePicker from '../components/ui/DateTimePicker';
 
 function ListEditor({ items, onChange, fields, labelKey = "label" }) {
   const addItem = () =>
@@ -73,9 +76,7 @@ function ListEditor({ items, onChange, fields, labelKey = "label" }) {
           ))}
         </div>
       ))}
-      <AdminButton onClick={addItem} variant="ghost" size="sm">
-        <FiPlus className="w-4 h-4" /> Add {labelKey}
-      </AdminButton>
+      <AddButton onClick={addItem} label={`Add ${labelKey}`} />
     </div>
   );
 }
@@ -181,6 +182,7 @@ export default function CourseEditor() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [startDateError, setStartDateError] = useState(false);
   const [message, setMessage] = useState("");
   const [allTags, setAllTags] = useState([]);
   const [courseTags, setCourseTags] = useState([]);
@@ -205,11 +207,10 @@ export default function CourseEditor() {
     duration: "3 months",
     mode: "Online",
     status: "Active",
+    start_date: '',
     checklist_items: [],
     highlights: [],
     overview_faqs: [],
-    course_fees: [],
-    show_pricing: false,
     cta_heading: '',
     cta_description: '',
     cta_text: '',
@@ -237,14 +238,21 @@ export default function CourseEditor() {
 
       if (!isNew) {
         const [courseRes, tabsRes, faqsRes, tagsRes] = await Promise.all([
-          supabase.from("courses").select(`*, highlights(*), overview_faqs(*), course_fees(*), projects(*), certifications(*)`).eq("id", id).single(),
+          supabase.from("courses").select(`*, highlights(*), overview_faqs(*), projects(*), certifications(*)`).eq("id", id).single(),
           supabase.from("course_tabs").select("*").eq("course_id", id).order("sort_order"),
           supabase.from("faqs").select("*").eq("course_id", id).order("sort_order"),
           supabase.from("course_tags").select("tag_id").eq("course_id", id),
         ]);
 
         if (courseRes.data && !courseRes.error) {
-          setCourse((p) => ({ ...p, ...courseRes.data, tabs: tabsRes.data || [], faqs: faqsRes.data || [] }));
+          setCourse((p) => ({
+            ...p,
+            ...courseRes.data,
+            status: courseRes.data.status === 'Inactive' || courseRes.data.status === 'Unpublished' ? 'Draft' : courseRes.data.status,
+            is_published: courseRes.data.status === 'Inactive' || courseRes.data.status === 'Unpublished' || courseRes.data.status === 'Draft' ? false : !!courseRes.data.is_published,
+            tabs: tabsRes.data || [],
+            faqs: faqsRes.data || [],
+          }));
         }
         setCourseTags(tagsRes.data?.map((t) => t.tag_id) || []);
       }
@@ -389,17 +397,41 @@ export default function CourseEditor() {
   async function handleSave() {
     setSaving(true);
     setMessage("");
+    if (course.status === 'Coming Soon' && !course.start_date) {
+      setStartDateError(true);
+      setTab('basic');
+      setMessage('Please set the start date and time — it is required for "Coming Soon" courses.');
+      setSaveError('Start date and time is required for "Coming Soon" courses.');
+      setSaving(false);
+      return;
+    }
+    setStartDateError(false);
     try {
+      let slug = course.slug;
+      if (!slug) slug = String(course.title || 'course').toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'course';
+      let slugQuery = supabase.from('courses').select('id').eq('slug', slug);
+      if (!isNew) slugQuery = slugQuery.neq('id', id);
+      const { data: slugHits } = await slugQuery;
+      if (slugHits && slugHits.length > 0) {
+        let n = 2;
+        while (true) {
+          const candidate = `${slug}-${n}`;
+          let q = supabase.from('courses').select('id').eq('slug', candidate);
+          if (!isNew) q = q.neq('id', id);
+          const { data: hits } = await q;
+          if (!hits || hits.length === 0) { slug = candidate; break; }
+          n += 1;
+        }
+      }
       const payload = {
         title: course.title,
-        slug: course.slug,
+        slug,
         subtitle: course.subtitle,
         description: course.description,
         hero_image_url: course.hero_image_url,
         video_thumbnail_url: course.video_thumbnail_url,
         video_url: course.video_url,
         nav_item_id: course.nav_item_id || null,
-        show_pricing: course.show_pricing,
         cta_heading: course.cta_heading,
         cta_description: course.cta_description,
         cta_text: course.cta_text,
@@ -410,6 +442,7 @@ export default function CourseEditor() {
         duration: course.duration,
         mode: course.mode,
         status: course.status,
+        start_date: course.start_date ? fromDateTimeLocal(course.start_date) : null,
         checklist_items: (course.checklist_items || []).filter(Boolean),
         curriculum: course.curriculum,
       };
@@ -489,7 +522,7 @@ export default function CourseEditor() {
     >
       {message && (
         <div className="fixed top-6 right-6 z-50 flex flex-col gap-3 pointer-events-none">
-          <div className={`p-4 rounded-xl flex items-center gap-3 text-sm shadow-xl animate-fade-in-up pointer-events-auto min-w-[300px] ${
+          <div className={`p-4 rounded-xl flex items-center gap-3 text-sm shadow-xl animate-fade-in-up pointer-events-auto min-w-[300px] max-w-[calc(100vw-2rem)] ${
             message.includes("successfully") || message.includes("success")
               ? "bg-success-50 border border-success-500 text-success-700"
               : "bg-destructive-50 border border-destructive-500 text-destructive-700"
@@ -504,10 +537,10 @@ export default function CourseEditor() {
         </div>
       )}
 
-      <div className="flex gap-6 items-start">
-        <div className="transition-all duration-200 w-[220px] shrink-0">
+      <div className="flex flex-col lg:flex-row gap-[15px] items-start">
+        <div className="hidden lg:block transition-all duration-200 lg:w-[220px] lg:shrink-0">
           <nav className="sticky top-6 self-start max-h-[calc(100vh-80px)] overflow-visible">
-            <div className="bg-white rounded-md flex flex-col overflow-visible ring-1 ring-gray-300" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
+            <div className="bg-white rounded-xl flex flex-col overflow-visible border border-gray-300" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
               {editorTabs.map((t, index) => {
                 const meta = tabMeta[t];
                 const isActive = tab === t;
@@ -515,12 +548,12 @@ export default function CourseEditor() {
                   <button
                     key={t}
                     onClick={() => setTab(t)}
-                    className={`relative w-full flex items-center gap-2 text-left px-4 py-3 border-b border-gray-100 last:border-b-0 focus:outline-none ${
-                      index === 0 ? 'rounded-t-md' : ''
+                    className={`relative w-full flex items-center gap-2.5 text-left px-4 py-3 border-b border-gray-200 last:border-b-0 focus:outline-none transition-colors ${
+                      index === 0 ? 'rounded-t-xl' : ''
                     } ${
-                      index === editorTabs.length - 1 ? 'rounded-b-md' : ''
+                      index === editorTabs.length - 1 ? 'rounded-b-xl' : ''
                     } ${
-                      isActive ? 'bg-admin-600 text-white shadow-md z-10' : 'bg-white text-gray-600 hover:bg-gray-50'
+                      isActive ? 'bg-admin-600 text-white shadow-md z-10' : 'bg-white text-gray-600 hover:bg-gray-100'
                     }`}
                     title={meta.label}
                   >
@@ -529,7 +562,7 @@ export default function CourseEditor() {
                     }`} />
                     <span className="font-semibold text-sm flex-1 truncate">{meta.label}</span>
                     {isActive && (
-                      <div className="absolute top-1/2 -translate-y-1/2 -right-[15px] w-0 h-0 border-y-[15px] border-y-transparent border-l-[30px] border-l-admin-600" />
+                      <div className="hidden lg:block absolute top-1/2 -translate-y-1/2 -right-[15px] w-0 h-0 border-y-[15px] border-y-transparent border-l-[27px] border-l-admin-600" />
                     )}
                   </button>
                 );
@@ -539,6 +572,7 @@ export default function CourseEditor() {
         </div>
 
         <div className="flex-1 min-w-0">
+          <SectionSelect items={editorTabs.map(t => ({ key: t, label: tabMeta[t].label }))} value={tab} onChange={setTab} label="Section" />
           <SaveBar saving={saving} saved={saved} saveError={saveError} label="Page" top />
           <div className="bg-white border border-gray-300 rounded-xl p-6" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
           {tab === "basic" && (
@@ -599,7 +633,7 @@ export default function CourseEditor() {
                       placeholder="Expert Led Live Training Sessions&#10;Angular Fundamentals to Advanced Concepts&#10;Real Time Project Development Experience"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-black mb-1">Left Button Label</label>
                       <input value={course.cta_left || ''} onChange={(e) => update('cta_left', e.target.value)}
@@ -617,7 +651,7 @@ export default function CourseEditor() {
               </div>
               {categories.length > 0 && (
                 <div>
-                  <label className="block text-xs font-medium text-neutral-500 mb-2">Category *</label>
+                  <label className="block text-xs font-medium text-neutral-500 mb-2">Category <span className="text-destructive-500">*</span></label>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {categories.map((cat) => (
                       <button
@@ -665,7 +699,7 @@ export default function CourseEditor() {
                   </div>
                 );
               })()}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-black mb-1">Duration</label>
                   <select value={course.duration} onChange={(e) => update("duration", e.target.value)}
@@ -686,32 +720,41 @@ export default function CourseEditor() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-black mb-1">Status</label>
-                  <select value={course.status} onChange={(e) => update("status", e.target.value)}
+                  <select value={course.status} onChange={(e) => {
+                    const v = e.target.value;
+                    update("status", v);
+                    update("is_published", v === 'Draft' ? false : true);
+                  }}
                     className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all bg-white">
                     <option value="Active">Active</option>
+                    <option value="Draft">Draft</option>
                     <option value="Coming Soon">Coming Soon</option>
-                    <option value="Inactive">Inactive</option>
                   </select>
+                  {course.status === 'Coming Soon' ? (
+                    <p className="text-xs text-neutral-500 mt-1.5">Listed in the home page Upcoming Courses section with a launch countdown. It becomes Active automatically once the start date arrives.</p>
+                  ) : (
+                    <p className="text-xs text-neutral-400 mt-1.5">Selecting "Coming Soon" lists this course in the home page Upcoming Courses section with a launch countdown.</p>
+                  )}
                 </div>
               </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={course.is_published}
-                  onChange={(e) => update("is_published", e.target.checked)}
-                  className="rounded"
-                />
-                Published
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={course.show_pricing}
-                  onChange={(e) => update("show_pricing", e.target.checked)}
-                  className="rounded"
-                />
-                Show pricing on page
-              </label>
+              {course.status === 'Coming Soon' && (
+                <div>
+                  <label className="block text-sm font-semibold text-black mb-1">
+                    Start Date & Time <span className="text-destructive-500">*</span>
+                  </label>
+                  <DateTimePicker
+                    value={toDateTimeLocal(course.start_date)}
+                    onChange={(v) => { update("start_date", v || null); if (startDateError) setStartDateError(false); }}
+                    error={!!startDateError}
+                  />
+                  {startDateError && (
+                    <p className="text-xs text-destructive-500 mt-1.5">Please set the start date and time for this Coming Soon course.</p>
+                  )}
+                  {!startDateError && (
+                    <p className="text-xs text-neutral-500 mt-1.5">The course becomes Active automatically once this date arrives.</p>
+                  )}
+                </div>
+              )}
 
               <div className="border-t border-admin-200 pt-6 mt-6">
                 <h3 className="text-sm font-semibold text-neutral-700 mb-4">Call to Action</h3>
@@ -728,7 +771,7 @@ export default function CourseEditor() {
                       className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
                       placeholder="Enroll now and gain industry-ready skills with expert mentors." />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-black mb-1">Button Text</label>
                       <input value={course.cta_text || ''} onChange={(e) => update('cta_text', e.target.value)}
@@ -760,9 +803,7 @@ export default function CourseEditor() {
             <div className="space-y-6 max-w-3xl">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-black">Curriculum / Modules</h2>
-                <AdminButton onClick={() => update("curriculum", [...course.curriculum, { title: "", topics: [] }])} variant="ghost" size="sm">
-                  <FiPlus className="w-4 h-4" /> Add Module
-                </AdminButton>
+                <AddButton onClick={() => update("curriculum", [...course.curriculum, { title: "", topics: [] }])} label="Add Module" />
               </div>
               {course.curriculum.length === 0 && (
                 <div className="text-center py-12 text-neutral-400 bg-white rounded-xl border-2 border-dashed border-admin-200">
@@ -798,8 +839,8 @@ export default function CourseEditor() {
                           </button>
                         </div>
                       ))}
-                      <AdminButton onClick={() => { const n = [...course.curriculum]; n[i] = { ...n[i], topics: [...(n[i].topics || []), ""] }; update("curriculum", n); }}
-                        variant="ghost" size="xs"><FiPlus className="w-3 h-3" /> Add Topic</AdminButton>
+                      <AddButton onClick={() => { const n = [...course.curriculum]; n[i] = { ...n[i], topics: [...(n[i].topics || []), ""] }; update("curriculum", n); }}
+                        size="xs" label="Add Topic" />
                     </div>
                   </div>
                 ))}
@@ -845,7 +886,7 @@ export default function CourseEditor() {
 
           {tab === "tabs" && !isNew && (
             <div className="space-y-6">
-              <h3 className="font-semibold text-black mb-3">Course Tabs</h3>
+              <h3 className="font-semibold text-black mb-3">Course Tabs <span className="text-destructive-500">*</span></h3>
               {course.tabs.map((t, i) => (
                 <div
                   key={t.id || i}
@@ -854,7 +895,7 @@ export default function CourseEditor() {
                   <div className="flex gap-3">
                     <div className="flex-1">
                       <label className="block text-sm font-semibold text-black mb-1">
-                        Label
+                        Label <span className="text-destructive-500">*</span>
                       </label>
                       <input
                         value={t.label}
@@ -863,6 +904,7 @@ export default function CourseEditor() {
                           n[i] = { ...n[i], label: e.target.value };
                           update("tabs", n);
                         }}
+                        required
                         className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
                       />
                     </div>
@@ -881,7 +923,6 @@ export default function CourseEditor() {
                       >
                         <option value="overview">Overview</option>
                         <option value="syllabus">Syllabus</option>
-                        <option value="pricing">Pricing</option>
                         <option value="apply_now">Apply Now</option>
                       </select>
                     </div>
@@ -910,7 +951,7 @@ export default function CourseEditor() {
                       return (
                         <div key={field}>
                           <div className="flex items-center justify-between mb-1">
-                            <label className="text-xs font-medium text-neutral-500 capitalize">{field}</label>
+                            <label className="text-xs font-medium text-neutral-500 capitalize">{field}{field === "heading" || field === "paragraph" ? <span className="text-destructive-500"> *</span> : null}</label>
                             <div className="flex items-center gap-1">
                               {["left","center","right"].map(a => (
                                 <button
@@ -942,6 +983,7 @@ export default function CourseEditor() {
                                 update("tabs", n);
                               }}
                               rows={field === "text" ? 6 : 2}
+                              required={field === "paragraph"}
                               className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
                               placeholder={`${field.charAt(0).toUpperCase() + field.slice(1)} content`}
                             />
@@ -953,6 +995,7 @@ export default function CourseEditor() {
                                 n[i] = { ...n[i], content: { ...n[i].content, [field]: e.target.value } };
                                 update("tabs", n);
                               }}
+                              required={field === "heading"}
                               className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
                               placeholder={`${field.charAt(0).toUpperCase() + field.slice(1)} content`}
                             />
@@ -964,17 +1007,16 @@ export default function CourseEditor() {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-xs font-medium text-neutral-500">Q&A Items</label>
-                        <button
+                        <AddButton
                           onClick={() => {
                             const n = [...course.tabs];
                             const qa = [...(n[i].content?.qa || []), { question: "", answers: [""] }];
                             n[i] = { ...n[i], content: { ...n[i].content, qa } };
                             update("tabs", n);
                           }}
-                          className="text-xs text-admin-600 font-semibold hover:underline"
-                        >
-                          + Add Question
-                        </button>
+                          size="xs"
+                          label="Add Question"
+                        />
                       </div>
                       <div className="space-y-3">
                         {(t.content?.qa || []).map((qa, qi) => (
@@ -1008,7 +1050,7 @@ export default function CourseEditor() {
                             <div>
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-xs text-neutral-500">Answers (one per line)</span>
-                                <button
+                                <AddButton
                                   onClick={() => {
                                     const n = [...course.tabs];
                                     const qa = [...n[i].content.qa];
@@ -1016,10 +1058,9 @@ export default function CourseEditor() {
                                     n[i] = { ...n[i], content: { ...n[i].content, qa } };
                                     update("tabs", n);
                                   }}
-                                  className="text-xs text-admin-600 hover:underline"
-                                >
-                                  + Add bullet
-                                </button>
+                                  size="xs"
+                                  label="Add Bullet"
+                                />
                               </div>
                               {qa.answers.map((ans, ai) => (
                                 <div key={ai} className="flex items-center gap-2 mb-1">
@@ -1060,7 +1101,7 @@ export default function CourseEditor() {
                   </div>
                 </div>
               ))}
-              <button
+              <AddButton
                 onClick={async () => {
                   const { data } = await supabase
                     .from("course_tabs")
@@ -1075,10 +1116,8 @@ export default function CourseEditor() {
                     .single();
                   if (data) update("tabs", [...course.tabs, data]);
                 }}
-                className="bg-admin-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-admin-700 transition-colors"
-              >
-                Add Tab
-              </button>
+                label="Add Tab"
+              />
             </div>
           )}
 
@@ -1128,18 +1167,15 @@ export default function CourseEditor() {
                     </div>
                   </div>
                 ))}
-                <AdminButton
+                <AddButton
                   onClick={() =>
                     update("highlights", [
                       ...course.highlights,
                       { icon: "", label: "" },
                     ])
                   }
-                  variant="ghost"
-                  size="sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Add Highlight
-                </AdminButton>
+                  label="Add Highlight"
+                />
               </div>
             </div>
           )}
@@ -1195,77 +1231,82 @@ export default function CourseEditor() {
                     </div>
                   </div>
                 ))}
-                <AdminButton
+                <AddButton
                   onClick={() =>
                     update("projects", [
                       ...course.projects,
                       { title: "", description: "" },
                     ])
                   }
-                  variant="ghost"
-                  size="sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Add Project
-                </AdminButton>
+                  label="Add Project"
+                />
               </div>
             </div>
           )}
 
           {tab === "certification" && (
             <div className="max-w-2xl space-y-4">
-              <h3 className="font-semibold text-black mb-4">Certification</h3>
+              <h3 className="font-semibold text-black mb-4">Certification <span className="text-destructive-500">*</span></h3>
               {(course.certifications.length === 0
                 ? [
                     {
                       description: "",
-                      image_url: "",
                       certificate_image_url: "",
                       recognized_companies: [],
                     },
                   ]
                 : course.certifications
               ).map((cert, i) => (
-                <div key={i} className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-black mb-1">
-                      Description
-                    </label>
-                    <textarea
-                      value={cert.description || ""}
-                      onChange={(e) => {
-                        const n = [
-                          ...(course.certifications.length
-                            ? course.certifications
-                            : [{ ...cert }]),
-                        ];
-                        n[i] = { ...n[i], description: e.target.value };
-                        update("certifications", n);
-                      }}
-                      rows={4}
-                      className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
-                    />
+                <div key={i} className="border border-admin-200 rounded-lg p-4 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                    <div>
+                      <label className="block text-sm font-semibold text-black mb-1">
+                        Description <span className="text-destructive-500">*</span>
+                      </label>
+                      <textarea
+                        value={cert.description || ""}
+                        onChange={(e) => {
+                          const n = [
+                            ...(course.certifications.length
+                              ? course.certifications
+                              : [{ ...cert }]),
+                          ];
+                          n[i] = { ...n[i], description: e.target.value };
+                          update("certifications", n);
+                        }}
+                        rows={4}
+                        required
+                        className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-black mb-1">
+                        Recognized Companies (one per line) <span className="text-destructive-500">*</span>
+                      </label>
+                      <textarea
+                        value={(cert.recognized_companies || []).join("\n")}
+                        onChange={(e) => {
+                          const n = [
+                            ...(course.certifications.length
+                              ? course.certifications
+                              : [{ ...cert }]),
+                          ];
+                          n[i] = {
+                            ...n[i],
+                            recognized_companies: e.target.value
+                              .split("\n"),
+                          };
+                          update("certifications", n);
+                        }}
+                        rows={4}
+                        required
+                        className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-black mb-1">
-                      Classroom Image
-                    </label>
-                    <ImageUploader
-                      bucket="certificates"
-                      value={cert.image_url || ""}
-                      onChange={(url) => {
-                        const n = [
-                          ...(course.certifications.length
-                            ? course.certifications
-                            : [{ ...cert }]),
-                        ];
-                        n[i] = { ...n[i], image_url: url };
-                        update("certifications", n);
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-black mb-1">
-                      Certificate Image
+                      Certificate Image <span className="text-destructive-500">*</span>
                     </label>
                     <ImageUploader
                       bucket="certificates"
@@ -1279,29 +1320,6 @@ export default function CourseEditor() {
                         n[i] = { ...n[i], certificate_image_url: url };
                         update("certifications", n);
                       }}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-black mb-1">
-                      Recognized Companies (one per line)
-                    </label>
-                    <textarea
-                      value={(cert.recognized_companies || []).join("\n")}
-                      onChange={(e) => {
-                        const n = [
-                          ...(course.certifications.length
-                            ? course.certifications
-                            : [{ ...cert }]),
-                        ];
-                        n[i] = {
-                          ...n[i],
-                          recognized_companies: e.target.value
-                            .split("\n"),
-                        };
-                        update("certifications", n);
-                      }}
-                      rows={4}
-                      className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
                     />
                   </div>
                 </div>
@@ -1360,15 +1378,12 @@ export default function CourseEditor() {
                     </div>
                   </div>
                 ))}
-                <AdminButton
+                <AddButton
                   onClick={() =>
                     update("faqs", [...course.faqs, { question: "", answer: "" }])
                   }
-                  variant="ghost"
-                  size="sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Add FAQ
-                </AdminButton>
+                  label="Add FAQ"
+                />
               </div>
             </div>
           )}

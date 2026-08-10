@@ -73,7 +73,7 @@ const [items, setItems] = useState([]);
                     const itemCourses = linkedCourses(item);
                     return (
                       <div key={item.id} className="px-5 py-3">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 flex-wrap">
                           <span className="text-sm font-medium text-black flex-1 truncate">{item.label}</span>
                           {item.path && (
                             <span className="text-[11px] text-neutral-400 bg-white px-2 py-0.5 rounded-full truncate max-w-[120px] hidden sm:inline">{item.path}</span>

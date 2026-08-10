@@ -40,7 +40,6 @@ create table if not exists services (
   curriculum jsonb default '[]',
   learning_outcomes jsonb default '[]',
   requirements jsonb default '[]',
-  highlights jsonb default '[]',
   featured boolean default false,
   popular boolean default false,
   trending boolean default false,

@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabaseClient';
-import AdminButton from '../components/AdminButton';
 import SaveBar from '../components/SaveBar';
 import SaveCancelBar from '../components/SaveCancelBar';
 import useDirty from '../hooks/useDirty';
@@ -67,8 +66,9 @@ function ImageUploader({ value, onChange, label }) {
 
 export default function BlogPostEditor() {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
-  const isNew = id === 'new';
+  const isNew = !id || location.pathname.endsWith('/new');
   const savingRef = useRef(false);
   const queryClient = useQueryClient();
   const formRef = useRef(null);
@@ -172,6 +172,12 @@ export default function BlogPostEditor() {
 
   async function handleSave(e) {
     e.preventDefault();
+    if (!form.title.trim()) return;
+    if (!form.slug.trim()) return;
+    if (!form.author.trim()) return;
+    if (!form.excerpt.trim()) return;
+    if (!form.content.trim()) return;
+    if (!form.category_id) return;
     if (savingRef.current) return;
     savingRef.current = true;
     setSaving(true);
@@ -241,7 +247,7 @@ export default function BlogPostEditor() {
   }
 
   return (
-    <PageShell title={isNew ? 'New Post' : 'Edit Post'} backTo="/admin/blog">
+    <PageShell title={isNew ? 'Add New Post' : 'Edit Post'} backTo="/admin/blog">
 
       <SaveBar saving={saving} saved={saved} saveError={saveError} onSave={handleSave} label="Post" top />
 
@@ -251,7 +257,7 @@ export default function BlogPostEditor() {
         {/* Row 1: Title | Slug | Author */}
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_2fr_1fr] gap-4">
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Title</label>
+            <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Title <span className="text-destructive-500">*</span></label>
             <input
               type="text"
               value={form.title}
@@ -262,7 +268,7 @@ export default function BlogPostEditor() {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Slug</label>
+            <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Slug <span className="text-destructive-500">*</span></label>
             <div className="relative">
               <input
                 type="text"
@@ -290,11 +296,12 @@ export default function BlogPostEditor() {
             {slugStatus === 'available' && <p className="text-xs text-success-500 mt-1">Available</p>}
           </div>
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Author</label>
+            <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Author <span className="text-destructive-500">*</span></label>
             <input
               type="text"
               value={form.author}
               onChange={(e) => setForm({ ...form, author: e.target.value })}
+              required
               className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
               placeholder="Author name"
             />
@@ -306,21 +313,23 @@ export default function BlogPostEditor() {
 
         {/* Row 3: Excerpt + Content */}
         <div>
-          <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Excerpt</label>
+          <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Excerpt <span className="text-destructive-500">*</span></label>
           <textarea
             value={form.excerpt}
             onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
             rows={2}
+            required
             className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
             placeholder="Short description shown in cards"
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Content</label>
+          <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Content <span className="text-destructive-500">*</span></label>
           <textarea
             value={form.content}
             onChange={(e) => setForm({ ...form, content: e.target.value })}
             rows={12}
+            required
             className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-admin-500/20 transition-all font-mono text-xs"
             placeholder="Full article content (HTML or markdown supported)"
           />
@@ -330,10 +339,11 @@ export default function BlogPostEditor() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr_auto_auto] gap-4 items-end pt-2 border-t border-admin-100">
           {/* Category */}
           <div>
-            <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Category</label>
+            <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Category <span className="text-destructive-500">*</span></label>
             <select
               value={form.category_id}
               onChange={(e) => setForm({ ...form, category_id: e.target.value })}
+              required
               className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-admin-500/20 transition-all bg-white"
             >
               <option value="">No category</option>

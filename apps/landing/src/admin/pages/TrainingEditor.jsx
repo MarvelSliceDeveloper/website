@@ -3,8 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from "../../lib/supabaseClient";
 import ImageUploader from "../components/ImageUploader";
-import AdminButton from "../components/AdminButton";
-import { FiPlus, FiTrash2, FiMove, FiLayers, FiCheck, FiClock, FiVideo, FiCode, FiAward, FiCalendar, FiRefreshCw, FiMessageCircle, FiUsers, FiStar, FiBarChart2, FiBookOpen, FiBriefcase, FiGlobe, FiCpu, FiDatabase, FiZap, FiShield, FiTrendingUp, FiChevronDown, FiSettings, FiFileText, FiImage, FiHeart, FiAlertCircle } from "react-icons/fi";
+import AddButton from "../components/AddButton";
+import { FiTrash2, FiMove, FiLayers, FiCheck, FiClock, FiVideo, FiCode, FiAward, FiCalendar, FiRefreshCw, FiMessageCircle, FiUsers, FiStar, FiBarChart2, FiBookOpen, FiBriefcase, FiGlobe, FiCpu, FiDatabase, FiZap, FiShield, FiTrendingUp, FiChevronDown, FiSettings, FiFileText, FiImage, FiHeart, FiAlertCircle } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import PageShell from '../components/ui/PageShell';
 import SaveBar from '../components/SaveBar';
@@ -73,9 +73,7 @@ function ListEditor({ items, onChange, fields, labelKey = "label" }) {
           ))}
         </div>
       ))}
-      <AdminButton onClick={addItem} variant="ghost" size="sm">
-        <FiPlus className="w-4 h-4" /> Add {labelKey}
-      </AdminButton>
+      <AddButton onClick={addItem} label={`Add ${labelKey}`} />
     </div>
   );
 }
@@ -353,9 +351,6 @@ export default function TrainingEditor() {
         meta_image: training.meta_image,
         eligibility: training.eligibility,
         learning_outcomes: training.learning_outcomes || [],
-        modules: training.modules || [],
-        skills: training.skills || [],
-        benefits: training.benefits || [],
         placement_support: training.placement_support,
         assessment: training.assessment,
         seo_title: training.seo_title,
@@ -428,7 +423,7 @@ export default function TrainingEditor() {
 
       {message && (
         <div className="fixed top-6 right-6 z-50 flex flex-col gap-3 pointer-events-none">
-          <div className={`p-4 rounded-xl flex items-center gap-3 text-sm shadow-xl animate-fade-in-up pointer-events-auto min-w-[300px] ${
+          <div className={`p-4 rounded-xl flex items-center gap-3 text-sm shadow-xl animate-fade-in-up pointer-events-auto min-w-[300px] max-w-[calc(100vw-2rem)] ${
             message.includes("successfully") || message.includes("success")
               ? "bg-success-50 border border-success-500 text-success-700"
               : "bg-destructive-50 border border-destructive-500 text-destructive-700"
@@ -765,13 +760,10 @@ export default function TrainingEditor() {
                 <h2 className="text-lg font-semibold text-black flex items-center gap-2">
                   <FiBookOpen className="w-5 h-5 text-cyan-600" /> Modules
                 </h2>
-                <AdminButton
+                <AddButton
                   onClick={() => update("trainingModules", [...training.trainingModules, { title: "", duration: "", topics: [], outcomes: [], sort_order: training.trainingModules.length }])}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Add Module
-                </AdminButton>
+                  label="Add Module"
+                />
               </div>
               <div className="space-y-3">
                 {training.trainingModules.length === 0 && (
@@ -847,17 +839,15 @@ export default function TrainingEditor() {
                           </button>
                         </div>
                       ))}
-                      <AdminButton
+                      <AddButton
                         onClick={() => {
                           const n = [...training.trainingModules];
                           n[i] = { ...n[i], topics: [...(n[i].topics || []), ""] };
                           update("trainingModules", n);
                         }}
-                        variant="ghost"
                         size="xs"
-                      >
-                        <FiPlus className="w-3 h-3" /> Add Topic
-                      </AdminButton>
+                        label="Add Topic"
+                      />
                     </div>
                     <div className="space-y-2 mb-3">
                       <label className="block text-sm font-semibold text-black mb-1">Outcomes</label>
@@ -887,17 +877,15 @@ export default function TrainingEditor() {
                           </button>
                         </div>
                       ))}
-                      <AdminButton
+                      <AddButton
                         onClick={() => {
                           const n = [...training.trainingModules];
                           n[i] = { ...n[i], outcomes: [...(n[i].outcomes || []), ""] };
                           update("trainingModules", n);
                         }}
-                        variant="ghost"
                         size="xs"
-                      >
-                        <FiPlus className="w-3 h-3" /> Add Outcome
-                      </AdminButton>
+                        label="Add Outcome"
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-black mb-1">Sort Order</label>
@@ -922,13 +910,10 @@ export default function TrainingEditor() {
                 <h3 className="text-lg font-semibold text-black flex items-center gap-2">
                   <FiZap className="w-5 h-5 text-amber-600" /> Skills
                 </h3>
-                <AdminButton
+                <AddButton
                   onClick={() => update("trainingSkills", [...training.trainingSkills, { icon: "", title: "", description: "", sort_order: training.trainingSkills.length }])}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Add Skill
-                </AdminButton>
+                  label="Add Skill"
+                />
               </div>
               <div className="space-y-3">
                 {training.trainingSkills.map((s, i) => (
@@ -997,13 +982,10 @@ export default function TrainingEditor() {
                 <h3 className="text-lg font-semibold text-black flex items-center gap-2">
                   <FiHeart className="w-5 h-5 text-rose-600" /> Benefits
                 </h3>
-                <AdminButton
+                <AddButton
                   onClick={() => update("trainingBenefits", [...training.trainingBenefits, { icon: "", title: "", description: "", sort_order: training.trainingBenefits.length }])}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Add Benefit
-                </AdminButton>
+                  label="Add Benefit"
+                />
               </div>
               <div className="space-y-3">
                 {training.trainingBenefits.map((b, i) => (
@@ -1076,13 +1058,10 @@ export default function TrainingEditor() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-black">FAQs</h3>
-                <AdminButton
+                <AddButton
                   onClick={() => update("faqs", [...training.faqs, { question: "", answer: "", category: "", is_active: true }])}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Add FAQ
-                </AdminButton>
+                  label="Add FAQ"
+                />
               </div>
               <div className="space-y-3">
                 {training.faqs.map((faq, i) => (
@@ -1160,13 +1139,10 @@ export default function TrainingEditor() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-black">Testimonials</h3>
-                <AdminButton
+                <AddButton
                   onClick={() => update("testimonials", [...training.testimonials, { student_name: "", photo: "", college: "", company: "", rating: 5, review: "" }])}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Add Testimonial
-                </AdminButton>
+                  label="Add Testimonial"
+                />
               </div>
               <div className="space-y-3">
                 {training.testimonials.map((t, i) => (
@@ -1270,13 +1246,10 @@ export default function TrainingEditor() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-black">Gallery</h3>
-                <AdminButton
+                <AddButton
                   onClick={() => update("gallery", [...training.gallery, { image: "", caption: "", type: "image" }])}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Add Gallery Item
-                </AdminButton>
+                  label="Add Gallery Item"
+                />
               </div>
               <div className="space-y-3">
                 {training.gallery.map((g, i) => (
@@ -1340,13 +1313,10 @@ export default function TrainingEditor() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-black">Statistics</h3>
-                <AdminButton
+                <AddButton
                   onClick={() => update("statistics", [...training.statistics, { title: "", value: "", icon: "" }])}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Add Statistic
-                </AdminButton>
+                  label="Add Statistic"
+                />
               </div>
               <div className="space-y-3">
                 {training.statistics.map((s, i) => (

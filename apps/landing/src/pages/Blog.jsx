@@ -19,7 +19,7 @@ function Hero({ search, onSearchChange, onSearch, heroImage, heading, subheading
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 lg:py-16 text-center relative z-20">
         <Reveal>
           <h1 className="text-[clamp(1.75rem,5vw,3.5rem)] font-extrabold leading-tight">{heading || 'Latest Articles & News'}</h1>
-          <p className="mt-3 sm:mt-4 text-base sm:text-lg text-white/70 max-w-2xl mx-auto">{subheading || 'Insights, tutorials, and stories from the Marvel Slice team'}</p>
+          <p className="mt-3 sm:mt-4 text-base sm:text-lg !text-white max-w-2xl mx-auto">{subheading || 'Insights, tutorials, and stories from the Marvel Slice team'}</p>
         </Reveal>
         <div className="mt-6 sm:mt-8 max-w-xl mx-auto flex flex-col sm:flex-row gap-2 sm:gap-0">
           <div className="relative flex-1">
@@ -27,7 +27,7 @@ function Hero({ search, onSearchChange, onSearch, heroImage, heading, subheading
             <input type="text" value={search} onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search articles..."
               onKeyDown={(e) => e.key === 'Enter' && onSearch?.()}
-              className="w-full pl-11 sm:pl-12 pr-4 py-3.5 rounded-xl sm:rounded-l-xl sm:rounded-r-none bg-white text-dark-navy text-base focus:outline-none focus:ring-2 focus:ring-brand-orange" />
+              className="w-full pl-11 sm:pl-12 pr-4 py-3.5 rounded-xl sm:rounded-l-xl sm:rounded-r-none bg-white text-dark-navy text-base focus:outline-none focus:ring-2 focus:ring-brand-orange border border-gray-300" />
           </div>
           <button onClick={onSearch} className="bg-brand-orange text-white px-8 py-3.5 rounded-xl sm:rounded-l-none sm:rounded-r-xl font-semibold hover:bg-brand-orange/90 transition-colors flex items-center justify-center gap-2">
             Search <FiArrowRight className="w-4 h-4" />
@@ -145,7 +145,7 @@ function RecentPostsWidget({ posts }) {
         <FiCalendar className="w-4 h-4 text-brand-orange" />
         Recent Posts
       </h3>
-      <Stagger className="divide-y divide-gray-100">
+      <Stagger key={posts.length} className="divide-y divide-gray-100">
         {posts.map((post, i) => (
           <StaggerItem key={post.id}>
             <Link to={`/blog/${post.slug}`} className="block group py-3 hover:bg-gray-50 transition-all duration-200">
@@ -208,10 +208,10 @@ function PopularTags({ tags, activeTag, onTagClick }) {
       <div className="flex flex-wrap gap-2">
         {tags.map((tag) => (
           <button key={tag.id} onClick={() => onTagClick?.(tag.name)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+            className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors border ${
               activeTag === tag.name
-                ? 'bg-brand-orange text-white'
-                : 'bg-gray-100 text-text-gray hover:bg-brand-orange/10 hover:text-brand-orange'
+                ? 'bg-brand-orange text-white border-gray-300'
+                : 'bg-white text-text-gray border-gray-300 hover:bg-brand-orange/10 hover:text-brand-orange'
             }`}>{tag.name}</button>
         ))}
         {tags.length === 0 && <p className="text-sm text-gray-400">No tags yet.</p>}
@@ -351,7 +351,7 @@ export default function Blog() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3, delay: 0.5, ease: 'easeOut' }}
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        className="fixed bottom-4 right-0 sm:bottom-8 sm:right-0 w-10 h-10 sm:w-10 sm:h-10 bg-brand-blue text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-colors z-50 cursor-pointer">
+        className="fixed bottom-4 right-4 sm:bottom-8 sm:right-6 w-10 h-10 sm:w-10 sm:h-10 bg-brand-blue text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-colors z-50 cursor-pointer">
         <FiArrowUp className="w-5 h-5" /></motion.button>
     </div>
   );

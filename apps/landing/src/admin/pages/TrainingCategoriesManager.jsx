@@ -5,7 +5,7 @@ import PageShell from "../components/ui/PageShell";
 import DataTable from '../components/ui/DataTable';
 import Badge from '../components/Badge';
 import EmptyState from '../components/EmptyState';
-import AdminButton from "../components/AdminButton";
+import { SubmitButton, CancelButton } from "../components/FormButtons";
 import {
   FiGrid, FiMonitor, FiServer, FiBookOpen, FiStar, FiAward,
   FiUsers, FiClock, FiCode, FiGlobe, FiZap, FiShield, FiHeart,
@@ -224,13 +224,9 @@ const [confirm, confirmDialog] = useConfirm();
         </form>
 
         <div className="w-28 shrink-0 flex flex-col gap-2 pt-9">
-          <AdminButton type="button" onClick={handleSave} disabled={!form.name.trim()} variant="primary" size="md">
-            {editingId ? 'Update' : 'Add'}
-          </AdminButton>
+          <SubmitButton type="button" onClick={handleSave} disabled={!form.name.trim()} label={editingId ? 'Save' : 'Submit'} />
           {editingId && (
-            <AdminButton type="button" onClick={resetForm} variant="destructive" size="md">
-              Cancel
-            </AdminButton>
+            <CancelButton onClick={resetForm} />
           )}
         </div>
       </div>

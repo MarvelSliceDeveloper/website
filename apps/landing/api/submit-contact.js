@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { full_name, email, phone, subject, message } = req.body;
+  const { full_name, email, phone, message } = req.body;
 
   if (!full_name || !email) {
     return res.status(400).json({ error: 'Name and email are required' });
@@ -41,7 +41,6 @@ export default async function handler(req, res) {
           ${row('Full Name', full_name)}
           ${row('Email', email)}
           ${row('Phone', phone || '\u2014')}
-          ${row('Subject', subject || '\u2014')}
           ${row('Message', (message || '\u2014').replace(/\n/g, '<br>'))}
         </table>
       </div>

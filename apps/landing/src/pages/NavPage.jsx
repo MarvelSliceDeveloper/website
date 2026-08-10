@@ -77,7 +77,7 @@ export default function NavPage() {
   return (
     <div>
       {data.hero_image && (
-        <div className="h-48 sm:h-72 lg:h-96 w-full overflow-hidden"><img src={data.hero_image} alt="" className="w-full h-full object-cover" /></div>
+        <Reveal variant="fadeIn" className="w-full max-w-[1900px] mx-auto h-[220px] sm:h-[320px] lg:h-[400px] overflow-hidden"><img src={data.hero_image} alt="" className="w-full h-full object-cover" /></Reveal>
       )}
 
       {(data.heading || data.subheading) && (
@@ -95,11 +95,11 @@ export default function NavPage() {
       )}
 
       {data.sections?.length > 0 && data.sections.filter(s => !s.hidden).map((section, i) => (
-        <div key={i} className={`py-10 sm:py-14 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+        <Reveal key={i} variant="up" className={`py-10 sm:py-14 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <SectionRenderer section={section} />
           </div>
-        </div>
+        </Reveal>
       ))}
 
       {data.courses?.length > 0 && (

@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabaseClient';
-import AdminButton from '../components/AdminButton';
+import AddButton from '../components/AddButton';
 import useDirty from '../hooks/useDirty';
 import SaveBar from '../components/SaveBar';
 import SaveCancelBar from '../components/SaveCancelBar';
 import EmptyState from '../components/EmptyState';
 import {
-  FiSave, FiAlertCircle, FiPlus, FiTrash2, FiEdit2,
+  FiSave, FiAlertCircle, FiTrash2, FiEdit2,
   FiUpload, FiCheck, FiX, FiBriefcase, FiArrowLeft,
   FiAlignLeft, FiAlignCenter, FiAlignRight, FiChevronLeft, FiChevronRight,
+  FiHome, FiGrid, FiTarget, FiUsers,
 } from 'react-icons/fi';
 import PageShell from '../components/ui/PageShell';
 import SectionAccordion from '../components/ui/SectionAccordion';
@@ -121,10 +122,18 @@ export default function CareerPageEditor() {
     headline: 'We\'re Hiring!',
     subtitle: 'Find Your Role. Find Your Fit.',
     description: 'Join a team that\'s passionate about innovation, collaboration, and making a real impact. Your dream role is waiting.',
-    categoriesHeading: 'Explore Opportunities',
+    categoriesHeading: '',
     categoriesSubtitle: 'Find the role that fits you best',
   });
-  const [section2, setSection2] = useState({ heading: 'Job Openings', subheading: '', heading_align: 'center', subheading_align: 'center', eyebrow: 'CAREER OPPORTUNITIES' });
+  const [section2, setSection2] = useState({ heading: 'Job Openings', subheading: '', heading_align: 'center', subheading_align: 'center', eyebrow: '' });
+  const [cta, setCta] = useState({
+    heading: 'Ready to start your dream career?',
+    subheading: '',
+    description: 'Talk to our team today and find the perfect role for you.',
+    cta_text: 'Request a Call Back',
+    cta_link: '',
+    background_image: '',
+  });
   const [formConfig, setFormConfig] = useState(buildDefaultFormConfig());
 
   const [openings, setOpenings] = useState([]);
@@ -143,7 +152,7 @@ export default function CareerPageEditor() {
   const catTotalPages = Math.ceil(roleCategories.length / catPageSize) || 1;
   useEffect(() => { if (catPage > catTotalPages) setCatPage(catTotalPages); }, [roleCategories.length, catPageSize]);
 
-  const { dirty, reset } = useDirty([hero, section1, section2, formConfig, openings], loading);
+  const { dirty, reset } = useDirty([hero, section1, section2, cta, formConfig, openings], loading);
 
   useEffect(() => {
     async function load() {
@@ -163,10 +172,19 @@ export default function CareerPageEditor() {
           headline: fc.headline || content.section1_heading || 'We\'re Hiring!',
           subtitle: fc.subtitle || content.section1_subheading || 'Find Your Role. Find Your Fit.',
           description: fc.description || content.section1_description || '',
-          categoriesHeading: fc.categoriesHeading || 'Explore Opportunities',
+          categoriesHeading: fc.categoriesHeading || '',
           categoriesSubtitle: fc.categoriesSubtitle || 'Find the role that fits you best',
         });
-        setSection2({ heading: content.section2_heading || 'Job Openings', subheading: content.section2_subheading || '', heading_align: fc.section2_heading_align || 'center', subheading_align: fc.section2_subheading_align || 'center', eyebrow: fc.section2_eyebrow || 'CAREER OPPORTUNITIES' });
+        setSection2({ heading: content.section2_heading || 'Job Openings', subheading: content.section2_subheading || '', heading_align: fc.section2_heading_align || 'center', subheading_align: fc.section2_subheading_align || 'center', eyebrow: fc.section2_eyebrow || '' });
+        const cb = fc.cta_banner || {};
+        setCta({
+          heading: cb.heading || '',
+          subheading: cb.subheading || '',
+          description: cb.description || '',
+          cta_text: cb.cta_text || '',
+          cta_link: cb.cta_link || '',
+          background_image: cb.background_image || '',
+        });
         const rawForm = fc.form || {};
         if (rawForm.enabled !== undefined || Object.keys(rawForm).length > 0) {
           setFormConfig({ ...buildDefaultFormConfig(), ...rawForm });
@@ -240,6 +258,14 @@ export default function CareerPageEditor() {
         section2_eyebrow: section2.eyebrow,
         section2_heading_align: section2.heading_align || 'center',
         section2_subheading_align: section2.subheading_align || 'center',
+        cta_banner: {
+          heading: cta.heading,
+          subheading: cta.subheading,
+          description: cta.description,
+          cta_text: cta.cta_text,
+          cta_link: cta.cta_link,
+          background_image: cta.background_image || null,
+        },
         form: formConfig,
       },
       is_published: true,
@@ -410,10 +436,11 @@ export default function CareerPageEditor() {
   if (loading) return <div className="flex justify-center py-20"><div className="w-8 h-8 border-2 border-admin-600 border-t-transparent rounded-full animate-spin" /></div>;
 
   const tabs = [
-    { id: 'hero-section', title: 'Hero' },
-    { id: 'hiring-header', title: 'Hiring' },
-    { id: 'categories-section', title: 'Categories' },
-    { id: 'role-categories', title: 'View Role' },
+    { id: 'hero-section', title: 'Hero', icon: FiHome },
+    { id: 'hiring-header', title: 'Hiring', icon: FiBriefcase },
+    { id: 'categories-section', title: 'Categories', icon: FiGrid },
+    { id: 'cta-section', title: 'CTA', icon: FiTarget },
+    { id: 'role-categories', title: 'View Role', icon: FiUsers },
   ];
 
   return (
@@ -423,9 +450,7 @@ export default function CareerPageEditor() {
         <div className="flex items-end justify-between">
           <FolderTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
           <div className="pb-2 pr-1 relative z-40">
-            <button type="button" onClick={openCategoryForm} className="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-medium rounded-[20px] text-white bg-admin-600 hover:bg-admin-700 transition-colors shadow-sm shrink-0">
-              <span className="w-5 h-5 rounded-full bg-white flex items-center justify-center"><FiPlus className="w-3 h-3 text-admin-600" /></span> Add Role
-            </button>
+            <AddButton onClick={openCategoryForm} label="Add Role" />
           </div>
         </div>
 
@@ -502,13 +527,50 @@ export default function CareerPageEditor() {
               <div>
                 <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Heading</label>
                 <input type="text" value={section1.categoriesHeading} onChange={(e) => setSection1({ ...section1, categoriesHeading: e.target.value })}
-                  placeholder="Explore Opportunities" className={inputClass} />
+                  placeholder="Heading" className={inputClass} />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Subtitle</label>
                 <input type="text" value={section1.categoriesSubtitle} onChange={(e) => setSection1({ ...section1, categoriesSubtitle: e.target.value })}
                   placeholder="Find the role that fits you best" className={inputClass} />
               </div>
+            </div>
+          </div>
+        )}
+
+          {activeTab === 'cta-section' && (
+          <div className="space-y-6">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Heading</label>
+                <input type="text" value={cta.heading} onChange={(e) => setCta({ ...cta, heading: e.target.value })}
+                  placeholder="Ready to start your dream career?" className={inputClass} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Subheading</label>
+                <input type="text" value={cta.subheading} onChange={(e) => setCta({ ...cta, subheading: e.target.value })}
+                  placeholder="Optional subheading" className={inputClass} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Description</label>
+              <textarea value={cta.description} onChange={(e) => setCta({ ...cta, description: e.target.value })}
+                rows={2} placeholder="Talk to our team today and find the perfect role for you." className={inputClass} />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">CTA Button Text</label>
+                <input type="text" value={cta.cta_text} onChange={(e) => setCta({ ...cta, cta_text: e.target.value })}
+                  placeholder="Request a Call Back" className={inputClass} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Phone Number</label>
+                <input type="text" value={cta.cta_link} onChange={(e) => setCta({ ...cta, cta_link: e.target.value })}
+                  placeholder="+1 (555) 019-2834" className={inputClass} />
+              </div>
+            </div>
+            <div>
+              <ImageUploader value={cta.background_image} onChange={(v) => setCta({ ...cta, background_image: v })} label="Background Image" />
             </div>
           </div>
         )}
@@ -521,7 +583,7 @@ export default function CareerPageEditor() {
                 icon={FiBriefcase}
                 title="No role categories yet"
                 description="Categories appear as interactive cards in the Explore Opportunities grid."
-                action={{ onClick: openCategoryForm, icon: <FiPlus className="w-4 h-4" />, label: 'Add Role Category' }}
+                action={{ onClick: openCategoryForm, label: 'Add Role Category' }}
               />
             ) : (
               <>

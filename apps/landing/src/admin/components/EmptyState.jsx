@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
 import { FiInbox } from "react-icons/fi";
+import AddButton from "./AddButton";
 
 export default function EmptyState({ icon: Icon = FiInbox, title = "Nothing here yet", description = "", action }) {
   return (
@@ -11,13 +11,9 @@ export default function EmptyState({ icon: Icon = FiInbox, title = "Nothing here
       {description && <p className="text-sm text-neutral-500 mb-4 text-center max-w-sm">{description}</p>}
       {action && (
         action.to ? (
-          <Link to={action.to} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-indigo-600 bg-white border border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300 transition-colors">
-            {action.icon}{action.label}
-          </Link>
+          <AddButton to={action.to} label={action.label} />
         ) : (
-          <button onClick={action.onClick} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-indigo-600 bg-white border border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300 transition-colors">
-            {action.icon}{action.label}
-          </button>
+          <AddButton onClick={action.onClick} label={action.label} />
         )
       )}
     </div>

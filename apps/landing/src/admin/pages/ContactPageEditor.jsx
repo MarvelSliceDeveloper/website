@@ -2,12 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabaseClient';
-import AdminButton from '../components/AdminButton';
 import SaveBar from '../components/SaveBar';
 import SaveCancelBar from '../components/SaveCancelBar';
 import useDirty from '../hooks/useDirty';
-import { FiSave, FiAlertCircle, FiPlus, FiTrash2, FiUpload, FiArrowLeft } from 'react-icons/fi';
+import { FiSave, FiAlertCircle, FiTrash2, FiUpload, FiArrowLeft, FiHome, FiBriefcase, FiMessageSquare, FiSettings, FiMapPin, FiHelpCircle } from 'react-icons/fi';
 import PageShell from '../components/ui/PageShell';
+import SectionSelect from '../components/ui/SectionSelect';
 import SectionAccordion from '../components/ui/SectionAccordion';
 import { RepeatableItemList } from '../components/ui/RepeatableItemList';
 import { RepeatableItemCard } from '../components/ui/RepeatableItemCard';
@@ -38,7 +38,18 @@ function ImageUploader({ value, onChange, label }) {
           <input type="file" accept="image/*" onChange={handleUpload} className="hidden" />
         </label>
       </div>
-      {value && <img src={value} alt="" className="mt-2 h-28 w-full object-cover rounded-lg border border-admin-200" />}
+      {value && (
+        <div className="mt-2 relative group rounded-lg overflow-hidden border border-admin-200">
+          <img src={value} alt="" className="h-28 w-full object-cover" />
+          <button
+            type="button"
+            onClick={() => onChange('')}
+            className="absolute top-2 right-2 p-1.5 bg-destructive-500 text-white rounded-full opacity-100 shadow-lg"
+          >
+            <FiTrash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -47,6 +58,7 @@ const PAGE_PATH = '/contact';
 
 const DEFAULT_CONTACT_CONTENT = {
   left_heading: 'Get in Touch',
+  left_heading_line_2: '',
   left_subtitle: "We'd love to hear from you. Reach out to us and we'll get back to you as soon as possible.",
   address: '',
   display_phone: '',
@@ -55,6 +67,10 @@ const DEFAULT_CONTACT_CONTENT = {
   business_hours: '',
   gradient_start: '#0B2D6B',
   gradient_end: '#1E56C7',
+  heading_color: '#ffffff',
+  heading_line_2_color: '#ffffff',
+  subheading_color: '#ffffff',
+  text_color: '#ffffff',
   show_shadow: true,
   success_message: 'Thank you! Your message has been received. Our team will contact you soon.',
   map_embed_url: '',
@@ -74,11 +90,11 @@ const queryClient = useQueryClient();
   const navItemIdRef = useRef(null);
   const savingRef = useRef(false);
 
-  const [hero, setHero] = useState({ heading: '', subheading: '', hero_image: '' });
+  const [hero, setHero] = useState({ heading: '', subheading: '', hero_image: '', heading_line_2: '' });
   const [contactContent, setContactContent] = useState(DEFAULT_CONTACT_CONTENT);
-  const [showContactSection, setShowContactSection] = useState(true);
+  const [formConfig, setFormConfig] = useState({});
   const [faqs, setFaqs] = useState([]);
-  const { dirty, reset } = useDirty([hero, contactContent, faqs], loading);
+  const { dirty, reset } = useDirty([hero, contactContent, formConfig, faqs], loading);
 
   function updateContent(field, value) {
     setContactContent((prev) => ({ ...prev, [field]: value }));
@@ -109,17 +125,21 @@ const queryClient = useQueryClient();
         const page = pages?.[0] || null;
         if (page) {
           setPageId(page.id);
-          setHero({ heading: page.heading || '', subheading: page.subheading || '', hero_image: page.hero_image || '' });
+          setHero({
+            heading: page.heading || '',
+            subheading: page.subheading || '',
+            hero_image: page.hero_image || '',
+            heading_line_2: page.form_config?.hero?.heading_line_2 || '',
+          });
+          setFormConfig(page.form_config || {});
           const secs = page.sections || [];
 
           const contactFormSec = secs.find(s => s.section_type === 'contact_form');
           if (contactFormSec) {
-            setShowContactSection(true);
             setContactContent({ ...DEFAULT_CONTACT_CONTENT, ...contactFormSec.content });
           } else {
             const contactInfoSec = secs.find(s => s.section_type === 'contact_info');
             if (contactInfoSec) {
-              setShowContactSection(true);
               setContactContent((prev) => ({
                 ...prev,
                 left_heading: contactInfoSec.heading || prev.left_heading,
@@ -155,14 +175,14 @@ const queryClient = useQueryClient();
     setSaveError('');
 
     const sections = [
-      showContactSection ? { section_type: 'contact_form', content: contactContent } : null,
+      { section_type: 'contact_form', content: contactContent },
       faqs.length > 0 ? { section_type: 'faq_list', heading: 'Frequently Asked Questions', items: faqs } : null,
       contactContent.map_embed_url ? { section_type: 'map_embed', content: contactContent.map_embed_url } : null,
     ].filter(Boolean);
 
     if (!navItemId && !navItemIdRef.current) { setSaveError('No nav item linked — please refresh and try again'); setSaving(false); savingRef.current = false; return; }
 
-    const payload = { nav_item_id: navItemId || navItemIdRef.current, heading: hero.heading, subheading: hero.subheading, hero_image: hero.hero_image || null, sections, is_published: true };
+    const payload = { nav_item_id: navItemId || navItemIdRef.current, heading: hero.heading, subheading: hero.subheading, hero_image: hero.hero_image || null, form_config: { ...formConfig, hero: { heading_line_2: hero.heading_line_2 || '' } }, sections, is_published: true };
     let res;
     if (pageId) {
       res = await supabase.from('nav_pages').update(payload).eq('id', pageId);
@@ -191,13 +211,12 @@ const queryClient = useQueryClient();
   const labelCls = "block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider";
 
   const tabs = [
-    { id: 'hero-section', title: 'Hero' },
-    { id: 'contact-section', title: 'Contact' },
-    { id: 'left-side-company-details', title: 'Company Details' },
-    { id: 'right-side-form-settings', title: 'Form' },
-    { id: 'style-settings', title: 'Style' },
-    { id: 'map-embed', title: 'Map' },
-    { id: 'faqs', title: 'FAQs' },
+    { id: 'hero-section', title: 'Hero', icon: FiHome },
+    { id: 'left-side-company-details', title: 'Company Details', icon: FiBriefcase },
+    { id: 'right-side-form-settings', title: 'Form', icon: FiMessageSquare },
+    { id: 'style-settings', title: 'Style', icon: FiSettings },
+    { id: 'map-embed', title: 'Map', icon: FiMapPin },
+    { id: 'faqs', title: 'FAQs', icon: FiHelpCircle },
   ];
   const currentTab = tabs.find(t => t.id === activeTab) || tabs[0];
 
@@ -206,11 +225,11 @@ const queryClient = useQueryClient();
       title=""
       maxWidth="max-w-none"
     >
-      <div className="flex gap-6 items-start">
+      <div className="flex flex-col lg:flex-row gap-[15px] items-start">
 
-        <div className="transition-all duration-200 w-[240px] shrink-0">
+        <div className="hidden lg:block transition-all duration-200 lg:w-[240px] lg:shrink-0">
           <nav className="sticky top-6 self-start max-h-[calc(100vh-80px)] overflow-visible">
-            <div className="bg-white rounded-md flex flex-col overflow-visible ring-1 ring-gray-300" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
+            <div className="bg-white rounded-xl flex flex-col overflow-visible border border-gray-300" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
               {tabs.map((tab, index) => {
                 const isActive = activeTab === tab.id;
                 return (
@@ -218,19 +237,20 @@ const queryClient = useQueryClient();
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`relative w-full flex flex-col text-left px-4 py-3 border-b border-gray-100 last:border-b-0 focus:outline-none ${
-                      index === 0 ? 'rounded-t-md' : ''
+                    className={`relative w-full flex items-center gap-2.5 text-left px-4 py-3 border-b border-gray-200 last:border-b-0 focus:outline-none transition-colors ${
+                      index === 0 ? 'rounded-t-xl' : ''
                     } ${
-                      index === tabs.length - 1 ? 'rounded-b-md' : ''
+                      index === tabs.length - 1 ? 'rounded-b-xl' : ''
                     } ${
-                      isActive ? 'bg-admin-600 text-white shadow-md z-10' : 'bg-white text-gray-600 hover:bg-gray-50'
+                      isActive ? 'bg-admin-600 text-white shadow-md z-10' : 'bg-white text-gray-600 hover:bg-gray-100'
                     }`}
                   >
+                    <tab.icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-neutral-400'}`} />
                     <div className="font-semibold text-sm">
                       {tab.title}
                     </div>
                     {isActive && (
-                      <div className="absolute top-1/2 -translate-y-1/2 -right-[15px] w-0 h-0 border-y-[15px] border-y-transparent border-l-[30px] border-l-admin-600" />
+                      <div className="absolute top-1/2 -translate-y-1/2 -right-[15px] w-0 h-0 border-y-[15px] border-y-transparent border-l-[27px] border-l-admin-600" />
                     )}
                   </button>
                 );
@@ -240,6 +260,7 @@ const queryClient = useQueryClient();
         </div>
 
         <div className="flex-1 min-w-0">
+          <SectionSelect items={tabs.map(t => ({ key: t.id, label: t.title }))} value={activeTab} onChange={setActiveTab} label="Section" />
           <SaveBar saving={saving} saved={saved} saveError={saveError} onSave={handleSave} label="Page" top />
           <div className="bg-white border border-gray-300 rounded-xl p-6" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
             <form onSubmit={handleSave} className="space-y-6">
@@ -254,9 +275,13 @@ const queryClient = useQueryClient();
                 <input type="text" value={hero.heading} onChange={(e) => setHero({ ...hero, heading: e.target.value })} placeholder="Heading" className={inputCls} />
               </div>
               <div>
-                <label className={labelCls}>Subheading</label>
-                <input type="text" value={hero.subheading} onChange={(e) => setHero({ ...hero, subheading: e.target.value })} placeholder="Subheading" className={inputCls} />
+                <label className={labelCls}>Heading Line 2 (Optional)</label>
+                <input type="text" value={hero.heading_line_2 || ''} onChange={(e) => setHero({ ...hero, heading_line_2: e.target.value })} placeholder="Second line of heading" className={inputCls} />
               </div>
+            </div>
+            <div>
+              <label className={labelCls}>Description</label>
+              <textarea rows={4} value={hero.subheading} onChange={(e) => setHero({ ...hero, subheading: e.target.value })} placeholder="Description" className={`${inputCls} resize-y`} />
             </div>
             <div>
               <ImageUploader value={hero.hero_image} onChange={(v) => setHero({ ...hero, hero_image: v })} label="Hero Image" />
@@ -265,31 +290,20 @@ const queryClient = useQueryClient();
         </div>
       )}
 
-        {/* Contact Section Toggle */}
-        {activeTab === 'contact-section' && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-neutral-500 mt-0.5">Split-screen layout: company details on the left, contact form on the right.</p>
-            </div>
-            <button type="button" onClick={() => setShowContactSection(!showContactSection)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${showContactSection ? 'bg-admin-600' : 'bg-admin-300'}`}>
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showContactSection ? 'translate-x-6' : 'translate-x-1'}`} />
-            </button>
-          </div>
-        </div>
-      )}
+        {/* Contact Section is always enabled */}
 
         {/* Left Side: Company Details */}
-        {showContactSection && (
-          <>
-            {activeTab === 'left-side-company-details' && (
+        {activeTab === 'left-side-company-details' && (
         <div className="space-y-6">
               <div className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className={labelCls}>Heading</label>
                     <input type="text" value={contactContent.left_heading} onChange={(e) => updateContent('left_heading', e.target.value)} className={inputCls} placeholder="Get in Touch" />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Heading Line 2 (Optional)</label>
+                    <input type="text" value={contactContent.left_heading_line_2 || ''} onChange={(e) => updateContent('left_heading_line_2', e.target.value)} className={inputCls} placeholder="Second line of heading" />
                   </div>
                   <div>
                     <label className={labelCls}>Subtitle</label>
@@ -355,19 +369,51 @@ const queryClient = useQueryClient();
                       <input type="text" value={contactContent.gradient_end} onChange={(e) => updateContent('gradient_end', e.target.value)} className={inputCls} />
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button type="button" onClick={() => updateContent('show_shadow', !contactContent.show_shadow)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${contactContent.show_shadow ? 'bg-admin-600' : 'bg-admin-300'}`}>
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${contactContent.show_shadow ? 'translate-x-6' : 'translate-x-1'}`} />
-                  </button>
-                  <label className="text-sm text-neutral-700">Card Shadow</label>
+                  <div>
+                    <label className={labelCls}>Heading</label>
+                    <input type="text" value={contactContent.left_heading || ''} onChange={(e) => updateContent('left_heading', e.target.value)} className={inputCls} placeholder="Get in Touch" />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Heading Color</label>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={contactContent.heading_color || '#ffffff'} onChange={(e) => updateContent('heading_color', e.target.value)} className="w-10 h-10 rounded-lg border border-admin-200 cursor-pointer" />
+                      <input type="text" value={contactContent.heading_color || '#ffffff'} onChange={(e) => updateContent('heading_color', e.target.value)} className={inputCls} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Heading Line 2 Color</label>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={contactContent.heading_line_2_color || '#ffffff'} onChange={(e) => updateContent('heading_line_2_color', e.target.value)} className="w-10 h-10 rounded-lg border border-admin-200 cursor-pointer" />
+                      <input type="text" value={contactContent.heading_line_2_color || '#ffffff'} onChange={(e) => updateContent('heading_line_2_color', e.target.value)} className={inputCls} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Subheading Color</label>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={contactContent.subheading_color || '#ffffff'} onChange={(e) => updateContent('subheading_color', e.target.value)} className="w-10 h-10 rounded-lg border border-admin-200 cursor-pointer" />
+                      <input type="text" value={contactContent.subheading_color || '#ffffff'} onChange={(e) => updateContent('subheading_color', e.target.value)} className={inputCls} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Text Color</label>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={contactContent.text_color || '#ffffff'} onChange={(e) => updateContent('text_color', e.target.value)} className="w-10 h-10 rounded-lg border border-admin-200 cursor-pointer" />
+                      <input type="text" value={contactContent.text_color || '#ffffff'} onChange={(e) => updateContent('text_color', e.target.value)} className={inputCls} />
+                    </div>
+                  </div>
+                  <div className="sm:col-start-3">
+                    <label className={labelCls}>Card Shadow</label>
+                    <div className="flex items-center gap-3 justify-end">
+                      <button type="button" onClick={() => updateContent('show_shadow', !contactContent.show_shadow)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${contactContent.show_shadow ? 'bg-admin-600' : 'bg-admin-300'}`}>
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${contactContent.show_shadow ? 'translate-x-6' : 'translate-x-1'}`} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
       )}
-          </>
-        )}
 
         {/* Map Embed */}
         {activeTab === 'map-embed' && (

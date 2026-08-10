@@ -5,14 +5,14 @@ import { RepeatableItemCard } from '../components/ui/RepeatableItemCard';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabaseClient';
-import AdminButton from '../components/AdminButton';
+import AddButton from '../components/AddButton';
 import SaveBar from '../components/SaveBar';
 import SaveCancelBar from '../components/SaveCancelBar';
 import useDirty from '../hooks/useDirty';
 import PageShell from '../components/ui/PageShell';
 import SectionAccordion from '../components/ui/SectionAccordion';
 import {
-  FiPlus, FiTrash2, FiSave, FiUpload, FiArrowLeft,
+  FiTrash2, FiSave, FiUpload, FiArrowLeft, FiMenu,
   FiHome, FiStar, FiAward, FiHelpCircle,
   FiLayout, FiMail, FiMessageSquare, FiBell, FiUsers,
   FiClock, FiVideo, FiCode, FiCalendar, FiRefreshCw,
@@ -114,6 +114,9 @@ const sectionDefs = [
     ],
   },
   {
+    key: 'upcoming_classes', label: 'Upcoming Classes', icon: FiCalendar, color: 'from-amber-400 to-amber-600',
+  },
+  {
     key: 'empowering', label: 'Empowering', icon: FiStar, color: 'from-blue-500 to-blue-600',
     fields: [
       { name: 'heading', label: 'Heading', type: 'text' },
@@ -137,6 +140,23 @@ const sectionDefs = [
       { name: 'cta_text', label: 'CTA Button Text', type: 'text' },
       { name: 'cta_link', label: 'Phone Number (tel:)', type: 'text' },
       { name: 'background_image', label: 'Background Image', type: 'image' },
+    ],
+  },
+  {
+    key: 'testimonials', label: 'Testimonials', icon: FiUsers, color: 'from-pink-500 to-pink-600',
+    contentOnly: true,
+    fields: [
+      { name: 'heading', label: 'Heading', type: 'text' },
+      { name: 'subheading', label: 'Subheading', type: 'text' },
+    ],
+  },
+  {
+    key: 'latest_blog', label: 'Latest Blog', icon: FiBookOpen, color: 'from-cyan-500 to-cyan-600',
+    contentOnly: true,
+    fields: [
+      { name: 'heading', label: 'Heading', type: 'text' },
+      { name: 'subheading', label: 'Subheading', type: 'text' },
+      { name: 'link_text', label: 'View All Link Text', type: 'text' },
     ],
   },
   {
@@ -305,7 +325,7 @@ function FeatureCardsEditor({ data, onChange }) {
       <div className="pt-4">
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-sm font-semibold text-black">Cards</h4>
-          <AdminButton type="button" onClick={addCard} variant="primary" size="sm"><FiPlus className="w-4 h-4" /> Add Card</AdminButton>
+          <AddButton onClick={addCard} label="Add Card" />
         </div>
         {cards.length === 0 && <p className="text-sm text-neutral-400 italic">No cards yet.</p>}
         <div className="space-y-3">
@@ -338,10 +358,7 @@ function FeatureCardsEditor({ data, onChange }) {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Bullet Points</label>
-                    <button type="button" onClick={() => addBullet(i)}
-                      className="text-xs text-admin-600 hover:text-admin-700 font-medium flex items-center gap-0.5">
-                      <FiPlus className="w-3 h-3" /> Add
-                    </button>
+                    <AddButton onClick={() => addBullet(i)} label="Add Bullet" size="xs" />
                   </div>
                   <div className="space-y-1.5">
                     {(card.bullets || []).map((b, j) => (
@@ -478,7 +495,7 @@ function ServicesEditor({ data, onChange }) {
       </div>
       <div className="pt-4">
         <RepeatableItemList
-          title="Service Cards"
+          title="Upcoming Cards"
           items={cards}
           onAdd={addCard}
           addLabel="Add Card"
@@ -739,14 +756,12 @@ function HeroEditor({ data, onChange }) {
       {/* Stats Section */}
       <SectionAccordion title="Stats" expanded={openSection === 'stats'} onToggle={() => setOpenSection(openSection === 'stats' ? null : 'stats')}>
         <div className="flex justify-end mb-4">
-          <button type="button" onClick={() => {
+          <AddButton onClick={() => {
             const s = Array.isArray(content.stats) ? content.stats : [];
             if (s.length >= 3) return;
             updateContent('stats', [...s, { value: '', label: '' }]);
           }}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${(content.stats || []).length >= 3 ? 'text-gray-300 bg-gray-50 cursor-not-allowed' : 'text-admin-600 bg-white border border-admin-200 hover:bg-admin-50 hover:border-admin-300'}`}>
-            <FiPlus className="w-3.5 h-3.5" /> Add Stat
-          </button>
+            disabled={(content.stats || []).length >= 3} label="Add Stat" />
         </div>
         {(!Array.isArray(content.stats) || content.stats.length === 0) ? (
           <div className="text-center">
@@ -788,12 +803,10 @@ function HeroEditor({ data, onChange }) {
       {/* Buttons Section */}
       <SectionAccordion title="Call-to-Action Buttons" expanded={openSection === 'buttons'} onToggle={() => setOpenSection(openSection === 'buttons' ? null : 'buttons')}>
         <div className="flex justify-end mb-4">
-          <AdminButton type="button" onClick={() => {
+          <AddButton onClick={() => {
             const b = Array.isArray(content.buttons) ? content.buttons : [];
             updateContent('buttons', [...b, { label: '', link: '', color: '' }]);
-          }} variant="primary" size="sm">
-            <FiPlus className="w-4 h-4" /> Add Button
-          </AdminButton>
+          }} label="Add Button" />
         </div>
         <div>
           {(!Array.isArray(content.buttons) || content.buttons.length === 0) ? (
@@ -821,7 +834,7 @@ function HeroEditor({ data, onChange }) {
                   updateContent('buttons', arr);
                 }}
                   className="w-28 px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all bg-white font-mono"
-                  placeholder="#F7941D" />
+                  placeholder="#f59e0b" />
                 <button type="button" onClick={() => {
                   const arr = [...content.buttons];
                   arr.splice(i, 1);
@@ -870,7 +883,7 @@ function FieldEditor({ def, data, onChange }) {
           </div>
         </div>
       )}
-      {def.fields.map((f) => (
+      {(def.fields || []).map((f) => (
         <RenderField key={f.name} field={f} value={def.contentOnly ? content[f.name] : (content[f.name] ?? '')} onChange={(v) => updateContent(f.name, v)} />
       ))}
       {def.hasList && !Array.isArray(def.hasList) && (
@@ -932,6 +945,11 @@ function SimpleListEditor({ def, data, onChange }) {
                     {f.type === 'textarea' ? (
                       <textarea value={item[f.name] || ''} onChange={(e) => updateItem(i, f.name, e.target.value)} rows={3}
                         className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                    ) : f.type === 'number' ? (
+                      <input type="number" min="1" max="5" value={item[f.name] || ''} onChange={(e) => updateItem(i, f.name, e.target.value)}
+                        className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+                    ) : f.type === 'image' ? (
+                      <ImageUploader value={item[f.name] || ''} onChange={(v) => updateItem(i, f.name, v)} label="" />
                     ) : (
                       <input type="text" value={item[f.name] || ''} onChange={(e) => updateItem(i, f.name, e.target.value)}
                         className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
@@ -978,6 +996,15 @@ function RenderField({ field, value, onChange }) {
       </div>
     );
   }
+  if (field.type === 'number') {
+    return (
+      <div>
+        <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">{field.label}</label>
+        <input type="number" min="1" max="5" value={value || ''} onChange={(e) => onChange(e.target.value)}
+          className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500 transition-all" />
+      </div>
+    );
+  }
   return (
     <div>
       <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">{field.label}</label>
@@ -1004,7 +1031,7 @@ function AlumniEditor({ data, onChange }) {
         <input type="text" value={name} onChange={(e) => setName(e.target.value)}
           placeholder="Company name" className="flex-1 px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 focus:border-admin-500"
           onKeyDown={(e) => e.key === 'Enter' && addCompany()} />
-        <AdminButton onClick={addCompany} variant="primary" size="md"><FiPlus className="w-4 h-4" /> Add</AdminButton>
+        <AddButton onClick={addCompany} label="Add Company" />
       </div>
       {companies.length === 0 && <p className="text-sm text-neutral-400 italic">No companies added yet.</p>}
       <div className="flex flex-wrap gap-2">
@@ -1027,14 +1054,34 @@ export default function HomePageEditor() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const mobileNavRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const savingRef = useRef(false);
   const { dirty, reset } = useDirty([sections, alumniData], loading);
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    if (!mobileNavOpen) return;
+    function handlePointer(e) {
+      if (mobileNavRef.current && !mobileNavRef.current.contains(e.target)) setMobileNavOpen(false);
+    }
+    function handleKey(e) {
+      if (e.key === "Escape") setMobileNavOpen(false);
+    }
+    document.addEventListener("mousedown", handlePointer);
+    document.addEventListener("touchstart", handlePointer);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handlePointer);
+      document.removeEventListener("touchstart", handlePointer);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [mobileNavOpen]);
+
+  useEffect(() => {
     if (!loading) {
-      const validKeys = ['hero', 'intro_form', 'empowering', 'featured_courses', 'services', 'cta_banner', 'faqs'];
+      const validKeys = ['hero', 'intro_form', 'upcoming_classes', 'empowering', 'featured_courses', 'services', 'cta_banner', 'faqs', 'testimonials', 'latest_blog'];
       if (!section) navigate('/admin/home/hero', { replace: true });
       else if (!validKeys.includes(section)) navigate('/admin/home/hero', { replace: true });
     }
@@ -1126,12 +1173,12 @@ export default function HomePageEditor() {
 
   return (
     <PageShell backTo="/admin" title="" maxWidth="max-w-none">
-      <div className="flex gap-6 items-start">
+      <div className="flex flex-col lg:flex-row gap-[15px] lg:items-start">
 
         {/* Redesigned Sidebar Matching the Image */}
-        <div className="transition-all duration-200 w-[240px] shrink-0">
+        <div className="hidden lg:block transition-all duration-200 lg:w-[240px] lg:shrink-0">
           <nav className="sticky top-6 self-start max-h-[calc(100vh-80px)] overflow-visible">
-            <div className="bg-white rounded-md flex flex-col overflow-visible ring-1 ring-gray-300" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
+            <div className="bg-white rounded-xl flex flex-col overflow-visible border border-gray-300" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
               {allNavItems.map((item, index) => {
                 const isActive = selectedNav.key === item.key;
                 return (
@@ -1139,22 +1186,21 @@ export default function HomePageEditor() {
                     key={item.key}
                     type="button"
                     onClick={() => navigate(`/admin/home/${item.key}`)}
-                    className={`relative w-full flex flex-col text-left px-4 py-3 border-b border-gray-100 last:border-b-0 focus:outline-none ${
-                      index === 0 ? 'rounded-t-md' : ''
+                    className={`relative w-full flex items-center gap-2.5 text-left px-4 py-3 border-b border-gray-200 last:border-b-0 focus:outline-none transition-colors ${
+                      index === 0 ? 'rounded-t-xl' : ''
                     } ${
-                      index === allNavItems.length - 1 ? 'rounded-b-md' : ''
+                      index === allNavItems.length - 1 ? 'rounded-b-xl' : ''
                     } ${
-                      isActive ? 'bg-admin-600 text-white shadow-md z-10' : 'bg-white text-gray-600 hover:bg-gray-50'
+                      isActive ? 'bg-admin-600 text-white shadow-md z-10' : 'bg-white text-gray-600 hover:bg-gray-100'
                     }`}
                   >
+                    {item.icon && <item.icon className="w-4 h-4 shrink-0" />}
                     <div className="font-semibold text-sm">
                       {item.label}
                     </div>
 
                     {isActive && (
-                      <div
-                        className="absolute top-1/2 -translate-y-1/2 -right-[15px] w-0 h-0 border-y-[15px] border-y-transparent border-l-[30px] border-l-admin-600"
-                      />
+                      <div className="hidden lg:block absolute top-1/2 -translate-y-1/2 -right-[15px] w-0 h-0 border-y-[15px] border-y-transparent border-l-[27px] border-l-admin-600" />
                     )}
                   </button>
                 );
@@ -1165,6 +1211,38 @@ export default function HomePageEditor() {
 
         {/* Main Content Editor Area */}
         <div className="flex-1 min-w-0">
+          <div ref={mobileNavRef} className="relative lg:hidden mb-4">
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen((o) => !o)}
+              className="w-full flex items-center gap-2.5 px-4 py-3 rounded-xl border border-gray-300 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              aria-expanded={mobileNavOpen}
+            >
+              <FiMenu className="w-4 h-4 text-admin-600 shrink-0" />
+              <span className="truncate">{selectedNav.label}</span>
+              <FiChevronDown className={`w-4 h-4 ml-auto text-gray-400 shrink-0 transition-transform duration-300 ${mobileNavOpen ? "rotate-180" : ""}`} />
+            </button>
+            {mobileNavOpen && (
+              <div className="absolute left-0 right-0 top-full mt-2 z-40 bg-white rounded-xl border border-gray-300 shadow-xl overflow-hidden">
+                {allNavItems.map((item) => {
+                  const isActive = selectedNav.key === item.key;
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => { navigate(`/admin/home/${item.key}`); setMobileNavOpen(false); }}
+                      className={`w-full flex items-center gap-2.5 text-left px-4 py-3 border-b border-gray-200 last:border-b-0 text-sm font-semibold ${
+                        isActive ? "bg-admin-600 text-white" : "bg-white text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      {item.icon && <item.icon className="w-4 h-4 shrink-0" />}
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
           <SaveBar saving={saving} saved={saved} saveError={saveError} onSave={handleSave} label="Page" top />
           <div className="bg-white border border-gray-300 rounded-xl p-6" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
             {def && sec ? (

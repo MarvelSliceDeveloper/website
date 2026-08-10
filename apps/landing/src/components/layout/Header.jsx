@@ -11,7 +11,6 @@ export const topNav = [
   { label: 'Software Learning' },
   { label: 'Competitive Exam' },
   { label: 'Services', path: '/services' },
-  { label: 'Training', path: '/training' },
   { label: 'Career', path: '/career' },
   { label: 'Blog', path: '/blog' },
   { label: 'Contact', path: '/contact' },

@@ -32,29 +32,29 @@ export default function Pagination({
 
   return (
     <div className="flex items-center justify-between w-full gap-x-4 gap-y-2 flex-wrap">
-      <div className="text-sm text-neutral-600 font-sans">
+      <div className="text-xs sm:text-sm text-neutral-600 font-sans">
         {startItem.toLocaleString()}-{endItem.toLocaleString()} of {totalItems.toLocaleString()}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
-          className="text-sm font-medium text-neutral-700 disabled:text-neutral-300 disabled:cursor-not-allowed hover:text-black transition-colors"
+          className="text-xs sm:text-sm font-medium text-neutral-700 disabled:text-neutral-300 disabled:cursor-not-allowed hover:text-black transition-colors"
         >
           &lt; Back
         </button>
 
         {pages.map((p, i) =>
           p === '...' ? (
-            <span key={`ellipsis-${i}`} className="w-7 h-7 flex items-center justify-center text-xs text-neutral-400">
+            <span key={`ellipsis-${i}`} className="w-9 h-9 lg:w-7 lg:h-7 flex items-center justify-center text-xs text-neutral-400">
               ...
             </span>
           ) : (
             <button
               key={p}
               onClick={() => onPageChange(p)}
-              className={`w-7 h-7 rounded flex items-center justify-center text-xs font-medium transition-colors ${
+              className={`w-9 h-9 lg:w-7 lg:h-7 rounded flex items-center justify-center text-xs font-medium transition-colors ${
                 p === currentPage
                   ? 'bg-blue-600 text-white'
                   : 'bg-white border border-gray-200 text-neutral-600 hover:bg-gray-100'
@@ -68,14 +68,14 @@ export default function Pagination({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
-          className="text-sm font-medium text-neutral-700 disabled:text-neutral-300 disabled:cursor-not-allowed hover:text-black transition-colors"
+          className="text-xs sm:text-sm font-medium text-neutral-700 disabled:text-neutral-300 disabled:cursor-not-allowed hover:text-black transition-colors"
         >
           Next &gt;
         </button>
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        <span className="text-sm text-neutral-600 whitespace-nowrap">Result per page</span>
+        <span className="hidden sm:inline text-sm text-neutral-600 whitespace-nowrap">Result per page</span>
         <div className="relative min-w-[80px]">
           <select
             value={itemsPerPage}
