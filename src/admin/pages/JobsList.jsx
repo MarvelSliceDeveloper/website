@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabaseClient';
 import AdminButton from '../components/AdminButton';
 import DataTable from '../components/ui/DataTable';
 import EmptyState from '../components/EmptyState';
-import { FiPlus, FiEdit3, FiEdit2, FiTrash2, FiBriefcase, FiArrowLeft } from 'react-icons/fi';
+import { FiEdit3, FiEdit2, FiTrash2, FiBriefcase, FiArrowLeft } from 'react-icons/fi';
 import PageShell from '../components/ui/PageShell';
 import useConfirm from '../hooks/useConfirm';
 import ExportDialog from '../components/ExportDialog';

@@ -23,7 +23,7 @@ const detailFields = [
 
 export default function ChatSubmissions() {
 return (
-    <PageShell backTo="/admin" title="Chat Submissions"
+    <PageShell backTo="/admin"
     >
       <SubmissionsInbox
         table="conversations"

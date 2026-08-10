@@ -26,10 +26,6 @@ import CareerPageEditor from './pages/CareerPageEditor';
 import JobsList from './pages/JobsList';
 import JobEditor from './pages/JobEditor';
 
-import ServicesManager from './pages/ServicesManager';
-import ServiceEditor from './pages/ServiceEditor';
-import ServiceWizard from './pages/ServiceWizard';
-import ServiceCategoriesManager from './pages/ServiceCategoriesManager';
 import TrainingManager from './pages/TrainingManager';
 import TrainingEditor from './pages/TrainingEditor';
 import TrainingCategoriesManager from './pages/TrainingCategoriesManager';
@@ -37,10 +33,20 @@ import TrainingWizard from './pages/TrainingWizard';
 import ServicesPageEditor from './pages/ServicesPageEditor';
 import TrainingPageEditor from './pages/TrainingPageEditor';
 import CareerSubmissions from './pages/CareerSubmissions';
+import CareerContactSubmissions from './pages/CareerContactSubmissions';
+import InternshipsManager from './pages/InternshipsManager';
+import InternEditor from './pages/InternEditor';
 import BrochureDownloads from './pages/BrochureDownloads';
 import FormSubmissions from "./pages/FormSubmissions";
+import UpcomingCoursesManager from './pages/UpcomingCoursesManager';
+import UpcomingClassAdd from './pages/UpcomingClassAdd';
+import UpcomingClassSubmissions from './pages/UpcomingClassSubmissions';
+import CourseInterests from './pages/CourseInterests';
+import TestimonialsManager from './pages/TestimonialsManager';
+import TestimonialEditor from './pages/TestimonialEditor';
 import NewsletterSubscribers from "./pages/NewsletterSubscribers";
 import ContactSubmissions from './pages/ContactSubmissions';
+import AboutSubmissions from './pages/AboutSubmissions';
 import ChatSubmissions from './pages/ChatSubmissions';
 import ChatPanel from './pages/ChatPanel';
 import BlogManager from './pages/BlogManager';
@@ -48,6 +54,7 @@ import BlogPostEditor from './pages/BlogPostEditor';
 import BlogCategoriesManager from './pages/BlogCategoriesManager';
 import BlogPageEditor from './pages/BlogPageEditor';
 import ProfileSettings from './pages/ProfileSettings';
+import LegalPageEditor from './pages/LegalPageEditor';
 
 const pageSlugToEditor = { about: 'about', contact: 'contact', career: 'career', services: 'services', training: 'training' };
 
@@ -140,11 +147,9 @@ export default function Admin() {
           <Route path="jobs" element={<JobsList />} />
           <Route path="jobs/new" element={<JobEditor />} />
           <Route path="jobs/:id" element={<JobEditor />} />
+          <Route path="internships" element={<InternshipsManager />} />
+          <Route path="internships/:id" element={<InternEditor />} />
           
-          <Route path="services" element={<ServicesManager />} />
-          <Route path="services/new" element={<ServiceWizard />} />
-          <Route path="services/:id" element={<ServiceEditor />} />
-          <Route path="service-categories" element={<ServiceCategoriesManager />} />
           <Route path="training" element={<TrainingManager />} />
           <Route path="training/new" element={<TrainingWizard />} />
           <Route path="training/:id" element={<TrainingEditor />} />
@@ -152,14 +157,26 @@ export default function Admin() {
           <Route path="services-page" element={<ServicesPageEditor />} />
           <Route path="training-page" element={<TrainingPageEditor />} />
           <Route path="career-submissions" element={<CareerSubmissions />} />
+          <Route path="career-contact-submissions" element={<CareerContactSubmissions />} />
           <Route path="brochure-downloads" element={<BrochureDownloads />} />
           <Route path="form-submissions" element={<FormSubmissions />} />
+          <Route path="upcoming-courses" element={<UpcomingCoursesManager />} />
+          <Route path="upcoming-courses/new" element={<UpcomingClassAdd key="new" />} />
+          <Route path="upcoming-courses/:id" element={<UpcomingClassAdd key="edit" />} />
+          <Route path="testimonials" element={<TestimonialsManager />} />
+          <Route path="testimonials/new" element={<TestimonialEditor key="new" />} />
+          <Route path="testimonials/:id" element={<TestimonialEditor key="edit" />} />
+          <Route path="upcoming-class-submissions" element={<UpcomingClassSubmissions />} />
+          <Route path="course-interests" element={<CourseInterests />} />
           <Route path="newsletter-subscribers" element={<NewsletterSubscribers />} />
           <Route path="contact-submissions" element={<ContactSubmissions />} />
+          <Route path="about-submissions" element={<AboutSubmissions />} />
           <Route path="chat-submissions" element={<ChatSubmissions />} />
           <Route path="pages/:slug" element={<PageEditorRedirect />} />
           <Route path="chats" element={<ChatPanel />} />
           <Route path="blog-page" element={<BlogPageEditor />} />
+          <Route path="terms-policy" element={<LegalPageEditor key="terms" pageKey="terms" />} />
+          <Route path="privacy-policy" element={<LegalPageEditor key="privacy" pageKey="privacy" />} />
           <Route path="blog" element={<BlogManager />} />
           <Route path="blog/new" element={<BlogPostEditor key="new" />} />
           <Route path="blog/:id" element={<BlogPostEditor key="edit" />} />

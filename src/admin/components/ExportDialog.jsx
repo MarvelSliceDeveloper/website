@@ -78,7 +78,7 @@ export default function ExportDialog({ type, data, columns, exportFilename, onCl
             </select>
           </div>
           {dateRange === 'custom' && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><label className="block text-xs font-medium text-neutral-500 mb-1">From</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full h-10 px-3 rounded-lg border border-admin-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" /></div>
               <div><label className="block text-xs font-medium text-neutral-500 mb-1">To</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full h-10 px-3 rounded-lg border border-admin-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" /></div>
             </div>

@@ -20,7 +20,7 @@ export default function FormRow({ label, error, required, hint, children, classN
 export function Input({ className = '', ...props }) {
   return (
     <input
-      className={`w-full h-9 px-3 rounded-lg border border-admin-300 bg-neutral-50 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all disabled:bg-neutral-50 disabled:text-admin-400 ${className}`}
+      className={`w-full h-10 lg:h-9 px-3 rounded-lg border border-admin-300 bg-neutral-50 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all disabled:bg-neutral-50 disabled:text-admin-400 ${className}`}
       {...props}
     />
   );
@@ -29,7 +29,7 @@ export function Input({ className = '', ...props }) {
 export function Select({ className = '', children, ...props }) {
   return (
     <select
-      className={`w-full h-9 px-3 rounded-lg border border-admin-300 bg-neutral-50 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all disabled:bg-neutral-50 disabled:text-neutral-400 appearance-none bg-[url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")] bg-[length:12px] bg-[right_12px_center] bg-no-repeat ${className}`}
+      className={`w-full h-10 lg:h-9 px-3 rounded-lg border border-admin-300 bg-neutral-50 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all disabled:bg-neutral-50 disabled:text-neutral-400 appearance-none bg-[url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")] bg-[length:12px] bg-[right_12px_center] bg-no-repeat ${className}`}
       {...props}
     >
       {children}

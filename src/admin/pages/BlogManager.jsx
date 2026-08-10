@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
-import AdminButton from '../components/AdminButton';
 import Badge from '../components/Badge';
 import EmptyState from '../components/EmptyState';
 import Card from '../components/ui/Card';
 import DataTable from '../components/ui/DataTable';
-import { FiPlus, FiFileText, FiCalendar, FiSearch, FiEdit3, FiTrash2, FiChevronDown, FiArrowLeft } from 'react-icons/fi';
+import { FiFileText, FiCalendar, FiSearch, FiEdit3, FiTrash2, FiChevronDown, FiArrowLeft } from 'react-icons/fi';
 import PageShell from '../components/ui/PageShell';
 import useConfirm from '../hooks/useConfirm';
 
@@ -133,7 +132,7 @@ const [confirm, confirmDialog] = useConfirm();
   return (
     <PageShell backTo="/admin"
       title="Blog Posts"
-      subtitle={search ? `${filteredPosts.length} of ${posts.length} post${posts.length !== 1 ? 's' : ''}` : `${posts.length} post${posts.length !== 1 ? 's' : ''}`}
+      titleLight={`(${posts.length} Post${posts.length !== 1 ? 's' : ''})`}
     >
       {posts.length > 0 && (
         <div className="bg-white border border-admin-200 p-5 mb-4">
@@ -195,7 +194,7 @@ const [confirm, confirmDialog] = useConfirm();
             icon={FiFileText}
             title="No blog posts yet"
             description="Get started by creating your first blog post."
-            action={{ to: '/admin/blog/new', icon: <FiPlus className="w-4 h-4" />, label: 'Create your first post' }}
+            action={{ to: '/admin/blog/new', label: 'Create your first post' }}
           />
         ) : (
           <EmptyState

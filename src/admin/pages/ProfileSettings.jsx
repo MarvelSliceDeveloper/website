@@ -2,8 +2,8 @@ import { useState, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import PageShell from '../components/ui/PageShell';
-import AdminButton from '../components/AdminButton';
-import { FiUpload, FiTrash2, FiSave } from 'react-icons/fi';
+import { SubmitButton } from '../components/FormButtons';
+import { FiUpload, FiTrash2 } from 'react-icons/fi';
 
 export default function ProfileSettings() {
   const { user, updateUser } = useAuth();
@@ -126,9 +126,7 @@ export default function ProfileSettings() {
             <p className="text-sm" style={{ color: message.type === 'error' ? '#dc3545' : '#059669' }}>{message.text}</p>
           )}
 
-          <AdminButton type="submit" disabled={saving}>
-            <FiSave className="w-4 h-4" /> {saving ? 'Saving...' : 'Save Profile'}
-          </AdminButton>
+          <SubmitButton type="submit" saving={saving} label="Save Profile" savingLabel="Saving..." />
         </form>
 
         <form onSubmit={handleChangePassword} className="bg-white rounded-xl border border-admin-200 p-6 space-y-5">
@@ -155,9 +153,7 @@ export default function ProfileSettings() {
             <p className="text-sm" style={{ color: pwMessage.type === 'error' ? '#dc3545' : '#059669' }}>{pwMessage.text}</p>
           )}
 
-          <AdminButton type="submit" disabled={pwSaving}>
-            <FiSave className="w-4 h-4" /> {pwSaving ? 'Changing...' : 'Change Password'}
-          </AdminButton>
+          <SubmitButton type="submit" saving={pwSaving} label="Change Password" savingLabel="Changing..." />
         </form>
       </div>
     </PageShell>

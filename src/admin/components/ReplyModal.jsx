@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { FiX, FiSend, FiLoader, FiUpload, FiSearch, FiFileText, FiBookOpen } from 'react-icons/fi';
 import { supabase } from '../../lib/supabaseClient';
+import { SubmitButton } from './FormButtons';
 
 export default function ReplyModal({ submission, type, onClose }) {
   const [subject, setSubject] = useState('');
@@ -253,14 +254,7 @@ export default function ReplyModal({ submission, type, onClose }) {
                     ? 'Will attach uploaded file'
                     : 'Reply via email'}
               </span>
-              <button
-                onClick={handleSend}
-                disabled={sending || !subject.trim() || !message.trim()}
-                className="flex items-center gap-2 px-5 py-2 bg-admin-600 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all disabled:opacity-50"
-              >
-                {sending ? <FiLoader className="w-4 h-4 animate-spin" /> : <FiSend className="w-4 h-4" />}
-                {sending ? 'Sending...' : 'Send Reply'}
-              </button>
+              <SubmitButton onClick={handleSend} saving={sending} savingLabel="Sending..." label="Send Reply" disabled={!subject.trim() || !message.trim()} />
             </div>
           </>
         )}

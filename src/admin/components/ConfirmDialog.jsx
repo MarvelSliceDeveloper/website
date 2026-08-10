@@ -17,7 +17,7 @@ export default function ConfirmDialog({ open, title = "Confirm", message = "Are 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm cursor-pointer" onClick={onCancel} />
-      <div className="relative bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 border border-admin-200" role="dialog" aria-modal="true">
+      <div className="relative bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 border border-admin-200 max-h-[85vh] overflow-y-auto" role="dialog" aria-modal="true">
         <div className="w-10 h-10 rounded-full bg-destructive-50 flex items-center justify-center mb-4">
           <FiAlertTriangle className="w-5 h-5 text-destructive-500" />
         </div>

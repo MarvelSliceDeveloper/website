@@ -1,106 +1,116 @@
 import { FiBriefcase } from "react-icons/fi";
 import { useState, useEffect, useCallback } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
-import { FiHome, FiFile, FiBookOpen, FiGrid, FiChevronDown, FiFileText, FiLayers, FiInbox, FiMenu, FiSettings, FiMessageCircle, FiServer, FiZap, FiX, FiBarChart2 } from "react-icons/fi";
+import { FiHome, FiFile, FiBookOpen, FiGrid, FiChevronDown, FiFileText, FiLayers, FiInbox, FiMenu, FiSettings, FiMessageCircle, FiServer, FiZap, FiX, FiBarChart2, FiPlusCircle, FiClock, FiDownload, FiClipboard, FiMail, FiMessageSquare, FiTag, FiImage, FiUsers, FiUser, FiHelpCircle, FiTarget, FiStar, FiInfo, FiCalendar } from "react-icons/fi";
 import { useSiteSettings } from "../../hooks/useSupabase";
 
 const navGroups = [
-  { label: "Dashboard", icon: FiHome, items: [{ to: "/admin", label: "Dashboard" }] },
+  { label: "Dashboard", icon: FiHome, items: [{ to: "/admin", label: "Dashboard", icon: FiHome }] },
   {
     label: "All Pages", icon: FiFile,
     items: [
-      { to: "/admin/home", label: "Home", catchSubRoutes: true },
-      { to: "/admin/about-page", label: "About" },
-      { to: "/admin/services-page", label: "Services" },
-      { to: "/admin/training-page", label: "Training" },
-      { to: "/admin/career-page", label: "Career" },
-      { to: "/admin/blog-page", label: "Blog" },
-      { to: "/admin/contact-page", label: "Contact" },
+      { to: "/admin/home", label: "Home", icon: FiHome, catchSubRoutes: true },
+      { to: "/admin/about-page", label: "About", icon: FiUser },
+      { to: "/admin/services-page", label: "Services", icon: FiServer },
+      { to: "/admin/training-page", label: "Training", icon: FiZap },
+      { to: "/admin/career-page", label: "Career", icon: FiBriefcase },
+      { to: "/admin/blog-page", label: "Blog", icon: FiFileText },
+      { to: "/admin/contact-page", label: "Contact", icon: FiMail },
+      { to: "/admin/terms-policy", label: "Terms & Conditions", icon: FiFileText },
+      { to: "/admin/privacy-policy", label: "Privacy Policy", icon: FiFileText },
     ],
   },
   { label: "Chat", icon: FiMessageCircle, items: [
-    { to: "/admin/chats?tab=live", label: "Live Chat" },
-    { to: "/admin/chats?tab=history", label: "Chat History" }
+    { to: "/admin/chats?tab=live", label: "Live Chat", icon: FiMessageCircle },
+    { to: "/admin/chats?tab=history", label: "Chat History", icon: FiClock }
     ]},
 
   {
-    label: "Services", icon: FiServer, parentTo: "/admin/services/new", items: [
-      { to: "/admin/services/new", label: "Add Service" },
-      { to: "/admin/services", label: "All Services", catchSubRoutes: true, siblingRoutes: ["/admin/services/new"] },
-      { to: "/admin/service-categories", label: "Categories" }
-    ],
-  },
-  {
     label: "Training", icon: FiZap, parentTo: "/admin/training/new", items: [
-      { to: "/admin/training/new", label: "Add Program" },
-      { to: "/admin/training", label: "All Programs", catchSubRoutes: true, siblingRoutes: ["/admin/training/new"] },
-      { to: "/admin/training-categories", label: "Categories" }
+      { to: "/admin/training/new", label: "Add Program", icon: FiPlusCircle },
+      { to: "/admin/training", label: "All Programs", icon: FiZap, catchSubRoutes: true, siblingRoutes: ["/admin/training/new"] },
+      { to: "/admin/training-categories", label: "Categories", icon: FiGrid }
     ],
   },
   {
     label: "Jobs", icon: FiBriefcase, items: [
-      { to: "/admin/jobs/new", label: "Add Job" },
-      { to: "/admin/jobs", label: "View Jobs", catchSubRoutes: true, siblingRoutes: ["/admin/jobs/new"] }
+      { to: "/admin/jobs/new", label: "Add Job", icon: FiPlusCircle },
+      { to: "/admin/jobs", label: "View Jobs", icon: FiBriefcase, catchSubRoutes: true, siblingRoutes: ["/admin/jobs/new"] },
+      { to: "/admin/internships/new", label: "Add Intern", icon: FiPlusCircle },
+      { to: "/admin/internships", label: "View Internships", icon: FiClock, catchSubRoutes: true, siblingRoutes: ["/admin/internships/new"] }
     ],
   },
   { label: "Submissions", icon: FiInbox, items: [
-    { to: "/admin/career-submissions", label: "Career Submissions" },
-    { to: "/admin/brochure-downloads", label: "Brochure Downloads" },
-    { to: "/admin/form-submissions", label: "Form Submissions" },
-    { to: "/admin/newsletter-subscribers", label: "Newsletter Subscribers" },
-    { to: "/admin/contact-submissions", label: "Contact Submissions" },
-    { to: "/admin/chat-submissions", label: "Chat Submissions" },
-    { to: "/admin/courses/reports", label: "Reports" }
+    { to: "/admin/career-submissions", label: "Career Submissions", icon: FiBriefcase },
+    { to: "/admin/career-contact-submissions", label: "Career Enquiry", icon: FiMail },
+    { to: "/admin/brochure-downloads", label: "Brochure Downloads", icon: FiDownload },
+    { to: "/admin/form-submissions", label: "Form Submissions", icon: FiClipboard },
+    { to: "/admin/newsletter-subscribers", label: "Newsletter Subscribers", icon: FiMail },
+    { to: "/admin/contact-submissions", label: "Contact Submissions", icon: FiMessageSquare },
+    { to: "/admin/about-submissions", label: "About Submissions", icon: FiInfo },
+    { to: "/admin/upcoming-class-submissions", label: "Upcoming Class Registrations", icon: FiCalendar },
+    { to: "/admin/course-interests", label: "Course Interests", icon: FiCalendar },
+    { to: "/admin/chat-submissions", label: "Chat Submissions", icon: FiMessageCircle },
+    { to: "/admin/courses/reports", label: "Reports", icon: FiBarChart2 }
     ]},
   {
-    label: "Courses", icon: FiBookOpen, parentTo: "/admin/courses", items: [
-      { to: "/admin/courses", label: "All Courses", catchSubRoutes: true, siblingRoutes: ["/admin/courses/wizard", "/admin/courses/reports", "/admin/courses/brochure", "/admin/courses/new"] },
+    label: "Courses", icon: FiBookOpen, items: [
       { label: "Software Learning", children: [
-        { to: "/admin/courses/wizard?category=Software%20Learning", label: "Add Course" },
-        { to: "/admin/courses?category=Software%20Learning", label: "View Courses" }
+        { to: "/admin/courses/wizard?category=Software%20Learning", label: "Add Course", icon: FiPlusCircle },
+        { to: "/admin/courses?category=Software%20Learning", label: "View Courses", icon: FiBookOpen }
       ]},
       { label: "Competitive Exam", children: [
-        { to: "/admin/courses/wizard?category=Competitive%20Exam", label: "Add Course" },
-        { to: "/admin/courses?category=Competitive%20Exam", label: "View Courses" }
+        { to: "/admin/courses/wizard?category=Competitive%20Exam", label: "Add Course", icon: FiPlusCircle },
+        { to: "/admin/courses?category=Competitive%20Exam", label: "View Courses", icon: FiBookOpen }
       ]},
       { label: "Tags", children: [
-        { to: "/admin/tags/add", label: "Add Tag" },
-        { to: "/admin/tags", label: "View Tags" }
+        { to: "/admin/tags/add", label: "Add Tag", icon: FiPlusCircle },
+        { to: "/admin/tags", label: "View Tags", icon: FiTag }
       ]},
-      { to: "/admin/courses/brochure", label: "Brochure" },
+      { label: "Upcoming Classes", children: [
+        { to: "/admin/upcoming-courses/new", label: "Add", icon: FiPlusCircle },
+        { to: "/admin/upcoming-courses", label: "View", icon: FiCalendar, catchSubRoutes: true, siblingRoutes: ["/admin/upcoming-courses/new"] }
+      ]},
+      { to: "/admin/courses/brochure", label: "Brochure", icon: FiFileText },
+    ],
+  },
+  {
+    label: "Testimonials", icon: FiStar, items: [
+      { to: "/admin/testimonials/new", label: "Add", icon: FiPlusCircle },
+      { to: "/admin/testimonials", label: "View", icon: FiStar, catchSubRoutes: true, siblingRoutes: ["/admin/testimonials/new"] }
     ],
   },
   {
     label: "Blog", icon: FiFileText, items: [
-      { to: "/admin/blog/new", label: "Add Blog" },
-      { to: "/admin/blog", label: "View Posts", catchSubRoutes: true, siblingRoutes: ["/admin/blog/categories", "/admin/blog/new"] },
-      { to: "/admin/blog/categories", label: "Categories" }
+      { to: "/admin/blog/new", label: "Add Blog", icon: FiPlusCircle },
+      { to: "/admin/blog", label: "View Posts", icon: FiFileText, catchSubRoutes: true, siblingRoutes: ["/admin/blog/categories", "/admin/blog/new"] },
+      { to: "/admin/blog/categories", label: "Categories", icon: FiGrid }
     ],
   },
-  { label: "Navigation", icon: FiMenu, items: [
+  { label: "Menu", icon: FiMenu, items: [
     { label: "Software Learning", children: [
-      { to: "/admin/nav-menu?section=Software%20Learning&tab=add", label: "Add Menu" },
-      { to: "/admin/nav-menu?section=Software%20Learning&tab=view", label: "View Menu" }
+      { to: "/admin/nav-menu?section=Software%20Learning&tab=add", label: "Add Menu", icon: FiPlusCircle },
+      { to: "/admin/nav-menu?section=Software%20Learning&tab=view", label: "View Menu", icon: FiMenu }
     ]},
     { label: "Competitive Exam", children: [
-      { to: "/admin/nav-menu?section=Competitive%20Exam&tab=add", label: "Add Menu" },
-      { to: "/admin/nav-menu?section=Competitive%20Exam&tab=view", label: "View Menu" }
+      { to: "/admin/nav-menu?section=Competitive%20Exam&tab=add", label: "Add Menu", icon: FiPlusCircle },
+      { to: "/admin/nav-menu?section=Competitive%20Exam&tab=view", label: "View Menu", icon: FiMenu }
     ]},
     { label: "Services", children: [
-      { to: "/admin/nav-menu?section=Services&tab=add", label: "Add Menu" },
-      { to: "/admin/nav-menu?section=Services&tab=view", label: "View Menu" }
+      { to: "/admin/nav-menu?section=Services&tab=add", label: "Add Menu", icon: FiPlusCircle },
+      { to: "/admin/nav-menu?section=Services&tab=view", label: "View Menu", icon: FiMenu }
     ]},
     { label: "Training", children: [
-      { to: "/admin/nav-menu?section=Training&tab=add", label: "Add Menu" },
-      { to: "/admin/nav-menu?section=Training&tab=view", label: "View Menu" }
+      { to: "/admin/nav-menu?section=Training&tab=add", label: "Add Menu", icon: FiPlusCircle },
+      { to: "/admin/nav-menu?section=Training&tab=view", label: "View Menu", icon: FiMenu }
     ]}
     ]},
   { label: "Uploads", icon: FiLayers, items: [
-    { to: "/admin/media", label: "Media Library" }
+    { to: "/admin/media", label: "Media Library", icon: FiImage }
     ]},
   { label: "Settings", icon: FiSettings, items: [
-    { to: "/admin/site-settings?section=general", label: "Site Settings" },
-    { to: "/admin/admin-users", label: "Admin Users" }
+    { to: "/admin/site-settings?section=general", label: "Site Settings", icon: FiSettings },
+    { to: "/admin/admin-users", label: "Admin Users", icon: FiUsers }
     ]}
     ];
 
@@ -265,24 +275,26 @@ function NestedNavGroup({ item, pathname, onNavigate, isAccordionOpen, onToggleA
           className={`w-3.5 h-3.5 transition-transform duration-300 ease-in-out ${open ? "" : "-rotate-90"}`}
           style={{ color: iconColor }}
         />
-        <span style={hasActiveChild ? activeLabelStyle : undefined}>{item.label}</span>
+        <span className="truncate" style={hasActiveChild ? activeLabelStyle : undefined}>{item.label}</span>
       </button>
       <Collapsible open={open}>
         <div className="ml-3 pl-2 mt-0.5 mb-1 space-y-0.5" style={{ borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
-          {item.children.map((child) => {
+              {item.children.map((child) => {
             const act = isActive(pathname, child);
+            const ItemIcon = child.icon;
             return (
               <NavLink
                 key={child.to}
                 to={child.to}
                 onClick={onNavigate}
                 end
-                className={`cursor-pointer block px-3 py-1.5 text-sm rounded-md transition-all duration-200 ${
+                className={`cursor-pointer flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-all duration-200 ${
                   act ? "" : "text-[#939AB3] hover:text-white hover:bg-white/5 hover:translate-x-0.5"
                 }`}
                       style={act ? { color: '#ffffff' } : undefined}
               >
-                      <span style={act ? activeLabelStyle : undefined}>{child.label}</span>
+                {ItemIcon && <ItemIcon className="w-3.5 h-3.5 shrink-0" style={{ color: '#707897' }} />}
+                      <span className="truncate" style={act ? activeLabelStyle : undefined}>{child.label}</span>
               </NavLink>
             );
           })}
@@ -325,7 +337,7 @@ function SidebarNav({ group, idx, pathname, isOpen, onToggle, onNavigate }) {
           className="w-4 h-4 shrink-0 transition-colors duration-200"
           style={{ color: groupIconColor }}
         />
-          <span style={groupActive ? activeLabelStyle : undefined}>{group.label}</span>
+          <span className="truncate" style={groupActive ? activeLabelStyle : undefined}>{group.label}</span>
       </NavLink>
     );
   }
@@ -347,7 +359,7 @@ function SidebarNav({ group, idx, pathname, isOpen, onToggle, onNavigate }) {
               className="w-4 h-4 shrink-0 transition-colors duration-200"
               style={{ color: groupIconColor }}
             />
-            <span style={groupActive ? activeLabelStyle : undefined}>{group.label}</span>
+            <span className="truncate" style={groupActive ? activeLabelStyle : undefined}>{group.label}</span>
           </NavLink>
           <button
             onClick={() => onToggle(idx)}
@@ -373,17 +385,19 @@ function SidebarNav({ group, idx, pathname, isOpen, onToggle, onNavigate }) {
                 />
               );
               const act = isActive(pathname, item);
+              const ItemIcon = item.icon;
               return (
                 <Link
                   key={item.to}
                   to={item.to}
                   onClick={onNavigate}
-                  className={`cursor-pointer block px-3 py-1.5 text-sm rounded-md transition-all duration-200 ${
+                  className={`cursor-pointer flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-all duration-200 ${
                     act ? "font-semibold" : "text-[#939AB3] hover:text-white hover:bg-white/5 hover:translate-x-0.5"
                   }`}
                       style={act ? { color: '#ffffff' } : undefined}
                 >
-                      <span style={act ? activeLabelStyle : undefined}>{item.label}</span>
+                  {ItemIcon && <ItemIcon className="w-3.5 h-3.5 shrink-0" style={{ color: '#707897' }} />}
+                      <span className="truncate" style={act ? activeLabelStyle : undefined}>{item.label}</span>
                 </Link>
               );
             })}
@@ -406,7 +420,7 @@ function SidebarNav({ group, idx, pathname, isOpen, onToggle, onNavigate }) {
           className="w-4 h-4 shrink-0 transition-colors duration-200"
           style={{ color: groupIconColor }}
         />
-        <span className="flex-1 text-left" style={groupActive ? activeLabelStyle : undefined}>{group.label}</span>
+        <span className="flex-1 text-left truncate" style={groupActive ? activeLabelStyle : undefined}>{group.label}</span>
         <FiChevronDown
           className={`w-3.5 h-3.5 transition-transform duration-300 ease-in-out ${opened ? '' : '-rotate-90'}`}
           style={{ color: iconColor }}
@@ -426,17 +440,19 @@ function SidebarNav({ group, idx, pathname, isOpen, onToggle, onNavigate }) {
               />
             );
             const act = isActive(pathname, item);
+            const ItemIcon = item.icon;
             return (
               <Link
                 key={item.to}
                 to={item.to}
                 onClick={onNavigate}
-                className={`cursor-pointer block px-3 py-1.5 text-sm rounded-md transition-all duration-200 ${
+                className={`cursor-pointer flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-all duration-200 ${
                   act ? "font-semibold" : "text-[#939AB3] hover:text-white hover:bg-white/5 hover:translate-x-0.5"
                 }`}
                       style={act ? { color: '#ffffff' } : undefined}
               >
-                      <span style={act ? activeLabelStyle : undefined}>{item.label}</span>
+                {ItemIcon && <ItemIcon className="w-3.5 h-3.5 shrink-0" style={{ color: '#707897' }} />}
+                      <span className="truncate" style={act ? activeLabelStyle : undefined}>{item.label}</span>
               </Link>
             );
           })}

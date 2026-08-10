@@ -6,6 +6,7 @@ import Card from './Card';
 import AccordionItem from './AccordionItem';
 import Reveal, { Stagger, StaggerItem } from './Reveal';
 import ContactSection from './ContactSection';
+import AnimatedNumber from './AnimatedNumber';
 
 function safeParse(val) {
   if (Array.isArray(val)) return val;
@@ -32,7 +33,7 @@ function DynamicIcon({ name, className }) {
 function FaqListSection({ section }) {
   const [openIdx, setOpenIdx] = useState(null);
   return (
-    <Reveal className="w-full max-w-[70%] mx-auto">
+    <Reveal className="w-full max-w-[92%] sm:max-w-[70%] mx-auto">
       {section.heading && <h2 className="text-xl sm:text-2xl font-bold text-dark-navy mb-6 text-center">{section.heading}</h2>}
       <div className="space-y-2">
         {(section.items || []).map((faq, i) => (
@@ -51,12 +52,52 @@ function FaqListSection({ section }) {
 export default function SectionRenderer({ section }) {
   switch (section.section_type) {
     case 'text': {
+      const parsed = safeParse(section.content);
+      const blocks = Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'object'
+        ? parsed
+        : null;
+      const ha = section.headingAlign || 'center';
+      const ca = section.contentAlign || 'center';
+      if (blocks) {
+        const contentBlocks = blocks.map((b, i) =>
+          b.type === 'heading' ? (
+            <h2 key={i} className={`text-3xl sm:text-4xl font-bold text-blue-700 mb-6 text-${ha}`}>{b.text}</h2>
+          ) : (
+            <div key={i} className={`text-gray-700 text-base leading-relaxed text-${ca} ${section.image_url ? 'mb-4' : ''}`}>{b.text}</div>
+          )
+        );
+        if (section.image_url) {
+          const heading = blocks.find(b => b.type === 'heading')?.text || '';
+          const paragraphs = blocks.filter(b => b.type === 'paragraph');
+          return (
+            <Reveal className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {heading && (
+                <div className="mb-10">
+                  <h2 className="text-3xl sm:text-4xl font-bold text-blue-700 text-center">{heading}</h2>
+                  <div className="w-16 h-1 bg-brand-orange mt-3 mx-auto" />
+                </div>
+              )}
+              <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-center">
+                <div className="space-y-4">
+                  {paragraphs.map((b, i) => (
+                    <div key={i} className="text-gray-700 text-base leading-relaxed text-left">{b.text}</div>
+                  ))}
+                </div>
+                <div className="flex justify-center">
+                  <img src={section.image_url} alt={heading} className="w-full max-w-[500px] aspect-square object-cover rounded-2xl shadow-lg" />
+                </div>
+              </div>
+            </Reveal>
+          );
+        }
+        return (
+          <Reveal className="py-16 max-w-4xl mx-auto">{contentBlocks}</Reveal>
+        );
+      }
       const paragraphs = safeParse(section.content);
       const content = Array.isArray(paragraphs) && paragraphs.length > 0
         ? paragraphs.join('\n\n')
         : safeString(section.content);
-      const ha = section.headingAlign || 'center';
-      const ca = section.contentAlign || 'center';
       return (
         <Reveal className={`py-16 max-w-4xl mx-auto text-${ca}`}>
           {section.heading && <h2 className={`text-3xl sm:text-4xl font-bold text-blue-700 mb-6 text-${ha}`}>{section.heading}</h2>}
@@ -72,20 +113,57 @@ export default function SectionRenderer({ section }) {
       const items = safeParse(section.items);
       const ha = section.headingAlign || 'center';
       const ca = section.contentAlign || 'center';
+      const statCard = (stat, i) => (
+        <div key={i} className="text-center p-[30px] bg-white rounded-[18px] shadow-md transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-2 hover:shadow-xl cursor-default" style={{ boxShadow: 'rgba(17, 17, 26, 0.08) 0px 4px 16px, rgba(17, 17, 26, 0.04) 0px 8px 32px' }}>
+          <div className="text-3xl sm:text-4xl font-bold text-brand-orange leading-none"><AnimatedNumber value={stat.number} /></div>
+          <div className="text-sm sm:text-base text-gray-600 mt-2">{stat.label}</div>
+        </div>
+      );
       return (
-        <div className="py-16">
-          <div className={`max-w-4xl mx-auto text-${ca}`}>
-            {section.heading && <h2 className={`text-3xl sm:text-4xl font-bold text-blue-700 mb-6 text-${ha}`}>{section.heading}</h2>}
-            {content && <div className="text-gray-700 text-base leading-relaxed mb-10">{content}</div>}
+        <div className="relative overflow-hidden py-[100px]">
+          <div className="absolute inset-0 pointer-events-none" aria-hidden>
+            <div className="absolute -top-16 -left-20 w-72 h-72 rounded-full opacity-10 blur-3xl" style={{ background: 'radial-gradient(circle, #93c5fd 0%, transparent 70%)' }} />
+            <div className="absolute -bottom-20 -right-16 w-80 h-80 rounded-full opacity-10 blur-3xl" style={{ background: 'radial-gradient(circle, #fb923c 0%, transparent 70%)' }} />
+            <div className="absolute top-1/4 right-[8%] w-44 h-44 rounded-full border-4 border-blue-200 opacity-10" />
+            <div className="absolute bottom-1/4 left-[5%] w-32 h-32 rounded-full border-4 border-brand-orange/30 opacity-10" />
+            <div className="absolute top-[15%] left-[45%] w-40 h-40 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, #175cdd 1.5px, transparent 1.5px)', backgroundSize: '16px 16px' }} />
           </div>
-          {items.length > 0 && (
-            <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {items.map((stat, i) => (
-                <div key={i} className="text-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow cursor-default">
-                  <div className="text-3xl sm:text-4xl font-bold text-orange-500">{stat.number}</div>
-                  <div className="text-sm sm:text-base text-gray-600 mt-2">{stat.label}</div>
+          {section.image_url ? (
+            <div className="relative max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid lg:grid-cols-[55fr_45fr] gap-y-12 lg:gap-x-[70px] items-start">
+                <div>
+                  {section.heading && (
+                    <>
+                      <h2 className="text-3xl sm:text-4xl font-bold text-blue-700 leading-tight">{section.heading}</h2>
+                      <div className="w-20 h-1.5 bg-brand-orange mt-5 mb-[50px]" />
+                    </>
+                  )}
+                  <div className="max-w-[600px] space-y-6">
+                    {content.split('\n\n').filter(Boolean).map((p, i) => (
+                      <p key={i} className="text-gray-700 text-base leading-relaxed">{p}</p>
+                    ))}
+                  </div>
                 </div>
-              ))}
+                <div className="lg:mt-[40px]">
+                  <img src={section.image_url} alt={section.heading || ''} className="w-full max-w-[500px] aspect-square object-cover rounded-2xl shadow-lg" />
+                </div>
+              </div>
+              {items.length > 0 && (
+                <div className="mt-[50px]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {items.map((stat, i) => statCard(stat, i))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="relative max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
+              <div className={`max-w-4xl mx-auto text-${ca} mb-12`}>{content}</div>
+              {items.length > 0 && (
+                <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {items.map((stat, i) => statCard(stat, i))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -136,10 +214,10 @@ export default function SectionRenderer({ section }) {
       return (
         <Reveal className="py-16">
           {section.heading && <h2 className={`text-3xl sm:text-4xl font-bold text-dark-navy mb-8 text-${ha}`}>{section.heading}</h2>}
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {items.map((stat, i) => (
-              <div key={i} className="text-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow cursor-default">
-                <div className="text-3xl sm:text-4xl font-bold text-orange-500">{stat.number}</div>
+              <div key={i} className="text-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-2 hover:border-gray-300 border border-transparent cursor-default" style={{ boxShadow: 'rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.05) 0px 8px 32px' }}>
+                <div className="text-3xl sm:text-4xl font-bold text-brand-orange"><AnimatedNumber value={stat.number} /></div>
                 <div className="text-sm sm:text-base text-gray-600 mt-2">{stat.label}</div>
               </div>
             ))}
@@ -187,20 +265,18 @@ export default function SectionRenderer({ section }) {
       const mapSrc = (match ? match[1] : raw).trim();
       if (!mapSrc) return null;
       return (
-        <Reveal>
-          {section.heading && <h2 className="text-xl sm:text-2xl font-bold text-dark-navy mb-6 text-center">{section.heading}</h2>}
-          <div className="relative left-1/2 -translate-x-1/2 w-screen">
-            <iframe
-              src={mapSrc}
-              className="w-full aspect-[16/9] max-h-[450px]"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Map"
-            />
-          </div>
-        </Reveal>
+        <section className="relative overflow-hidden" style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}>
+          {section.heading && <h2 className="text-xl sm:text-2xl font-bold text-dark-navy mb-6 text-center max-w-7xl mx-auto px-4">{section.heading}</h2>}
+          <iframe
+            src={mapSrc}
+            className="w-full aspect-[16/9] max-h-[450px]"
+            style={{ border: 0, display: 'block' }}
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            title="Map"
+          />
+        </section>
       );
     }
     case 'faq_list':
@@ -261,8 +337,8 @@ export default function SectionRenderer({ section }) {
     case 'feature_grid': {
       const items = safeParse(section.items);
       if (items.length === 0) return null;
-      const circleBgColors = ['bg-orange-100', 'bg-blue-100', 'bg-green-100', 'bg-purple-100'];
-      const iconColors = ['text-orange-500', 'text-blue-500', 'text-green-500', 'text-purple-500'];
+      const circleBgColors = ['bg-brand-orange/15', 'bg-blue-100', 'bg-green-100', 'bg-purple-100'];
+      const iconColors = ['text-brand-orange', 'text-blue-500', 'text-green-500', 'text-purple-500'];
       const ha = section.headingAlign || 'center';
       const sa = section.subheadingAlign || 'center';
       const barMargin = ha === 'center' ? 'mx-auto' : ha === 'right' ? 'ml-auto' : 'mr-auto';
@@ -272,7 +348,7 @@ export default function SectionRenderer({ section }) {
             {section.heading && (
               <Reveal as="div" className={`mb-4 text-${ha}`}>
                 <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">{section.heading}</h2>
-                <div className={`w-16 h-1 bg-orange-500 mt-2 ${barMargin}`} />
+                <div className={`w-16 h-1 bg-brand-orange mt-2 ${barMargin}`} />
               </Reveal>
             )}
             {section.subheading && (
@@ -283,13 +359,13 @@ export default function SectionRenderer({ section }) {
             <Stagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
               {items.map((item, i) => (
                 <StaggerItem key={i} className="h-full">
-                  <Card className="p-6 text-center h-full bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                    <div className={`w-16 h-16 rounded-full ${circleBgColors[i % 4]} flex items-center justify-center mx-auto mb-4`}>
-                      <DynamicIcon name={item.icon} className={`w-7 h-7 ${iconColors[i % 4]}`} />
+                  <div className="group h-full p-6 text-center bg-white rounded-xl border border-gray-100 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_12px_24px_rgba(15,23,42,0.10),0_24px_56px_rgba(15,23,42,0.12)]">
+                    <div className={`w-16 h-16 rounded-full ${circleBgColors[i % 4]} flex items-center justify-center mx-auto mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6`}>
+                      <DynamicIcon name={item.icon} className={`w-7 h-7 ${iconColors[i % 4]} transition-transform duration-300 group-hover:scale-110`} />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2 transition-colors duration-300 group-hover:text-slate-700">{item.title}</h3>
                     <p className="text-sm text-gray-500 leading-relaxed">{item.description}</p>
-                  </Card>
+                  </div>
                 </StaggerItem>
               ))}
             </Stagger>

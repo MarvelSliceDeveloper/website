@@ -18,19 +18,31 @@ function FloatingCircles() {
   );
 }
 
-function ContactDetailItem({ icon: Icon, label, value, href }) {
+function hexToRgba(hex, alpha) {
+  let h = String(hex || '').replace('#', '');
+  if (!h) return `rgba(255, 255, 255, ${alpha})`;
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  const num = parseInt(h, 16);
+  if (Number.isNaN(num)) return `rgba(255, 255, 255, ${alpha})`;
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function ContactDetailItem({ icon: Icon, label, value, href, textColor }) {
   const content = href ? (
-    <a href={href} className="text-white/90 hover:text-white transition-colors text-sm leading-relaxed">{value}</a>
+    <a href={href} className="hover:opacity-80 transition-opacity text-sm leading-relaxed" style={{ color: hexToRgba(textColor, 0.9) }}>{value}</a>
   ) : (
-    <span className="text-white/90 text-sm leading-relaxed">{value}</span>
+    <span className="text-sm leading-relaxed" style={{ color: hexToRgba(textColor, 0.9) }}>{value}</span>
   );
   return (
     <div className="flex items-start gap-4">
       <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0 mt-0.5">
-        <Icon className="w-5 h-5 text-white" />
+        <Icon className="w-5 h-5" style={{ color: textColor }} />
       </div>
       <div>
-        <p className="text-white/60 text-xs font-semibold uppercase tracking-wider mb-1">{label}</p>
+        <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: hexToRgba(textColor, 0.65) }}>{label}</p>
         {content}
       </div>
     </div>
@@ -39,6 +51,10 @@ function ContactDetailItem({ icon: Icon, label, value, href }) {
 
 export default function ContactSection({ section }) {
   const c = section?.content || {};
+
+  const headingColor = c.heading_color || '#ffffff';
+  const subheadingColor = c.subheading_color || '#ffffff';
+  const textColor = c.text_color || '#ffffff';
 
   const leftHeading = c.left_heading || section?.heading || 'Get in Touch';
   const leftSubtitle = c.left_subtitle || 'We\'d love to hear from you. Reach out to us and we\'ll get back to you as soon as possible.';
@@ -50,9 +66,10 @@ export default function ContactSection({ section }) {
 
   const successMessage = c.success_message || 'Thank you! Your message has been received. Our team will contact you soon.';
 
-  const [form, setForm] = useState({ full_name: '', email: '', phone: '', subject: '', message: '' });
+  const [form, setForm] = useState({ full_name: '', email: '', phone: '', message: '' });
   const [status, setStatus] = useState('idle');
   const [errors, setErrors] = useState({});
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
   function validate() {
     const errs = {};
@@ -61,8 +78,8 @@ export default function ContactSection({ section }) {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Invalid email';
     if (!form.phone.trim()) errs.phone = 'Phone is required';
     else if (!/^[\d\s+\-()]{7,15}$/.test(form.phone.trim())) errs.phone = 'Invalid phone number';
-    if (!form.subject.trim()) errs.subject = 'Subject is required';
     if (!form.message.trim()) errs.message = 'Message is required';
+    if (!agreeTerms) errs.agree = 'Please agree to the terms and conditions';
     return errs;
   }
 
@@ -85,12 +102,12 @@ export default function ContactSection({ section }) {
           full_name: form.full_name,
           email: form.email,
           phone: form.phone,
-          subject: form.subject,
           message: form.message,
         });
         trackFormSubmit('contact');
         setStatus('success');
-        setForm({ full_name: '', email: '', phone: '', subject: '', message: '' });
+        setForm({ full_name: '', email: '', phone: '', message: '' });
+        setAgreeTerms(false);
       } else {
         setStatus('error');
       }
@@ -105,8 +122,8 @@ export default function ContactSection({ section }) {
   }
 
   return (
-    <div className="rounded-2xl shadow-lg">
-      <div className="grid lg:grid-cols-2 min-h-[520px] rounded-2xl overflow-hidden">
+    <div className="bg-white border border-gray-300 rounded-xl" style={{ boxShadow: 'rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px' }}>
+      <div className="grid lg:grid-cols-2 min-h-[520px] rounded-xl overflow-hidden">
       {/* Left: Details */}
       <div
         className="relative p-8 sm:p-10 flex flex-col justify-center"
@@ -115,14 +132,17 @@ export default function ContactSection({ section }) {
         <FloatingCircles />
         <div className="relative z-10 space-y-7">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">{leftHeading}</h2>
-            <p className="text-white/70 text-sm leading-relaxed">{leftSubtitle}</p>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3" style={{ color: headingColor }}>
+              {leftHeading}
+              {c.left_heading_line_2 && <><br /><span style={{ color: c.heading_line_2_color || headingColor }}>{c.left_heading_line_2}</span></>}
+            </h2>
+            <p className="text-sm leading-relaxed" style={{ color: subheadingColor }}>{leftSubtitle}</p>
           </div>
           <div className="space-y-5">
-            {address && <ContactDetailItem icon={FiMapPin} label="Address" value={address} />}
-            {displayPhone && <ContactDetailItem icon={FiPhone} label="Phone" value={displayPhone} href={`tel:${telLink}`} />}
-            {companyEmail && <ContactDetailItem icon={FiMail} label="Email" value={companyEmail} href={`mailto:${companyEmail}`} />}
-            {businessHours && <ContactDetailItem icon={FiClock} label="Business Hours" value={businessHours} />}
+            {address && <ContactDetailItem icon={FiMapPin} label="Address" value={address} textColor={textColor} />}
+            {displayPhone && <ContactDetailItem icon={FiPhone} label="Phone" value={displayPhone} href={`tel:${telLink}`} textColor={textColor} />}
+            {companyEmail && <ContactDetailItem icon={FiMail} label="Email" value={companyEmail} href={`mailto:${companyEmail}`} textColor={textColor} />}
+            {businessHours && <ContactDetailItem icon={FiClock} label="Business Hours" value={businessHours} textColor={textColor} />}
           </div>
         </div>
       </div>
@@ -189,35 +209,19 @@ export default function ContactSection({ section }) {
                       {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
                     </div>
                   </div>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-1.5">Phone Number <span className="text-red-400">*</span></label>
-                      <input
-                        type="tel"
-                        required
-                        value={form.phone}
-                        onChange={(e) => handleChange('phone', e.target.value)}
-                        placeholder="+1 (555) 019-2834"
-                        className={`w-full px-4 py-2.5 border rounded-lg text-sm outline-none transition-colors ${
-                          errors.phone ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-neutral-300 focus:ring-2 focus:ring-[#1E56C7]/20 focus:border-[#1E56C7]'
-                        }`}
-                      />
-                      {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-1.5">Subject <span className="text-red-400">*</span></label>
-                      <input
-                        type="text"
-                        required
-                        value={form.subject}
-                        onChange={(e) => handleChange('subject', e.target.value)}
-                        placeholder="How can we help you?"
-                        className={`w-full px-4 py-2.5 border rounded-lg text-sm outline-none transition-colors ${
-                          errors.subject ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-neutral-300 focus:ring-2 focus:ring-[#1E56C7]/20 focus:border-[#1E56C7]'
-                        }`}
-                      />
-                      {errors.subject && <p className="text-xs text-red-500 mt-1">{errors.subject}</p>}
-                    </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-1.5">Phone Number <span className="text-red-400">*</span></label>
+                    <input
+                      type="tel"
+                      required
+                      value={form.phone}
+                      onChange={(e) => handleChange('phone', e.target.value)}
+                      placeholder="+1 (555) 019-2834"
+                      className={`w-full px-4 py-2.5 border rounded-lg text-sm outline-none transition-colors ${
+                        errors.phone ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-neutral-300 focus:ring-2 focus:ring-[#1E56C7]/20 focus:border-[#1E56C7]'
+                      }`}
+                    />
+                    {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-1.5">Message <span className="text-red-400">*</span></label>
@@ -233,6 +237,19 @@ export default function ContactSection({ section }) {
                     />
                     {errors.message && <p className="text-xs text-red-500 mt-1">{errors.message}</p>}
                   </div>
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" checked={agreeTerms} onChange={(e) => {
+                      setAgreeTerms(e.target.checked);
+                      if (errors.agree) setErrors((prev) => ({ ...prev, agree: undefined }));
+                    }} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600/20" />
+                    <span className="text-xs text-slate-600 leading-relaxed">
+                      I agree to the{' '}
+                      <a href="/terms" className="text-blue-600 underline hover:text-blue-700">Terms of Use</a>
+                      {' '}and{' '}
+                      <a href="/privacy" className="text-blue-600 underline hover:text-blue-700">Privacy Policy</a>.
+                    </span>
+                  </label>
+                  {errors.agree && <p className="text-xs text-red-500 mt-1">{errors.agree}</p>}
                   <div className="flex justify-center">
                     <button
                     type="submit"

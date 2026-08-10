@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FiBookOpen, FiUsers, FiBriefcase, FiStar, FiClock, FiAward, FiCheckCircle, FiLoader, FiX } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import Reveal, { Stagger, StaggerItem } from '../ui/Reveal';
+import UpcomingClassesMiniCarousel from './UpcomingClassesMiniCarousel';
 import { supabase } from '../../lib/supabaseClient';
 import { trackFormSubmit } from '../../lib/analytics';
 
@@ -14,6 +15,63 @@ function getStatIcon(label) {
   if (l.includes('trainer') || l.includes('expert') || l.includes('faculty')) return FiStar;
   if (l.includes('year') || l.includes('experience')) return FiClock;
   return FiAward;
+}
+
+function CourseButtons() {
+  return (
+    <div className="flex flex-wrap gap-2 pt-1">
+      <Link
+        to="/courses?parent=software-learning"
+        className="inline-flex items-center justify-center gap-2 flex-1 min-w-0 sm:flex-none px-4 sm:px-[30px] py-3 sm:py-[15px] rounded-full bg-brand-orange text-white font-semibold text-xs sm:text-sm hover:bg-brand-orange/90 transition-colors"
+      >
+        Software Learning
+      </Link>
+      <Link
+        to="/courses?parent=competitive-exam"
+        className="inline-flex items-center justify-center gap-2 flex-1 min-w-0 sm:flex-none px-4 sm:px-[30px] py-3 sm:py-[15px] rounded-full bg-brand-green text-white font-semibold text-xs sm:text-sm hover:bg-brand-green/90 transition-colors"
+      >
+        Competitive Exam
+      </Link>
+    </div>
+  );
+}
+
+function StatsGrid({ stats }) {
+  return (
+    <Stagger className="grid grid-cols-3 gap-3 sm:gap-4">
+      {stats.map((stat, i) => {
+        const Icon = getStatIcon(stat.label);
+        return (
+          <StaggerItem key={i}>
+            <div className="bg-white rounded-xl border border-gray-100 p-3 sm:p-4 text-center hover:-translate-y-1 transition-all duration-300 max-w-[238px] mx-auto" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto rounded-lg bg-brand-orange/10 flex items-center justify-center mb-2">
+                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-orange" />
+              </div>
+              <p className="text-base sm:text-2xl font-extrabold" style={{ color: '#175cdd' }}>{stat.value}</p>
+              <p className="text-[10px] sm:text-xs mt-0.5" style={{ color: '#000000' }}>{stat.label}</p>
+            </div>
+          </StaggerItem>
+        );
+      })}
+    </Stagger>
+  );
+}
+
+function PillGrid({ pills }) {
+  return (
+    <Stagger className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+      {pills.map((label, i) => (
+        <StaggerItem key={i}>
+          <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-100 px-3 py-2.5 shadow-sm">
+            <div className="w-7 h-7 rounded-lg bg-brand-green/10 flex items-center justify-center shrink-0">
+              <FiCheckCircle className="w-3.5 h-3.5 text-brand-green" />
+            </div>
+            <span className="text-xs font-bold text-brand-blue leading-tight">{label}</span>
+          </div>
+        </StaggerItem>
+      ))}
+    </Stagger>
+  );
 }
 
 export default function IntroFormSection({ section }) {
@@ -30,20 +88,24 @@ export default function IntroFormSection({ section }) {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formMsg, setFormMsg] = useState(null);
+  const [errors, setErrors] = useState({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!formName.trim() || !formEmail.trim() || !formPhone.trim()) {
-      setFormMsg({ type: 'error', text: 'Please fill all fields' });
-      return;
-    }
+    const errs = {};
+    if (!formName.trim()) errs.name = 'Please enter your name';
+    if (!formEmail.trim()) errs.email = 'Please enter your email';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formEmail.trim())) errs.email = 'Please enter a valid email';
+    if (!formPhone.trim()) errs.phone = 'Please enter your phone number';
+    setErrors(errs);
     if (!agreeTerms) {
       setFormMsg({ type: 'error', text: 'Please agree to the terms and conditions.' });
       return;
     }
-    setSubmitting(true);
     setFormMsg(null);
+    if (Object.keys(errs).length > 0) return;
+    setSubmitting(true);
     const { error } = await supabase.from('form_submissions').insert({
       full_name: formName.trim(),
       email: formEmail.trim(),
@@ -70,12 +132,8 @@ export default function IntroFormSection({ section }) {
     setSubmitting(false);
   }
 
-  const features = rawPills.map((label) => ({ label, icon: FiCheckCircle }));
-
   return (
     <section className="relative overflow-hidden bg-white">
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
-        style={{ backgroundImage: 'radial-gradient(#1B3A6B 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         <div className="grid lg:grid-cols-6 gap-8 lg:gap-12">
           <Reveal variant="up" className="lg:col-span-4 space-y-6 self-start">
@@ -90,46 +148,18 @@ export default function IntroFormSection({ section }) {
               </p>
             )}
 
-            {stats.length > 0 && (
-              <Stagger className="grid grid-cols-3 gap-4">
-                {stats.map((stat, i) => {
-                  const Icon = getStatIcon(stat.label);
-                  return (
-                    <StaggerItem key={i}>
-                      <div className="bg-white rounded-xl border border-gray-100 p-4 text-center hover:-translate-y-1 transition-all duration-300 max-w-[238px] mx-auto" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
-                        <div className="w-10 h-10 mx-auto rounded-lg bg-brand-orange/10 flex items-center justify-center mb-2">
-                          <Icon className="w-4 h-4 text-brand-orange" />
-                        </div>
-                        <p className="text-xl sm:text-2xl font-extrabold" style={{ color: '#175cdd' }}>{stat.value}</p>
-                        <p className="text-xs mt-0.5" style={{ color: '#000000' }}>{stat.label}</p>
-                      </div>
-                    </StaggerItem>
-                  );
-                })}
-              </Stagger>
-            )}
-
-            <div className="flex flex-wrap gap-2 pt-1">
-              <Link
-                to="/courses?parent=software-learning"
-                className="inline-flex items-center justify-center gap-2 px-[30px] py-[15px] rounded-full bg-brand-orange text-white font-semibold text-sm hover:bg-brand-orange/90 transition-colors"
-              >
-                Software Learning
-              </Link>
-              <Link
-                to="/courses?parent=competitive-exam"
-                className="inline-flex items-center justify-center gap-2 px-[30px] py-[15px] rounded-full bg-brand-green text-white font-semibold text-sm hover:bg-brand-green/90 transition-colors"
-              >
-                Competitive Exam
-              </Link>
+            <div className="mt-10 hidden lg:block space-y-6">
+              {rawPills.length > 0 && <PillGrid pills={rawPills} />}
+              {stats.length > 0 && <div className="pt-4"><StatsGrid stats={stats} /></div>}
+              <div className="pt-4"><CourseButtons /></div>
             </div>
           </Reveal>
 
           <Reveal variant="right" className="lg:col-span-2 self-start">
             <p className="text-base font-[600] text-center mb-2" style={{ color: '#ef4444' }}>Book Your Demo Now!</p>
-            <div className="rounded-2xl overflow-hidden max-w-sm w-full lg:ml-auto" style={{ backgroundColor: '#74a916', boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
+            <div className="rounded-2xl overflow-hidden max-w-sm w-full mx-auto lg:ml-auto" style={{ backgroundColor: '#74a916', boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
               {/* diagonal header: white left / orange right */}
-              <div className="relative h-16" style={{ backgroundColor: '#ff8415' }}>
+              <div className="relative h-16" style={{ backgroundColor: '#f59e0b' }}>
                 <div
                   className="absolute inset-0"
                   style={{
@@ -138,11 +168,11 @@ export default function IntroFormSection({ section }) {
                   }}
                 >
                   <div className="h-full flex items-center pl-5">
-                    <span className="text-xl font-serif font-bold" style={{ color: '#ff8415' }}>Career</span>
+                    <span className="text-xl font-serif font-bold" style={{ color: '#f59e0b' }}>Career</span>
                   </div>
                 </div>
                 <div className="absolute inset-0 flex items-center justify-end">
-                  <span className="bg-white rounded-[6px] px-3 py-1 text-base font-serif font-bold shadow-sm mr-1.5" style={{ color: '#ff8415' }}>
+                  <span className="bg-white rounded-[6px] px-3 py-1 text-base font-serif font-bold shadow-sm mr-1.5" style={{ color: '#f59e0b' }}>
                     Counselling
                   </span>
                 </div>
@@ -158,14 +188,23 @@ export default function IntroFormSection({ section }) {
                   }}
                 />
                 <form onSubmit={handleSubmit} className="relative z-10 space-y-3">
-                  <input type="text" placeholder="Your Name" value={formName} onChange={(e) => setFormName(e.target.value)}
-                    className="w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all" />
-                  <input type="email" placeholder="your@email.com" value={formEmail} onChange={(e) => setFormEmail(e.target.value)}
-                    className="w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all" />
-                  <input type="tel" placeholder="Your Phone Number" value={formPhone} onChange={(e) => setFormPhone(e.target.value)}
-                    className="w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all" />
-                  {formMsg?.type === 'error' && formMsg?.text === 'Please agree to the terms and conditions.' && (
-                    <p className="text-red-300 text-xs">{formMsg.text}</p>
+                  <div>
+                    <input type="text" placeholder="Your Name" value={formName} onChange={(e) => { setFormName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }} required
+                      className={`w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all ${errors.name ? 'ring-2 ring-red-400' : ''}`} />
+                    {errors.name && <p className="!text-red-600 text-xs mt-1">{errors.name}</p>}
+                  </div>
+                  <div>
+                    <input type="email" placeholder="your@email.com" value={formEmail} onChange={(e) => { setFormEmail(e.target.value); if (errors.email) setErrors((p) => ({ ...p, email: undefined })); }} required
+                      className={`w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all ${errors.email ? 'ring-2 ring-red-400' : ''}`} />
+                    {errors.email && <p className="!text-red-600 text-xs mt-1">{errors.email}</p>}
+                  </div>
+                  <div>
+                    <input type="tel" placeholder="Your Phone Number" value={formPhone} onChange={(e) => { setFormPhone(e.target.value); if (errors.phone) setErrors((p) => ({ ...p, phone: undefined })); }} required
+                      className={`w-full px-4 py-2.5 border-0 text-xs bg-white rounded-[8px] outline-none placeholder-gray-400 focus:ring-2 focus:ring-white/50 transition-all ${errors.phone ? 'ring-2 ring-red-400' : ''}`} />
+                    {errors.phone && <p className="!text-red-600 text-xs mt-1">{errors.phone}</p>}
+                  </div>
+                  {formMsg?.type === 'error' && (
+                    <p className="!text-red-600 text-xs">{formMsg.text}</p>
                   )}
                   <label className="flex items-start gap-2 cursor-pointer">
                     <input type="checkbox" checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)} className="mt-0.5 w-3.5 h-3.5 border-white/50 accent-white" />
@@ -176,31 +215,22 @@ export default function IntroFormSection({ section }) {
                       <a href="/privacy" className="text-blue-300 underline hover:text-blue-200">Privacy Policy</a>.
                     </span>
                   </label>
-                  <button type="submit" disabled={submitting} className="w-full flex items-center justify-center gap-2 px-[30px] py-[15px] bg-[#ff8415] text-white font-semibold rounded hover:bg-[#ff8415]/90 transition-colors disabled:opacity-70 text-sm">
+                  <button type="submit" disabled={submitting} className="w-full flex items-center justify-center gap-2 px-[30px] py-[15px] bg-[#f59e0b] text-white font-semibold rounded hover:bg-[#f59e0b]/90 transition-colors disabled:opacity-70 text-sm">
                     {submitting ? <FiLoader className="w-4 h-4 animate-spin" /> : null}
                     {submitting ? 'Submitting...' : 'Send Message'}
                   </button>
                 </form>
               </div>
             </div>
-            {features.length > 0 && (
-              <Stagger className="grid grid-cols-2 gap-2 mt-4">
-                {features.map((feat, i) => {
-                  const Icon = feat.icon;
-                  return (
-                    <StaggerItem key={i}>
-                      <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-100 px-3 py-2.5 shadow-sm">
-                        <div className="w-7 h-7 rounded-lg bg-brand-blue/10 flex items-center justify-center shrink-0">
-                          <Icon className="w-3.5 h-3.5 text-brand-blue" />
-                        </div>
-                        <span className="text-xs font-bold text-brand-blue">{feat.label}</span>
-                      </div>
-                    </StaggerItem>
-                  );
-                })}
-              </Stagger>
-            )}
+
+            <UpcomingClassesMiniCarousel />
           </Reveal>
+
+          <div className="lg:hidden mt-8 space-y-6">
+            {rawPills.length > 0 && <PillGrid pills={rawPills} />}
+            {stats.length > 0 && <StatsGrid stats={stats} />}
+            <CourseButtons />
+          </div>
         </div>
       </div>
 

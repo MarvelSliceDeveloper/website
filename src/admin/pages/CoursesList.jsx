@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
-import AdminButton from "../components/AdminButton";
 import Badge from "../components/Badge";
 import EmptyState from "../components/EmptyState";
 import Card from "../components/ui/Card";
 import DataTable from "../components/ui/DataTable";
-import { FiPlus, FiBookOpen, FiSearch, FiEdit3, FiTrash2, FiChevronDown, FiArrowLeft, FiX } from "react-icons/fi";
+import { FiBookOpen, FiSearch, FiEdit3, FiTrash2, FiChevronDown, FiArrowLeft, FiX } from "react-icons/fi";
 import PageShell from '../components/ui/PageShell';
 import useConfirm from '../hooks/useConfirm';
 
@@ -55,11 +54,17 @@ const [confirm, confirmDialog] = useConfirm();
     return current.parent_label || "Uncategorized";
   }
 
-  async function togglePublish(id, current) {
-    await supabase.from("courses").update({ is_published: !current }).eq("id", id);
-    setCourses((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, is_published: !current } : c))
-    );
+  function getStatusLabel(status) {
+    return status === 'Inactive' || status === 'Unpublished' ? 'Draft' : status;
+  }
+
+  function statusBadge(status) {
+    const s = getStatusLabel(status);
+    const variant =
+      s === 'Active' ? 'active'
+      : s === 'Coming Soon' ? 'coming_soon'
+      : 'draft';
+    return <Badge variant={variant}>{s || 'Draft'}</Badge>;
   }
 
   async function handleDelete(id, title) {
@@ -73,10 +78,9 @@ const [confirm, confirmDialog] = useConfirm();
     if (activeCategory && getRootSection(c.nav_item_id) !== activeCategory) {
       return false;
     }
-    
+
     // 2. Status
-    if (statusFilter === 'published' && !c.is_published) return false;
-    if (statusFilter === 'draft' && c.is_published) return false;
+    if (statusFilter !== 'All' && getStatusLabel(c.status) !== statusFilter) return false;
     
     // 3. Search
     if (activeSearch) {
@@ -139,15 +143,7 @@ const [confirm, confirmDialog] = useConfirm();
     },
     {
       header: 'Status',
-      cell: (row) => (
-        <div className="flex items-center gap-2">
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" checked={row.is_published} onChange={() => togglePublish(row.id, row.is_published)} className="sr-only peer" />
-            <div className="w-9 h-5 bg-admin-200 rounded-full peer peer-checked:bg-success-500 peer-focus-visible:ring-2 peer-focus-visible:ring-admin-500 peer-focus-visible:ring-offset-2 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
-          </label>
-          <Badge variant={row.is_published ? 'published' : 'draft'}>{row.is_published ? 'Published' : 'Draft'}</Badge>
-        </div>
-      ),
+      cell: (row) => statusBadge(row.status),
     },
     {
       header: 'Actions',
@@ -175,7 +171,7 @@ const [confirm, confirmDialog] = useConfirm();
 
   return (
     <PageShell backTo="/admin"
-      title={activeCategory ? `${activeCategory} Courses` : "All Courses"}
+      title={activeCategory ? `${activeCategory} Courses` : "Courses"}
       subtitle={`${courses.length} course${courses.length !== 1 ? 's' : ''} total`}
     >
       {courses.length > 0 && (
@@ -213,8 +209,9 @@ const [confirm, confirmDialog] = useConfirm();
                 className="w-full h-9 px-3 pr-8 border border-admin-200 bg-white text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all"
               >
                 <option value="All">All Status</option>
-                <option value="published">Published</option>
-                <option value="draft">Draft</option>
+                <option value="Active">Active</option>
+                <option value="Coming Soon">Coming Soon</option>
+                <option value="Draft">Draft</option>
               </select>
             </div>
           </div>
@@ -257,7 +254,7 @@ const [confirm, confirmDialog] = useConfirm();
             icon={FiBookOpen}
             title={activeCategory ? `No courses in ${activeCategory}` : "No courses yet"}
             description="Get started by creating your first course."
-            action={{ to: `/admin/courses/wizard${activeCategory ? `?category=${encodeURIComponent(activeCategory)}` : ''}`, icon: <FiPlus className="w-4 h-4" />, label: "Create your first course" }}
+            action={{ to: `/admin/courses/wizard${activeCategory ? `?category=${encodeURIComponent(activeCategory)}` : ''}`, label: "Create your first course" }}
           />
         </div>
       ) : filteredCourses.length === 0 ? (

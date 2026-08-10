@@ -19,7 +19,7 @@ export const BUTTON_VARIANTS = {
   'ghost-blue': 'text-gray-400 font-medium hover:text-blue-600 hover:bg-blue-50 transition-all',
   link: 'text-brand-orange font-medium hover:text-brand-blue transition-all',
   'link-add': 'text-brand-orange font-medium hover:text-brand-blue inline-flex items-center gap-1.5 transition-all',
-  pill: 'bg-gray-100 text-text-gray font-medium hover:bg-gray-200 transition-all',
+  pill: 'bg-gray-100 text-text-gray font-medium hover:bg-gray-200 border border-gray-300 transition-all',
   'pill-active': 'bg-brand-orange text-white font-medium shadow-sm transition-all',
   'pill-orange': 'bg-brand-orange text-white font-medium shadow-md transition-all',
 };

@@ -12,10 +12,12 @@ import CourseDetail from './pages/CourseDetail';
 import Blog from './pages/Blog';
 import NavPage from './pages/NavPage';
 import Career from './pages/Career';
+import AllJobs from './pages/AllJobs';
+import AllUpcomingClasses from './pages/AllUpcomingClasses';
+import About from './pages/About';
+import Contact from './pages/Contact';
 import ServicesPage from './pages/ServicesPage';
-import ServiceDetail from './pages/ServiceDetail';
-import TrainingPage from './pages/TrainingPage';
-import TrainingDetail from './pages/TrainingDetail';
+import LegalPage from './pages/LegalPage';
 import { pageTransition } from './lib/motion';
 
 const Admin = lazy(() => import('./admin/Admin'));
@@ -29,69 +31,6 @@ function ScrollToTop() {
 function PageTracker() {
   const { pathname } = useLocation();
   useEffect(() => { trackPageView(pathname); }, [pathname]);
-  return null;
-}
-
-function DataPrefetcher() {
-
-  useQuery({
-    queryKey: ['siteSettings'],
-    queryFn: () => supabase.from('site_settings').select('*').maybeSingle(),
-  });
-
-  useQuery({
-    queryKey: ['topNavItems'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('nav_items')
-        .select('*')
-        .eq('is_active', true)
-        .order('sort_order');
-      if (error) throw error;
-      return (data || []).filter((item) => !item.parent_id && !item.parent_label);
-    },
-  });
-
-  useQuery({
-    queryKey: ['homeSections'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('home_sections')
-        .select('*')
-        .eq('is_active', true)
-        .order('sort_order');
-      if (error) {
-        if (error.code === '42P01') return [];
-        throw error;
-      }
-      return data || [];
-    },
-  });
-
-  useQuery({
-    queryKey: ['alumniCompanies'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('alumni_companies')
-        .select('*')
-        .order('sort_order');
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  useQuery({
-    queryKey: ['footer'],
-    queryFn: async () => {
-      const { data: columns, error } = await supabase
-        .from('footer_columns')
-        .select('*, footer_links(*)')
-        .order('sort_order');
-      if (error) throw error;
-      return columns;
-    },
-  });
-
   return null;
 }
 
@@ -120,6 +59,8 @@ function AnimatedRoutes() {
   const routes = (
     <Routes location={location}>
       <Route path="/" element={<Home />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<Contact />} />
       <Route path="/blog" element={<Blog />} />
       <Route path="/blog/:slug" element={<Blog />} />
       <Route path="/courses" element={<CoursesWithKey />} />
@@ -128,12 +69,13 @@ function AnimatedRoutes() {
       <Route path="/courses/ce/:subSlug" element={<CourseNavRedirect />} />
       <Route path="/courses/:slug" element={<CourseDetail />} />
       <Route path="/career" element={<Career />} />
+      <Route path="/career/jobs" element={<AllJobs />} />
+      <Route path="/upcoming-classes" element={<AllUpcomingClasses />} />
       <Route path="/services" element={<ServicesPage />} />
-      <Route path="/services/:slug" element={<ServiceDetail />} />
-      <Route path="/training" element={<TrainingPage />} />
-      <Route path="/training/:slug" element={<TrainingDetail />} />
       <Route path="/software-learning" element={<Navigate to="/courses?parent=software-learning" replace />} />
       <Route path="/competitive-exam" element={<Navigate to="/courses?parent=competitive-exam" replace />} />
+      <Route path="/terms" element={<LegalPage pageKey="terms" />} />
+      <Route path="/privacy" element={<LegalPage pageKey="privacy" />} />
       <Route path="/:slug/*" element={<NavPage />} />
     </Routes>
   );
@@ -172,7 +114,7 @@ function PublicLayout() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/*" element={<PublicLayout />} />
         <Route path="/admin/*" element={<Suspense fallback={<div className="min-h-screen flex items-center justify-center text-neutral-500 text-sm">Loading admin…</div>}><Admin /></Suspense>} />

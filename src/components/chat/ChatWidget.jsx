@@ -101,7 +101,7 @@ function PreChatForm({ onSubmit, initial }) {
           </div>
           <button
             type="submit"
-            className="w-1/2 mx-auto block py-1 rounded-lg bg-brand-green text-white text-sm font-semibold hover:bg-brand-green/90 transition-colors cursor-pointer"
+            className="w-1/2 mx-auto block py-2.5 lg:py-1 rounded-lg bg-brand-green text-white text-sm font-semibold hover:bg-brand-green/90 transition-colors cursor-pointer"
           >
             Next
           </button>
@@ -130,7 +130,7 @@ function PreChatForm({ onSubmit, initial }) {
         <button
           type="submit"
           disabled={!reason.trim() || submitting}
-          className="w-3/5 mx-auto block py-1 rounded-lg bg-brand-green text-white text-sm font-semibold hover:bg-brand-green/90 transition-colors disabled:opacity-60 cursor-pointer"
+          className="w-3/5 mx-auto block py-2.5 lg:py-1 rounded-lg bg-brand-green text-white text-sm font-semibold hover:bg-brand-green/90 transition-colors disabled:opacity-60 cursor-pointer"
         >
           {submitting ? 'Starting...' : 'Start Chat'}
         </button>
@@ -360,16 +360,16 @@ export default function ChatWidget() {
         >
           <div className="bg-brand-green text-white flex items-center justify-between px-3 py-2 shrink-0">
             <div className="flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 lg:w-7 lg:h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0">
                 <FiMessageCircle className="w-4 h-4" />
               </div>
               <span className="text-sm font-semibold">Online</span>
             </div>
             <div className="flex items-center gap-0.5">
-              <button onClick={() => setMaximized((p) => !p)} className="w-7 h-7 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors shrink-0 cursor-pointer">
+              <button onClick={() => setMaximized((p) => !p)} className="w-9 h-9 lg:w-7 lg:h-7 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors shrink-0 cursor-pointer">
                 {maximized ? <FiMinimize2 className="w-3.5 h-3.5" /> : <FiMaximize2 className="w-3.5 h-3.5" />}
               </button>
-              <button onClick={handleCloseClick} className="w-7 h-7 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors shrink-0 cursor-pointer">
+              <button onClick={handleCloseClick} className="w-9 h-9 lg:w-7 lg:h-7 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors shrink-0 cursor-pointer">
                 <FiX className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -415,7 +415,7 @@ export default function ChatWidget() {
                   <button
                     type="submit"
                     disabled={!input.trim() || sending}
-                    className="absolute right-1 w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition-colors disabled:opacity-50 cursor-pointer"
+                    className="absolute right-1 w-10 h-10 lg:w-8 lg:h-8 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition-colors disabled:opacity-50 cursor-pointer"
                   >
                     {sending ? <FiLoader className="w-3.5 h-3.5 animate-spin" /> : <FiSend className="w-3.5 h-3.5" />}
                   </button>

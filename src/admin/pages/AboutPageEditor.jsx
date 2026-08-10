@@ -2,11 +2,11 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import * as LuIcons from 'react-icons/lu';
 import { supabase } from '../../lib/supabaseClient';
-import AdminButton from '../components/AdminButton';
+import AddButton from '../components/AddButton';
 import SaveBar from '../components/SaveBar';
 import SaveCancelBar from '../components/SaveCancelBar';
 import useDirty from '../hooks/useDirty';
-import { FiSave, FiAlertCircle, FiPlus, FiTrash2, FiUpload, FiChevronUp, FiChevronDown, FiChevronRight, FiAlignLeft, FiAlignCenter, FiAlignRight, FiEye, FiEyeOff, FiMove, FiX, FiCheck } from 'react-icons/fi';
+import { FiSave, FiAlertCircle, FiTrash2, FiUpload, FiChevronUp, FiChevronDown, FiChevronRight, FiAlignLeft, FiAlignCenter, FiAlignRight, FiEye, FiEyeOff, FiMove, FiX, FiCheck, FiImage, FiLayers } from 'react-icons/fi';
 import PageShell from '../components/ui/PageShell';
 import SectionAccordion from '../components/ui/SectionAccordion';
 import FolderTabs from '../components/ui/FolderTabs';
@@ -25,9 +25,9 @@ function createEmptySection(type) {
   const base = { section_type: type, heading: '', headingAlign: 'center', hidden: false };
   switch (type) {
     case 'text':
-      return { ...base, content: '', contentAlign: 'center' };
+      return { ...base, content: '', contentAlign: 'center', image_url: '' };
     case 'text_stats':
-      return { ...base, content: '', contentAlign: 'center', items: [] };
+      return { ...base, content: '', contentAlign: 'center', items: [], image_url: '' };
     case 'stats_row':
       return { ...base, items: [] };
     case 'feature_grid':
@@ -61,17 +61,22 @@ function AlignButtons({ value, onChange }) {
 
 function ImageUploader({ value, onChange, label }) {
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   async function handleUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
+    setUploadError('');
     const ext = file.name.split('.').pop();
     const path = `about/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const { error } = await supabase.storage.from('pages').upload(path, file);
-    if (!error) {
-      const { data } = supabase.storage.from('pages').getPublicUrl(path);
-      onChange(data.publicUrl);
+    if (error) {
+      setUploadError(error.message);
+      setUploading(false);
+      return;
     }
+    const { data } = supabase.storage.from('pages').getPublicUrl(path);
+    onChange(data.publicUrl);
     setUploading(false);
   }
   return (
@@ -85,6 +90,7 @@ function ImageUploader({ value, onChange, label }) {
           <input type="file" accept="image/*" onChange={handleUpload} className="hidden" />
         </label>
       </div>
+      {uploadError && <p className="text-xs text-destructive-500 mt-1">{uploadError}</p>}
       {value && <img src={value} alt="" className="mt-2 h-28 w-full object-cover rounded-lg border border-admin-200" />}
     </div>
   );
@@ -209,28 +215,104 @@ function SubEditor({ section, onChange }) {
   const set = (patch) => onChange({ ...section, ...patch });
 
   switch (section.section_type) {
-    case 'text':
+    case 'text': {
+      const blocks = Array.isArray(section.content)
+        ? section.content
+        : (() => {
+            if (typeof section.content === 'string') {
+              try { const p = JSON.parse(section.content); if (Array.isArray(p)) return p; } catch {}
+            }
+            const paras = (section.content || '').split('\n\n').map(t => t.trim()).filter(Boolean);
+            const list = [];
+            if (section.heading) list.push({ type: 'heading', text: section.heading });
+            paras.forEach((p) => list.push({ type: 'paragraph', text: p }));
+            if (list.length === 0) list.push({ type: 'heading', text: '' });
+            return list;
+          })();
+
+      function updateBlock(i, patch) {
+        const next = blocks.map((b, j) => j === i ? { ...b, ...patch } : b);
+        set({ content: JSON.stringify(next) });
+      }
+      function moveBlock(from, dir) {
+        const to = from + dir;
+        if (to < 0 || to >= blocks.length) return;
+        const next = [...blocks];
+        const [removed] = next.splice(from, 1);
+        next.splice(to, 0, removed);
+        set({ content: JSON.stringify(next) });
+      }
+      function removeBlock(i) {
+        const next = blocks.filter((_, j) => j !== i);
+        set({ content: JSON.stringify(next) });
+      }
+      function addBlock(type) {
+        const next = [...blocks, { type, text: '' }];
+        set({ content: JSON.stringify(next) });
+      }
+
       return (
         <div className="space-y-6">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <TextInput value={section.heading} onChange={(v) => set({ heading: v })} placeholder="Section heading (optional)" label="Heading" />
+          <ImageUploader value={section.image_url} onChange={(v) => set({ image_url: v })} label="Side Image (optional — shows on the right)" />
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">Heading + Body Paragraphs</span>
+              <span className="text-xs text-neutral-400 flex items-center gap-1"><FiMove className="w-3 h-3" /> Drag to fix positions</span>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Align</label>
-              <AlignButtons value={section.headingAlign || 'center'} onChange={(v) => set({ headingAlign: v })} />
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">Content Align</span>
+              <AlignButtons value={section.contentAlign || 'center'} onChange={(v) => set({ contentAlign: v })} />
             </div>
           </div>
-          <TextArea value={section.content} onChange={(v) => set({ content: v })} placeholder="Content..." label="Content" required />
-          <div className="flex items-center justify-end gap-3">
-            <span className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">Content Align</span>
-            <AlignButtons value={section.contentAlign || 'center'} onChange={(v) => set({ contentAlign: v })} />
+
+          <div className="border border-admin-200 rounded-lg overflow-hidden divide-y divide-admin-200">
+            {blocks.map((b, i) => (
+              <div key={i} className="flex items-start gap-2 p-3 bg-white">
+                <div className="mt-1 flex flex-col items-center gap-1">
+                  <span className="text-neutral-300 hover:text-admin-500 cursor-grab active:cursor-grabbing" onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+                    <FiMove className="w-4 h-4" />
+                  </span>
+                  <span className="text-[10px] text-neutral-400">{i + 1}</span>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${b.type === 'heading' ? 'bg-blue-50 text-blue-600' : 'bg-neutral-100 text-neutral-500'}`}>
+                      {b.type === 'heading' ? 'Heading' : 'Paragraph'}
+                    </span>
+                    <button type="button" onClick={() => updateBlock(i, { type: b.type === 'heading' ? 'paragraph' : 'heading' })}
+                      className="text-[10px] text-admin-500 hover:underline cursor-pointer">
+                      Make {b.type === 'heading' ? 'Paragraph' : 'Heading'}
+                    </button>
+                  </div>
+                  {b.type === 'heading' ? (
+                    <TextInput value={b.text} onChange={(v) => updateBlock(i, { text: v })} placeholder="Section heading" />
+                  ) : (
+                    <TextArea value={b.text} onChange={(v) => updateBlock(i, { text: v })} placeholder="Body paragraph..." rows={2} />
+                  )}
+                </div>
+                <div className="flex flex-col items-center gap-1 mt-1">
+                  <button type="button" onClick={() => moveBlock(i, -1)} disabled={i === 0}
+                    className="p-1 text-emerald-500 hover:text-emerald-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"><FiChevronUp className="w-3.5 h-3.5" /></button>
+                  <button type="button" onClick={() => moveBlock(i, 1)} disabled={i === blocks.length - 1}
+                    className="p-1 text-cyan-500 hover:text-cyan-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"><FiChevronDown className="w-3.5 h-3.5" /></button>
+                  <button type="button" onClick={() => removeBlock(i)}
+                    className="p-1 text-red-500 hover:text-red-600 cursor-pointer"><FiTrash2 className="w-3.5 h-3.5" /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <AddButton onClick={() => addBlock('heading')} label="Add Heading" />
+            <AddButton onClick={() => addBlock('paragraph')} label="Add Paragraph" />
           </div>
         </div>
       );
+    }
     case 'text_stats':
       return (
         <div className="space-y-6">
+          <ImageUploader value={section.image_url} onChange={(v) => set({ image_url: v })} label="Side Image (optional — shows on the right)" />
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <TextInput value={section.heading} onChange={(v) => set({ heading: v })} placeholder="Section heading (optional)" label="Heading" />
@@ -248,7 +330,7 @@ function SubEditor({ section, onChange }) {
           <hr className="border-admin-200" />
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Stat Items</span>
-            <button type="button" onClick={() => set({ items: [...(section.items || []), { number: '', label: '' }] })} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg text-admin-600 border border-admin-200 hover:bg-admin-50 hover:border-admin-300 transition-colors"><FiPlus className="w-4 h-4" /> Add Stat</button>
+              <AddButton onClick={() => set({ items: [...(section.items || []), { number: '', label: '' }] })} label="Add Stat" />
           </div>
           <ReorderableList
             items={section.items || []}
@@ -283,7 +365,7 @@ function SubEditor({ section, onChange }) {
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Stat Items</span>
-              <button type="button" onClick={() => set({ items: [...(section.items || []), { number: '', label: '' }] })} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg text-admin-600 border border-admin-200 hover:bg-admin-50 hover:border-admin-300 transition-colors"><FiPlus className="w-4 h-4" /> Add Stat</button>
+            <AddButton onClick={() => set({ items: [...(section.items || []), { number: '', label: '' }] })} label="Add Stat" />
             </div>
             <ReorderableList
               items={section.items || []}
@@ -311,7 +393,7 @@ function SubEditor({ section, onChange }) {
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Team Members</span>
-              <button type="button" onClick={() => set({ items: [...(section.items || []), { name: '', role: '', bio: '', image_url: '' }] })} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg text-admin-600 border border-admin-200 hover:bg-admin-50 hover:border-admin-300 transition-colors"><FiPlus className="w-4 h-4" /> Add Member</button>
+              <AddButton onClick={() => set({ items: [...(section.items || []), { name: '', role: '', bio: '', image_url: '' }] })} label="Add Member" />
             </div>
             <ReorderableList
               items={section.items || []}
@@ -356,7 +438,7 @@ function SubEditor({ section, onChange }) {
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Feature Items</span>
-              <button type="button" onClick={() => set({ items: [...(section.items || []), { icon: '', title: '', description: '' }] })} className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg text-admin-600 border border-admin-200 hover:bg-admin-50 hover:border-admin-300 transition-colors"><FiPlus className="w-4 h-4" /> Add Feature</button>
+              <AddButton onClick={() => set({ items: [...(section.items || []), { icon: '', title: '', description: '' }] })} label="Add Feature" />
             </div>
             <ReorderableList
               items={section.items || []}
@@ -560,8 +642,8 @@ const queryClient = useQueryClient();
   if (loading) return <div className="flex justify-center py-20"><div className="w-8 h-8 border-2 border-admin-600 border-t-transparent rounded-full animate-spin" /></div>;
 
   const tabs = [
-    { id: 'hero-image', title: 'Hero Image' },
-    { id: 'sections', title: 'Sections' },
+    { id: 'hero-image', title: 'Hero Image', icon: FiImage },
+    { id: 'sections', title: 'Sections', icon: FiLayers },
   ];
 
   return (
@@ -594,26 +676,29 @@ const queryClient = useQueryClient();
 
         {activeTab === 'sections' && (
           <div className="space-y-6">
-            <div className="flex justify-end mb-4">
+            <div className="flex items-center justify-between mb-4">
+              {SECTION_TYPES.find(t => t.value === newType)?.desc ? (
+                <div className="flex items-center gap-3">
+                  <p className="text-xs text-neutral-400">{SECTION_TYPES.find(t => t.value === newType)?.desc}</p>
+                  <span className="text-xs text-neutral-400 flex items-center gap-1"><FiMove className="w-3 h-3" /> Drag to fix positions</span>
+                </div>
+              ) : <div />}
               <div className="flex items-center gap-2">
                 <div className="relative">
                   <select value={newType} onChange={(e) => setNewType(e.target.value)}
-                    className="w-44 px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 bg-white cursor-pointer transition-all">
+                    className="w-44 px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 bg-white cursor-pointer transition-all">
                     {SECTION_TYPES.map((t) => (
                       <option key={t.value} value={t.value}>{t.label}</option>
                     ))}
                   </select>
                 </div>
-                <button type="button" onClick={addSection} className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg text-admin-600 border border-admin-200 hover:bg-admin-50 hover:border-admin-300 transition-colors"><FiPlus className="w-4 h-4" /> Add</button>
+                <AddButton onClick={addSection} label="Add Section" />
               </div>
             </div>
-            {SECTION_TYPES.find(t => t.value === newType)?.desc && (
-              <p className="text-xs text-neutral-400">{SECTION_TYPES.find(t => t.value === newType)?.desc}</p>
-            )}
             {sections.length === 0 && (
               <p className="text-sm text-neutral-400 text-center py-8">No sections yet. Select a type above and click "Add".</p>
             )}
-            <div className="space-y-3">
+            <div className="border-2 border-admin-300 rounded-xl p-1.5 space-y-1.5">
               {sections.map((sec, i) => (
                 <div
                   key={i}
@@ -621,29 +706,35 @@ const queryClient = useQueryClient();
                   onDragStart={() => handleDragStart(i)}
                   onDragOver={(e) => handleDragOver(e, i)}
                   onDragEnd={handleDragEnd}
-                  className={`border border-admin-200 rounded-lg overflow-hidden transition-shadow ${dragIdx === i ? 'shadow-lg ring-2 ring-admin-500' : ''} ${sec.hidden ? 'opacity-50' : ''}`}
+                  className={`flex items-stretch border border-admin-200 rounded-lg overflow-hidden transition-shadow bg-white ${dragIdx === i ? 'shadow-lg ring-2 ring-admin-500' : ''} ${sec.hidden ? 'opacity-50' : ''}`}
                 >
-                  <div className="flex items-center justify-between px-4 py-3 bg-white cursor-pointer" onClick={() => setExpandedIdx(expandedIdx === i ? null : i)}>
-                    <div className="flex items-center gap-3">
-                      <span className="text-neutral-300 hover:text-neutral-500 cursor-grab active:cursor-grabbing" onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
-                        <FiMove className="w-4 h-4" />
-                      </span>
+                  <div
+                    className="flex flex-col items-center justify-center px-3 cursor-grab active:cursor-grabbing border-r border-dashed border-admin-200 bg-neutral-50 hover:bg-admin-50 group"
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    title="Drag to reorder"
+                  >
+                    <FiMove className="w-4 h-4 text-neutral-400 group-hover:text-admin-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between px-4 py-2.5 bg-white cursor-pointer" onClick={() => setExpandedIdx(expandedIdx === i ? null : i)}>
+                    <div className="flex items-center gap-2.5">
                       <span className="text-xs font-bold text-neutral-400">{i + 1}</span>
-                      <span className="text-sm font-medium text-neutral-700">{SECTION_TYPE_LABELS[sec.section_type] || sec.section_type}</span>
+                      <span className="text-xs font-medium text-neutral-700">{SECTION_TYPE_LABELS[sec.section_type] || sec.section_type}</span>
                       {sec.heading && <span className="text-xs text-neutral-400 max-w-48 truncate">— {sec.heading}</span>}
                       {sec.hidden && <span className="text-xs text-warning-500 font-medium">Hidden</span>}
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-0.5">
                       <button type="button" onClick={(e) => { e.stopPropagation(); toggleVisibility(i); }}
                         className="p-1 text-blue-500 hover:text-blue-700 cursor-pointer" title={sec.hidden ? 'Show section' : 'Hide section'}>
-                        {sec.hidden ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                        {sec.hidden ? <FiEyeOff className="w-3.5 h-3.5" /> : <FiEye className="w-3.5 h-3.5" />}
                       </button>
                       <button type="button" onClick={(e) => { e.stopPropagation(); moveSection(i, -1); }} disabled={i === 0}
-                        className="p-1 text-emerald-500 hover:text-emerald-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"><FiChevronUp className="w-4 h-4" /></button>
+                        className="p-1 text-emerald-500 hover:text-emerald-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"><FiChevronUp className="w-3.5 h-3.5" /></button>
                       <button type="button" onClick={(e) => { e.stopPropagation(); moveSection(i, 1); }} disabled={i === sections.length - 1}
-                        className="p-1 text-cyan-500 hover:text-cyan-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"><FiChevronDown className="w-4 h-4" /></button>
+                        className="p-1 text-cyan-500 hover:text-cyan-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"><FiChevronDown className="w-3.5 h-3.5" /></button>
                       <button type="button" onClick={(e) => { e.stopPropagation(); removeSection(i); }}
-                        className="p-1 text-red-500 hover:text-red-600 cursor-pointer"><FiTrash2 className="w-4 h-4" /></button>
+                        className="p-1 text-red-500 hover:text-red-600 cursor-pointer"><FiTrash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   </div>
                   {expandedIdx === i && (
@@ -651,6 +742,7 @@ const queryClient = useQueryClient();
                       <SubEditor section={sec} onChange={(updated) => updateSection(i, updated)} />
                     </div>
                   )}
+                  </div>
                 </div>
               ))}
             </div>

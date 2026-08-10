@@ -7,7 +7,7 @@ import EmptyState from '../components/EmptyState';
 import Card from '../components/ui/Card';
 import DataTable from '../components/ui/DataTable';
 import {
-  FiPlus, FiTrash2, FiSearch, FiChevronDown, FiEdit3, FiBookOpen
+  FiTrash2, FiSearch, FiChevronDown, FiEdit3, FiBookOpen
 } from 'react-icons/fi';
 import PageShell from '../components/ui/PageShell';
 import useConfirm from '../hooks/useConfirm';
@@ -238,7 +238,7 @@ const [confirm, confirmDialog] = useConfirm();
             icon={FiBookOpen}
             title="No training programs yet"
             description="Get started by adding your first program."
-            action={{ to: '/admin/training/new', icon: <FiPlus className="w-4 h-4" />, label: 'Add your first program' }}
+            action={{ to: '/admin/training/new', label: 'Add your first program' }}
           />
         </div>
       ) : filtered.length === 0 ? (

@@ -11,7 +11,7 @@ const detailFields = [
 
 export default function NewsletterSubscribers() {
 return (
-    <PageShell backTo="/admin" title="Newsletter Subscribers"
+    <PageShell backTo="/admin"
     >
       <SubmissionsInbox
         table="newsletter_subscribers"

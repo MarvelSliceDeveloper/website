@@ -56,20 +56,6 @@
           "required": false,
           "placeholder": "Optional"
         },
-        "category": {
-          "label": "Subject",
-          "enabled": true,
-          "options": [
-            "General Inquiry",
-            "Course Information",
-            "Corporate Training",
-            "Partnership",
-            "Support",
-            "Other"
-          ],
-          "required": true,
-          "placeholder": "Select subject"
-        },
         "full_name": {
           "label": "Full Name",
           "enabled": true,

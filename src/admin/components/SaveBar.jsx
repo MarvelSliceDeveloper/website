@@ -6,12 +6,12 @@ export default function SaveBar({ saving, saved, saveError, onSave, onDiscard, l
     return (
       <div className="fixed top-6 right-6 z-50 flex flex-col gap-3 pointer-events-none">
         {saveError && (
-          <div className="p-4 bg-destructive-50 border border-destructive-500 rounded-xl flex items-center gap-3 text-destructive-700 text-sm shadow-xl animate-fade-in-up pointer-events-auto min-w-[300px]">
+          <div className="p-4 bg-destructive-50 border border-destructive-500 rounded-xl flex items-center gap-3 text-destructive-700 text-sm shadow-xl animate-fade-in-up pointer-events-auto min-w-[300px] max-w-[calc(100vw-2rem)]">
             <FiAlertCircle className="w-5 h-5 shrink-0" /> {saveError}
           </div>
         )}
         {saved && (
-          <div className="p-4 bg-success-50 border border-success-500 rounded-xl flex items-center gap-3 text-success-700 text-sm shadow-xl animate-fade-in-up pointer-events-auto min-w-[300px]">
+          <div className="p-4 bg-success-50 border border-success-500 rounded-xl flex items-center gap-3 text-success-700 text-sm shadow-xl animate-fade-in-up pointer-events-auto min-w-[300px] max-w-[calc(100vw-2rem)]">
             <FiCheck className="w-5 h-5 shrink-0 text-success-600" /> 
             <span className="font-medium">{label} saved successfully!</span>
           </div>

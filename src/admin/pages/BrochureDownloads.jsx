@@ -16,7 +16,7 @@ const detailFields = [
 
 export default function BrochureDownloads() {
 return (
-    <PageShell backTo="/admin" title="Brochure Downloads"
+    <PageShell backTo="/admin"
     >
       <SubmissionsInbox
         table="brochure_downloads"

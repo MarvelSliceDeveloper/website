@@ -20,7 +20,7 @@ export function PageEditorLayout({
   
   return (
     <PageShell backTo={backTo} title={title} maxWidth="max-w-none">
-      <div className="flex gap-6 items-start">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-6 lg:items-start">
         <SectionSidebar navItems={navItems} activeItemKey={activeSectionKey} onNavClick={onNavClick} />
         
         <div className="flex-1 min-w-0">

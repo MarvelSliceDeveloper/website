@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
-import AdminButton from "../components/AdminButton";
 import ImageUploader from "../components/ImageUploader";
+import { CancelButton, SubmitButton } from "../components/FormButtons";
 import {
-  FiPlus,
   FiTrash2,
   FiArrowLeft,
   FiCheck,
@@ -159,7 +158,6 @@ export default function ServiceWizard() {
     eligibility: "",
     requirements: [],
     learning_outcomes: [],
-    highlights: [],
     curriculum: [],
     seo_title: "",
     seo_description: "",
@@ -266,7 +264,6 @@ export default function ServiceWizard() {
         eligibility: service.eligibility,
         requirements: service.requirements || [],
         learning_outcomes: service.learning_outcomes || [],
-        highlights: service.highlights || [],
         curriculum: service.curriculum || [],
         seo_title: service.seo_title,
         seo_description: service.seo_description,
@@ -418,7 +415,7 @@ export default function ServiceWizard() {
                   className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-black mb-1">Duration</label>
                   <input
@@ -441,7 +438,7 @@ export default function ServiceWizard() {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-black mb-1">Price</label>
                   <input
@@ -541,12 +538,7 @@ export default function ServiceWizard() {
           )}
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-1.5 px-6 py-2.5 text-sm font-medium text-red-600 bg-white border border-red-200 hover:bg-red-50 rounded-lg transition-colors shadow-sm"
-          >
-            Cancel
-          </button>
+          <CancelButton onClick={() => navigate(-1)} />
           {step < STEPS.length - 1 ? (
             <button
               onClick={() => handleStepClick(step + 1)}
@@ -556,13 +548,7 @@ export default function ServiceWizard() {
               Next Step
             </button>
           ) : (
-            <button
-              onClick={handleSave}
-              disabled={saving || !service.title.trim() || !service.slug.trim()}
-              className="inline-flex items-center gap-1.5 px-6 py-2.5 text-sm font-medium text-white bg-admin-600 hover:bg-admin-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-            >
-              {saving ? "Saving..." : "Save Service"}
-            </button>
+            <SubmitButton onClick={handleSave} saving={saving} savingLabel="Saving..." label="Submit" />
           )}
         </div>
       </div>

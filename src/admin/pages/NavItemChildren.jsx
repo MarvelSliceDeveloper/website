@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
-import { FiPlus, FiEdit2, FiTrash2, FiArrowLeft, FiBookOpen, FiX, FiCheck, FiChevronDown } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiArrowLeft, FiBookOpen, FiX, FiChevronDown } from 'react-icons/fi';
 import PageShell from "../components/ui/PageShell";
+import AddButton from '../components/AddButton';
+import { SubmitButton, CancelButton } from '../components/FormButtons';
 import useConfirm from '../hooks/useConfirm';
 
 export default function NavItemChildren() {
@@ -126,10 +128,9 @@ export default function NavItemChildren() {
     >
 
       {!showForm && (
-        <button onClick={openAdd}
-          className="flex items-center gap-2 px-4 py-2 mb-6 text-sm font-medium rounded-lg bg-admin-600 text-white hover:bg-admin-700 transition-colors">
-          <FiPlus className="w-4 h-4" /> Add Child Item
-        </button>
+        <div className="mb-6">
+          <AddButton onClick={openAdd} label="Add Child Item" />
+        </div>
       )}
 
       {showForm && (
@@ -187,13 +188,8 @@ export default function NavItemChildren() {
             </div>
           </div>
           <div className="flex gap-2 mt-4">
-            <button type="submit" className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-admin-600 text-white hover:bg-admin-700 transition-colors">
-              <FiCheck className="w-4 h-4" /> {editing ? 'Update' : 'Add'}
-            </button>
-            <button type="button" onClick={() => setShowForm(false)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-admin-200 text-admin-700 hover:bg-white transition-colors">
-              <FiX className="w-4 h-4" /> Cancel
-            </button>
+            <SubmitButton type="submit" label={editing ? 'Save' : 'Submit'} />
+            <CancelButton onClick={() => setShowForm(false)} />
           </div>
         </form>
       )}

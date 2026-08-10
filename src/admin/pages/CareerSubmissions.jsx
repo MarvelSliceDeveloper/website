@@ -71,9 +71,8 @@ const [positionOptions, setPositionOptions] = useState([]);
   }, [positionFilter, categoryFilter]);
 
   return (
-    <PageShell backTo="/admin" title="Career Submissions"
-    >
-      <SubmissionsInbox
+<PageShell backTo="/admin">
+    <SubmissionsInbox
         table="career_submissions"
         title="Career Submissions"
         columns={columns}

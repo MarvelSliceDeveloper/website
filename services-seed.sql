@@ -20,7 +20,7 @@ on conflict (slug) do nothing;
 -- ============================================================
 -- SERVICES
 -- ============================================================
-insert into services (title, slug, category_id, icon, short_description, description, duration, mode, price, discount, badge, difficulty, language, certificate, placement_support, internship, eligibility, curriculum, learning_outcomes, requirements, highlights, featured, popular, trending, status, sort_order)
+insert into services (title, slug, category_id, icon, short_description, description, duration, mode, price, discount, badge, difficulty, language, certificate, placement_support, internship, eligibility, curriculum, learning_outcomes, requirements, featured, popular, trending, status, sort_order)
 values
 (
   'Internship Programs',

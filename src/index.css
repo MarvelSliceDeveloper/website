@@ -35,6 +35,16 @@
   --color-info-500: #0d6efd;
   --color-info-700: #0a58ca;
   --color-brand-orange: #f59e0b;
+  --color-orange-50: #fffbeb;
+  --color-orange-100: #fef3c7;
+  --color-orange-200: #fde68a;
+  --color-orange-300: #fcd34d;
+  --color-orange-400: #fbbf24;
+  --color-orange-500: #f59e0b;
+  --color-orange-600: #d97706;
+  --color-orange-700: #b45309;
+  --color-orange-800: #92400e;
+  --color-orange-900: #78350f;
   --color-brand-green: #74a916;
   --color-brand-blue: #175cdd;
   --color-dark-navy: #175cdd;
@@ -66,7 +76,7 @@
   --color-admin-icon-rose: #e11d48;
   --color-admin-icon-violet: #7c3aed;
   --color-admin-icon-cyan: #0891b2;
-  --color-admin-icon-orange: #ea580c;
+  --color-admin-icon-orange: #f59e0b;
   --color-admin-icon-zinc: #52525b;
   --color-admin-teal: #00cccd;
   --color-admin-amber: #ffc107;
@@ -266,8 +276,38 @@ select {
   background-repeat: no-repeat;
   background-size: 1.2em 1.2em;
   padding-right: 2.5rem !important;
-  text-align: center;
-  text-align-last: center;
+  text-align: left;
+  text-align-last: left;
   cursor: pointer;
 }
 
+/* ─── Mobile/Tablet-only responsive fixes (≤1023px) ─── */
+/* STRICT: These rules ONLY apply below the desktop breakpoint. */
+/* Desktop (≥1024px) is completely unaffected. */
+@media (max-width: 1023px) {
+  /* Table scroll affordance: subtle shadow on right edge when table overflows */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+
+  /* Ensure admin images don't cause horizontal overflow */
+  .admin-scrollbar img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* FolderTabs: ensure scrollable on small screens */
+  .overflow-x-auto::-webkit-scrollbar {
+    height: 0;
+  }
+}
+
+/* Extra-small screen overrides (≤480px) — mobile phones only */
+@media (max-width: 480px) {
+  /* Stack form button pairs full-width on tiny screens */
+  .admin-scrollbar .flex.items-center.justify-end.gap-2 > button,
+  .admin-scrollbar .flex.items-center.justify-end.gap-3 > button {
+    min-width: 0;
+  }
+}

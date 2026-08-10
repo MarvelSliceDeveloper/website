@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabaseClient';
-import AdminButton from '../components/AdminButton';
-import { FiPlus, FiLink, FiChevronDown, FiChevronRight, FiArrowLeft } from 'react-icons/fi';
+import AddButton from '../components/AddButton';
+import { FiLink, FiChevronDown, FiChevronRight, FiArrowLeft } from 'react-icons/fi';
 import PageShell from '../components/ui/PageShell';
 import useConfirm from '../hooks/useConfirm';
 
@@ -52,10 +52,7 @@ function ColumnCard({ column, onUpdate, onDelete, onAddLink, onUpdateLink, onDel
               onUpdate={(field, value) => onUpdateLink(li, field, value)}
               onDelete={() => onDeleteLink(li)} />
           ))}
-          <button type="button" onClick={onAddLink}
-            className="flex items-center gap-1 text-xs font-medium text-admin-600 hover:text-admin-700 transition-colors pt-1">
-            <FiPlus className="w-3 h-3" /> Add Link
-          </button>
+          <AddButton onClick={onAddLink} size="xs" label="Add Link" />
         </div>
       )}
     </div>
@@ -163,10 +160,7 @@ const [confirm, confirmDialog] = useConfirm();
       subtitle="Manage footer columns and their links"
       actions={
         <div className="flex items-center gap-3 self-start sm:self-auto">
-<AdminButton onClick={addColumn} variant="primary" size="md">
-            <FiPlus className="w-4 h-4" />
-            Add Column
-          </AdminButton>
+<AddButton onClick={addColumn} label="Add Column" size="md" />
         </div>
       }
     >

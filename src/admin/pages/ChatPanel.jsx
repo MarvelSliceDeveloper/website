@@ -30,9 +30,9 @@ function formatDate(d) {
 
 const FILTERS = ['All', 'Open', 'Closed'];
 
-function ConversationList({ conversations, activeId, onSelect, filter, onFilterChange, search, onSearchChange }) {
+function ConversationList({ conversations, activeId, onSelect, filter, onFilterChange, search, onSearchChange, className = '' }) {
   return (
-    <div className="w-80 shrink-0 bg-white border-r border-admin-200 flex flex-col">
+    <div className={`${className} bg-white border-r border-admin-200 flex flex-col min-h-0`}>
       <div className="shrink-0 px-4 pt-4 pb-3 border-b border-admin-100">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-bold text-black text-base flex items-center gap-2">
@@ -238,7 +238,7 @@ function LiveChat({ conversations, onConversationsChange }) {
   }
 
   return (
-    <div className="flex h-[calc(100vh-11rem)] bg-white rounded-xl border border-admin-200 shadow-sm overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-11rem)] bg-white rounded-xl border border-admin-200 shadow-sm overflow-hidden">
       <ConversationList
         conversations={filtered}
         activeId={activeConv?.id}
@@ -247,6 +247,7 @@ function LiveChat({ conversations, onConversationsChange }) {
         onFilterChange={setFilter}
         search={search}
         onSearchChange={setSearch}
+        className={`shrink-0 w-full lg:w-80 ${activeConv ? 'hidden lg:flex' : 'flex'}`}
       />
 
       {activeConv ? (
@@ -401,7 +402,7 @@ function SessionsTable({ conversations }) {
 
   return (
     <div className="bg-white border border-admin-200 shadow-sm overflow-hidden">
-      <div className="px-5 py-4 border-b border-admin-100 flex items-center justify-between gap-4 flex-wrap">
+      <div className="px-5 py-4 border-b border-admin-100 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <h2 className="font-bold text-black text-base flex items-center gap-2">
             <FiList className="w-4 h-4 text-amber-500" />
@@ -411,7 +412,7 @@ function SessionsTable({ conversations }) {
             {filtered.length} session{filtered.length !== 1 ? 's' : ''}
           </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <div className="relative">
             <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400 pointer-events-none" />
             <input
@@ -419,12 +420,12 @@ function SessionsTable({ conversations }) {
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (setActiveSearch(search), setPage(1))}
               placeholder="Search by name, email, phone..."
-              className="w-56 pl-9 pr-3 h-9 border border-admin-200 rounded-lg text-sm text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all bg-white"
+              className="w-full sm:w-56 pl-9 pr-3 h-9 border border-admin-200 rounded-none text-sm text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all bg-white"
             />
           </div>
           <button
             onClick={() => { setActiveSearch(search); setPage(1); }}
-            className="h-9 px-4 bg-admin-600 text-white text-sm font-medium rounded-lg hover:bg-admin-700 transition-colors shrink-0"
+            className="h-9 px-4 bg-admin-600 text-white text-sm font-medium rounded-full hover:bg-admin-700 transition-colors shrink-0"
           >
             Search
           </button>
@@ -432,7 +433,7 @@ function SessionsTable({ conversations }) {
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="h-9 px-3 pr-8 rounded-lg border border-admin-200 bg-white text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all cursor-pointer"
+              className="h-9 px-3 pr-8 rounded-none border border-admin-200 bg-white text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all cursor-pointer"
             >
               <option value="all">All</option>
               <option value="new">New</option>
@@ -512,7 +513,7 @@ function SessionsTable({ conversations }) {
         </table>
       </div>
 
-      <div className="flex items-center justify-between px-4 py-3 border-t border-admin-100 bg-white text-xs text-neutral-400 font-medium">
+      <div className="flex flex-wrap items-center justify-between px-4 py-3 border-t border-admin-100 bg-white text-xs text-neutral-400 font-medium gap-2">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
             <span>Rows per page:</span>
@@ -619,7 +620,7 @@ const [searchParams, setSearchParams] = useSearchParams();
   }
 
   return (
-    <PageShell backTo="/admin" title="Chats" maxWidth="max-w-none"
+    <PageShell backTo="/admin" title="" maxWidth="max-w-none"
     >
       {tab === 'live' ? (
         <LiveChat conversations={conversations} onConversationsChange={setConversations} />

@@ -10,20 +10,21 @@ const routes = [
   { label: 'Career Page', to: '/admin/career-page', icon: FiFile, category: 'Pages' },
   { label: 'Services Page', to: '/admin/services-page', icon: FiServer, category: 'Pages' },
   { label: 'Training Page', to: '/admin/training-page', icon: FiZap, category: 'Pages' },
-  { label: 'All Courses', to: '/admin/courses', icon: FiBookOpen, category: 'Content' },
+  { label: 'Courses', to: '/admin/courses', icon: FiBookOpen, category: 'Content' },
   { label: 'Add Course', to: '/admin/courses/wizard', icon: FiBookOpen, category: 'Content' },
-  { label: 'All Services', to: '/admin/services', icon: FiServer, category: 'Content' },
-  { label: 'Add Service', to: '/admin/services/new', icon: FiServer, category: 'Content' },
   { label: 'All Programs', to: '/admin/training', icon: FiZap, category: 'Content' },
   { label: 'Add Program', to: '/admin/training/new', icon: FiZap, category: 'Content' },
   { label: 'Blog Posts', to: '/admin/blog', icon: FiFileText, category: 'Content' },
   { label: 'New Blog Post', to: '/admin/blog/new', icon: FiFileText, category: 'Content' },
   { label: 'Career Submissions', to: '/admin/career-submissions', icon: FiInbox, category: 'Submissions' },
+  { label: 'Career Enquiry Submissions', to: '/admin/career-contact-submissions', icon: FiInbox, category: 'Submissions' },
+  { label: 'Internships', to: '/admin/internships', icon: FiInbox, category: 'Content' },
+  { label: 'Add Intern', to: '/admin/internships/new', icon: FiInbox, category: 'Content' },
   { label: 'Contact Submissions', to: '/admin/contact-submissions', icon: FiInbox, category: 'Submissions' },
   { label: 'Brochure Downloads', to: '/admin/brochure-downloads', icon: FiInbox, category: 'Submissions' },
   { label: 'Form Submissions', to: '/admin/form-submissions', icon: FiInbox, category: 'Submissions' },
   { label: 'Chat Submissions', to: '/admin/chat-submissions', icon: FiInbox, category: 'Submissions' },
-  { label: 'Navigation', to: '/admin/nav-menu', icon: FiMenu, category: 'Settings' },
+  { label: 'Menu', to: '/admin/nav-menu', icon: FiMenu, category: 'Settings' },
   { label: 'Media Library', to: '/admin/media', icon: FiLayers, category: 'Settings' },
   { label: 'Footer', to: '/admin/footer', icon: FiLayers, category: 'Settings' },
   { label: 'Site Settings', to: '/admin/site-settings?section=general', icon: FiSettings, category: 'Settings' },
@@ -77,7 +78,7 @@ export default function CommandPalette({ open, onClose }) {
   const grouped = groupResults(results);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] cursor-pointer" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-[15vh] cursor-pointer" onClick={onClose}>
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
       <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-admin-200 overflow-hidden cursor-pointer" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3 px-4 border-b border-admin-100">

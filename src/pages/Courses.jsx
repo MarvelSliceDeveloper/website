@@ -3,10 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, useParams, Link } from "react-router-dom";
 import {
   FiBookOpen,
+  FiChevronDown,
   FiChevronLeft,
   FiChevronRight,
+  FiFilter,
   FiSearch,
-  FiChevronDown,
   FiGrid,
   FiList,
   FiClock,
@@ -61,11 +62,107 @@ const CATEGORY_ICONS = {
 
 const DEFAULT_ICON = FiBookOpen;
 
+const nodeSlug = (node) =>
+  node.path ? node.path.replace(/.*\//, "") : node.label.toLowerCase().replace(/\s+/g, "-");
+
+function MobileCatList({ parentTree, activeCategory, countFor, onSelectParent, onSelectChild }) {
+  const [expanded, setExpanded] = useState(null);
+
+  return (
+    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white divide-y divide-gray-100">
+      {parentTree.map((parentNode) => {
+        const parentSlug = nodeSlug(parentNode);
+        const Icon = CATEGORY_ICONS[parentNode.label] || DEFAULT_ICON;
+        const isParentActive = activeCategory === parentSlug;
+        const hasChildren = parentNode.children.length > 0;
+        const open =
+          expanded === parentNode.id ||
+          isParentActive ||
+          parentNode.children.some((c) => nodeSlug(c) === activeCategory);
+        return (
+          <div key={parentNode.id}>
+            <button
+              onClick={() => {
+                onSelectParent(parentNode, parentSlug);
+                if (hasChildren) setExpanded(open ? null : parentNode.id);
+              }}
+              className={`w-full text-left pl-[9px] pr-3 py-2.5 text-xs sm:text-sm transition-all duration-200 ease-out cursor-pointer flex items-center justify-between gap-2 overflow-hidden border-l-[3px] ${
+                isParentActive
+                  ? "border-brand-blue text-brand-blue font-semibold"
+                  : "border-transparent text-gray-600 hover:border-brand-blue/50 hover:text-gray-900"
+              }`}
+              aria-label={`${parentNode.label} (${parentNode.totalCount} courses)`}
+            >
+              <span className="flex items-center gap-2 min-w-0 flex-1">
+                <span className="w-[18px] h-[18px] flex items-center justify-center shrink-0">
+                  <Icon className={`w-4 h-4 ${isParentActive ? "text-brand-blue" : "text-gray-400"}`} />
+                </span>
+                <span className="truncate min-w-0 max-w-full">{parentNode.label}</span>
+              </span>
+              <span className="flex items-center gap-1.5 shrink-0">
+                <span className={`text-[10px] font-medium tabular-nums leading-none px-1.5 py-0.5 rounded-full ${
+                  isParentActive ? "bg-brand-blue/15 text-brand-blue" : "text-gray-400"
+                }`}>
+                  {parentNode.totalCount}
+                </span>
+                {hasChildren && (
+                  <FiChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 ease-out ${open ? "rotate-90" : ""} ${
+                    isParentActive ? "text-brand-blue" : "text-gray-400"
+                  }`} />
+                )}
+              </span>
+            </button>
+            <div
+              className={`grid transition-all duration-200 ease-out ${
+                open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+              }`}
+            >
+              <div className="overflow-hidden">
+                {hasChildren && (
+                  <div className="border-t border-gray-100 ml-[22px] pl-[13px]">
+                    {parentNode.children.map((child) => {
+                      const childSlug = nodeSlug(child);
+                      const ChildIcon = CATEGORY_ICONS[child.label] || DEFAULT_ICON;
+                      const isChildActive = activeCategory === childSlug;
+                      return (
+                        <button
+                          key={child.id}
+                          onClick={() => onSelectChild(child, childSlug)}
+                          className={`w-full text-left pl-[9px] pr-3 py-2 text-xs transition-all duration-200 ease-out cursor-pointer flex items-center justify-between gap-2 overflow-hidden border-l-[3px] ${
+                            isChildActive
+                              ? "border-brand-blue text-brand-blue font-semibold"
+                              : "border-transparent text-gray-500 hover:border-brand-blue/50 hover:text-gray-900"
+                          }`}
+                          aria-label={`${child.label} (${countFor(child.id)} courses)`}
+                        >
+                          <span className="flex items-center gap-2 min-w-0 flex-1">
+                            <span className="w-[14px] h-[14px] flex items-center justify-center shrink-0">
+                              <ChildIcon className={`w-3.5 h-3.5 ${isChildActive ? "text-brand-blue" : "text-gray-400"}`} />
+                            </span>
+                            <span className="truncate min-w-0 max-w-full">{child.label}</span>
+                          </span>
+                          <span className="text-[10px] font-medium text-gray-400 tabular-nums leading-none shrink-0">
+                            {countFor(child.id)}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function Pagination({ page, total, onPage }) {
   const last = Math.ceil(total / PER_PAGE);
   if (last <= 1) return null;
   return (
-    <div className="flex items-center justify-center gap-1.5 mt-12">
+    <div className="flex items-center justify-center gap-1.5 mt-12 flex-wrap">
       <button
         onClick={() => onPage(page - 1)}
         disabled={page <= 1}
@@ -74,21 +171,37 @@ function Pagination({ page, total, onPage }) {
       >
         <FiChevronLeft className="w-4 h-4" />
       </button>
-      {Array.from({ length: last }, (_, i) => i + 1).map((p) => (
-        <button
-          key={p}
-          onClick={() => onPage(p)}
-          className={`w-9 h-9 rounded-full text-sm font-medium transition-all cursor-pointer ${
-            p === page
-              ? "bg-brand-orange text-white shadow-sm shadow-brand-orange/30"
-              : "text-gray-500 hover:bg-gray-100"
-          }`}
-          aria-label={`Page ${p}`}
-          aria-current={p === page ? "page" : undefined}
-        >
-          {p}
-        </button>
-      ))}
+      {(() => {
+        const pages = [];
+        if (last <= 7) {
+          for (let i = 1; i <= last; i++) pages.push(i);
+        } else {
+          pages.push(1);
+          if (page > 3) pages.push('...');
+          for (let i = Math.max(2, page - 1); i <= Math.min(last - 1, page + 1); i++) pages.push(i);
+          if (page < last - 2) pages.push('...');
+          pages.push(last);
+        }
+        return pages.map((p, idx) =>
+          p === '...' ? (
+            <span key={`ellipsis-${idx}`} className="w-9 h-9 flex items-center justify-center text-sm text-gray-400">…</span>
+          ) : (
+            <button
+              key={p}
+              onClick={() => onPage(p)}
+              className={`w-9 h-9 rounded-full text-sm font-medium transition-all cursor-pointer ${
+                p === page
+                  ? "bg-brand-orange text-white shadow-sm shadow-brand-orange/30"
+                  : "text-gray-500 hover:bg-gray-100"
+              }`}
+              aria-label={`Page ${p}`}
+              aria-current={p === page ? "page" : undefined}
+            >
+              {p}
+            </button>
+          )
+        );
+      })()}
       <button
         onClick={() => onPage(page + 1)}
         disabled={page >= last}
@@ -142,42 +255,8 @@ function CourseListItem({ course }) {
           )}
         </div>
       </div>
-      <FiChevronRight className="w-5 h-5 text-gray-300 shrink-0 group-hover:text-brand-orange group-hover:translate-x-0.5 transition-all" />
+      <span className="text-sm font-semibold text-brand-orange shrink-0">View Course &rarr;</span>
     </Link>
-  );
-}
-
-// Segmented parent toggle — shared visual between desktop sidebar and mobile
-function ParentToggle({ parents, parentParam, onSelect, className = "" }) {
-  return (
-    <div
-      className={`flex gap-6 border-b border-gray-200 ${className}`}
-      role="tablist"
-    >
-      {parents.map((p) => {
-        const active = parentParam === p.slug;
-        return (
-          <button
-            key={p.slug}
-            role="tab"
-            aria-selected={active}
-            onClick={() => onSelect(p.slug)}
-            className={`relative pb-3 text-[15px] transition-colors cursor-pointer ${
-              active
-                ? "text-brand-orange font-semibold"
-                : "text-gray-500 font-medium hover:text-gray-800"
-            }`}
-          >
-            {p.displayLabel}
-            <span
-              className={`absolute left-0 right-0 -bottom-px h-[2px] rounded-full bg-brand-orange transition-transform duration-200 origin-left ${
-                active ? "scale-x-100" : "scale-x-0"
-              }`}
-            />
-          </button>
-        );
-      })}
-    </div>
   );
 }
 
@@ -185,9 +264,9 @@ export default function Courses() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { categorySlug } = useParams();
   const [search, setSearch] = useState("");
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [userExpanded, setUserExpanded] = useState(null);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
   const parentParam = searchParams.get("parent") || PARENTS[0].slug;
   const activeCategory = searchParams.get("category") || categorySlug || null;
@@ -224,13 +303,16 @@ export default function Courses() {
     [searchParams, setSearchParams],
   );
 
-  const clearCategory = useCallback(() => {
-    setSearch("");
-    const next = new URLSearchParams(searchParams);
-    next.delete("page");
-    next.delete("category");
-    setSearchParams(next);
-  }, [searchParams, setSearchParams]);
+  const selectParentCategory = useCallback(
+    (parentSlug, catSlug) => {
+      setSearch("");
+      const next = new URLSearchParams();
+      next.set("parent", parentSlug);
+      next.set("category", catSlug);
+      setSearchParams(next);
+    },
+    [setSearchParams],
+  );
 
   const { data: courses, isLoading } = useQuery({
     queryKey: ["allCourses"],
@@ -346,7 +428,7 @@ export default function Courses() {
     const next = new URLSearchParams();
     next.set("parent", parentParam);
     next.set("category", slug);
-    setSearchParams(next);
+    setSearchParams(next, { replace: true });
   }, [parentParam, activeNavId, navItems, currentTree, setSearchParams]);
 
   // Auto-select first category if none selected
@@ -361,7 +443,7 @@ export default function Courses() {
         const next = new URLSearchParams();
         next.set("parent", parentParam);
         next.set("category", slug);
-        setSearchParams(next);
+        setSearchParams(next, { replace: true });
       }
     }
   }, [parentParam, navItems, currentTree, searchParams, setSearchParams]);
@@ -416,7 +498,7 @@ export default function Courses() {
     const hasChildren = parentNode.children.length > 0;
 
     return (
-      <div key={parentNode.id} className="mb-0.5">
+      <div key={parentNode.id} className="mb-0.5 border-b border-gray-100 last:border-b-0">
         <button
           onClick={() => {
             if (hasChildren) {
@@ -540,7 +622,7 @@ export default function Courses() {
                       onClick={() => selectParent(p.slug)}
                       className={`flex-1 py-3 text-sm font-medium text-center transition-all cursor-pointer ${
                         active
-                          ? "bg-[#F97316] text-white shadow-[0_0_8px_rgba(249,115,22,0.4)]"
+                          ? "bg-[#f59e0b] text-white shadow-[0_0_8px_rgba(245,158,11,0.4)]"
                           : "bg-[#EEEEEE] text-gray-500 hover:text-gray-800"
                       }`}
                     >
@@ -552,7 +634,9 @@ export default function Courses() {
             </div>
             {/* Category tree */}
             <nav className="px-3 pt-3 pb-4 overflow-y-auto flex-1">
-              {currentTree.map(sidebarNode)}
+              <div className="border border-gray-200 rounded-xl overflow-hidden">
+                {currentTree.map(sidebarNode)}
+              </div>
             </nav>
           </aside>
         )}
@@ -562,121 +646,110 @@ export default function Courses() {
           className={`flex-1 min-w-0 bg-white ${
             listOnly
               ? "max-w-[1400px] mx-auto pt-6"
-              : "max-w-[1600px] pt-6"
+              : "max-w-[1600px] pt-0 lg:pt-6"
           }`}
         >
-          {/* Mobile sidebar (dropdown) — hidden in list-only mode */}
+          {/* Mobile sidebar — persistent PC toggle + narrow filter dropdown + guide */}
           {!listOnly && (
-            <div className="lg:hidden px-4 sm:px-6 mb-6">
-              <ParentToggle
-                parents={parents}
-                parentParam={parentParam}
-                onSelect={selectParent}
-                className="mb-4"
-              />
-              <div className="relative">
-                <button
-                  onClick={() => setMobileOpen(!mobileOpen)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-dark-navy bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange cursor-pointer flex items-center justify-between gap-2"
-                  aria-label="Select a course category"
-                  aria-expanded={mobileOpen}
-                >
-                  <span className="truncate">
-                    {activeNavId
-                      ? navItems?.find((n) => n.id === activeNavId)?.label ||
-                        "All Courses"
-                      : "All Courses"}
-                  </span>
-                  <FiChevronDown
-                    className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ${mobileOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
-                {mobileOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setMobileOpen(false)}
-                    />
-                    <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-2xl shadow-lg shadow-gray-200/60 max-h-[60vh] overflow-y-auto">
-                      <button
-                        onClick={() => {
-                          clearCategory();
-                          setMobileOpen(false);
-                        }}
-                        className="w-full text-left px-4 py-2.5 text-sm text-gray-700 transition-colors cursor-pointer truncate"
-                      >
-                        All Courses
-                      </button>
-                      {currentTree.map((parent) => {
-                        const parentSlug = parent.path
-                          ? parent.path.replace(/.*\//, "")
-                          : parent.label.toLowerCase().replace(/\s+/g, "-");
-                        const isParentActive = activeCategory === parentSlug;
-                        return (
-                          <div key={parent.id}>
-                            <button
-                              onClick={() => {
-                                if (parent.children?.length > 0) {
-                                  const firstChild = parent.children[0];
-                                  const childSlug = firstChild.path
-                                    ? firstChild.path.replace(/.*\//, "")
-                                    : firstChild.label
-                                        .toLowerCase()
-                                        .replace(/\s+/g, "-");
-                                  selectCategory(childSlug);
-                                } else {
-                                  selectCategory(parentSlug);
+            <div className="lg:hidden mb-0">
+              <div className="flex border border-gray-200">
+                {parents.map((p) => {
+                  const activeParent = parentParam === p.slug;
+                  return (
+                    <button
+                      key={p.slug}
+                      onClick={() => selectParent(p.slug)}
+                      className={`flex-1 py-3 text-xs sm:text-sm font-medium text-center transition-all cursor-pointer ${
+                        activeParent
+                          ? "bg-brand-orange text-white shadow-sm shadow-brand-orange/30"
+                          : "bg-[#EEEEEE] text-gray-500 hover:text-gray-800"
+                      }`}
+                    >
+                      {p.displayLabel}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="px-4 sm:px-6 pt-5">
+                <div className="flex items-start gap-4">
+                  <div className="relative w-2/3 sm:w-1/2 shrink-0">
+                    {mobileOpen && (
+                      <div
+                        className="fixed inset-0 z-20"
+                        onClick={() => setMobileOpen(false)}
+                        aria-hidden="true"
+                      />
+                    )}
+                    <button
+                      onClick={() => setMobileOpen((o) => !o)}
+                      className={`relative z-30 w-full flex items-center justify-between gap-2 pl-3.5 pr-3 py-2.5 rounded-full border-2 text-sm transition-all duration-200 cursor-pointer bg-white ${
+                        mobileOpen
+                          ? "border-brand-blue/40 text-dark-navy"
+                          : "border-gray-300 text-dark-navy hover:border-brand-blue/30"
+                      }`}
+                      aria-expanded={mobileOpen}
+                    >
+                      <span className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <FiFilter
+                          className={`w-4 h-4 shrink-0 ${mobileOpen ? "text-brand-blue" : "text-gray-400"}`}
+                        />
+                        <span className="truncate min-w-0 max-w-full text-left">
+                          {activeNavId
+                            ? navItems?.find((n) => n.id === activeNavId)?.label
+                            : "Select category"}
+                        </span>
+                      </span>
+                      <FiChevronDown
+                        className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ${
+                          mobileOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {mobileOpen && (
+                      <div className="absolute left-0 right-0 z-30 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+                        <div className="max-h-[60vh] overflow-y-auto p-2">
+                          {currentTree.length === 0 ? (
+                            <div className="px-2 py-4 text-center text-xs text-gray-400">
+                              No categories yet
+                            </div>
+                          ) : (
+                            <MobileCatList
+                              parentTree={currentTree}
+                              activeCategory={activeCategory}
+                              countFor={countFor}
+                              onSelectParent={(parentNode, parentSlug) => {
+                                if (parentNode.children.length === 0) {
+                                  selectParentCategory(parentParam, parentSlug);
+                                  setMobileOpen(false);
                                 }
+                              }}
+                              onSelectChild={(child, childSlug) => {
+                                selectParentCategory(parentParam, childSlug);
                                 setMobileOpen(false);
                               }}
-                              className={`w-full text-left pl-[13px] pr-4 py-2.5 text-sm transition-all duration-200 cursor-pointer flex items-center justify-between gap-2 overflow-hidden border-l-[3px] ${
-                                isParentActive
-                                  ? "border-brand-blue text-brand-blue font-semibold"
-                                  : "border-transparent text-gray-500 hover:border-brand-blue/50 hover:text-gray-900"
-                              }`}
-                            >
-                              <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-                                {parent.label}
-                              </span>
-                              <span className="text-xs font-medium text-gray-400 tabular-nums shrink-0">
-                                {parent.totalCount}
-                              </span>
-                            </button>
-                            {parent.children.map((child) => {
-                              const childSlug = child.path
-                                ? child.path.replace(/.*\//, "")
-                                : child.label
-                                    .toLowerCase()
-                                    .replace(/\s+/g, "-");
-                              const isChildActive =
-                                activeCategory === childSlug;
-                              return (
-                                <button
-                                  key={child.id}
-                                  onClick={() => {
-                                    selectCategory(childSlug);
-                                    setMobileOpen(false);
-                                  }}
-                                  className={`w-full text-left pl-[31px] pr-4 py-2 text-sm transition-all duration-200 cursor-pointer flex items-center justify-between gap-2 overflow-hidden border-l-[3px] ${
-                                    isChildActive
-                                      ? "border-brand-blue text-brand-blue font-semibold"
-                                      : "border-transparent text-gray-500 hover:border-brand-blue/50 hover:text-gray-900"
-                                  }`}
-                                >
-                                  <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-                                    {child.label}
-                                  </span>
-                                  <span className="text-xs font-medium text-gray-400 tabular-nums shrink-0">
-                                    {countFor(child.id)}
-                                  </span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </>
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="flex-1 min-w-0 text-xs sm:text-sm text-gray-500 leading-relaxed pt-2">
+                    Tap to filter courses.
+                  </p>
+                </div>
+
+                <h1 className="text-2xl sm:text-3xl font-bold text-brand-blue mb-1 mt-6">
+                  Find Your Courses related to{" "}
+                  {parents.find((p) => p.slug === parentParam)?.label ||
+                    "Software Learning"}
+                </h1>
+                {activeNavId && (
+                  <p className="text-lg sm:text-xl font-semibold text-[#175CDD]">
+                    {navItems?.find((n) => n.id === activeNavId)?.label || ""}
+                  </p>
                 )}
               </div>
             </div>
@@ -708,8 +781,8 @@ export default function Courses() {
 
             {/* Sidebar-mode header */}
             {!listOnly && (
-              <div className="mb-6">
-                <h1 className="text-2xl sm:text-3xl font-bold text-brand-orange mb-1">
+              <div className="hidden lg:block mb-6">
+                <h1 className="text-2xl sm:text-3xl font-bold text-brand-blue mb-1">
                   Find Your Courses related to{" "}
                   {parents.find((p) => p.slug === parentParam)?.label || "Software Learning"}
                 </h1>
@@ -729,8 +802,8 @@ export default function Courses() {
                 </span>{" "}
                 {totalItems === 1 ? "course" : "courses"}
               </p>
-              <div className="flex items-center gap-3">
-                <div className="relative w-full sm:w-56 lg:w-64">
+              <div className="flex items-center gap-3 ml-auto">
+                <div className="relative flex-1 min-w-0 sm:flex-none sm:w-56 lg:w-64">
                   <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     value={search}
@@ -739,7 +812,7 @@ export default function Courses() {
                       setPage(1);
                     }}
                     placeholder="Search courses..."
-                    className="w-full pl-10 pr-4 py-2.5 rounded-full border border-gray-200 text-sm text-dark-navy bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue/40 focus:border-brand-blue transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-full border-2 border-gray-300 text-sm text-dark-navy bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue/30 transition-all"
                     aria-label="Search courses"
                   />
                 </div>
@@ -832,7 +905,7 @@ export default function Courses() {
                   <div className="flex justify-end mt-8">
                     <Link
                       to={`/courses?parent=${parentParam}`}
-                      className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-brand-orange transition-colors"
+                      className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 transition-colors"
                     >
                       Explore more courses
                       <FiChevronRight className="w-4 h-4" />

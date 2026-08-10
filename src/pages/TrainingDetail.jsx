@@ -384,15 +384,15 @@ export default function TrainingDetail() {
 
   async function handleEnquirySubmit(e) {
     e.preventDefault();
-    if (!enquiryForm.name.trim() || !enquiryForm.email.trim()) return;
+    if (!enquiryForm.name.trim() || !enquiryForm.email.trim() || !enquiryForm.phone.trim() || !enquiryForm.message.trim()) return;
     setEnquirySubmitting(true);
     setEnquiryError('');
 
     const payload = {
       name: enquiryForm.name.trim(),
       email: enquiryForm.email.trim(),
-      phone: enquiryForm.phone.trim() || null,
-      message: enquiryForm.message.trim() || null,
+      phone: enquiryForm.phone.trim(),
+      message: enquiryForm.message.trim(),
       training_id: training.id,
       training_title: training.title,
     };
@@ -730,7 +730,7 @@ export default function TrainingDetail() {
                   </div>
                 </div>
                 {training.placement_highlights?.length > 0 && (
-                  <ul className="grid sm:grid-cols-2 gap-3 mt-6 pl-16">
+                  <ul className="grid sm:grid-cols-2 gap-3 mt-6 pl-4 sm:pl-16">
                     {training.placement_highlights.map((item, i) => {
                       const label = typeof item === 'string' ? item : item.title || item.label;
                       return (
@@ -922,7 +922,7 @@ export default function TrainingDetail() {
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
           onClick={() => setEnquiryOpen(false)}
         >
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
               <h2 className="text-lg font-bold text-gray-900">Enquire Now</h2>
               <button
@@ -973,22 +973,24 @@ export default function TrainingDetail() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Phone *</label>
                   <input
                     type="tel"
                     value={enquiryForm.phone}
                     onChange={(e) => setEnquiryForm((p) => ({ ...p, phone: e.target.value }))}
                     placeholder="Your phone number"
+                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Message</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Message *</label>
                   <textarea
                     value={enquiryForm.message}
                     onChange={(e) => setEnquiryForm((p) => ({ ...p, message: e.target.value }))}
                     placeholder="Your message or question"
                     rows={3}
+                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange transition-all resize-none"
                   />
                 </div>
