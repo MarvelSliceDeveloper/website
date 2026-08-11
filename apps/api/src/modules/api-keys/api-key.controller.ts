@@ -52,4 +52,47 @@ export const apiKeyController = {
       return res.status(statusCode).json(body);
     }
   },
+
+  async update(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { name, description, active } = req.body;
+
+      const existing = await prisma.apiKey.findUnique({ where: { id } });
+      if (!existing) {
+        return res.status(404).json({ error: "API key not found" });
+      }
+
+      const updateData: {
+        name?: string;
+        description?: string | null;
+        active?: boolean;
+      } = {};
+
+      if (name !== undefined) {
+        if (typeof name !== "string" || name.trim().length === 0) {
+          return res.status(400).json({ error: "Name cannot be empty" });
+        }
+        updateData.name = name.trim();
+      }
+      if (description !== undefined) {
+        updateData.description =
+          typeof description === "string" && description.trim()
+            ? description.trim()
+            : null;
+      }
+      if (active !== undefined) {
+        if (typeof active !== "boolean") {
+          return res.status(400).json({ error: "active must be a boolean" });
+        }
+        updateData.active = active;
+      }
+
+      await apiKeyService.update(id, updateData);
+      return res.json({ message: "API key updated" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
 };

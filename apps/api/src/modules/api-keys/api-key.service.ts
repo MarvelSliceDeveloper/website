@@ -57,6 +57,26 @@ export const apiKeyService = {
       data: { active: false },
     });
   },
+
+  async update(
+    id: string,
+    data: {
+      name?: string;
+      description?: string | null;
+      active?: boolean;
+    },
+  ) {
+    return prisma.apiKey.update({
+      where: { id },
+      data: {
+        ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.description !== undefined
+          ? { description: data.description }
+          : {}),
+        ...(data.active !== undefined ? { active: data.active } : {}),
+      },
+    });
+  },
 };
 
 function maskKey(hashed: string): string {

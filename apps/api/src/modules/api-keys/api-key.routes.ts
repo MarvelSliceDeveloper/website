@@ -15,6 +15,7 @@ router.use(requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]));
 router.get("/", apiKeyController.list);
 router.post("/", apiKeyController.create);
 router.delete("/:id", apiKeyController.revoke);
+router.patch("/:id", apiKeyController.update);
 
 // GET /api/admin/api-keys/youtube-status — check if YouTube API key is configured
 router.get("/youtube-status", (_req: AuthRequest, res: Response) => {

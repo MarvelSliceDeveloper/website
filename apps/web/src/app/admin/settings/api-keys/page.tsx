@@ -9,8 +9,10 @@ import {
   IconRefresh,
   IconCopy,
   IconTrash,
+  IconEdit,
   IconBrandYoutube,
 } from "@tabler/icons-react";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type ApiKeyEntry = {
   id: string;
@@ -24,12 +26,17 @@ type ApiKeyEntry = {
 
 export default function ApiKeysPage() {
   usePageTitle("API Keys");
+  const confirmDelete = useConfirmDialog();
   const [keys, setKeys] = useState<ApiKeyEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const [newKeyDesc, setNewKeyDesc] = useState("");
   const [createdKey, setCreatedKey] = useState<string | null>(null);
+  const [editingKey, setEditingKey] = useState<ApiKeyEntry | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [saving, setSaving] = useState(false);
   const [youtubeStatus, setYoutubeStatus] = useState<{
     configured: boolean;
     masked: string | null;
@@ -49,11 +56,6 @@ export default function ApiKeysPage() {
     }
   }
 
-  useEffect(() => {
-    fetchKeys();
-    fetchYoutubeStatus();
-  }, []);
-
   async function fetchYoutubeStatus() {
     try {
       const data = await api.get<{
@@ -65,6 +67,11 @@ export default function ApiKeysPage() {
       // silent
     }
   }
+
+  useEffect(() => {
+    fetchKeys();
+    fetchYoutubeStatus();
+  }, []);
 
   async function handleCreate() {
     if (!newKeyName.trim()) return;
@@ -85,13 +92,60 @@ export default function ApiKeysPage() {
     }
   }
 
-  async function handleRevoke(id: string) {
+  async function handleRevoke(id: string, name: string) {
+    if (
+      !(await confirmDelete({
+        title: "Revoke API Key",
+        message: `Revoke API key "${name}"? Any integration using it will stop working.`,
+      }))
+    )
+      return;
     try {
       await api.delete(`/api/admin/api-keys/${id}`);
       toast.success("API key revoked");
       fetchKeys();
     } catch {
       toast.error("Failed to revoke API key");
+    }
+  }
+
+  async function handleReactivate(id: string) {
+    try {
+      await api.patch(`/api/admin/api-keys/${id}`, { active: true });
+      toast.success("API key reactivated");
+      fetchKeys();
+    } catch {
+      toast.error("Failed to reactivate API key");
+    }
+  }
+
+  function openEdit(key: ApiKeyEntry) {
+    setEditingKey(key);
+    setEditName(key.name);
+    setEditDesc(key.description ?? "");
+    setShowCreate(false);
+    setCreatedKey(null);
+  }
+
+  async function handleUpdate() {
+    if (!editingKey) return;
+    if (!editName.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+    setSaving(true);
+    try {
+      await api.patch(`/api/admin/api-keys/${editingKey.id}`, {
+        name: editName.trim(),
+        description: editDesc.trim() || null,
+      });
+      toast.success("API key updated");
+      setEditingKey(null);
+      fetchKeys();
+    } catch {
+      toast.error("Failed to update API key");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -121,6 +175,7 @@ export default function ApiKeysPage() {
             onClick={() => {
               setShowCreate(true);
               setCreatedKey(null);
+              setEditingKey(null);
             }}
             className="btn-primary text-xs py-2"
           >
@@ -201,6 +256,56 @@ export default function ApiKeysPage() {
         </div>
       )}
 
+      {/* Edit Modal */}
+      {editingKey && (
+        <div className="glass-card p-5 border border-primary/30">
+          <h3 className="text-sm font-bold mb-3">Edit API Key</h3>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-semibold text-foreground/70 block mb-1">
+                Name
+              </label>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="input text-xs w-full"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-foreground/70 block mb-1">
+                Description (optional)
+              </label>
+              <input
+                type="text"
+                value={editDesc}
+                onChange={(e) => setEditDesc(e.target.value)}
+                className="input text-xs w-full"
+              />
+            </div>
+            <p className="text-[10px] text-foreground/50">
+              The key value itself cannot be changed — generate a new key if
+              you need to rotate it.
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleUpdate}
+                disabled={saving || !editName.trim()}
+                className="btn-primary text-xs py-2 disabled:opacity-40"
+              >
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+              <button
+                onClick={() => setEditingKey(null)}
+                className="btn-secondary text-xs py-2"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Keys Table */}
       <div className="glass-card p-5 border border-border/80">
         {loading ? (
@@ -217,6 +322,7 @@ export default function ApiKeysPage() {
               <thead>
                 <tr className="border-b border-border/60 text-foreground/50 uppercase font-bold tracking-wider">
                   <th className="py-2.5 pr-3">Name</th>
+                  <th className="py-2.5 pr-3">Description</th>
                   <th className="py-2.5 pr-3">Key</th>
                   <th className="py-2.5 pr-3">Status</th>
                   <th className="py-2.5 pr-3">Last Used</th>
@@ -232,6 +338,9 @@ export default function ApiKeysPage() {
                   >
                     <td className="py-3 pr-3 font-medium text-foreground">
                       {k.name}
+                    </td>
+                    <td className="py-3 pr-3 text-foreground/60 max-w-[220px] truncate">
+                      {k.description || "—"}
                     </td>
                     <td className="py-3 pr-3 font-mono text-[10px] text-foreground/70">
                       {k.key}
@@ -256,14 +365,30 @@ export default function ApiKeysPage() {
                       {new Date(k.createdAt).toLocaleDateString()}
                     </td>
                     <td className="py-3">
-                      {k.active && (
+                      <div className="flex items-center justify-end gap-3">
                         <button
-                          onClick={() => handleRevoke(k.id)}
-                          className="text-danger hover:text-danger/80 text-[10px] flex items-center gap-1"
+                          onClick={() => openEdit(k)}
+                          className="text-foreground/60 hover:text-primary text-[10px] flex items-center gap-1"
+                          title="Edit"
                         >
-                          <IconTrash size={12} /> Revoke
+                          <IconEdit size={12} /> Edit
                         </button>
-                      )}
+                        {k.active ? (
+                          <button
+                            onClick={() => handleRevoke(k.id, k.name)}
+                            className="text-danger hover:text-danger/80 text-[10px] flex items-center gap-1"
+                          >
+                            <IconTrash size={12} /> Revoke
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleReactivate(k.id)}
+                            className="text-success hover:text-success/80 text-[10px] flex items-center gap-1"
+                          >
+                            <IconRefresh size={12} /> Reactivate
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
