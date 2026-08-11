@@ -113,6 +113,7 @@ export default function CreateCoursePage() {
         title: form.title,
         description: form.description,
         category: form.category || undefined,
+        slug:form.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
       });
 
       if (thumbnailFile) {

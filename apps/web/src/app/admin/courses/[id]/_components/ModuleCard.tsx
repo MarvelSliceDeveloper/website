@@ -7,7 +7,6 @@ import {
   IconTrash,
   IconFile,
   IconDownload,
-  IconDeviceFloppy,
   IconClipboardText,
   IconFileText,
   IconBrain,
@@ -32,6 +31,7 @@ import AddAssignmentForm from "./AddAssignmentForm";
 import PracticalCard from "./PracticalCard";
 import AddPracticalForm from "./AddPracticalForm";
 import AddStudyMaterialForm from "./AddStudyMaterialForm";
+import { FormModal } from "@/components/admin/FormModal";
 
 const ALLOWED_RESOURCE_TYPES = new Set([
   "application/pdf",
@@ -205,6 +205,56 @@ export default function ModuleCard({
     }
   };
 
+  const editFooter = (
+    <>
+      <button
+        onClick={() => setEditing(false)}
+        className="btn-secondary text-xs px-3 py-1.5"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleSave}
+        className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1"
+      >
+        Save
+      </button>
+    </>
+  );
+
+  const editContent = (
+    <div className="space-y-3">
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-muted-foreground">
+          Module Title
+        </label>
+        <input
+          type="text"
+          value={editForm.title}
+          onChange={(e) =>
+            setEditForm((p) => ({ ...p, title: e.target.value }))
+          }
+          className="field w-full"
+          autoFocus
+        />
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-muted-foreground">
+          Short Description
+        </label>
+        <input
+          type="text"
+          value={editForm.description}
+          onChange={(e) =>
+            setEditForm((p) => ({ ...p, description: e.target.value }))
+          }
+          placeholder="Short description"
+          className="field w-full"
+        />
+      </div>
+    </div>
+  );
+
   const handleDelete = async () => {
     if (
       !confirm(
@@ -366,75 +416,36 @@ export default function ModuleCard({
 
         {/* Module title / edit form */}
         <div className="flex-1 min-w-0">
-          {editing ? (
-            <div className="space-y-2">
-              <input
-                type="text"
-                value={editForm.title}
-                onChange={(e) =>
-                  setEditForm((p) => ({ ...p, title: e.target.value }))
-                }
-                className="field text-sm w-full"
-                autoFocus
-              />
-              <input
-                type="text"
-                value={editForm.description}
-                onChange={(e) =>
-                  setEditForm((p) => ({ ...p, description: e.target.value }))
-                }
-                placeholder="Short description"
-                className="field text-xs w-full"
-              />
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleSave}
-                  className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1"
-                >
-                  <IconDeviceFloppy size={14} />
-                  Save
-                </button>
-                <button
-                  onClick={() => setEditing(false)}
-                  className="btn-secondary text-xs px-3 py-1.5"
-                >
-                  Cancel
-                </button>
-              </div>
+          <>
+            <p className="text-sm font-semibold text-foreground leading-tight">
+              {mod.title}
+            </p>
+            <div className="flex items-center gap-3 mt-1 text-[10px] text-muted">
+              <span>
+                {itemCount} {itemCount === 1 ? "item" : "items"}
+              </span>
             </div>
-          ) : (
-            <>
-              <p className="text-sm font-semibold text-foreground leading-tight">
-                {mod.title}
+            {mod.description && (
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                {mod.description}
               </p>
-              <div className="flex items-center gap-3 mt-1 text-[10px] text-muted">
-                <span>
-                  {itemCount} {itemCount === 1 ? "item" : "items"}
+            )}
+            {certModule && (
+              <div className="flex items-center gap-3 mt-1 text-[10px]">
+                <span className="text-amber-600 font-medium">
+                  Passing: {passingScore ?? 60}%
+                </span>
+                <span className="text-muted-foreground">|</span>
+                <span className="text-blue-600">
+                  {timeLimitMin ?? 30} min
                 </span>
               </div>
-              {mod.description && (
-                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                  {mod.description}
-                </p>
-              )}
-              {certModule && (
-                <div className="flex items-center gap-3 mt-1 text-[10px]">
-                  <span className="text-amber-600 font-medium">
-                    Passing: {passingScore ?? 60}%
-                  </span>
-                  <span className="text-muted-foreground">|</span>
-                  <span className="text-blue-600">
-                    {timeLimitMin ?? 30} min
-                  </span>
-                </div>
-              )}
-            </>
-          )}
+            )}
+          </>
         </div>
 
         {/* Action buttons: direct inline options & expand/edit/delete */}
-        {!editing && (
-          <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+        <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
             {certModule ? (
               <>
                 <button
@@ -535,7 +546,6 @@ export default function ModuleCard({
               <IconTrash size={15} />
             </button>
           </div>
-        )}
       </div>
 
       {/* Module Content (expanded) */}
@@ -765,6 +775,17 @@ export default function ModuleCard({
         onAdded={onChanged}
         onClose={() => setShowAddLesson(false)}
       />
+
+      {/* Edit Module Modal */}
+      <FormModal
+        open={editing}
+        onClose={() => setEditing(false)}
+        title="Edit Module"
+        size="sm"
+        footer={editFooter}
+      >
+        {editContent}
+      </FormModal>
     </div>
   );
 }

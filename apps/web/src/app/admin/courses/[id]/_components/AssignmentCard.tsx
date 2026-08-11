@@ -12,8 +12,15 @@ import {
   IconTrash,
   IconChevronUp,
   IconChevronDown,
+  IconFile,
+  IconLink,
+  IconUpload,
 } from "@tabler/icons-react";
+import { useRef } from "react";
 import RichEditor from "@/components/editor/RichEditor";
+import { FormModal } from "@/components/admin/FormModal";
+
+type PdfSource = "drive" | "upload";
 
 interface Assignment {
   id: string;
@@ -61,9 +68,16 @@ export default function AssignmentCard({
   const [questionPdfUrl, setQuestionPdfUrl] = useState(
     assignment.questionPdfUrl || "",
   );
+  const [pdfSource, setPdfSource] = useState<PdfSource>(
+    assignment.questionPdfUrl?.includes("/uploads/") ? "upload" : "drive",
+  );
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pdfName, setPdfName] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const copyId = async () => {
     await navigator.clipboard.writeText(assignment.id);
@@ -76,16 +90,44 @@ export default function AssignmentCard({
       toast.error("Please enter an assignment title");
       return;
     }
+    if (pdfSource === "drive" && !questionPdfUrl.trim()) {
+      toast.error("Please enter a Google Drive link or switch to PDF upload");
+      return;
+    }
+    if (pdfSource === "upload" && !pdfFile && !assignment.questionPdfUrl) {
+      toast.error("Please upload a PDF or switch to Google Drive link");
+      return;
+    }
 
     setLoading(true);
     try {
+      let savedPdfUrl: string | undefined;
+
+      if (pdfSource === "upload") {
+        if (pdfFile) {
+          setUploading(true);
+          const formData = new FormData();
+          formData.append("questionPdf", pdfFile);
+          const uploadRes = await api.post<{ fileUrl: string }>(
+            "/api/assignments/upload-pdf",
+            formData,
+          );
+          savedPdfUrl = uploadRes.fileUrl;
+          setUploading(false);
+        } else {
+          savedPdfUrl = assignment.questionPdfUrl || undefined;
+        }
+      } else {
+        savedPdfUrl = questionPdfUrl.trim() || undefined;
+      }
+
       await api.put(`/api/admin/courses/modules/assignments/${assignment.id}`, {
         title,
         description,
         dueDate: undefined,
         daysFromEnrollment: daysFromEnrollment !== "" ? Number(daysFromEnrollment) : null,
         maxPoints,
-        questionPdfUrl: questionPdfUrl || undefined,
+        questionPdfUrl: savedPdfUrl,
       });
       toast.success("Assignment updated successfully");
       setEditing(false);
@@ -94,7 +136,26 @@ export default function AssignmentCard({
       toast.error("Failed to update assignment");
     } finally {
       setLoading(false);
+      setUploading(false);
     }
+  };
+
+  const handlePdfSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      toast.error("Only PDF files are allowed");
+      e.target.value = "";
+      return;
+    }
+    setPdfFile(file);
+    setPdfName(file.name);
+  };
+
+  const clearPdf = () => {
+    setPdfFile(null);
+    setPdfName("");
+    if (fileRef.current) fileRef.current.value = "";
   };
 
   const handleDelete = async () => {
@@ -123,33 +184,40 @@ export default function AssignmentCard({
     setDaysFromEnrollment(assignment.daysFromEnrollment?.toString() ?? "");
     setMaxPoints(assignment.maxPoints);
     setQuestionPdfUrl(assignment.questionPdfUrl || "");
+    setPdfSource(
+      assignment.questionPdfUrl?.includes("/uploads/") ? "upload" : "drive",
+    );
+    setPdfFile(null);
+    setPdfName("");
   };
 
-  if (editing) {
-    return (
-      <div className="ml-6 space-y-4 rounded-xl border border-[#e4e2f5] bg-[#f8f7fd] p-4">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium text-[#1f2233]">
-            Edit Assignment
-          </h4>
-          <button
-            onClick={cancelEdit}
-            className="p-1 text-[#8b8da3] hover:text-[#1f2233]"
-          >
-            <IconX size={16} />
-          </button>
-        </div>
+  const editFooter = (
+    <>
+      <button onClick={cancelEdit} className="btn-secondary text-xs px-3 py-1.5">
+        Cancel
+      </button>
+      <button
+        onClick={handleUpdate}
+        disabled={loading || uploading}
+        className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1 disabled:opacity-50"
+      >
+        {uploading ? "Uploading PDF..." : loading ? "Saving..." : "Save Changes"}
+      </button>
+    </>
+  );
 
-        <div className="space-y-2">
-          <label className="text-xs font-medium">Title</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter assignment title"
-            className="field"
-          />
-        </div>
+  const editContent = (
+    <>
+      <div className="space-y-2">
+        <label className="text-xs font-medium">Title</label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Enter assignment title"
+          className="field w-full"
+        />
+      </div>
 
         <div className="space-y-2">
           <label className="text-xs font-medium">Description</label>
@@ -187,37 +255,106 @@ export default function AssignmentCard({
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-medium">Google Drive PDF Link</label>
-          <input
-            type="url"
-            value={questionPdfUrl}
-            onChange={(e) => setQuestionPdfUrl(e.target.value)}
-            placeholder="https://drive.google.com/file/d/.../preview"
-            className="field text-xs"
-          />
+          <label className="text-xs font-medium">Question Paper Source</label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setPdfSource("drive")}
+              className={`flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                pdfSource === "drive"
+                  ? "border-[#4f63f0]/50 bg-[#4f63f0]/10 text-[#4f63f0]"
+                  : "border-[#e4e2f5] text-[#8b8da3] hover:bg-[#f5f4fd]"
+              }`}
+            >
+              <IconLink size={14} />
+              Google Drive Link
+            </button>
+            <button
+              type="button"
+              onClick={() => setPdfSource("upload")}
+              className={`flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                pdfSource === "upload"
+                  ? "border-[#4f63f0]/50 bg-[#4f63f0]/10 text-[#4f63f0]"
+                  : "border-[#e4e2f5] text-[#8b8da3] hover:bg-[#f5f4fd]"
+              }`}
+            >
+              <IconUpload size={14} />
+              Upload PDF
+            </button>
+          </div>
           <p className="text-[10px] text-[#8b8da3]">
-            Paste a Google Drive embed URL to render the PDF inline for students
+            Provide either a Google Drive link or upload a PDF, not both.
           </p>
         </div>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <button
-            onClick={cancelEdit}
-            className="rounded-full border border-[#e4e2f5] bg-white px-3.5 py-1.5 text-xs font-medium text-[#1f2233] hover:bg-[#f5f4fd]"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleUpdate}
-            disabled={loading}
-            className="rounded-full bg-[#4f63f0] px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#3f52e0] disabled:opacity-50"
-          >
-            {loading ? "Saving..." : "Save Changes"}
-          </button>
-        </div>
-      </div>
-    );
-  }
+        {pdfSource === "drive" ? (
+          <div className="space-y-2">
+            <label className="text-xs font-medium">Google Drive PDF Link</label>
+            <input
+              type="url"
+              value={questionPdfUrl}
+              onChange={(e) => setQuestionPdfUrl(e.target.value)}
+              placeholder="https://drive.google.com/file/d/.../preview"
+              className="field text-xs"
+            />
+            <p className="text-[10px] text-[#8b8da3]">
+              Paste a Google Drive embed URL to render the PDF inline for students
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <label className="text-xs font-medium">PDF Upload</label>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".pdf,application/pdf"
+              onChange={handlePdfSelect}
+              className="hidden"
+            />
+            {pdfName ? (
+              <div className="flex items-center gap-2 rounded-md border border-violet-500/30 bg-violet-500/10 px-2.5 py-1.5">
+                <IconFile size={14} className="text-violet-600 shrink-0" />
+                <span className="text-xs text-[#1f2233] truncate flex-1">
+                  {pdfName}
+                </span>
+                <button
+                  type="button"
+                  onClick={clearPdf}
+                  className="text-[#8b8da3] hover:text-danger"
+                >
+                  <IconX size={12} />
+                </button>
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="w-full flex items-center justify-center gap-1.5 rounded-md border border-dashed border-[#e4e2f5] px-3 py-2 text-xs text-[#8b8da3] hover:bg-violet-500/10 hover:text-violet-600 hover:border-violet-500/30 transition-colors"
+                >
+                  <IconFile size={13} />
+                  Upload PDF (max 10 MB)
+                </button>
+                {assignment.questionPdfUrl && !pdfName && (
+                  <p className="text-[10px] text-[#8b8da3]">
+                    Current:{" "}
+                    <a
+                      href={assignment.questionPdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#2563eb] underline"
+                    >
+                      view PDF
+                    </a>{" "}
+                    — upload a new file to replace it.
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        )}
+    </>
+  );
 
   const dueLabel =
     assignment.daysFromEnrollment != null
@@ -227,6 +364,7 @@ export default function AssignmentCard({
         : null;
 
   return (
+    <>
     <div className="group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 hover:border-[#cfcbe8] hover:bg-[#f8f7fd]">
       <div className="flex shrink-0 flex-col">
         <button
@@ -307,5 +445,18 @@ export default function AssignmentCard({
         </div>
       </div>
     </div>
+
+      {editing && (
+        <FormModal
+          open={editing}
+          onClose={cancelEdit}
+          title="Edit Assignment"
+          size="lg"
+          footer={editFooter}
+        >
+          {editContent}
+        </FormModal>
+      )}
+    </>
   );
 }

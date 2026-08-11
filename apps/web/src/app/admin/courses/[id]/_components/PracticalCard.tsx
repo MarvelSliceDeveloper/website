@@ -6,7 +6,6 @@ import { toast } from "@/lib/toast";
 import {
   IconTrash,
   IconEdit,
-  IconDeviceFloppy,
   IconX,
   IconVideo,
   IconFile,
@@ -16,6 +15,7 @@ import {
   IconChevronDown,
 } from "@tabler/icons-react";
 import type { Practical } from "./types";
+import { FormModal } from "@/components/admin/FormModal";
 
 export default function PracticalCard({
   practical,
@@ -115,18 +115,45 @@ export default function PracticalCard({
   const hasPdf = !!practical.pdfUrl;
   const resourceCount = practical.resources?.length ?? 0;
 
-  if (editing) {
-    return (
-      <div className="ml-6 space-y-2 rounded-xl border border-[#e4e2f5] bg-[#f8f7fd] p-3">
+  const editFooter = (
+    <>
+      <button
+        onClick={() => {
+          setEditing(false);
+          setPdfFile(null);
+          setPdfName("");
+        }}
+        className="btn-secondary text-xs px-3 py-1.5"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleSave}
+        disabled={uploading}
+        className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1 disabled:opacity-50"
+      >
+        {uploading ? "Uploading..." : "Save Changes"}
+      </button>
+    </>
+  );
+
+  const editContent = (
+    <div className="space-y-3">
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium">Title</label>
         <input
           type="text"
           value={editForm.title}
           onChange={(e) =>
             setEditForm((p) => ({ ...p, title: e.target.value }))
           }
-          className="field py-1 text-xs"
+          className="field w-full"
           autoFocus
         />
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium">Description (optional)</label>
         <input
           type="text"
           value={editForm.description}
@@ -134,8 +161,12 @@ export default function PracticalCard({
             setEditForm((p) => ({ ...p, description: e.target.value }))
           }
           placeholder="Description (optional)"
-          className="field py-1 text-xs"
+          className="field w-full"
         />
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium">Video URL (optional)</label>
         <input
           type="url"
           value={editForm.videoUrl}
@@ -143,84 +174,67 @@ export default function PracticalCard({
             setEditForm((p) => ({ ...p, videoUrl: e.target.value }))
           }
           placeholder="Video URL (optional)"
-          className="field py-1 text-xs"
+          className="field w-full"
         />
-        <div className="space-y-1.5">
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".pdf"
-            onChange={handlePdfSelect}
-            className="hidden"
-          />
-          {pdfName ? (
-            <div className="flex items-center gap-2 rounded-lg border border-[#8b5cf6]/30 bg-[#f0eaff] px-2.5 py-1.5">
-              <IconFile size={14} className="shrink-0 text-[#8b5cf6]" />
-              <span className="flex-1 truncate text-xs text-[#1f2233]">
-                {pdfName}
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setPdfFile(null);
-                  setPdfName("");
-                  if (fileRef.current) fileRef.current.value = "";
-                }}
-                className="text-[#8b8da3] hover:text-danger"
-              >
-                <IconX size={12} />
-              </button>
-            </div>
-          ) : hasPdf ? (
-            <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5">
-              <IconFile size={14} className="shrink-0 text-blue-500" />
-              <span className="flex-1 truncate text-xs text-[#1f2233]">
-                Current PDF
-              </span>
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="text-[10px] text-[#4f63f0] hover:underline"
-              >
-                Replace
-              </button>
-            </div>
-          ) : (
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium">PDF (optional)</label>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf"
+          onChange={handlePdfSelect}
+          className="hidden"
+        />
+        {pdfName ? (
+          <div className="flex items-center gap-2 rounded-lg border border-[#8b5cf6]/30 bg-[#f0eaff] px-2.5 py-1.5">
+            <IconFile size={14} className="shrink-0 text-[#8b5cf6]" />
+            <span className="flex-1 truncate text-xs text-[#1f2233]">
+              {pdfName}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setPdfFile(null);
+                setPdfName("");
+                if (fileRef.current) fileRef.current.value = "";
+              }}
+              className="text-[#8b8da3] hover:text-danger"
+            >
+              <IconX size={12} />
+            </button>
+          </div>
+        ) : hasPdf ? (
+          <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5">
+            <IconFile size={14} className="shrink-0 text-blue-500" />
+            <span className="flex-1 truncate text-xs text-[#1f2233]">
+              Current PDF
+            </span>
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#e4e2f5] px-3 py-2 text-xs text-[#8b8da3] transition-colors hover:border-[#8b5cf6]/30 hover:bg-[#f0eaff] hover:text-[#8b5cf6]"
+              className="text-[10px] text-[#4f63f0] hover:underline"
             >
-              <IconFile size={13} />
-              Upload PDF (optional)
+              Replace
             </button>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
+          </div>
+        ) : (
           <button
-            onClick={handleSave}
-            disabled={uploading}
-            className="flex items-center gap-1 rounded-full bg-[#4f63f0] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#3f52e0] disabled:opacity-50"
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#e4e2f5] px-3 py-2 text-xs text-[#8b8da3] transition-colors hover:border-[#8b5cf6]/30 hover:bg-[#f0eaff] hover:text-[#8b5cf6]"
           >
-            <IconDeviceFloppy size={12} />{" "}
-            {uploading ? "Uploading..." : "Save"}
+            <IconFile size={13} />
+            Upload PDF (optional)
           </button>
-          <button
-            onClick={() => {
-              setEditing(false);
-              setPdfFile(null);
-              setPdfName("");
-            }}
-            className="rounded-full border border-[#e4e2f5] bg-white px-3 py-1.5 text-xs font-medium text-[#1f2233] hover:bg-[#f5f4fd]"
-          >
-            Cancel
-          </button>
-        </div>
+        )}
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
+    <>
     <div className="group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 hover:border-[#cfcbe8] hover:bg-[#f8f7fd]">
       <div className="flex shrink-0 flex-col">
         <button
@@ -289,5 +303,22 @@ export default function PracticalCard({
         </button>
       </div>
     </div>
+
+      {editing && (
+        <FormModal
+          open={editing}
+          onClose={() => {
+            setEditing(false);
+            setPdfFile(null);
+            setPdfName("");
+          }}
+          title="Edit Practical"
+          size="md"
+          footer={editFooter}
+        >
+          {editContent}
+        </FormModal>
+      )}
+    </>
   );
 }

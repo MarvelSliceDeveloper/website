@@ -143,7 +143,7 @@ export default function AdminPackagesPage() {
             </span>
           ))}
           {pkg.courses.length > 2 && (
-            <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+            <span className="rounded-md bg-primary/8 px-2 py-0.5 text-[10px] font-medium text-primary">
               +{pkg.courses.length - 2} more
             </span>
           )}

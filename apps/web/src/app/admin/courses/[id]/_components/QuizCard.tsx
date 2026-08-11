@@ -14,6 +14,7 @@ import {
   IconChevronDown,
 } from "@tabler/icons-react";
 import RichEditor from "@/components/editor/RichEditor";
+import { FormModal } from "@/components/admin/FormModal";
 
 interface QuizOption {
   id?: string;
@@ -272,29 +273,33 @@ export default function QuizCard({
     );
   };
 
-  if (editing) {
-    return (
-      <div className="ml-6 space-y-4 rounded-xl border border-[#e4e2f5] bg-[#f8f7fd] p-4">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium text-[#1f2233]">Edit Quiz</h4>
-          <button
-            onClick={cancelEdit}
-            className="p-1 text-[#8b8da3] hover:text-[#1f2233]"
-          >
-            <IconX size={16} />
-          </button>
-        </div>
+  const editFooter = (
+    <>
+      <button onClick={cancelEdit} className="btn-secondary text-xs px-3 py-1.5">
+        Cancel
+      </button>
+      <button
+        onClick={handleUpdate}
+        disabled={loading}
+        className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1 disabled:opacity-50"
+      >
+        {loading ? "Saving..." : "Save Changes"}
+      </button>
+    </>
+  );
 
-        <div className="space-y-2">
-          <label className="text-xs font-medium">Title</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter title"
-            className="field"
-          />
-        </div>
+  const editContent = (
+    <>
+      <div className="space-y-2">
+        <label className="text-xs font-medium">Title</label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Enter title"
+          className="field w-full"
+        />
+      </div>
 
       <div className="space-y-2">
         <label className="text-xs font-medium text-muted-foreground">
@@ -502,25 +507,8 @@ export default function QuizCard({
             </button>
           </div>
         )}
-
-        <div className="flex justify-end gap-2 pt-2">
-          <button
-            onClick={cancelEdit}
-            className="rounded-full border border-[#e4e2f5] bg-white px-3.5 py-1.5 text-xs font-medium text-[#1f2233] hover:bg-[#f5f4fd]"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleUpdate}
-            disabled={loading}
-            className="rounded-full bg-[#4f63f0] px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#3f52e0] disabled:opacity-50"
-          >
-            {loading ? "Saving..." : "Save Changes"}
-          </button>
-        </div>
-      </div>
-    );
-  }
+    </>
+  );
 
   const dueLabel =
     quiz.daysFromEnrollment != null
@@ -532,6 +520,7 @@ export default function QuizCard({
   const questionCount = quiz.hasMcq !== false ? quiz.questions?.length ?? 0 : 0;
 
   return (
+    <>
     <div className="group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 hover:border-[#cfcbe8] hover:bg-[#f8f7fd]">
       <div className="flex shrink-0 flex-col">
         <button
@@ -617,5 +606,18 @@ export default function QuizCard({
         </div>
       </div>
     </div>
+
+      {editing && (
+        <FormModal
+          open={editing}
+          onClose={cancelEdit}
+          title="Edit Quiz"
+          size="xl"
+          footer={editFooter}
+        >
+          {editContent}
+        </FormModal>
+      )}
+    </>
   );
 }

@@ -6,15 +6,14 @@ import { toast } from "@/lib/toast";
 import {
   IconBrandYoutube,
   IconPlayerPlay,
-  IconDeviceFloppy,
   IconTrash,
-  IconX,
   IconRefresh,
   IconChevronUp,
   IconChevronDown,
 } from "@tabler/icons-react";
 import type { Lesson } from "./types";
 import RichEditor from "@/components/editor/RichEditor";
+import { FormModal } from "@/components/admin/FormModal";
 
 export default function LessonCard({
   lesson,
@@ -125,18 +124,41 @@ export default function LessonCard({
       ? `${Math.floor(lesson.durationSeconds / 60)} mins`
       : null;
 
-  if (editing) {
-    return (
-      <div className="ml-6 space-y-1.5 rounded-xl border border-[#e4e2f5] bg-[#f8f7fd] px-3.5 py-3">
+  const editFooter = (
+    <>
+      <button
+        onClick={() => setEditing(false)}
+        className="btn-secondary text-xs px-3 py-1.5"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleSave}
+        disabled={fetchingInfo}
+        className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1 disabled:opacity-50"
+      >
+        {fetchingInfo ? "Fetching..." : "Save Changes"}
+      </button>
+    </>
+  );
+
+  const editContent = (
+    <div className="space-y-4">
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium">Title</label>
         <input
           type="text"
           value={editForm.title}
           onChange={(e) =>
             setEditForm((p) => ({ ...p, title: e.target.value }))
           }
-          className="field text-xs"
+          className="field w-full"
           autoFocus
         />
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium">Description</label>
         <RichEditor
           content={editForm.description}
           onChange={(html) =>
@@ -145,58 +167,46 @@ export default function LessonCard({
           placeholder="Description"
           minHeight="150px"
         />
-        <div className="flex items-center gap-1.5">
-          <div className="relative flex-1">
-            <input
-              type="url"
-              value={editForm.videoUrl}
-              onChange={(e) =>
-                setEditForm((p) => ({ ...p, videoUrl: e.target.value }))
-              }
-              onBlur={() => handleFetchVideoInfo(editForm.videoUrl)}
-              placeholder="Video URL (YouTube...)"
-              className="field w-full pr-6 text-[11px]"
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium">Video URL</label>
+        <div className="relative">
+          <input
+            type="url"
+            value={editForm.videoUrl}
+            onChange={(e) =>
+              setEditForm((p) => ({ ...p, videoUrl: e.target.value }))
+            }
+            onBlur={() => handleFetchVideoInfo(editForm.videoUrl)}
+            placeholder="Video URL (YouTube...)"
+            className="field w-full pr-6"
+          />
+          {fetchingInfo && (
+            <IconRefresh
+              size={14}
+              className="absolute right-2 top-1/2 -translate-y-1/2 animate-spin text-[#8b8da3]"
             />
-            {fetchingInfo && (
-              <IconRefresh
-                size={11}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 animate-spin text-[#8b8da3]"
-              />
-            )}
-          </div>
-          <label className="flex items-center gap-1.5 whitespace-nowrap text-[10px] text-[#8b8da3]">
-            <input
-              type="checkbox"
-              checked={editForm.isFreePreview}
-              onChange={(e) =>
-                setEditForm((p) => ({
-                  ...p,
-                  isFreePreview: e.target.checked,
-                }))
-              }
-              className="h-3 w-3 accent-[#4f63f0]"
-            />
-            Free preview
-          </label>
-          <button
-            onClick={handleSave}
-            disabled={fetchingInfo}
-            className="rounded-full bg-[#4f63f0] px-2.5 py-1.5 text-white transition-colors hover:bg-[#3f52e0]"
-          >
-            <IconDeviceFloppy size={12} />
-          </button>
-          <button
-            onClick={() => setEditing(false)}
-            className="rounded-full border border-[#e4e2f5] bg-white px-2.5 py-1.5 text-[#8b8da3] transition-colors hover:bg-[#f5f4fd]"
-          >
-            <IconX size={12} />
-          </button>
+          )}
         </div>
       </div>
-    );
-  }
+
+      <label className="flex items-center gap-2 text-xs text-[#8b8da3]">
+        <input
+          type="checkbox"
+          checked={editForm.isFreePreview}
+          onChange={(e) =>
+            setEditForm((p) => ({ ...p, isFreePreview: e.target.checked }))
+          }
+          className="h-4 w-4 accent-[#4f63f0]"
+        />
+        Free preview
+      </label>
+    </div>
+  );
 
   return (
+    <>
     <div
       className="group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 hover:border-[#cfcbe8] hover:bg-[#f8f7fd]"
     >
@@ -265,5 +275,18 @@ export default function LessonCard({
         </div>
       </div>
     </div>
+
+      {editing && (
+        <FormModal
+          open={editing}
+          onClose={() => setEditing(false)}
+          title="Edit Lesson"
+          size="md"
+          footer={editFooter}
+        >
+          {editContent}
+        </FormModal>
+      )}
+    </>
   );
 }

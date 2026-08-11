@@ -1,10 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import RichEditor from "@/components/editor/RichEditor";
 import { FormModal } from "@/components/admin/FormModal";
+import {
+  IconFile,
+  IconLink,
+  IconUpload,
+  IconX,
+} from "@tabler/icons-react";
 
 interface AddAssignmentFormProps {
   moduleId: string;
@@ -14,6 +20,8 @@ interface AddAssignmentFormProps {
   onCancel: () => void;
   open: boolean;
 }
+
+type PdfSource = "drive" | "upload";
 
 export default function AddAssignmentForm({
   moduleId,
@@ -29,8 +37,13 @@ export default function AddAssignmentForm({
   const [dueDate, setDueDate] = useState("");
   const [daysFromEnrollment, setDaysFromEnrollment] = useState("");
   const [maxPoints, setMaxPoints] = useState(100);
-  const [questionPdfUrl, setQuestionPdfUrl] = useState("");
+  const [pdfSource, setPdfSource] = useState<PdfSource>("drive");
+  const [driveUrl, setDriveUrl] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [pdfName, setPdfName] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const resetForm = () => {
     setTitle("");
@@ -39,12 +52,33 @@ export default function AddAssignmentForm({
     setDueDate("");
     setDaysFromEnrollment("");
     setMaxPoints(100);
-    setQuestionPdfUrl("");
+    setPdfSource("drive");
+    setDriveUrl("");
+    setPdfFile(null);
+    setPdfName("");
   };
 
   const close = () => {
     resetForm();
     onCancel();
+  };
+
+  const handlePdfSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      toast.error("Only PDF files are allowed");
+      e.target.value = "";
+      return;
+    }
+    setPdfFile(file);
+    setPdfName(file.name);
+  };
+
+  const clearPdf = () => {
+    setPdfFile(null);
+    setPdfName("");
+    if (fileRef.current) fileRef.current.value = "";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,9 +87,33 @@ export default function AddAssignmentForm({
       toast.error("Please enter an assignment title");
       return;
     }
+    if (pdfSource === "drive" && !driveUrl.trim()) {
+      toast.error("Please enter a Google Drive link or switch to PDF upload");
+      return;
+    }
+    if (pdfSource === "upload" && !pdfFile) {
+      toast.error("Please upload a PDF or switch to Google Drive link");
+      return;
+    }
 
     setLoading(true);
     try {
+      let questionPdfUrl: string | undefined;
+
+      if (pdfSource === "upload" && pdfFile) {
+        setUploading(true);
+        const formData = new FormData();
+        formData.append("questionPdf", pdfFile);
+        const uploadRes = await api.post<{ fileUrl: string }>(
+          "/api/assignments/upload-pdf",
+          formData,
+        );
+        questionPdfUrl = uploadRes.fileUrl;
+        setUploading(false);
+      } else if (pdfSource === "drive") {
+        questionPdfUrl = driveUrl.trim();
+      }
+
       await api.post(`/api/admin/courses/modules/${moduleId}/assignments`, {
         title,
         description,
@@ -73,6 +131,7 @@ export default function AddAssignmentForm({
       toast.error("Failed to add assignment");
     } finally {
       setLoading(false);
+      setUploading(false);
     }
   };
 
@@ -83,11 +142,11 @@ export default function AddAssignmentForm({
       </button>
       <button
         type="submit"
-        disabled={loading}
-        className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1"
+        disabled={loading || uploading}
+        className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1 disabled:opacity-50"
         form="add-assignment-form"
       >
-        {loading ? "Adding..." : "Add Assignment"}
+        {uploading ? "Uploading PDF..." : loading ? "Adding..." : "Add Assignment"}
       </button>
     </>
   );
@@ -121,16 +180,90 @@ export default function AddAssignmentForm({
 
       <div className="space-y-2">
         <label className="text-xs font-medium text-muted-foreground">
-          Google Drive PDF Link (optional)
+          Question Paper Source
         </label>
-        <input
-          type="url"
-          value={questionPdfUrl}
-          onChange={(e) => setQuestionPdfUrl(e.target.value)}
-          placeholder="https://drive.google.com/file/d/.../preview"
-          className="field text-xs w-full"
-        />
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setPdfSource("drive")}
+            className={`flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+              pdfSource === "drive"
+                ? "border-primary/50 bg-primary/10 text-primary"
+                : "border-border text-muted-foreground hover:bg-card-hover"
+            }`}
+          >
+            <IconLink size={14} />
+            Google Drive Link
+          </button>
+          <button
+            type="button"
+            onClick={() => setPdfSource("upload")}
+            className={`flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+              pdfSource === "upload"
+                ? "border-primary/50 bg-primary/10 text-primary"
+                : "border-border text-muted-foreground hover:bg-card-hover"
+            }`}
+          >
+            <IconUpload size={14} />
+            Upload PDF
+          </button>
+        </div>
+        <p className="text-[10px] text-muted-foreground">
+          Provide either a Google Drive link or upload a PDF, not both.
+        </p>
       </div>
+
+      {pdfSource === "drive" ? (
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground">
+            Google Drive PDF Link
+          </label>
+          <input
+            type="url"
+            value={driveUrl}
+            onChange={(e) => setDriveUrl(e.target.value)}
+            placeholder="https://drive.google.com/file/d/.../preview"
+            className="field text-xs w-full"
+          />
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground">
+            PDF Upload
+          </label>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".pdf,application/pdf"
+            onChange={handlePdfSelect}
+            className="hidden"
+          />
+          {pdfName ? (
+            <div className="flex items-center gap-2 rounded-md border border-violet-500/30 bg-violet-500/10 px-2.5 py-1.5">
+              <IconFile size={14} className="text-violet-600 shrink-0" />
+              <span className="text-xs text-foreground truncate flex-1">
+                {pdfName}
+              </span>
+              <button
+                type="button"
+                onClick={clearPdf}
+                className="text-muted hover:text-danger"
+              >
+                <IconX size={12} />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="w-full flex items-center justify-center gap-1.5 rounded-md border border-dashed border-border px-3 py-2 text-xs text-muted-foreground hover:bg-violet-500/10 hover:text-violet-600 hover:border-violet-500/30 transition-colors"
+            >
+              <IconFile size={13} />
+              Upload PDF (max 10 MB)
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="space-y-2">
         <label className="text-xs font-medium text-muted-foreground">
