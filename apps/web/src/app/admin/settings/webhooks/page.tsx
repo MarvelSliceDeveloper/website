@@ -12,6 +12,7 @@ import {
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type Webhook = {
   id: string;
@@ -38,6 +39,7 @@ export default function WebhooksPage() {
   const [form, setForm] = useState({ name: "", url: "", events: [] as string[], active: true });
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const confirmDelete = useConfirmDialog();
 
   const fetchWebhooks = async () => {
     setLoading(true);
@@ -94,7 +96,13 @@ export default function WebhooksPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Delete this webhook?")) return;
+    if (
+      !(await confirmDelete({
+        title: "Delete Webhook",
+        message: "Delete this webhook?",
+      }))
+    )
+      return;
     try {
       await api.delete(`/api/admin/alerting-webhooks/${id}`);
       toast.success("Webhook deleted");

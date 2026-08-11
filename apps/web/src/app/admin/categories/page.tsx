@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   IconPlus,
   IconEdit,
@@ -24,6 +25,7 @@ type Category = {
 
 export default function AdminCategoriesPage() {
   usePageTitle("Categories");
+  const confirmDelete = useConfirmDialog();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -99,7 +101,13 @@ export default function AdminCategoriesPage() {
   }
 
   async function handleDelete(id: string, name: string) {
-    if (!confirm(`Delete category "${name}"? This cannot be undone.`)) return;
+    if (
+      !(await confirmDelete({
+        title: "Delete Category",
+        message: `Delete category "${name}"? This cannot be undone.`,
+      }))
+    )
+      return;
     try {
       await api.delete(`/api/admin/categories/${id}`);
       toast.success("Category deleted");

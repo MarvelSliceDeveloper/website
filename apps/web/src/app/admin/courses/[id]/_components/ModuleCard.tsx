@@ -32,6 +32,7 @@ import PracticalCard from "./PracticalCard";
 import AddPracticalForm from "./AddPracticalForm";
 import AddStudyMaterialForm from "./AddStudyMaterialForm";
 import { FormModal } from "@/components/admin/FormModal";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 const ALLOWED_RESOURCE_TYPES = new Set([
   "application/pdf",
@@ -157,6 +158,7 @@ export default function ModuleCard({
   const [uploadingResource, setUploadingResource] = useState(false);
   const [resourceError, setResourceError] = useState("");
   const [addContentPopoverOpen, setAddContentPopoverOpen] = useState(false);
+  const confirmDelete = useConfirmDialog();
 
   const unifiedItems = useMemo(() => buildUnifiedList(mod), [mod]);
 
@@ -257,9 +259,10 @@ export default function ModuleCard({
 
   const handleDelete = async () => {
     if (
-      !confirm(
-        `Delete module "${mod.title}"?\n\nThis will also delete all ${mod.lessons.length} lesson(s), ${mod.quizzes.length} quiz(zes), and ${mod.assignments.length} assignment(s) in this module. This action cannot be undone.`,
-      )
+      !(await confirmDelete({
+        title: "Delete Module",
+        message: `Delete module "${mod.title}"? This will also delete all ${mod.lessons.length} lesson(s), ${mod.quizzes.length} quiz(zes), and ${mod.assignments.length} assignment(s) in this module. This action cannot be undone.`,
+      }))
     )
       return;
     try {
@@ -383,7 +386,8 @@ export default function ModuleCard({
   };
 
   const handleDeleteResource = async (lessonId: string, resourceId: string) => {
-    if (!confirm("Delete this resource?")) return;
+    if (!(await confirmDelete({ title: "Delete Resource", message: "Delete this resource?" })))
+      return;
     try {
       await api.delete(
         `/api/admin/courses/lessons/${lessonId}/resources/${resourceId}`,

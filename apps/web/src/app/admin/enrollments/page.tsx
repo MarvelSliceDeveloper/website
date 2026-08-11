@@ -4,6 +4,7 @@ import { useEffect, useState, type ComponentType } from "react";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { FormModal } from "@/components/admin/FormModal";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -57,6 +58,7 @@ const statusIcons: Record<
 
 export default function AdminEnrollmentsPage() {
   usePageTitle("Enrollments");
+  const confirmDelete = useConfirmDialog();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("PENDING");
@@ -130,7 +132,13 @@ export default function AdminEnrollmentsPage() {
   };
 
   const handleReject = async (id: string) => {
-    if (!confirm("Are you sure you want to reject this enrollment?")) return;
+    if (
+      !(await confirmDelete({
+        title: "Reject Enrollment",
+        message: "Are you sure you want to reject this enrollment?",
+      }))
+    )
+      return;
     try {
       await api.patch(`/api/admin/enrollments/${id}/reject`);
       toast.success("Enrollment rejected");

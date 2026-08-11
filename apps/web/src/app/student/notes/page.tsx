@@ -19,6 +19,7 @@ import StudentPortalShell from "@/components/StudentPortalShell";
 import RichEditor from "@/components/editor/RichEditor";
 import { usePageTitle } from "@/lib/use-page-title";
 import { SearchInput } from "@/components/ui/SearchInput";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 interface CourseInfo {
   id: string;
@@ -76,6 +77,7 @@ function noteToPlainText(note: NoteItem): string {
 export default function StudentNotesPage() {
   usePageTitle("Notes");
   const router = useRouter();
+  const confirmDelete = useConfirmDialog();
   const [notes, setNotes] = useState<NoteItem[]>([]);
   const [courses, setCourses] = useState<CourseInfo[]>([]);
   const [courseFilter, setCourseFilter] = useState<string>("");
@@ -163,9 +165,10 @@ export default function StudentNotesPage() {
   }, []);
 
   async function deleteNote(id: string) {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this note?",
-    );
+    const confirmed = await confirmDelete({
+      title: "Delete Note",
+      message: "Are you sure you want to delete this note?",
+    });
     if (!confirmed) return;
     try {
       await api.delete(`/api/notes/${id}`);

@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   IconPlus,
   IconEdit,
@@ -223,6 +224,7 @@ function StaticPageForm({
 
 export default function AdminStaticPagesPage() {
   usePageTitle("Static Pages");
+  const confirmDelete = useConfirmDialog();
   const [pages, setPages] = useState<StaticPage[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -285,7 +287,13 @@ export default function AdminStaticPagesPage() {
 
   async function handleDelete(id: string, title: string) {
     if (deletingId) return;
-    if (!confirm(`Delete page "${title}"? This cannot be undone.`)) return;
+    if (
+      !(await confirmDelete({
+        title: "Delete Page",
+        message: `Delete page "${title}"? This cannot be undone.`,
+      }))
+    )
+      return;
 
     setDeletingId(id);
     const previousPages = pages;

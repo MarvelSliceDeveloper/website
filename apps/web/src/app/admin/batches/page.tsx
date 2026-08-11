@@ -8,6 +8,7 @@ import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { IconUsersGroup } from "@tabler/icons-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { FilterTabs } from "@/components/shared/FilterTabs";
 import { TableSkeleton } from "@/components/admin/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -64,6 +65,7 @@ function BatchesPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const statusFilter = searchParams.get("status") || "";
+  const confirmDelete = useConfirmDialog();
 
   const [batches, setBatches] = useState<Batch[]>([]);
   const [total, setTotal] = useState(0);
@@ -105,7 +107,13 @@ function BatchesPageContent() {
   }, [statusFilter, search]);
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete batch "${name}"?`)) return;
+    if (
+      !(await confirmDelete({
+        title: "Delete Batch",
+        message: `Delete batch "${name}"?`,
+      }))
+    )
+      return;
     try {
       await api.delete(`/api/admin/batches/${id}`);
       toast.success(`Batch "${name}" deleted`);

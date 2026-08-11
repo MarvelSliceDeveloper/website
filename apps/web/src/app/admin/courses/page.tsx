@@ -23,6 +23,7 @@ import type { DataTableColumn } from "@/components/admin/DataTable";
 import { TableSkeleton } from "@/components/admin/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SearchInput } from "@/components/ui/SearchInput";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { AdminWorkflowGuide } from "@/components/admin/AdminWorkflowGuide";
 
 type Course = {
@@ -78,6 +79,7 @@ function CoursesPageContent() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [purging, setPurging] = useState<string | null>(null);
   const [recovering, setRecovering] = useState<string | null>(null);
+  const confirmDelete = useConfirmDialog();
 
   const fetchCourses = useCallback(async () => {
     setLoading(true);
@@ -108,7 +110,8 @@ function CoursesPageContent() {
   }, [fetchCourses]);
 
   const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Archive "${title}"? Students will lose access.`)) return;
+    if (!(await confirmDelete({ title: "Archive Course", message: `Archive "${title}"? Students will lose access.` })))
+      return;
     setDeleting(id);
     try {
       await api.delete(`/api/admin/courses/${id}`);
@@ -167,9 +170,10 @@ function CoursesPageContent() {
 
   const handlePermanentDelete = async (id: string, title: string) => {
     if (
-      !confirm(
-        `Permanently delete "${title}"? This will remove all associated modules, batches, enrollments, and data. This cannot be undone.`,
-      )
+      !(await confirmDelete({
+        title: "Permanently Delete Course",
+        message: `Permanently delete "${title}"? This will remove all associated modules, batches, enrollments, and data. This cannot be undone.`,
+      }))
     )
       return;
     setPurging(id);

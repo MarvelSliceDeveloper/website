@@ -14,6 +14,7 @@ import {
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type Session = {
   id: string;
@@ -56,6 +57,7 @@ export default function InstructorSessionsPage() {
 function SessionsPageContent() {
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status");
+  const confirmDelete = useConfirmDialog();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncingId, setSyncingId] = useState<string | null>(null);
@@ -165,9 +167,11 @@ function SessionsPageContent() {
 
   const handleDeleteSession = async (sessionId: string) => {
     if (
-      !confirm(
-        "Are you sure you want to cancel this live session? This will mark it as ended.",
-      )
+      !(await confirmDelete({
+        title: "Cancel Session",
+        message:
+          "Are you sure you want to cancel this live session? This will mark it as ended.",
+      }))
     )
       return;
     setDeletingId(sessionId);

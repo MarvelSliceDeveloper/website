@@ -14,6 +14,7 @@ import {
 import type { Lesson } from "./types";
 import RichEditor from "@/components/editor/RichEditor";
 import { FormModal } from "@/components/admin/FormModal";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 export default function LessonCard({
   lesson,
@@ -43,6 +44,7 @@ export default function LessonCard({
   const [durationSeconds, setDurationSeconds] = useState<number | null>(
     lesson.durationSeconds ?? null,
   );
+  const confirmDelete = useConfirmDialog();
 
   const startEditing = () => {
     setEditForm({
@@ -98,9 +100,10 @@ export default function LessonCard({
 
   const handleDelete = async () => {
     if (
-      !confirm(
-        `Delete lesson "${lesson.title}"?\n\nAny uploaded resources will also be removed. This action cannot be undone.`,
-      )
+      !(await confirmDelete({
+        title: "Delete Lesson",
+        message: `Delete lesson "${lesson.title}"? Any uploaded resources will also be removed. This action cannot be undone.`,
+      }))
     )
       return;
     try {

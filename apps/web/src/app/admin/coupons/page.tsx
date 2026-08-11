@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   IconPlus,
   IconTrash,
@@ -43,6 +44,7 @@ function generateRandomCode(): string {
 
 export default function AdminCouponsPage() {
   usePageTitle("Coupons");
+  const confirmDelete = useConfirmDialog();
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -136,7 +138,13 @@ export default function AdminCouponsPage() {
   }
 
   async function handleDelete(id: string, code: string) {
-    if (!confirm(`Delete coupon "${code}"? This cannot be undone.`)) return;
+    if (
+      !(await confirmDelete({
+        title: "Delete Coupon",
+        message: `Delete coupon "${code}"? This cannot be undone.`,
+      }))
+    )
+      return;
     try {
       await api.delete(`/api/coupons/${id}`);
       toast.success("Coupon deleted");

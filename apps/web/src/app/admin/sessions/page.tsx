@@ -17,6 +17,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FormModal } from "@/components/admin/FormModal";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type Session = {
   id: string;
@@ -51,6 +52,7 @@ export default function AdminSessionsPage() {
 
   // Sync state
   const [syncingId, setSyncingId] = useState<string | null>(null);
+  const confirmDelete = useConfirmDialog();
 
   const fetchSessions = () => {
     setLoading(true);
@@ -116,9 +118,11 @@ export default function AdminSessionsPage() {
 
   const handleDelete = async (sessionId: string) => {
     if (
-      !confirm(
-        "Are you sure you want to permanently delete this session? This will remove all associated data (attendance, calendar events, recordings).",
-      )
+      !(await confirmDelete({
+        title: "Delete Session",
+        message:
+          "Are you sure you want to permanently delete this session? This will remove all associated data (attendance, calendar events, recordings).",
+      }))
     )
       return;
     try {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import DataTable from "@/components/admin/DataTable";
 import type { DataTableColumn } from "@/components/admin/DataTable";
 import { usePageTitle } from "@/lib/use-page-title";
@@ -106,6 +107,7 @@ const downloadCSV = (rows: Intern[], filename = "interns.csv") => {
 
 export default function AdminInternsPage() {
   usePageTitle("Interns");
+  const confirmDelete = useConfirmDialog();
   const [tab, setTab] = useState<Tab>("interns");
 
   // Interns tab
@@ -211,7 +213,13 @@ export default function AdminInternsPage() {
   };
 
   const handleDeleteField = async (field: InternField) => {
-    if (!window.confirm(`Delete field "${field.name}"?`)) return;
+    if (
+      !(await confirmDelete({
+        title: "Delete Field",
+        message: `Delete field "${field.name}"?`,
+      }))
+    )
+      return;
     try {
       await api.delete(`/api/admin/interns/fields/${field.id}`);
       toast.success("Field deleted");

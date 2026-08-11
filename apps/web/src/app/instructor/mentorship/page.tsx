@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type TicketStatus =
   | "OPEN"
@@ -79,6 +80,7 @@ export default function InstructorMentorshipPage() {
 function InstructorMentorshipContent() {
   const searchParams = useSearchParams();
   const initialStatus = (searchParams.get("status") as TicketStatus) || "all";
+  const confirmDelete = useConfirmDialog();
 
   const [tickets, setTickets] = useState<MentorshipTicket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -178,7 +180,8 @@ function InstructorMentorshipContent() {
   };
 
   const handleCancel = async (ticketId: string) => {
-    if (!confirm("Cancel this mentorship request?")) return;
+    if (!(await confirmDelete({ title: "Cancel Request", message: "Cancel this mentorship request?" })))
+      return;
     setProcessing(true);
     try {
       await api.patch(`/api/mentorship/tickets/${ticketId}/cancel`);

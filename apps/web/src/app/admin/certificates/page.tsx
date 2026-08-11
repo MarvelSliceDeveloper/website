@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   IconRefresh,
   IconBan,
@@ -227,6 +228,7 @@ function CertificatesTab() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const limit = 20;
+  const confirmDelete = useConfirmDialog();
 
   async function fetchData() {
     setLoading(true);
@@ -257,7 +259,10 @@ function CertificatesTab() {
 
   async function handleRevoke(id: string, number: string) {
     if (
-      !confirm(`Revoke certificate "${number}"? This action cannot be undone.`)
+      !(await confirmDelete({
+        title: "Revoke Certificate",
+        message: `Revoke certificate "${number}"? This action cannot be undone.`,
+      }))
     )
       return;
     try {
@@ -444,6 +449,7 @@ function TemplatesTab() {
   const [selectedFieldIndex, setSelectedFieldIndex] = useState<number | null>(
     null,
   );
+  const confirmDelete = useConfirmDialog();
   // Shows rendered sample data (name/course/date/etc.) at each field's real
   // position/size/color instead of just a bare crosshair + key label.
   const [showSampleText, setShowSampleText] = useState(true);
@@ -635,7 +641,13 @@ function TemplatesTab() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this template? This cannot be undone.")) return;
+    if (
+      !(await confirmDelete({
+        title: "Delete Template",
+        message: "Delete this template? This cannot be undone.",
+      }))
+    )
+      return;
     try {
       await api.delete(`/api/admin/certificate-templates/${id}`);
       toast.success("Template deleted");
@@ -671,7 +683,13 @@ function TemplatesTab() {
   }
 
   async function handleRemovePdf(templateId: string) {
-    if (!confirm("Remove the uploaded PDF template?")) return;
+    if (
+      !(await confirmDelete({
+        title: "Remove PDF Template",
+        message: "Remove the uploaded PDF template?",
+      }))
+    )
+      return;
     try {
       await api.delete(
         `/api/admin/certificate-templates/${templateId}/pdf-template`,

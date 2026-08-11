@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { IconSearch, IconDownload, IconTrash, IconUser, IconAlertTriangle } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 export default function GdprPage() {
   usePageTitle("GDPR Compliance");
@@ -15,6 +16,7 @@ export default function GdprPage() {
   const [exportData, setExportData] = useState<Record<string, unknown> | null>(null);
   const [exporting, setExporting] = useState(false);
   const [anonymizing, setAnonymizing] = useState(false);
+  const confirmDelete = useConfirmDialog();
 
   const searchUsers = useCallback(async () => {
     if (!searchQuery.trim()) return;
@@ -47,7 +49,13 @@ export default function GdprPage() {
   };
 
   const handleAnonymize = async (userId: string) => {
-    if (!window.confirm("Are you sure? This action is irreversible. The user's personal data will be permanently anonymized.")) {
+    if (
+      !(await confirmDelete({
+        title: "Anonymize User Data",
+        message:
+          "Are you sure? This action is irreversible. The user's personal data will be permanently anonymized.",
+      }))
+    ) {
       return;
     }
     setAnonymizing(true);

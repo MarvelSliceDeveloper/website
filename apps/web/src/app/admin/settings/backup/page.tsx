@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { IconDatabase, IconDownload, IconUpload, IconTrash, IconRefresh, IconAlertTriangle } from "@tabler/icons-react";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type Backup = { filename: string; size: number; createdAt: string };
 
@@ -14,6 +15,7 @@ export default function BackupPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const confirmDelete = useConfirmDialog();
 
   const fetchBackups = async () => {
     setLoading(true);
@@ -49,7 +51,14 @@ export default function BackupPage() {
     input.onchange = async () => {
       const file = input.files?.[0];
       if (!file) return;
-      if (!window.confirm("Are you sure? This will overwrite the current database. All data will be replaced with the backup contents.")) return;
+      if (
+        !(await confirmDelete({
+          title: "Overwrite Database",
+          message:
+            "Are you sure? This will overwrite the current database. All data will be replaced with the backup contents.",
+        }))
+      )
+        return;
       setRestoring(true);
       try {
         const formData = new FormData();
@@ -70,7 +79,13 @@ export default function BackupPage() {
   };
 
   const handleDelete = async (filename: string) => {
-    if (!window.confirm(`Delete ${filename}?`)) return;
+    if (
+      !(await confirmDelete({
+        title: "Delete Backup",
+        message: `Delete ${filename}?`,
+      }))
+    )
+      return;
     try {
       await api.delete(`/api/admin/backup/${filename}`);
       toast.success("Backup deleted");

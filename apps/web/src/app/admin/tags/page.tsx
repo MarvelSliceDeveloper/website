@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   IconPlus,
   IconEdit,
@@ -22,6 +23,7 @@ type Tag = {
 
 export default function AdminTagsPage() {
   usePageTitle("Tags");
+  const confirmDelete = useConfirmDialog();
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -88,7 +90,13 @@ export default function AdminTagsPage() {
   }
 
   async function handleDelete(id: string, name: string) {
-    if (!confirm(`Delete tag "${name}"? This cannot be undone.`)) return;
+    if (
+      !(await confirmDelete({
+        title: "Delete Tag",
+        message: `Delete tag "${name}"? This cannot be undone.`,
+      }))
+    )
+      return;
     try {
       await api.delete(`/api/admin/tags/${id}`);
       toast.success("Tag deleted");

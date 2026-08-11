@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { IconArrowLeft, IconTrash } from "@tabler/icons-react";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 export default function AssignmentTemplateEditorPage() {
   usePageTitle("Assignment Template Details");
@@ -21,6 +22,7 @@ export default function AssignmentTemplateEditorPage() {
   const [category, setCategory] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(!isNew);
+  const confirmDelete = useConfirmDialog();
 
   useEffect(() => {
     if (!isNew) {
@@ -76,7 +78,13 @@ export default function AssignmentTemplateEditorPage() {
   }
 
   async function handleDelete() {
-    if (!confirm("Delete this template?")) return;
+    if (
+      !(await confirmDelete({
+        title: "Delete Template",
+        message: "Delete this template?",
+      }))
+    )
+      return;
     try {
       await api.delete(`/api/admin/assignment-templates/${id}`);
       toast.success("Deleted");

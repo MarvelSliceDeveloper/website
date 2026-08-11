@@ -17,6 +17,7 @@ import CertificationTab from "./_components/CertificationTab";
 import { usePageTitle } from "@/lib/use-page-title";
 import TabButton from "./_components/TabButton";
 import { IconAward } from "@tabler/icons-react";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 const MAX_THUMBNAIL_BYTES = 5 * 1024 * 1024;
 const ALLOWED_THUMBNAIL_TYPES = new Set([
@@ -40,6 +41,7 @@ export default function CourseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [thumbnailUploading, setThumbnailUploading] = useState(false);
+  const confirmDelete = useConfirmDialog();
 
   const [activeTab, setActiveTab] = useState<
     "details" | "content" | "certification"
@@ -153,9 +155,10 @@ export default function CourseDetailPage() {
 
   const handleDeleteCourse = async () => {
     if (
-      !confirm(
-        `Archive course "${course!.title}"?\n\nStudents will lose access to this course. This action can be reversed by an admin.`,
-      )
+      !(await confirmDelete({
+        title: "Archive Course",
+        message: `Archive course "${course!.title}"? Students will lose access to this course. This action can be reversed by an admin.`,
+      }))
     )
       return;
     try {

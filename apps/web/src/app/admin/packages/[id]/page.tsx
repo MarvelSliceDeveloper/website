@@ -10,6 +10,7 @@ import { FormModal } from "@/components/admin/FormModal";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   IconArrowLeft,
   IconUsers,
@@ -113,6 +114,7 @@ export default function PackageDetailPage({
   params: Promise<{ id: string }>;
 }) {
   usePageTitle("Package Details");
+  const confirmDelete = useConfirmDialog();
   const { id } = use(params);
   const router = useRouter();
   const [pkg, setPkg] = useState<PackageDetail | null>(null);
@@ -254,7 +256,13 @@ export default function PackageDetailPage({
   }, [pkgSlug]);
 
   const handleReject = async (enrollmentId: string) => {
-    if (!confirm("Reject this enrollment?")) return;
+    if (
+      !(await confirmDelete({
+        title: "Reject Enrollment",
+        message: "Reject this enrollment?",
+      }))
+    )
+      return;
     try {
       await api.patch(`/api/admin/package-enrollments/${enrollmentId}/reject`);
       toast.success("Enrollment rejected");

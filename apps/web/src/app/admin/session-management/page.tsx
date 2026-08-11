@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   IconDeviceTablet,
   IconDesk,
@@ -62,6 +63,7 @@ export default function SessionManagementPage() {
   const [loading, setLoading] = useState(true);
   const [killing, setKilling] = useState<string | null>(null);
   const [killingAll, setKillingAll] = useState(false);
+  const confirmDelete = useConfirmDialog();
 
   const fetchSessions = () => {
     setLoading(true);
@@ -81,7 +83,13 @@ export default function SessionManagementPage() {
   }, []);
 
   const handleKill = async (id: string) => {
-    if (!confirm("Terminate this session? The user will be logged out.")) return;
+    if (
+      !(await confirmDelete({
+        title: "Terminate Session",
+        message: "Terminate this session? The user will be logged out.",
+      }))
+    )
+      return;
     setKilling(id);
     try {
       await api.post(`/api/admin/sessions/${id}/kill`);
@@ -96,9 +104,11 @@ export default function SessionManagementPage() {
 
   const handleKillAll = async () => {
     if (
-      !confirm(
-        "Terminate ALL your active sessions? You will be logged out of all devices except this one.",
-      )
+      !(await confirmDelete({
+        title: "Terminate All Sessions",
+        message:
+          "Terminate ALL your active sessions? You will be logged out of all devices except this one.",
+      }))
     )
       return;
     setKillingAll(true);

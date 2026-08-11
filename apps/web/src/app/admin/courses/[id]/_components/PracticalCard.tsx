@@ -16,6 +16,7 @@ import {
 } from "@tabler/icons-react";
 import type { Practical } from "./types";
 import { FormModal } from "@/components/admin/FormModal";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 export default function PracticalCard({
   practical,
@@ -46,6 +47,7 @@ export default function PracticalCard({
   const [pdfName, setPdfName] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const confirmDelete = useConfirmDialog();
 
   const handlePdfSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -101,7 +103,8 @@ export default function PracticalCard({
   };
 
   const handleDelete = async () => {
-    if (!confirm(`Delete practical "${practical.title}"?`)) return;
+    if (!(await confirmDelete({ title: "Delete Practical", message: `Delete practical "${practical.title}"?` })))
+      return;
     try {
       await api.delete(`/api/admin/courses/modules/practicals/${practical.id}`);
       toast.success("Practical deleted");

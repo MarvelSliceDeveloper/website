@@ -14,6 +14,7 @@ import DataTable from "@/components/admin/DataTable";
 import type { DataTableColumn } from "@/components/admin/DataTable";
 import PaginationBar from "@/components/student/PaginationBar";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { IconPackage, IconPlus, IconEye, IconTrash } from "@tabler/icons-react";
 import { AdminWorkflowGuide } from "@/components/admin/AdminWorkflowGuide";
 
@@ -49,6 +50,7 @@ const statusConfig: Record<string, { label: string; classes: string }> = {
 
 export default function AdminPackagesPage() {
   usePageTitle("Packages");
+  const confirmDelete = useConfirmDialog();
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -79,7 +81,13 @@ export default function AdminPackagesPage() {
   }, [statusFilter]);
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete package "${name}"? This cannot be undone.`)) return;
+    if (
+      !(await confirmDelete({
+        title: "Delete Package",
+        message: `Delete package "${name}"? This cannot be undone.`,
+      }))
+    )
+      return;
     try {
       await api.delete(`/api/admin/packages/${id}`);
       toast.success("Package deleted");

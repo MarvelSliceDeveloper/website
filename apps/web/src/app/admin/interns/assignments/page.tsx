@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   IconRefresh,
   IconCircleCheck,
@@ -108,6 +109,7 @@ const TrackerRow = memo(function TrackerRow({
 
 export default function InternAssignmentsPage() {
   usePageTitle("Assignment Tracker");
+  const confirmDelete = useConfirmDialog();
 
   const [savedSheets, setSavedSheets] = useState<SavedSheet[]>([]);
   const [selectedSheetId, setSelectedSheetId] = useState<string | null>(null);
@@ -193,7 +195,13 @@ export default function InternAssignmentsPage() {
   const handleDeleteSheet = async (compositeKey: string) => {
     const [sheetId, gid] = compositeKey.split("|");
     const actualGid = gid ?? "0";
-    if (!confirm("Remove this sheet from the saved list?")) return;
+    if (
+      !(await confirmDelete({
+        title: "Remove Sheet",
+        message: "Remove this sheet from the saved list?",
+      }))
+    )
+      return;
     try {
       const res = await api.delete<{ sheets: SavedSheet[] }>(
         `/api/admin/interns/assignments/sheets/${sheetId}?gid=${encodeURIComponent(actualGid)}`,
