@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { SearchInput } from "@/components/ui/SearchInput";
 import {
   IconEye,
   IconEyeOff,
@@ -15,6 +16,8 @@ import {
   IconTrash,
   IconPlus,
   IconEdit,
+  IconCalendarEvent,
+  IconVideo,
 } from "@tabler/icons-react";
 
 type BatchCourse = {
@@ -82,6 +85,9 @@ export default function BatchDetailPage() {
   const [courses, setCourses] = useState<BatchCourse[]>([]);
   const [toggling, setToggling] = useState<string | null>(null);
   const [togglingExam, setTogglingExam] = useState<string | null>(null);
+
+  // Sessions search
+  const [sessionSearch, setSessionSearch] = useState("");
 
   // Extensions state
   const [extensions, setExtensions] = useState<any[]>([]);
@@ -257,6 +263,27 @@ export default function BatchDetailPage() {
 
     return Array.from(map.values());
   }, [batch]);
+
+  const filteredSessions = useMemo(() => {
+    if (!batch) return [];
+    const q = sessionSearch.trim().toLowerCase();
+    if (!q) return batch.sessions;
+    return batch.sessions.filter((s) => {
+      const date = new Date(s.scheduledAt).toLocaleString("en-IN", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      return (
+        date.toLowerCase().includes(q) ||
+        s.createdFrom.toLowerCase().includes(q) ||
+        (s.recording ? "recording available" : "no recording").includes(q) ||
+        (s.endedAt ? "past" : "upcoming").includes(q)
+      );
+    });
+  }, [batch, sessionSearch]);
 
   if (loading) {
     return (
@@ -436,59 +463,124 @@ export default function BatchDetailPage() {
       )}
 
       {tab === "sessions" && (
-        <div className="space-y-3">
-          {batch.sessions.length === 0 ? (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              {batch.sessions.length} session
+              {batch.sessions.length !== 1 ? "s" : ""} scheduled for this batch.
+            </p>
+            <div className="min-w-[200px] max-w-sm">
+              <SearchInput
+                placeholder="Search sessions..."
+                value={sessionSearch}
+                onChange={setSessionSearch}
+              />
+            </div>
+          </div>
+
+          {filteredSessions.length === 0 ? (
             <div className="glass-card p-8 text-center">
               <p className="text-muted-foreground text-sm">
-                No sessions scheduled yet.
+                {batch.sessions.length === 0
+                  ? "No sessions scheduled yet."
+                  : "No sessions match your search."}
               </p>
             </div>
           ) : (
-            batch.sessions.map((session) => {
-              const isPast =
-                session.endedAt || new Date(session.scheduledAt) < new Date();
-              return (
-                <div
-                  key={session.id}
-                  className="glass-card p-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      {new Date(session.scheduledAt).toLocaleString("en-IN", {
-                        weekday: "short",
-                        day: "numeric",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] uppercase font-medium bg-accent/15 text-accent px-1.5 py-0.5 rounded">
-                        {session.createdFrom}
-                      </span>
-                      {session.recording && (
-                        <span className="text-[10px] uppercase font-medium bg-success/15 text-success px-1.5 py-0.5 rounded">
-                          Recording Available
-                        </span>
-                      )}
-                      {isPast && !session.recording && (
-                        <span className="text-[10px] uppercase font-medium bg-warning/15 text-warning px-1.5 py-0.5 rounded">
-                          No Recording
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <a
-                    href={session.joinUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-secondary text-xs"
-                  >
-                    {isPast ? "View Details" : "Join URL →"}
-                  </a>
-                </div>
-              );
-            })
+            <div className="glass-card overflow-hidden rounded-none">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border text-left">
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                      Scheduled At
+                    </th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                      Source
+                    </th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                      Recording
+                    </th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                      Status
+                    </th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted text-right">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {filteredSessions.map((session) => {
+                    const isPast =
+                      session.endedAt ||
+                      new Date(session.scheduledAt) < new Date();
+                    return (
+                      <tr
+                        key={session.id}
+                        className="hover:bg-card-hover/50 transition-colors"
+                      >
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-2.5">
+                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                              <IconCalendarEvent size={15} />
+                            </span>
+                            <span className="text-sm font-medium text-foreground">
+                              {new Date(session.scheduledAt).toLocaleString(
+                                "en-IN",
+                                {
+                                  weekday: "short",
+                                  day: "numeric",
+                                  month: "short",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3 text-sm text-muted-foreground">
+                          {session.createdFrom}
+                        </td>
+                        <td className="px-5 py-3">
+                          {session.recording ? (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/10 px-2.5 py-0.5 text-[11px] font-medium text-success">
+                              <IconVideo size={13} />
+                              Available
+                            </span>
+                          ) : isPast ? (
+                            <span className="inline-flex items-center rounded-full border border-warning/30 bg-warning/10 px-2.5 py-0.5 text-[11px] font-medium text-warning">
+                              No Recording
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted">—</span>
+                          )}
+                        </td>
+                        <td className="px-5 py-3">
+                          <span
+                            className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${
+                              isPast
+                                ? "bg-muted/15 text-muted border-muted/25"
+                                : "bg-accent/15 text-accent border-accent/25"
+                            }`}
+                          >
+                            {isPast ? "Past" : "Upcoming"}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <a
+                            href={session.joinUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-secondary text-xs"
+                          >
+                            {isPast ? "View Details" : "Join URL →"}
+                          </a>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}

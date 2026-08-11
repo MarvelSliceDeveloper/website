@@ -35,6 +35,8 @@ export default function AdminEmailTemplatesPage() {
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
 
+  const modalOpen = editing !== null || creating;
+
   async function fetchTemplates() {
     setLoading(true);
     try {
@@ -53,6 +55,16 @@ export default function AdminEmailTemplatesPage() {
     fetchTemplates();
   }, []);
 
+  // Close modal on Escape key
+  useEffect(() => {
+    if (!modalOpen) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") cancelEdit();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [modalOpen]);
+
   function openEdit(tpl: EmailTemplate) {
     setCreating(false);
     setEditing(tpl);
@@ -69,7 +81,6 @@ export default function AdminEmailTemplatesPage() {
     setFormSubject("");
     setFormBody("");
     setFormActive(true);
-    setPreviewHtml(null);
   }
 
   function cancelEdit() {
@@ -156,82 +167,139 @@ export default function AdminEmailTemplatesPage() {
         }
       />
 
-      {/* Editor Panel */}
-      {(editing || creating) && (
-        <div className="rounded-xl border border-primary/30 bg-card p-5 space-y-3">
-          <div className="flex items-center justify-between mb-1">
-            <h3 className="text-sm font-semibold text-foreground">
-              {creating ? "New Template" : `Edit: ${editing!.name}`}
-            </h3>
-            <button
-              onClick={cancelEdit}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <IconX size={16} />
-            </button>
-          </div>
-          {creating && (
-            <input
-              type="text"
-              placeholder="Template name"
-              value={formName}
-              onChange={(e) => setFormName(e.target.value)}
-              className="input text-xs w-full"
-            />
-          )}
-          <input
-            type="text"
-            placeholder="Subject line"
-            value={formSubject}
-            onChange={(e) => setFormSubject(e.target.value)}
-            className="input text-xs w-full"
-          />
-          <textarea
-            placeholder="Email body (HTML supported)"
-            value={formBody}
-            onChange={(e) => setFormBody(e.target.value)}
-            className="input text-xs w-full min-h-[300px] font-mono"
-          />
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formActive}
-                onChange={(e) => setFormActive(e.target.checked)}
-                className="rounded border-border"
-              />
-              <span className="text-xs text-foreground">Active</span>
-            </label>
-            <button
-              onClick={handleSave}
-              disabled={saving || !formSubject.trim() || (creating && !formName.trim())}
-              className="btn-primary text-xs py-2 disabled:opacity-40"
-            >
-              {saving ? "Saving..." : creating ? "Create Template" : "Save Changes"}
-            </button>
-            <button onClick={cancelEdit} className="btn-secondary text-xs py-2">
-              Cancel
-            </button>
+      {/* Editor Modal */}
+      {modalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) cancelEdit();
+          }}
+        >
+          <div className="w-full max-w-5xl max-h-[90vh] flex flex-col rounded-xl border-2 border-primary/40 bg-card shadow-2xl overflow-hidden">
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
+              <h3 className="text-sm font-semibold text-foreground">
+                {creating ? "New Template" : `Edit: ${editing!.name}`}
+              </h3>
+              <button
+                onClick={cancelEdit}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <IconX size={16} />
+              </button>
+            </div>
+
+            {/* Two-column body: form (left) / live preview (right) */}
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 overflow-hidden">
+              {/* Left: form fields */}
+              <div className="p-5 space-y-3 overflow-y-auto border-b md:border-b-0 md:border-r border-border">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                  Template Details
+                </p>
+                {creating && (
+                  <input
+                    type="text"
+                    placeholder="Template name"
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    className="input text-xs w-full"
+                  />
+                )}
+                <input
+                  type="text"
+                  placeholder="Subject line"
+                  value={formSubject}
+                  onChange={(e) => setFormSubject(e.target.value)}
+                  className="input text-xs w-full"
+                />
+                <textarea
+                  placeholder="Email body (HTML supported)"
+                  value={formBody}
+                  onChange={(e) => setFormBody(e.target.value)}
+                  className="input text-xs w-full min-h-[320px] font-mono"
+                />
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formActive}
+                    onChange={(e) => setFormActive(e.target.checked)}
+                    className="rounded border-border"
+                  />
+                  <span className="text-xs text-foreground">Active</span>
+                </label>
+              </div>
+
+              {/* Right: live preview */}
+              <div className="p-5 overflow-y-auto bg-muted/5">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                  Live Preview
+                </p>
+                <div className="rounded-lg border border-border bg-white p-6 text-xs text-foreground min-h-[300px]">
+                  <div className="mb-3 pb-2 border-b border-border/40">
+                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      Subject
+                    </span>
+                    <p className="text-sm font-medium text-gray-900">
+                      {formSubject.trim() || (
+                        <span className="text-gray-400 font-normal">
+                          (no subject yet)
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  {formBody.trim() ? (
+                    <div dangerouslySetInnerHTML={{ __html: formBody }} />
+                  ) : (
+                    <p className="text-gray-400">
+                      Start typing the email body to see a live preview here.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal footer */}
+            <div className="flex items-center gap-3 px-5 py-4 border-t border-border shrink-0">
+              <button
+                onClick={handleSave}
+                disabled={saving || !formSubject.trim() || (creating && !formName.trim())}
+                className="btn-primary text-xs py-2 disabled:opacity-40"
+              >
+                {saving ? "Saving..." : creating ? "Create Template" : "Save Changes"}
+              </button>
+              <button onClick={cancelEdit} className="btn-secondary text-xs py-2">
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Preview Panel */}
+      {/* Server-rendered Preview Modal (from table row action) */}
       {previewHtml !== null && (
-        <div className="rounded-xl border border-border bg-card p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-foreground">Preview</h3>
-            <button
-              onClick={() => setPreviewHtml(null)}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <IconX size={16} />
-            </button>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setPreviewHtml(null);
+          }}
+        >
+          <div className="w-full max-w-3xl max-h-[90vh] flex flex-col rounded-xl border-2 border-primary/40 bg-card shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
+              <h3 className="text-sm font-semibold text-foreground">Preview</h3>
+              <button
+                onClick={() => setPreviewHtml(null)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <IconX size={16} />
+              </button>
+            </div>
+            <div className="p-5 overflow-y-auto">
+              <div
+                className="rounded-lg border border-border bg-white p-6 text-xs text-foreground"
+                dangerouslySetInnerHTML={{ __html: previewHtml }}
+              />
+            </div>
           </div>
-          <div
-            className="rounded-lg border border-border bg-white p-6 text-xs text-foreground max-h-[500px] overflow-y-auto"
-            dangerouslySetInnerHTML={{ __html: previewHtml }}
-          />
         </div>
       )}
 

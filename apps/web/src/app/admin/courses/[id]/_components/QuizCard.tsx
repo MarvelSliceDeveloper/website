@@ -5,12 +5,13 @@ import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import {
   IconX,
-  IconGripVertical,
   IconPlus,
   IconTrash,
   IconCopy,
   IconCheck,
   IconClipboardText,
+  IconChevronUp,
+  IconChevronDown,
 } from "@tabler/icons-react";
 import RichEditor from "@/components/editor/RichEditor";
 
@@ -55,21 +56,19 @@ interface Quiz {
 interface QuizCardProps {
   quiz: Quiz;
   onUpdate: () => void;
-  onDragStart?: () => void;
-  onDragOver?: (e: React.DragEvent) => void;
-  onDragLeave?: () => void;
-  onDrop?: () => void;
-  isDragging?: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
 }
 
 export default function QuizCard({
   quiz,
   onUpdate,
-  onDragStart,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  isDragging,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
 }: QuizCardProps) {
   const [editing, setEditing] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -80,12 +79,6 @@ export default function QuizCard({
     setTimeout(() => setCopied(false), 1500);
   };
   const [title, setTitle] = useState(quiz.title);
-  const [dueDateMode, setDueDateMode] = useState<"absolute" | "days">(
-    quiz.daysFromEnrollment != null ? "days" : "absolute"
-  );
-  const [dueDate, setDueDate] = useState(
-    quiz.dueDate ? new Date(quiz.dueDate).toISOString().slice(0, 16) : ""
-  );
   const [daysFromEnrollment, setDaysFromEnrollment] = useState(
     quiz.daysFromEnrollment?.toString() ?? ""
   );
@@ -211,7 +204,6 @@ export default function QuizCard({
     try {
       await api.put(`/api/admin/courses/modules/quizzes/${quiz.id}`, {
         title,
-        dueDate: null,
         daysFromEnrollment: daysFromEnrollment !== "" ? Number(daysFromEnrollment) : null,
         passingScore: Number(passingScore),
         examType:
@@ -259,8 +251,6 @@ export default function QuizCard({
   const cancelEdit = () => {
     setEditing(false);
     setTitle(quiz.title);
-    setDueDateMode(quiz.daysFromEnrollment != null ? "days" : "absolute");
-    setDueDate(quiz.dueDate ? new Date(quiz.dueDate).toISOString().slice(0, 16) : "");
     setDaysFromEnrollment(quiz.daysFromEnrollment?.toString() ?? "");
     setPassingScore(quiz.passingScore ?? 65);
     setExamType(quiz.examType ?? "MCQ");
@@ -542,24 +532,25 @@ export default function QuizCard({
   const questionCount = quiz.hasMcq !== false ? quiz.questions?.length ?? 0 : 0;
 
   return (
-    <div
-      draggable={!!onDragStart}
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={(e) => {
-        e.preventDefault();
-        onDrop?.();
-      }}
-      className={`group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 ${
-        isDragging ? "scale-[0.98] opacity-40" : "hover:border-[#cfcbe8] hover:bg-[#f8f7fd]"
-      }`}
-    >
-      {onDragStart && (
-        <span className="shrink-0 cursor-grab text-[#c7c6dd] transition-colors hover:text-[#a3a1c9] active:cursor-grabbing">
-          <IconGripVertical size={13} />
-        </span>
-      )}
+    <div className="group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 hover:border-[#cfcbe8] hover:bg-[#f8f7fd]">
+      <div className="flex shrink-0 flex-col">
+        <button
+          onClick={onMoveUp}
+          disabled={!canMoveUp}
+          className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#8b5cf6] hover:bg-[#f3efff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+          title="Move up"
+        >
+          <IconChevronUp size={13} />
+        </button>
+        <button
+          onClick={onMoveDown}
+          disabled={!canMoveDown}
+          className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#8b5cf6] hover:bg-[#f3efff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+          title="Move down"
+        >
+          <IconChevronDown size={13} />
+        </button>
+      </div>
 
       <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg bg-[#f0eaff] text-[#8b5cf6]">
         <IconClipboardText size={13} />
@@ -572,16 +563,19 @@ export default function QuizCard({
           </p>
           <button
             onClick={copyId}
-            className="group/copy relative inline-flex items-center gap-1 text-[10px] font-mono text-[#8b8da3]/70 transition-colors hover:text-[#1f2233]"
+            className="inline-flex items-center gap-1 rounded-md border border-[#e4e2f5] bg-[#f8f7fd] px-1.5 py-0.5 text-[10px] font-mono text-[#8b8da3] transition-colors hover:border-[#cfcbe8] hover:text-[#1f2233]"
             title="Copy quiz ID"
           >
             {copied ? (
-              <IconCheck size={10} className="text-emerald-500" />
+              <>
+                <IconCheck size={10} className="text-emerald-500" />
+                Copied!
+              </>
             ) : (
-              <IconCopy
-                size={10}
-                className="opacity-0 transition-opacity group-hover/copy:opacity-100"
-              />
+              <>
+                <IconCopy size={10} />
+                {quiz.id.slice(0, 8)}
+              </>
             )}
           </button>
           {quiz.hasAssignment && (

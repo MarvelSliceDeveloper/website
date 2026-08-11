@@ -72,8 +72,40 @@ export default function CreateCoursePage() {
     setThumbnailFile(file);
   };
 
+  const validateForm = () => {
+    // Checked in display order so the toast matches the first empty field on the page.
+    if (!form.title.trim()) {
+      toast.error("Course Title is required.");
+      return false;
+    }
+    if (form.title.trim().length < 3) {
+      toast.error("Course Title must be at least 3 characters.");
+      return false;
+    }
+    if (!form.description.trim()) {
+      toast.error("Description is required.");
+      return false;
+    }
+    if (form.description.trim().length < 10) {
+      toast.error("Description must be at least 10 characters.");
+      return false;
+    }
+    if (!thumbnailFile) {
+      toast.error("Thumbnail is required.");
+      return false;
+    }
+    if (!form.category.trim()) {
+      toast.error("Category is required.");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) return;
+
     setSubmitting(true);
 
     try {
@@ -112,7 +144,7 @@ export default function CreateCoursePage() {
   };
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="w-full space-y-6">
       <AdminPageHeader
         title="Add Course"
         description="Start with the basics. You can add modules, videos, and design the course page later."
@@ -172,7 +204,7 @@ export default function CreateCoursePage() {
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Thumbnail
+              Thumbnail <span className="text-danger">*</span>
             </label>
             <div className="flex flex-wrap items-center gap-4">
               <div className="h-20 w-28 overflow-hidden rounded-lg border border-border bg-card flex items-center justify-center text-xl">
@@ -195,6 +227,7 @@ export default function CreateCoursePage() {
                   accept="image/png,image/jpeg,image/webp"
                   onChange={handleThumbnailChange}
                   className="field w-full"
+                  required
                 />
                 <p className="text-xs text-muted">JPG, PNG, or WebP. Max 5 MB.</p>
               </div>
@@ -203,7 +236,7 @@ export default function CreateCoursePage() {
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Category
+              Category <span className="text-danger">*</span>
             </label>
             <input
               type="text"
@@ -211,6 +244,7 @@ export default function CreateCoursePage() {
               onChange={(e) => update("category", e.target.value)}
               placeholder="e.g. Programming, Design"
               className="field w-full"
+              required
             />
           </div>
         </div>

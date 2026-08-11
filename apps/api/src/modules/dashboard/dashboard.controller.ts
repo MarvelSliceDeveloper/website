@@ -31,7 +31,6 @@ export const dashboardController = {
         batchDistribution,
         userRoleDistribution,
         recentEnrollments,
-        topCourses,
         enrollments,
         certificateGroups,
         paidPayments,
@@ -69,15 +68,6 @@ export const dashboardController = {
             payment: { select: { razorpayPaymentId: true, amount: true } },
           },
         }),
-        prisma.packageEnrollmentCourse.groupBy({
-          by: ["courseId"],
-          where: {
-            enrollment: { status: "APPROVED", ...enrollmentCreatedFilter },
-          },
-          _count: { id: true },
-          orderBy: { _count: { id: "desc" } },
-          take: 5,
-        }),
         prisma.packageEnrollment.findMany({
           where: { status: "APPROVED", ...(hasDateFilter ? { createdAt: dateFilter } : {}) },
           select: { createdAt: true },
@@ -104,20 +94,15 @@ export const dashboardController = {
       // ── Wave 2: Queries that need IDs from Wave 1 ──
       const pkgIds = studentsPerPackage.map((s) => s.packageId);
       const courseIds1 = studentsPerCourse.map((s) => s.courseId);
-      const courseIds2 = topCourses.map((t) => t.courseId);
       const revPkgIds = [...new Set(paidPayments.map((p) => p.packageId))];
 
-      const [pkgs, courses1, courses2, revPkgs] = await Promise.all([
+      const [pkgs, courses1, revPkgs] = await Promise.all([
         prisma.coursePackage.findMany({
           where: { id: { in: pkgIds } },
           select: { id: true, name: true },
         }),
         prisma.course.findMany({
           where: { id: { in: courseIds1 } },
-          select: { id: true, title: true },
-        }),
-        prisma.course.findMany({
-          where: { id: { in: courseIds2 } },
           select: { id: true, title: true },
         }),
         prisma.coursePackage.findMany({
@@ -129,7 +114,6 @@ export const dashboardController = {
       // ── Resolve all data in memory (no more DB calls) ──
       const pkgMap = new Map(pkgs.map((p) => [p.id, p.name]));
       const courseMap1 = new Map(courses1.map((c) => [c.id, c.title]));
-      const courseMap2 = new Map(courses2.map((c) => [c.id, c.title]));
       const revPkgNameMap = new Map(revPkgs.map((p) => [p.id, p.name]));
       const certMap = new Map(
         certificateGroups
@@ -147,10 +131,13 @@ export const dashboardController = {
         count: s._count.id,
       }));
 
-      const topCoursesResolved = topCourses.map((t) => ({
-        courseTitle: courseMap2.get(t.courseId) || "Unknown",
-        enrollmentCount: t._count.id,
-      }));
+      const topCoursesResolved = [...studentsPerCourseResolved]
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5)
+        .map((s) => ({
+          courseTitle: s.courseTitle,
+          enrollmentCount: s.count,
+        }));
 
       const recentEnrollmentsResolved = recentEnrollments.map((e) => ({
         id: e.id,

@@ -249,7 +249,7 @@ export default function ScheduleSessionPage() {
   };
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="w-full space-y-6">
       <AdminPageHeader
         title="Schedule Session"
         description="Select a batch first, then set the date/time and instructor."

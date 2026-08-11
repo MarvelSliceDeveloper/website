@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { IconPlus } from "@tabler/icons-react";
@@ -17,44 +17,17 @@ export default function ContentTab({
   modules: Module[];
   onContentChanged: () => void;
 }) {
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [overIndex, setOverIndex] = useState<number | null>(null);
-  const [dragOrder, setDragOrder] = useState<string[] | null>(null);
-
   const regularModules = useMemo(
     () => modules.filter((m) => !m.isCertificationModule),
     [modules],
   );
 
-  const items = useMemo(() => {
-    if (dragOrder) {
-      return dragOrder
-        .map((id) => regularModules.find((m) => m.id === id)!)
-        .filter(Boolean);
-    }
-    return regularModules;
-  }, [regularModules, dragOrder]);
-
-  const handleDragStart = (index: number) => {
-    setDragIndex(index);
-  };
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    setOverIndex(index);
-  };
-  const handleDragLeave = () => {
-    setOverIndex(null);
-  };
-  const handleDrop = async (dropIdx: number) => {
-    if (dragIndex === null || dragIndex === dropIdx) {
-      reset();
-      return;
-    }
-    const reordered = [...items];
-    const [moved] = reordered.splice(dragIndex, 1);
-    reordered.splice(dropIdx, 0, moved);
-    setDragOrder(reordered.map((m) => m.id));
+  const handleMoveModule = async (fromIdx: number, dir: -1 | 1) => {
+    const toIdx = fromIdx + dir;
+    if (toIdx < 0 || toIdx >= regularModules.length) return;
+    const reordered = [...regularModules];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
     const promise = api.patch(`/api/admin/courses/${courseId}/modules/reorder`, {
       moduleIds: reordered.map((m) => m.id),
     });
@@ -65,17 +38,10 @@ export default function ContentTab({
     });
     try {
       await promise;
-      setDragOrder(null);
       onContentChanged();
     } catch {
-      setDragOrder(null);
       onContentChanged();
     }
-    reset();
-  };
-  const reset = () => {
-    setDragIndex(null);
-    setOverIndex(null);
   };
 
   return (
@@ -85,7 +51,7 @@ export default function ContentTab({
           Course Builder
         </h2>
         <span className="text-xs text-muted">
-          {items.length} module{items.length !== 1 ? "s" : ""}
+          {regularModules.length} module{regularModules.length !== 1 ? "s" : ""}
         </span>
       </div>
 
@@ -96,7 +62,7 @@ export default function ContentTab({
         </div>
       )}
 
-      {items.length === 0 ? (
+      {regularModules.length === 0 ? (
         <div className="border-2 border-dashed border-border/60 rounded-xl hover:border-primary/30 transition-colors flex flex-col items-center justify-center gap-3 py-10">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 border border-primary/20">
             <IconPlus size={24} className="text-primary" />
@@ -108,27 +74,18 @@ export default function ContentTab({
         </div>
       ) : (
         <div className="space-y-2">
-          {items.map((mod, idx) => (
-            <div key={mod.id}>
-              {overIndex === idx && dragIndex !== idx && overIndex !== null && (
-                <div
-                  key="drag"
-                  className="h-1 rounded-full bg-primary/40 mx-1 transition-all"
-                />
-              )}
-              <ModuleCard
-                key="module"
-                module={mod}
-                index={idx}
-                courseId={courseId}
-                onChanged={onContentChanged}
-                onDragStart={() => handleDragStart(idx)}
-                onDragOver={(e) => handleDragOver(e, idx)}
-                onDragLeave={handleDragLeave}
-                onDrop={() => handleDrop(idx)}
-                isDragging={dragIndex === idx}
-              />
-            </div>
+          {regularModules.map((mod, idx) => (
+            <ModuleCard
+              key={mod.id}
+              module={mod}
+              index={idx}
+              courseId={courseId}
+              onChanged={onContentChanged}
+              onMoveUp={() => handleMoveModule(idx, -1)}
+              onMoveDown={() => handleMoveModule(idx, 1)}
+              canMoveUp={idx > 0}
+              canMoveDown={idx < regularModules.length - 1}
+            />
           ))}
         </div>
       )}

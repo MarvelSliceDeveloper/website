@@ -4,18 +4,16 @@ import { useState, useMemo, useEffect } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import {
-  IconGripVertical,
   IconTrash,
-  IconPlus,
   IconFile,
   IconDownload,
-  IconX,
   IconDeviceFloppy,
   IconClipboardText,
   IconFileText,
   IconBrain,
   IconVideo,
   IconChevronDown,
+  IconChevronUp,
 } from "@tabler/icons-react";
 import type {
   Module,
@@ -117,11 +115,10 @@ export default function ModuleCard({
   index,
   courseId,
   onChanged,
-  onDragStart,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  isDragging,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
   certModule,
   onAddQuestion,
   onAddAssignment,
@@ -132,11 +129,10 @@ export default function ModuleCard({
   index: number;
   courseId: string;
   onChanged: () => void;
-  onDragStart?: () => void;
-  onDragOver?: (e: React.DragEvent) => void;
-  onDragLeave?: () => void;
-  onDrop?: () => void;
-  isDragging?: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
   certModule?: boolean;
   onAddQuestion?: () => void;
   onAddAssignment?: () => void;
@@ -149,9 +145,6 @@ export default function ModuleCard({
     title: mod.title,
     description: mod.description || "",
   });
-  const [contentDragIdx, setContentDragIdx] = useState<number | null>(null);
-  const [contentOverIdx, setContentOverIdx] = useState<number | null>(null);
-  const [resourceDragIdx, setResourceDragIdx] = useState<number | null>(null);
   const [showAddQuiz, setShowAddQuiz] = useState(false);
   const [showAddAssignment, setShowAddAssignment] = useState(false);
   const [showAddPractical, setShowAddPractical] = useState(false);
@@ -228,17 +221,12 @@ export default function ModuleCard({
     }
   };
 
-  const handleContentDrop = async (dropIdx: number) => {
-    if (contentDragIdx === null || contentDragIdx === dropIdx) {
-      setContentDragIdx(null);
-      setContentOverIdx(null);
-      return;
-    }
+  const handleMoveContent = async (fromIdx: number, dir: -1 | 1) => {
+    const toIdx = fromIdx + dir;
+    if (toIdx < 0 || toIdx >= unifiedItems.length) return;
     const reordered = [...unifiedItems];
-    const [moved] = reordered.splice(contentDragIdx, 1);
-    reordered.splice(dropIdx, 0, moved);
-    setContentDragIdx(null);
-    setContentOverIdx(null);
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
     const promise = api.patch(
       `/api/admin/courses/modules/${mod.id}/content/reorder`,
       {
@@ -261,15 +249,12 @@ export default function ModuleCard({
     }
   };
 
-  const handleResourceDrop = async (dropIdx: number) => {
-    if (resourceDragIdx === null || resourceDragIdx === dropIdx) {
-      setResourceDragIdx(null);
-      return;
-    }
+  const handleMoveResource = async (fromIdx: number, dir: -1 | 1) => {
+    const toIdx = fromIdx + dir;
+    if (toIdx < 0 || toIdx >= allResources.length) return;
     const reordered = [...allResources];
-    const [moved] = reordered.splice(resourceDragIdx, 1);
-    reordered.splice(dropIdx, 0, moved);
-    setResourceDragIdx(null);
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
 
     const groupedByLesson: Record<string, string[]> = {};
     for (const r of reordered) {
@@ -369,18 +354,7 @@ export default function ModuleCard({
   const hasContent = itemCount > 0 || certModule === true;
 
   return (
-    <div
-      className={`rounded-xl border border-border bg-card shadow-sm transition-all duration-200 ${isDragging ? "opacity-40 scale-[0.97]" : "hover:shadow-md hover:border-border-hover"}`}
-      draggable={!!onDragStart}
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={(e) => {
-        e.preventDefault();
-        onDrop?.();
-      }}
-      onDragEnd={() => {}}
-    >
+    <div className="rounded-xl border border-border bg-card shadow-sm transition-all duration-200 hover:shadow-md hover:border-border-hover">
       {/* Module Header */}
       <div className="flex items-start gap-3 p-4">
         {/* Module number badge */}
@@ -532,6 +506,22 @@ export default function ModuleCard({
               />
             </button>
             <button
+              onClick={onMoveUp}
+              disabled={!canMoveUp}
+              className="p-1 rounded-lg text-[#a3a1c9] transition-colors hover:text-primary hover:bg-primary/10 disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+              title="Move module up"
+            >
+              <IconChevronUp size={17} />
+            </button>
+            <button
+              onClick={onMoveDown}
+              disabled={!canMoveDown}
+              className="p-1 rounded-lg text-[#a3a1c9] transition-colors hover:text-primary hover:bg-primary/10 disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+              title="Move module down"
+            >
+              <IconChevronDown size={17} />
+            </button>
+            <button
               onClick={() => setEditing(true)}
               className="text-xs font-medium text-primary hover:text-primary-hover transition-colors px-2.5 py-1 rounded-md hover:bg-primary/12"
             >
@@ -602,90 +592,48 @@ export default function ModuleCard({
             <div className="px-3 py-2 space-y-1">
               {unifiedItems.map((item, idx) => (
                 <div key={`${item.type}-${item.data.id}`}>
-                  {contentOverIdx === idx &&
-                    contentDragIdx !== idx &&
-                    contentOverIdx !== null && (
-                      <div
-                        key="drag"
-                        className="h-0.5 rounded-full bg-primary/30 mx-6"
-                      />
-                    )}
                   {item.type === "LESSON" && (
                     <LessonCard
                       lesson={item.data}
                       index={idx}
                       onChanged={onChanged}
-                      onDragStart={() => setContentDragIdx(idx)}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setContentOverIdx(idx);
-                      }}
-                      onDragLeave={() => setContentOverIdx(null)}
-                      onDrop={() => handleContentDrop(idx)}
-                      isDragging={contentDragIdx === idx}
+                      onMoveUp={() => handleMoveContent(idx, -1)}
+                      onMoveDown={() => handleMoveContent(idx, 1)}
+                      canMoveUp={idx > 0}
+                      canMoveDown={idx < unifiedItems.length - 1}
                     />
                   )}
                   {item.type === "QUIZ" && (
-                    <div
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setContentOverIdx(idx);
-                      }}
-                      onDragLeave={() => setContentOverIdx(null)}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        handleContentDrop(idx);
-                      }}
-                    >
-                      <QuizCard
-                        quiz={item.data}
-                        onUpdate={onChanged}
-                        onDragStart={() => setContentDragIdx(idx)}
-                        isDragging={contentDragIdx === idx}
-                      />
-                    </div>
+                    <QuizCard
+                      quiz={item.data}
+                      onUpdate={onChanged}
+                      onMoveUp={() => handleMoveContent(idx, -1)}
+                      onMoveDown={() => handleMoveContent(idx, 1)}
+                      canMoveUp={idx > 0}
+                      canMoveDown={idx < unifiedItems.length - 1}
+                    />
                   )}
                   {item.type === "ASSIGNMENT" && (
-                    <div
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setContentOverIdx(idx);
-                      }}
-                      onDragLeave={() => setContentOverIdx(null)}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        handleContentDrop(idx);
-                      }}
-                    >
-                      <AssignmentCard
-                        assignment={item.data}
-                        onUpdate={onChanged}
-                        onDragStart={() => setContentDragIdx(idx)}
-                        isDragging={contentDragIdx === idx}
-                      />
-                    </div>
+                    <AssignmentCard
+                      assignment={item.data}
+                      onUpdate={onChanged}
+                      onMoveUp={() => handleMoveContent(idx, -1)}
+                      onMoveDown={() => handleMoveContent(idx, 1)}
+                      canMoveUp={idx > 0}
+                      canMoveDown={idx < unifiedItems.length - 1}
+                    />
                   )}
                   {item.type === "PRACTICAL" && (
-                    <div
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setContentOverIdx(idx);
-                      }}
-                      onDragLeave={() => setContentOverIdx(null)}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        handleContentDrop(idx);
-                      }}
-                    >
-                      <PracticalCard
-                        practical={item.data}
-                        index={idx}
-                        courseId={courseId}
-                        onUpdate={onChanged}
-                        onDragStart={() => setContentDragIdx(idx)}
-                        isDragging={contentDragIdx === idx}
-                      />
-                    </div>
+                    <PracticalCard
+                      practical={item.data}
+                      index={idx}
+                      courseId={courseId}
+                      onUpdate={onChanged}
+                      onMoveUp={() => handleMoveContent(idx, -1)}
+                      onMoveDown={() => handleMoveContent(idx, 1)}
+                      canMoveUp={idx > 0}
+                      canMoveDown={idx < unifiedItems.length - 1}
+                    />
                   )}
                 </div>
               ))}
@@ -710,26 +658,26 @@ export default function ModuleCard({
                   {allResources.map((resource, rIdx) => (
                     <div
                       key={`${resource.lessonId}-${resource.id}`}
-                      draggable
-                      onDragStart={() => setResourceDragIdx(rIdx)}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                      }}
-                      onDragLeave={() => {}}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        handleResourceDrop(rIdx);
-                      }}
-                      className={`flex items-center gap-2 rounded-md border border-[#e4e2f5] bg-white px-2 py-1.5 text-xs transition-all duration-200 cursor-grab active:cursor-grabbing ${
-                        resourceDragIdx === rIdx
-                          ? "opacity-40 scale-[0.98]"
-                          : "hover:border-[#cfcbe8] hover:bg-card/50"
-                      }`}
+                      className="flex items-center gap-1.5 rounded-md border border-[#e4e2f5] bg-white px-2 py-1.5 text-xs transition-all duration-200 hover:border-[#cfcbe8] hover:bg-card/50"
                     >
-                      <IconGripVertical
-                        size={12}
-                        className="text-muted shrink-0"
-                      />
+                      <div className="flex shrink-0 flex-col">
+                        <button
+                          onClick={() => handleMoveResource(rIdx, -1)}
+                          disabled={rIdx === 0}
+                          className="rounded p-px text-[#a3a1c9] transition-colors hover:text-emerald-600 hover:bg-emerald-50 disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+                          title="Move up"
+                        >
+                          <IconChevronUp size={11} />
+                        </button>
+                        <button
+                          onClick={() => handleMoveResource(rIdx, 1)}
+                          disabled={rIdx === allResources.length - 1}
+                          className="rounded p-px text-[#a3a1c9] transition-colors hover:text-emerald-600 hover:bg-emerald-50 disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+                          title="Move down"
+                        >
+                          <IconChevronDown size={11} />
+                        </button>
+                      </div>
                       <IconFile size={12} className="text-success shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="truncate text-foreground">

@@ -6,11 +6,12 @@ import { toast } from "@/lib/toast";
 import {
   IconX,
   IconExternalLink,
-  IconGripVertical,
   IconCopy,
   IconCheck,
   IconFileText,
   IconTrash,
+  IconChevronUp,
+  IconChevronDown,
 } from "@tabler/icons-react";
 import RichEditor from "@/components/editor/RichEditor";
 
@@ -28,21 +29,19 @@ interface Assignment {
 interface AssignmentCardProps {
   assignment: Assignment;
   onUpdate: () => void;
-  onDragStart?: () => void;
-  onDragOver?: (e: React.DragEvent) => void;
-  onDragLeave?: () => void;
-  onDrop?: () => void;
-  isDragging?: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
 }
 
 export default function AssignmentCard({
   assignment,
   onUpdate,
-  onDragStart,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  isDragging,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
 }: AssignmentCardProps) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(assignment.title);
@@ -228,24 +227,25 @@ export default function AssignmentCard({
         : null;
 
   return (
-    <div
-      draggable={!!onDragStart}
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={(e) => {
-        e.preventDefault();
-        onDrop?.();
-      }}
-      className={`group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 ${
-        isDragging ? "scale-[0.98] opacity-40" : "hover:border-[#cfcbe8] hover:bg-[#f8f7fd]"
-      }`}
-    >
-      {onDragStart && (
-        <span className="shrink-0 cursor-grab text-[#c7c6dd] transition-colors hover:text-[#a3a1c9] active:cursor-grabbing">
-          <IconGripVertical size={13} />
-        </span>
-      )}
+    <div className="group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 hover:border-[#cfcbe8] hover:bg-[#f8f7fd]">
+      <div className="flex shrink-0 flex-col">
+        <button
+          onClick={onMoveUp}
+          disabled={!canMoveUp}
+          className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#2563eb] hover:bg-[#eff6ff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+          title="Move up"
+        >
+          <IconChevronUp size={13} />
+        </button>
+        <button
+          onClick={onMoveDown}
+          disabled={!canMoveDown}
+          className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#2563eb] hover:bg-[#eff6ff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+          title="Move down"
+        >
+          <IconChevronDown size={13} />
+        </button>
+      </div>
 
       <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg bg-[#eff6ff] text-[#2563eb]">
         <IconFileText size={13} />

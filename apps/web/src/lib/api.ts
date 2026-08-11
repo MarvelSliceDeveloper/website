@@ -63,6 +63,14 @@ function getCsrfToken(forceRefresh = false): Promise<string> {
   return csrfTokenPromise;
 }
 
+// Resets the cached CSRF token. Call after login/logout — the token is bound
+// to the session identifier (accessToken cookie), which changes on auth
+// transitions, so the old cached token would be rejected with a 403.
+function resetCsrfToken() {
+  csrfTokenPromise = null;
+  csrfRetryCount = 0;
+}
+
 async function request<T>(
   endpoint: string,
   options: FetchOptions = {},

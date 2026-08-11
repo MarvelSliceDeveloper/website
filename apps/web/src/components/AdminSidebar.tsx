@@ -636,7 +636,16 @@ export default function AdminSidebar({
           {
             label: "Reports",
             items: [
-              { label: "Reports", href: "/admin/reports", icon: IconChartBar },
+              {
+                label: "Reports",
+                href: "/admin/reports",
+                icon: IconChartBar,
+                children: [
+                  { label: "Overview", href: "/admin/reports" },
+                  { label: "Course Report", href: "/admin/reports/course" },
+                  { label: "Payment Report", href: "/admin/reports/payment" },
+                ],
+              },
               { label: "Calendar", href: "/admin/calendar", icon: IconCalendar },
             ],
           },

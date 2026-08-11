@@ -183,9 +183,10 @@ export default function CreateBatchPage() {
       );
       if (assigned.length > 0) body.courseInstructors = assigned;
 
-      const result = await api.post<
-        { id: string; name: string }
-      >("/api/admin/batches", body);
+      const result = await api.post<{ id: string; name: string }>(
+        "/api/admin/batches",
+            body,
+          );
 
       toast.success(`Created batch "${result.name}"`);
       router.push("/admin/batches");
@@ -202,7 +203,7 @@ export default function CreateBatchPage() {
     ) : null;
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="w-full space-y-6">
       <AdminPageHeader
         title="Add Batch"
         description="Select a package and assign instructors to each course."

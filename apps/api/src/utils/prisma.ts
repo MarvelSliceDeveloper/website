@@ -33,11 +33,15 @@ function getPrismaUrl(): string {
   if (!baseUrl) return "";
   try {
     const url = new URL(baseUrl);
-    // Pool size is env-driven: default 10. Keep it well below Supabase session-mode pooler limit (15)
-    // to prevent EMAXCONNSESSION max clients reached errors during concurrent portal loads.
+    // Pool size is env-driven: default 7. Keep it well below the Supabase
+    // session-mode pooler limit (15) so that even a second process (tests,
+    // a lingering dev server) doesn't trigger EMAXCONNSESSION errors.
     const connectionLimit =
-      Number(process.env.DATABASE_CONNECTION_LIMIT) || 10;
+      Number(process.env.DATABASE_CONNECTION_LIMIT) || 7;
     url.searchParams.set("connection_limit", String(connectionLimit));
+    // Wait up to 30s for a pooled connection instead of failing immediately
+    // during concurrent bursts (e.g. report pages firing parallel queries).
+    url.searchParams.set("pool_timeout", "30");
     return url.toString();
   } catch {
     return baseUrl;

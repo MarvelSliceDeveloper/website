@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import {
   IconPlus,
   IconX,
   IconTrash,
+  IconFileSpreadsheet,
 } from "@tabler/icons-react";
+import { readSheet } from "read-excel-file/browser";
 import RichEditor from "@/components/editor/RichEditor";
 import { FormModal } from "@/components/admin/FormModal";
 
@@ -41,8 +43,6 @@ export default function AddQuizForm({
   open,
 }: AddQuizFormProps) {
   const [title, setTitle] = useState("");
-  const [dueDateMode, setDueDateMode] = useState<"absolute" | "days">("absolute");
-  const [dueDate, setDueDate] = useState("");
   const [daysFromEnrollment, setDaysFromEnrollment] = useState("");
   const [examType, setExamType] = useState<
     "MCQ" | "ASSIGNMENT" | "CODING_TESTCASE" | "ALL_IN_ONE"
@@ -65,11 +65,62 @@ export default function AddQuizForm({
   ]);
 
   const [loading, setLoading] = useState(false);
+  const excelInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExcelImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const rows = await readSheet(file);
+      const imported: QuizQuestion[] = [];
+      let skipped = 0;
+
+      rows.forEach((row) => {
+        const question = String(row[0] ?? "").trim();
+        const options = [
+          { label: String(row[1] ?? "").trim(), isCorrect: false },
+          { label: String(row[2] ?? "").trim(), isCorrect: false },
+          { label: String(row[3] ?? "").trim(), isCorrect: false },
+          { label: String(row[4] ?? "").trim(), isCorrect: false },
+        ];
+        const answer = String(row[5] ?? "").trim().toUpperCase();
+
+        if (!question || options.every((o) => !o.label)) {
+          skipped++;
+          return;
+        }
+
+        const answerIndex =
+          answer === "A" ? 0 : answer === "B" ? 1 : answer === "C" ? 2 : answer === "D" ? 3 : -1;
+        if (answerIndex >= 0) {
+          options[answerIndex] = { ...options[answerIndex], isCorrect: true };
+        }
+
+        imported.push({
+          text: question,
+          options: options.filter((o) => o.label || o.isCorrect),
+        });
+      });
+
+      if (imported.length === 0) {
+        toast.error("No valid questions found. Check the file format.");
+        return;
+      }
+
+      setQuestions((prev) => [...prev, ...imported]);
+      toast.success(
+        `Imported ${imported.length} question${imported.length !== 1 ? "s" : ""}${skipped > 0 ? ` (${skipped} row${skipped !== 1 ? "s" : ""} skipped)` : ""}`,
+      );
+    } catch {
+      toast.error("Failed to read the Excel file. Use a .xlsx file.");
+    } finally {
+      e.target.value = "";
+    }
+  };
 
   const resetForm = () => {
     setTitle("");
-    setDueDateMode("absolute");
-    setDueDate("");
     setDaysFromEnrollment("");
     setExamType("MCQ");
     setHasMcq(true);
@@ -186,8 +237,7 @@ export default function AddQuizForm({
     try {
       await api.post(`/api/admin/courses/modules/${moduleId}/quizzes`, {
         title,
-        dueDate: dueDateMode === "absolute" && dueDate ? new Date(dueDate).toISOString() : undefined,
-        daysFromEnrollment: dueDateMode === "days" && daysFromEnrollment !== "" ? Number(daysFromEnrollment) : undefined,
+        daysFromEnrollment: daysFromEnrollment !== "" ? Number(daysFromEnrollment) : undefined,
         passingScore: 65,
         examType:
           hasMcq && hasAssignment && hasCoding ? "ALL_IN_ONE" : examType,
@@ -246,63 +296,47 @@ export default function AddQuizForm({
         />
       </div>
 
-      {/* Due Date Mode */}
-      <div className="sticky top-0 bg-card py-2 z-10 border-b border-border/40">
+      {/* Due Date */}
+      <div className="space-y-2">
         <label className="text-xs font-medium text-muted-foreground">
-          Due Date
+          Due Date (Days After Enrollment)
         </label>
-        <div className="flex gap-2 mt-1">
-          <button
-            type="button"
-            onClick={() => setDueDateMode("absolute")}
-            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${dueDateMode === "absolute" ? "bg-primary text-white border-primary" : "bg-paper text-ink border-hairline"}`}
-          >
-            Absolute Date
-          </button>
-          <button
-            type="button"
-            onClick={() => setDueDateMode("days")}
-            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${dueDateMode === "days" ? "bg-primary text-white border-primary" : "bg-paper text-ink border-hairline"}`}
-          >
-            Days from Enrollment
-          </button>
-        </div>
+        <input
+          type="number"
+          value={daysFromEnrollment}
+          onChange={(e) => setDaysFromEnrollment(e.target.value)}
+          placeholder="e.g. 10"
+          className="field w-full"
+          min={1}
+        />
       </div>
-
-      {dueDateMode === "absolute" ? (
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-muted-foreground">
-            Due Date
-          </label>
-          <input
-            type="datetime-local"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-            className="field w-full"
-          />
-        </div>
-      ) : (
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-muted-foreground">
-            Days After Enrollment
-          </label>
-          <input
-            type="number"
-            value={daysFromEnrollment}
-            onChange={(e) => setDaysFromEnrollment(e.target.value)}
-            placeholder="e.g. 10"
-            className="field w-full"
-            min={1}
-          />
-        </div>
-      )}
 
       {/* MCQ Section */}
       {hasMcq && (
         <div className="space-y-4 rounded-md border border-border p-3">
-          <h5 className="text-xs font-semibold uppercase tracking-wider text-primary">
-            1. MCQ Questions
-          </h5>
+          <div className="flex items-center justify-between">
+            <h5 className="text-xs font-semibold uppercase tracking-wider text-primary">
+              1. MCQ Questions
+            </h5>
+            <button
+              type="button"
+              onClick={() => excelInputRef.current?.click()}
+              className="flex items-center gap-1 rounded-md border border-emerald-300/60 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+            >
+              <IconFileSpreadsheet size={13} />
+              Import from Excel
+            </button>
+            <input
+              ref={excelInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleExcelImport}
+              className="hidden"
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground -mt-1">
+            Excel columns: Question | A | B | C | D | Correct Answer (A/B/C/D)
+          </p>
           {questions.map((q, qIndex) => (
             <div
               key={qIndex}
@@ -531,7 +565,7 @@ export default function AddQuizForm({
   );
 
   return (
-    <FormModal open={open} onClose={close} title="Add Quiz" size="lg" footer={footer}>
+    <FormModal open={open} onClose={close} title="Add Quiz" size="xl" footer={footer}>
       {formContent}
     </FormModal>
   );

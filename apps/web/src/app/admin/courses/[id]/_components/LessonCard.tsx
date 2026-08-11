@@ -4,13 +4,14 @@ import { useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import {
-  IconGripVertical,
   IconBrandYoutube,
   IconPlayerPlay,
   IconDeviceFloppy,
   IconTrash,
   IconX,
   IconRefresh,
+  IconChevronUp,
+  IconChevronDown,
 } from "@tabler/icons-react";
 import type { Lesson } from "./types";
 import RichEditor from "@/components/editor/RichEditor";
@@ -19,20 +20,18 @@ export default function LessonCard({
   lesson,
   index,
   onChanged,
-  onDragStart,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  isDragging,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
 }: {
   lesson: Lesson;
   index: number;
   onChanged: () => void;
-  onDragStart: () => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragLeave: () => void;
-  onDrop: () => void;
-  isDragging: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [fetchingInfo, setFetchingInfo] = useState(false);
@@ -199,22 +198,26 @@ export default function LessonCard({
 
   return (
     <div
-      draggable
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={(e) => {
-        e.preventDefault();
-        onDrop();
-      }}
-      onDragEnd={() => {}}
-      className={`group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 ${
-        isDragging ? "scale-[0.98] opacity-40" : "hover:border-[#cfcbe8] hover:bg-[#f8f7fd]"
-      }`}
+      className="group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 hover:border-[#cfcbe8] hover:bg-[#f8f7fd]"
     >
-      <span className="shrink-0 cursor-grab text-[#c7c6dd] transition-colors hover:text-[#a3a1c9] active:cursor-grabbing">
-        <IconGripVertical size={13} />
-      </span>
+      <div className="flex shrink-0 flex-col">
+        <button
+          onClick={onMoveUp}
+          disabled={!canMoveUp}
+          className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#4f63f0] hover:bg-[#e8ecff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+          title="Move up"
+        >
+          <IconChevronUp size={13} />
+        </button>
+        <button
+          onClick={onMoveDown}
+          disabled={!canMoveDown}
+          className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#4f63f0] hover:bg-[#e8ecff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+          title="Move down"
+        >
+          <IconChevronDown size={13} />
+        </button>
+      </div>
 
       <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg bg-[#e8ecff] text-[#4f63f0]">
         {contentType === "youtube" ? (

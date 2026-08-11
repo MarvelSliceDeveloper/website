@@ -212,8 +212,9 @@ export default function CourseContentView({
   const [selectedRecordingId, setSelectedRecordingId] = useState<string | null>(
     null,
   );
-  const [expandedModules, setExpandedModules] = useState<Set<string>>(
-    new Set(),
+  // Single-expand accordion: only one module's id (or null) is ever "open".
+  const [expandedModuleId, setExpandedModuleId] = useState<string | null>(
+    null,
   );
   const [retryKey, setRetryKey] = useState(0);
 
@@ -304,7 +305,7 @@ export default function CourseContentView({
               ) ?? firstModule)
             : firstModule;
           setSelectedModuleId(targetModule.id);
-          setExpandedModules(new Set([targetModule.id]));
+          setExpandedModuleId(targetModule.id);
           const targetLesson = initialLessonId
             ? targetModule.lessons.find((l) => l.id === initialLessonId)
             : targetModule.lessons[0];
@@ -329,12 +330,9 @@ export default function CourseContentView({
   // ── Navigation ─────────────────────────────────────────────────────────
 
   const toggleModule = (moduleId: string) => {
-    setExpandedModules((prev) => {
-      const next = new Set(prev);
-      if (next.has(moduleId)) next.delete(moduleId);
-      else next.add(moduleId);
-      return next;
-    });
+    // Clicking the already-open module collapses it; clicking any other
+    // module opens it and implicitly closes whichever one was open.
+    setExpandedModuleId((prev) => (prev === moduleId ? null : moduleId));
   };
 
   const selectModule = (moduleId: string) => {
@@ -348,9 +346,7 @@ export default function CourseContentView({
     setSelectedAssignmentId(null);
     setSelectedPracticalId(null);
 
-    if (!expandedModules.has(moduleId)) {
-      setExpandedModules((prev) => new Set([...prev, moduleId]));
-    }
+    setExpandedModuleId(moduleId);
   };
   const selectLesson = (lesson: { id: string }, moduleId: string) => {
     setSelectedLessonId(lesson.id);
@@ -365,9 +361,7 @@ export default function CourseContentView({
     setSelectedAssignmentId(null);
     setSelectedPracticalId(null);
 
-    if (!expandedModules.has(moduleId)) {
-      setExpandedModules((prev) => new Set([...prev, moduleId]));
-    }
+    setExpandedModuleId(moduleId);
   };
 
   const selectRecording = (recordingId: string) => {
@@ -506,9 +500,7 @@ export default function CourseContentView({
         );
         if (assignment) {
           selectAssignment(assignment);
-          if (!expandedModules.has(mod.id)) {
-            setExpandedModules((prev) => new Set([...prev, mod.id]));
-          }
+          setExpandedModuleId(mod.id);
           setSelectedModuleId(mod.id);
           break;
         }
@@ -1029,7 +1021,7 @@ export default function CourseContentView({
         </div>
       </div>
       {d.modules.filter((m) => !m.isCertificationModule).map((module, mIdx) => {
-        const isExpanded = expandedModules.has(module.id);
+        const isExpanded = expandedModuleId === module.id;
         const isActiveModule = module.id === selectedModuleId;
         const totalSeconds = module.lessons.reduce(
           (s, l) => s + (l.durationSeconds ?? 0),
@@ -1637,9 +1629,7 @@ export default function CourseContentView({
                   const prevUnified = buildUnifiedList(prevMod);
                   if (prevUnified.length > 0) {
                     const last = prevUnified[prevUnified.length - 1];
-                    setExpandedModules(
-                      (prevSet) => new Set([...prevSet, prevMod.id]),
-                    );
+                    setExpandedModuleId(prevMod.id);
                     if (last.type === "LESSON")
                       selectLesson(last.data, prevMod.id);
                     else if (last.type === "QUIZ") selectQuiz(last.data.id);
@@ -1740,9 +1730,7 @@ export default function CourseContentView({
                   const nextUnified = buildUnifiedList(nextMod);
                   if (nextUnified.length > 0) {
                     const first = nextUnified[0];
-                    setExpandedModules(
-                      (prevSet) => new Set([...prevSet, nextMod.id]),
-                    );
+                    setExpandedModuleId(nextMod.id);
                     if (first.type === "LESSON")
                       selectLesson(first.data, nextMod.id);
                     else if (first.type === "QUIZ") selectQuiz(first.data.id);

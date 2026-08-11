@@ -11,7 +11,8 @@
     "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
-    "@fullcalendar/core": "^6.1.20",    "@fullcalendar/daygrid": "^6.1.20",
+    "@fullcalendar/core": "^6.1.20",
+    "@fullcalendar/daygrid": "^6.1.20",
     "@fullcalendar/interaction": "^6.1.20",
     "@fullcalendar/list": "^6.1.20",
     "@fullcalendar/react": "^6.1.20",
@@ -24,6 +25,7 @@
     "@tinymce/tinymce-react": "^5.1.1",
     "apexcharts": "^5.16.0",
     "clsx": "^2.1.1",
+    "exceljs": "^4.4.0",
     "jose": "^6.2.3",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
@@ -34,8 +36,9 @@
     "react": "19.2.4",
     "react-apexcharts": "^2.1.1",
     "react-dom": "19.2.4",
-    "sonner": "^2.0.7",
+    "read-excel-file": "^9.3.9",
     "socket.io-client": "^4.8.1",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {

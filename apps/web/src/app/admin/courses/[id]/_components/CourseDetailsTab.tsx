@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { IconPlus, IconX } from "@tabler/icons-react";
 import RichEditor from "@/components/editor/RichEditor";
+import { toast } from "@/lib/toast";
 import type { Course, CourseFormData } from "./types";
 
 export default function CourseDetailsTab({
@@ -54,6 +55,29 @@ export default function CourseDetailsTab({
     }));
   };
 
+  const stripHtml = (html: string) => html.replace(/<[^>]*>/g, "").trim();
+
+  const handleSave = () => {
+    // Checked in display order so the toast matches the first empty field on the page.
+    if (!form.title.trim()) {
+      toast.error("Title is required.");
+      return;
+    }
+    if (form.title.trim().length < 3) {
+      toast.error("Title must be at least 3 characters.");
+      return;
+    }
+    if (!stripHtml(form.description)) {
+      toast.error("Description is required.");
+      return;
+    }
+    if (!form.category.trim()) {
+      toast.error("Category is required.");
+      return;
+    }
+    onSave();
+  };
+
   return (
     <div className="glass-card p-6 space-y-4">
       <h2 className="text-base font-semibold text-foreground">
@@ -62,7 +86,7 @@ export default function CourseDetailsTab({
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-foreground">
-          Thumbnail
+          Thumbnail <span className="text-danger">*</span>
         </label>
         <div className="flex flex-wrap items-center gap-4">
           <div className="relative h-20 w-28 overflow-hidden rounded-lg border border-border bg-card flex items-center justify-center text-xl">
@@ -107,7 +131,7 @@ export default function CourseDetailsTab({
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-foreground">
-          Title
+          Title <span className="text-danger">*</span>
         </label>
         <input
           type="text"
@@ -124,7 +148,7 @@ export default function CourseDetailsTab({
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-foreground">
-          Description
+          Description <span className="text-danger">*</span>
         </label>
         <RichEditor
           content={form.description}
@@ -142,7 +166,7 @@ export default function CourseDetailsTab({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Category
+            Category <span className="text-danger">*</span>
           </label>
           <input
             type="text"
@@ -238,9 +262,15 @@ export default function CourseDetailsTab({
         </div>
       </div>
 
-      <button onClick={onSave} disabled={saving} className="btn-primary w-full">
-        {saving ? "Saving..." : "Save Changes"}
-      </button>
+      <div className="flex justify-center">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="btn-primary text-xs px-3 py-1.5"
+        >
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
     </div>
   );
 }

@@ -9,13 +9,14 @@ interface FormModalProps {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
 const sizeMap = {
-  sm: "max-w-md",
-  md: "max-w-2xl",
-  lg: "max-w-4xl",
+  sm: "max-w-[480px]",
+  md: "max-w-[640px]",
+  lg: "max-w-[800px]",
+  xl: "max-w-[1100px]",
 } as const;
 
 export function FormModal({
@@ -70,17 +71,20 @@ export function FormModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col bg-background"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-label={title}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div
         ref={dialogRef}
-        className="flex h-full w-full flex-col"
+        className={`flex max-h-[90vh] w-full ${sizeMap[size]} flex-col rounded-2xl border border-border bg-card shadow-2xl`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-border bg-card px-5 py-3">
+        <div className="flex shrink-0 items-center justify-between border-b border-border bg-card px-5 py-3.5 rounded-t-2xl">
           <h3 className="text-base font-bold text-foreground">{title}</h3>
           <button
             onClick={onClose}
@@ -92,13 +96,11 @@ export function FormModal({
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-5">
-          <div className={`mx-auto w-full ${sizeMap[size]} space-y-4`}>
-            {children}
-          </div>
+          <div className="w-full space-y-4">{children}</div>
         </div>
 
         {footer && (
-          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border/50 bg-card px-5 py-3">
+          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border/50 bg-card px-5 py-3 rounded-b-2xl">
             {footer}
           </div>
         )}

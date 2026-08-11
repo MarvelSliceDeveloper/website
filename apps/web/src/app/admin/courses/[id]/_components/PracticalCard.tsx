@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import {
-  IconGripVertical,
   IconTrash,
   IconEdit,
   IconDeviceFloppy,
@@ -13,6 +12,8 @@ import {
   IconFile,
   IconDownload,
   IconBrain,
+  IconChevronUp,
+  IconChevronDown,
 } from "@tabler/icons-react";
 import type { Practical } from "./types";
 
@@ -21,15 +22,19 @@ export default function PracticalCard({
   index,
   courseId,
   onUpdate,
-  onDragStart,
-  isDragging,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
 }: {
   practical: Practical;
   index: number;
   courseId: string;
   onUpdate: () => void;
-  onDragStart: () => void;
-  isDragging: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -216,22 +221,25 @@ export default function PracticalCard({
   }
 
   return (
-    <div
-      className={`group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 ${
-        isDragging ? "scale-[0.98] opacity-40" : "hover:border-[#cfcbe8] hover:bg-[#f8f7fd]"
-      }`}
-      draggable
-      onDragStart={(e) => {
-        e.dataTransfer.effectAllowed = "move";
-        onDragStart();
-      }}
-    >
-      <span
-        className="shrink-0 cursor-grab text-[#c7c6dd] transition-colors hover:text-[#a3a1c9] active:cursor-grabbing"
-        onDragStart={onDragStart}
-      >
-        <IconGripVertical size={13} />
-      </span>
+    <div className="group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 hover:border-[#cfcbe8] hover:bg-[#f8f7fd]">
+      <div className="flex shrink-0 flex-col">
+        <button
+          onClick={onMoveUp}
+          disabled={!canMoveUp}
+          className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#8b5cf6] hover:bg-[#f3efff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+          title="Move up"
+        >
+          <IconChevronUp size={13} />
+        </button>
+        <button
+          onClick={onMoveDown}
+          disabled={!canMoveDown}
+          className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#8b5cf6] hover:bg-[#f3efff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+          title="Move down"
+        >
+          <IconChevronDown size={13} />
+        </button>
+      </div>
 
       <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg bg-[#f0eaff] text-[#8b5cf6]">
         <IconBrain size={13} />
