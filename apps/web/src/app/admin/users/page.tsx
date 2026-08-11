@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -13,13 +13,10 @@ import { usePageTitle } from "@/lib/use-page-title";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SearchInput } from "@/components/ui/SearchInput";
 import {
-  IconShield,
-  IconChalkboardTeacher,
   IconSchool,
   IconUsers,
   IconEdit,
   IconTrash,
-  IconCheck,
   IconDownload,
   IconEye,
   IconX,
@@ -44,8 +41,6 @@ type User = {
   phone?: string | null;
   address?: string | null;
   createdAt?: string;
-  designation?: "WORKING" | "STUDYING" | null;
-  internField?: { id: string; name: string } | null;
   isSuspended?: boolean;
   packageEnrollments?: {
     package: { id: string; name: string };
@@ -102,31 +97,20 @@ type BatchResponse = {
 };
 
 const roleStyles: Record<string, string> = {
-  SUPER_ADMIN: "bg-purple-100 text-purple-700",
-  ADMIN: "bg-red-100 text-red-700",
-  INSTRUCTOR: "bg-sky-100 text-sky-700",
   STUDENT: "bg-blue-100 text-blue-700",
-  INTERN: "bg-emerald-100 text-emerald-700",
 };
 
 const roleIcons: Record<string, React.ReactNode> = {
-  SUPER_ADMIN: <IconShield size={14} />,
-  ADMIN: <IconShield size={14} />,
-  INSTRUCTOR: <IconChalkboardTeacher size={14} />,
   STUDENT: <IconSchool size={14} />,
-  INTERN: <IconUsers size={14} />,
 };
 
 export default function AdminUsersPage() {
-  usePageTitle("Users");
+  usePageTitle("Students");
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [packages, setPackages] = useState<PackageSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const roleFilter = searchParams.get("role") || "";
   const packageFilter = searchParams.get("packageId") || "";
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -138,11 +122,8 @@ export default function AdminUsersPage() {
     name: "",
     email: "",
     password: "",
-    role: "STUDENT",
     packageId: "",
     batchId: "",
-    designation: "" as string,
-    internFieldId: "",
   });
 
   // Edit user modal
@@ -150,11 +131,8 @@ export default function AdminUsersPage() {
   const [editForm, setEditForm] = useState({
     name: "",
     email: "",
-    role: "STUDENT" as string,
     packageId: "",
     batchId: "",
-    designation: "" as string,
-    internFieldId: "",
   });
   const [editing, setEditing] = useState(false);
   // Batches for edit modal's selected package
@@ -182,11 +160,6 @@ export default function AdminUsersPage() {
     { id: string; name: string }[]
   >([]);
 
-  // Internship fields for the INTERN role's field dropdown
-  const [internFields, setInternFields] = useState<
-    { id: string; name: string; isActive: boolean }[]
-  >([]);
-
   // Batches for the selected package (flat list)
   const [packageBatches, setPackageBatches] = useState<
     {
@@ -201,6 +174,7 @@ export default function AdminUsersPage() {
   const fetchUsers = () => {
     setLoading(true);
     const params = new URLSearchParams();
+    params.set("role", "STUDENT");
     if (packageFilter) params.set("packageId", packageFilter);
 
     api
@@ -221,12 +195,6 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     Promise.resolve().then(() => fetchUsers());
-    api
-      .get<{ user: { role: string } }>("/api/auth/me")
-      .then((res) => {
-        if (res?.user) setCurrentUserRole(res.user.role);
-      })
-      .catch(() => {});
   }, [packageFilter]);
 
   useEffect(() => {
@@ -238,15 +206,6 @@ export default function AdminUsersPage() {
         );
         setActivePackages(active.map((p) => ({ id: p.id, name: p.name })));
       })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    api
-      .get<{ fields: { id: string; name: string; isActive: boolean }[] }>(
-        "/api/admin/interns/fields",
-      )
-      .then((res) => setInternFields(res.fields ?? []))
       .catch(() => {});
   }, []);
 
@@ -302,32 +261,29 @@ export default function AdminUsersPage() {
     setSubmitting(true);
 
     try {
-      // Validate: students must have a package
-      if (form.role === "STUDENT" && !form.packageId) {
+      if (!form.packageId) {
         toast.error("Please select a package for the student");
         setSubmitting(false);
         return;
       }
 
       await api.post("/api/users", {
-        ...form,
-        packageId: form.packageId || undefined,
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        role: "STUDENT",
+        packageId: form.packageId,
         batchId: form.batchId || undefined,
-        designation: form.designation || undefined,
-        internFieldId: form.internFieldId || undefined,
       });
       setForm({
         name: "",
         email: "",
         password: "",
-        role: "STUDENT",
         packageId: "",
         batchId: "",
-        designation: "",
-        internFieldId: "",
       });
       setShowModal(false);
-      toast.success("User added successfully");
+      toast.success("Student added successfully");
       fetchUsers();
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
@@ -342,24 +298,16 @@ export default function AdminUsersPage() {
     setEditing(true);
 
     try {
-      const payload: Record<string, string | string[]> = {
+      const payload: Record<string, string> = {
         name: editForm.name,
         email: editForm.email,
-        role: editForm.role,
+        role: "STUDENT",
       };
-      // Only send package/batch for students
-      if (editForm.role === "STUDENT") {
-        if (editForm.packageId) payload.packageId = editForm.packageId;
-        if (editForm.batchId) payload.batchId = editForm.batchId;
-      }
-      // Only send intern-specific fields for interns
-      if (editForm.role === "INTERN") {
-        payload.designation = editForm.designation;
-        payload.internFieldId = editForm.internFieldId;
-      }
+      if (editForm.packageId) payload.packageId = editForm.packageId;
+      if (editForm.batchId) payload.batchId = editForm.batchId;
       await api.patch(`/api/users/${editUser.id}`, payload);
       setEditUser(null);
-      toast.success("User updated successfully");
+      toast.success("Student updated successfully");
       fetchUsers();
     } catch (err: unknown) {
       toast.error(getErrorMessage(err));
@@ -394,11 +342,8 @@ export default function AdminUsersPage() {
     setEditForm({
       name: user.name,
       email: user.email,
-      role: user.role,
       packageId: currentPkg,
       batchId: currentBatch,
-      designation: user.designation ?? "",
-      internFieldId: user.internField?.id ?? "",
     });
     // Load batches for the current package
     if (currentPkg) {
@@ -425,7 +370,6 @@ export default function AdminUsersPage() {
   const openProfile = async (user: User) => {
     setViewUser(user);
     setProfileDetail(null);
-    if (user.role !== "STUDENT") return;
     setProfileLoading(true);
     try {
       const data = await api.get<UserDetail>(`/api/users/${user.id}`);
@@ -434,16 +378,6 @@ export default function AdminUsersPage() {
       setProfileDetail(null);
     } finally {
       setProfileLoading(false);
-    }
-  };
-
-  const handleApproveInstructor = async (userId: string) => {
-    try {
-      await api.put(`/api/admin/users/${userId}/approve`);
-      toast.success("Instructor approved successfully");
-      fetchUsers();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
     }
   };
 
@@ -458,9 +392,6 @@ export default function AdminUsersPage() {
       "Name",
       "Email",
       "Phone",
-      "Role",
-      "Designation",
-      "Intern Field",
       "Package(s)",
       "Status",
     ];
@@ -469,9 +400,6 @@ export default function AdminUsersPage() {
       u.name,
       u.email,
       u.phone ?? "",
-      u.role,
-      u.role === "INTERN" ? (u.designation ?? "") : "",
-      u.internField?.name ?? "",
       u.packageEnrollments?.map((pe) => pe.package.name).join("; ") ?? "",
       u.isSuspended ? "Suspended" : "Active",
     ]);
@@ -491,30 +419,22 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, roleFilter, packageFilter]);
+  }, [search, packageFilter]);
 
   const filtered = users.filter((u) => {
     const matchesSearch =
       !search ||
       u.name.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase());
-    const matchesRole = !roleFilter || u.role === roleFilter;
     const matchesPackage =
       !packageFilter ||
       u.packageEnrollments?.some((pe) => pe.package.id === packageFilter);
-    return matchesSearch && matchesRole && matchesPackage;
+    return matchesSearch && matchesPackage;
   });
 
   const paginatedData = filtered.slice((page - 1) * pageSize, page * pageSize);
 
-  const counts = {
-    total: users.length,
-    INSTRUCTOR: users.filter((u) => u.role === "INSTRUCTOR").length,
-    STUDENT: users.filter((u) => u.role === "STUDENT").length,
-    ADMIN: users.filter((u) => u.role === "ADMIN").length,
-    SUPER_ADMIN: users.filter((u) => u.role === "SUPER_ADMIN").length,
-    INTERN: users.filter((u) => u.role === "INTERN").length,
-  };
+  const totalStudents = users.length;
 
   const columns: DataTableColumn<User>[] = [
     {
@@ -558,81 +478,31 @@ export default function AdminUsersPage() {
       },
     },
     {
-      key: "internDetails",
-      label: "Designation",
-      render: (_, user) =>
-        user.role === "INTERN" ? (
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-medium text-foreground capitalize">
-              {user.designation?.toLowerCase() === "working"
-                ? "Working"
-                : user.designation?.toLowerCase() === "studying"
-                  ? "Studying"
-                  : "—"}
-            </span>
-            {user.internField && (
-              <span className="text-xs text-muted-foreground">
-                {user.internField.name}
-              </span>
-            )}
-          </div>
-        ) : (
-          <span className="text-sm text-muted-foreground">—</span>
-        ),
-    },
-    {
-      key: "role",
-      label: "Role",
-      render: (_, user) => (
-        <span
-          className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium ${roleStyles[user.role]}`}
-        >
-          {roleIcons[user.role]}
-        </span>
-      ),
-    },
-    {
       key: "id",
       label: "Actions",
       render: (_, user) => (
         <div className="flex items-center justify-center gap-1">
-          {currentUserRole === "SUPER_ADMIN" &&
-            user.role === "INSTRUCTOR" &&
-            user.isSuspended && (
-              <button
-                onClick={() => handleApproveInstructor(user.id)}
-                className="rounded-md border border-success/20 p-2 text-success hover:bg-success/10 transition-colors"
-                title="Approve instructor"
-              >
-                <IconCheck size={16} />
-              </button>
-            )}
-          {user.role === "STUDENT" && (
-            <button
-              onClick={() => openProfile(user)}
-              className="rounded-md border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
-              title="View profile"
-            >
-              <IconEye size={16} />
-            </button>
-          )}
+          <button
+            onClick={() => openProfile(user)}
+            className="rounded-md border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
+            title="View Student"
+          >
+            <IconEye size={16} />
+          </button>
           <button
             onClick={() => openEditModal(user)}
             className="rounded-md border border-border p-2 text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
-            title="Edit user"
+            title="Edit Student"
           >
             <IconEdit size={16} />
           </button>
-          {(currentUserRole === "SUPER_ADMIN" ||
-            (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) && (
-            <button
-              onClick={() => setDeleteUserId(user.id)}
-              className="rounded-md border border-danger/20 p-2 text-danger hover:bg-danger/10 transition-colors"
-              title="Delete user"
-            >
-              <IconTrash size={16} />
-            </button>
-          )}
+          <button
+            onClick={() => setDeleteUserId(user.id)}
+            className="rounded-md border border-danger/20 p-2 text-danger hover:bg-danger/10 transition-colors"
+            title="Delete Student"
+          >
+            <IconTrash size={16} />
+          </button>
         </div>
       ),
     },
@@ -641,57 +511,31 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        title="Users"
-        description={`${counts.total} registered users`}
+        title="Students"
+        description={`${totalStudents} registered students`}
         breadcrumbs={[
-          { label: "Users", href: "/admin/users" },
+          { label: "Students", href: "/admin/users" },
         ]}
         action={
           <button
             onClick={() => setShowModal(true)}
             className="btn-primary text-sm shadow-md"
           >
-            + Add User
+            + Add Student
           </button>
         }
       />
 
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Role filter chips */}
-          <div className="flex flex-wrap gap-2">
-            {(["STUDENT", "INTERN"] as const).map((role) => (
-              <button
-                key={role}
-                onClick={() =>
-                  router.replace(
-                    roleFilter === role
-                      ? "/admin/users"
-                      : `/admin/users?role=${role}`,
-                  )
-                }
-                className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-                  roleFilter === role
-                    ? roleStyles[role]
-                    : "border-border text-muted-foreground hover:bg-card-hover"
-                }`}
-              >
-                <span>{roleIcons[role]}</span>
-                {role} · {counts[role]}
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={handleDownloadCsv}
-            disabled={filtered.length === 0}
-            className="btn-secondary text-sm flex items-center gap-1.5 disabled:opacity-50"
-            title="Download filtered users as CSV"
-          >
-            <IconDownload size={16} />
-            Download CSV
-          </button>
-        </div>
+        <button
+          onClick={handleDownloadCsv}
+          disabled={filtered.length === 0}
+          className="btn-secondary text-sm flex items-center gap-1.5 disabled:opacity-50"
+          title="Download filtered students as CSV"
+        >
+          <IconDownload size={16} />
+          Download CSV
+        </button>
 
         <div className="max-w-sm">
           <SearchInput
@@ -718,17 +562,17 @@ export default function AdminUsersPage() {
           <EmptyState
             variant="glass"
             icon={IconUsers}
-            title="No users found"
+            title="No students found"
             description="Try adjusting your filters."
           />
         }
       />
 
-      {/* Add User Modal */}
+      {/* Add Student Modal */}
       <FormModal
         open={showModal}
         onClose={() => setShowModal(false)}
-        title="Add New User"
+        title="Add New Student"
         footer={
           <>
             <button
@@ -751,7 +595,7 @@ export default function AdminUsersPage() {
                   Adding...
                 </>
               ) : (
-                "Add User"
+                "Add Student"
               )}
             </button>
           </>
@@ -807,161 +651,71 @@ export default function AdminUsersPage() {
 
           <div>
             <label className="mb-1 block text-xs font-medium text-muted">
-              Role
+              Package <span className="text-danger">*</span>
             </label>
             <Select
-              value={form.role}
+              value={form.packageId || ""}
               onValueChange={(value) =>
                 setForm({
                   ...form,
-                  role: value,
-                  packageId: "",
+                  packageId: value,
                   batchId: "",
                 })
               }
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Select a package..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="STUDENT">Student</SelectItem>
-                <SelectItem value="INSTRUCTOR">Instructor</SelectItem>
-                <SelectItem value="INTERN">Intern</SelectItem>
-                {currentUserRole === "SUPER_ADMIN" && (
-                  <>
-                    <SelectItem value="ADMIN">Administrator</SelectItem>
-                    <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
-                  </>
-                )}
+                {activePackages.map((pkg) => (
+                  <SelectItem key={pkg.id} value={pkg.id}>
+                    {pkg.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
-          {form.role === "INTERN" && (
-            <>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted">
-                  Designation <span className="text-danger">*</span>
-                </label>
-                <Select
-                  value={form.designation}
-                  onValueChange={(value) =>
-                    setForm({ ...form, designation: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select designation..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="WORKING">Working</SelectItem>
-                    <SelectItem value="STUDYING">Studying</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted">
-                  Field of Study <span className="text-danger">*</span>
-                </label>
-                <Select
-                  value={form.internFieldId}
-                  onValueChange={(value) =>
-                    setForm({ ...form, internFieldId: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select an internship field..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {internFields.length === 0 && (
-                      <p className="px-2 py-1.5 text-xs text-muted-foreground italic">
-                        No internship fields — add them in Interns → Fields
-                      </p>
-                    )}
-                    {internFields
-                      .filter((f) => f.isActive)
-                      .map((field) => (
-                        <SelectItem key={field.id} value={field.id}>
-                          {field.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </>
-          )}
-
-          {form.role === "STUDENT" && (
-            <>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted">
-                  Package <span className="text-danger">*</span>
-                </label>
-                <Select
-                  value={form.packageId || ""}
-                  onValueChange={(value) =>
-                    setForm({
-                      ...form,
-                      packageId: value,
-                      batchId: "",
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a package..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activePackages.map((pkg) => (
-                      <SelectItem key={pkg.id} value={pkg.id}>
-                        {pkg.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {form.packageId && (
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-muted">
-                    Batch <span className="text-danger">*</span>
-                  </label>
-                  <Select
-                    value={form.batchId || ""}
-                    onValueChange={(value) =>
-                      setForm({ ...form, batchId: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a batch..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {packageBatches.map((b) => (
-                        <SelectItem key={b.id} value={b.id}>
-                          {b.name} — {b.courseTitle}
-                          {b.maxStudents
-                            ? ` (${b.filledCount}/${b.maxStudents} filled, ${b.maxStudents - b.filledCount} remaining)`
-                            : ` (${b.filledCount} enrolled, unlimited)`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {packageBatches.length === 0 && (
-                    <p className="mt-1 text-xs text-muted-foreground italic">
-                      No batches in this package yet — create one first
-                    </p>
-                  )}
-                </div>
+          {form.packageId && (
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted">
+                Batch <span className="text-danger">*</span>
+              </label>
+              <Select
+                value={form.batchId || ""}
+                onValueChange={(value) =>
+                  setForm({ ...form, batchId: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a batch..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {packageBatches.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.name} — {b.courseTitle}
+                      {b.maxStudents
+                        ? ` (${b.filledCount}/${b.maxStudents} filled, ${b.maxStudents - b.filledCount} remaining)`
+                        : ` (${b.filledCount} enrolled, unlimited)`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {packageBatches.length === 0 && (
+                <p className="mt-1 text-xs text-muted-foreground italic">
+                  No batches in this package yet — create one first
+                </p>
               )}
-            </>
+            </div>
           )}
         </form>
       </FormModal>
 
-      {/* Edit User Modal */}
+      {/* Edit Student Modal */}
       <FormModal
         open={editUser !== null}
         onClose={() => setEditUser(null)}
-        title="Edit User"
+        title="Edit Student"
         footer={
           <>
             <button
@@ -1027,167 +781,77 @@ export default function AdminUsersPage() {
 
           <div>
             <label className="mb-1 block text-xs font-medium text-muted">
-              Role
+              Package
             </label>
             <Select
-              value={editForm.role}
+              value={editForm.packageId || ""}
               onValueChange={(value) =>
                 setEditForm({
                   ...editForm,
-                  role: value,
-                  packageId: "",
+                  packageId: value,
                   batchId: "",
                 })
               }
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Select a package..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="STUDENT">Student</SelectItem>
-                <SelectItem value="INSTRUCTOR">Instructor</SelectItem>
-                <SelectItem value="INTERN">Intern</SelectItem>
-                {currentUserRole === "SUPER_ADMIN" && (
-                  <>
-                    <SelectItem value="ADMIN">Administrator</SelectItem>
-                    <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
-                  </>
-                )}
+                {activePackages.map((pkg) => (
+                  <SelectItem key={pkg.id} value={pkg.id}>
+                    {pkg.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
-          {editForm.role === "INTERN" && (
-            <>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted">
-                  Designation
-                </label>
-                <Select
-                  value={editForm.designation}
-                  onValueChange={(value) =>
-                    setEditForm({ ...editForm, designation: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select designation..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="WORKING">Working</SelectItem>
-                    <SelectItem value="STUDYING">Studying</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted">
-                  Field of Study
-                </label>
-                <Select
-                  value={editForm.internFieldId}
-                  onValueChange={(value) =>
-                    setEditForm({ ...editForm, internFieldId: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select an internship field..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {internFields.length === 0 && (
-                      <p className="px-2 py-1.5 text-xs text-muted-foreground italic">
-                        No internship fields — add them in Interns → Fields
-                      </p>
-                    )}
-                    {internFields
-                      .filter((f) => f.isActive)
-                      .map((field) => (
-                        <SelectItem key={field.id} value={field.id}>
-                          {field.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </>
-          )}
-
-          {editForm.role === "STUDENT" && (
-            <>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted">
-                  Package
-                </label>
-                <Select
-                  value={editForm.packageId || ""}
-                  onValueChange={(value) =>
-                    setEditForm({
-                      ...editForm,
-                      packageId: value,
-                      batchId: "",
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a package..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {activePackages.map((pkg) => (
-                      <SelectItem key={pkg.id} value={pkg.id}>
-                        {pkg.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {editForm.packageId && (
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-muted">
-                    Batch
-                  </label>
-                  <Select
-                    value={editForm.batchId || ""}
-                    onValueChange={(value) =>
-                      setEditForm({ ...editForm, batchId: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a batch..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {editBatches.map((b) => (
-                        <SelectItem key={b.id} value={b.id}>
-                          {b.name} — {b.courseTitle}
-                          {b.maxStudents
-                            ? ` (${b.filledCount}/${b.maxStudents} filled, ${b.maxStudents - b.filledCount} remaining)`
-                            : ` (${b.filledCount} enrolled, unlimited)`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {editBatches.length === 0 && (
-                    <p className="mt-1 text-xs text-muted-foreground italic">
-                      No batches in this package yet
-                    </p>
-                  )}
-                </div>
+          {editForm.packageId && (
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted">
+                Batch
+              </label>
+              <Select
+                value={editForm.batchId || ""}
+                onValueChange={(value) =>
+                  setEditForm({ ...editForm, batchId: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a batch..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {editBatches.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.name} — {b.courseTitle}
+                      {b.maxStudents
+                        ? ` (${b.filledCount}/${b.maxStudents} filled, ${b.maxStudents - b.filledCount} remaining)`
+                        : ` (${b.filledCount} enrolled, unlimited)`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {editBatches.length === 0 && (
+                <p className="mt-1 text-xs text-muted-foreground italic">
+                  No batches in this package yet
+                </p>
               )}
-            </>
+            </div>
           )}
         </form>
       </FormModal>
 
-      {/* User Profile Panel */}
+      {/* User Profile Popup */}
       {viewUser && (
         <div
-          className="fixed inset-0 z-50 bg-black/40"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
           onClick={() => setViewUser(null)}
           role="dialog"
           aria-modal="true"
           aria-label={`${viewUser.name}'s profile`}
         >
           <div
-            className="absolute right-0 top-0 h-full w-full max-w-md border-l border-border bg-card shadow-2xl flex flex-col"
+            className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="border-b border-border p-5">
@@ -1261,32 +925,6 @@ export default function AdminUsersPage() {
                   </div>
                 </div>
               </section>
-
-              {viewUser.role === "INTERN" && (
-                <section className="space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wide text-muted">
-                    Internship Details
-                  </h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-lg border border-border bg-card-hover/40 p-3">
-                      <p className="text-[11px] text-muted">Designation</p>
-                      <p className="mt-0.5 text-sm font-medium text-foreground capitalize">
-                        {viewUser.designation?.toLowerCase() === "working"
-                          ? "Working"
-                          : viewUser.designation?.toLowerCase() === "studying"
-                            ? "Studying"
-                            : "—"}
-                      </p>
-                    </div>
-                    <div className="rounded-lg border border-border bg-card-hover/40 p-3">
-                      <p className="text-[11px] text-muted">Field of Study</p>
-                      <p className="mt-0.5 text-sm font-medium text-foreground">
-                        {viewUser.internField?.name || "—"}
-                      </p>
-                    </div>
-                  </div>
-                </section>
-              )}
 
               <section className="space-y-3">
                 <h4 className="text-xs font-bold uppercase tracking-wide text-muted">
@@ -1428,7 +1066,7 @@ export default function AdminUsersPage() {
                 className="btn-secondary text-sm flex items-center gap-1.5"
               >
                 <IconEdit size={15} />
-                Edit User
+                Edit Student
               </button>
             </div>
           </div>
@@ -1440,8 +1078,8 @@ export default function AdminUsersPage() {
         open={deleteUserId !== null}
         onClose={() => setDeleteUserId(null)}
         onConfirm={handleDeleteUser}
-        title="Delete User?"
-        description="This action cannot be undone. All data associated with this user will be permanently removed."
+        title="Delete Student?"
+        description="This action cannot be undone. All data associated with this student will be permanently removed."
         variant="danger"
         confirmLabel="Yes, Delete"
         confirmLoading={deleting}

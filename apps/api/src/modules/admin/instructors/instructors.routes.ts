@@ -17,6 +17,32 @@ const router = Router();
 router.use(requireAuth);
 router.use(requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]));
 
+// Legacy rows may store skills/languages/socialLinks as JSON strings (old seed used JSON.stringify) — normalize to arrays/objects.
+function normalizeProfileFields<T extends { skills?: unknown; languages?: unknown; socialLinks?: unknown } | null | undefined>(
+  profile: T,
+): T {
+  if (!profile) return profile;
+  const out = { ...profile };
+  for (const key of ["skills", "languages"] as const) {
+    const value = out[key];
+    if (typeof value === "string") {
+      try {
+        out[key] = JSON.parse(value) as unknown;
+      } catch {
+        out[key] = value.split(",").map((s) => s.trim()).filter(Boolean) as unknown;
+      }
+    }
+  }
+  if (typeof out.socialLinks === "string") {
+    try {
+      out.socialLinks = JSON.parse(out.socialLinks) as unknown;
+    } catch {
+      out.socialLinks = null;
+    }
+  }
+  return out as T;
+}
+
 // ── GET / — List instructors with pagination ──
 router.get("/", async (req: AuthRequest, res: Response) => {
   try {
@@ -47,21 +73,42 @@ router.get("/", async (req: AuthRequest, res: Response) => {
 
     const itemsWithWorkload = await Promise.all(
       items.map(async (user) => {
-        const [activeBatchCount, liveSessionCount] = await Promise.all([
+        const [activeBatchCount, liveSessionCount, batches] = await Promise.all([
           prisma.batch.count({
             where: { instructorId: user.id, status: "ACTIVE", deletedAt: null },
           }),
           prisma.liveSession.count({
             where: { instructorId: user.id, deletedAt: null },
           }),
+          prisma.batch.findMany({
+            where: { instructorId: user.id, deletedAt: null },
+            select: { id: true },
+          }),
         ]);
+        const batchIds = batches.map((b) => b.id);
+        const [directEnrollments, packageEnrollmentCourses] =
+          batchIds.length > 0
+            ? await Promise.all([
+                prisma.enrollmentRequest.count({
+                  where: { batchId: { in: batchIds }, status: "APPROVED" },
+                }),
+                prisma.packageEnrollmentCourse.findMany({
+                  where: { batchId: { in: batchIds } },
+                  distinct: ["enrollmentId"],
+                  select: { enrollmentId: true },
+                }),
+              ])
+            : [0, []];
+        const totalStudents = directEnrollments + packageEnrollmentCourses.length;
         return {
           ...user,
+          instructorProfile: normalizeProfileFields(user.instructorProfile),
           passwordHash: undefined,
           msAccessToken: undefined,
           msRefreshToken: undefined,
           activeBatchCount,
           liveSessionCount,
+          totalStudents,
         };
       }),
     );
@@ -97,14 +144,37 @@ router.get("/:id", async (req: AuthRequest, res: Response) => {
       }),
     ]);
 
+    const batches = await prisma.batch.findMany({
+      where: { instructorId: user.id, deletedAt: null },
+      select: { id: true },
+    });
+    const batchIds = batches.map((b) => b.id);
+
+    const [directEnrollments, packageEnrollmentCourses] =
+      batchIds.length > 0
+        ? await Promise.all([
+            prisma.enrollmentRequest.count({
+              where: { batchId: { in: batchIds }, status: "APPROVED" },
+            }),
+            prisma.packageEnrollmentCourse.findMany({
+              where: { batchId: { in: batchIds } },
+              distinct: ["enrollmentId"],
+              select: { enrollmentId: true },
+            }),
+          ])
+        : [0, []];
+    const totalStudents = directEnrollments + packageEnrollmentCourses.length;
+
     return res.json({
       ...user,
+      instructorProfile: normalizeProfileFields(user.instructorProfile),
       passwordHash: undefined,
       msAccessToken: undefined,
       msRefreshToken: undefined,
       activeBatchCount,
       liveSessionCount,
       completedSessionCount,
+      totalStudents,
     });
   } catch (err: unknown) {
     const { statusCode, body } = handleControllerError(err, (req as any).log);

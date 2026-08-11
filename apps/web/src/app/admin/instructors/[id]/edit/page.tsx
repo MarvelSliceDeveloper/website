@@ -100,11 +100,13 @@ export default function EditInstructorPage() {
           `/api/admin/instructors/${params.id}`,
         );
         const p = data.instructorProfile ?? ({} as InstructorProfileData);
+        const toCsv = (v: unknown) =>
+          Array.isArray(v) ? v.join(", ") : typeof v === "string" ? v : "";
         setForm({
           designation: p.designation ?? "",
           qualification: p.qualification ?? "",
           experienceYears: p.experienceYears?.toString() ?? "",
-          skills: (p.skills ?? []).join(", "),
+          skills: toCsv(p.skills),
           currentlyEmployed: p.currentlyEmployed ?? false,
           companyName: p.companyName ?? "",
           availableTime: p.availableTime ?? "",
@@ -114,7 +116,7 @@ export default function EditInstructorPage() {
           city: p.city ?? "",
           state: p.state ?? "",
           country: p.country ?? "",
-          languages: (p.languages ?? []).join(", "),
+          languages: toCsv(p.languages),
           linkedin: p.socialLinks?.linkedin ?? "",
           github: p.socialLinks?.github ?? "",
           portfolio: p.socialLinks?.portfolio ?? "",

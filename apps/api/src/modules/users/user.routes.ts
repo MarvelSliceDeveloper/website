@@ -25,13 +25,17 @@ function handleError(res: Response, error: unknown) {
 // Lists STUDENT and INSTRUCTOR users only (ADMIN/SUPER_ADMIN users only visible to super admins)
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const { packageId, page, limit } = req.query;
+    const { packageId, page, limit, role } = req.query;
 
     const where: any = { deletedAt: null };
 
     // Admin users are only visible to super admins
     if ((req as AuthRequest).user?.role !== UserRole.SUPER_ADMIN) {
       where.role = { in: [UserRole.STUDENT, UserRole.INSTRUCTOR, UserRole.INTERN] };
+    }
+
+    if (role && typeof role === "string") {
+      where.role = role;
     }
 
     // If packageId is provided, filter users who have a PackageEnrollment for that package

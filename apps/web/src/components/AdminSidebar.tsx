@@ -434,8 +434,8 @@ export default function AdminSidebar({
                 icon: IconUsers,
                 children: [
                   { label: "Login History", href: "/admin/users/login-history" },
-                  { label: "View Users", href: "/admin/users" },
-                  { label: "Instructors", href: "/admin/instructors" },
+                  { label: "View Students", href: "/admin/users" },
+                  { label: "View Instructors", href: "/admin/instructors" },
                 ],
               },
               {
@@ -648,8 +648,8 @@ export default function AdminSidebar({
                 href: "/admin/users",
                 icon: IconUsers,
                 children: [
-                  { label: "View Users", href: "/admin/users" },
-                  { label: "Instructors", href: "/admin/instructors" },
+                  { label: "View Students", href: "/admin/users" },
+                  { label: "View Instructors", href: "/admin/instructors" },
                 ],
               },
               {
