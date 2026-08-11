@@ -285,32 +285,57 @@ async function main() {
   console.log("✅ Courses created");
 
   // ─── Categories ─────────────────────────────────────────────────────────────
-  const dataScienceCategory = await prisma.category.upsert({
-    where: { slug: "data-science" },
-    update: {},
-    create: {
-      name: "Data Science",
-      slug: "data-science",
-      description:
-        "Courses on data analysis, visualization, and machine learning",
-      order: 0,
-    },
-  });
-  console.log("✅ Category: Data Science");
+  const categoryDefinitions = [
+    { name: "Data Science", slug: "data-science", description: "Courses on data analysis, visualization, and machine learning" },
+    { name: "Programming", slug: "programming", description: "Foundational and advanced programming languages and paradigms" },
+    { name: "Web Development", slug: "web-development", description: "Frontend, backend, and full-stack web development" },
+    { name: "Mobile Development", slug: "mobile-development", description: "Building apps for iOS, Android, and cross-platform" },
+    { name: "Machine Learning & AI", slug: "machine-learning-ai", description: "Machine learning, deep learning, and artificial intelligence" },
+    { name: "DevOps & Cloud", slug: "devops-cloud", description: "CI/CD, containers, orchestration, and cloud platforms" },
+    { name: "Cybersecurity", slug: "cybersecurity", description: "Security fundamentals, ethical hacking, and defense" },
+    { name: "Networking", slug: "networking", description: "Computer networking, protocols, and infrastructure" },
+    { name: "Database Design", slug: "database-design", description: "SQL, NoSQL, and data modeling" },
+    { name: "Software Testing", slug: "software-testing", description: "Automated and manual software testing practices" },
+    { name: "Game Development", slug: "game-development", description: "Game engines, design, and game programming" },
+    { name: "Blockchain & Web3", slug: "blockchain-web3", description: "Blockchain, smart contracts, and decentralized apps" },
+    { name: "Design & UI/UX", slug: "design-ui-ux", description: "UI/UX, graphic design, and product design" },
+    { name: "Business & Finance", slug: "business-finance", description: "Entrepreneurship, finance, and accounting" },
+    { name: "Marketing", slug: "marketing", description: "Digital marketing, SEO, and social media" },
+    { name: "Personal Development", slug: "personal-development", description: "Productivity, leadership, and communication" },
+    { name: "Photography & Video", slug: "photography-video", description: "Photography, videography, and editing" },
+    { name: "Music & Audio", slug: "music-audio", description: "Music theory, production, and audio engineering" },
+    { name: "Language Learning", slug: "language-learning", description: "Foreign language courses" },
+    { name: "Health & Fitness", slug: "health-fitness", description: "Wellness, exercise, and nutrition" },
+  ];
+
+  const categories = [];
+  for (let i = 0; i < categoryDefinitions.length; i++) {
+    const def = categoryDefinitions[i];
+    const category = await prisma.category.upsert({
+      where: { slug: def.slug },
+      update: { name: def.name, description: def.description, order: i },
+      create: { ...def, order: i },
+    });
+    categories.push(category);
+  }
+  console.log(`✅ ${categories.length} categories seeded`);
 
   // Wire courses to category
-  await prisma.course.updateMany({
-    where: {
-      slug: {
-        in: [
-          "python-for-data-science",
-          "sql-for-data-analysis",
-          "machine-learning-basics",
-        ],
+  const dataScienceCategory = categories.find((c) => c.slug === "data-science");
+  if (dataScienceCategory) {
+    await prisma.course.updateMany({
+      where: {
+        slug: {
+          in: [
+            "python-for-data-science",
+            "sql-for-data-analysis",
+            "machine-learning-basics",
+          ],
+        },
       },
-    },
-    data: { categoryId: dataScienceCategory.id },
-  });
+      data: { categoryId: dataScienceCategory.id },
+    });
+  }
   console.log("✅ Courses wired to category");
 
   // ─── Tags ────────────────────────────────────────────────────────────────────
@@ -323,6 +348,72 @@ async function main() {
     { name: "NumPy", slug: "numpy" },
     { name: "Scikit-learn", slug: "scikit-learn" },
     { name: "AI", slug: "ai" },
+    { name: "JavaScript", slug: "javascript" },
+    { name: "TypeScript", slug: "typescript" },
+    { name: "React", slug: "react" },
+    { name: "Next.js", slug: "next-js" },
+    { name: "Node.js", slug: "node-js" },
+    { name: "Java", slug: "java" },
+    { name: "C++", slug: "c-plus-plus" },
+    { name: "C#", slug: "c-sharp" },
+    { name: "PHP", slug: "php" },
+    { name: "Ruby", slug: "ruby" },
+    { name: "Go", slug: "go" },
+    { name: "Rust", slug: "rust" },
+    { name: "Swift", slug: "swift" },
+    { name: "Kotlin", slug: "kotlin" },
+    { name: "Django", slug: "django" },
+    { name: "Flask", slug: "flask" },
+    { name: "Express", slug: "express" },
+    { name: "HTML", slug: "html" },
+    { name: "CSS", slug: "css" },
+    { name: "Tailwind CSS", slug: "tailwind-css" },
+    { name: "PostgreSQL", slug: "postgresql" },
+    { name: "MongoDB", slug: "mongodb" },
+    { name: "MySQL", slug: "mysql" },
+    { name: "Redis", slug: "redis" },
+    { name: "Deep Learning", slug: "deep-learning" },
+    { name: "Data Science", slug: "data-science" },
+    { name: "Big Data", slug: "big-data" },
+    { name: "Computer Vision", slug: "computer-vision" },
+    { name: "NLP", slug: "nlp" },
+    { name: "Docker", slug: "docker" },
+    { name: "Kubernetes", slug: "kubernetes" },
+    { name: "AWS", slug: "aws" },
+    { name: "Azure", slug: "azure" },
+    { name: "GCP", slug: "gcp" },
+    { name: "Cloud Computing", slug: "cloud-computing" },
+    { name: "DevOps", slug: "devops" },
+    { name: "Git", slug: "git" },
+    { name: "GitHub", slug: "github" },
+    { name: "CI/CD", slug: "ci-cd" },
+    { name: "Cybersecurity", slug: "cybersecurity" },
+    { name: "Networking", slug: "networking" },
+    { name: "Blockchain", slug: "blockchain" },
+    { name: "Web3", slug: "web3" },
+    { name: "API", slug: "api" },
+    { name: "REST", slug: "rest" },
+    { name: "GraphQL", slug: "graphql" },
+    { name: "Microservices", slug: "microservices" },
+    { name: "Android", slug: "android" },
+    { name: "iOS", slug: "ios" },
+    { name: "Flutter", slug: "flutter" },
+    { name: "React Native", slug: "react-native" },
+    { name: "UI/UX", slug: "ui-ux" },
+    { name: "Figma", slug: "figma" },
+    { name: "Graphic Design", slug: "graphic-design" },
+    { name: "Game Development", slug: "game-development" },
+    { name: "Unity", slug: "unity" },
+    { name: "Digital Marketing", slug: "digital-marketing" },
+    { name: "SEO", slug: "seo" },
+    { name: "Social Media", slug: "social-media" },
+    { name: "Finance", slug: "finance" },
+    { name: "Accounting", slug: "accounting" },
+    { name: "Excel", slug: "excel" },
+    { name: "Project Management", slug: "project-management" },
+    { name: "Leadership", slug: "leadership" },
+    { name: "Communication", slug: "communication" },
+    { name: "Interview Prep", slug: "interview-prep" },
   ];
 
   const tags = [];

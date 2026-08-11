@@ -6,6 +6,7 @@ import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { SUGGESTED_TAGS } from "@/lib/suggestions";
 import {
   IconPlus,
   IconEdit,
@@ -106,6 +107,26 @@ export default function AdminTagsPage() {
     }
   }
 
+  async function createSuggested(name: string) {
+    setSaving(true);
+    try {
+      await api.post("/api/admin/tags", { name });
+      toast.success(`Tag "${name}" created`);
+      cancelForm();
+      fetchTags();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const existingNames = new Set(tags.map((t) => t.name.toLowerCase()));
+  const query = formName.trim().toLowerCase();
+  const suggestions = SUGGESTED_TAGS.filter(
+    (t) => !existingNames.has(t.toLowerCase()) && t.toLowerCase().includes(query),
+  ).slice(0, 24);
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <AdminPageHeader
@@ -154,6 +175,32 @@ export default function AdminTagsPage() {
           <p className="text-[10px] text-muted-foreground">
             Slug will be auto-generated from the name.
           </p>
+          {!editingId && (
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Popular suggestions — click to add
+              </p>
+              {suggestions.length === 0 ? (
+                <p className="text-[10px] text-muted-foreground">
+                  No matching suggestions.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {suggestions.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => createSuggested(s)}
+                      disabled={saving}
+                      className="text-[11px] px-2 py-1 rounded-full border border-border bg-muted/30 text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-40"
+                    >
+                      + {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <button
               onClick={handleSubmit}
