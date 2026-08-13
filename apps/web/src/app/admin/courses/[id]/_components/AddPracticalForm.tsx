@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, withLoadingToast } from "@/lib/toast";
 import { IconPlus, IconX, IconFile } from "@tabler/icons-react";
 import { FormModal } from "@/components/admin/FormModal";
 
@@ -77,9 +77,15 @@ export default function AddPracticalForm({
         setUploading(true);
         const formData = new FormData();
         formData.append("pdf", pdfFile);
-        const uploadRes = await api.post<{ url: string }>(
-          `/api/admin/courses/${courseId}/practicals/pdf`,
-          formData,
+        const uploadRes = await withLoadingToast(
+          api.post<{ url: string }>(
+            `/api/admin/courses/${courseId}/practicals/pdf`,
+            formData,
+          ),
+          {
+            loading: "Uploading PDF...",
+            success: () => "PDF uploaded",
+          },
         );
         pdfUrl = uploadRes.url;
         setUploading(false);

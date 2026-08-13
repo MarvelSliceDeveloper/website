@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, withLoadingToast } from "@/lib/toast";
 import {
   IconBrandYoutube,
   IconPlayerPlay,
@@ -61,17 +61,22 @@ export default function LessonCard({
     if (!url.trim()) return;
     setFetchingInfo(true);
     try {
-      const data = await api.get<{
-        videoId: string;
-        title: string;
-        durationSeconds: number;
-      }>(`/api/youtube/video-info?url=${encodeURIComponent(url)}`);
+      const data = await withLoadingToast(
+        api.get<{
+          videoId: string;
+          title: string;
+          durationSeconds: number;
+        }>(`/api/youtube/video-info?url=${encodeURIComponent(url)}`),
+        {
+          loading: "Fetching video info...",
+          success: (d) => `Duration: ${Math.floor(d.durationSeconds / 60)} min`,
+        },
+      );
       setEditForm((p) => ({
         ...p,
         title: data.title || p.title,
       }));
       setDurationSeconds(data.durationSeconds);
-      toast.success(`Duration: ${Math.floor(data.durationSeconds / 60)} min`);
     } catch {
       toast.error("Failed to fetch video info. Check the URL or API key.");
     } finally {

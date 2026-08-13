@@ -33,6 +33,22 @@ export default function CreatePackagePage() {
   const [loading, setLoading] = useState(false);
   const [loadingCourses, setLoadingCourses] = useState(true);
 
+  // DB-backed package names (fall back to static suggestions)
+  const [dbPackageNames, setDbPackageNames] = useState<string[]>([]);
+
+  useEffect(() => {
+    api
+      .get<{ packageNames: { name: string }[] }>(
+        "/api/admin/content/package-names",
+      )
+      .then((d) => setDbPackageNames(d.packageNames.map((p) => p.name)))
+      .catch(() => {});
+  }, []);
+
+  const packageNameOptions = dbPackageNames.length
+    ? dbPackageNames
+    : (SUGGESTED_PACKAGE_NAMES as readonly string[]);
+
   useEffect(() => {
     api
       .get<{ courses: Course[] }>("/api/admin/packages/courses")
@@ -144,13 +160,13 @@ export default function CreatePackagePage() {
                 <SelectItem value="">
                   <span>-- Select a package name --</span>
                 </SelectItem>
-                {SUGGESTED_PACKAGE_NAMES.filter((n) => n !== name).map((n) => (
+                {packageNameOptions.filter((n) => n !== name).map((n) => (
                   <SelectItem key={n} value={n}>
                     {n}
                   </SelectItem>
                 ))}
                 {name &&
-                  !(SUGGESTED_PACKAGE_NAMES as readonly string[]).includes(
+                  !(packageNameOptions as readonly string[]).includes(
                     name,
                   ) && (
                     <SelectItem value={name}>{name}</SelectItem>

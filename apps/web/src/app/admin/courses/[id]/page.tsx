@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, withLoadingToast } from "@/lib/toast";
 import { IconChevronRight } from "@tabler/icons-react";
 import type {
   Course,
@@ -111,8 +111,13 @@ export default function CourseDetailPage() {
     try {
       const uploadData = new FormData();
       uploadData.append("thumbnail", file);
-      await api.post(`/api/admin/courses/${id}/thumbnail`, uploadData);
-      toast.success("Thumbnail updated.");
+      await withLoadingToast(
+        api.post(`/api/admin/courses/${id}/thumbnail`, uploadData),
+        {
+          loading: "Uploading thumbnail...",
+          success: () => "Thumbnail updated.",
+        },
+      );
       fetchCourse();
     } catch (err: unknown) {
       toast.error(
@@ -125,20 +130,26 @@ export default function CourseDetailPage() {
 
   const handlePublish = async () => {
     try {
-      const result = await api.post<{
-        published: boolean;
-        checklist: ChecklistItem[];
-      }>(`/api/admin/courses/${id}/publish`);
-      if (!result.published) {
-        const fails = result.checklist
-          .filter((c: ChecklistItem) => !c.passed)
-          .map((c: ChecklistItem) => `\u2022 ${c.item}`)
-          .join("\n");
-        toast.error(`Cannot publish:\n${fails}`);
-        return;
-      }
-      toast.success("Course published");
-      fetchCourse();
+      const result = await withLoadingToast(
+        api.post<{
+          published: boolean;
+          checklist: ChecklistItem[];
+        }>(`/api/admin/courses/${id}/publish`),
+        {
+          loading: "Publishing course...",
+          success: (r) => {
+            if (!r.published) {
+              const fails = r.checklist
+                .filter((c: ChecklistItem) => !c.passed)
+                .map((c: ChecklistItem) => `\u2022 ${c.item}`)
+                .join("\n");
+              return { message: `Cannot publish:\n${fails}`, type: "error" };
+            }
+            return "Course published";
+          },
+        },
+      );
+      if (result.published) fetchCourse();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to publish");
     }
@@ -146,8 +157,13 @@ export default function CourseDetailPage() {
 
   const handleUnpublish = async () => {
     try {
-      await api.post(`/api/admin/courses/${id}/unpublish`);
-      toast.success("Course unpublished");
+      await withLoadingToast(
+        api.post(`/api/admin/courses/${id}/unpublish`),
+        {
+          loading: "Unpublishing course...",
+          success: () => "Course unpublished",
+        },
+      );
       fetchCourse();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to unpublish");
@@ -163,8 +179,10 @@ export default function CourseDetailPage() {
     )
       return;
     try {
-      await api.delete(`/api/admin/courses/${id}`);
-      toast.success("Course archived");
+      await withLoadingToast(api.delete(`/api/admin/courses/${id}`), {
+        loading: "Archiving course...",
+        success: () => "Course archived",
+      });
       router.push("/admin/courses");
     } catch (err: unknown) {
       toast.error(

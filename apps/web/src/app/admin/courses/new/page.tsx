@@ -38,6 +38,11 @@ export default function CreateCoursePage() {
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [newTag, setNewTag] = useState("");
 
+  // DB-backed options (fall back to static suggestions when unavailable)
+  const [dbTitles, setDbTitles] = useState<string[]>([]);
+  const [dbCategories, setDbCategories] = useState<string[]>([]);
+  const [dbTags, setDbTags] = useState<string[]>([]);
+
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -47,6 +52,33 @@ export default function CreateCoursePage() {
 
   const update = (field: string, value: string | number) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  useEffect(() => {
+    Promise.all([
+      api
+        .get<{ titles: { name: string }[] }>("/api/admin/content/titles")
+        .then((d) => setDbTitles(d.titles.map((t) => t.name)))
+        .catch(() => {}),
+      api
+        .get<{ categories: { name: string }[] }>("/api/admin/content/categories")
+        .then((d) => setDbCategories(d.categories.map((c) => c.name)))
+        .catch(() => {}),
+      api
+        .get<{ tags: { name: string }[] }>("/api/admin/content/tags")
+        .then((d) => setDbTags(d.tags.map((t) => t.name)))
+        .catch(() => {}),
+    ]);
+  }, []);
+
+  const titleOptions = dbTitles.length
+    ? dbTitles
+    : (SUGGESTED_COURSE_TITLES as readonly string[]);
+  const categoryOptions = dbCategories.length
+    ? dbCategories
+    : (SUGGESTED_CATEGORIES as readonly string[]);
+  const tagOptions = dbTags.length
+    ? dbTags
+    : (SUGGESTED_TAGS as readonly string[]);
 
   // Auto-fill category + tags based on the selected course title.
   useEffect(() => {
@@ -223,13 +255,13 @@ export default function CreateCoursePage() {
                 <SelectItem value="">
                   <span>-- Select a title --</span>
                 </SelectItem>
-                {SUGGESTED_COURSE_TITLES.map((title) => (
+                {titleOptions.map((title) => (
                   <SelectItem key={title} value={title}>
                     {title}
                   </SelectItem>
                 ))}
                 {form.title &&
-                  !(SUGGESTED_COURSE_TITLES as readonly string[]).includes(
+                  !(titleOptions as readonly string[]).includes(
                     form.title,
                   ) && (
                     <SelectItem value={form.title}>{form.title}</SelectItem>
@@ -302,13 +334,13 @@ export default function CreateCoursePage() {
                 <SelectItem value="">
                   <span>-- Select a category --</span>
                 </SelectItem>
-                {SUGGESTED_CATEGORIES.map((cat) => (
+                {categoryOptions.map((cat) => (
                   <SelectItem key={cat} value={cat}>
                     {cat}
                   </SelectItem>
                 ))}
                 {form.category &&
-                  !(SUGGESTED_CATEGORIES as readonly string[]).includes(
+                  !(categoryOptions as readonly string[]).includes(
                     form.category,
                   ) && (
                     <SelectItem value={form.category}>
@@ -355,7 +387,7 @@ export default function CreateCoursePage() {
                   <SelectItem value="">
                     <span>-- Select a tag --</span>
                   </SelectItem>
-                  {SUGGESTED_TAGS.map((tag) => (
+                  {tagOptions.map((tag) => (
                     <SelectItem key={tag} value={tag}>
                       {tag}
                     </SelectItem>

@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { IconLock, IconRefresh } from "@tabler/icons-react";
+import { Switch } from "@/components/ui/Switch";
 
 type Override = {
   id: string;
@@ -203,22 +204,14 @@ export default function PermissionsPage() {
                   </td>
                   {ROLES.map((role) => (
                     <td key={role} className="py-3 pr-4 text-center">
-                      <button
-                        onClick={() => toggleLocal(role, perm.permission)}
-                        className={`w-10 h-6 rounded-full transition-all duration-200 relative ${
-                          isToggled(role, perm.permission)
-                            ? "bg-primary"
-                            : "bg-gray-200 dark:bg-slate-600"
-                        }`}
-                      >
-                        <span
-                          className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md ring-1 ring-black/5 transition-all duration-200 ${
-                            isToggled(role, perm.permission)
-                              ? "translate-x-[18px]"
-                              : "translate-x-0.5"
-                          }`}
+                      <div className="flex items-center justify-center">
+                        <Switch
+                          checked={isToggled(role, perm.permission)}
+                          onChange={() => toggleLocal(role, perm.permission)}
+                          size="sm"
+                          label={`${perm.label} — ${role}`}
                         />
-                      </button>
+                      </div>
                     </td>
                   ))}
                 </tr>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
-import { toast, getErrorMessage } from "@/lib/toast";
+import { toast, getErrorMessage, withLoadingToast } from "@/lib/toast";
 import {
   IconBook,
   IconEdit,
@@ -133,20 +133,29 @@ function CoursesPageContent() {
 
   const handlePublish = async (id: string) => {
     try {
-      const result = await api.post<{
-        published: boolean;
-        checklist: ChecklistItem[];
-      }>(`/api/admin/courses/${id}/publish`);
-      if (!result.published) {
-        const failedItems = result.checklist
-          .filter((c: ChecklistItem) => !c.passed)
-          .map((c: ChecklistItem) => `• ${c.item}`)
-          .join("\n");
-        toast.error(`Cannot publish. Fix these:\n${failedItems}`);
-        return;
-      }
-      toast.success("Course published");
-      fetchCourses();
+      const result = await withLoadingToast(
+        api.post<{
+          published: boolean;
+          checklist: ChecklistItem[];
+        }>(`/api/admin/courses/${id}/publish`),
+        {
+          loading: "Publishing course...",
+          success: (r) => {
+            if (!r.published) {
+              const failedItems = r.checklist
+                .filter((c: ChecklistItem) => !c.passed)
+                .map((c: ChecklistItem) => `• ${c.item}`)
+                .join("\n");
+              return {
+                message: `Cannot publish. Fix these:\n${failedItems}`,
+                type: "error",
+              };
+            }
+            return "Course published";
+          },
+        },
+      );
+      if (result.published) fetchCourses();
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
@@ -154,8 +163,10 @@ function CoursesPageContent() {
 
   const handleUnpublish = async (id: string) => {
     try {
-      await api.post(`/api/admin/courses/${id}/unpublish`);
-      toast.success("Course unpublished");
+      await withLoadingToast(api.post(`/api/admin/courses/${id}/unpublish`), {
+        loading: "Unpublishing course...",
+        success: () => "Course unpublished",
+      });
       fetchCourses();
     } catch (err) {
       toast.error(getErrorMessage(err));

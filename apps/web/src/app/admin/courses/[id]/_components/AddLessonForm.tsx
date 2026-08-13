@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, withLoadingToast } from "@/lib/toast";
 import { IconRefresh } from "@tabler/icons-react";
 import RichEditor from "@/components/editor/RichEditor";
 import { FormModal } from "@/components/admin/FormModal";
@@ -40,12 +40,18 @@ export default function AddLessonForm({
     }
     setFetchingInfo(true);
     try {
-      const data = await api.get<{
-        videoId: string;
-        title: string;
-        durationSeconds: number;
-        thumbnail: string;
-      }>(`/api/youtube/video-info?url=${encodeURIComponent(url)}`);
+      const data = await withLoadingToast(
+        api.get<{
+          videoId: string;
+          title: string;
+          durationSeconds: number;
+          thumbnail: string;
+        }>(`/api/youtube/video-info?url=${encodeURIComponent(url)}`),
+        {
+          loading: "Fetching video info...",
+          success: (d) => `Duration: ${Math.floor(d.durationSeconds / 60)} min`,
+        },
+      );
       setDurationSeconds(data.durationSeconds);
       if (data.title && !title) setTitle(data.title);
     } catch {

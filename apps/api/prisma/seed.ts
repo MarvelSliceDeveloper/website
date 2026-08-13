@@ -457,6 +457,121 @@ async function main() {
   }
   console.log("✅ Courses wired to tags");
 
+  // ─── Course Titles ─────────────────────────────────────────────────────────
+  const courseTitleDefinitions = [
+    "Web Development Bootcamp",
+    "Full Stack Development",
+    "MERN Stack Development",
+    "MEAN Stack Development",
+    "Frontend Development",
+    "Backend Development",
+    "JavaScript Mastery",
+    "TypeScript Essentials",
+    "React & Next.js Advanced",
+    "Node.js Backend Development",
+    "Python for Beginners",
+    "Advanced Python Programming",
+    "HTML & CSS Fundamentals",
+    "Tailwind CSS Essentials",
+    "SQL & Databases for Beginners",
+    "Excel for Data Analysis",
+    "WordPress Essentials",
+    "Shopify Store Setup",
+    "Data Science Fundamentals",
+    "Data Analysis with Pandas",
+    "Machine Learning with Python",
+    "Deep Learning & Neural Networks",
+    "Artificial Intelligence Foundations",
+    "Natural Language Processing",
+    "Computer Vision with OpenCV",
+    "DevOps Essentials",
+    "Docker & Kubernetes Mastery",
+    "AWS Cloud Practitioner",
+    "Azure Cloud Fundamentals",
+    "Google Cloud Platform Basics",
+    "Linux for Beginners",
+    "Cybersecurity Fundamentals",
+    "Ethical Hacking & Penetration Testing",
+    "Networking Fundamentals",
+    "Database Design & SQL",
+    "PostgreSQL Mastery",
+    "MongoDB for Developers",
+    "GraphQL API Development",
+    "REST API Design",
+    "Microservices Architecture",
+    "System Design Fundamentals",
+    "UI/UX Design Fundamentals",
+    "Figma Masterclass",
+    "Graphic Design Basics",
+    "Adobe Photoshop Essentials",
+    "Mobile App Development with Flutter",
+    "Android Development with Kotlin",
+    "iOS Development with Swift",
+    "React Native App Development",
+    "Game Development with Unity",
+    "Blockchain Development",
+    "Web3 & Smart Contracts",
+    "Digital Marketing Masterclass",
+    "SEO Fundamentals",
+    "Social Media Marketing",
+    "Google Ads Essentials",
+    "Content Writing & Copywriting",
+    "Business Analytics",
+    "Financial Modeling & Analysis",
+    "Project Management Professional",
+    "Agile & Scrum Fundamentals",
+    "Leadership & Communication Skills",
+    "Interview Preparation Masterclass",
+  ];
+
+  for (const name of courseTitleDefinitions) {
+    await prisma.courseTitle.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
+  }
+  console.log(`✅ ${courseTitleDefinitions.length} course titles seeded`);
+
+  // ─── Package Names ─────────────────────────────────────────────────────────
+  const packageNameDefinitions = [
+    "Full Stack Development Package",
+    "MERN Stack Developer Track",
+    "Frontend Developer Package",
+    "Backend Developer Package",
+    "JavaScript Developer Track",
+    "Python Developer Package",
+    "Data Science Career Track",
+    "Machine Learning Engineer Track",
+    "Web Development Starter Pack",
+    "Frontend Development Bundle",
+    "Backend Development Bundle",
+    "Mobile Development Mastery",
+    "Android Developer Package",
+    "iOS Developer Package",
+    "DevOps Engineer Track",
+    "Cloud Computing Career Track",
+    "AI & Machine Learning Package",
+    "Cybersecurity Professional Package",
+    "Digital Marketing Bundle",
+    "Blockchain & Web3 Bundle",
+    "UI/UX Design Package",
+    "Data Engineering Track",
+    "Software Testing & QA Package",
+    "Game Development Bundle",
+    "Business Analytics Package",
+    "Project Management Bundle",
+  ];
+
+  for (const name of packageNameDefinitions) {
+    await prisma.packageName.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
+  }
+  console.log(`✅ ${packageNameDefinitions.length} package names seeded`);
+
   // ─── Branding (SystemSetting) ────────────────────────────────────────────────
   const brandingValue = JSON.stringify({
     primaryColor: "#4F46E5",

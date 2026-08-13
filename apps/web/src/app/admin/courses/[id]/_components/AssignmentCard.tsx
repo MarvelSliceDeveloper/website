@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, withLoadingToast } from "@/lib/toast";
 import {
   IconX,
   IconExternalLink,
@@ -108,9 +108,12 @@ export default function AssignmentCard({
           setUploading(true);
           const formData = new FormData();
           formData.append("questionPdf", pdfFile);
-          const uploadRes = await api.post<{ fileUrl: string }>(
-            "/api/assignments/upload-pdf",
-            formData,
+          const uploadRes = await withLoadingToast(
+            api.post<{ fileUrl: string }>("/api/assignments/upload-pdf", formData),
+            {
+              loading: "Uploading PDF...",
+              success: () => "PDF uploaded",
+            },
           );
           savedPdfUrl = uploadRes.fileUrl;
           setUploading(false);

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { withLoadingToast } from "@/lib/toast";
 import { FormModal } from "@/components/admin/FormModal";
 import { IconPlus } from "@tabler/icons-react";
 import type { Lesson } from "./types";
@@ -77,11 +77,16 @@ export default function AddStudyMaterialForm({
     try {
       const uploadData = new FormData();
       uploadData.append("resource", file);
-      await api.post(
-        `/api/admin/courses/${courseId}/lessons/${targetLessonId}/resources`,
-        uploadData,
+      await withLoadingToast(
+        api.post(
+          `/api/admin/courses/${courseId}/lessons/${targetLessonId}/resources`,
+          uploadData,
+        ),
+        {
+          loading: "Uploading study material...",
+          success: () => "Study material uploaded successfully",
+        },
       );
-      toast.success("Study material uploaded successfully");
       e.target.value = "";
       onSuccess();
     } catch (err: unknown) {
