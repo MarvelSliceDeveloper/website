@@ -5,7 +5,8 @@ import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { IconRefresh, IconRestore } from "@tabler/icons-react";
+import { IconRefresh, IconRestore, IconTrash } from "@tabler/icons-react";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type TrashEntity = {
   id: string;
@@ -21,6 +22,8 @@ export default function TrashPage() {
   const [trash, setTrash] = useState<Record<string, TrashEntity[]>>({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("users");
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const confirmDelete = useConfirmDialog();
 
   async function fetchTrash() {
     setLoading(true);
@@ -47,6 +50,26 @@ export default function TrashPage() {
       fetchTrash();
     } catch {
       toast.error("Failed to restore");
+    }
+  }
+
+  async function handlePermanentDelete(id: string, title?: string) {
+    if (
+      !(await confirmDelete({
+        title: "Permanently Delete Course",
+        message: `Permanently delete "${title || "this course"}"? This will remove all associated modules, batches, enrollments, and data. This cannot be undone.`,
+      }))
+    )
+      return;
+    setDeleting(id);
+    try {
+      await api.delete(`/api/admin/courses/${id}/permanent`);
+      toast.success("Course permanently deleted");
+      fetchTrash();
+    } catch {
+      toast.error("Failed to permanently delete");
+    } finally {
+      setDeleting(null);
     }
   }
 
@@ -129,12 +152,31 @@ export default function TrashPage() {
                       {new Date(item.deletedAt).toLocaleString("en-IN")}
                     </td>
                     <td className="py-3">
-                      <button
-                        onClick={() => handleRestore(activeTab, item.id)}
-                        className="text-emerald-400 hover:text-emerald-300 text-[10px] flex items-center gap-1"
-                      >
-                        <IconRestore size={12} /> Restore
-                      </button>
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={() => handleRestore(activeTab, item.id)}
+                          className="text-emerald-400 hover:text-emerald-300 text-[10px] flex items-center gap-1"
+                        >
+                          <IconRestore size={12} /> Restore
+                        </button>
+                        {activeTab === "courses" && (
+                          <button
+                            onClick={() =>
+                              handlePermanentDelete(item.id, item.title)
+                            }
+                            disabled={deleting === item.id}
+                            className="text-danger hover:text-danger/70 text-[10px] flex items-center gap-1 disabled:opacity-50"
+                          >
+                            {deleting === item.id ? (
+                              <span className="h-3 w-3 animate-spin rounded-full border border-danger border-t-transparent" />
+                            ) : (
+                              <>
+                                <IconTrash size={12} /> Delete Permanently
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

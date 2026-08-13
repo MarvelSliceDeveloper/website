@@ -8,7 +8,20 @@ import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast } from "sonner";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { IconArrowLeft, IconPlus, IconX } from "@tabler/icons-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  SUGGESTED_COURSE_TITLES,
+  SUGGESTED_CATEGORIES,
+  SUGGESTED_TAGS,
+  getSuggestedCourseMeta,
+} from "@/lib/suggestions";
 
 const MAX_THUMBNAIL_BYTES = 5 * 1024 * 1024;
 const ALLOWED_THUMBNAIL_TYPES = new Set([
@@ -23,15 +36,39 @@ export default function CreateCoursePage() {
   const [submitting, setSubmitting] = useState(false);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [newTag, setNewTag] = useState("");
 
   const [form, setForm] = useState({
     title: "",
     description: "",
     category: "",
+    tags: [] as string[],
   });
 
   const update = (field: string, value: string | number) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  // Auto-fill category + tags based on the selected course title.
+  useEffect(() => {
+    if (!form.title.trim()) return;
+    const { category, tags } = getSuggestedCourseMeta(form.title);
+    setForm((prev) => ({
+      ...prev,
+      category: prev.category || category,
+      tags: prev.tags.length > 0 ? prev.tags : tags,
+    }));
+  }, [form.title]);
+
+  const addTag = () => {
+    if (newTag.trim() && !form.tags.includes(newTag.trim())) {
+      setForm((prev) => ({ ...prev, tags: [...prev.tags, newTag.trim()] }));
+      setNewTag("");
+    }
+  };
+
+  const removeTag = (tag: string) => {
+    setForm((prev) => ({ ...prev, tags: prev.tags.filter((t) => t !== tag) }));
+  };
 
   useEffect(() => {
     if (!thumbnailFile) {
@@ -82,16 +119,16 @@ export default function CreateCoursePage() {
       toast.error("Course Title must be at least 3 characters.");
       return false;
     }
+    if (!thumbnailFile) {
+      toast.error("Thumbnail is required.");
+      return false;
+    }
     if (!form.description.trim()) {
       toast.error("Description is required.");
       return false;
     }
     if (form.description.trim().length < 10) {
       toast.error("Description must be at least 10 characters.");
-      return false;
-    }
-    if (!thumbnailFile) {
-      toast.error("Thumbnail is required.");
       return false;
     }
     if (!form.category.trim()) {
@@ -113,6 +150,7 @@ export default function CreateCoursePage() {
         title: form.title,
         description: form.description,
         category: form.category || undefined,
+        tags: form.tags,
         slug:form.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
       });
 
@@ -174,33 +212,30 @@ export default function CreateCoursePage() {
             <label className="mb-1.5 block text-sm font-medium text-foreground">
               Course Title <span className="text-danger">*</span>
             </label>
-            <input
-              type="text"
+            <Select
               value={form.title}
-              onChange={(e) => update("title", e.target.value)}
-              placeholder="e.g. Advanced TypeScript Patterns"
-              className="field w-full"
-              required
-              minLength={3}
-              maxLength={200}
-            />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Description <span className="text-danger">*</span>
-            </label>
-            <textarea
-              value={form.description}
-              onChange={(e) => update("description", e.target.value)}
-              placeholder="What will students learn in this course?"
-              className="field w-full min-h-[120px] resize-y"
-              required
-              minLength={10}
-            />
-            <p className="mt-1 text-xs text-muted">
-              You can add rich formatting in the Course Designer later.
-            </p>
+              onValueChange={(val) => update("title", val || "")}
+            >
+              <SelectTrigger className="field w-full">
+                <SelectValue placeholder="-- Select a title --" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">
+                  <span>-- Select a title --</span>
+                </SelectItem>
+                {SUGGESTED_COURSE_TITLES.map((title) => (
+                  <SelectItem key={title} value={title}>
+                    {title}
+                  </SelectItem>
+                ))}
+                {form.title &&
+                  !(SUGGESTED_COURSE_TITLES as readonly string[]).includes(
+                    form.title,
+                  ) && (
+                    <SelectItem value={form.title}>{form.title}</SelectItem>
+                  )}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -237,16 +272,117 @@ export default function CreateCoursePage() {
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Description <span className="text-danger">*</span>
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) => update("description", e.target.value)}
+              placeholder="What will students learn in this course?"
+              className="field w-full min-h-[120px] resize-y"
+              required
+              minLength={10}
+            />
+            <p className="mt-1 text-xs text-muted">
+              You can add rich formatting in the Course Designer later.
+            </p>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
               Category <span className="text-danger">*</span>
             </label>
-            <input
-              type="text"
+            <Select
               value={form.category}
-              onChange={(e) => update("category", e.target.value)}
-              placeholder="e.g. Programming, Design"
-              className="field w-full"
-              required
-            />
+              onValueChange={(val) => update("category", val || "")}
+            >
+              <SelectTrigger className="field w-full">
+                <SelectValue placeholder="-- Select a category --" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">
+                  <span>-- Select a category --</span>
+                </SelectItem>
+                {SUGGESTED_CATEGORIES.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
+                ))}
+                {form.category &&
+                  !(SUGGESTED_CATEGORIES as readonly string[]).includes(
+                    form.category,
+                  ) && (
+                    <SelectItem value={form.category}>
+                      {form.category}
+                    </SelectItem>
+                  )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Tags
+            </label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {form.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-primary/10 text-primary rounded-md"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(tag)}
+                    className="hover:text-primary/70"
+                  >
+                    <IconX size={12} />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Select
+                onValueChange={(val) =>
+                  val &&
+                  !form.tags.includes(val) &&
+                  setForm((prev) => ({ ...prev, tags: [...prev.tags, val] }))
+                }
+              >
+                <SelectTrigger className="field">
+                  <SelectValue placeholder="-- Select a tag --" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">
+                    <span>-- Select a tag --</span>
+                  </SelectItem>
+                  {SUGGESTED_TAGS.map((tag) => (
+                    <SelectItem key={tag} value={tag}>
+                      {tag}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <input
+                type="text"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), addTag())
+                }
+                placeholder="Add a custom tag"
+                className="field flex-1"
+              />
+              <button
+                type="button"
+                onClick={addTag}
+                className="btn-secondary text-xs px-3"
+              >
+                <IconPlus size={14} />
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-muted">
+              Tags auto-fill from the course title. You can add or remove them.
+            </p>
           </div>
         </div>
 

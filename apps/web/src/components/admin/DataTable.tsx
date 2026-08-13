@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { ReactNode } from "react";
 import {
   IconChevronUp,
@@ -43,11 +43,21 @@ export default function DataTable<T>({
 }: DataTableProps<T>) {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [internalPage, setInternalPage] = useState(1);
+
+  const isControlled = typeof onPageChange === "function";
+  const activePage = isControlled ? page : internalPage;
 
   const total = totalItems ?? data.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const startItem = total === 0 ? 0 : (page - 1) * pageSize + 1;
-  const endItem = Math.min(page * pageSize, total);
+  const startItem = total === 0 ? 0 : (activePage - 1) * pageSize + 1;
+  const endItem = Math.min(activePage * pageSize, total);
+
+  // When not server-controlled, reset to page 1 whenever the data changes
+  // (e.g. a filter/search re-fetches the list).
+  useEffect(() => {
+    if (!isControlled) setInternalPage(1);
+  }, [data, isControlled]);
 
   const sorted = useMemo(() => {
     if (!sortKey) return data;
@@ -65,6 +75,11 @@ export default function DataTable<T>({
     });
   }, [data, sortKey, sortDir]);
 
+  // Client-side slice when the parent does not drive pagination itself.
+  const displayed = isControlled
+    ? sorted
+    : sorted.slice((activePage - 1) * pageSize, activePage * pageSize);
+
   const handleSort = (key: string) => {
     if (sortKey === key) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -81,7 +96,7 @@ export default function DataTable<T>({
     return String((row as Record<string, unknown>)[col.key] ?? "");
   };
 
-  const serialOffset = (page - 1) * pageSize;
+  const serialOffset = (activePage - 1) * pageSize;
 
   const renderTableHeader = () => (
     <thead>
@@ -191,13 +206,13 @@ export default function DataTable<T>({
       <div className="hidden md:block overflow-x-auto min-w-[600px]">
         <table className="w-full">
           {renderTableHeader()}
-          {renderTableBody(sorted)}
+          {renderTableBody(displayed)}
         </table>
       </div>
 
       {/* Mobile Cards */}
       <div className="block md:hidden divide-y divide-border/50">
-        {sorted.map((row, i) => (
+        {displayed.map((row, i) => (
           <div key={i} className="p-3 space-y-1.5">
             {showSerialNumber && (
               <div className="flex items-start justify-between gap-2 mb-1">
@@ -234,18 +249,26 @@ export default function DataTable<T>({
           </p>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => onPageChange?.(page - 1)}
-              disabled={page <= 1}
+              onClick={() =>
+                isControlled
+                  ? onPageChange(activePage - 1)
+                  : setInternalPage((p) => Math.max(1, p - 1))
+              }
+              disabled={activePage <= 1}
               className="btn-secondary px-3 py-1.5 text-xs disabled:opacity-50"
             >
               Previous
             </button>
             <span className="text-xs text-muted">
-              Page {page} of {totalPages}
+              Page {activePage} of {totalPages}
             </span>
             <button
-              onClick={() => onPageChange?.(page + 1)}
-              disabled={page >= totalPages}
+              onClick={() =>
+                isControlled
+                  ? onPageChange(activePage + 1)
+                  : setInternalPage((p) => Math.min(totalPages, p + 1))
+              }
+              disabled={activePage >= totalPages}
               className="btn-secondary px-3 py-1.5 text-xs disabled:opacity-50"
             >
               Next

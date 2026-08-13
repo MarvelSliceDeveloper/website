@@ -12,8 +12,6 @@ import {
   IconPhoto,
   IconUpload,
   IconArchive,
-  IconRefresh,
-  IconTrash,
 } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -71,20 +69,23 @@ function CoursesPageContent() {
   const searchParams = useSearchParams();
   const statusParam = searchParams.get("status") || "";
 
+  const PAGE_SIZE = 10;
   const [courses, setCourses] = useState<Course[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState(statusParam);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [purging, setPurging] = useState<string | null>(null);
-  const [recovering, setRecovering] = useState<string | null>(null);
   const confirmDelete = useConfirmDialog();
 
   const fetchCourses = useCallback(async () => {
     setLoading(true);
     try {
-      const params: Record<string, string> = {};
+      const params: Record<string, string> = {
+        page: String(page),
+        limit: String(PAGE_SIZE),
+      };
       if (statusFilter) params.status = statusFilter;
       if (search) params.search = search;
 
@@ -96,10 +97,11 @@ function CoursesPageContent() {
       setTotal(data.total);
     } catch {
       setCourses([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, search]);
+  }, [statusFilter, search, page]);
 
   useEffect(() => {
     Promise.resolve().then(() => setStatusFilter(statusParam));
@@ -108,6 +110,11 @@ function CoursesPageContent() {
   useEffect(() => {
     Promise.resolve().then(() => fetchCourses());
   }, [fetchCourses]);
+
+  // Reset to page 1 whenever the filter or search term changes
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, search]);
 
   const handleDelete = async (id: string, title: string) => {
     if (!(await confirmDelete({ title: "Archive Course", message: `Archive "${title}"? Students will lose access.` })))
@@ -152,39 +159,6 @@ function CoursesPageContent() {
       fetchCourses();
     } catch (err) {
       toast.error(getErrorMessage(err));
-    }
-  };
-
-  const handleRecover = async (id: string) => {
-    setRecovering(id);
-    try {
-      await api.post(`/api/admin/courses/${id}/recover`);
-      toast.success("Course recovered to draft");
-      fetchCourses();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setRecovering(null);
-    }
-  };
-
-  const handlePermanentDelete = async (id: string, title: string) => {
-    if (
-      !(await confirmDelete({
-        title: "Permanently Delete Course",
-        message: `Permanently delete "${title}"? This will remove all associated modules, batches, enrollments, and data. This cannot be undone.`,
-      }))
-    )
-      return;
-    setPurging(id);
-    try {
-      await api.delete(`/api/admin/courses/${id}/permanent`);
-      toast.success("Course permanently deleted");
-      fetchCourses();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setPurging(null);
     }
   };
 
@@ -308,34 +282,6 @@ function CoursesPageContent() {
               )}
             </button>
           )}
-          {course.status === "ARCHIVED" && (
-            <>
-              <button
-                onClick={() => handleRecover(course.id)}
-                disabled={recovering === course.id}
-                className="rounded-md border border-success/20 p-2 text-success hover:bg-success/10 transition-colors disabled:opacity-50"
-                title="Recover course"
-              >
-                {recovering === course.id ? (
-                  <span className="h-3.5 w-3.5 animate-spin rounded-full border border-success border-t-transparent" />
-                ) : (
-                  <IconRefresh size={16} />
-                )}
-              </button>
-              <button
-                onClick={() => handlePermanentDelete(course.id, course.title)}
-                disabled={purging === course.id}
-                className="rounded-md border border-danger/20 p-2 text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
-                title="Delete permanently"
-              >
-                {purging === course.id ? (
-                  <span className="h-3.5 w-3.5 animate-spin rounded-full border border-danger border-t-transparent" />
-                ) : (
-                  <IconTrash size={16} />
-                )}
-              </button>
-            </>
-          )}
         </div>
       ),
     },
@@ -364,7 +310,6 @@ function CoursesPageContent() {
             { value: "", label: "All" },
             { value: "DRAFT", label: "Draft" },
             { value: "PUBLISHED", label: "Published" },
-            { value: "ARCHIVED", label: "Archived" },
           ]}
           active={statusFilter}
           onChange={setStatusFilter}
@@ -397,7 +342,15 @@ function CoursesPageContent() {
           }
         />
       ) : (
-        <DataTable columns={columns} data={courses} />
+        <DataTable
+          columns={columns}
+          data={courses}
+          loading={loading}
+          page={page}
+          pageSize={PAGE_SIZE}
+          totalItems={total}
+          onPageChange={setPage}
+        />
       )}
     </div>
   );

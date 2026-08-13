@@ -14,14 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SUGGESTED_PACKAGE_NAMES, getRelatedCourseIds } from "@/lib/suggestions";
+import type { PackagedCourse } from "@/lib/suggestions";
 import Link from "next/link";
 
-type Course = {
-  id: string;
-  title: string;
-  slug: string;
-  thumbnailUrl: string | null;
-};
+type Course = PackagedCourse;
 
 export default function CreatePackagePage() {
   usePageTitle("New Package");
@@ -32,6 +29,7 @@ export default function CreatePackagePage() {
   const [isInternship, setIsInternship] = useState(false);
   const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
   const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
+  const [relatedCourseIds, setRelatedCourseIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingCourses, setLoadingCourses] = useState(true);
 
@@ -42,6 +40,18 @@ export default function CreatePackagePage() {
       .catch(() => setAvailableCourses([]))
       .finally(() => setLoadingCourses(false));
   }, []);
+
+  // When a package name is chosen, auto-select the related courses so the
+  // admin gets a sensible starter set (they can still add/remove via the UI).
+  useEffect(() => {
+    const ids = name ? getRelatedCourseIds(name, availableCourses) : [];
+    setRelatedCourseIds(ids);
+    setSelectedCourseIds((prev) => {
+      const union = new Set([...prev, ...ids]);
+      if (prev.length === union.size) return prev;
+      return [...union];
+    });
+  }, [name, availableCourses]);
 
   const addCourse = (courseId: string) => {
     if (!selectedCourseIds.includes(courseId)) {
@@ -93,7 +103,7 @@ export default function CreatePackagePage() {
   );
 
   return (
-    <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500 max-w-3xl">
+    <div className="motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500 w-full">
       <AdminPageHeader
         title="Add Package"
         description="Bundle courses together into a single package."
@@ -112,9 +122,9 @@ export default function CreatePackagePage() {
         }
       />
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="w-full space-y-6">
         {/* Basic Info */}
-        <div className="glass-card p-6 space-y-4">
+        <div className="w-full glass-card p-6 space-y-4">
           <h2 className="text-sm font-semibold text-foreground">
             Package Details
           </h2>
@@ -123,14 +133,30 @@ export default function CreatePackagePage() {
             <label className="mb-1.5 block text-sm font-medium text-foreground">
               Name <span className="text-danger">*</span>
             </label>
-            <input
-              type="text"
+            <Select
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Backend Development"
-              className="field w-full"
-              required
-            />
+              onValueChange={(val) => setName(val || "")}
+            >
+              <SelectTrigger className="field w-full">
+                <SelectValue placeholder="-- Select a package name --" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">
+                  <span>-- Select a package name --</span>
+                </SelectItem>
+                {SUGGESTED_PACKAGE_NAMES.filter((n) => n !== name).map((n) => (
+                  <SelectItem key={n} value={n}>
+                    {n}
+                  </SelectItem>
+                ))}
+                {name &&
+                  !(SUGGESTED_PACKAGE_NAMES as readonly string[]).includes(
+                    name,
+                  ) && (
+                    <SelectItem value={name}>{name}</SelectItem>
+                  )}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -185,7 +211,7 @@ export default function CreatePackagePage() {
 
         {/* Course Selection */}
         {!isInternship && (
-          <div className="glass-card p-6 space-y-4">
+          <div className="w-full glass-card p-6 space-y-4">
             <h2 className="text-sm font-semibold text-foreground">
               Courses <span className="text-danger">*</span>
             </h2>
@@ -203,7 +229,8 @@ export default function CreatePackagePage() {
             <>
               <div>
                 <label className="mb-1.5 block text-xs text-muted-foreground">
-                  Select courses to add to this package
+                  Courses matching this package were auto-selected below. You
+                  can add more or remove any course.
                 </label>
                 <Select onValueChange={addCourse}>
                   <SelectTrigger className="field w-full">
@@ -243,6 +270,11 @@ export default function CreatePackagePage() {
                           <span className="text-sm font-medium text-foreground">
                             {course.title}
                           </span>
+                          {relatedCourseIds.includes(course.id) && (
+                            <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                              Related
+                            </span>
+                          )}
                         </div>
                         <button
                           type="button"
@@ -275,14 +307,14 @@ export default function CreatePackagePage() {
         )}
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-2">
+        <div className="w-full flex items-center justify-end gap-2">
           <Link href="/admin/packages" className="btn-secondary text-sm">
             Cancel
           </Link>
           <button
             type="submit"
             disabled={loading || (!isInternship && selectedCourseIds.length === 0)}
-            className="btn-primary text-sm flex items-center gap-1.5"
+            className="btn-primary w-full text-sm flex items-center gap-1.5"
           >
             {loading ? (
               <>

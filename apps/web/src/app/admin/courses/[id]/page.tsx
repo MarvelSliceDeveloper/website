@@ -90,6 +90,7 @@ export default function CourseDetailPage() {
       });
       toast.success("Course saved!");
       fetchCourse();
+      setActiveTab("content");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to save");
     } finally {
