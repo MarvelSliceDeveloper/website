@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
-import { toast } from "@/lib/toast";
+import { toast, getErrorMessage } from "@/lib/toast";
 import {
   Select,
   SelectContent,
@@ -46,9 +48,6 @@ export default function AdminSendNotificationPage() {
   const router = useRouter();
 
   const [targetType, setTargetType] = useState<TargetType>("ALL_USERS");
-  const [courses, setCourses] = useState<CourseOption[]>([]);
-  const [batches, setBatches] = useState<BatchOption[]>([]);
-  const [internFields, setInternFields] = useState<InternFieldOption[]>([]);
   const [selectedCourseIds, setSelectedCourseIds] = useState<Set<string>>(
     new Set(),
   );
@@ -60,33 +59,35 @@ export default function AdminSendNotificationPage() {
   >(new Set());
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
+  const [channel, setChannel] = useState<"IN_APP" | "EMAIL" | "BOTH">("BOTH");
   const [attachment, setAttachment] = useState<File | null>(null);
-  const [sending, setSending] = useState(false);
   const [confirmShow, setConfirmShow] = useState(false);
-
-  const [emailTemplates, setEmailTemplates] = useState<
-    EmailTemplateOption[]
-  >([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
 
-  useEffect(() => {
-    api
-      .get<CourseOption[]>("/api/admin/batches/courses")
-      .then(setCourses)
-      .catch(() => {});
-    api
-      .get<{ batches: BatchOption[] }>("/api/admin/batches")
-      .then((data) => setBatches(data.batches))
-      .catch(() => {});
-    api
-      .get<EmailTemplateOption[] | { templates: EmailTemplateOption[] }>("/api/admin/email-templates")
-      .then((res) => setEmailTemplates(Array.isArray(res) ? res : res.templates ?? []))
-      .catch(() => {});
-    api
-      .get<{ fields: InternFieldOption[] }>("/api/admin/interns/fields")
-      .then((res) => setInternFields(res.fields ?? []))
-      .catch(() => {});
-  }, []);
+  const coursesQuery = useApiQuery<CourseOption[]>(
+    ["admin", "notifications", "courses"],
+    "/api/admin/batches/courses",
+  );
+  const courses = coursesQuery.data ?? [];
+
+  const batchesQuery = useApiQuery<{ batches: BatchOption[] }>(
+    ["admin", "notifications", "batches"],
+    "/api/admin/batches",
+  );
+  const batches = batchesQuery.data?.batches ?? [];
+
+  const emailTemplatesQuery = useApiQuery<
+    EmailTemplateOption[] | { templates: EmailTemplateOption[] }
+  >(["admin", "notifications", "email-templates"], "/api/admin/email-templates");
+  const emailTemplates = Array.isArray(emailTemplatesQuery.data)
+    ? emailTemplatesQuery.data
+    : emailTemplatesQuery.data?.templates ?? [];
+
+  const internFieldsQuery = useApiQuery<{ fields: InternFieldOption[] }>(
+    ["admin", "notifications", "intern-fields"],
+    "/api/admin/interns/fields",
+  );
+  const internFields = internFieldsQuery.data?.fields ?? [];
 
   const filteredBatches =
     targetType === "COURSE" && selectedCourseIds.size > 0
@@ -108,7 +109,41 @@ export default function AdminSendNotificationPage() {
     }
   }
 
-  async function handleSend() {
+  type SendPayload = {
+    targetType: TargetType;
+    targetIds: string[];
+    title: string;
+    message: string;
+    channel: "IN_APP" | "EMAIL" | "BOTH";
+    emailTemplateId?: string;
+  };
+
+  const sendMutation = useMutation({
+    mutationFn: ({
+      payload,
+      attachment,
+    }: {
+      payload: SendPayload;
+      attachment: File | null;
+    }) =>
+      api.post<{ message: string; count: number }>(
+        "/api/notifications/send",
+        attachment ? toFormData(payload, attachment) : payload,
+      ),
+    onSuccess: (res) => {
+      toast.success(res.message || `Sent to ${res.count} users`);
+      setTitle("");
+      setMessage("");
+      setAttachment(null);
+      setSelectedBatchIds(new Set());
+      setSelectedCourseIds(new Set());
+      setSelectedInternFieldIds(new Set());
+      setConfirmShow(false);
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  function handleSend() {
     if (!title.trim() || !message.trim()) {
       toast.error("Title and message are required");
       return;
@@ -130,35 +165,16 @@ export default function AdminSendNotificationPage() {
       return;
     }
 
-    setSending(true);
-    try {
-      const payload = {
-        targetType,
-        targetIds,
-        title: title.trim(),
-        message: message.trim(),
-        ...(selectedTemplateId ? { emailTemplateId: selectedTemplateId } : {}),
-      };
+    const payload: SendPayload = {
+      targetType,
+      targetIds,
+      title: title.trim(),
+      message: message.trim(),
+      channel,
+      ...(selectedTemplateId ? { emailTemplateId: selectedTemplateId } : {}),
+    };
 
-      const res = await api.post<{ message: string; count: number }>(
-        "/api/notifications/send",
-        attachment ? toFormData(payload, attachment) : payload,
-      );
-      toast.success(res.message || `Sent to ${res.count} users`);
-      setTitle("");
-      setMessage("");
-      setAttachment(null);
-      setSelectedBatchIds(new Set());
-      setSelectedCourseIds(new Set());
-      setSelectedInternFieldIds(new Set());
-      setConfirmShow(false);
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to send notification",
-      );
-    } finally {
-      setSending(false);
-    }
+    sendMutation.mutate({ payload, attachment });
   }
 
   function toggleBatch(id: string) {
@@ -392,6 +408,44 @@ export default function AdminSendNotificationPage() {
           </div>
         )}
 
+        {/* Delivery Channel */}
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
+            Delivery
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            {(
+              [
+                { value: "IN_APP", label: "In-app", hint: "Inbox only" },
+                { value: "EMAIL", label: "Email", hint: "Email only" },
+                { value: "BOTH", label: "Both", hint: "Inbox + email" },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setChannel(opt.value)}
+                className={`flex flex-col items-start gap-0.5 rounded-xl border px-3 py-2.5 text-left transition-all ${
+                  channel === opt.value
+                    ? "border-primary/40 bg-primary/5"
+                    : "border-border/60 bg-card-hover/30 hover:border-border-hover"
+                }`}
+              >
+                <span
+                  className={`text-sm font-medium ${
+                    channel === opt.value
+                      ? "text-primary-hover"
+                      : "text-foreground"
+                  }`}
+                >
+                  {opt.label}
+                </span>
+                <span className="text-[11px] text-muted">{opt.hint}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Attachment (ZIP / PDF) */}
         <div>
           <label className="mb-1.5 block text-sm font-medium text-foreground">
@@ -527,10 +581,10 @@ export default function AdminSendNotificationPage() {
           <button
             type="button"
             onClick={() => setConfirmShow(true)}
-            disabled={!title.trim() || !message.trim() || sending}
+            disabled={!title.trim() || !message.trim() || sendMutation.isPending}
             className="btn-primary"
           >
-            {sending ? "Sending..." : "Send Notification"}
+            {sendMutation.isPending ? "Sending..." : "Send Notification"}
           </button>
         </div>
       </div>
@@ -636,16 +690,16 @@ export default function AdminSendNotificationPage() {
               <button
                 onClick={() => setConfirmShow(false)}
                 className="btn-secondary"
-                disabled={sending}
+                disabled={sendMutation.isPending}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSend}
                 className="btn-primary"
-                disabled={sending}
+                disabled={sendMutation.isPending}
               >
-                {sending ? "Sending..." : "Yes, Send"}
+                {sendMutation.isPending ? "Sending..." : "Yes, Send"}
               </button>
             </div>
           </div>

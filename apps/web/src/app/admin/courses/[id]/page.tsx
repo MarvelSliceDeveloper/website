@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast, withLoadingToast } from "@/lib/toast";
+import { toast, getErrorMessage, withLoadingToast } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { IconChevronRight } from "@tabler/icons-react";
 import type {
   Course,
@@ -37,10 +39,10 @@ export default function CourseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
-  const [course, setCourse] = useState<Course | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [thumbnailUploading, setThumbnailUploading] = useState(false);
+  const courseQuery = useApiQuery<Course>(
+    ["admin", "courses", id],
+    `/api/admin/courses/${id}`,
+  );
   const confirmDelete = useConfirmDialog();
 
   const [activeTab, setActiveTab] = useState<
@@ -55,10 +57,9 @@ export default function CourseDetailPage() {
     learningObjectives: [],
   });
 
-  const fetchCourse = useCallback(async () => {
-    try {
-      const data = await api.get<Course>(`/api/admin/courses/${id}`);
-      setCourse(data);
+  useEffect(() => {
+    const data = courseQuery.data;
+    if (data) {
       setForm({
         title: data.title,
         description: data.description,
@@ -66,49 +67,31 @@ export default function CourseDetailPage() {
         tags: data.tags || [],
         learningObjectives: data.learningObjectives || [],
       });
-    } catch {
-      toast.error("Failed to load course");
-    } finally {
-      setLoading(false);
     }
-  }, [id]);
+  }, [courseQuery.data]);
 
-  useEffect(() => {
-    Promise.resolve().then(() => fetchCourse());
-  }, [fetchCourse]);
-
-  const handleSaveCourse = async () => {
-    setSaving(true);
-    try {
-      await api.put(`/api/admin/courses/${id}`, {
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      api.put(`/api/admin/courses/${id}`, {
         title: form.title,
         description: form.description,
         category: form.category || null,
         tags: form.tags.length > 0 ? form.tags : null,
         learningObjectives:
           form.learningObjectives.length > 0 ? form.learningObjectives : null,
-      });
+      }),
+    onSuccess: () => {
       toast.success("Course saved!");
-      fetchCourse();
+      void courseQuery.refetch();
       setActiveTab("content");
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to save");
-    } finally {
-      setSaving(false);
-    }
-  };
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  const handleThumbnailUpload = async (file: File) => {
-    if (!ALLOWED_THUMBNAIL_TYPES.has(file.type)) {
-      toast.error("Thumbnail must be a JPG, PNG, or WebP image.");
-      return;
-    }
-    if (file.size > MAX_THUMBNAIL_BYTES) {
-      toast.error("Thumbnail must be 5 MB or smaller.");
-      return;
-    }
-    setThumbnailUploading(true);
-    try {
+  const handleSaveCourse = () => saveMutation.mutate();
+
+  const thumbnailMutation = useMutation({
+    mutationFn: async (file: File) => {
       const uploadData = new FormData();
       uploadData.append("thumbnail", file);
       await withLoadingToast(
@@ -118,19 +101,26 @@ export default function CourseDetailPage() {
           success: () => "Thumbnail updated.",
         },
       );
-      fetchCourse();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to upload thumbnail",
-      );
-    } finally {
-      setThumbnailUploading(false);
+    },
+    onSuccess: () => void courseQuery.refetch(),
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleThumbnailUpload = (file: File) => {
+    if (!ALLOWED_THUMBNAIL_TYPES.has(file.type)) {
+      toast.error("Thumbnail must be a JPG, PNG, or WebP image.");
+      return;
     }
+    if (file.size > MAX_THUMBNAIL_BYTES) {
+      toast.error("Thumbnail must be 5 MB or smaller.");
+      return;
+    }
+    thumbnailMutation.mutate(file);
   };
 
-  const handlePublish = async () => {
-    try {
-      const result = await withLoadingToast(
+  const publishMutation = useMutation({
+    mutationFn: () =>
+      withLoadingToast(
         api.post<{
           published: boolean;
           checklist: ChecklistItem[];
@@ -148,50 +138,53 @@ export default function CourseDetailPage() {
             return "Course published";
           },
         },
-      );
-      if (result.published) fetchCourse();
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to publish");
-    }
-  };
+      ),
+    onSuccess: (result) => {
+      if (result.published) void courseQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  const handleUnpublish = async () => {
-    try {
-      await withLoadingToast(
-        api.post(`/api/admin/courses/${id}/unpublish`),
-        {
-          loading: "Unpublishing course...",
-          success: () => "Course unpublished",
-        },
-      );
-      fetchCourse();
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to unpublish");
-    }
-  };
+  const handlePublish = () => publishMutation.mutate();
 
-  const handleDeleteCourse = async () => {
-    if (
-      !(await confirmDelete({
-        title: "Archive Course",
-        message: `Archive course "${course!.title}"? Students will lose access to this course. This action can be reversed by an admin.`,
-      }))
-    )
-      return;
-    try {
+  const unpublishMutation = useMutation({
+    mutationFn: () =>
+      withLoadingToast(api.post(`/api/admin/courses/${id}/unpublish`), {
+        loading: "Unpublishing course...",
+        success: () => "Course unpublished",
+      }),
+    onSuccess: () => void courseQuery.refetch(),
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleUnpublish = () => unpublishMutation.mutate();
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (
+        !(await confirmDelete({
+          title: "Archive Course",
+          message: `Archive course "${courseQuery.data!.title}"? Students will lose access to this course. This action can be reversed by an admin.`,
+        }))
+      )
+        throw new Error("cancelled");
       await withLoadingToast(api.delete(`/api/admin/courses/${id}`), {
         loading: "Archiving course...",
         success: () => "Course archived",
       });
-      router.push("/admin/courses");
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to archive course",
-      );
-    }
-  };
+    },
+    onSuccess: () => router.push("/admin/courses"),
+    onError: (err: unknown) => {
+      if ((err as Error).message === "cancelled") return;
+      toast.error(getErrorMessage(err));
+    },
+  });
 
-  if (loading) {
+  const handleDeleteCourse = () => deleteMutation.mutate();
+
+  const course = courseQuery.data;
+
+  if (courseQuery.isPending) {
     return (
       <div className="flex items-center justify-center py-20">
         <p className="text-muted animate-pulse">Loading course...</p>
@@ -286,8 +279,8 @@ export default function CourseDetailPage() {
           course={course}
           form={form}
           setForm={setForm}
-          thumbnailUploading={thumbnailUploading}
-          saving={saving}
+          thumbnailUploading={thumbnailMutation.isPending}
+          saving={saveMutation.isPending}
           onThumbnailUpload={handleThumbnailUpload}
           onSave={handleSaveCourse}
         />
@@ -297,7 +290,7 @@ export default function CourseDetailPage() {
         <ContentTab
           courseId={course.id}
           modules={sortedModules}
-          onContentChanged={fetchCourse}
+          onContentChanged={() => void courseQuery.refetch()}
         />
       )}
 

@@ -164,7 +164,9 @@ export const studentService = {
         const submission = assignment.submissions[0];
         seenAssignmentIds.add(assignment.id);
         const enrollmentDate =
-          batchEnrollDateMap.get(assignment.batchId) ??
+          (assignment.batchId
+            ? batchEnrollDateMap.get(assignment.batchId)
+            : null) ??
           courseEnrollDateMap.get(assignment.courseId) ??
           null;
         const effectiveDueDate = resolveEffectiveDueDate(
@@ -273,6 +275,7 @@ export const studentService = {
       const quizModelQuizzes = await prisma.quiz.findMany({
         where: {
           moduleId: { in: moduleIds },
+          module: { isCertificationModule: false },
         },
         take: 50,
         include: {

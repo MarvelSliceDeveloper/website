@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   IconVideo,
@@ -75,114 +77,111 @@ const iconBg: Record<string, string> = {
 export default function InstructorDashboardPage() {
   usePageTitle("Dashboard");
   const router = useRouter();
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [submissions, setSubmissions] = useState<AssignmentSubmission[]>([
-    // No demo submissions — rely on real API data
-  ]);
-  const [upcomingSessions, setUpcomingSessions] = useState<Session[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  // Loads all dashboard data in parallel: sessions, batches, and assignments.
-  // Then fetches pending submissions for each assignment that has submissions.
-  // Aggregates stats: total batches, students, sessions, pending submissions.
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [sessionsRes, batchesRes, assignmentsRes] =
-          await Promise.allSettled([
-            api.get<{ sessions?: Session[] }>("/api/sessions"),
-            api.get<Batch[]>("/api/instructor/batches"),
-            api.get<{ assignments: Assignment[] }>("/api/assignments"),
-          ]);
+  // Three base dashboard endpoints load in parallel. The submissions
+  // enrichment below depends on the assignments list.
+  const sessionsQuery = useApiQuery<{ sessions?: Session[] }>(
+    ["instructor", "sessions"],
+    "/api/sessions",
+  );
+  const batchesQuery = useApiQuery<Batch[]>(
+    ["instructor", "batches"],
+    "/api/instructor/batches",
+  );
+  const assignmentsQuery = useApiQuery<{ assignments: Assignment[] }>(
+    ["instructor", "assignments"],
+    "/api/assignments",
+  );
 
-        const allSessions =
-          sessionsRes.status === "fulfilled" &&
-          Array.isArray(sessionsRes.value.sessions)
-            ? sessionsRes.value.sessions
-            : [];
-        const batches =
-          batchesRes.status === "fulfilled" && Array.isArray(batchesRes.value)
-            ? batchesRes.value
-            : [];
-        const assignments =
-          assignmentsRes.status === "fulfilled" &&
-          Array.isArray(assignmentsRes.value.assignments)
-            ? assignmentsRes.value.assignments
-            : [];
-
-        const now = new Date();
-        const upcoming = allSessions.filter(
-          (s) => !s.endedAt && new Date(s.scheduledAt) >= now,
-        );
-        setUpcomingSessions(upcoming.slice(0, 3));
-
-        const totalStudents = batches.reduce(
-          (sum, batch) => sum + (batch._count?.enrollments ?? 0),
-          0,
-        );
-
-        const assignmentsWithSubmissions = assignments.filter(
+  // Pending submissions: fetched per-assignment (only those with submissions),
+  // aggregated + sorted. Keyed by the assignment ids so it re-runs when the
+  // assignment list changes; disabled until assignments have loaded.
+  const submissionsQuery = useQuery({
+    queryKey: [
+      "instructor",
+      "dashboard",
+      "submissions",
+      (assignmentsQuery.data?.assignments ?? []).map((a) => a.id),
+    ],
+    queryFn: async () => {
+      const assignments =
+        assignmentsQuery.data?.assignments?.filter(
           (assignment) => (assignment._count?.submissions ?? 0) > 0,
-        );
+        ) ?? [];
+      const results = await Promise.allSettled(
+        assignments.map((assignment) =>
+          api
+            .get<{ submissions: SubmissionRecord[] }>(
+              `/api/assignments/${assignment.id}/submissions`,
+            )
+            .then((res) =>
+              (res.submissions || [])
+                .filter((sub) => sub.status === "PENDING")
+                .map((sub) => ({
+                  id: sub.id,
+                  studentName: sub.student.name,
+                  studentEmail: sub.student.email,
+                  courseTitle: assignment.course.title,
+                  assignmentTitle: assignment.title,
+                  submittedAt: sub.submittedAt,
+                  status: sub.status as "PENDING" | "GRADED",
+                })),
+            ),
+        ),
+      );
+      return results
+        .filter(
+          (r): r is PromiseFulfilledResult<AssignmentSubmission[]> =>
+            r.status === "fulfilled",
+        )
+        .flatMap((r) => r.value)
+        .sort(
+          (a, b) =>
+            new Date(b.submittedAt).getTime() -
+            new Date(a.submittedAt).getTime(),
+        )
+        .slice(0, 5);
+    },
+    enabled: Boolean(assignmentsQuery.data),
+    staleTime: 30_000,
+  });
 
-        const submissionResults = await Promise.allSettled(
-          assignmentsWithSubmissions.map((assignment) =>
-            api
-              .get<{
-                submissions: SubmissionRecord[];
-              }>(`/api/assignments/${assignment.id}/submissions`)
-              .then((res) =>
-                (res.submissions || [])
-                  .filter((sub) => sub.status === "PENDING")
-                  .map((sub) => ({
-                    id: sub.id,
-                    studentName: sub.student.name,
-                    studentEmail: sub.student.email,
-                    courseTitle: assignment.course.title,
-                    assignmentTitle: assignment.title,
-                    submittedAt: sub.submittedAt,
-                    status: sub.status as "PENDING" | "GRADED",
-                  })),
-              ),
-          ),
-        );
+  const allSessions = useMemo(
+    () => sessionsQuery.data?.sessions ?? [],
+    [sessionsQuery.data],
+  );
+  const batches = useMemo(() => batchesQuery.data ?? [], [batchesQuery.data]);
 
-        const allPendingSubmissions = submissionResults
-          .filter(
-            (
-              result,
-            ): result is PromiseFulfilledResult<AssignmentSubmission[]> =>
-              result.status === "fulfilled",
-          )
-          .flatMap((result) => result.value)
-          .sort(
-            (a, b) =>
-              new Date(b.submittedAt).getTime() -
-              new Date(a.submittedAt).getTime(),
-          );
+  // Upcoming = sessions that haven't ended and are still in the future.
+  const upcomingSessions = useMemo(() => {
+    const now = new Date();
+    return allSessions
+      .filter((s) => !s.endedAt && new Date(s.scheduledAt) >= now)
+      .slice(0, 3);
+  }, [allSessions]);
 
-        setSubmissions(allPendingSubmissions.slice(0, 5));
-        setStats({
-          totalSessions: allSessions.length,
-          totalBatches: batches.length,
-          totalStudents,
-          pendingAssignments: allPendingSubmissions.length,
-        });
-      } catch (err: unknown) {
-        console.error("Failed to load dashboard data:", err);
-        if (
-          err instanceof Error &&
-          (err.message?.includes("Authentication") ||
-            err.message?.includes("401"))
-        ) {
-          router.push("/login");
-        }
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  const totalStudents = useMemo(
+    () =>
+      batches.reduce(
+        (sum, batch) => sum + (batch._count?.enrollments ?? 0),
+        0,
+      ),
+    [batches],
+  );
+
+  const submissions = submissionsQuery.data ?? [];
+  const stats: DashboardStats = {
+    totalSessions: allSessions.length,
+    totalBatches: batches.length,
+    totalStudents,
+    pendingAssignments: submissions.length,
+  };
+
+  const loading =
+    sessionsQuery.isPending ||
+    batchesQuery.isPending ||
+    assignmentsQuery.isPending;
+  const submissionsLoading = loading || submissionsQuery.isPending;
 
   return (
     <div className="space-y-6">
@@ -197,7 +196,7 @@ export default function InstructorDashboardPage() {
                 Batches
               </p>
               <p className="text-lg font-bold text-primary">
-                {loading ? "\u2014" : (stats?.totalBatches ?? "\u2014")}
+                {loading ? "\u2014" : stats.totalBatches}
               </p>
             </div>
             <div className="h-8 w-px bg-border/60" />
@@ -206,7 +205,7 @@ export default function InstructorDashboardPage() {
                 Students
               </p>
               <p className="text-lg font-bold text-success">
-                {loading ? "\u2014" : (stats?.totalStudents ?? "\u2014")}
+                {loading ? "\u2014" : stats.totalStudents}
               </p>
             </div>
           </div>
@@ -218,25 +217,25 @@ export default function InstructorDashboardPage() {
         {[
           {
             label: "Assigned Batches",
-            value: stats?.totalBatches,
+            value: stats.totalBatches,
             icon: IconUsers,
             color: "violet",
           },
           {
             label: "Total Sessions",
-            value: stats?.totalSessions,
+            value: stats.totalSessions,
             icon: IconVideo,
             color: "emerald",
           },
           {
             label: "Active Students",
-            value: stats?.totalStudents,
+            value: stats.totalStudents,
             icon: IconBook,
             color: "sky",
           },
           {
             label: "Pending Submissions",
-            value: stats?.pendingAssignments,
+            value: submissionsQuery.isPending ? undefined : stats.pendingAssignments,
             icon: IconClipboardList,
             color: "amber",
           },
@@ -249,8 +248,7 @@ export default function InstructorDashboardPage() {
                 </p>
                 <p className="text-3xl font-bold text-foreground">
                   {loading || stat.value === undefined ? "\u2014" : stat.value}
-                </p>
-              </div>
+                </p>              </div>
               <div
                 className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${iconBg[stat.color]} group-hover:scale-110 transition-transform`}
               >
@@ -347,7 +345,7 @@ export default function InstructorDashboardPage() {
           </h2>
 
           <div className="space-y-3">
-            {loading ? (
+            {submissionsLoading ? (
               <div className="border border-border bg-card p-8 text-center text-sm text-muted animate-pulse">
                 Loading submissions...
               </div>

@@ -26,6 +26,7 @@ describe("Quiz Submission — Scoring & Attempt Tracking", () => {
     const quiz = await prisma.quiz.findFirst({
       where: {
         module: {
+          isCertificationModule: false,
           course: { slug: "python-for-data-science" },
         },
       },
@@ -91,11 +92,15 @@ describe("Quiz Submission — Scoring & Attempt Tracking", () => {
   // ── Submit Quiz ───────────────────────────────────────────────────────────
   describe("POST /api/courses/quizzes/:quizId/submit", () => {
     it("submits answers and returns score", async () => {
-      // Build answers — select first option for each question (may be right or wrong)
-      const answers = quizQuestions.map((q: any) => ({
-        questionId: q.id,
-        selectedOptionId: "0", // Select first option (index 0)
-      }));
+      // Build answers — select the correct option for each question so the
+      // attempt passes and later duplicate-submission tests behave correctly.
+      const answers = quizQuestions.map((q: any) => {
+        const correct = q.options.find((o: any) => o.isCorrect);
+        return {
+          questionId: q.id,
+          selectedOptionId: correct ? String(correct.id) : "0",
+        };
+      });
 
       const res = await studentAgent
         .post(`/api/courses/quizzes/${quizId}/submit`)
@@ -115,10 +120,13 @@ describe("Quiz Submission — Scoring & Attempt Tracking", () => {
     });
 
     it("rejects duplicate submission", async () => {
-      const answers = quizQuestions.map((q: any) => ({
-        questionId: q.id,
-        selectedOptionId: "0",
-      }));
+      const answers = quizQuestions.map((q: any) => {
+        const correct = q.options.find((o: any) => o.isCorrect);
+        return {
+          questionId: q.id,
+          selectedOptionId: correct ? String(correct.id) : "0",
+        };
+      });
 
       const res = await studentAgent
         .post(`/api/courses/quizzes/${quizId}/submit`)
@@ -126,7 +134,7 @@ describe("Quiz Submission — Scoring & Attempt Tracking", () => {
         .send({ answers });
 
       expect(res.status).toBe(400);
-      expect(res.body.error).toMatch(/already submitted/i);
+      expect(res.body.error).toMatch(/already (submitted|passed)/i);
     });
 
     it("returns 400 for empty answers", async () => {
@@ -135,6 +143,7 @@ describe("Quiz Submission — Scoring & Attempt Tracking", () => {
         where: {
           id: { not: quizId },
           module: {
+            isCertificationModule: false,
             course: { slug: "python-for-data-science" },
           },
           questions: { some: {} },
@@ -200,6 +209,7 @@ describe("Quiz Submission — Scoring & Attempt Tracking", () => {
         where: {
           id: { not: quizId },
           module: {
+            isCertificationModule: false,
             course: { slug: "python-for-data-science" },
           },
           questions: { some: {} },

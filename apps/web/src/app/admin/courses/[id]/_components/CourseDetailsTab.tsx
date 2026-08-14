@@ -12,12 +12,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import {
   SUGGESTED_CATEGORIES,
   SUGGESTED_TAGS,
   SUGGESTED_COURSE_TITLES,
 } from "@/lib/suggestions";
-import { api } from "@/lib/api";
 import type { Course, CourseFormData } from "./types";
 
 export default function CourseDetailsTab({
@@ -40,9 +40,23 @@ export default function CourseDetailsTab({
   const [newTag, setNewTag] = useState("");
   const [newObjective, setNewObjective] = useState("");
 
-  const [dbTitles, setDbTitles] = useState<string[]>([]);
-  const [dbCategories, setDbCategories] = useState<string[]>([]);
-  const [dbTags, setDbTags] = useState<string[]>([]);
+  const titlesQuery = useApiQuery<{ titles: { name: string }[] }>(
+    ["admin", "content", "titles"],
+    "/api/admin/content/titles",
+  );
+  const categoriesQuery = useApiQuery<{ categories: { name: string }[] }>(
+    ["admin", "content", "categories"],
+    "/api/admin/content/categories",
+  );
+  const tagsQuery = useApiQuery<{ tags: { name: string }[] }>(
+    ["admin", "content", "tags"],
+    "/api/admin/content/tags",
+  );
+
+  const dbTitles = titlesQuery.data?.titles.map((t) => t.name) ?? [];
+  const dbCategories =
+    categoriesQuery.data?.categories.map((c) => c.name) ?? [];
+  const dbTags = tagsQuery.data?.tags.map((t) => t.name) ?? [];
 
   const titleOptions = dbTitles.length
     ? dbTitles
@@ -53,23 +67,6 @@ export default function CourseDetailsTab({
   const tagOptions = dbTags.length
     ? dbTags
     : (SUGGESTED_TAGS as readonly string[]);
-
-  useEffect(() => {
-    Promise.all([
-      api
-        .get<{ titles: { name: string }[] }>("/api/admin/content/titles")
-        .then((d) => setDbTitles(d.titles.map((t) => t.name)))
-        .catch(() => {}),
-      api
-        .get<{ categories: { name: string }[] }>("/api/admin/content/categories")
-        .then((d) => setDbCategories(d.categories.map((c) => c.name)))
-        .catch(() => {}),
-      api
-        .get<{ tags: { name: string }[] }>("/api/admin/content/tags")
-        .then((d) => setDbTags(d.tags.map((t) => t.name)))
-        .catch(() => {}),
-    ]);
-  }, []);
 
   useEffect(() => {
     if (!form.title.trim()) return;

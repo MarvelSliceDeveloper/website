@@ -2,8 +2,7 @@
 
 import { usePageTitle } from "@/lib/use-page-title";
 import { ChartSkeleton } from "@/components/admin/LoadingSkeleton";
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import type { DashboardChartData } from "@/lib/api-types";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -66,91 +65,68 @@ const PIE_COLORS = [
 
 // --- Super Admin Dashboard ---
 function SuperAdminDashboard() {
-  const [saStats, setSaStats] = useState({
-    healthStatus: "checking" as "ok" | "error" | "checking",
-    totalLogs: 0,
-    failedLogs: 0,
-    apiKeysActive: 0,
-    pendingInstructors: 0,
-    trashCount: 0,
+  const healthQuery = useApiQuery<{ status: string }>(
+    ["admin", "dashboard", "health"],
+    "/health",
+  );
+  const apiKeysQuery = useApiQuery<{ keys: { active: boolean }[] }>(
+    ["admin", "dashboard", "api-keys"],
+    "/api/admin/api-keys",
+  );
+  const pendingQuery = useApiQuery<{ users: unknown[] }>(
+    ["admin", "dashboard", "pending-instructors"],
+    "/api/admin/users/pending",
+  );
+  const trashQuery = useApiQuery<{ trash: Record<string, unknown[]> }>(
+    ["admin", "dashboard", "trash"],
+    "/api/admin/trash",
+  );
+  const logStatsQuery = useApiQuery<{
+    stats: { totalLogs: number; failedLogs: number };
+  }>(["admin", "dashboard", "log-stats"], "/api/admin/logs/stats");
+  const dashStatsQuery = useApiQuery<DashboardChartData>(
+    ["admin", "dashboard", "stats"],
+    "/api/admin/dashboard/stats",
+  );
+
+  const loading =
+    healthQuery.isPending ||
+    apiKeysQuery.isPending ||
+    pendingQuery.isPending ||
+    trashQuery.isPending ||
+    logStatsQuery.isPending ||
+    dashStatsQuery.isPending;
+
+  const dashStats = dashStatsQuery.data ?? null;
+  const roleDist = dashStats?.userRoleDistribution ?? [];
+  const totalSuperAdmins =
+    roleDist.find((r) => r.role === "SUPER_ADMIN")?.count ?? 0;
+  const totalAdmins = roleDist.find((r) => r.role === "ADMIN")?.count ?? 0;
+  const totalInstructors =
+    roleDist.find((r) => r.role === "INSTRUCTOR")?.count ?? 0;
+  const totalStudents =
+    roleDist.find((r) => r.role === "STUDENT")?.count ?? 0;
+
+  const trashTotal = Object.values(trashQuery.data?.trash ?? {}).reduce(
+    (sum: number, arr: unknown[]) => sum + arr.length,
+    0,
+  );
+
+  const saStats = {
+    healthStatus:
+      healthQuery.data?.status === "ok" ? ("ok" as const) : ("error" as const),
+    totalLogs: logStatsQuery.data?.stats.totalLogs ?? 0,
+    failedLogs: logStatsQuery.data?.stats.failedLogs ?? 0,
+    apiKeysActive: (apiKeysQuery.data?.keys ?? []).filter((k) => k.active)
+      .length,
+    pendingInstructors: pendingQuery.data?.users.length ?? 0,
+    trashCount: trashTotal,
     loginLogsToday: 0,
-    totalAdmins: 0,
-    totalInstructors: 0,
-    totalStudents: 0,
-    totalSuperAdmins: 0,
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const [
-          healthRes,
-          apiKeysRes,
-          pendingRes,
-          trashRes,
-          logStatsRes,
-          statsRes,
-        ] = await Promise.allSettled([
-          api.get<{ status: string }>("/health"),
-          api.get<{ keys: { active: boolean }[] }>("/api/admin/api-keys"),
-          api.get<{ users: unknown[] }>("/api/admin/users/pending"),
-          api.get<{ trash: Record<string, unknown[]> }>("/api/admin/trash"),
-          api.get<{ stats: { totalLogs: number; failedLogs: number } }>(
-            "/api/admin/logs/stats",
-          ),
-          api.get<DashboardChartData>("/api/admin/dashboard/stats"),
-        ]);
-
-        const healthOk =
-          healthRes.status === "fulfilled" && healthRes.value.status === "ok";
-        const keys =
-          apiKeysRes.status === "fulfilled" ? apiKeysRes.value.keys : [];
-        const pending =
-          pendingRes.status === "fulfilled" ? pendingRes.value.users : [];
-        const trash =
-          trashRes.status === "fulfilled" ? trashRes.value.trash : {};
-        const logStats =
-          logStatsRes.status === "fulfilled" ? logStatsRes.value.stats : null;
-        const dashStats =
-          statsRes.status === "fulfilled" ? statsRes.value : null;
-
-        const roleDist = dashStats?.userRoleDistribution ?? [];
-        const totalSuperAdmins =
-          roleDist.find((r) => r.role === "SUPER_ADMIN")?.count ?? 0;
-        const totalAdmins =
-          roleDist.find((r) => r.role === "ADMIN")?.count ?? 0;
-        const totalInstructors =
-          roleDist.find((r) => r.role === "INSTRUCTOR")?.count ?? 0;
-        const totalStudents =
-          roleDist.find((r) => r.role === "STUDENT")?.count ?? 0;
-
-        const trashTotal = Object.values(trash).reduce(
-          (sum: number, arr: unknown[]) => sum + arr.length,
-          0,
-        );
-
-        setSaStats({
-          healthStatus: healthOk ? "ok" : "error",
-          totalLogs: logStats?.totalLogs ?? 0,
-          failedLogs: logStats?.failedLogs ?? 0,
-          apiKeysActive: keys.filter((k) => k.active).length,
-          pendingInstructors: pending.length,
-          trashCount: trashTotal,
-          loginLogsToday: 0,
-          totalSuperAdmins,
-          totalAdmins,
-          totalInstructors,
-          totalStudents,
-        });
-      } catch {
-        // silent
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
+    totalSuperAdmins,
+    totalAdmins,
+    totalInstructors,
+    totalStudents,
+  };
 
   const saCards = [
     {
@@ -391,71 +367,50 @@ function SuperAdminDashboard() {
 
 // --- Admin Dashboard ---
 function AdminDashboard() {
-  const [stats, setStats] = useState({
-    totalCourses: null as number | null,
-    activeBatches: null as number | null,
-    liveSessions: null as number | null,
-    totalStudents: null as number | null,
-  });
+  const coursesQuery = useApiQuery<{ total: number }>(
+    ["admin", "dashboard", "courses"],
+    "/api/admin/courses",
+    { limit: "1" },
+  );
+  const batchesQuery = useApiQuery<{ batches: unknown[] }>(
+    ["admin", "dashboard", "batches"],
+    "/api/admin/batches",
+    { status: "ACTIVE" },
+  );
+  const sessionsQuery = useApiQuery<{ sessions: unknown[] }>(
+    ["admin", "dashboard", "sessions"],
+    "/api/sessions",
+    { status: "live" },
+  );
+  const usersQuery = useApiQuery<{
+    users: Array<{ role: string }>;
+    packages: unknown[];
+  }>(["admin", "dashboard", "users"], "/api/users");
+  const dashStatsQuery = useApiQuery<DashboardChartData>(
+    ["admin", "dashboard", "stats"],
+    "/api/admin/dashboard/stats",
+  );
 
-  const [chartData, setChartData] = useState<DashboardChartData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const loading =
+    coursesQuery.isPending ||
+    batchesQuery.isPending ||
+    sessionsQuery.isPending ||
+    usersQuery.isPending ||
+    dashStatsQuery.isPending;
 
-  useEffect(() => {
-    async function loadStats() {
-      try {
-        const [
-          coursesRes,
-          activeBatchesRes,
-          sessionsRes,
-          usersRes,
-          dashboardRes,
-        ] = await Promise.allSettled([
-          api.get<{ total: number }>("/api/admin/courses", { limit: "1" }),
-          api.get<{ batches: unknown[] }>("/api/admin/batches", { status: "ACTIVE" }),
-          api.get<{ sessions: unknown[] }>("/api/sessions", { status: "live" }),
-          api.get<{ users: Array<{ role: string }>; packages: unknown[] }>(
-            "/api/users",
-          ),
-          api.get<DashboardChartData>("/api/admin/dashboard/stats"),
-        ]);
+  const stats = {
+    totalCourses: coursesQuery.data ? (coursesQuery.data.total ?? 0) : null,
+    activeBatches: batchesQuery.data
+      ? (batchesQuery.data.batches?.length ?? 0)
+      : null,
+    liveSessions: sessionsQuery.data ? sessionsQuery.data.sessions.length : null,
+    totalStudents: usersQuery.data
+      ? (usersQuery.data.users ?? []).filter((user) => user.role === "STUDENT")
+          .length
+      : null,
+  };
 
-        setStats({
-          totalCourses:
-            coursesRes.status === "fulfilled" ? coursesRes.value.total : 0,
-          activeBatches:
-            activeBatchesRes.status === "fulfilled"
-              ? activeBatchesRes.value.batches?.length ?? 0
-              : 0,
-          liveSessions:
-            sessionsRes.status === "fulfilled"
-              ? sessionsRes.value.sessions.length
-              : 0,
-          totalStudents:
-            usersRes.status === "fulfilled"
-              ? usersRes.value.users.filter((user) => user.role === "STUDENT")
-                  .length
-              : 0,
-        });
-
-        if (dashboardRes.status === "fulfilled") {
-          setChartData(dashboardRes.value);
-        }
-      } catch (error) {
-        console.error("Failed to load dashboard stats:", error);
-        setStats({
-          totalCourses: 0,
-          activeBatches: 0,
-          liveSessions: 0,
-          totalStudents: 0,
-        });
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadStats();
-  }, []);
+  const chartData = dashStatsQuery.data ?? null;
 
   const statsCards = [
     {
@@ -888,22 +843,14 @@ function AdminDashboard() {
 // --- Root: role-aware dispatcher ---
 export default function AdminDashboardPage() {
   usePageTitle("Dashboard");
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const meQuery = useApiQuery<{ user: { role: string } }>(
+    ["admin", "dashboard", "me"],
+    "/api/auth/me",
+  );
 
-  useEffect(() => {
-    api
-      .get<{ user: { role: string } }>("/api/auth/me")
-      .then((res) => {
-        if (res?.user) {
-          setUserRole(res.user.role);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+  const userRole = meQuery.data?.user?.role ?? null;
 
-  if (loading) {
+  if (meQuery.isPending) {
     return (
       <div className="space-y-6 animate-pulse">
         <div className="h-32 rounded-lg bg-card-hover/60" />

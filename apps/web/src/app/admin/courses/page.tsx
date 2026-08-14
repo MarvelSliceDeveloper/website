@@ -2,10 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage, withLoadingToast } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import {
   IconBook,
   IconEdit,
@@ -70,107 +72,90 @@ function CoursesPageContent() {
   const statusParam = searchParams.get("status") || "";
 
   const PAGE_SIZE = 10;
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState(statusParam);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [deleting, setDeleting] = useState<string | null>(null);
   const confirmDelete = useConfirmDialog();
 
-  const fetchCourses = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params: Record<string, string> = {
-        page: String(page),
-        limit: String(PAGE_SIZE),
-      };
-      if (statusFilter) params.status = statusFilter;
-      if (search) params.search = search;
-
-      const data = await api.get<CourseListResponse>(
-        "/api/admin/courses",
-        params,
-      );
-      setCourses(data.courses);
-      setTotal(data.total);
-    } catch {
-      setCourses([]);
-      setTotal(0);
-    } finally {
-      setLoading(false);
-    }
-  }, [statusFilter, search, page]);
+  // List query keyed on the active filter/search/page so any change refetches.
+  const coursesQuery = useApiQuery<CourseListResponse>(
+    ["admin", "courses", statusFilter || "all", search || "all", page],
+    "/api/admin/courses",
+    {
+      page: String(page),
+      limit: String(PAGE_SIZE),
+      ...(statusFilter ? { status: statusFilter } : {}),
+      ...(search ? { search } : {}),
+    },
+  );
+  const courses = coursesQuery.data?.courses ?? [];
+  const total = coursesQuery.data?.total ?? 0;
+  const loading = coursesQuery.isPending;
 
   useEffect(() => {
     Promise.resolve().then(() => setStatusFilter(statusParam));
   }, [statusParam]);
-
-  useEffect(() => {
-    Promise.resolve().then(() => fetchCourses());
-  }, [fetchCourses]);
 
   // Reset to page 1 whenever the filter or search term changes
   useEffect(() => {
     setPage(1);
   }, [statusFilter, search]);
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/admin/courses/${id}`),
+    onSuccess: () => {
+      toast.success("Course archived");
+      void coursesQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
   const handleDelete = async (id: string, title: string) => {
     if (!(await confirmDelete({ title: "Archive Course", message: `Archive "${title}"? Students will lose access.` })))
       return;
-    setDeleting(id);
-    try {
-      await api.delete(`/api/admin/courses/${id}`);
-      toast.success("Course archived");
-      fetchCourses();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setDeleting(null);
-    }
+    deleteMutation.mutate(id);
   };
 
-  const handlePublish = async (id: string) => {
-    try {
-      const result = await withLoadingToast(
-        api.post<{
-          published: boolean;
-          checklist: ChecklistItem[];
-        }>(`/api/admin/courses/${id}/publish`),
-        {
-          loading: "Publishing course...",
-          success: (r) => {
-            if (!r.published) {
-              const failedItems = r.checklist
-                .filter((c: ChecklistItem) => !c.passed)
-                .map((c: ChecklistItem) => `• ${c.item}`)
-                .join("\n");
-              return {
-                message: `Cannot publish. Fix these:\n${failedItems}`,
-                type: "error",
-              };
-            }
-            return "Course published";
-          },
-        },
-      );
-      if (result.published) fetchCourses();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
+  const publishMutation = useMutation({
+    mutationFn: (id: string) =>
+      api.post<{
+        published: boolean;
+        checklist: ChecklistItem[];
+      }>(`/api/admin/courses/${id}/publish`),
+  });
+
+  const handlePublish = (id: string) => {
+    void withLoadingToast(publishMutation.mutateAsync(id), {
+      loading: "Publishing course...",
+      success: (r) => {
+        if (!r.published) {
+          const failedItems = (r.checklist ?? [])
+            .filter((c: ChecklistItem) => !c.passed)
+            .map((c: ChecklistItem) => `• ${c.item}`)
+            .join("\n");
+          return {
+            message: `Cannot publish. Fix these:\n${failedItems}`,
+            type: "error",
+          };
+        }
+        return "Course published";
+      },
+    }).then(() => {
+      void coursesQuery.refetch();
+    });
   };
 
-  const handleUnpublish = async (id: string) => {
-    try {
-      await withLoadingToast(api.post(`/api/admin/courses/${id}/unpublish`), {
-        loading: "Unpublishing course...",
-        success: () => "Course unpublished",
-      });
-      fetchCourses();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
+  const unpublishMutation = useMutation({
+    mutationFn: (id: string) => api.post(`/api/admin/courses/${id}/unpublish`),
+  });
+
+  const handleUnpublish = (id: string) => {
+    void withLoadingToast(unpublishMutation.mutateAsync(id), {
+      loading: "Unpublishing course...",
+      success: () => "Course unpublished",
+    }).then(() => {
+      void coursesQuery.refetch();
+    });
   };
 
   const columns: DataTableColumn<Course>[] = [
@@ -282,11 +267,15 @@ function CoursesPageContent() {
           {course.status !== "ARCHIVED" && (
             <button
               onClick={() => handleDelete(course.id, course.title)}
-              disabled={deleting === course.id}
+              disabled={
+                deleteMutation.isPending &&
+                deleteMutation.variables === course.id
+              }
               className="rounded-md border border-danger/20 p-2 text-danger hover:bg-danger/10 transition-colors disabled:opacity-50"
               title="Archive course"
             >
-              {deleting === course.id ? (
+              {deleteMutation.isPending &&
+              deleteMutation.variables === course.id ? (
                 <span className="h-3.5 w-3.5 animate-spin rounded-full border border-danger border-t-transparent" />
               ) : (
                 <IconArchive size={16} />

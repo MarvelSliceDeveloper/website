@@ -22,6 +22,7 @@
     "@radix-ui/react-select": "^2.3.2",
     "@sentry/react": "^10.66.0",
     "@tabler/icons-react": "^3.44.0",
+    "@tanstack/react-query": "^5.101.4",
     "@tinymce/tinymce-react": "^5.1.1",
     "apexcharts": "^5.16.0",
     "clsx": "^2.1.1",

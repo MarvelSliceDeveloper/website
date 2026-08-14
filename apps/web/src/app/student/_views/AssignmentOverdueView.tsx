@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { api } from "@/lib/api";
 import {
@@ -26,7 +27,7 @@ export default function AssignmentOverdueView({
   assignments,
   navigate,
 }: AssignmentOverdueViewProps) {
-  const [uploading, setUploading] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [comment, setComment] = useState("");
   const [modalAssignmentId, setModalAssignmentId] = useState<string | null>(
@@ -34,7 +35,6 @@ export default function AssignmentOverdueView({
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
-  const [locallySubmittedIds, setLocallySubmittedIds] = useState<string[]>([]);
   const [listFilter, setListFilter] = useState<"all" | "pending" | "completed">(
     "all",
   );
@@ -45,17 +45,8 @@ export default function AssignmentOverdueView({
     setMounted(true);
   }, []);
 
-  const overdueItems = assignments.filter(
-    (a) => a.status === "PENDING" && !locallySubmittedIds.includes(a.id),
-  );
-  const completedItems = [
-    ...assignments.filter((a) => a.status === "SUBMITTED"),
-    ...assignments
-      .filter(
-        (a) => a.status === "PENDING" && locallySubmittedIds.includes(a.id),
-      )
-      .map((a) => ({ ...a, status: "SUBMITTED" as const })),
-  ];
+  const overdueItems = assignments.filter((a) => a.status === "PENDING");
+  const completedItems = assignments.filter((a) => a.status === "SUBMITTED");
 
   const allItems = [...overdueItems, ...completedItems];
   const filteredItems =
@@ -91,7 +82,25 @@ export default function AssignmentOverdueView({
     setSelectedFile(file);
   }
 
-  async function handleSubmitFile(assignmentId: string) {
+  // Submit mutation — refreshes the parent's overdue list after success so the
+  // item moves from Pending to Submitted via real server data.
+  const submitMutation = useMutation({
+    mutationFn: ({
+      assignmentId,
+      formData,
+    }: {
+      assignmentId: string;
+      formData: FormData;
+    }) => api.post(`/api/assignments/${assignmentId}/submit/file`, formData),
+    onSuccess: () => {
+      toast.success("Assignment submitted successfully!");
+      void queryClient.invalidateQueries({ queryKey: ["student", "overdue"] });
+      handleCloseModal();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  function handleSubmitFile(assignmentId: string) {
     if (!selectedFile) {
       toast.error("Please select a file to upload.");
       return;
@@ -101,17 +110,7 @@ export default function AssignmentOverdueView({
     if (comment.trim()) {
       formData.append("comment", comment.trim());
     }
-    try {
-      setUploading(assignmentId);
-      await api.post(`/api/assignments/${assignmentId}/submit/file`, formData);
-      setLocallySubmittedIds((prev) => [...prev, assignmentId]);
-      toast.success("Assignment submitted successfully!");
-      handleCloseModal();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setUploading(null);
-    }
+    submitMutation.mutate({ assignmentId, formData });
   }
 
   function handleDownloadSubmission(item: OverdueAssignment) {
@@ -185,7 +184,7 @@ export default function AssignmentOverdueView({
             onClick={() => setListFilter(tab)}
             className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
               listFilter === tab
-                ? "bg-primary text-primary-foreground hover:bg-primary-hover"
+                ? "bg-primary text-white hover:bg-primary-hover"
                 : "text-muted-foreground hover:text-primary hover:bg-primary/5"
             }`}
           >
@@ -552,10 +551,17 @@ export default function AssignmentOverdueView({
                 </button>
                 <button
                   onClick={() => handleSubmitFile(modalAssignment.id)}
-                  disabled={!selectedFile || uploading === modalAssignment.id}
+                  disabled={
+                    !selectedFile ||
+                    (submitMutation.isPending &&
+                      submitMutation.variables?.assignmentId ===
+                        modalAssignment.id)
+                  }
                   className="btn-primary text-sm font-semibold px-6 py-2 disabled:opacity-50"
                 >
-                  {uploading === modalAssignment.id ? (
+                  {submitMutation.isPending &&
+                  submitMutation.variables?.assignmentId ===
+                    modalAssignment.id ? (
                     <span className="flex items-center gap-2">
                       <svg
                         className="animate-spin h-4 w-4"

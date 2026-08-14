@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { IconShieldCheck, IconShieldOff, IconRefresh, IconAlarmSmoke } from "@tabler/icons-react";
 
@@ -14,51 +16,41 @@ interface MaintenanceStatus {
 
 export default function MaintenancePage() {
   usePageTitle("Maintenance Mode");
-  const [status, setStatus] = useState<MaintenanceStatus>({
-    enabled: false,
-    message: "",
-  });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
-  const fetchStatus = () => {
-    setLoading(true);
-    api
-      .get<MaintenanceStatus>("/api/admin/maintenance")
-      .then((data) => {
-        setStatus(data);
-        setMessage(data.message || "");
-      })
-      .catch(() => {
-        toast.error("Failed to fetch maintenance status");
-      })
-      .finally(() => setLoading(false));
-  };
+  const maintenanceQuery = useApiQuery<MaintenanceStatus>(
+    ["admin", "maintenance"],
+    "/api/admin/maintenance",
+  );
+  const status = maintenanceQuery.data ?? { enabled: false, message: "" };
+  const loading = maintenanceQuery.isPending;
 
   useEffect(() => {
-    fetchStatus();
-  }, []);
+    if (maintenanceQuery.data) {
+      setMessage(maintenanceQuery.data.message || "");
+    }
+  }, [maintenanceQuery.data]);
 
-  const handleToggle = async () => {
-    setSaving(true);
-    try {
-      const data = await api.put<MaintenanceStatus>("/api/admin/maintenance", {
-        enabled: !status.enabled,
-        message: message.trim(),
-      });
-      setStatus(data);
+  const toggleMutation = useMutation({
+    mutationFn: (body: MaintenanceStatus) =>
+      api.put<MaintenanceStatus>("/api/admin/maintenance", body),
+    onSuccess: (data) => {
       toast.success(
         data.enabled
           ? "Maintenance mode enabled"
           : "Maintenance mode disabled",
       );
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSaving(false);
-    }
-  };
+      void maintenanceQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  function handleToggle() {
+    toggleMutation.mutate({
+      enabled: !status.enabled,
+      message: message.trim(),
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -68,7 +60,7 @@ export default function MaintenancePage() {
         breadcrumbs={[{ label: "Maintenance Mode", href: "/admin/maintenance" }]}
         action={
           <button
-            onClick={fetchStatus}
+            onClick={() => void maintenanceQuery.refetch()}
             className="btn-secondary text-xs py-2 flex items-center gap-1.5"
           >
             <IconRefresh size={14} /> Refresh
@@ -106,14 +98,18 @@ export default function MaintenancePage() {
             </div>
             <button
               onClick={handleToggle}
-              disabled={saving}
+              disabled={toggleMutation.isPending}
               className={`btn text-sm py-2 px-5 shrink-0 ${
                 status.enabled
                   ? "bg-gray-100 dark:bg-slate-800 text-foreground hover:bg-gray-200 dark:hover:bg-slate-700"
                   : "bg-primary text-primary-foreground hover:bg-primary/90"
               } disabled:opacity-50`}
             >
-              {saving ? "Saving..." : status.enabled ? "Disable" : "Enable"}
+              {toggleMutation.isPending
+                ? "Saving..."
+                : status.enabled
+                  ? "Disable"
+                  : "Enable"}
             </button>
           </div>
 
@@ -147,7 +143,7 @@ export default function MaintenancePage() {
             </div>
             <button
               onClick={handleToggle}
-              disabled={saving}
+              disabled={toggleMutation.isPending}
               className={`btn-secondary text-xs py-1.5 px-4 ${
                 status.enabled
                   ? "border-danger text-danger hover:bg-danger/10"

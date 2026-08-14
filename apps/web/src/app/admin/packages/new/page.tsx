@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { usePageTitle } from "@/lib/use-page-title";
 import { IconArrowLeft, IconPackage, IconX } from "@tabler/icons-react";
@@ -27,35 +29,27 @@ export default function CreatePackagePage() {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [isInternship, setIsInternship] = useState(false);
-  const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
   const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
   const [relatedCourseIds, setRelatedCourseIds] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingCourses, setLoadingCourses] = useState(true);
 
   // DB-backed package names (fall back to static suggestions)
-  const [dbPackageNames, setDbPackageNames] = useState<string[]>([]);
+  const packageNamesQuery = useApiQuery<{ packageNames: { name: string }[] }>(
+    ["admin", "content", "package-names"],
+    "/api/admin/content/package-names",
+  );
+  const dbPackageNames =
+    packageNamesQuery.data?.packageNames.map((p) => p.name) ?? [];
 
-  useEffect(() => {
-    api
-      .get<{ packageNames: { name: string }[] }>(
-        "/api/admin/content/package-names",
-      )
-      .then((d) => setDbPackageNames(d.packageNames.map((p) => p.name)))
-      .catch(() => {});
-  }, []);
+  const coursesQuery = useApiQuery<{ courses: Course[] }>(
+    ["admin", "packages", "courses"],
+    "/api/admin/packages/courses",
+  );
+  const availableCourses = coursesQuery.data?.courses ?? [];
+  const loadingCourses = coursesQuery.isPending;
 
   const packageNameOptions = dbPackageNames.length
     ? dbPackageNames
     : (SUGGESTED_PACKAGE_NAMES as readonly string[]);
-
-  useEffect(() => {
-    api
-      .get<{ courses: Course[] }>("/api/admin/packages/courses")
-      .then((data) => setAvailableCourses(data.courses || []))
-      .catch(() => setAvailableCourses([]))
-      .finally(() => setLoadingCourses(false));
-  }, []);
 
   // When a package name is chosen, auto-select the related courses so the
   // admin gets a sensible starter set (they can still add/remove via the UI).
@@ -79,7 +73,26 @@ export default function CreatePackagePage() {
     setSelectedCourseIds(selectedCourseIds.filter((id) => id !== courseId));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const createMutation = useMutation({
+    mutationFn: (payload: {
+      name: string;
+      description?: string;
+      price?: number;
+      courseIds: string[];
+      isInternship: boolean;
+    }) => api.post("/api/admin/packages", payload),
+    onSuccess: () => {
+      toast.success(
+        isInternship
+          ? "Internship package created successfully"
+          : "Package created successfully",
+      );
+      router.push("/admin/packages");
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       toast.error("Package name is required");
@@ -90,25 +103,14 @@ export default function CreatePackagePage() {
       return;
     }
 
-    setLoading(true);
-    try {
-      const priceNum = price ? parseInt(price, 10) * 100 : undefined;
-      await api.post("/api/admin/packages", {
-        name: name.trim(),
-        description: description.trim() || undefined,
-        price: priceNum,
-        courseIds: selectedCourseIds,
-        isInternship,
-      });
-      toast.success(
-        isInternship ? "Internship package created successfully" : "Package created successfully",
-      );
-      router.push("/admin/packages");
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
+    const priceNum = price ? parseInt(price, 10) * 100 : undefined;
+    createMutation.mutate({
+      name: name.trim(),
+      description: description.trim() || undefined,
+      price: priceNum,
+      courseIds: selectedCourseIds,
+      isInternship,
+    });
   };
 
   const selectedCourses = availableCourses.filter((c) =>
@@ -329,10 +331,10 @@ export default function CreatePackagePage() {
           </Link>
           <button
             type="submit"
-            disabled={loading || (!isInternship && selectedCourseIds.length === 0)}
+            disabled={createMutation.isPending || (!isInternship && selectedCourseIds.length === 0)}
             className="btn-primary w-full text-sm flex items-center gap-1.5"
           >
-            {loading ? (
+            {createMutation.isPending ? (
               <>
                 <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
                 Adding...

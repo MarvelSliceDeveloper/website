@@ -253,14 +253,16 @@ export const assignmentService = {
       include: { batch: true },
     });
     if (!assignment) throw new AppError(404, "Assignment not found");
-    if (assignment.batch.instructorId !== instructorId) {
-      const isMentor = await prisma.batchCourseMentor.findFirst({
-        where: {
-          batchId: assignment.batchId,
-          mentorId: instructorId,
-          courseId: assignment.courseId,
-        },
-      });
+    if (assignment.batch?.instructorId !== instructorId) {
+      const isMentor = assignment.batchId
+        ? await prisma.batchCourseMentor.findFirst({
+            where: {
+              batchId: assignment.batchId,
+              mentorId: instructorId,
+              courseId: assignment.courseId,
+            },
+          })
+        : null;
       if (!isMentor) {
         throw new AppError(403, "You are not the instructor of this batch");
       }
@@ -315,14 +317,16 @@ export const assignmentService = {
     });
 
     if (!submission) throw new AppError(404, "Submission not found");
-    if (submission.assignment.batch.instructorId !== instructorId) {
-      const isMentor = await prisma.batchCourseMentor.findFirst({
-        where: {
-          batchId: submission.assignment.batchId,
-          mentorId: instructorId,
-          courseId: submission.assignment.courseId,
-        },
-      });
+    if (submission.assignment.batch?.instructorId !== instructorId) {
+      const isMentor = submission.assignment.batchId
+        ? await prisma.batchCourseMentor.findFirst({
+            where: {
+              batchId: submission.assignment.batchId,
+              mentorId: instructorId,
+              courseId: submission.assignment.courseId,
+            },
+          })
+        : null;
       if (!isMentor) {
         throw new AppError(403, "You are not the instructor of this batch");
       }

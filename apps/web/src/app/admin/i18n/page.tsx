@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { usePageTitle } from "@/lib/use-page-title";
@@ -18,76 +20,68 @@ type TranslationData = Record<string, unknown>;
 
 export default function I18nPage() {
   usePageTitle("Localization");
-  const [locales, setLocales] = useState<LocaleInfo[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeLocale, setActiveLocale] = useState<string | null>(null);
   const [translations, setTranslations] = useState<TranslationData>({});
   const [search, setSearch] = useState("");
-  const [loadingLocale, setLoadingLocale] = useState(false);
-  const [savingLocale, setSavingLocale] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [newLocale, setNewLocale] = useState("");
-  const [creating, setCreating] = useState(false);
 
-  const fetchLocales = useCallback(() => {
-    setLoading(true);
-    api
-      .get<{ data: LocaleInfo[]; enKeys: number }>("/api/admin/i18n/locales")
-      .then((res) => {
-        setLocales(res.data);
-      })
-      .catch(() => toast.error("Failed to load locales"))
-      .finally(() => setLoading(false));
-  }, []);
+  const localesQuery = useApiQuery<{ data: LocaleInfo[]; enKeys: number }>(
+    ["admin", "i18n", "locales"],
+    "/api/admin/i18n/locales",
+  );
+  const locales = localesQuery.data?.data ?? [];
+  const loading = localesQuery.isPending;
+
+  const translationsQuery = useApiQuery<{ data: TranslationData }>(
+    ["admin", "i18n", "translations", activeLocale ?? ""],
+    activeLocale ? `/api/admin/i18n/${activeLocale}` : "",
+    undefined,
+    { enabled: Boolean(activeLocale) },
+  );
+  const loadingLocale = translationsQuery.isPending;
 
   useEffect(() => {
-    fetchLocales();
-  }, [fetchLocales]);
+    if (translationsQuery.data) {
+      setTranslations(translationsQuery.data.data);
+    }
+  }, [translationsQuery.data]);
 
-  const openLocale = async (locale: string) => {
+  const openLocale = (locale: string) => {
     setActiveLocale(locale);
-    setLoadingLocale(true);
     setSearch("");
-    try {
-      const res = await api.get<{ data: TranslationData }>(
-        `/api/admin/i18n/${locale}`,
-      );
-      setTranslations(res.data);
-    } catch {
-      toast.error("Failed to load translations");
-    } finally {
-      setLoadingLocale(false);
-    }
   };
 
-  const handleSave = async () => {
-    if (!activeLocale) return;
-    setSavingLocale(true);
-    try {
-      await api.put(`/api/admin/i18n/${activeLocale}`, translations);
+  const saveMutation = useMutation({
+    mutationFn: (translations: TranslationData) =>
+      api.put(`/api/admin/i18n/${activeLocale}`, translations),
+    onSuccess: () => {
       toast.success(`"${activeLocale}" translations saved`);
-      fetchLocales();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSavingLocale(false);
-    }
+      void localesQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSave = () => {
+    if (!activeLocale) return;
+    saveMutation.mutate(translations);
   };
 
-  const handleCreate = async () => {
-    if (!newLocale.trim()) return;
-    setCreating(true);
-    try {
-      await api.post("/api/admin/i18n/create", { locale: newLocale.trim() });
+  const createMutation = useMutation({
+    mutationFn: (locale: string) =>
+      api.post("/api/admin/i18n/create", { locale }),
+    onSuccess: () => {
       toast.success(`Locale "${newLocale.trim()}" created`);
       setNewLocale("");
       setShowCreate(false);
-      fetchLocales();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setCreating(false);
-    }
+      void localesQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleCreate = () => {
+    if (!newLocale.trim()) return;
+    createMutation.mutate(newLocale.trim());
   };
 
   const flatEntries = useMemo(() => {
@@ -156,10 +150,10 @@ export default function I18nPage() {
               </button>
               <button
                 onClick={handleSave}
-                disabled={savingLocale}
+                disabled={saveMutation.isPending}
                 className="btn-primary text-sm flex items-center gap-1.5"
               >
-                {savingLocale ? (
+                {saveMutation.isPending ? (
                   <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
                 ) : (
                   <IconDeviceFloppy size={14} />
@@ -272,10 +266,10 @@ export default function I18nPage() {
             />
             <button
               onClick={handleCreate}
-              disabled={creating || !newLocale.trim()}
+              disabled={createMutation.isPending || !newLocale.trim()}
               className="btn-primary text-sm flex items-center gap-1.5"
             >
-              {creating ? (
+              {createMutation.isPending ? (
                 <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
               ) : (
                 <IconPlus size={14} />

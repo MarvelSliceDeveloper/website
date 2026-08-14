@@ -3,8 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
@@ -52,16 +54,6 @@ export default function ScheduleSessionPage() {
   usePageTitle("New Session");
   const router = useRouter();
 
-  // Data lists
-  const [batches, setBatches] = useState<Batch[]>([]);
-  const [modules, setModules] = useState<Module[]>([]);
-  const [instructors, setInstructors] = useState<Instructor[]>([]);
-
-  // Loading states
-  const [loadingBatches, setLoadingBatches] = useState(false);
-  const [loadingModules, setLoadingModules] = useState(false);
-  const [loadingInstructors, setLoadingInstructors] = useState(false);
-
   // Form state
   const [selectedBatchId, setSelectedBatchId] = useState("");
   const [selectedInstructorId, setSelectedInstructorId] = useState("");
@@ -72,10 +64,41 @@ export default function ScheduleSessionPage() {
     endDateTime: "",
     customJoinUrl: "",
   });
-  const [submitting, setSubmitting] = useState(false);
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const [copiedBatchId, setCopiedBatchId] = useState<string | null>(null);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const batchesQuery = useApiQuery<{ batches: Batch[] }>(
+    ["admin", "sessions", "batches"],
+    "/api/admin/batches",
+    { limit: "500" },
+  );
+  const batches = batchesQuery.data?.batches ?? [];
+  const loadingBatches = batchesQuery.isPending;
+
+  const instructorsQuery = useApiQuery<Instructor[]>(
+    ["admin", "sessions", "instructors"],
+    "/api/admin/batches/instructors",
+  );
+  const instructors = instructorsQuery.data ?? [];
+  const loadingInstructors = instructorsQuery.isPending;
+
+  const selectedBatch = batches.find((b) => b.id === selectedBatchId);
+  const courseId = selectedBatch?.courseId ?? null;
+
+  const modulesQuery = useApiQuery<{ modules: Module[] }>(
+    ["admin", "sessions", "modules", courseId ?? ""],
+    courseId ? `/api/admin/courses/${courseId}` : "",
+    undefined,
+    { enabled: Boolean(courseId) },
+  );
+  const modules = modulesQuery.data?.modules ?? [];
+  const loadingModules = modulesQuery.isPending;
+
+  // Reset the linked module whenever the batch's course changes
+  useEffect(() => {
+    setForm((prev) => ({ ...prev, moduleId: "" }));
+  }, [courseId]);
 
   const copyBatchId = async (batchId: string) => {
     if (!batchId) {
@@ -101,56 +124,6 @@ export default function ScheduleSessionPage() {
     }
   };
 
-  // Fetch all batches + instructors on mount
-  useEffect(() => {
-    setLoadingBatches(true);
-    api
-      .get<{ batches: Batch[] }>("/api/admin/batches?limit=500")
-      .then((data) => setBatches(data.batches || []))
-      .catch((err: unknown) => {
-        console.error("Failed to load batches:", err);
-        toast.error("Failed to load batches");
-      })
-      .finally(() => setLoadingBatches(false));
-
-    api
-      .get<Instructor[]>("/api/admin/batches/instructors")
-      .then((data) => setInstructors(data || []))
-      .catch((err: unknown) => {
-        console.error("Failed to load instructors:", err);
-      })
-      .finally(() => setLoadingInstructors(false));
-  }, []);
-
-  // Fetch modules when a batch is selected
-  useEffect(() => {
-    const selectedBatch = batches.find((b) => b.id === selectedBatchId);
-    if (!selectedBatch) {
-      setModules([]);
-      setForm((prev) => ({ ...prev, moduleId: "" }));
-      return;
-    }
-
-    const courseId = selectedBatch.courseId;
-    if (!courseId) {
-      setModules([]);
-      setForm((prev) => ({ ...prev, moduleId: "" }));
-      return;
-    }
-
-    setLoadingModules(true);
-    api
-      .get<{ modules: Module[] }>(`/api/admin/courses/${courseId}`)
-      .then((data) => setModules(data.modules || []))
-      .catch((err: unknown) => {
-        console.error("Failed to load modules:", err);
-        setModules([]);
-      })
-      .finally(() => setLoadingModules(false));
-  }, [selectedBatchId, batches]);
-
-  // Auto-select the batch's instructor by default
-  const selectedBatch = batches.find((b) => b.id === selectedBatchId);
   const defaultInstructorId = selectedBatch?.instructor?.id || "";
 
   const effectiveInstructorId =
@@ -160,7 +133,26 @@ export default function ScheduleSessionPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const scheduleMutation = useMutation({
+    mutationFn: (payload: {
+      batchId: string;
+      courseId?: string;
+      moduleId?: string;
+      title: string;
+      startDateTime: string;
+      endDateTime: string;
+      customJoinUrl?: string;
+      instructorOverride?: string;
+    }) => api.post("/api/sessions", payload),
+    onSuccess: () => {
+      toast.success("Session scheduled successfully!");
+      router.push("/admin/sessions");
+      router.refresh();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title.trim()) {
       toast.error("Please enter a session title");
@@ -185,67 +177,48 @@ export default function ScheduleSessionPage() {
       return;
     }
 
-    setSubmitting(true);
-    try {
-      const courseId = selectedBatch?.courseId || undefined;
-      await api.post("/api/sessions", {
-        batchId: selectedBatchId,
-        courseId,
-        moduleId: form.moduleId || undefined,
-        title: form.title,
-        startDateTime: start.toISOString(),
-        endDateTime: end.toISOString(),
-        customJoinUrl: form.customJoinUrl || undefined,
-        instructorOverride:
-          effectiveInstructorId &&
-          effectiveInstructorId !== defaultInstructorId
-            ? effectiveInstructorId
-            : undefined,
-      });
-
-      toast.success("Session scheduled successfully!");
-      router.push("/admin/sessions");
-      router.refresh();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to schedule session.",
-      );
-    } finally {
-      setSubmitting(false);
-    }
+    scheduleMutation.mutate({
+      batchId: selectedBatchId,
+      courseId: selectedBatch?.courseId || undefined,
+      moduleId: form.moduleId || undefined,
+      title: form.title,
+      startDateTime: start.toISOString(),
+      endDateTime: end.toISOString(),
+      customJoinUrl: form.customJoinUrl || undefined,
+      instructorOverride:
+        effectiveInstructorId &&
+        effectiveInstructorId !== defaultInstructorId
+          ? effectiveInstructorId
+          : undefined,
+    });
   };
 
-  const handleExcelUpload = async () => {
+  const uploadMutation = useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return api.post<{
+        created: number;
+        errors: string[];
+      }>("/api/sessions/bulk-upload", formData);
+    },
+    onSuccess: (result) => {
+      if (result.errors && result.errors.length > 0) {
+        result.errors.forEach((e: string) => toast.error(e));
+      }
+      toast.success(`${result.created} session(s) created successfully!`);
+      router.push("/admin/sessions");
+      router.refresh();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleExcelUpload = () => {
     if (!excelFile) {
       toast.error("Please select an Excel file");
       return;
     }
-
-    setSubmitting(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", excelFile);
-
-      const result = await api.post<{
-        created: number;
-        errors: string[];
-        sessions: unknown[];
-      }>("/api/sessions/bulk-upload", formData);
-
-      if (result.errors && result.errors.length > 0) {
-        result.errors.forEach((e: string) => toast.error(e));
-      }
-
-      toast.success(`${result.created} session(s) created successfully!`);
-      router.push("/admin/sessions");
-      router.refresh();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to upload Excel file",
-      );
-    } finally {
-      setSubmitting(false);
-    }
+    uploadMutation.mutate(excelFile);
   };
 
   return (
@@ -516,9 +489,11 @@ export default function ScheduleSessionPage() {
           <button
             type="submit"
             className="btn-primary flex items-center gap-2"
-            disabled={submitting || !selectedBatchId || !form.title}
+            disabled={
+              scheduleMutation.isPending || !selectedBatchId || !form.title
+            }
           >
-            {submitting ? (
+            {scheduleMutation.isPending ? (
               <>
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 Scheduling...
@@ -638,9 +613,11 @@ export default function ScheduleSessionPage() {
         <button
           onClick={handleExcelUpload}
           className="btn-primary text-sm flex items-center gap-2"
-          disabled={submitting || !excelFile}
+          disabled={uploadMutation.isPending || !excelFile}
         >
-          {submitting ? "Uploading..." : "Upload & Create Sessions"}
+          {uploadMutation.isPending
+            ? "Uploading..."
+            : "Upload & Create Sessions"}
         </button>
       </div>
     </div>

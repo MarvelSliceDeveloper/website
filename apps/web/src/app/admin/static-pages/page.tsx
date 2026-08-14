@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -225,31 +228,15 @@ function StaticPageForm({
 export default function AdminStaticPagesPage() {
   usePageTitle("Static Pages");
   const confirmDelete = useConfirmDialog();
-  const [pages, setPages] = useState<StaticPage[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingPage, setEditingPage] = useState<StaticPage | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  async function fetchPages() {
-    setLoading(true);
-    try {
-      const data = await api.get<{ pages: StaticPage[] }>(
-        "/api/admin/static-pages",
-      );
-      setPages(data.pages);
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-      setPages([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchPages();
-  }, []);
+  const pagesQuery = useApiQuery<{ pages: StaticPage[] }>(
+    ["admin", "static-pages"],
+    "/api/admin/static-pages",
+  );
+  const pages = pagesQuery.data?.pages ?? [];
+  const loading = pagesQuery.isPending;
 
   function openCreate() {
     setEditingPage(null);
@@ -266,27 +253,34 @@ export default function AdminStaticPagesPage() {
     setEditingPage(null);
   }
 
-  async function handleSubmit(input: StaticPageInput) {
-    setSaving(true);
-    try {
-      if (editingPage) {
-        await api.put(`/api/admin/static-pages/${editingPage.id}`, input);
-        toast.success("Page updated");
-      } else {
-        await api.post("/api/admin/static-pages", input);
-        toast.success("Page created");
-      }
+  const saveMutation = useMutation({
+    mutationFn: (input: StaticPageInput) =>
+      editingPage
+        ? api.put(`/api/admin/static-pages/${editingPage.id}`, input)
+        : api.post("/api/admin/static-pages", input),
+    onSuccess: () => {
+      toast.success(editingPage ? "Page updated" : "Page created");
       cancelForm();
-      fetchPages();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSaving(false);
-    }
-  }
+      void pagesQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  async function handleDelete(id: string, title: string) {
-    if (deletingId) return;
+  const handleSubmit = (input: StaticPageInput) => {
+    saveMutation.mutate(input);
+  };
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/admin/static-pages/${id}`),
+    onSuccess: () => {
+      toast.success("Page deleted");
+      void pagesQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleDelete = async (id: string, title: string) => {
+    if (deleteMutation.isPending) return;
     if (
       !(await confirmDelete({
         title: "Delete Page",
@@ -295,20 +289,8 @@ export default function AdminStaticPagesPage() {
     )
       return;
 
-    setDeletingId(id);
-    const previousPages = pages;
-    setPages((prev) => prev.filter((p) => p.id !== id));
-
-    try {
-      await api.delete(`/api/admin/static-pages/${id}`);
-      toast.success("Page deleted");
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-      setPages(previousPages);
-    } finally {
-      setDeletingId(null);
-    }
-  }
+    deleteMutation.mutate(id);
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -319,7 +301,7 @@ export default function AdminStaticPagesPage() {
         action={
           <div className="flex items-center gap-2">
             <button
-              onClick={fetchPages}
+              onClick={() => void pagesQuery.refetch()}
               aria-label="Refresh page list"
               className="btn-secondary text-xs py-2 flex items-center gap-1.5"
             >
@@ -339,7 +321,7 @@ export default function AdminStaticPagesPage() {
       {showForm && (
         <StaticPageForm
           initial={editingPage}
-          saving={saving}
+          saving={saveMutation.isPending}
           onCancel={cancelForm}
           onSubmit={handleSubmit}
         />
@@ -381,7 +363,7 @@ export default function AdminStaticPagesPage() {
                           /{pg.slug}
                         </span>
                         {pg.isPublished && (
-                          <a
+                          <Link
                             href={`/${pg.slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -390,7 +372,7 @@ export default function AdminStaticPagesPage() {
                             className="text-muted-foreground hover:text-primary transition-colors"
                           >
                             <IconExternalLink size={12} />
-                          </a>
+                          </Link>
                         )}
                       </div>
                     </td>
@@ -412,7 +394,10 @@ export default function AdminStaticPagesPage() {
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => openEdit(pg)}
-                          disabled={deletingId === pg.id}
+                          disabled={
+                            deleteMutation.isPending &&
+                            deleteMutation.variables === pg.id
+                          }
                           aria-label={`Edit ${pg.title}`}
                           title="Edit"
                           className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors disabled:opacity-40"
@@ -421,7 +406,10 @@ export default function AdminStaticPagesPage() {
                         </button>
                         <button
                           onClick={() => handleDelete(pg.id, pg.title)}
-                          disabled={deletingId === pg.id}
+                          disabled={
+                            deleteMutation.isPending &&
+                            deleteMutation.variables === pg.id
+                          }
                           aria-label={`Delete ${pg.title}`}
                           title="Delete"
                           className="p-1.5 rounded-md hover:bg-danger/10 text-muted-foreground hover:text-danger transition-colors disabled:opacity-40"

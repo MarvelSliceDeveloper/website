@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
   Certificate,
   ClaimableCertificate,
@@ -8,6 +9,7 @@ import type {
 } from "@/lib/api-types";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import {
   IconAward,
   IconCheck,
@@ -60,32 +62,29 @@ type CertificateList = {
 export default function CertificatesView({
   onCertificateClaimed,
 }: CertificatesViewProps) {
-  const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [inProgress, setInProgress] = useState<
-    Array<Certificate & { courseId: string }>
-  >([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const [progressByCourse, setProgressByCourse] = useState<
-    Record<string, CourseProgress>
-  >({});
-  const [progressLoading, setProgressLoading] = useState(false);
-  const [packageProgresses, setPackageProgresses] = useState<
-    PackageExamProgress[]
-  >([]);
-  const [claimingPackageId, setClaimingPackageId] = useState<string | null>(
-    null,
-  );
 
-  // Fetch certificates on demand (kept off the dashboard load path)
-  const loadCertificates = useCallback(async () => {
-    try {
-      const res = await api.get<CertificateList>("/api/certificates");
-      const issued = (res.certificates || []).map((c) => ({
+  // Certificates + claimable (in-progress) courses — same cache key as the
+  // standalone certificates page so navigation shares the cached result.
+  const certificatesQuery = useApiQuery<CertificateList>(
+    ["student", "certificates"],
+    "/api/certificates",
+  );
+  const loading = certificatesQuery.isPending;
+
+  const earned = useMemo<Certificate[]>(
+    () =>
+      (certificatesQuery.data?.certificates ?? []).map((c) => ({
         ...c,
         earned: true,
-      }));
-      const claimable = (res.claimable || []).map((c) => ({
+      })),
+    [certificatesQuery.data],
+  );
+
+  const inProgress = useMemo<Array<Certificate & { courseId: string }>>(
+    () =>
+      (certificatesQuery.data?.claimable ?? []).map((c) => ({
         id: c.courseId,
         courseId: c.courseId,
         course: c.course,
@@ -95,94 +94,110 @@ export default function CertificatesView({
         completedRecordings: c.completedRecordings,
         progressPercent: c.progressPercent,
         earned: false,
-      }));
-      setCertificates(issued);
-      setInProgress(claimable);
-    } catch {
-      setCertificates([]);
-      setInProgress([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      })),
+    [certificatesQuery.data],
+  );
 
-  useEffect(() => {
-    loadCertificates();
-  }, [loadCertificates]);
-
-  const earned = certificates;
-
-  // Fetch package exam progress
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await api.get<{ packages: StudentPackageEnrollment[] }>(
-          "/api/student/packages",
-        );
-        const pkgs = res.packages || [];
-        const progresses = await Promise.all(
-          pkgs.map(async (item) => {
-            const targetPackageId = item.packageId || item.package?.id;
-            if (!targetPackageId) return null;
-            try {
-              return await api.get<PackageExamProgress>(
-                `/api/certificates/package/${targetPackageId}/status`,
-              );
-            } catch {
-              return null;
-            }
-          }),
-        );
-        if (!cancelled) {
-          setPackageProgresses(
-            progresses.filter((p): p is PackageExamProgress => p !== null),
-          );
-        }
-      } catch {
-        // Ignore if no packages
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // Fetch certificate content progress for in-progress courses
-  useEffect(() => {
-    if (inProgress.length === 0) return;
-
-    let cancelled = false;
-    setProgressLoading(true);
-
-    (async () => {
+  // Package exam progress — packages first, then one status call per package.
+  const packagesQuery = useApiQuery<{ packages: StudentPackageEnrollment[] }>(
+    ["student", "packages"],
+    "/api/student/packages",
+  );
+  const packageProgressesQuery = useQuery({
+    queryKey: [
+      "student",
+      "certificates",
+      "package-progress",
+      packagesQuery.data?.packages
+        ?.map((p) => p.packageId ?? p.package?.id)
+        .filter(Boolean)
+        .join(",") ?? "",
+    ],
+    queryFn: async () => {
+      const pkgs = packagesQuery.data?.packages ?? [];
       const results = await Promise.all(
-        inProgress.map(async (cert) => {
+        pkgs.map(async (item) => {
+          const targetPackageId = item.packageId || item.package?.id;
+          if (!targetPackageId) return null;
           try {
-            const progress = await api.get<CourseProgress>(
-              `/api/courses/${cert.courseId}/progress`,
+            return await api.get<PackageExamProgress>(
+              `/api/certificates/package/${targetPackageId}/status`,
             );
-            return { courseId: cert.courseId, progress };
           } catch {
             return null;
           }
         }),
       );
+      return results.filter((p): p is PackageExamProgress => p !== null);
+    },
+    enabled: Boolean(packagesQuery.data),
+  });
+  const packageProgresses = packageProgressesQuery.data ?? [];
 
-      if (!cancelled) {
-        const map: Record<string, CourseProgress> = {};
-        for (const r of results) {
-          if (r) map[r.courseId] = r.progress;
-        }
-        setProgressByCourse(map);
-        setProgressLoading(false);
+  // Per-course content progress for in-progress (claimable) courses.
+  const inProgressCourseIds = useMemo(
+    () => inProgress.map((cert) => cert.courseId),
+    [inProgress],
+  );
+  const courseProgressQuery = useQuery({
+    queryKey: [
+      "student",
+      "certificates",
+      "course-progress",
+      inProgressCourseIds.join(","),
+    ],
+    queryFn: async () => {
+      const results = await Promise.all(
+        inProgressCourseIds.map(async (courseId) => {
+          try {
+            const progress = await api.get<CourseProgress>(
+              `/api/courses/${courseId}/progress`,
+            );
+            return { courseId, progress };
+          } catch {
+            return null;
+          }
+        }),
+      );
+      const map: Record<string, CourseProgress> = {};
+      for (const r of results) {
+        if (r) map[r.courseId] = r.progress;
       }
-    })();
+      return map;
+    },
+    enabled: inProgressCourseIds.length > 0,
+  });
+  const progressByCourse = courseProgressQuery.data ?? {};
+  const progressLoading = courseProgressQuery.isPending;
 
-    return () => {
-      cancelled = true;
-    };
-  }, [inProgress]);
+  // Claim a package certificate — refreshes the certificates list on success.
+  const claimMutation = useMutation({
+    mutationFn: (packageId: string) =>
+      api.post<{ issued: boolean; reason?: string }>(
+        "/api/certificates/claim-package",
+        { packageId },
+      ),
+    onSuccess: (result) => {
+      if (result.issued) {
+        toast.success(
+          "Congratulations! Package Certificate claimed successfully.",
+        );
+        void queryClient.invalidateQueries({
+          queryKey: ["student", "certificates"],
+        });
+        if (onCertificateClaimed) onCertificateClaimed();
+      } else {
+        toast.info(result.reason || "Unable to claim certificate.");
+      }
+    },
+    onError: (err: unknown) => {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to claim package certificate",
+      );
+    },
+  });
 
   async function handleDownload(certId: string) {
     setDownloadingId(certId);
@@ -211,33 +226,6 @@ export default function CertificatesView({
       );
     } finally {
       setDownloadingId(null);
-    }
-  }
-
-  async function claimPackageCert(packageId: string) {
-    setClaimingPackageId(packageId);
-    try {
-      const result = await api.post<{
-        issued: boolean;
-        reason?: string;
-      }>("/api/certificates/claim-package", { packageId });
-      if (result.issued) {
-        toast.success(
-          "Congratulations! Package Certificate claimed successfully.",
-        );
-        await loadCertificates();
-        if (onCertificateClaimed) onCertificateClaimed();
-      } else {
-        toast.info(result.reason || "Unable to claim certificate.");
-      }
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error
-          ? err.message
-          : "Failed to claim package certificate",
-      );
-    } finally {
-      setClaimingPackageId(null);
     }
   }
 
@@ -283,10 +271,11 @@ export default function CertificatesView({
                 </div>
                 <div>
                   <button
-                    onClick={() => claimPackageCert(progress.packageId)}
+                    onClick={() => claimMutation.mutate(progress.packageId)}
                     disabled={
                       !progress.allPassed ||
-                      claimingPackageId === progress.packageId
+                      (claimMutation.isPending &&
+                        claimMutation.variables === progress.packageId)
                     }
                     className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all ${
                       progress.allPassed
@@ -294,7 +283,8 @@ export default function CertificatesView({
                         : "bg-muted/20 text-muted-foreground cursor-not-allowed border border-border/40"
                     }`}
                   >
-                    {claimingPackageId === progress.packageId ? (
+                    {claimMutation.isPending &&
+                    claimMutation.variables === progress.packageId ? (
                       <span className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />
                     ) : progress.allPassed ? (
                       <>
@@ -482,17 +472,15 @@ export default function CertificatesView({
           <div className="space-y-3">
             {inProgress.map((cert) => {
               const progress = progressByCourse[cert.courseId];
-              const percent =
-                progress?.totalItems > 0
-                  ? Math.round(
-                      (progress.completedItems / progress.totalItems) * 100,
-                    )
-                  : 0;
-              const progressLabel = progress
-                ? `${progress.completedItems}/${progress.totalItems} requirements`
-                : `${cert.progressPercent}%`;
               const hasCertModule = progress?.hasCertificationModule ?? false;
               const certQuizPassed = progress?.certificationQuizPassed ?? false;
+              const { percent, contentPercent, examPercent } = computeProgress(
+                progress,
+                cert.progressPercent,
+              );
+              const progressLabel = progress
+                ? `${percent}%`
+                : `${cert.progressPercent}%`;
 
               return (
                 <div key={cert.id} className="glass-card p-5">
@@ -522,6 +510,14 @@ export default function CertificatesView({
                             style={{ width: `${percent}%` }}
                           />
                         </div>
+                        {hasCertModule && (
+                          <p className="mt-1 text-[11px] text-muted-foreground flex items-center justify-between">
+                            <span>
+                              Quizzes &amp; Assignments: {contentPercent}%
+                            </span>
+                            <span>Certification Exam: {examPercent}%</span>
+                          </p>
+                        )}
                       </div>
 
                       {/* Detailed requirement breakdown (only when progress fetches) */}
@@ -613,6 +609,44 @@ export default function CertificatesView({
       )}
     </div>
   );
+}
+
+/**
+ * Certificate progress is split 50/50: completing all quizzes + assignments
+ * (the "content" requirements) accounts for 0–50%, and passing the
+ * certification exam accounts for the other 50%. Courses without a
+ * certification module simply scale content completion to 100%.
+ */
+function computeProgress(
+  progress: CourseProgress | undefined,
+  fallbackPercent: number,
+): { percent: number; contentPercent: number; examPercent: number } {
+  if (!progress) {
+    return {
+      percent: fallbackPercent || 0,
+      contentPercent: fallbackPercent || 0,
+      examPercent: 0,
+    };
+  }
+
+  if (!progress.hasCertificationModule) {
+    const percent =
+      progress.totalItems > 0
+        ? Math.round((progress.completedItems / progress.totalItems) * 100)
+        : 0;
+    return { percent, contentPercent: percent, examPercent: 0 };
+  }
+
+  const contentPercent =
+    progress.totalItems > 0
+      ? Math.round((progress.completedItems / progress.totalItems) * 50)
+      : 0;
+  const examPercent = progress.certificationQuizPassed ? 50 : 0;
+  return {
+    percent: Math.min(contentPercent + examPercent, 100),
+    contentPercent,
+    examPercent,
+  };
 }
 
 function RequirementRow({

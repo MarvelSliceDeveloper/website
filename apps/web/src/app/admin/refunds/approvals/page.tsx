@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { ConfirmModal } from "@/components/admin/ConfirmModal";
 import { FormModal } from "@/components/admin/FormModal";
@@ -71,70 +73,57 @@ function formatDate(dateStr: string) {
 export default function RefundApprovalsPage() {
   usePageTitle("Refund Approvals");
   const [tab, setTab] = useState<Tab>("PENDING");
-  const [refunds, setRefunds] = useState<Refund[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const [approveId, setApproveId] = useState<string | null>(null);
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
-  const [processing, setProcessing] = useState(false);
 
-  async function fetchRefunds(status: Tab) {
-    setLoading(true);
-    try {
-      const data = await api.get<ApiResponse>("/api/admin/refunds", {
-        status,
-        limit: "100",
-      });
-      setRefunds(data.items ?? []);
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-      setRefunds([]);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const refundsQuery = useApiQuery<ApiResponse>(
+    ["admin", "refunds", "approvals", tab],
+    "/api/admin/refunds",
+    { status: tab, limit: "100" },
+  );
+  const refunds = refundsQuery.data?.items ?? [];
+  const loading = refundsQuery.isPending;
 
-  useEffect(() => {
-    fetchRefunds(tab);
-  }, [tab]);
-
-  async function handleApprove() {
-    if (!approveId) return;
-    setProcessing(true);
-    try {
-      await api.post(`/api/admin/refunds/${approveId}/approve`);
+  const approveMutation = useMutation({
+    mutationFn: (id: string) =>
+      api.post(`/api/admin/refunds/${id}/approve`),
+    onSuccess: () => {
       toast.success("Refund approved and processed via Razorpay");
       setApproveId(null);
-      fetchRefunds(tab);
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setProcessing(false);
-    }
+      void refundsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  function handleApprove() {
+    if (!approveId) return;
+    approveMutation.mutate(approveId);
   }
 
-  async function handleReject() {
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      api.post(`/api/admin/refunds/${id}/reject`, { reason }),
+    onSuccess: () => {
+      toast.success("Refund request rejected");
+      setRejectId(null);
+      setRejectReason("");
+      void refundsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  function handleReject() {
     if (!rejectId) return;
     if (!rejectReason.trim()) {
       toast.error("Please provide a reason for rejection");
       return;
     }
-    setProcessing(true);
-    try {
-      await api.post(`/api/admin/refunds/${rejectId}/reject`, {
-        reason: rejectReason.trim(),
-      });
-      toast.success("Refund request rejected");
-      setRejectId(null);
-      setRejectReason("");
-      fetchRefunds(tab);
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setProcessing(false);
-    }
+    rejectMutation.mutate({ id: rejectId, reason: rejectReason.trim() });
   }
+
+  const processing = approveMutation.isPending || rejectMutation.isPending;
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -149,7 +138,7 @@ export default function RefundApprovalsPage() {
         role="Super Admin"
         action={
           <button
-            onClick={() => fetchRefunds(tab)}
+            onClick={() => void refundsQuery.refetch()}
             className="btn-secondary text-xs py-2 flex items-center gap-1.5"
           >
             <IconRefresh size={14} /> Refresh

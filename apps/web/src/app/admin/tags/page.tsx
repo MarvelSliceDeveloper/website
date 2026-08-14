@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { SUGGESTED_TAGS } from "@/lib/suggestions";
@@ -25,28 +27,52 @@ type Tag = {
 export default function AdminTagsPage() {
   usePageTitle("Tags");
   const confirmDelete = useConfirmDialog();
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formName, setFormName] = useState("");
-  const [saving, setSaving] = useState(false);
 
-  async function fetchTags() {
-    setLoading(true);
-    try {
-      const data = await api.get<{ tags: Tag[] }>("/api/admin/tags");
-      setTags(data.tags);
-    } catch {
-      setTags([]);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const tagsQuery = useApiQuery<{ tags: Tag[] }>(
+    ["admin", "tags"],
+    "/api/admin/tags",
+  );
+  const tags = tagsQuery.data?.tags ?? [];
+  const loading = tagsQuery.isPending;
 
-  useEffect(() => {
-    fetchTags();
-  }, []);
+  const saveMutation = useMutation({
+    mutationFn: ({
+      id,
+      name,
+      suggested,
+    }: {
+      id: string | null;
+      name: string;
+      suggested?: boolean;
+    }) =>
+      id
+        ? api.put(`/api/admin/tags/${id}`, { name })
+        : api.post("/api/admin/tags", { name }),
+    onSuccess: (_, vars) => {
+      toast.success(
+        vars.suggested
+          ? `Tag "${vars.name}" created`
+          : vars.id
+            ? "Tag updated"
+            : "Tag created",
+      );
+      cancelForm();
+      void tagsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/admin/tags/${id}`),
+    onSuccess: () => {
+      toast.success("Tag deleted");
+      void tagsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   function openCreate() {
     setEditingId(null);
@@ -71,23 +97,7 @@ export default function AdminTagsPage() {
       toast.error("Tag name is required");
       return;
     }
-    setSaving(true);
-    try {
-      const body = { name: formName.trim() };
-      if (editingId) {
-        await api.put(`/api/admin/tags/${editingId}`, body);
-        toast.success("Tag updated");
-      } else {
-        await api.post("/api/admin/tags", body);
-        toast.success("Tag created");
-      }
-      cancelForm();
-      fetchTags();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSaving(false);
-    }
+    saveMutation.mutate({ id: editingId, name: formName.trim() });
   }
 
   async function handleDelete(id: string, name: string) {
@@ -98,27 +108,11 @@ export default function AdminTagsPage() {
       }))
     )
       return;
-    try {
-      await api.delete(`/api/admin/tags/${id}`);
-      toast.success("Tag deleted");
-      fetchTags();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
+    deleteMutation.mutate(id);
   }
 
-  async function createSuggested(name: string) {
-    setSaving(true);
-    try {
-      await api.post("/api/admin/tags", { name });
-      toast.success(`Tag "${name}" created`);
-      cancelForm();
-      fetchTags();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSaving(false);
-    }
+  function createSuggested(name: string) {
+    saveMutation.mutate({ id: null, name, suggested: true });
   }
 
   const existingNames = new Set(tags.map((t) => t.name.toLowerCase()));
@@ -137,7 +131,7 @@ export default function AdminTagsPage() {
         action={
           <div className="flex items-center gap-2">
             <button
-              onClick={fetchTags}
+              onClick={() => void tagsQuery.refetch()}
               className="btn-secondary text-xs py-2 flex items-center gap-1.5"
             >
               <IconRefresh size={14} /> Refresh
@@ -191,7 +185,7 @@ export default function AdminTagsPage() {
                       key={s}
                       type="button"
                       onClick={() => createSuggested(s)}
-                      disabled={saving}
+                      disabled={saveMutation.isPending}
                       className="text-[11px] px-2 py-1 rounded-full border border-border bg-muted/30 text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-40"
                     >
                       + {s}
@@ -204,10 +198,14 @@ export default function AdminTagsPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleSubmit}
-              disabled={saving || !formName.trim()}
+              disabled={saveMutation.isPending || !formName.trim()}
               className="btn-primary text-xs py-2 disabled:opacity-40"
             >
-              {saving ? "Saving..." : editingId ? "Update" : "Create"}
+              {saveMutation.isPending
+                ? "Saving..."
+                : editingId
+                  ? "Update"
+                  : "Create"}
             </button>
             <button onClick={cancelForm} className="btn-secondary text-xs py-2">
               Cancel

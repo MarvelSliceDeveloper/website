@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -59,28 +60,32 @@ function formatBrowser(ua: string | null): string {
 
 export default function SessionManagementPage() {
   usePageTitle("Session Management");
-  const [sessions, setSessions] = useState<AdminSession[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [killing, setKilling] = useState<string | null>(null);
-  const [killingAll, setKillingAll] = useState(false);
   const confirmDelete = useConfirmDialog();
 
-  const fetchSessions = () => {
-    setLoading(true);
-    api
-      .get<{ sessions: AdminSession[] }>("/api/admin/sessions/all")
-      .then((data) => {
-        setSessions(Array.isArray(data.sessions) ? data.sessions : []);
-      })
-      .catch(() => {
-        toast.error("Failed to fetch sessions");
-      })
-      .finally(() => setLoading(false));
-  };
+  const sessionsQuery = useApiQuery<{ sessions: AdminSession[] }>(
+    ["admin", "sessions", "all"],
+    "/api/admin/sessions/all",
+  );
+  const sessions = sessionsQuery.data?.sessions ?? [];
+  const loading = sessionsQuery.isPending;
 
-  useEffect(() => {
-    fetchSessions();
-  }, []);
+  const killMutation = useMutation({
+    mutationFn: (id: string) => api.post(`/api/admin/sessions/${id}/kill`),
+    onSuccess: () => {
+      toast.success("Session terminated");
+      void sessionsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const killAllMutation = useMutation({
+    mutationFn: () => api.post("/api/admin/sessions/kill-all"),
+    onSuccess: () => {
+      toast.success("All sessions terminated");
+      void sessionsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   const handleKill = async (id: string) => {
     if (
@@ -90,16 +95,7 @@ export default function SessionManagementPage() {
       }))
     )
       return;
-    setKilling(id);
-    try {
-      await api.post(`/api/admin/sessions/${id}/kill`);
-      toast.success("Session terminated");
-      fetchSessions();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setKilling(null);
-    }
+    killMutation.mutate(id);
   };
 
   const handleKillAll = async () => {
@@ -111,16 +107,7 @@ export default function SessionManagementPage() {
       }))
     )
       return;
-    setKillingAll(true);
-    try {
-      await api.post("/api/admin/sessions/kill-all");
-      toast.success("All sessions terminated");
-      fetchSessions();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setKillingAll(false);
-    }
+    killAllMutation.mutate();
   };
 
   return (
@@ -135,17 +122,20 @@ export default function SessionManagementPage() {
         action={
           <div className="flex gap-2">
             <button
-              onClick={fetchSessions}
+              onClick={() => void sessionsQuery.refetch()}
               className="btn-secondary text-xs py-2 flex items-center gap-1.5"
             >
               <IconRefresh size={14} /> Refresh
             </button>
             <button
               onClick={handleKillAll}
-              disabled={killingAll}
+              disabled={killAllMutation.isPending}
               className="btn-danger text-xs py-2 flex items-center gap-1.5"
             >
-              <IconTrash size={14} /> {killingAll ? "Killing..." : "Kill All My Sessions"}
+              <IconTrash size={14} />{" "}
+              {killAllMutation.isPending
+                ? "Killing..."
+                : "Kill All My Sessions"}
             </button>
           </div>
         }
@@ -230,7 +220,11 @@ export default function SessionManagementPage() {
                     <div className="flex justify-end">
                       <button
                         onClick={() => handleKill(s.id)}
-                        disabled={killing === s.id || !s.active}
+                        disabled={
+                          (killMutation.isPending &&
+                            killMutation.variables === s.id) ||
+                          !s.active
+                        }
                         className="p-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-40"
                         title="Terminate session"
                       >

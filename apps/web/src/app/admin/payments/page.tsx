@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
@@ -67,36 +66,17 @@ function formatCurrency(amount: number, currency: string = "INR") {
 
 export default function AdminPaymentsPage() {
   usePageTitle("Payments");
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [stats, setStats] = useState<RevenueStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  async function fetchData() {
-    setLoading(true);
-    try {
-      const [paymentsData, statsData] = await Promise.all([
-        api.get<{ items: Payment[] }>("/api/admin/payments"),
-        api.get<RevenueStats>("/api/admin/payments/revenue"),
-      ]);
-      setPayments(paymentsData.items ?? []);
-      setStats(statsData);
-    } catch {
-      setPayments([]);
-      setStats({
-        totalRevenue: 0,
-        totalPayments: 0,
-        successful: 0,
-        failed: 0,
-        refunded: 0,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const paymentsQuery = useApiQuery<{ items: Payment[] }>(
+    ["admin", "payments"],
+    "/api/admin/payments",
+  );
+  const statsQuery = useApiQuery<RevenueStats>(
+    ["admin", "payments", "revenue"],
+    "/api/admin/payments/revenue",
+  );
+  const payments = paymentsQuery.data?.items ?? [];
+  const stats = statsQuery.data;
+  const loading = paymentsQuery.isPending || statsQuery.isPending;
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -107,7 +87,10 @@ export default function AdminPaymentsPage() {
         role="Administration"
         action={
           <button
-            onClick={fetchData}
+            onClick={() => {
+              void paymentsQuery.refetch();
+              void statsQuery.refetch();
+            }}
             className="btn-secondary text-xs py-2 flex items-center gap-1.5"
           >
             <IconRefresh size={14} /> Refresh

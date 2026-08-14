@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { timeAgo } from "@/lib/time-ago";
-import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Skeleton } from "@/components/shared/Skeleton";
 import StudentPortalShell from "@/components/StudentPortalShell";
@@ -65,122 +66,91 @@ const STATUS_CONFIG: Record<string, { label: string; classes: string }> = {
 
 export default function StudentSupportPage() {
   usePageTitle("Support");
-  const [tickets, setTickets] = useState<SupportTicket[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(
-    null,
-  );
+  const queryClient = useQueryClient();
+
+  // UI-only state (form fields + which ticket is open).
   const [showForm, setShowForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const [replyText, setReplyText] = useState("");
-  const [sendingReply, setSendingReply] = useState(false);
-  const [studentName, setStudentName] = useState("Student");
-  const [studentEmail, setStudentEmail] = useState("");
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
 
-  const fetchTickets = useCallback(async () => {
-    try {
-      const data = await api.get<{ tickets: SupportTicket[] }>(
-        "/api/tickets?type=SUPPORT",
-      );
-      setTickets(data.tickets || []);
-    } catch {
-      /* ignore */
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Shared cached /api/auth/me query (same key as the rest of the portal).
+  const meQuery = useApiQuery<{ user: { name: string; email: string } }>(
+    ["auth", "me"],
+    "/api/auth/me",
+  );
+  const studentName = meQuery.data?.user?.name || "Student";
+  const studentEmail = meQuery.data?.user?.email || "";
 
-  useEffect(() => {
-    api
-      .get<{ tickets: SupportTicket[] }>("/api/tickets?type=SUPPORT")
-      .then((data) => {
-        setTickets(data.tickets || []);
-      })
-      .catch(() => { })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+  const ticketsQuery = useApiQuery<{ tickets: SupportTicket[] }>(
+    ["student", "support-tickets"],
+    "/api/tickets?type=SUPPORT",
+  );
+  const tickets = ticketsQuery.data?.tickets ?? [];
+  const loading = ticketsQuery.isPending;
 
-  // Load user profile for shell header
-  useEffect(() => {
-    api
-      .get<{ user: { name: string; email: string } }>("/api/auth/me")
-      .then((res) => {
-        if (res?.user) {
-          setStudentName(res.user.name || "Student");
-          setStudentEmail(res.user.email || "");
-        }
-      })
-      .catch(() => { });
-  }, []);
+  // Selected ticket detail — a dependent query. placeholderData keeps the
+  // previous ticket visible while switching so the panel doesn't flash.
+  const ticketQuery = useApiQuery<{ ticket: SupportTicket }>(
+    ["student", "ticket", selectedTicketId ?? ""],
+    selectedTicketId ? `/api/tickets/${selectedTicketId}` : "",
+    undefined,
+    {
+      enabled: Boolean(selectedTicketId),
+      placeholderData: (prev) => prev,
+    },
+  );
+  const selectedTicket = ticketQuery.data?.ticket ?? null;
 
-  async function openTicket(ticketId: string) {
-    const promise = api.get<{ ticket: SupportTicket }>(
-      `/api/tickets/${ticketId}`,
-    );
-    toast.promise(promise, {
-      loading: "Opening ticket...",
-      success: undefined,
-      error: "Failed to load ticket",
-    });
-    try {
-      const data = await promise;
-      setSelectedTicket(data.ticket);
-    } catch {
-      /* handled by toast */
-    }
-  }
-
-  async function createTicket(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newTitle.trim() || !newDescription.trim()) return;
-    setSubmitting(true);
-    const promise = api.post("/api/tickets", {
-      type: "SUPPORT",
-      title: newTitle,
-      description: newDescription,
-    });
-    toast.promise(promise, {
-      loading: "Creating ticket...",
-      success: "Support ticket created",
-      error: "Failed to create ticket",
-    });
-    try {
-      await promise;
+  // Create ticket mutation — refreshes the list after success.
+  const createMutation = useMutation({
+    mutationFn: (payload: { title: string; description: string }) =>
+      api.post("/api/tickets", { type: "SUPPORT", ...payload }),
+    onSuccess: () => {
+      toast.success("Support ticket created");
       setShowForm(false);
       setNewTitle("");
       setNewDescription("");
-      fetchTickets();
-    } catch {
-      /* handled by toast */
-    } finally {
-      setSubmitting(false);
-    }
+      void queryClient.invalidateQueries({
+        queryKey: ["student", "support-tickets"],
+      });
+    },
+    onError: () => toast.error("Failed to create ticket"),
+  });
+
+  // Reply mutation — refreshes the open ticket thread after success.
+  const replyMutation = useMutation({
+    mutationFn: ({
+      ticketId,
+      message,
+    }: {
+      ticketId: string;
+      message: string;
+    }) => api.post(`/api/tickets/${ticketId}/messages`, { message }),
+    onSuccess: (_, { ticketId }) => {
+      toast.success("Reply sent");
+      setReplyText("");
+      void queryClient.invalidateQueries({
+        queryKey: ["student", "ticket", ticketId],
+      });
+    },
+    onError: () => toast.error("Failed to send reply"),
+  });
+
+  function openTicket(ticketId: string) {
+    setSelectedTicketId(ticketId);
   }
 
-  async function sendReply() {
+  function createTicket(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newTitle.trim() || !newDescription.trim()) return;
+    createMutation.mutate({ title: newTitle, description: newDescription });
+  }
+
+  function sendReply() {
     if (!selectedTicket || !replyText.trim()) return;
-    setSendingReply(true);
-    const promise = api.post(`/api/tickets/${selectedTicket.id}/messages`, {
-      message: replyText,
-    });
-    toast.promise(promise, {
-      loading: "Sending reply...",
-      success: "Reply sent",
-      error: "Failed to send reply",
-    });
-    try {
-      await promise;
-      setReplyText("");
-      openTicket(selectedTicket.id);
-    } catch {
-      /* handled by toast */
-    } finally {
-      setSendingReply(false);
-    }
+    replyMutation.mutate({ ticketId: selectedTicket.id, message: replyText });
   }
 
   // ── Ticket detail panel (right side on desktop) ──────────────────────
@@ -207,7 +177,7 @@ export default function StudentSupportPage() {
             </h2>
           </div>
           <button
-            onClick={() => setSelectedTicket(null)}
+            onClick={() => setSelectedTicketId(null)}
             className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-border-hover transition-colors shrink-0"
           >
             <IconX size={16} />
@@ -277,7 +247,7 @@ export default function StudentSupportPage() {
               />
               <button
                 onClick={sendReply}
-                disabled={!replyText.trim() || sendingReply}
+                disabled={!replyText.trim() || replyMutation.isPending}
                 className="btn-primary text-sm flex items-center gap-1.5 shrink-0"
               >
                 <IconSend size={14} /> Send
@@ -341,10 +311,10 @@ export default function StudentSupportPage() {
             </button>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={createMutation.isPending}
               className="btn-primary text-sm"
             >
-              {submitting ? "Submitting..." : "Submit Ticket"}
+              {createMutation.isPending ? "Submitting..." : "Submit Ticket"}
             </button>
           </div>
         </form>
@@ -374,54 +344,6 @@ export default function StudentSupportPage() {
   }
 
   // ── Ticket list card ─────────────────────────────────────────────────
-
-  function renderTicketCard(t: SupportTicket) {
-    const isActive = selectedTicket?.id === t.id;
-
-    return (
-      <button
-        key={t.id}
-        onClick={() => {
-          openTicket(t.id);
-          setShowForm(false);
-        }}
-        className={`w-full flex items-start gap-3.5 rounded-xl border p-4 text-left transition-all ${isActive
-          ? "border-primary/40 bg-primary/5 shadow-sm shadow-primary/5"
-          : "border-border/60 bg-card hover:bg-card-hover hover:border-border"
-          }`}
-      >
-        <div
-          className={`flex h-9 w-9 items-center justify-center rounded-full shrink-0 mt-0.5 ${isActive
-            ? "bg-primary/20 text-primary"
-            : "bg-primary/10 text-primary"
-            }`}
-        >
-          <IconHelp size={16} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 mb-0.5">
-            <p className="text-sm font-medium text-foreground truncate">
-              {t.title}
-            </p>
-          </div>
-          <p className="text-xs text-muted-foreground line-clamp-1">
-            {t.description}
-          </p>
-          <div className="mt-2 flex items-center gap-3 flex-wrap">
-            <StatusBadge status={t.status} config={STATUS_CONFIG} />
-            <span className="flex items-center gap-1 text-[11px] text-muted">
-              <IconClock size={11} /> {timeAgo(t.createdAt)}
-            </span>
-            {t._count && (
-              <span className="flex items-center gap-1 text-[11px] text-muted">
-                <IconMessage size={11} /> {t._count.messages}
-              </span>
-            )}
-          </div>
-        </div>
-      </button>
-    );
-  }
 
   // ── Main render ──────────────────────────────────────────────────────
 
@@ -533,7 +455,7 @@ export default function StudentSupportPage() {
             <button
               onClick={() => {
                 setShowForm((v) => !v);
-                setSelectedTicket(null);
+                setSelectedTicketId(null);
               }}
               className="btn-primary w-full flex items-center justify-center gap-2 py-2.5"
             >
@@ -562,7 +484,7 @@ export default function StudentSupportPage() {
                 <button
                   onClick={() => {
                     setShowForm(true);
-                    setSelectedTicket(null);
+                    setSelectedTicketId(null);
                   }}
                   className="btn-primary text-sm mt-1"
                 >
@@ -635,7 +557,7 @@ export default function StudentSupportPage() {
                 <div className="lg:hidden border-b border-border/60 px-4 py-2.5">
                   <button
                     onClick={() => {
-                      setSelectedTicket(null);
+                      setSelectedTicketId(null);
                       setShowForm(false);
                     }}
                     className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"

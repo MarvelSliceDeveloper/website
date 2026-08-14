@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import DataTable from "@/components/admin/DataTable";
 import type { DataTableColumn } from "@/components/admin/DataTable";
@@ -104,20 +106,28 @@ const roleIcons: Record<string, React.ReactNode> = {
   STUDENT: <IconSchool size={14} />,
 };
 
+// Converts a batch API row into the display shape used by the create/edit
+// modal package→batch selectors.
+function toBatchOption(b: BatchResponse) {
+  return {
+    id: b.id,
+    name: b.name,
+    courseTitle: b.course?.title ?? b.package?.name ?? "All Courses",
+    filledCount: b.totalStudents ?? b._count?.enrollments ?? 0,
+    maxStudents: b.maxStudents ?? null,
+  };
+}
+
 export default function AdminUsersPage() {
   usePageTitle("Students");
   const searchParams = useSearchParams();
-  const [users, setUsers] = useState<User[]>([]);
-  const [packages, setPackages] = useState<PackageSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
   const packageFilter = searchParams.get("packageId") || "";
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
   // Create user modal
   const [showModal, setShowModal] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -134,147 +144,73 @@ export default function AdminUsersPage() {
     packageId: "",
     batchId: "",
   });
-  const [editing, setEditing] = useState(false);
-  // Batches for edit modal's selected package
-  const [editBatches, setEditBatches] = useState<
-    {
-      id: string;
-      name: string;
-      courseTitle: string;
-      filledCount: number;
-      maxStudents: number | null;
-    }[]
-  >([]);
 
   // Delete confirmation
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   // Profile viewer
   const [viewUser, setViewUser] = useState<User | null>(null);
   const [profileDetail, setProfileDetail] = useState<UserDetail | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
 
-  // Active packages for create modal
-  const [activePackages, setActivePackages] = useState<
-    { id: string; name: string }[]
-  >([]);
-
-  // Batches for the selected package (flat list)
-  const [packageBatches, setPackageBatches] = useState<
+  // Users list + package filter options, keyed on the active package filter so
+  // switching filters refetches. Both come from the same endpoint.
+  const usersQuery = useApiQuery<{ users: User[]; packages: PackageSummary[] }>(
+    ["admin", "users", packageFilter || "all"],
+    "/api/users",
     {
-      id: string;
-      name: string;
-      courseTitle: string;
-      filledCount: number;
-      maxStudents: number | null;
-    }[]
-  >([]);
+      role: "STUDENT",
+      ...(packageFilter ? { packageId: packageFilter } : {}),
+    },
+  );
+  const users = usersQuery.data?.users ?? [];
+  const packages = usersQuery.data?.packages ?? [];
+  const loading = usersQuery.isPending;
 
-  const fetchUsers = () => {
-    setLoading(true);
-    const params = new URLSearchParams();
-    params.set("role", "STUDENT");
-    if (packageFilter) params.set("packageId", packageFilter);
+  // Active packages for the create/edit modals.
+  const activePackagesQuery = useApiQuery<{ items: AdminPackage[] }>(
+    ["admin", "packages"],
+    "/api/admin/packages",
+  );
+  const activePackages = (activePackagesQuery.data?.items ?? [])
+    .filter((p) => p.status === "ACTIVE")
+    .map((p) => ({ id: p.id, name: p.name }));
 
-    api
-      .get<{ users: User[]; packages: PackageSummary[] }>(
-        `/api/users${params.toString() ? `?${params.toString()}` : ""}`,
-      )
-      .then((res) => {
-        setUsers(res.users);
-        setPackages(res.packages);
-      })
-      .catch((err) => {
-        toast.error(getErrorMessage(err));
-        setUsers([]);
-        setPackages([]);
-      })
-      .finally(() => setLoading(false));
-  };
+  // Batches for the package selected in the create modal.
+  const packageBatchesQuery = useQuery({
+    queryKey: ["admin", "batches", "by-package", form.packageId ?? ""],
+    queryFn: () =>
+      api.get<{ batches: BatchResponse[] }>("/api/admin/batches", {
+        packageId: form.packageId!,
+      }),
+    enabled: Boolean(form.packageId),
+  });
+  const packageBatches = (packageBatchesQuery.data?.batches ?? []).map(
+    toBatchOption,
+  );
 
-  useEffect(() => {
-    Promise.resolve().then(() => fetchUsers());
-  }, [packageFilter]);
+  // Batches for the package selected in the edit modal.
+  const editBatchesQuery = useQuery({
+    queryKey: ["admin", "batches", "by-package", editForm.packageId ?? ""],
+    queryFn: () =>
+      api.get<{ batches: BatchResponse[] }>("/api/admin/batches", {
+        packageId: editForm.packageId!,
+      }),
+    enabled: Boolean(editForm.packageId && editUser),
+  });
+  const editBatches = (editBatchesQuery.data?.batches ?? []).map(toBatchOption);
 
-  useEffect(() => {
-    api
-      .get<{ items: AdminPackage[] }>("/api/admin/packages")
-      .then((res) => {
-        const active = (res.items ?? []).filter(
-          (p) => p.status === "ACTIVE",
-        );
-        setActivePackages(active.map((p) => ({ id: p.id, name: p.name })));
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (!form.packageId) {
-      setPackageBatches([]);
-      return;
-    }
-    api
-      .get<{ batches: BatchResponse[] }>("/api/admin/batches", { packageId: form.packageId })
-      .then((res) => {
-        const batches = res.batches ?? [];
-        setPackageBatches(
-          batches.map((b) => ({
-            id: b.id,
-            name: b.name,
-            courseTitle: b.course?.title ?? b.package?.name ?? "All Courses",
-             filledCount: b.totalStudents ?? b._count?.enrollments ?? 0,
-             maxStudents: b.maxStudents ?? null,
-          })),
-        );
-      })
-      .catch(() => setPackageBatches([]));
-  }, [form.packageId]);
-
-  // Fetch batches when edit modal's package changes
-  useEffect(() => {
-    if (!editForm.packageId || !editUser) {
-      setEditBatches([]);
-      return;
-    }
-    api
-      .get<{ batches: BatchResponse[] }>("/api/admin/batches", {
-        packageId: editForm.packageId,
-      })
-      .then((res) => {
-        const batches = res.batches ?? [];
-        setEditBatches(
-          batches.map((b) => ({
-            id: b.id,
-            name: b.name,
-            courseTitle: b.course?.title ?? b.package?.name ?? "All Courses",
-             filledCount: b.totalStudents ?? b._count?.enrollments ?? 0,
-             maxStudents: b.maxStudents ?? null,
-          })),
-        );
-      })
-      .catch(() => setEditBatches([]));
-  }, [editForm.packageId, editUser?.id]);
-
-  const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-
-    try {
-      if (!form.packageId) {
-        toast.error("Please select a package for the student");
-        setSubmitting(false);
-        return;
-      }
-
-      await api.post("/api/users", {
+  const createUserMutation = useMutation({
+    mutationFn: () =>
+      api.post("/api/users", {
         name: form.name,
         email: form.email,
         password: form.password,
         role: "STUDENT",
         packageId: form.packageId,
         batchId: form.batchId || undefined,
-      });
+      }),
+    onSuccess: () => {
       setForm({
         name: "",
         email: "",
@@ -284,20 +220,13 @@ export default function AdminUsersPage() {
       });
       setShowModal(false);
       toast.success("Student added successfully");
-      fetchUsers();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSubmitting(false);
-    }
-  };
+      void usersQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  const handleEditUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editUser) return;
-    setEditing(true);
-
-    try {
+  const editUserMutation = useMutation({
+    mutationFn: () => {
       const payload: Record<string, string> = {
         name: editForm.name,
         email: editForm.email,
@@ -305,31 +234,44 @@ export default function AdminUsersPage() {
       };
       if (editForm.packageId) payload.packageId = editForm.packageId;
       if (editForm.batchId) payload.batchId = editForm.batchId;
-      await api.patch(`/api/users/${editUser.id}`, payload);
+      return api.patch(`/api/users/${editUser!.id}`, payload);
+    },
+    onSuccess: () => {
       setEditUser(null);
       toast.success("Student updated successfully");
-      fetchUsers();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setEditing(false);
-    }
-  };
+      void usersQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  const handleDeleteUser = async () => {
-    if (!deleteUserId) return;
-    setDeleting(true);
-
-    try {
-      await api.delete(`/api/users/${deleteUserId}`);
+  const deleteUserMutation = useMutation({
+    mutationFn: () => api.delete(`/api/users/${deleteUserId!}`),
+    onSuccess: () => {
       setDeleteUserId(null);
       toast.success("User deleted successfully");
-      fetchUsers();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setDeleting(false);
+      void usersQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleCreateUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.packageId) {
+      toast.error("Please select a package for the student");
+      return;
     }
+    createUserMutation.mutate();
+  };
+
+  const handleEditUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editUser) return;
+    editUserMutation.mutate();
+  };
+
+  const handleDeleteUser = () => {
+    if (!deleteUserId) return;
+    deleteUserMutation.mutate();
   };
 
   const openEditModal = (user: User) => {
@@ -345,26 +287,6 @@ export default function AdminUsersPage() {
       packageId: currentPkg,
       batchId: currentBatch,
     });
-    // Load batches for the current package
-    if (currentPkg) {
-      api
-        .get<{ batches: BatchResponse[] }>("/api/admin/batches", { packageId: currentPkg })
-        .then((res) => {
-          const batches = res.batches ?? [];
-          setEditBatches(
-            batches.map((b) => ({
-              id: b.id,
-              name: b.name,
-              courseTitle: b.course?.title ?? b.package?.name ?? "All Courses",
-              filledCount: b._count?.enrollments ?? 0,
-              maxStudents: b.maxStudents ?? null,
-            })),
-          );
-        })
-        .catch(() => setEditBatches([]));
-    } else {
-      setEditBatches([]);
-    }
   };
 
   const openProfile = async (user: User) => {
@@ -579,7 +501,7 @@ export default function AdminUsersPage() {
               type="button"
               onClick={() => setShowModal(false)}
               className="btn-secondary text-sm"
-              disabled={submitting}
+              disabled={createUserMutation.isPending}
             >
               Cancel
             </button>
@@ -587,9 +509,9 @@ export default function AdminUsersPage() {
               type="submit"
               form="create-user-form"
               className="btn-primary text-sm flex items-center gap-1.5"
-              disabled={submitting}
+              disabled={createUserMutation.isPending}
             >
-              {submitting ? (
+              {createUserMutation.isPending ? (
                 <>
                   <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
                   Adding...
@@ -722,7 +644,7 @@ export default function AdminUsersPage() {
               type="button"
               onClick={() => setEditUser(null)}
               className="btn-secondary text-sm"
-              disabled={editing}
+              disabled={editUserMutation.isPending}
             >
               Cancel
             </button>
@@ -730,9 +652,9 @@ export default function AdminUsersPage() {
               type="submit"
               form="edit-user-form"
               className="btn-primary text-sm flex items-center gap-1.5"
-              disabled={editing}
+              disabled={editUserMutation.isPending}
             >
-              {editing ? (
+              {editUserMutation.isPending ? (
                 <>
                   <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
                   Saving...
@@ -1082,7 +1004,7 @@ export default function AdminUsersPage() {
         description="This action cannot be undone. All data associated with this student will be permanently removed."
         variant="danger"
         confirmLabel="Yes, Delete"
-        confirmLoading={deleting}
+        confirmLoading={deleteUserMutation.isPending}
       />
     </div>
   );

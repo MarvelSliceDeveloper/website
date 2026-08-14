@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconAward,
@@ -97,39 +103,30 @@ type StudentPackage = {
 
 export default function CertificatesPage() {
   usePageTitle("My Certificates");
-  const [data, setData] = useState<CertificatesResponse>({
-    certificates: [],
-    claimable: [],
-  });
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const [packageProgresses, setPackageProgresses] = useState<
-    PackageExamProgress[]
-  >([]);
-  const [claimingPackageId, setClaimingPackageId] = useState<string | null>(
-    null,
+
+  const certificatesQuery = useApiQuery<CertificatesResponse>(
+    ["student", "certificates"],
+    "/api/certificates/",
   );
 
-  const fetchCertificates = useCallback(async () => {
-    try {
-      const response =
-        await api.get<CertificatesResponse>("/api/certificates/");
-      setData(response);
-    } catch (loadError: unknown) {
-      toast.error(
-        loadError instanceof Error
-          ? loadError.message
-          : "Failed to load certificates",
-      );
-    }
-  }, []);
+  // Package certification tracker: load the student's packages, then one
+  // status request per package (dependent query keyed by package ids).
+  const packagesQuery = useApiQuery<{ packages: StudentPackage[] }>(
+    ["student", "packages"],
+    "/api/student/packages",
+  );
 
-  const fetchPackageProgress = useCallback(async () => {
-    try {
-      const res = await api.get<{ packages: StudentPackage[] }>(
-        "/api/student/packages",
-      );
-      const pkgs = res.packages || [];
+  const packageProgressQuery = useQuery({
+    queryKey: [
+      "student",
+      "certificates",
+      "package-progress",
+      (packagesQuery.data?.packages ?? []).map((p) => p.id),
+    ],
+    queryFn: async () => {
+      const pkgs = packagesQuery.data?.packages ?? [];
       const progresses = await Promise.all(
         pkgs.map(async (pkg) => {
           try {
@@ -141,20 +138,47 @@ export default function CertificatesPage() {
           }
         }),
       );
-      setPackageProgresses(
-        progresses.filter((p): p is PackageExamProgress => p !== null),
-      );
-    } catch {
-      // Ignore if student has no packages
-    }
-  }, []);
+      return progresses.filter((p): p is PackageExamProgress => p !== null);
+    },
+    enabled: Boolean(packagesQuery.data),
+    staleTime: 30_000,
+  });
 
-  useEffect(() => {
-    setIsLoading(true);
-    Promise.all([fetchCertificates(), fetchPackageProgress()]).finally(() => {
-      setIsLoading(false);
-    });
-  }, [fetchCertificates, fetchPackageProgress]);
+  const data = certificatesQuery.data ?? {
+    certificates: [],
+    claimable: [],
+  };
+  const packageProgresses = packageProgressQuery.data ?? [];
+  const isLoading =
+    certificatesQuery.isPending || packageProgressQuery.isPending;
+
+  // Claim a package certificate once all required exams are passed.
+  const claimMutation = useMutation({
+    mutationFn: (packageId: string) =>
+      api.post<{ issued: boolean; reason?: string }>(
+        "/api/certificates/claim-package",
+        { packageId },
+      ),
+    onSuccess: (result) => {
+      if (result.issued) {
+        toast.success(
+          "Congratulations! Package Certificate claimed successfully.",
+        );
+        void queryClient.invalidateQueries({
+          queryKey: ["student", "certificates"],
+        });
+      } else {
+        toast.info(result.reason || "Unable to claim certificate.");
+      }
+    },
+    onError: (err) => {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to claim package certificate",
+      );
+    },
+  });
 
   const downloadCertificate = async (certId: string) => {
     setDownloadingId(certId);
@@ -185,33 +209,6 @@ export default function CertificatesPage() {
       );
     } finally {
       setDownloadingId(null);
-    }
-  };
-
-  const claimPackageCert = async (packageId: string) => {
-    setClaimingPackageId(packageId);
-    try {
-      const result = await api.post<{
-        issued: boolean;
-        certificate?: any;
-        reason?: string;
-      }>("/api/certificates/claim-package", { packageId });
-      if (result.issued) {
-        toast.success(
-          "Congratulations! Package Certificate claimed successfully.",
-        );
-        await fetchCertificates();
-      } else {
-        toast.info(result.reason || "Unable to claim certificate.");
-      }
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error
-          ? err.message
-          : "Failed to claim package certificate",
-      );
-    } finally {
-      setClaimingPackageId(null);
     }
   };
 
@@ -268,18 +265,15 @@ export default function CertificatesPage() {
                 </div>
                 <div>
                   <button
-                    onClick={() => claimPackageCert(progress.packageId)}
-                    disabled={
-                      !progress.allPassed ||
-                      claimingPackageId === progress.packageId
-                    }
+                    onClick={() => claimMutation.mutate(progress.packageId)}
+                    disabled={!progress.allPassed || claimMutation.isPending}
                     className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all ${
                       progress.allPassed
                         ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-black shadow-lg shadow-amber-500/20 hover:scale-[1.02]"
                         : "bg-muted/20 text-muted-foreground cursor-not-allowed border border-border/40"
                     }`}
                   >
-                    {claimingPackageId === progress.packageId ? (
+                    {claimMutation.isPending ? (
                       <span className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />
                     ) : progress.allPassed ? (
                       <>
@@ -454,7 +448,9 @@ export default function CertificatesPage() {
             <div className="rounded-xl border border-dashed border-border/60 bg-background/40 p-6 text-sm text-muted-foreground">
               {isLoading
                 ? "Loading..."
-                    : "No certificates issued yet. Pass all required certification exams in your enrolled program to claim your certificate."}
+                : certificatesQuery.isError
+                  ? "Failed to load certificates. Please try again."
+                  : "No certificates issued yet. Pass all required certification exams in your enrolled program to claim your certificate."}
             </div>
           )}
         </div>
@@ -474,15 +470,6 @@ export default function CertificatesPage() {
               {[...(data.claimable || []), ...(data.inProgress || [])].map(
                 (item) => {
                   const d = item.details;
-                  const lessonsLeft = d
-                    ? Math.max(0, d.totalLessons - d.completedLessons)
-                    : 0;
-                  const quizzesLeft = d
-                    ? Math.max(0, d.totalQuizzes - d.completedQuizzes)
-                    : 0;
-                  const assignmentsLeft = d
-                    ? Math.max(0, d.totalAssignments - d.completedAssignments)
-                    : 0;
                   const examDone = d?.isExamRequired ? d.isExamPassed : true;
 
                   const isClaimable = item.progressPercent === 100 && examDone;

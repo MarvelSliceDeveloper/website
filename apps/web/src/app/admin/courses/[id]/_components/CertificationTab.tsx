@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
-import { getErrorMessage } from "@/lib/toast";
+import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import {
   IconClock,
   IconCheck,
@@ -12,9 +13,6 @@ import {
   IconX,
   IconSettings,
   IconClipboardText,
-  IconUpload,
-  IconFile,
-  IconTrash,
   IconExternalLink,
   IconFileSpreadsheet,
 } from "@tabler/icons-react";
@@ -51,11 +49,15 @@ interface CertificationTabProps {
 }
 
 export default function CertificationTab({ courseId }: CertificationTabProps) {
-  const [courseData, setCourseData] = useState<{ modules: Module[] } | null>(
-    null,
+  const courseQuery = useApiQuery<{ modules: Module[] }>(
+    ["admin", "courses", courseId],
+    `/api/admin/courses/${courseId}`,
   );
-  const [data, setData] = useState<CertificationData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const certQuery = useApiQuery<CertificationData>(
+    ["admin", "courses", courseId, "certification"],
+    `/api/admin/courses/${courseId}/certification`,
+  );
+
   const [title, setTitle] = useState("Certification Exam");
   const [passingScore, setPassingScore] = useState(60);
   const [timeLimitMin, setTimeLimitMin] = useState("30");
@@ -66,13 +68,9 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
   const [assignmentInstructions, setAssignmentInstructions] = useState("");
   const [assignmentPdfUrl, setAssignmentPdfUrl] = useState("");
   const [showQuestionsModal, setShowQuestionsModal] = useState(false);
-  const [questionSaving, setQuestionSaving] = useState(false);
-  const [pdfUploading, setPdfUploading] = useState(false);
-  const pdfInputRef = useRef<HTMLInputElement>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
 
   const applyData = (result: CertificationData) => {
-    setData(result);
     if (result.quiz) {
       setTitle(result.module?.title ?? "Certification Exam");
       setPassingScore(result.quiz.passingScore);
@@ -91,46 +89,42 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
     }
   };
 
-  const reload = async () => {
-    try {
-      const [courseRes, certRes] = await Promise.all([
-        api.get<{ modules: Module[] }>(`/api/admin/courses/${courseId}`),
-        api.get<CertificationData>(
-          `/api/admin/courses/${courseId}/certification`,
-        ),
-      ]);
-      setCourseData(courseRes);
-      applyData(certRes);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    }
+  useEffect(() => {
+    if (certQuery.data) applyData(certQuery.data);
+  }, [certQuery.data]);
+
+  const handleReload = () => {
+    void courseQuery.refetch();
+    void certQuery.refetch();
   };
 
-  useEffect(() => {
-    let cancelled = false;
-    const loadCourse = api
-      .get<{ modules: Module[] }>(`/api/admin/courses/${courseId}`)
-      .then((res) => {
-        if (!cancelled) setCourseData(res);
-      })
-      .catch(() => {
-        /* course data is non-critical here */
-      });
-    const loadCert = api
-      .get<CertificationData>(`/api/admin/courses/${courseId}/certification`)
-      .then((res) => {
-        if (!cancelled) applyData(res);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) toast.error(getErrorMessage(err));
-      });
-    Promise.all([loadCourse, loadCert]).finally(() => {
-      if (!cancelled) setLoading(false);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [courseId]);
+  const certData = certQuery.data;
+
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      api.put(`/api/admin/courses/${courseId}/certification`, {
+        title,
+        passingScore,
+        timeLimitMin: timeLimitMin ? parseInt(timeLimitMin) : null,
+        hasAssignment,
+        assignmentInstructions: hasAssignment
+          ? assignmentInstructions
+          : null,
+        assignmentPdfUrl: hasAssignment ? assignmentPdfUrl || null : null,
+        questions: questions.map((q) => ({
+          text: q.text,
+          options: q.options.map((o) => ({
+            label: o.label,
+            isCorrect: o.isCorrect,
+          })),
+        })),
+      }),
+    onSuccess: () => {
+      toast.success("Certification settings saved");
+      handleReload();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   // ── Question helpers (immutable updates) ────────────────────────
   const addQuestion = () => {
@@ -255,99 +249,13 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
     }
   };
 
-  const handleSaveSettings = async () => {
-    setQuestionSaving(true);
-    try {
-      await api.put(`/api/admin/courses/${courseId}/certification`, {
-        title,
-        passingScore,
-        timeLimitMin: timeLimitMin ? parseInt(timeLimitMin) : null,
-        hasAssignment,
-        assignmentInstructions: hasAssignment
-          ? assignmentInstructions
-          : null,
-        assignmentPdfUrl: hasAssignment ? (assignmentPdfUrl || null) : null,
-        questions: questions.map((q) => ({
-          text: q.text,
-          options: q.options.map((o) => ({
-            label: o.label,
-            isCorrect: o.isCorrect,
-          })),
-        })),
-      });
-      toast.success("Certification settings saved");
-      reload();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setQuestionSaving(false);
-    }
-  };
+  const handleSaveSettings = () => saveMutation.mutate();
 
-  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const certModule = courseQuery.data?.modules.find(
+    (m) => m.isCertificationModule,
+  );
 
-    if (file.type !== "application/pdf") {
-      toast.error("Only PDF files are allowed");
-      e.target.value = "";
-      return;
-    }
-
-    if (file.size > 50 * 1024 * 1024) {
-      toast.error("File too large. Maximum size is 50 MB.");
-      e.target.value = "";
-      return;
-    }
-
-    setPdfUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("pdf", file);
-      const result = await api.post<{ url: string }>(
-        `/api/admin/courses/${courseId}/certification/pdf`,
-        formData,
-      );
-      setAssignmentPdfUrl(result.url);
-      toast.success("Assignment PDF uploaded");
-      reload();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setPdfUploading(false);
-      e.target.value = "";
-    }
-  };
-
-  const handleRemovePdf = async () => {
-    setAssignmentPdfUrl("");
-    // Save immediately to clear the URL on server
-    try {
-      await api.put(`/api/admin/courses/${courseId}/certification`, {
-        title,
-        passingScore,
-        timeLimitMin: timeLimitMin ? parseInt(timeLimitMin) : null,
-        hasAssignment,
-        assignmentInstructions: hasAssignment ? assignmentInstructions : null,
-        assignmentPdfUrl: null,
-        questions: questions.map((q) => ({
-          text: q.text,
-          options: q.options.map((o) => ({
-            label: o.label,
-            isCorrect: o.isCorrect,
-          })),
-        })),
-      });
-      toast.success("Assignment PDF removed");
-      reload();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    }
-  };
-
-  const certModule = courseData?.modules.find((m) => m.isCertificationModule);
-
-  if (loading) {
+  if (courseQuery.isPending || certQuery.isPending) {
     return (
       <div className="flex items-center justify-center py-12">
         <IconLoader2 className="h-6 w-6 animate-spin text-muted" />
@@ -370,9 +278,9 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
           setShowQuestionsModal(false);
         }}
         className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1"
-        disabled={questionSaving}
+        disabled={saveMutation.isPending}
       >
-        {questionSaving && (
+        {saveMutation.isPending && (
           <IconLoader2 className="h-3 w-3 animate-spin" />
         )}
         Save Questions
@@ -388,7 +296,7 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
           module={certModule}
           index={0}
           courseId={courseId}
-          onChanged={reload}
+          onChanged={handleReload}
           certModule
           onAddQuestion={() => setShowQuestionsModal(true)}
           onAddAssignment={() => {
@@ -482,18 +390,18 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
           </div>
 
           <div className="flex justify-end mt-4">
-            <button
-              onClick={handleSaveSettings}
-              className="btn-primary inline-flex items-center gap-2"
-              disabled={questionSaving}
-            >
-              {questionSaving ? (
-                <IconLoader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <IconSettings className="h-4 w-4" />
-              )}
-              Save Settings
-            </button>
+<button
+            onClick={handleSaveSettings}
+            className="btn-primary inline-flex items-center gap-2"
+            disabled={saveMutation.isPending}
+          >
+            {saveMutation.isPending ? (
+              <IconLoader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <IconSettings className="h-4 w-4" />
+            )}
+            Save Settings
+          </button>
           </div>
         </div>
       </div>
@@ -550,7 +458,7 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
       </div>
 
       {/* Current Configuration Summary */}
-      {data?.quiz && (
+      {certData?.quiz && (
         <div className="glass-card p-6">
           <h4 className="text-sm font-semibold text-foreground mb-3">
             Current Configuration
@@ -559,21 +467,21 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
             <div className="rounded-lg bg-muted/30 p-3">
               <p className="text-xs text-muted">Passing Score</p>
               <p className="text-lg font-bold text-foreground">
-                {data.quiz.passingScore}%
+                {certData.quiz.passingScore}%
               </p>
             </div>
             <div className="rounded-lg bg-muted/30 p-3">
               <p className="text-xs text-muted">Time Limit</p>
               <p className="text-lg font-bold text-foreground">
-                {data.quiz.timeLimitMin
-                  ? `${data.quiz.timeLimitMin} min`
+                {certData.quiz.timeLimitMin
+                  ? `${certData.quiz.timeLimitMin} min`
                   : "None"}
               </p>
             </div>
             <div className="rounded-lg bg-muted/30 p-3">
               <p className="text-xs text-muted">Questions</p>
               <p className="text-lg font-bold text-foreground">
-                {data.quiz.questionCount}
+                {certData.quiz.questionCount}
               </p>
             </div>
           </div>
@@ -581,15 +489,15 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
             <div className="rounded-lg bg-muted/30 p-3">
               <p className="text-xs text-muted">Assignment</p>
               <p className="text-sm font-medium text-foreground">
-                {data.quiz.hasAssignment ? "Included" : "Not included"}
+                {certData.quiz.hasAssignment ? "Included" : "Not included"}
               </p>
             </div>
             <div className="rounded-lg bg-muted/30 p-3">
               <p className="text-xs text-muted">Question Paper PDF</p>
               <p className="text-sm font-medium text-foreground">
-                {data.quiz.assignmentPdfUrl ? (
+                {certData.quiz.assignmentPdfUrl ? (
                   <a
-                    href={data.quiz.assignmentPdfUrl}
+                    href={certData.quiz.assignmentPdfUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline flex items-center gap-1"

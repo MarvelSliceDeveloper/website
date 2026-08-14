@@ -73,6 +73,18 @@ export const notificationController = {
     }
   },
 
+  async listSent(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user)
+        return res.status(401).json({ error: "Authentication required" });
+      const sent = await notificationService.listSent(req.user.userId);
+      return res.status(200).json({ sent });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
+    }
+  },
+
   async getPreferences(req: AuthRequest, res: Response) {
     try {
       if (!req.user)
@@ -114,6 +126,7 @@ export const notificationController = {
         title,
         message,
         type,
+        channel,
         emailTemplateId,
       } = req.body;
 
@@ -171,6 +184,9 @@ export const notificationController = {
         return res.status(400).json({ error: "message is required" });
       }
 
+      const deliveryChannel =
+        channel === "IN_APP" || channel === "EMAIL" ? channel : "BOTH";
+
       const result = await notificationService.sendNotification(
         req.user.userId,
         req.user.role,
@@ -180,6 +196,7 @@ export const notificationController = {
           title: title.trim(),
           message: message.trim(),
           type,
+          channel: deliveryChannel,
           emailTemplateId,
           attachmentUrl:
             typeof req.body._attachmentUrl === "string"

@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import StatCard from "@/components/admin/StatCard";
 import { ChartSkeleton } from "@/components/admin/LoadingSkeleton";
-import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconChartBar,
@@ -50,24 +49,12 @@ const COLORS = {
 
 export default function AdminAnalyticsPage() {
   usePageTitle("Analytics & UX Insights");
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadAnalytics() {
-      try {
-        const res = await api.get<AnalyticsData>(
-          "/api/admin/dashboard/analytics",
-        );
-        setData(res);
-      } catch (err) {
-        console.error("Failed to fetch analytics data:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadAnalytics();
-  }, []);
+  const analyticsQuery = useApiQuery<AnalyticsData>(
+    ["admin", "analytics"],
+    "/api/admin/dashboard/analytics",
+  );
+  const data = analyticsQuery.data ?? null;
+  const loading = analyticsQuery.isPending;
 
   const avgCompletion = data?.completionRates?.length
     ? Math.round(

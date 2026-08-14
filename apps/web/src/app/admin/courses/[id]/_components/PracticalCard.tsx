@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast, withLoadingToast } from "@/lib/toast";
+import { toast, getErrorMessage, withLoadingToast } from "@/lib/toast";
 import {
   IconTrash,
   IconEdit,
@@ -45,7 +46,6 @@ export default function PracticalCard({
   });
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfName, setPdfName] = useState("");
-  const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const confirmDelete = useConfirmDialog();
 
@@ -66,12 +66,11 @@ export default function PracticalCard({
     setPdfName(file.name);
   };
 
-  const handleSave = async () => {
-    try {
+  const saveMutation = useMutation({
+    mutationFn: async () => {
       let pdfUrl = practical.pdfUrl || undefined;
 
       if (pdfFile) {
-        setUploading(true);
         const formData = new FormData();
         formData.append("pdf", pdfFile);
         const uploadRes = await withLoadingToast(
@@ -85,7 +84,6 @@ export default function PracticalCard({
           },
         );
         pdfUrl = uploadRes.url;
-        setUploading(false);
       }
 
       await api.put(`/api/admin/courses/modules/practicals/${practical.id}`, {
@@ -94,31 +92,41 @@ export default function PracticalCard({
         videoUrl: editForm.videoUrl || undefined,
         pdfUrl,
       });
+    },
+    onSuccess: () => {
       setEditing(false);
       setPdfFile(null);
       setPdfName("");
       toast.success("Practical updated");
       onUpdate();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to update practical",
-      );
-    } finally {
-      setUploading(false);
-    }
-  };
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  const handleDelete = async () => {
-    if (!(await confirmDelete({ title: "Delete Practical", message: `Delete practical "${practical.title}"?` })))
-      return;
-    try {
+  const handleSave = () => saveMutation.mutate();
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (
+        !(await confirmDelete({
+          title: "Delete Practical",
+          message: `Delete practical "${practical.title}"?`,
+        }))
+      )
+        throw new Error("cancelled");
       await api.delete(`/api/admin/courses/modules/practicals/${practical.id}`);
+    },
+    onSuccess: () => {
       toast.success("Practical deleted");
       onUpdate();
-    } catch {
-      toast.error("Failed to delete practical");
-    }
-  };
+    },
+    onError: (err: unknown) => {
+      if ((err as Error).message === "cancelled") return;
+      toast.error(getErrorMessage(err));
+    },
+  });
+
+  const handleDelete = () => deleteMutation.mutate();
 
   const hasVideo = !!practical.videoUrl;
   const hasPdf = !!practical.pdfUrl;
@@ -138,10 +146,10 @@ export default function PracticalCard({
       </button>
       <button
         onClick={handleSave}
-        disabled={uploading}
+        disabled={saveMutation.isPending}
         className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1 disabled:opacity-50"
       >
-        {uploading ? "Uploading..." : "Save Changes"}
+        {saveMutation.isPending ? "Saving..." : "Save Changes"}
       </button>
     </>
   );

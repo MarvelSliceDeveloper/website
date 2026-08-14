@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { IconPlus } from "@tabler/icons-react";
 import { FormModal } from "@/components/admin/FormModal";
 
@@ -17,8 +18,22 @@ export default function AddModuleForm({
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [isFreePreview, setIsFreePreview] = useState(false);
-  const [adding, setAdding] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const createModuleMutation = useMutation({
+    mutationFn: () =>
+      api.post(`/api/admin/courses/${courseId}/modules`, {
+        title,
+        description: desc || undefined,
+        isFreePreview,
+      }),
+    onSuccess: () => {
+      setShow(false);
+      toast.success("Module added");
+      onAdded();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   const openForm = () => {
     setTitle("");
@@ -28,23 +43,9 @@ export default function AddModuleForm({
     setTimeout(() => inputRef.current?.focus(), 100);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setAdding(true);
-    try {
-      await api.post(`/api/admin/courses/${courseId}/modules`, {
-        title,
-        description: desc || undefined,
-        isFreePreview,
-      });
-      setShow(false);
-      toast.success("Module added");
-      onAdded();
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to add module");
-    } finally {
-      setAdding(false);
-    }
+    createModuleMutation.mutate();
   };
 
   const footer = (
@@ -58,11 +59,11 @@ export default function AddModuleForm({
       </button>
       <button
         type="submit"
-        disabled={adding}
+        disabled={createModuleMutation.isPending}
         className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1"
         form="add-module-form"
       >
-        {adding ? "Adding..." : "Add Module"}
+        {createModuleMutation.isPending ? "Adding..." : "Add Module"}
       </button>
     </>
   );

@@ -1,9 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import type { DashboardChartData } from "@/lib/api-types";
-import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import jsPDF, { GState } from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -581,53 +579,34 @@ class ReportPdfBuilder {
  * time range plus the previous period (for delta comparisons).
  */
 function useReportData(timeRange: string) {
-  const [data, setData] = useState<DashboardChartData | null>(null);
-  const [prevData, setPrevData] = useState<DashboardChartData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const currentParams = getDateRange(timeRange);
+  const currentQuery = useApiQuery<DashboardChartData>(
+    ["admin", "dashboard", "stats", timeRange],
+    "/api/admin/dashboard/stats",
+    currentParams.from && currentParams.to
+      ? { from: currentParams.from, to: currentParams.to }
+      : undefined,
+  );
 
-  const fetchData = useCallback(async (range: string) => {
-    setLoading(true);
-    try {
-      const params = getDateRange(range);
-      const query = new URLSearchParams();
-      if (params.from) query.set("from", params.from);
-      if (params.to) query.set("to", params.to);
-      const qs = query.toString();
-      const res = await api.get<DashboardChartData>(
-        `/api/admin/dashboard/stats${qs ? `?${qs}` : ""}`,
-      );
-      setData(res);
+  const prevRange = getPreviousDateRange(timeRange);
+  const prevQuery = useApiQuery<DashboardChartData>(
+    ["admin", "dashboard", "stats", "prev", timeRange],
+    "/api/admin/dashboard/stats",
+    prevRange?.from && prevRange.to
+      ? { from: prevRange.from, to: prevRange.to }
+      : undefined,
+    { enabled: prevRange !== null },
+  );
 
-      const prevRange = getPreviousDateRange(range);
-      if (prevRange) {
-        const prevQuery = new URLSearchParams();
-        if (prevRange.from) prevQuery.set("from", prevRange.from);
-        if (prevRange.to) prevQuery.set("to", prevRange.to);
-        try {
-          const prevRes = await api.get<DashboardChartData>(
-            `/api/admin/dashboard/stats?${prevQuery.toString()}`,
-          );
-          setPrevData(prevRes);
-        } catch (e) {
-          console.error("Failed to load previous period data:", e);
-          setPrevData(null);
-        }
-      } else {
-        setPrevData(null);
-      }
-    } catch (e) {
-      console.error("Failed to load report data:", e);
-      toast.error("Failed to load report data");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData(timeRange);
-  }, [timeRange, fetchData]);
-
-  return { data, prevData, loading, refetch: () => fetchData(timeRange) };
+  return {
+    data: currentQuery.data ?? null,
+    prevData: prevQuery.data ?? null,
+    loading: currentQuery.isLoading || prevQuery.isLoading,
+    refetch: () => {
+      void currentQuery.refetch();
+      void prevQuery.refetch();
+    },
+  };
 }
 
 export {

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { api } from "@/lib/api";
+import { useMemo } from "react";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
 import {
   IconServer,
   IconDatabase,
@@ -43,138 +43,139 @@ function formatBytes(bytes: number) {
 
 export default function AdminHealthPage() {
   usePageTitle("Health");
-  const [health, setHealth] = useState<HealthData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [services, setServices] = useState<ServiceStatus[]>([]);
-  const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
-  const checkServices = useCallback(async () => {
-    const checks: ServiceStatus[] = [
-      {
-        name: "API Server",
-        status: "loading",
-        detail: "Checking...",
-        icon: <IconServer size={18} />,
-      },
-      {
-        name: "Database (PostgreSQL)",
-        status: "loading",
-        detail: "Checking...",
-        icon: <IconDatabase size={18} />,
-      },
-      {
-        name: "YouTube API",
-        status: "loading",
-        detail: "Checking...",
-        icon: <IconVideo size={18} />,
-      },
-      {
-        name: "Microsoft Azure AD",
-        status: "loading",
-        detail: "Checking...",
-        icon: <IconCloud size={18} />,
-      },
-      {
-        name: "Payments (Razorpay)",
-        status: "loading",
-        detail: "Checking...",
-        icon: <IconKey size={18} />,
-      },
-      {
-        name: "Email Service (Brevo)",
-        status: "loading",
-        detail: "Checking...",
-        icon: <IconMail size={18} />,
-      },
-    ];
-    setServices(checks);
+  const healthQuery = useApiQuery<HealthData>(
+    ["admin", "health", "core"],
+    "/api/admin/users/health",
+  );
+  const youtubeQuery = useApiQuery(
+    ["admin", "health", "youtube"],
+    "/api/youtube/video-info",
+    { url: "dQw4w9WgXcQ" },
+  );
+  const azureQuery = useApiQuery<{
+    configured?: boolean;
+    envConfigured?: boolean;
+    linked?: boolean;
+  }>(["admin", "health", "azure-ad"], "/api/auth/azure-ad/status");
+  const paymentsQuery = useApiQuery(
+    ["admin", "health", "payments"],
+    "/api/payments/batches",
+  );
 
-    // 1. API + DB health
-    try {
-      const data = await api.get<HealthData>("/api/admin/users/health");
-      setHealth(data);
-      checks[0] = {
-        ...checks[0],
-        status: data.status === "ok" ? "ok" : "error",
-        detail: `Uptime: ${formatUptime(data.uptime)}`,
-      };
-      checks[1] = {
-        ...checks[1],
-        status: data.database === "connected" ? "ok" : "error",
-        detail: data.database === "connected" ? "Connected" : "Disconnected",
-      };
-    } catch {
-      checks[0] = { ...checks[0], status: "error", detail: "Unreachable" };
-      checks[1] = { ...checks[1], status: "error", detail: "Unknown" };
-    }
+  const health = healthQuery.data ?? null;
+  const loading =
+    healthQuery.isPending ||
+    youtubeQuery.isPending ||
+    azureQuery.isPending ||
+    paymentsQuery.isPending;
 
-    // 2. YouTube API (check key + reachability with a stable video ID)
-    try {
-      await api.get("/api/youtube/video-info?url=dQw4w9WgXcQ");
-      checks[2] = {
-        ...checks[2],
-        status: "ok",
-        detail: "Configured",
-      };
-    } catch {
-      checks[2] = {
-        ...checks[2],
-        status: "error",
-        detail: "Not configured",
-      };
-    }
+  const services = useMemo<ServiceStatus[]>(() => {
+    const apiServer: ServiceStatus = healthQuery.isPending
+      ? {
+          name: "API Server",
+          status: "loading",
+          detail: "Checking...",
+          icon: <IconServer size={18} />,
+        }
+      : healthQuery.isError
+        ? {
+            name: "API Server",
+            status: "error",
+            detail: "Unreachable",
+            icon: <IconServer size={18} />,
+          }
+        : {
+            name: "API Server",
+            status: health?.status === "ok" ? "ok" : "error",
+            detail: `Uptime: ${formatUptime(health?.uptime ?? 0)}`,
+            icon: <IconServer size={18} />,
+          };
 
-    // 3. Microsoft Azure AD
-    try {
-      const msData = await api.get<{
-        configured?: boolean;
-        envConfigured?: boolean;
-        linked?: boolean;
-      }>("/api/auth/azure-ad/status");
-      const msOk = msData.envConfigured || msData.linked || msData.configured;
-      checks[3] = {
-        ...checks[3],
-        status: msOk ? "ok" : "error",
-        detail: msOk ? "Configured" : "Not configured",
-      };
-    } catch {
-      checks[3] = {
-        ...checks[3],
-        status: "error",
-        detail: "Not configured",
-      };
-    }
+    const db: ServiceStatus = healthQuery.isPending
+      ? {
+          name: "Database (PostgreSQL)",
+          status: "loading",
+          detail: "Checking...",
+          icon: <IconDatabase size={18} />,
+        }
+      : healthQuery.isError
+        ? {
+            name: "Database (PostgreSQL)",
+            status: "error",
+            detail: "Unknown",
+            icon: <IconDatabase size={18} />,
+          }
+        : {
+            name: "Database (PostgreSQL)",
+            status: health?.database === "connected" ? "ok" : "error",
+            detail:
+              health?.database === "connected" ? "Connected" : "Disconnected",
+            icon: <IconDatabase size={18} />,
+          };
 
-    // 4. Payments (check if payment routes are reachable)
-    try {
-      await api.get("/api/payments/batches");
-      checks[4] = {
-        ...checks[4],
-        status: "ok",
-        detail: "Connected",
-      };
-    } catch {
-      checks[4] = {
-        ...checks[4],
-        status: "ok",
-        detail: "Available",
-      };
-    }
+    const youtube: ServiceStatus = youtubeQuery.isPending
+      ? {
+          name: "YouTube API",
+          status: "loading",
+          detail: "Checking...",
+          icon: <IconVideo size={18} />,
+        }
+      : {
+          name: "YouTube API",
+          status: youtubeQuery.isSuccess ? "ok" : "error",
+          detail: youtubeQuery.isSuccess ? "Configured" : "Not configured",
+          icon: <IconVideo size={18} />,
+        };
 
-    // 5. Email Service — mark as available if API is reachable (no dedicated status endpoint)
-    checks[5] = {
-      ...checks[5],
-      status: checks[0].status === "ok" ? "ok" : "error",
-      detail: checks[0].status === "ok" ? "Available" : "Unreachable",
+    const msData = azureQuery.data;
+    const msOk = msData?.envConfigured || msData?.linked || msData?.configured;
+    const azure: ServiceStatus = azureQuery.isPending
+      ? {
+          name: "Microsoft Azure AD",
+          status: "loading",
+          detail: "Checking...",
+          icon: <IconCloud size={18} />,
+        }
+      : {
+          name: "Microsoft Azure AD",
+          status: msOk ? "ok" : "error",
+          detail: msOk ? "Configured" : "Not configured",
+          icon: <IconCloud size={18} />,
+        };
+
+    const payments: ServiceStatus = {
+      name: "Payments (Razorpay)",
+      status: "ok",
+      detail: paymentsQuery.isSuccess ? "Connected" : "Available",
+      icon: <IconKey size={18} />,
     };
 
-    setServices([...checks]);
-    setLastChecked(new Date());
-  }, []);
+    const email: ServiceStatus = {
+      name: "Email Service (Brevo)",
+      status: apiServer.status === "ok" ? "ok" : "error",
+      detail: apiServer.status === "ok" ? "Available" : "Unreachable",
+      icon: <IconMail size={18} />,
+    };
 
-  useEffect(() => {
-    checkServices().finally(() => setLoading(false));
-  }, [checkServices]);
+    return [apiServer, db, youtube, azure, payments, email];
+  }, [
+    health,
+    healthQuery.isPending,
+    healthQuery.isError,
+    youtubeQuery.isPending,
+    youtubeQuery.isSuccess,
+    azureQuery.isPending,
+    azureQuery.data,
+    paymentsQuery.isSuccess,
+  ]);
+
+  const handleRefresh = () => {
+    void healthQuery.refetch();
+    void youtubeQuery.refetch();
+    void azureQuery.refetch();
+    void paymentsQuery.refetch();
+  };
 
   const okCount = services.filter((s) => s.status === "ok").length;
   const errorCount = services.filter((s) => s.status === "error").length;
@@ -213,10 +214,7 @@ export default function AdminHealthPage() {
           </p>
         </div>
         <button
-          onClick={() => {
-            setLoading(true);
-            checkServices().finally(() => setLoading(false));
-          }}
+          onClick={handleRefresh}
           className="btn-secondary flex items-center gap-1.5 text-sm"
         >
           <IconRefresh size={14} /> Refresh
@@ -311,9 +309,7 @@ export default function AdminHealthPage() {
             <div>
               <p className="text-xs text-muted-foreground">Last Checked</p>
               <p className="text-sm font-medium text-foreground">
-                {lastChecked
-                  ? lastChecked.toLocaleTimeString()
-                  : new Date(health.timestamp).toLocaleTimeString()}
+                {new Date(health.timestamp).toLocaleTimeString()}
               </p>
             </div>
           </div>

@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { timeAgo } from "@/lib/time-ago";
 
@@ -16,18 +15,13 @@ interface Ticket {
 
 export default function AdminInboxTicketsPage() {
   usePageTitle("Tickets");
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    api
-      .get<{ tickets?: Ticket[] }>("/api/mentorship/tickets")
-      .then((data) => setTickets(data.tickets || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+  const ticketsQuery = useApiQuery<{ tickets?: Ticket[] }>(
+    ["admin", "mentorship", "tickets"],
+    "/api/mentorship/tickets",
+  );
 
-  if (loading)
+  if (ticketsQuery.isLoading)
     return (
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
@@ -54,12 +48,12 @@ export default function AdminInboxTicketsPage() {
       </div>
 
       <div className="space-y-2">
-        {tickets.length === 0 ? (
+        {ticketsQuery.data?.tickets?.length === 0 ? (
           <div className="glass-card flex flex-col items-center justify-center py-12 text-center">
             <p className="font-semibold text-foreground">No support tickets</p>
           </div>
         ) : (
-          tickets.map((t) => (
+          ticketsQuery.data?.tickets?.map((t) => (
             <div
               key={t.id}
               className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/50 p-4"

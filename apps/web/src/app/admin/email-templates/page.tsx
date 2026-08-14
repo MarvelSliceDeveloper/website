@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   IconEdit,
@@ -23,37 +25,22 @@ type EmailTemplate = {
 
 export default function AdminEmailTemplatesPage() {
   usePageTitle("Email Templates");
-  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<EmailTemplate | null>(null);
   const [creating, setCreating] = useState(false);
   const [formName, setFormName] = useState("");
   const [formSubject, setFormSubject] = useState("");
   const [formBody, setFormBody] = useState("");
   const [formActive, setFormActive] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
 
   const modalOpen = editing !== null || creating;
 
-  async function fetchTemplates() {
-    setLoading(true);
-    try {
-      const data = await api.get<{ templates: EmailTemplate[] }>(
-        "/api/admin/email-templates",
-      );
-      setTemplates(data.templates);
-    } catch {
-      setTemplates([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchTemplates();
-  }, []);
+  const templatesQuery = useApiQuery<{ templates: EmailTemplate[] }>(
+    ["admin", "email-templates"],
+    "/api/admin/email-templates",
+  );
+  const templates = templatesQuery.data?.templates ?? [];
+  const loading = templatesQuery.isPending;
 
   // Close modal on Escape key
   useEffect(() => {
@@ -92,7 +79,40 @@ export default function AdminEmailTemplatesPage() {
     setFormActive(true);
   }
 
-  async function handleSave() {
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      creating
+        ? api.post("/api/admin/email-templates", {
+            name: formName.trim(),
+            subject: formSubject.trim(),
+            body: formBody,
+            isActive: formActive,
+          })
+        : api.put(`/api/admin/email-templates/${editing?.id}`, {
+            subject: formSubject.trim(),
+            body: formBody,
+            isActive: formActive,
+          }),
+    onSuccess: () => {
+      toast.success(creating ? "Template created" : "Template updated");
+      cancelEdit();
+      void templatesQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const previewMutation = useMutation({
+    mutationFn: (id: string) =>
+      api.post<{ html: string }>(
+        `/api/admin/email-templates/${id}/preview`,
+      ),
+    onSuccess: (data) => {
+      setPreviewHtml(data.html);
+    },
+    onError: () => toast.error("Failed to generate preview"),
+  });
+
+  const handleSave = () => {
     if (!formSubject.trim()) {
       toast.error("Subject is required");
       return;
@@ -101,47 +121,13 @@ export default function AdminEmailTemplatesPage() {
       toast.error("Template name is required");
       return;
     }
-    setSaving(true);
-    try {
-      if (creating) {
-        await api.post("/api/admin/email-templates", {
-          name: formName.trim(),
-          subject: formSubject.trim(),
-          body: formBody,
-          isActive: formActive,
-        });
-        toast.success("Template created");
-      } else if (editing) {
-        await api.put(`/api/admin/email-templates/${editing.id}`, {
-          subject: formSubject.trim(),
-          body: formBody,
-          isActive: formActive,
-        });
-        toast.success("Template updated");
-      }
-      cancelEdit();
-      fetchTemplates();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSaving(false);
-    }
-  }
+    saveMutation.mutate();
+  };
 
-  async function handlePreview(tpl: EmailTemplate) {
-    setPreviewLoading(true);
+  const handlePreview = (tpl: EmailTemplate) => {
     setPreviewHtml(null);
-    try {
-      const data = await api.post<{ html: string }>(
-        `/api/admin/email-templates/${tpl.id}/preview`,
-      );
-      setPreviewHtml(data.html);
-    } catch {
-      toast.error("Failed to generate preview");
-    } finally {
-      setPreviewLoading(false);
-    }
-  }
+    previewMutation.mutate(tpl.id);
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -158,7 +144,7 @@ export default function AdminEmailTemplatesPage() {
               <IconPlus size={14} /> New Template
             </button>
             <button
-              onClick={fetchTemplates}
+              onClick={() => void templatesQuery.refetch()}
               className="btn-secondary text-xs py-2 flex items-center gap-1.5"
             >
               <IconRefresh size={14} /> Refresh
@@ -262,10 +248,18 @@ export default function AdminEmailTemplatesPage() {
             <div className="flex items-center gap-3 px-5 py-4 border-t border-border shrink-0">
               <button
                 onClick={handleSave}
-                disabled={saving || !formSubject.trim() || (creating && !formName.trim())}
+                disabled={
+                  saveMutation.isPending ||
+                  !formSubject.trim() ||
+                  (creating && !formName.trim())
+                }
                 className="btn-primary text-xs py-2 disabled:opacity-40"
               >
-                {saving ? "Saving..." : creating ? "Create Template" : "Save Changes"}
+                {saveMutation.isPending
+                  ? "Saving..."
+                  : creating
+                    ? "Create Template"
+                    : "Save Changes"}
               </button>
               <button onClick={cancelEdit} className="btn-secondary text-xs py-2">
                 Cancel
@@ -358,7 +352,7 @@ export default function AdminEmailTemplatesPage() {
                         </button>
                         <button
                           onClick={() => handlePreview(tpl)}
-                          disabled={previewLoading}
+                          disabled={previewMutation.isPending}
                           className="p-1.5 rounded-md hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors disabled:opacity-40"
                           title="Preview"
                         >

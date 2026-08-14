@@ -8,13 +8,15 @@ import {
   ReorderModulesSchema,
   ReorderContentSchema,
 } from "./module.service";
+import { courseService } from "./course.service";
 
 export const moduleController = {
   // Creates a new module in a course
   async addModule(req: AuthRequest, res: Response) {
     try {
       const data = CreateModuleSchema.parse(req.body);
-      const module = await moduleService.addModule(req.params.id, data);
+      const courseId = await courseService.resolveCourseId(req.params.id);
+      const module = await moduleService.addModule(courseId, data);
       return res.status(201).json(module);
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
@@ -49,7 +51,8 @@ export const moduleController = {
   async reorderModules(req: AuthRequest, res: Response) {
     try {
       const { moduleIds } = ReorderModulesSchema.parse(req.body);
-      await moduleService.reorderModules(req.params.id, moduleIds);
+      const courseId = await courseService.resolveCourseId(req.params.id);
+      await moduleService.reorderModules(courseId, moduleIds);
       return res.json({ message: "Modules reordered" });
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);

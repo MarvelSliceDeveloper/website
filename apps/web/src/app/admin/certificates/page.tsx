@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { PDFDocument } from "pdf-lib";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
@@ -222,40 +224,38 @@ export default function AdminCertificatesPage() {
 
 // ── Certificates Tab ────────────────────────────────────────────────────────
 function CertificatesTab() {
-  const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [stats, setStats] = useState<CertificateStats | null>(null);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
   const limit = 20;
   const confirmDelete = useConfirmDialog();
 
-  async function fetchData() {
-    setLoading(true);
-    try {
-      const [certsData, statsData] = await Promise.all([
-        api.get<{
-          certificates: Certificate[];
-          total: number;
-        }>("/api/admin/certificates", {
-          page: String(page),
-          limit: String(limit),
-        }),
-        api.get<CertificateStats>("/api/admin/certificates/stats"),
-      ]);
-      setCertificates(certsData.certificates);
-      setTotal(certsData.total);
-      setStats(statsData);
-    } catch {
-      setCertificates([]);
-    } finally {
-      setLoading(false);
-    }
-  }
+  // List query is keyed on the current page so pagination refetches cleanly.
+  const certificatesQuery = useApiQuery<{
+    certificates: Certificate[];
+    total: number;
+  }>(
+    ["admin", "certificates", page],
+    "/api/admin/certificates",
+    { page: String(page), limit: String(limit) },
+  );
+  const certificates = certificatesQuery.data?.certificates ?? [];
+  const total = certificatesQuery.data?.total ?? 0;
+  const loading = certificatesQuery.isPending;
 
-  useEffect(() => {
-    fetchData();
-  }, [page]);
+  const statsQuery = useApiQuery<CertificateStats>(
+    ["admin", "certificates", "stats"],
+    "/api/admin/certificates/stats",
+  );
+  const stats = statsQuery.data ?? null;
+
+  const revokeMutation = useMutation({
+    mutationFn: (id: string) => api.put(`/api/admin/certificates/${id}/revoke`),
+    onSuccess: () => {
+      toast.success("Certificate revoked");
+      void certificatesQuery.refetch();
+      void statsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   async function handleRevoke(id: string, number: string) {
     if (
@@ -265,13 +265,7 @@ function CertificatesTab() {
       }))
     )
       return;
-    try {
-      await api.put(`/api/admin/certificates/${id}/revoke`);
-      toast.success("Certificate revoked");
-      fetchData();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
+    revokeMutation.mutate(id);
   }
 
   const totalPages = Math.ceil(total / limit);
@@ -322,7 +316,7 @@ function CertificatesTab() {
             All Certificates
           </p>
           <button
-            onClick={fetchData}
+            onClick={() => void certificatesQuery.refetch()}
             className="btn-secondary text-xs py-1.5 flex items-center gap-1.5"
           >
             <IconRefresh size={14} /> Refresh
@@ -429,14 +423,10 @@ function CertificatesTab() {
 
 // ── Templates Tab ───────────────────────────────────────────────────────────
 function TemplatesTab() {
-  const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(defaultTemplateValues);
-  const [saving, setSaving] = useState(false);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
   const [pdfTemplateFields, setPdfTemplateFields] = useState<
     PlaceholderField[]
   >([]);
@@ -455,29 +445,18 @@ function TemplatesTab() {
   const [showSampleText, setShowSampleText] = useState(true);
   const previewRef = useRef<HTMLDivElement | null>(null);
 
+  const templatesQuery = useApiQuery<{ templates: CertificateTemplate[] }>(
+    ["admin", "certificate-templates"],
+    "/api/admin/certificate-templates",
+  );
+  const templates = templatesQuery.data?.templates ?? [];
+  const loading = templatesQuery.isPending;
+
   // Ignore a page size that belongs to a previously previewed file.
   const pageSize =
     pdfPageSize && pdfPageSize.url === pdfPreviewUrl ? pdfPageSize : null;
   const pageW = pageSize?.width || 595;
   const pageH = pageSize?.height || 842;
-
-  async function fetchTemplates() {
-    setLoading(true);
-    try {
-      const data = await api.get<{ templates: CertificateTemplate[] }>(
-        "/api/admin/certificate-templates",
-      );
-      setTemplates(data.templates);
-    } catch {
-      setTemplates([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchTemplates();
-  }, []);
 
   // Load the first page's dimensions so markers can be positioned accurately
   // (x/y are in PDF points, mapped to the preview as percentages).
@@ -574,13 +553,8 @@ function TemplatesTab() {
     setSelectedFieldIndex(null);
   }
 
-  async function handleSave() {
-    if (!form.name.trim()) {
-      toast.error("Template name is required");
-      return;
-    }
-    setSaving(true);
-    try {
+  const saveMutation = useMutation({
+    mutationFn: async (): Promise<string | null> => {
       const payload = {
         ...form,
         footerText: form.footerText || null,
@@ -614,31 +588,51 @@ function TemplatesTab() {
           `/api/admin/certificate-templates/${templateId}/upload-pdf`,
           fd,
         );
-        if (up.template?.pdfTemplateUrl) {
-          setPdfPreviewUrl(uploadsPublicUrl(up.template.pdfTemplateUrl));
-        }
-        setPdfFile(null);
+        return up.template?.pdfTemplateUrl ?? null;
       }
-
+      return null;
+    },
+    onSuccess: (pdfTemplateUrl) => {
       toast.success(editingId ? "Template updated" : "Template created");
       setShowForm(false);
-      fetchTemplates();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSaving(false);
+      setPdfFile(null);
+      if (pdfTemplateUrl) setPdfPreviewUrl(uploadsPublicUrl(pdfTemplateUrl));
+      void templatesQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  async function handleSave() {
+    if (!form.name.trim()) {
+      toast.error("Template name is required");
+      return;
     }
+    saveMutation.mutate();
   }
 
-  async function handleSetDefault(id: string) {
-    try {
-      await api.post(`/api/admin/certificate-templates/${id}/set-default`);
+  const setDefaultMutation = useMutation({
+    mutationFn: (id: string) =>
+      api.post(`/api/admin/certificate-templates/${id}/set-default`),
+    onSuccess: () => {
       toast.success("Default template updated");
-      fetchTemplates();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
+      void templatesQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  async function handleSetDefault(id: string) {
+    setDefaultMutation.mutate(id);
   }
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) =>
+      api.delete(`/api/admin/certificate-templates/${id}`),
+    onSuccess: () => {
+      toast.success("Template deleted");
+      void templatesQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   async function handleDelete(id: string) {
     if (
@@ -648,39 +642,54 @@ function TemplatesTab() {
       }))
     )
       return;
-    try {
-      await api.delete(`/api/admin/certificate-templates/${id}`);
-      toast.success("Template deleted");
-      fetchTemplates();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
+    deleteMutation.mutate(id);
   }
 
-  async function handleUploadPdf() {
-    if (!pdfFile || !editingId) return;
-    setUploading(true);
-    try {
+  const uploadPdfMutation = useMutation({
+    mutationFn: () => {
       const formData = new FormData();
-      formData.append("pdf", pdfFile);
-      formData.append("pdfTemplateFields", JSON.stringify(pdfTemplateFields));
-      const res = await api.post<{ template: CertificateTemplate }>(
-        `/api/admin/certificate-templates/${editingId}/upload-pdf`,
+      formData.append("pdf", pdfFile!);
+      formData.append(
+        "pdfTemplateFields",
+        JSON.stringify(pdfTemplateFields),
+      );
+      return api.post<{ template: CertificateTemplate }>(
+        `/api/admin/certificate-templates/${editingId!}/upload-pdf`,
         formData,
       );
+    },
+    onSuccess: (res) => {
       toast.success("PDF template uploaded");
       setPdfFile(null);
       setForm((f) => ({ ...f, pdfTemplateType: "uploadedPdf" }));
       if (res.template?.pdfTemplateUrl) {
         setPdfPreviewUrl(uploadsPublicUrl(res.template.pdfTemplateUrl));
       }
-      fetchTemplates();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setUploading(false);
-    }
+      void templatesQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  async function handleUploadPdf() {
+    if (!pdfFile || !editingId) return;
+    uploadPdfMutation.mutate();
   }
+
+  const removePdfMutation = useMutation({
+    mutationFn: (templateId: string) =>
+      api.delete(
+        `/api/admin/certificate-templates/${templateId}/pdf-template`,
+      ),
+    onSuccess: () => {
+      toast.success("PDF template removed");
+      setForm((f) => ({ ...f, pdfTemplateType: "uploadedPdf" }));
+      setPdfPreviewUrl("");
+      setPdfPageSize(null);
+      setSelectedFieldIndex(null);
+      void templatesQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   async function handleRemovePdf(templateId: string) {
     if (
@@ -690,19 +699,7 @@ function TemplatesTab() {
       }))
     )
       return;
-    try {
-      await api.delete(
-        `/api/admin/certificate-templates/${templateId}/pdf-template`,
-      );
-      toast.success("PDF template removed");
-      setForm((f) => ({ ...f, pdfTemplateType: "uploadedPdf" }));
-      setPdfPreviewUrl("");
-      setPdfPageSize(null);
-      setSelectedFieldIndex(null);
-      fetchTemplates();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
+    removePdfMutation.mutate(templateId);
   }
 
   function handlePdfFileChange(file: File | null) {
@@ -1050,10 +1047,12 @@ function TemplatesTab() {
                         />
                         <button
                           onClick={handleUploadPdf}
-                          disabled={!pdfFile || uploading}
+                          disabled={!pdfFile || uploadPdfMutation.isPending}
                           className="btn-primary text-xs py-2 px-4 disabled:opacity-60"
                         >
-                          {uploading ? "Uploading..." : "Upload"}
+                          {uploadPdfMutation.isPending
+                            ? "Uploading..."
+                            : "Upload"}
                         </button>
                       </div>
                     </div>
@@ -1412,10 +1411,14 @@ function TemplatesTab() {
               </button>
               <button
                 onClick={handleSave}
-                disabled={saving}
+                disabled={saveMutation.isPending}
                 className="btn-primary flex-1 text-sm disabled:opacity-60"
               >
-                {saving ? "Saving..." : editingId ? "Update" : "Create"}
+                {saveMutation.isPending
+                  ? "Saving..."
+                  : editingId
+                    ? "Update"
+                    : "Create"}
               </button>
             </div>
           </div>

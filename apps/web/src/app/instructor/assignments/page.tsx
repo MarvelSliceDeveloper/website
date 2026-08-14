@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   IconClipboardList,
@@ -55,73 +57,76 @@ function PassFailPreview({
 
 export default function InstructorAssignmentsPage() {
   usePageTitle("Assignments");
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  // Shares the cache key with the instructor dashboard's ["instructor","assignments"].
+  const assignmentsQuery = useApiQuery<{ items: Assignment[] }>(
+    ["instructor", "assignments"],
+    "/api/assignments",
+  );
+  const assignments = assignmentsQuery.data?.items ?? [];
+  const loading = assignmentsQuery.isPending;
+
   const [selectedAssignment, setSelectedAssignment] =
     useState<Assignment | null>(null);
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+
+  // Dependent query: submissions for the currently selected assignment.
+  const submissionsQuery = useQuery({
+    queryKey: ["instructor", "submissions", selectedAssignment?.id ?? ""],
+    queryFn: () =>
+      api.get<{ items: Submission[] }>(
+        `/api/assignments/${selectedAssignment!.id}/submissions`,
+      ),
+    enabled: Boolean(selectedAssignment),
+  });
+  const submissions = submissionsQuery.data?.items ?? [];
+  const loadingSubmissions = submissionsQuery.isPending;
+
   const [gradeModal, setGradeModal] = useState<Submission | null>(null);
   const [gradeInput, setGradeInput] = useState("");
   const [feedbackInput, setFeedbackInput] = useState("");
-  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    api
-      .get<{ items: Assignment[] }>("/api/assignments")
-      .then((res) => setAssignments(res.items ?? []))
-      .catch(() => setAssignments([]))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const fetchSubmissions = useCallback(async (assignmentId: string) => {
-    setLoadingSubmissions(true);
-    try {
-      const res = await api.get<{ items: Submission[] }>(
-        `/api/assignments/${assignmentId}/submissions`,
-      );
-      setSubmissions(res.items ?? []);
-    } catch {
-      setSubmissions([]);
-    } finally {
-      setLoadingSubmissions(false);
-    }
-  }, []);
-
-  const handleSelectAssignment = (assignment: Assignment) => {
-    setSelectedAssignment(assignment);
-    fetchSubmissions(assignment.id);
-  };
-
-  const handleGrade = async () => {
-    if (!gradeModal) return;
-    setSubmitting(true);
-    try {
-      const score = parseInt(gradeInput, 10);
-      if (isNaN(score) || score < 0 || score > 100) {
-        toast.error("Score must be between 0 and 100");
-        setSubmitting(false);
-        return;
-      }
-      await api.post(
-        `/api/assignments/submissions/${gradeModal.id}/grade`,
-        {
-          grade: score,
-          feedback: feedbackInput || undefined,
-        },
-      );
+  const gradeMutation = useMutation({
+    mutationFn: ({
+      submissionId,
+      payload,
+    }: {
+      submissionId: string;
+      payload: { grade: number; feedback?: string };
+    }) =>
+      api.post(
+        `/api/assignments/submissions/${submissionId}/grade`,
+        payload,
+      ),
+    onSuccess: () => {
       toast.success("Submission graded successfully");
       setGradeModal(null);
       setGradeInput("");
       setFeedbackInput("");
       if (selectedAssignment) {
-        fetchSubmissions(selectedAssignment.id);
+        void queryClient.invalidateQueries({
+          queryKey: ["instructor", "submissions", selectedAssignment.id],
+        });
       }
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSubmitting(false);
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSelectAssignment = (assignment: Assignment) => {
+    setSelectedAssignment(assignment);
+  };
+
+  const handleGrade = () => {
+    if (!gradeModal) return;
+    const score = parseInt(gradeInput, 10);
+    if (isNaN(score) || score < 0 || score > 100) {
+      toast.error("Score must be between 0 and 100");
+      return;
     }
+    gradeMutation.mutate({
+      submissionId: gradeModal.id,
+      payload: { grade: score, feedback: feedbackInput || undefined },
+    });
   };
 
   const pendingCount = submissions.filter((s) => s.status === "PENDING").length;
@@ -132,10 +137,7 @@ export default function InstructorAssignmentsPage() {
       <div className="space-y-6">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => {
-              setSelectedAssignment(null);
-              setSubmissions([]);
-            }}
+            onClick={() => setSelectedAssignment(null)}
             className="p-2 rounded-lg hover:bg-card-hover text-muted-foreground hover:text-foreground transition-colors"
           >
             <IconArrowLeft size={20} />
@@ -372,10 +374,10 @@ export default function InstructorAssignmentsPage() {
                   </button>
                   <button
                     onClick={handleGrade}
-                    disabled={submitting || !gradeInput.trim()}
+                    disabled={gradeMutation.isPending || !gradeInput.trim()}
                     className="btn-primary text-xs px-4"
                   >
-                    {submitting ? "Submitting..." : "Submit Grade"}
+                    {gradeMutation.isPending ? "Submitting..." : "Submit Grade"}
                   </button>
                 </div>
               </div>

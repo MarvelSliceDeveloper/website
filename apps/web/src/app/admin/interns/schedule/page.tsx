@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { usePageTitle } from "@/lib/use-page-title";
@@ -50,43 +52,51 @@ export default function AdminInternSchedulePage() {
   const [endTime, setEndTime] = useState("");
   const [joinUrl, setJoinUrl] = useState("");
   const [target, setTarget] = useState("ALL");
-  const [fields, setFields] = useState<FieldOption[]>([]);
-  const [submitting, setSubmitting] = useState(false);
 
   const [status, setStatus] = useState("UPCOMING");
-  const [sessions, setSessions] = useState<InternSession[]>([]);
-  const [loadingSessions, setLoadingSessions] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
-  const fetchSessions = () => {
-    setLoadingSessions(true);
-    api
-      .get<{ items: InternSession[] }>("/api/admin/interns/sessions", {
-        status,
-      })
-      .then((res) => setSessions(res.items ?? []))
-      .catch((err) => {
-        toast.error(getErrorMessage(err));
-        setSessions([]);
-      })
-      .finally(() => setLoadingSessions(false));
-  };
+  const fieldsQuery = useApiQuery<{ fields: FieldOption[] }>(
+    ["admin", "interns", "fields"],
+    "/api/admin/interns/fields",
+  );
+  const fields = fieldsQuery.data?.fields ?? [];
 
-  useEffect(() => {
-    api
-      .get<{ fields: FieldOption[] }>("/api/admin/interns/fields")
-      .then((res) => setFields(res.fields ?? []))
-      .catch(() => setFields([]));
-  }, []);
-
-  useEffect(() => {
-    fetchSessions();
-  }, [status]);
+  // Sessions list keyed on the status tab so switching tabs refetches.
+  const sessionsQuery = useApiQuery<{ items: InternSession[] }>(
+    ["admin", "interns", "sessions", status],
+    "/api/admin/interns/sessions",
+    { status },
+  );
+  const sessions = sessionsQuery.data?.items ?? [];
+  const loadingSessions = sessionsQuery.isPending;
 
   const activeFields = fields.filter((f) => f.isActive);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const createSessionMutation = useMutation({
+    mutationFn: (payload: {
+      title: string;
+      description?: string;
+      scheduledAt: string;
+      scheduledEndAt?: string;
+      joinUrl?: string;
+      targetFieldId?: string;
+    }) => api.post("/api/admin/interns/sessions", payload),
+    onSuccess: () => {
+      toast.success("Class scheduled — interns have been notified");
+      setTitle("");
+      setDescription("");
+      setDate("");
+      setTime("");
+      setEndTime("");
+      setJoinUrl("");
+      setTarget("ALL");
+      void sessionsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
       toast.error("Session title is required");
@@ -102,45 +112,29 @@ export default function AdminInternSchedulePage() {
       ? new Date(`${date}T${endTime}:00`).toISOString()
       : undefined;
 
-    setSubmitting(true);
-    try {
-      await api.post("/api/admin/interns/sessions", {
-        title: title.trim(),
-        description: description.trim() || undefined,
-        scheduledAt,
-        scheduledEndAt,
-        joinUrl: joinUrl.trim() || undefined,
-        targetFieldId: target === "ALL" ? undefined : target,
-      });
-      toast.success("Class scheduled — interns have been notified");
-      setTitle("");
-      setDescription("");
-      setDate("");
-      setTime("");
-      setEndTime("");
-      setJoinUrl("");
-      setTarget("ALL");
-      fetchSessions();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSubmitting(false);
-    }
+    createSessionMutation.mutate({
+      title: title.trim(),
+      description: description.trim() || undefined,
+      scheduledAt,
+      scheduledEndAt,
+      joinUrl: joinUrl.trim() || undefined,
+      targetFieldId: target === "ALL" ? undefined : target,
+    });
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    setDeleting(true);
-    try {
-      await api.delete(`/api/admin/interns/sessions/${deleteId}`);
+  const deleteSessionMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/admin/interns/sessions/${id}`),
+    onSuccess: () => {
       setDeleteId(null);
       toast.success("Class deleted");
-      fetchSessions();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setDeleting(false);
-    }
+      void sessionsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleDelete = () => {
+    if (!deleteId) return;
+    deleteSessionMutation.mutate(deleteId);
   };
 
   const formatDateTime = (iso: string) =>
@@ -283,10 +277,10 @@ export default function AdminInternSchedulePage() {
 
             <button
               type="submit"
-              disabled={submitting}
+              disabled={createSessionMutation.isPending}
               className="btn-primary text-sm w-full flex items-center justify-center gap-1.5"
             >
-              {submitting ? (
+              {createSessionMutation.isPending ? (
                 <>
                   <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
                   Scheduling...
@@ -400,7 +394,7 @@ export default function AdminInternSchedulePage() {
         description="This class will be removed. Interns will not be notified of the deletion."
         variant="danger"
         confirmLabel="Yes, Delete"
-        confirmLoading={deleting}
+        confirmLoading={deleteSessionMutation.isPending}
       />
     </div>
   );

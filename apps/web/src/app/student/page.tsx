@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
 import { IconAlertCircle, IconSearch } from "@tabler/icons-react";
@@ -11,6 +11,8 @@ import { Spinner } from "@/components/shared/Spinner";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Types
 import type { ViewState } from "./_types/student-portal";
@@ -184,38 +186,13 @@ function computeSessionStatus(
   return "UPCOMING";
 }
 
-async function fetchPortalData(): Promise<PortalData> {
-  const failedSections: string[] = [];
-  let summaryData: ApiSummaryResponse | null = null;
-
-  try {
-    // Lightweight core summary only — enrolled, sessions, calendar, tickets,
-    // cheap certificate count. Heavy sections load in parallel afterwards so
-    // the dashboard renders progressively.
-    summaryData = await api.get<ApiSummaryResponse>("/api/student/summary");
-  } catch (err) {
-    console.warn("[portal] Core summary fetch failed, falling back to legacy queries:", err);
-    failedSections.push("summary");
-  }
-
-  // Heavy sections fetched once core is ready. Each has its own endpoint and
-  // is already independently cached/optimized server-side.
-  const [
-    overdueSection,
-    continueLearningSection,
-    resultsSection,
-  ] = await Promise.all([
-    api
-      .get<{ items: OverdueAssignment[] }>("/api/student/assignments/overdue")
-      .catch(() => ({ items: [] })),
-    api
-      .get<{ items: ContinueLearningItem[] }>("/api/student/continue-learning")
-      .catch(() => ({ items: [] })),
-    api
-      .get<{ items: StudentResultItem[] }>("/api/student/results")
-      .catch(() => ({ items: [] })),
-  ]);
-
+function assemblePortalData(
+  summaryData: ApiSummaryResponse | null,
+  overdueItems: OverdueAssignment[],
+  continueLearningItems: ContinueLearningItem[],
+  resultsItems: StudentResultItem[],
+  failedSections: string[],
+): PortalData {
   if (summaryData) {
     const enrolledCourses: EnrolledCourse[] = (summaryData.enrolled || []).map(
       (req: ApiEnrolledCourse) => {
@@ -278,7 +255,7 @@ async function fetchPortalData(): Promise<PortalData> {
         liveTodayCount: mappedSessions.filter((s) => s.status === "LIVE").length,
         certificatesCount: summaryData.certificatesCount ?? 0,
       },
-      overdueAssignments: overdueSection.items,
+      overdueAssignments: overdueItems,
       enrolledCourses,
       batches: {},
       liveSessions: mappedSessions,
@@ -296,8 +273,8 @@ async function fetchPortalData(): Promise<PortalData> {
           joinUrl: t.joinUrl || undefined,
         }),
       ),
-      continueLearning: continueLearningSection.items,
-      results: resultsSection.items,
+      continueLearning: continueLearningItems,
+      results: resultsItems,
       failedSections,
     };
   }
@@ -312,16 +289,72 @@ async function fetchPortalData(): Promise<PortalData> {
       liveTodayCount: 0,
       certificatesCount: 0,
     },
-    overdueAssignments: overdueSection.items,
+    overdueAssignments: overdueItems,
     enrolledCourses: [],
     batches: {},
     liveSessions: [],
     calendarEvents: [],
     mentorshipTickets: [],
-    continueLearning: continueLearningSection.items,
-    results: resultsSection.items,
+    continueLearning: continueLearningItems,
+    results: resultsItems,
     failedSections,
   };
+}
+
+// Parallelizes the four dashboard endpoints with TanStack Query. All four
+// fire together (no summary-first waterfall); results are cached/refetched
+// per query key. `isLoading` mirrors the old behavior: the skeleton stays up
+// until every section has settled.
+function usePortalData() {
+  const queryClient = useQueryClient();
+  const summaryQuery = useApiQuery<ApiSummaryResponse>(
+    ["student", "summary"],
+    "/api/student/summary",
+  );
+  const overdueQuery = useApiQuery<{ items: OverdueAssignment[] }>(
+    ["student", "overdue"],
+    "/api/student/assignments/overdue",
+  );
+  const continueQuery = useApiQuery<{ items: ContinueLearningItem[] }>(
+    ["student", "continue-learning"],
+    "/api/student/continue-learning",
+  );
+  const resultsQuery = useApiQuery<{ items: StudentResultItem[] }>(
+    ["student", "results"],
+    "/api/student/results",
+  );
+
+  const isLoading =
+    summaryQuery.isPending ||
+    overdueQuery.isPending ||
+    continueQuery.isPending ||
+    resultsQuery.isPending;
+
+  const data = useMemo<PortalData | null>(() => {
+    if (summaryQuery.isPending) return null;
+    return assemblePortalData(
+      summaryQuery.data ?? null,
+      overdueQuery.data?.items ?? [],
+      continueQuery.data?.items ?? [],
+      resultsQuery.data?.items ?? [],
+      summaryQuery.isError ? ["summary"] : [],
+    );
+  }, [
+    summaryQuery.isPending,
+    summaryQuery.data,
+    summaryQuery.isError,
+    overdueQuery.data,
+    continueQuery.data,
+    resultsQuery.data,
+  ]);
+
+  const refetch = useCallback(() => {
+    return queryClient.refetchQueries({
+      predicate: (query) => query.queryKey[0] === "student",
+    });
+  }, [queryClient]);
+
+  return { data, isLoading, refetch };
 }
 
 async function fetchBatch(batchId: string): Promise<Batch | null> {
@@ -519,16 +552,13 @@ export default function StudentPortalPage() {
 function StudentPortalContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [data, setData] = useState<PortalData | null>(null);
+  const { data, isLoading, refetch } = usePortalData();
   const [batchCache, setBatchCache] = useState<Record<string, Batch>>({});
   const [courseDetailCache, setCourseDetailCache] = useState<
     Record<string, CatalogueCourse>
   >({});
   const [loadingBatch, setLoadingBatch] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [studentName, setStudentName] = useState("Demo Student");
-  const [studentEmail, setStudentEmail] = useState("demo@student.example.com");
   const [onboardingComplete, setOnboardingComplete] = useState(true);
   const [needsProfile, setNeedsProfile] = useState(false);
   const [dismissedWarnings, setDismissedWarnings] = useState(false);
@@ -669,71 +699,57 @@ function StudentPortalContent() {
 
   // ── Data loading ──────────────────────────────────────────────────────────
 
+  // TanStack Query owns the four dashboard endpoints (see usePortalData).
+  // `loadData` is kept as the refresh hook used after actions (enroll,
+  // mentorship submit, certificate claim).
   const loadData = useCallback(async () => {
-    const d = await fetchPortalData();
-    setData(d);
-    setBatchCache(d.batches);
-  }, []);
+    await refetch();
+  }, [refetch]);
 
-  useEffect(() => {
-    let active = true;
-    fetchPortalData()
-      .then((d) => {
-        if (!active) return;
-        setData(d);
-        setBatchCache(d.batches);
-      })
-      .catch((e) => {
-        if (active)
-          setError(
-            e instanceof Error ? e.message : "Failed to load portal data",
-          );
-      })
-      .finally(() => {
-        if (active) setIsLoading(false);
-      });
-    return () => {
-      active = false;
+  // Greeting + onboarding gate — query is cached so navigating between portal
+  // views never refetches /api/auth/me; the profile query only runs when
+  // onboarding is complete (dependent query).
+  const meQuery = useApiQuery<{
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      role: string;
+      mustChangePassword: boolean;
+      onboardingComplete: boolean;
     };
-  }, []);
+  }>(["auth", "me"], "/api/auth/me");
 
-  // Load current user profile for greeting
+  const profileQuery = useApiQuery<{ user: { phone?: string } }>(
+    ["student", "profile"],
+    "/api/student/profile",
+    undefined,
+    { enabled: Boolean(meQuery.data?.user?.onboardingComplete) },
+  );
+
+  // needsProfile is cleared by the onboarding wizard's completion handler, so
+  // it's local state synced from the dependent profile query.
   useEffect(() => {
-    let active = true;
-    api
-      .get<{
-        user: {
-          id: string;
-          name: string;
-          email: string;
-          role: string;
-          mustChangePassword: boolean;
-          onboardingComplete: boolean;
-        };
-      }>("/api/auth/me")
-      .then((res) => {
-        if (!active || !res || !res.user) return;
-        setStudentName(res.user.name || "");
-        setStudentEmail(res.user.email || "");
-        setOnboardingComplete(res.user.onboardingComplete);
+    if (!profileQuery.data) return;
+    if (!profileQuery.data.user?.phone?.trim()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setNeedsProfile(true);
+    }
+  }, [profileQuery.data]);
 
-        if (res.user.onboardingComplete) {
-          api
-            .get<{ user: { phone?: string } }>("/api/student/profile")
-            .then((p) => {
-              if (!active) return;
-              if (!p?.user?.phone?.trim()) setNeedsProfile(true);
-            })
-            .catch(() => {});
-        }
-      })
-      .catch(() => {
-        // ignore — keep demo values if unauthenticated
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
+  // onboardingComplete is state (the wizard completion handler overrides it
+  // client-side), so sync it from the cached /api/auth/me query here.
+  useEffect(() => {
+    const user = meQuery.data?.user;
+    if (!user) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOnboardingComplete(user.onboardingComplete);
+  }, [meQuery.data]);
+
+  // Name/email are pure display values — derive them from the cached query
+  // during render instead of copying into state.
+  const studentName = meQuery.data?.user?.name || "Demo Student";
+  const studentEmail = meQuery.data?.user?.email || "demo@student.example.com";
 
   // Load batch on-demand when navigating to BATCH_DETAIL or RECORDING_PLAYER
   useEffect(() => {
@@ -865,8 +881,7 @@ function StudentPortalContent() {
           <button
             onClick={() => {
               setError("");
-              setIsLoading(true);
-              loadData().finally(() => setIsLoading(false));
+              void refetch();
             }}
             className="btn-primary text-sm"
           >

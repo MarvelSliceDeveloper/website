@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast, withLoadingToast } from "@/lib/toast";
+import { toast, getErrorMessage, withLoadingToast } from "@/lib/toast";
 import {
   IconBrandYoutube,
   IconPlayerPlay,
@@ -84,41 +85,47 @@ export default function LessonCard({
     }
   }, []);
 
-  const handleSave = async () => {
-    try {
-      await api.put(`/api/admin/courses/modules/lessons/${lesson.id}`, {
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      api.put(`/api/admin/courses/modules/lessons/${lesson.id}`, {
         title: editForm.title,
         description: editForm.description || undefined,
         videoUrl: editForm.videoUrl || undefined,
         durationSeconds: durationSeconds ?? undefined,
         isFreePreview: editForm.isFreePreview,
-      });
+      }),
+    onSuccess: () => {
       setEditing(false);
       toast.success("Lesson updated");
       onChanged();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to update lesson",
-      );
-    }
-  };
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  const handleDelete = async () => {
-    if (
-      !(await confirmDelete({
-        title: "Delete Lesson",
-        message: `Delete lesson "${lesson.title}"? Any uploaded resources will also be removed. This action cannot be undone.`,
-      }))
-    )
-      return;
-    try {
+  const handleSave = () => saveMutation.mutate();
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (
+        !(await confirmDelete({
+          title: "Delete Lesson",
+          message: `Delete lesson "${lesson.title}"? Any uploaded resources will also be removed. This action cannot be undone.`,
+        }))
+      )
+        throw new Error("cancelled");
       await api.delete(`/api/admin/courses/modules/lessons/${lesson.id}`);
+    },
+    onSuccess: () => {
       toast.success("Lesson deleted");
       onChanged();
-    } catch {
-      toast.error("Failed to delete lesson");
-    }
-  };
+    },
+    onError: (err: unknown) => {
+      if ((err as Error).message === "cancelled") return;
+      toast.error(getErrorMessage(err));
+    },
+  });
+
+  const handleDelete = () => deleteMutation.mutate();
 
   const contentType =
     lesson.videoType === "youtube"

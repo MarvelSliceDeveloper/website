@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FormModal } from "@/components/admin/FormModal";
@@ -104,11 +106,6 @@ function formatDate(dateStr: string) {
 export default function AssignmentReviewPage() {
   usePageTitle("Assignment Review Queue");
 
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [statsLoading, setStatsLoading] = useState(true);
-
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
 
@@ -116,36 +113,20 @@ export default function AssignmentReviewPage() {
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [gradeInput, setGradeInput] = useState("");
   const [feedbackInput, setFeedbackInput] = useState("");
-  const [saving, setSaving] = useState(false);
 
-  async function fetchSubmissions() {
-    setLoading(true);
-    try {
-      const data = await api.get<SubmissionResponse>("/api/admin/assignments/review");
-      setSubmissions(data.items ?? []);
-    } catch {
-      setSubmissions([]);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const submissionsQuery = useApiQuery<SubmissionResponse>(
+    ["admin", "assignments", "review"],
+    "/api/admin/assignments/review",
+  );
+  const submissions = submissionsQuery.data?.items ?? [];
+  const loading = submissionsQuery.isPending;
 
-  async function fetchStats() {
-    setStatsLoading(true);
-    try {
-      const data = await api.get<Stats>("/api/admin/assignments/review/stats");
-      setStats(data);
-    } catch {
-      setStats(null);
-    } finally {
-      setStatsLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchSubmissions();
-    fetchStats();
-  }, []);
+  const statsQuery = useApiQuery<Stats>(
+    ["admin", "assignments", "review", "stats"],
+    "/api/admin/assignments/review/stats",
+  );
+  const stats = statsQuery.data ?? null;
+  const statsLoading = statsQuery.isPending;
 
   function openGradeModal(submission: Submission) {
     setSelectedSubmission(submission);
@@ -161,7 +142,30 @@ export default function AssignmentReviewPage() {
     setFeedbackInput("");
   }
 
-  async function handleGradeSubmit() {
+  const gradeMutation = useMutation({
+    mutationFn: ({
+      id,
+      grade,
+      feedback,
+    }: {
+      id: string;
+      grade: number;
+      feedback?: string;
+    }) =>
+      api.post(`/api/admin/assignments/review/${id}/grade`, {
+        grade,
+        feedback,
+      }),
+    onSuccess: () => {
+      toast.success("Submission graded successfully!");
+      closeGradeModal();
+      void submissionsQuery.refetch();
+      void statsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  function handleGradeSubmit() {
     if (!selectedSubmission) return;
     const gradeNum = Number(gradeInput);
     if (!gradeInput.trim() || isNaN(gradeNum) || gradeNum < 0) {
@@ -169,21 +173,11 @@ export default function AssignmentReviewPage() {
       return;
     }
 
-    setSaving(true);
-    try {
-      await api.post(
-        `/api/admin/assignments/review/${selectedSubmission.id}/grade`,
-        { grade: gradeNum, feedback: feedbackInput.trim() || undefined },
-      );
-      toast.success("Submission graded successfully!");
-      closeGradeModal();
-      fetchSubmissions();
-      fetchStats();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSaving(false);
-    }
+    gradeMutation.mutate({
+      id: selectedSubmission.id,
+      grade: gradeNum,
+      feedback: feedbackInput.trim() || undefined,
+    });
   }
 
   const query = search.trim().toLowerCase();
@@ -217,8 +211,8 @@ export default function AssignmentReviewPage() {
         action={
           <button
             onClick={() => {
-              fetchSubmissions();
-              fetchStats();
+              void submissionsQuery.refetch();
+              void statsQuery.refetch();
             }}
             className="btn-secondary text-xs py-2 flex items-center gap-1.5"
           >
@@ -511,16 +505,16 @@ export default function AssignmentReviewPage() {
             <button
               onClick={closeGradeModal}
               className="btn-secondary text-sm"
-              disabled={saving}
+              disabled={gradeMutation.isPending}
             >
               Cancel
             </button>
             <button
               onClick={handleGradeSubmit}
-              disabled={saving}
+              disabled={gradeMutation.isPending}
               className="btn-primary text-sm flex items-center gap-1.5"
             >
-              {saving ? (
+              {gradeMutation.isPending ? (
                 <>
                   <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
                   Saving...

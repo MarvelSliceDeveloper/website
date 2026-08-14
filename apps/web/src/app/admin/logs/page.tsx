@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { api } from "@/lib/api";
+import { useState } from "react";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconFileDescription,
@@ -24,38 +24,25 @@ type LogEntry = {
 
 export default function ActivityLogsPage() {
   usePageTitle("Logs");
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
   const [actionFilter, setActionFilter] = useState("");
 
-  const fetchLogs = useCallback(async () => {
-    try {
-      const params: Record<string, string> = {
-        page: String(page),
-        limit: "50",
-      };
-      if (actionFilter) params.action = actionFilter;
-
-      const data = await api.get<{
-        logs: LogEntry[];
-        pagination: { total: number };
-      }>("/api/admin/logs", params);
-      setLogs(data.logs);
-      setTotal(data.pagination.total);
-    } catch {
-      // silent
-    } finally {
-      setLoading(false);
-    }
-  }, [page, actionFilter]);
-
-  useEffect(() => {
-    fetchLogs();
-    const interval = setInterval(fetchLogs, 10000);
-    return () => clearInterval(interval);
-  }, [fetchLogs]);
+  const logsQuery = useApiQuery<{
+    logs: LogEntry[];
+    pagination: { total: number };
+  }>(
+    ["admin", "logs", actionFilter || "all", page],
+    "/api/admin/logs",
+    {
+      page: String(page),
+      limit: "50",
+      ...(actionFilter ? { action: actionFilter } : {}),
+    },
+    { refetchInterval: 10000 },
+  );
+  const logs = logsQuery.data?.logs ?? [];
+  const total = logsQuery.data?.pagination.total ?? 0;
+  const loading = logsQuery.isPending;
 
   return (
     <div className="space-y-6">
@@ -88,7 +75,7 @@ export default function ActivityLogsPage() {
           <option value="syncRecording">syncRecording</option>
         </select>
         <button
-          onClick={fetchLogs}
+          onClick={() => void logsQuery.refetch()}
           className="btn-secondary text-xs py-2 flex items-center gap-1.5"
         >
           <IconRefresh size={14} /> Refresh

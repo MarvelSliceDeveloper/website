@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -56,56 +58,45 @@ export default function AdminContentPage() {
 
   const [activeTab, setActiveTab] = useState<TabId>("categories");
 
-  const [categories, setCategories] = useState<CategoryItem[]>([]);
-  const [titles, setTitles] = useState<TitleItem[]>([]);
-  const [tags, setTags] = useState<TagItem[]>([]);
-  const [packageNames, setPackageNames] = useState<PackageNameItem[]>([]);
-  const [loading, setLoading] = useState(false);
-
   // Add/edit form state
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formName, setFormName] = useState("");
   const [formDescription, setFormDescription] = useState("");
-  const [saving, setSaving] = useState(false);
 
-  async function fetchTab(tab: TabId) {
-    setLoading(true);
-    try {
-      if (tab === "categories") {
-        const data = await api.get<{ categories: CategoryItem[] }>(
-          "/api/admin/content/categories",
-        );
-        setCategories(data.categories);
-      } else if (tab === "titles") {
-        const data = await api.get<{ titles: TitleItem[] }>(
-          "/api/admin/content/titles",
-        );
-        setTitles(data.titles);
-      } else if (tab === "tags") {
-        const data = await api.get<{ tags: TagItem[] }>(
-          "/api/admin/content/tags",
-        );
-        setTags(data.tags);
-      } else {
-        const data = await api.get<{ packageNames: PackageNameItem[] }>(
-          "/api/admin/content/package-names",
-        );
-        setPackageNames(data.packageNames);
-      }
-    } catch {
-      if (tab === "categories") setCategories([]);
-      else if (tab === "titles") setTitles([]);
-      else if (tab === "tags") setTags([]);
-      else setPackageNames([]);
-    } finally {
-      setLoading(false);
-    }
+  const categoriesQuery = useApiQuery<{ categories: CategoryItem[] }>(
+    ["admin", "content", "categories"],
+    "/api/admin/content/categories",
+  );
+  const titlesQuery = useApiQuery<{ titles: TitleItem[] }>(
+    ["admin", "content", "titles"],
+    "/api/admin/content/titles",
+  );
+  const tagsQuery = useApiQuery<{ tags: TagItem[] }>(
+    ["admin", "content", "tags"],
+    "/api/admin/content/tags",
+  );
+  const packageNamesQuery = useApiQuery<{ packageNames: PackageNameItem[] }>(
+    ["admin", "content", "package-names"],
+    "/api/admin/content/package-names",
+  );
+  const loading =
+    categoriesQuery.isPending ||
+    titlesQuery.isPending ||
+    tagsQuery.isPending ||
+    packageNamesQuery.isPending;
+
+  const categories = categoriesQuery.data?.categories ?? [];
+  const titles = titlesQuery.data?.titles ?? [];
+  const tags = tagsQuery.data?.tags ?? [];
+  const packageNames = packageNamesQuery.data?.packageNames ?? [];
+
+  function refetchActive() {
+    if (activeTab === "categories") void categoriesQuery.refetch();
+    else if (activeTab === "titles") void titlesQuery.refetch();
+    else if (activeTab === "tags") void tagsQuery.refetch();
+    else void packageNamesQuery.refetch();
   }
-
-  useEffect(() => {
-    fetchTab(activeTab);
-  }, [activeTab]);
 
   const items =
     activeTab === "categories"
@@ -159,32 +150,41 @@ export default function AdminContentPage() {
           ? "/api/admin/tags"
           : "/api/admin/content/package-names";
 
-  async function handleSubmit() {
+  const saveMutation = useMutation({
+    mutationFn: (body: Record<string, unknown>) =>
+      editingId
+        ? api.put(`${endpointBase}/${editingId}`, body)
+        : api.post(endpointBase, body),
+    onSuccess: () => {
+      cancelForm();
+      refetchActive();
+    },
+    onError: (err: unknown) =>
+      alert(err instanceof Error ? err.message : "Failed to save"),
+  });
+
+  const handleSubmit = () => {
     if (!formName.trim()) {
       alert("Name is required");
       return;
     }
-    setSaving(true);
-    try {
-      const body: Record<string, unknown> = { name: formName.trim() };
-      if (activeTab === "categories") {
-        body.description = formDescription.trim() || undefined;
-      }
-      if (editingId) {
-        await api.put(`${endpointBase}/${editingId}`, body);
-      } else {
-        await api.post(endpointBase, body);
-      }
-      cancelForm();
-      fetchTab(activeTab);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to save");
-    } finally {
-      setSaving(false);
+    const body: Record<string, unknown> = { name: formName.trim() };
+    if (activeTab === "categories") {
+      body.description = formDescription.trim() || undefined;
     }
-  }
+    saveMutation.mutate(body);
+  };
 
-  async function handleDelete(id: string, name: string) {
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`${endpointBase}/${id}`),
+    onSuccess: () => {
+      refetchActive();
+    },
+    onError: (err: unknown) =>
+      alert(err instanceof Error ? err.message : "Failed to delete"),
+  });
+
+  const handleDelete = async (id: string, name: string) => {
     const label = TABS.find((t) => t.id === activeTab)?.label || "Item";
     if (
       !(await confirmDelete({
@@ -193,13 +193,8 @@ export default function AdminContentPage() {
       }))
     )
       return;
-    try {
-      await api.delete(`${endpointBase}/${id}`);
-      fetchTab(activeTab);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to delete");
-    }
-  }
+    deleteMutation.mutate(id);
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -211,7 +206,7 @@ export default function AdminContentPage() {
         action={
           <div className="flex items-center gap-2">
             <button
-              onClick={() => fetchTab(activeTab)}
+              onClick={refetchActive}
               className="btn-secondary text-xs py-2 flex items-center gap-1.5"
             >
               <IconRefresh size={14} /> Refresh
@@ -278,10 +273,10 @@ export default function AdminContentPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleSubmit}
-              disabled={saving || !formName.trim()}
+              disabled={saveMutation.isPending || !formName.trim()}
               className="btn-primary text-xs py-2 disabled:opacity-40"
             >
-              {saving ? "Saving..." : editingId ? "Update" : "Create"}
+              {saveMutation.isPending ? "Saving..." : editingId ? "Update" : "Create"}
             </button>
             <button onClick={cancelForm} className="btn-secondary text-xs py-2">
               Cancel

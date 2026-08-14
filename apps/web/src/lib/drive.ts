@@ -47,7 +47,27 @@ export function getDriveDownloadUrl(url: string): string {
   return `https://drive.google.com/uc?export=download&id=${id}`;
 }
 
-/** True when the URL is a full http(s) URL (external / cross-origin). */
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "0.0.0.0", "0"]);
+
+/**
+ * True when the URL is a genuinely external http(s) URL that must be fetched
+ * through the API's SSRF-protected download proxy (e.g. Google Drive).
+ *
+ * Local API uploads (e.g. `http://localhost:4000/uploads/...`) are served with
+ * CORS headers and are fetched directly — sending them through the proxy would
+ * be rejected by the SSRF guard, which refuses private/reserved hosts.
+ */
 export function isExternalUrl(url: string): boolean {
-  return /^https?:\/\//i.test(url);
+  if (!/^https?:\/\//i.test(url)) return false;
+  try {
+    const parsed = new URL(url);
+    // Local API uploads live under /uploads/ regardless of host — fetch them
+    // directly, never through the SSRF-guarded proxy.
+    if (parsed.pathname.startsWith("/uploads/")) return false;
+    const host = parsed.hostname.toLowerCase().replace(/\.$/, "");
+    if (LOCAL_HOSTS.has(host) || host.endsWith(".local")) return false;
+  } catch {
+    return true;
+  }
+  return true;
 }

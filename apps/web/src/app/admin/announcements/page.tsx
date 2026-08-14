@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { toast } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { IconSend, IconRefresh } from "@tabler/icons-react";
@@ -36,8 +38,6 @@ const ROLES = [
 
 export default function AnnouncementsPage() {
   usePageTitle("Announcements");
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -49,37 +49,49 @@ export default function AnnouncementsPage() {
   const [selectedBatchIds, setSelectedBatchIds] = useState<Set<string>>(
     new Set(),
   );
-  const [packages, setPackages] = useState<PackageOption[]>([]);
-  const [batches, setBatches] = useState<BatchOption[]>([]);
-  const [sending, setSending] = useState(false);
 
-  async function fetchAnnouncements() {
-    setLoading(true);
-    try {
-      const data = await api.get<{ announcements: Announcement[] }>(
-        "/api/admin/announcements",
-      );
-      setAnnouncements(data.announcements);
-    } catch {
-      // silent
-    } finally {
-      setLoading(false);
-    }
-  }
+  const announcementsQuery = useApiQuery<{ announcements: Announcement[] }>(
+    ["admin", "announcements"],
+    "/api/admin/announcements",
+  );
+  const announcements = announcementsQuery.data?.announcements ?? [];
+  const loading = announcementsQuery.isPending;
 
-  useEffect(() => {
-    fetchAnnouncements();
-    api
-      .get<{ packages: PackageOption[] }>("/api/admin/announcements/packages")
-      .then((data) => setPackages(data.packages))
-      .catch(() => {});
-    api
-      .get<{ batches: BatchOption[] }>("/api/admin/announcements/batches")
-      .then((data) => setBatches(data.batches))
-      .catch(() => {});
-  }, []);
+  const packagesQuery = useApiQuery<{ packages: PackageOption[] }>(
+    ["admin", "announcements", "packages"],
+    "/api/admin/announcements/packages",
+  );
+  const packages = packagesQuery.data?.packages ?? [];
 
-  async function handleSend() {
+  const batchesQuery = useApiQuery<{ batches: BatchOption[] }>(
+    ["admin", "announcements", "batches"],
+    "/api/admin/announcements/batches",
+  );
+  const batches = batchesQuery.data?.batches ?? [];
+
+  const sendMutation = useMutation({
+    mutationFn: (payload: {
+      title: string;
+      body: string;
+      targetType: string;
+      targetRole: string;
+      targetIds: string[];
+    }) => api.post<{ notifiedCount: number }>("/api/admin/announcements", payload),
+    onSuccess: (res) => {
+      toast.success(`Announcement sent to ${res.notifiedCount} user(s)`);
+      setTitle("");
+      setBody("");
+      setTargetType("ROLE");
+      setTargetRole("STUDENT");
+      setSelectedPackageIds(new Set());
+      setSelectedBatchIds(new Set());
+      setShowCreate(false);
+      void announcementsQuery.refetch();
+    },
+    onError: () => toast.error("Failed to send announcement"),
+  });
+
+  const handleSend = () => {
     if (!title.trim() || !body.trim()) return;
 
     let targetIds: string[] = [];
@@ -96,35 +108,14 @@ export default function AnnouncementsPage() {
       return;
     }
 
-    setSending(true);
-    try {
-      const res = await api.post<{ notifiedCount: number }>(
-        "/api/admin/announcements",
-        {
-          title: title.trim(),
-          body: body.trim(),
-          targetType,
-          targetRole,
-          targetIds,
-        },
-      );
-      toast.success(
-        `Announcement sent to ${res.notifiedCount} user(s)`,
-      );
-      setTitle("");
-      setBody("");
-      setTargetType("ROLE");
-      setTargetRole("STUDENT");
-      setSelectedPackageIds(new Set());
-      setSelectedBatchIds(new Set());
-      setShowCreate(false);
-      fetchAnnouncements();
-    } catch {
-      toast.error("Failed to send announcement");
-    } finally {
-      setSending(false);
-    }
-  }
+    sendMutation.mutate({
+      title: title.trim(),
+      body: body.trim(),
+      targetType,
+      targetRole,
+      targetIds,
+    });
+  };
 
   function togglePackage(id: string) {
     setSelectedPackageIds((prev) => {
@@ -311,10 +302,10 @@ export default function AnnouncementsPage() {
           <div className="flex items-center gap-3 pt-1">
             <button
               onClick={handleSend}
-              disabled={sending || !title.trim() || !body.trim()}
+              disabled={sendMutation.isPending || !title.trim() || !body.trim()}
               className="btn-primary text-xs py-2 disabled:opacity-40"
             >
-              {sending ? "Sending..." : "Send"}
+              {sendMutation.isPending ? "Sending..." : "Send"}
             </button>
             <button
               onClick={() => setShowCreate(false)}
@@ -328,7 +319,7 @@ export default function AnnouncementsPage() {
 
       <div className="glass-card p-5 border border-border/80">
         <button
-          onClick={fetchAnnouncements}
+          onClick={() => void announcementsQuery.refetch()}
           className="btn-secondary text-xs py-2 flex items-center gap-1.5 mb-4"
         >
           <IconRefresh size={14} /> Refresh

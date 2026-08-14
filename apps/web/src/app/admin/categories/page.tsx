@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { SUGGESTED_CATEGORIES } from "@/lib/suggestions";
@@ -27,31 +29,54 @@ type Category = {
 export default function AdminCategoriesPage() {
   usePageTitle("Categories");
   const confirmDelete = useConfirmDialog();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formName, setFormName] = useState("");
   const [formDescription, setFormDescription] = useState("");
-  const [saving, setSaving] = useState(false);
 
-  async function fetchCategories() {
-    setLoading(true);
-    try {
-      const data = await api.get<{ categories: Category[] }>(
-        "/api/admin/categories",
+  const categoriesQuery = useApiQuery<{ categories: Category[] }>(
+    ["admin", "categories"],
+    "/api/admin/categories",
+  );
+  const categories = categoriesQuery.data?.categories ?? [];
+  const loading = categoriesQuery.isPending;
+
+  const saveMutation = useMutation({
+    mutationFn: ({
+      id,
+      name,
+      description,
+    }: {
+      id: string | null;
+      name: string;
+      description?: string;
+      suggested?: boolean;
+    }) =>
+      id
+        ? api.put(`/api/admin/categories/${id}`, { name, description })
+        : api.post("/api/admin/categories", { name, description }),
+    onSuccess: (_, vars) => {
+      toast.success(
+        vars.suggested
+          ? `Category "${vars.name}" created`
+          : vars.id
+            ? "Category updated"
+            : "Category created",
       );
-      setCategories(data.categories);
-    } catch {
-      setCategories([]);
-    } finally {
-      setLoading(false);
-    }
-  }
+      cancelForm();
+      void categoriesQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/admin/categories/${id}`),
+    onSuccess: () => {
+      toast.success("Category deleted");
+      void categoriesQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   function openCreate() {
     setEditingId(null);
@@ -79,26 +104,11 @@ export default function AdminCategoriesPage() {
       toast.error("Category name is required");
       return;
     }
-    setSaving(true);
-    try {
-      const body = {
-        name: formName.trim(),
-        description: formDescription.trim() || undefined,
-      };
-      if (editingId) {
-        await api.put(`/api/admin/categories/${editingId}`, body);
-        toast.success("Category updated");
-      } else {
-        await api.post("/api/admin/categories", body);
-        toast.success("Category created");
-      }
-      cancelForm();
-      fetchCategories();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSaving(false);
-    }
+    saveMutation.mutate({
+      id: editingId,
+      name: formName.trim(),
+      description: formDescription.trim() || undefined,
+    });
   }
 
   async function handleDelete(id: string, name: string) {
@@ -109,27 +119,11 @@ export default function AdminCategoriesPage() {
       }))
     )
       return;
-    try {
-      await api.delete(`/api/admin/categories/${id}`);
-      toast.success("Category deleted");
-      fetchCategories();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
+    deleteMutation.mutate(id);
   }
 
-  async function createSuggested(name: string) {
-    setSaving(true);
-    try {
-      await api.post("/api/admin/categories", { name });
-      toast.success(`Category "${name}" created`);
-      cancelForm();
-      fetchCategories();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSaving(false);
-    }
+  function createSuggested(name: string) {
+    saveMutation.mutate({ id: null, name, suggested: true });
   }
 
   const existingNames = new Set(categories.map((c) => c.name.toLowerCase()));
@@ -148,7 +142,7 @@ export default function AdminCategoriesPage() {
         action={
           <div className="flex items-center gap-2">
             <button
-              onClick={fetchCategories}
+              onClick={() => void categoriesQuery.refetch()}
               className="btn-secondary text-xs py-2 flex items-center gap-1.5"
             >
               <IconRefresh size={14} /> Refresh
@@ -205,7 +199,7 @@ export default function AdminCategoriesPage() {
                       key={s}
                       type="button"
                       onClick={() => createSuggested(s)}
-                      disabled={saving}
+                      disabled={saveMutation.isPending}
                       className="text-[11px] px-2 py-1 rounded-full border border-border bg-muted/30 text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-primary/10 transition-colors disabled:opacity-40"
                     >
                       + {s}
@@ -218,10 +212,14 @@ export default function AdminCategoriesPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleSubmit}
-              disabled={saving || !formName.trim()}
+              disabled={saveMutation.isPending || !formName.trim()}
               className="btn-primary text-xs py-2 disabled:opacity-40"
             >
-              {saving ? "Saving..." : editingId ? "Update" : "Create"}
+              {saveMutation.isPending
+                ? "Saving..."
+                : editingId
+                  ? "Update"
+                  : "Create"}
             </button>
             <button onClick={cancelForm} className="btn-secondary text-xs py-2">
               Cancel

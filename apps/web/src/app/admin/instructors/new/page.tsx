@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { api } from "@/lib/api";
@@ -35,125 +36,12 @@ type FormState = {
   upiId: string;
 };
 
-export default function CreateInstructorPage() {
-  usePageTitle("Add Instructor");
-  const router = useRouter();
-  const [submitting, setSubmitting] = useState(false);
-  const [attempted, setAttempted] = useState(false);
-
-  const [form, setForm] = useState<FormState>({
-    name: "",
-    email: "",
-    password: "",
-    designation: "",
-    qualification: "",
-    experienceYears: "",
-    skills: "",
-    currentlyEmployed: false,
-    companyName: "",
-    availableTime: "",
-    phone: "",
-    bio: "",
-    address: "",
-    city: "",
-    state: "",
-    country: "",
-    languages: "",
-    linkedin: "",
-    github: "",
-    portfolio: "",
-    bankName: "",
-    bankAccountNumber: "",
-    bankIfscCode: "",
-    bankAccountHolderName: "",
-    upiId: "",
-  });
-
-  const update = <K extends keyof FormState>(field: K, value: FormState[K]) =>
-    setForm((p) => ({ ...p, [field]: value }));
-
-  const errors = useMemo(() => {
-    const e: Partial<Record<keyof FormState, string>> = {};
-    if (!form.name.trim()) e.name = "Name is required";
-    if (!form.email.trim()) e.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
-      e.email = "Invalid email format";
-    if (
-      form.experienceYears &&
-      (Number(form.experienceYears) < 0 || Number(form.experienceYears) > 70)
-    )
-      e.experienceYears = "Enter a valid number (0-70)";
-    return e;
-  }, [form]);
-
-  const isValid = Object.keys(errors).length === 0;
-
-  function buildPayload() {
-    const skills = form.skills
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const languages = form.languages
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const socialLinks: Record<string, string> = {};
-    if (form.linkedin.trim()) socialLinks.linkedin = form.linkedin.trim();
-    if (form.github.trim()) socialLinks.github = form.github.trim();
-    if (form.portfolio.trim()) socialLinks.portfolio = form.portfolio.trim();
-
-    return {
-      name: form.name.trim(),
-      email: form.email.trim(),
-      password: form.password || undefined,
-      designation: form.designation.trim() || undefined,
-      qualification: form.qualification.trim() || undefined,
-      experienceYears: form.experienceYears ? Number(form.experienceYears) : undefined,
-      skills: skills.length ? skills : undefined,
-      currentlyEmployed: form.currentlyEmployed || undefined,
-      companyName: form.companyName.trim() || undefined,
-      availableTime: form.availableTime.trim() || undefined,
-      phone: form.phone.trim() || undefined,
-      bio: form.bio.trim() || undefined,
-      address: form.address.trim() || undefined,
-      city: form.city.trim() || undefined,
-      state: form.state.trim() || undefined,
-      country: form.country.trim() || undefined,
-      languages: languages.length ? languages : undefined,
-      socialLinks: Object.keys(socialLinks).length ? socialLinks : undefined,
-      bankName: form.bankName.trim() || undefined,
-      bankAccountNumber: form.bankAccountNumber.trim() || undefined,
-      bankIfscCode: form.bankIfscCode.trim() || undefined,
-      bankAccountHolderName: form.bankAccountHolderName.trim() || undefined,
-      upiId: form.upiId.trim() || undefined,
-    };
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAttempted(true);
-
-    if (!isValid) {
-      const firstError = Object.values(errors)[0];
-      toast.error(firstError ?? "Please fix the highlighted fields");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const result = await api.post<{ id: string }>(
-        "/api/admin/instructors",
-        buildPayload(),
-      );
-      toast.success("Instructor created successfully!");
-      router.push(`/admin/instructors/${result.id}`);
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
+function makeFormParts(
+  form: FormState,
+  update: <K extends keyof FormState>(field: K, value: FormState[K]) => void,
+  errors: Partial<Record<keyof FormState, string>>,
+  attempted: boolean,
+) {
   const showError = (field: keyof FormState) =>
     attempted && errors[field] ? (
       <p className="mt-1 text-xs text-danger">{errors[field]}</p>
@@ -256,6 +144,132 @@ export default function CreateInstructorPage() {
       </label>
     );
   }
+
+  return { Field, TagField, CardSection, CheckboxField };
+}
+
+export default function CreateInstructorPage() {
+  usePageTitle("Add Instructor");
+  const router = useRouter();
+  const [attempted, setAttempted] = useState(false);
+
+  const [form, setForm] = useState<FormState>({
+    name: "",
+    email: "",
+    password: "",
+    designation: "",
+    qualification: "",
+    experienceYears: "",
+    skills: "",
+    currentlyEmployed: false,
+    companyName: "",
+    availableTime: "",
+    phone: "",
+    bio: "",
+    address: "",
+    city: "",
+    state: "",
+    country: "",
+    languages: "",
+    linkedin: "",
+    github: "",
+    portfolio: "",
+    bankName: "",
+    bankAccountNumber: "",
+    bankIfscCode: "",
+    bankAccountHolderName: "",
+    upiId: "",
+  });
+
+  const update = <K extends keyof FormState>(field: K, value: FormState[K]) =>
+    setForm((p) => ({ ...p, [field]: value }));
+
+  const errors = useMemo(() => {
+    const e: Partial<Record<keyof FormState, string>> = {};
+    if (!form.name.trim()) e.name = "Name is required";
+    if (!form.email.trim()) e.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
+      e.email = "Invalid email format";
+    if (
+      form.experienceYears &&
+      (Number(form.experienceYears) < 0 || Number(form.experienceYears) > 70)
+    )
+      e.experienceYears = "Enter a valid number (0-70)";
+    return e;
+  }, [form]);
+
+  const isValid = Object.keys(errors).length === 0;
+
+  function buildPayload() {
+    const skills = form.skills
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const languages = form.languages
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const socialLinks: Record<string, string> = {};
+    if (form.linkedin.trim()) socialLinks.linkedin = form.linkedin.trim();
+    if (form.github.trim()) socialLinks.github = form.github.trim();
+    if (form.portfolio.trim()) socialLinks.portfolio = form.portfolio.trim();
+
+    return {
+      name: form.name.trim(),
+      email: form.email.trim(),
+      password: form.password || undefined,
+      designation: form.designation.trim() || undefined,
+      qualification: form.qualification.trim() || undefined,
+      experienceYears: form.experienceYears ? Number(form.experienceYears) : undefined,
+      skills: skills.length ? skills : undefined,
+      currentlyEmployed: form.currentlyEmployed || undefined,
+      companyName: form.companyName.trim() || undefined,
+      availableTime: form.availableTime.trim() || undefined,
+      phone: form.phone.trim() || undefined,
+      bio: form.bio.trim() || undefined,
+      address: form.address.trim() || undefined,
+      city: form.city.trim() || undefined,
+      state: form.state.trim() || undefined,
+      country: form.country.trim() || undefined,
+      languages: languages.length ? languages : undefined,
+      socialLinks: Object.keys(socialLinks).length ? socialLinks : undefined,
+      bankName: form.bankName.trim() || undefined,
+      bankAccountNumber: form.bankAccountNumber.trim() || undefined,
+      bankIfscCode: form.bankIfscCode.trim() || undefined,
+      bankAccountHolderName: form.bankAccountHolderName.trim() || undefined,
+      upiId: form.upiId.trim() || undefined,
+    };
+  }
+
+  const createInstructorMutation = useMutation({
+    mutationFn: (payload: ReturnType<typeof buildPayload>) =>
+      api.post<{ id: string }>("/api/admin/instructors", payload),
+    onSuccess: (result) => {
+      toast.success("Instructor created successfully!");
+      router.push(`/admin/instructors/${result.id}`);
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAttempted(true);
+
+    if (!isValid) {
+      const firstError = Object.values(errors)[0];
+      toast.error(firstError ?? "Please fix the highlighted fields");
+      return;
+    }
+
+    createInstructorMutation.mutate(buildPayload());
+  };
+
+  const { Field, TagField, CardSection, CheckboxField } = makeFormParts(
+    form,
+    update,
+    errors,
+    attempted,
+  );
 
   return (
     <div className="max-w-4xl space-y-6">
@@ -436,9 +450,9 @@ export default function CreateInstructorPage() {
           <button
             type="submit"
             className="btn-primary"
-            disabled={submitting || !isValid}
+            disabled={createInstructorMutation.isPending || !isValid}
           >
-            {submitting ? "Creating..." : "Create Instructor"}
+            {createInstructorMutation.isPending ? "Creating..." : "Create Instructor"}
           </button>
         </div>
       </form>

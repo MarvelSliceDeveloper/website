@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import {
@@ -79,30 +80,72 @@ export default function QuizOverdueView({
   quizzes,
   navigate: _navigate,
 }: QuizOverdueViewProps) {
+  const queryClient = useQueryClient();
   const [subView, setSubView] = useState<SubView>({ type: "LIST" });
   const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [selectedAnswers, setSelectedAnswers] = useState<
     Record<string, string>
   >({});
-  const [locallySubmittedIds, setLocallySubmittedIds] = useState<string[]>([]);
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [listFilter, setListFilter] = useState<"all" | "pending" | "completed">(
     "all",
   );
 
-  const overdueItems = quizzes.filter(
-    (q) => q.status === "PENDING" && !locallySubmittedIds.includes(q.id),
-  );
+  const overdueItems = quizzes.filter((q) => q.status === "PENDING");
+  const completedItems = quizzes.filter((q) => q.status === "SUBMITTED");
 
-  const completedItems = [
-    ...quizzes.filter((q) => q.status === "SUBMITTED"),
-    ...quizzes
-      .filter(
-        (q) => q.status === "PENDING" && locallySubmittedIds.includes(q.id),
-      )
-      .map((q) => ({ ...q, status: "SUBMITTED" as const })),
-  ];
+  // MCQ submission mutation — refreshes the parent's overdue list after
+  // success so the quiz moves to Completed via real server data.
+  const submitMutation = useMutation({
+    mutationFn: ({
+      assignmentId,
+      answers,
+    }: {
+      assignmentId: string;
+      answers: Array<{ questionId: string; selectedOptionId: string }>;
+    }) =>
+      api.post<{
+        attemptId: string;
+        score: number;
+        total: number;
+        percentage: number;
+        answers: Array<{
+          questionId: string;
+          selectedOptionId: string;
+          isCorrect: boolean;
+        }>;
+      }>(`/api/courses/quizzes/${assignmentId}/submit`, { answers }),
+    onSuccess: (res) => {
+      if (subView.type !== "QUIZ") return;
+      const { data } = subView;
+      const result: SubmissionResult = {
+        id: res.attemptId,
+        status: "GRADED",
+        totalScore: res.score,
+        grade: null,
+        feedback: null,
+        assignment: {
+          id: data.id,
+          title: data.title,
+          maxPoints: data.maxPoints,
+          questions: data.questions.map((q) => ({
+            id: q.id,
+            questionText: q.questionText,
+            marks: q.marks,
+            options: q.options.map((o) => ({
+              id: o.id,
+              optionText: o.optionText,
+              isCorrect: false,
+            })),
+          })),
+        },
+        questionResponses: res.answers,
+      };
+      setSubView({ type: "RESULT", data: result });
+      void queryClient.invalidateQueries({ queryKey: ["student", "overdue"] });
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   async function handleStartQuiz(quizId: string) {
     try {
@@ -169,7 +212,7 @@ export default function QuizOverdueView({
     }
   }
 
-  async function handleSubmitMcq() {
+  function handleSubmitMcq() {
     if (subView.type !== "QUIZ") return;
 
     const { assignmentId, data } = subView;
@@ -188,51 +231,7 @@ export default function QuizOverdueView({
       }),
     );
 
-    try {
-      setSubmitting(true);
-
-      const res = await api.post<{
-        attemptId: string;
-        score: number;
-        total: number;
-        percentage: number;
-        answers: Array<{
-          questionId: string;
-          selectedOptionId: string;
-          isCorrect: boolean;
-        }>;
-      }>(`/api/courses/quizzes/${assignmentId}/submit`, { answers });
-
-      const result: SubmissionResult = {
-        id: res.attemptId,
-        status: "GRADED",
-        totalScore: res.score,
-        grade: null,
-        feedback: null,
-        assignment: {
-          id: data.id,
-          title: data.title,
-          maxPoints: data.maxPoints,
-          questions: data.questions.map((q) => ({
-            id: q.id,
-            questionText: q.questionText,
-            marks: q.marks,
-            options: q.options.map((o) => ({
-              id: o.id,
-              optionText: o.optionText,
-              isCorrect: false,
-            })),
-          })),
-        },
-        questionResponses: res.answers,
-      };
-      setLocallySubmittedIds((prev) => [...prev, assignmentId]);
-      setSubView({ type: "RESULT", data: result });
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSubmitting(false);
-    }
+    submitMutation.mutate({ assignmentId, answers });
   }
 
   // ── QUIZ TAKING SCREEN ──
@@ -405,10 +404,10 @@ export default function QuizOverdueView({
           ) : (
             <button
               onClick={handleSubmitMcq}
-              disabled={submitting || answeredCount < totalCount}
+              disabled={submitMutation.isPending || answeredCount < totalCount}
               className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-primary text-white shadow-lg shadow-violet-500/20 hover:shadow-xl hover:shadow-violet-500/30 hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0 transition-all duration-200"
             >
-              {submitting ? (
+              {submitMutation.isPending ? (
                 <>
                   <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />{" "}
                   Submitting...

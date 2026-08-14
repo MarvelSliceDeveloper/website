@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import StatCard from "@/components/admin/StatCard";
 import { ChartSkeleton } from "@/components/admin/LoadingSkeleton";
-import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   IconChartBar,
@@ -49,27 +48,16 @@ const COLORS = {
 
 export default function InstructorAnalyticsPage() {
   usePageTitle("Instructor Analytics");
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
 
   // Fetches analytics data from /api/instructor/analytics.
   // Returns: completionRates, activeRetention, videoDropOff, quizScoreAverages
   // All scoped to the instructor's assigned batches/courses.
-  useEffect(() => {
-    async function loadAnalytics() {
-      try {
-        const res = await api.get<AnalyticsData>(
-          "/api/instructor/analytics",
-        );
-        setData(res);
-      } catch (err) {
-        console.error("Failed to fetch analytics data:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadAnalytics();
-  }, []);
+  const analyticsQuery = useApiQuery<AnalyticsData>(
+    ["instructor", "analytics"],
+    "/api/instructor/analytics",
+  );
+  const data = analyticsQuery.data ?? null;
+  const loading = analyticsQuery.isPending;
 
   const avgCompletion = data?.completionRates?.length
     ? Math.round(

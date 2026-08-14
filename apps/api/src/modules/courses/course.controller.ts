@@ -151,9 +151,10 @@ export const courseController = {
   // Lists sessions for a course
   async listSessions(req: AuthRequest, res: Response) {
     try {
+      const courseId = await courseService.resolveCourseId(req.params.courseId);
       const sessions = await prisma.liveSession.findMany({
         where: {
-          batch: { courseId: req.params.courseId },
+          batch: { courseId },
         },
         include: {
           batch: { select: { id: true, name: true } },
@@ -172,9 +173,10 @@ export const courseController = {
   // Lists recordings for a course
   async listRecordings(req: AuthRequest, res: Response) {
     try {
+      const courseId = await courseService.resolveCourseId(req.params.courseId);
       const recordings = await prisma.recording.findMany({
         where: {
-          session: { batch: { courseId: req.params.courseId } },
+          session: { batch: { courseId } },
         },
         include: {
           session: {

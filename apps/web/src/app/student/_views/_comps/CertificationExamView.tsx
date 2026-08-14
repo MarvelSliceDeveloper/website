@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import {
@@ -11,6 +12,7 @@ import {
   IconLoader2,
   IconArrowLeft,
   IconAlertTriangle,
+  IconLock,
 } from "@tabler/icons-react";
 
 interface CertQuestion {
@@ -45,6 +47,13 @@ interface CertData {
   module: { id: string; title: string } | null;
   quiz: CertQuiz | null;
   attempt: CertAttempt | null;
+  eligible?: boolean;
+  requirements?: {
+    totalQuizzes: number;
+    completedQuizzes: number;
+    totalAssignments: number;
+    completedAssignments: number;
+  };
 }
 
 interface CertificationExamViewProps {
@@ -52,7 +61,7 @@ interface CertificationExamViewProps {
   onBack: () => void;
 }
 
-type Phase = "loading" | "intro" | "active" | "results" | "error";
+type Phase = "loading" | "intro" | "active" | "results" | "error" | "locked";
 
 export default function CertificationExamView({
   courseId,
@@ -61,7 +70,6 @@ export default function CertificationExamView({
   const [phase, setPhase] = useState<Phase>("loading");
   const [data, setData] = useState<CertData | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<CertAttempt | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -82,6 +90,8 @@ export default function CertificationExamView({
       if (res.attempt) {
         setResult(res.attempt);
         setPhase("results");
+      } else if (res.eligible === false) {
+        setPhase("locked");
       } else {
         setPhase("intro");
       }
@@ -94,36 +104,30 @@ export default function CertificationExamView({
     fetchData();
   }, [fetchData]);
 
-  const handleSubmit = async (force = false) => {
-    if (submitting || !data?.quiz) return;
-    if (timerRef.current) clearInterval(timerRef.current);
-
-    const unanswered = data.quiz.questions.filter((q) => !answers[q.id]);
-    if (!force && unanswered.length > 0) {
-      toast.error(
-        `Please answer all ${unanswered.length} remaining question(s)`,
-      );
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const submissionAnswers = data.quiz.questions.map((q) => ({
-        questionId: q.id,
-        selectedOptionId: answers[q.id],
-      }));
-
-      const res = await api.post<{
+  // Exam submission mutation — writes the attempt, then shows the result.
+  const submitMutation = useMutation({
+    mutationFn: ({
+      quizId,
+      submissionAnswers,
+    }: {
+      quizId: string;
+      submissionAnswers: Array<{
+        questionId: string;
+        selectedOptionId: string;
+      }>;
+      force: boolean;
+    }) =>
+      api.post<{
         attemptId: string;
         score: number;
         total: number;
         percentage: number;
         isPassed: boolean;
         passingScore: number;
-      }>(`/api/courses/quizzes/${data.quiz.id}/submit`, {
+      }>(`/api/courses/quizzes/${quizId}/submit`, {
         answers: submissionAnswers,
-      });
-
+      }),
+    onSuccess: (res, vars) => {
       const attemptResult: CertAttempt = {
         id: res.attemptId,
         score: res.score,
@@ -137,14 +141,35 @@ export default function CertificationExamView({
 
       if (res.isPassed) {
         toast.success("Congratulations! You passed the certification exam!");
-      } else if (force) {
+      } else if (vars.force) {
         toast.error("Time is up! Your exam has been auto-submitted.");
       }
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSubmitting(false);
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSubmit = (force = false) => {
+    if (submitMutation.isPending || !data?.quiz) return;
+    if (timerRef.current) clearInterval(timerRef.current);
+
+    const unanswered = data.quiz.questions.filter((q) => !answers[q.id]);
+    if (!force && unanswered.length > 0) {
+      toast.error(
+        `Please answer all ${unanswered.length} remaining question(s)`,
+      );
+      return;
     }
+
+    const submissionAnswers = data.quiz.questions.map((q) => ({
+      questionId: q.id,
+      selectedOptionId: answers[q.id],
+    }));
+
+    submitMutation.mutate({
+      quizId: data.quiz.id,
+      submissionAnswers,
+      force,
+    });
   };
 
   const handleAnswerSelect = (questionId: string, optionId: string) => {
@@ -218,6 +243,55 @@ export default function CertificationExamView({
           <IconArrowLeft className="h-4 w-4" />
           Back to Course
         </button>
+      </div>
+    );
+  }
+
+  if (phase === "locked") {
+    const reqs = data.requirements;
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors"
+        >
+          <IconArrowLeft className="h-4 w-4" />
+          Back to Course
+        </button>
+
+        <div className="glass-card p-8 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/40 mx-auto mb-6">
+            <IconLock className="h-8 w-8 text-muted" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-2">
+            Certification Exam Locked
+          </h2>
+          <p className="text-sm text-muted mb-8">
+            Complete all quizzes and assignments in this course before you can
+            attempt the certification exam.
+          </p>
+
+          {reqs && (
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="rounded-lg bg-muted/30 p-4">
+                <p className="text-2xl font-bold text-foreground">
+                  {reqs.completedQuizzes}/{reqs.totalQuizzes}
+                </p>
+                <p className="text-xs text-muted">Quizzes Completed</p>
+              </div>
+              <div className="rounded-lg bg-muted/30 p-4">
+                <p className="text-2xl font-bold text-foreground">
+                  {reqs.completedAssignments}/{reqs.totalAssignments}
+                </p>
+                <p className="text-xs text-muted">Assignments Completed</p>
+              </div>
+            </div>
+          )}
+
+          <button onClick={onBack} className="btn-primary px-8 py-3 text-base font-semibold">
+            Back to Course
+          </button>
+        </div>
       </div>
     );
   }
@@ -430,15 +504,15 @@ export default function CertificationExamView({
         <div className="flex justify-end mt-6 pt-4 border-t border-border/50">
           <button
             onClick={() => handleSubmit()}
-            disabled={submitting}
+            disabled={submitMutation.isPending}
             className="btn-primary inline-flex items-center gap-2 px-6"
           >
-            {submitting ? (
+            {submitMutation.isPending ? (
               <IconLoader2 className="h-4 w-4 animate-spin" />
             ) : (
               <IconAward className="h-4 w-4" />
             )}
-            {submitting ? "Submitting..." : "Submit Exam"}
+            {submitMutation.isPending ? "Submitting..." : "Submit Exam"}
           </button>
         </div>
       </div>

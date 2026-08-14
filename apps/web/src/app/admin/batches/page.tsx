@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { IconUsersGroup } from "@tabler/icons-react";
@@ -67,44 +69,38 @@ function BatchesPageContent() {
   const statusFilter = searchParams.get("status") || "";
   const confirmDelete = useConfirmDialog();
 
-  const [batches, setBatches] = useState<Batch[]>([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
 
-  const fetchBatches = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params: Record<string, string> = {
-        page: String(page),
-        limit: String(PAGE_SIZE),
-      };
-      if (statusFilter) params.status = statusFilter;
-      if (search) params.search = search;
-
-      const data = await api.get<PaginatedResponse<Batch>>(
-        "/api/admin/batches",
-        params,
-      );
-      setBatches(data.batches);
-      setTotal(data.total);
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-      setBatches([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [statusFilter, search, page]);
-
-  useEffect(() => {
-    fetchBatches();
-  }, [fetchBatches]);
+  // List query keyed on the active filter/search/page so any change refetches.
+  const batchesQuery = useApiQuery<PaginatedResponse<Batch>>(
+    ["admin", "batches", statusFilter || "all", search || "all", page],
+    "/api/admin/batches",
+    {
+      page: String(page),
+      limit: String(PAGE_SIZE),
+      ...(statusFilter ? { status: statusFilter } : {}),
+      ...(search ? { search } : {}),
+    },
+  );
+  const batches = batchesQuery.data?.batches ?? [];
+  const total = batchesQuery.data?.total ?? 0;
+  const loading = batchesQuery.isPending;
 
   // Reset to page 1 whenever the filter or search term changes
   useEffect(() => {
     setPage(1);
   }, [statusFilter, search]);
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/admin/batches/${id}`),
+    onSuccess: (_data, id) => {
+      const name = batches.find((b) => b.id === id)?.name ?? "";
+      toast.success(`Batch "${name}" deleted`);
+      void batchesQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   const handleDelete = async (id: string, name: string) => {
     if (
@@ -114,13 +110,7 @@ function BatchesPageContent() {
       }))
     )
       return;
-    try {
-      await api.delete(`/api/admin/batches/${id}`);
-      toast.success(`Batch "${name}" deleted`);
-      fetchBatches();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
+    deleteMutation.mutate(id);
   };
 
   const columns: DataTableColumn<Batch>[] = [

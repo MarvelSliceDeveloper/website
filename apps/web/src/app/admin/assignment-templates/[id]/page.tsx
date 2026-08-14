@@ -2,11 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
 import { IconArrowLeft, IconTrash } from "@tabler/icons-react";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
+
+type TemplateDetail = {
+  template: {
+    title: string;
+    description: string;
+    type: string;
+    maxPoints: number;
+    category: string | null;
+  };
+};
 
 export default function AssignmentTemplateEditorPage() {
   usePageTitle("Assignment Template Details");
@@ -20,64 +32,78 @@ export default function AssignmentTemplateEditorPage() {
   const [type, setType] = useState("QUIZ");
   const [maxPoints, setMaxPoints] = useState(100);
   const [category, setCategory] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(!isNew);
   const confirmDelete = useConfirmDialog();
+  const queryClient = useQueryClient();
+
+  const detailQuery = useApiQuery<TemplateDetail>(
+    ["admin", "assignment-templates", id],
+    isNew ? "" : `/api/admin/assignment-templates/${id}`,
+    undefined,
+    { enabled: !isNew },
+  );
+  const loading = detailQuery.isLoading;
 
   useEffect(() => {
-    if (!isNew) {
-      api
-        .get<{
-          template: {
-            title: string;
-            description: string;
-            type: string;
-            maxPoints: number;
-            category: string | null;
-          };
-        }>(`/api/admin/assignment-templates/${id}`)
-        .then((data) => {
-          const t = data.template;
-          setTitle(t.title);
-          setDescription(t.description);
-          setType(t.type);
-          setMaxPoints(t.maxPoints);
-          setCategory(t.category || "");
-        })
-        .catch(() => toast.error("Failed to load template"))
-        .finally(() => setLoading(false));
+    if (detailQuery.data) {
+      const t = detailQuery.data.template;
+      setTitle(t.title);
+      setDescription(t.description);
+      setType(t.type);
+      setMaxPoints(t.maxPoints);
+      setCategory(t.category || "");
     }
-  }, [id, isNew]);
+  }, [detailQuery.data]);
 
-  async function handleSave() {
-    if (!title.trim() || !description.trim())
-      return toast.error("Title and description are required");
-    setSaving(true);
-    try {
-      const payload = {
-        title: title.trim(),
-        description: description.trim(),
-        type,
-        maxPoints,
-        category: category.trim() || undefined,
-      };
-
-      if (isNew) {
-        await api.post("/api/admin/assignment-templates", payload);
-        toast.success("Assignment template created");
-      } else {
-        await api.put(`/api/admin/assignment-templates/${id}`, payload);
-        toast.success("Assignment template updated");
-      }
+  const saveMutation = useMutation({
+    mutationFn: (payload: {
+      title: string;
+      description: string;
+      type: string;
+      maxPoints: number;
+      category?: string;
+    }) =>
+      isNew
+        ? api.post("/api/admin/assignment-templates", payload)
+        : api.put(`/api/admin/assignment-templates/${id}`, payload),
+    onSuccess: () => {
+      toast.success(
+        isNew ? "Assignment template created" : "Assignment template updated",
+      );
+      void queryClient.invalidateQueries({
+        queryKey: ["admin", "assignment-templates"],
+      });
       router.push("/admin/assignment-templates");
-    } catch {
-      toast.error("Failed to save");
-    } finally {
-      setSaving(false);
-    }
-  }
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  async function handleDelete() {
+  const deleteMutation = useMutation({
+    mutationFn: () => api.delete(`/api/admin/assignment-templates/${id}`),
+    onSuccess: () => {
+      toast.success("Deleted");
+      void queryClient.invalidateQueries({
+        queryKey: ["admin", "assignment-templates"],
+      });
+      router.push("/admin/assignment-templates");
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSave = () => {
+    if (!title.trim() || !description.trim()) {
+      toast.error("Title and description are required");
+      return;
+    }
+    saveMutation.mutate({
+      title: title.trim(),
+      description: description.trim(),
+      type,
+      maxPoints,
+      category: category.trim() || undefined,
+    });
+  };
+
+  const handleDelete = async () => {
     if (
       !(await confirmDelete({
         title: "Delete Template",
@@ -85,14 +111,8 @@ export default function AssignmentTemplateEditorPage() {
       }))
     )
       return;
-    try {
-      await api.delete(`/api/admin/assignment-templates/${id}`);
-      toast.success("Deleted");
-      router.push("/admin/assignment-templates");
-    } catch {
-      toast.error("Failed to delete");
-    }
-  }
+    deleteMutation.mutate();
+  };
 
   if (loading) {
     return (
@@ -174,10 +194,14 @@ export default function AssignmentTemplateEditorPage() {
       <div className="flex items-center gap-2">
         <button
           onClick={handleSave}
-          disabled={saving}
+          disabled={saveMutation.isPending}
           className="btn-primary text-sm py-2.5 px-6 disabled:opacity-40"
         >
-          {saving ? "Saving..." : isNew ? "Add Template" : "Save Changes"}
+          {saveMutation.isPending
+            ? "Saving..."
+            : isNew
+              ? "Add Template"
+              : "Save Changes"}
         </button>
         <button
           onClick={() => router.push("/admin/assignment-templates")}

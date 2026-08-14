@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState, type ComponentType } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -59,77 +61,70 @@ const statusIcons: Record<
 export default function AdminEnrollmentsPage() {
   usePageTitle("Enrollments");
   const confirmDelete = useConfirmDialog();
-  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("PENDING");
 
   // Approve modal state
   const [approveModal, setApproveModal] = useState<Enrollment | null>(null);
-  const [allBatches, setAllBatches] = useState<Batch[]>([]);
-  const [loadingBatches, setLoadingBatches] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState("");
-  const [processing, setProcessing] = useState(false);
 
-  const fetchEnrollments = async () => {
-    setLoading(true);
-    try {
-      const data = await api.get<{ items: Enrollment[] }>(
-        `/api/admin/enrollments?status=${statusFilter}`,
-      );
-      setEnrollments(data.items || []);
-    } catch {
-      setEnrollments([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchEnrollments();
-  }, [statusFilter]);
+  // List query keyed on the active status filter so switching tabs refetches.
+  const enrollmentsQuery = useApiQuery<{ items: Enrollment[] }>(
+    ["admin", "enrollments", statusFilter],
+    `/api/admin/enrollments?status=${statusFilter}`,
+  );
+  const enrollments = enrollmentsQuery.data?.items ?? [];
+  const loading = enrollmentsQuery.isPending;
 
   // Fetch all batches when approve modal opens (so any batch can be assigned,
   // including ones not offered on the payment page)
-  useEffect(() => {
-    if (!approveModal) return;
-    setLoadingBatches(true);
-    setSelectedBatchId("");
+  const batchesQuery = useApiQuery<{ batches: Batch[] }>(
+    ["admin", "batches", "all"],
+    "/api/admin/batches?limit=100",
+    undefined,
+    { enabled: !!approveModal },
+  );
+  const allBatches = batchesQuery.data?.batches ?? [];
+  const loadingBatches = batchesQuery.isPending;
 
-    (async () => {
-      try {
-        const data = await api.get<{ batches: Batch[] }>(
-          `/api/admin/batches?limit=100`,
-        );
-        setAllBatches(data.batches || []);
-      } catch {
-        setAllBatches([]);
-      } finally {
-        setLoadingBatches(false);
-      }
-    })();
+  useEffect(() => {
+    if (approveModal) setSelectedBatchId("");
   }, [approveModal]);
 
-  const handleApprove = async () => {
+  const approveMutation = useMutation({
+    mutationFn: ({
+      id,
+      batchId,
+    }: {
+      id: string;
+      batchId: string;
+    }) =>
+      api.patch(`/api/admin/enrollments/${id}/approve`, { batchId }),
+    onSuccess: () => {
+      toast.success("Enrollment approved and batch assigned");
+      setApproveModal(null);
+      void enrollmentsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleApprove = () => {
     if (!approveModal) return;
     if (!selectedBatchId) {
       toast.error("Select a batch to assign");
       return;
     }
-
-    setProcessing(true);
-    try {
-      await api.patch(`/api/admin/enrollments/${approveModal.id}/approve`, {
-        batchId: selectedBatchId,
-      });
-      toast.success("Enrollment approved and batch assigned");
-      setApproveModal(null);
-      fetchEnrollments();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setProcessing(false);
-    }
+    approveMutation.mutate({ id: approveModal.id, batchId: selectedBatchId });
   };
+
+  const rejectMutation = useMutation({
+    mutationFn: (id: string) =>
+      api.patch(`/api/admin/enrollments/${id}/reject`),
+    onSuccess: () => {
+      toast.success("Enrollment rejected");
+      void enrollmentsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   const handleReject = async (id: string) => {
     if (
@@ -139,13 +134,7 @@ export default function AdminEnrollmentsPage() {
       }))
     )
       return;
-    try {
-      await api.patch(`/api/admin/enrollments/${id}/reject`);
-      toast.success("Enrollment rejected");
-      fetchEnrollments();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
+    rejectMutation.mutate(id);
   };
 
   return (
@@ -292,16 +281,16 @@ export default function AdminEnrollmentsPage() {
               <button
                 onClick={() => setApproveModal(null)}
                 className="btn-secondary text-sm"
-                disabled={processing}
+                disabled={approveMutation.isPending}
               >
                 Cancel
               </button>
               <button
                 onClick={handleApprove}
-                disabled={processing}
+                disabled={approveMutation.isPending}
                 className="btn-primary text-sm flex items-center gap-1.5"
               >
-                {processing ? (
+                {approveMutation.isPending ? (
                   <>
                     <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
                     Approving...

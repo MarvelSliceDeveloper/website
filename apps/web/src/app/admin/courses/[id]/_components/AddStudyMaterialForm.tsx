@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { withLoadingToast } from "@/lib/toast";
+import { toast, getErrorMessage, withLoadingToast } from "@/lib/toast";
 import { FormModal } from "@/components/admin/FormModal";
 import { IconPlus } from "@tabler/icons-react";
 import type { Lesson } from "./types";
@@ -37,8 +38,32 @@ export default function AddStudyMaterialForm({
   onCancel,
 }: AddStudyMaterialFormProps) {
   const [selectedLessonId, setSelectedLessonId] = useState<string>("");
-  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+
+  const uploadMutation = useMutation({
+    mutationFn: async ({
+      file,
+      lessonId,
+    }: {
+      file: File;
+      lessonId: string;
+    }) => {
+      const uploadData = new FormData();
+      uploadData.append("resource", file);
+      await withLoadingToast(
+        api.post(
+          `/api/admin/courses/${courseId}/lessons/${lessonId}/resources`,
+          uploadData,
+        ),
+        {
+          loading: "Uploading study material...",
+          success: () => "Study material uploaded successfully",
+        },
+      );
+    },
+    onSuccess: () => onSuccess(),
+    onError: (err: unknown) => setError(getErrorMessage(err)),
+  });
 
   useEffect(() => {
     if (lessons.length > 0) {
@@ -46,7 +71,7 @@ export default function AddStudyMaterialForm({
     }
   }, [lessons]);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -73,27 +98,14 @@ export default function AddStudyMaterialForm({
       return;
     }
 
-    setUploading(true);
-    try {
-      const uploadData = new FormData();
-      uploadData.append("resource", file);
-      await withLoadingToast(
-        api.post(
-          `/api/admin/courses/${courseId}/lessons/${targetLessonId}/resources`,
-          uploadData,
-        ),
-        {
-          loading: "Uploading study material...",
-          success: () => "Study material uploaded successfully",
+    uploadMutation.mutate(
+      { file, lessonId: targetLessonId },
+      {
+        onSettled: () => {
+          e.target.value = "";
         },
-      );
-      e.target.value = "";
-      onSuccess();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setUploading(false);
-    }
+      },
+    );
   };
 
   const footer = (
@@ -143,12 +155,14 @@ export default function AddStudyMaterialForm({
               <label className="flex flex-col items-center justify-center gap-2 w-full p-6 border-2 border-dashed border-border hover:border-emerald-500/50 rounded-xl cursor-pointer hover:bg-emerald-500/5 transition-all text-xs text-emerald-600">
                 <IconPlus size={20} />
                 <span className="font-medium">
-                  {uploading ? "Uploading..." : "Click to select and upload file"}
+                  {uploadMutation.isPending
+                    ? "Uploading..."
+                    : "Click to select and upload file"}
                 </span>
                 <input
                   type="file"
                   onChange={handleFileUpload}
-                  disabled={uploading}
+                  disabled={uploadMutation.isPending}
                   className="hidden"
                   accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.webp"
                 />

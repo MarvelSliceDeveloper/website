@@ -1,48 +1,56 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { IconDatabase, IconDownload, IconUpload, IconTrash, IconRefresh, IconAlertTriangle } from "@tabler/icons-react";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type Backup = { filename: string; size: number; createdAt: string };
 
 export default function BackupPage() {
   usePageTitle("Backup & Restore");
-  const [backups, setBackups] = useState<Backup[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [restoring, setRestoring] = useState(false);
   const confirmDelete = useConfirmDialog();
 
-  const fetchBackups = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get<{ backups: Backup[] }>("/api/admin/backup/list");
-      setBackups(res.backups || []);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const backupsQuery = useApiQuery<{ backups: Backup[] }>(
+    ["admin", "backup", "list"],
+    "/api/admin/backup/list",
+  );
+  const backups = backupsQuery.data?.backups ?? [];
+  const loading = backupsQuery.isPending;
 
-  useEffect(() => { fetchBackups(); }, []);
-
-  const handleCreate = async () => {
-    setCreating(true);
-    try {
-      const res = await api.post<{ filename: string; size: number }>("/api/admin/backup", {});
+  const createMutation = useMutation({
+    mutationFn: () =>
+      api.post<{ filename: string; size: number }>("/api/admin/backup", {}),
+    onSuccess: (res) => {
       toast.success(`Backup created: ${res.filename}`);
-      fetchBackups();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setCreating(false);
-    }
-  };
+      void backupsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  function handleCreate() {
+    createMutation.mutate();
+  }
+
+  const restoreMutation = useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return api.post<{ message: string }>(
+        "/api/admin/backup/restore",
+        formData,
+      );
+    },
+    onSuccess: (res) => {
+      toast.success(res.message);
+      void backupsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   const handleRestore = async () => {
     const input = document.createElement("input");
@@ -59,24 +67,20 @@ export default function BackupPage() {
         }))
       )
         return;
-      setRestoring(true);
-      try {
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await api.post<{ message: string }>(
-          "/api/admin/backup/restore",
-          formData,
-        );
-        toast.success(res.message);
-        fetchBackups();
-      } catch (err: unknown) {
-        toast.error(getErrorMessage(err));
-      } finally {
-        setRestoring(false);
-      }
+      restoreMutation.mutate(file);
     };
     input.click();
   };
+
+  const deleteMutation = useMutation({
+    mutationFn: (filename: string) =>
+      api.delete(`/api/admin/backup/${filename}`),
+    onSuccess: () => {
+      toast.success("Backup deleted");
+      void backupsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   const handleDelete = async (filename: string) => {
     if (
@@ -86,13 +90,7 @@ export default function BackupPage() {
       }))
     )
       return;
-    try {
-      await api.delete(`/api/admin/backup/${filename}`);
-      toast.success("Backup deleted");
-      fetchBackups();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    }
+    deleteMutation.mutate(filename);
   };
 
   const formatSize = (bytes: number) => {
@@ -111,22 +109,22 @@ export default function BackupPage() {
         <div className="flex gap-2">
           <button
             onClick={handleCreate}
-            disabled={creating}
+            disabled={createMutation.isPending}
             className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 flex items-center gap-2"
           >
             <IconDatabase size={16} />
-            {creating ? "Creating..." : "Create Backup"}
+            {createMutation.isPending ? "Creating..." : "Create Backup"}
           </button>
           <button
             onClick={handleRestore}
-            disabled={restoring}
+            disabled={restoreMutation.isPending}
             className="px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 flex items-center gap-2"
           >
             <IconUpload size={16} />
-            {restoring ? "Restoring..." : "Restore"}
+            {restoreMutation.isPending ? "Restoring..." : "Restore"}
           </button>
           <button
-            onClick={fetchBackups}
+            onClick={() => void backupsQuery.refetch()}
             className="px-3 py-2 rounded-xl border border-border text-sm hover:bg-muted/50 flex items-center gap-1"
           >
             <IconRefresh size={16} />

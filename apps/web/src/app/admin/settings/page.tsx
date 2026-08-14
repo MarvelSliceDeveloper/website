@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import SecuritySettings from "@/components/SecuritySettings";
 import {
@@ -24,7 +26,6 @@ import {
   IconHelp,
   IconInbox,
   IconChevronRight,
-  IconPalette,
   IconCheck,
 } from "@tabler/icons-react";
 
@@ -91,95 +92,72 @@ const TYPE_CONFIG: Record<
   },
 };
 
-type SettingsSection = "profile" | "security" | "notifications" | "appearance";
+type SettingsSection = "profile" | "security" | "notifications";
 
 export default function AdminSettingsPage() {
   usePageTitle("Settings");
   const router = useRouter();
-  const [preferences, setPreferences] = useState<Record<string, boolean>>({});
-  const [saving, setSaving] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [profileName, setProfileName] = useState("");
-  const [profileEmail, setProfileEmail] = useState("");
-  const [profileRole, setProfileRole] = useState("ADMIN");
   const [activeSection, setActiveSection] =
     useState<SettingsSection>("profile");
   const [nameInput, setNameInput] = useState("");
-  const [savingName, setSavingName] = useState(false);
 
-  useEffect(() => {
-    api
-      .get<{ preferences: { type: string; enabled: boolean }[] }>(
-        "/api/notifications/preferences",
-      )
-      .then((data) => {
-        const map: Record<string, boolean> = {};
-        for (const p of data.preferences || []) {
-          map[p.type] = p.enabled;
-        }
-        setPreferences(map);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    api
-      .get<{ user: { name: string; email: string; role: string } }>(
-        "/api/auth/me",
-      )
-      .then((res) => {
-        if (res?.user) {
-          setProfileName(res.user.name || "User");
-          setProfileEmail(res.user.email || "");
-          setProfileRole(res.user.role || "ADMIN");
-          setNameInput(res.user.name || "");
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  async function toggle(type: string) {
-    const newVal = !(preferences[type] ?? true);
-    setSaving(type);
-    const label = TYPE_CONFIG[type]?.label || type;
-    const promise = api.patch("/api/notifications/preferences", {
-      type,
-      enabled: newVal,
-    });
-    toast.promise(promise, {
-      loading: `${label}: ${newVal ? "enabling" : "disabling"}...`,
-      success: `${label} ${newVal ? "enabled" : "disabled"}`,
-      error: "Failed to update preference",
-    });
-    try {
-      await promise;
-      setPreferences((prev) => ({ ...prev, [type]: newVal }));
-    } catch {
-      /* handled by toast */
-    } finally {
-      setSaving(null);
+  const preferencesQuery = useApiQuery<{
+    preferences: { type: string; enabled: boolean }[];
+  }>(["admin", "settings", "notifications"], "/api/notifications/preferences");
+  const preferences = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    for (const p of preferencesQuery.data?.preferences ?? []) {
+      map[p.type] = p.enabled;
     }
+    return map;
+  }, [preferencesQuery.data]);
+
+  const meQuery = useApiQuery<{
+    user: { name: string; email: string; role: string };
+  }>(["admin", "settings", "me"], "/api/auth/me");
+  const me = meQuery.data?.user;
+  const profileName = me?.name || "User";
+  const profileEmail = me?.email || "";
+  const profileRole = me?.role || "ADMIN";
+
+  useEffect(() => {
+    if (me?.name) setNameInput(me.name);
+  }, [me?.name]);
+
+  const toggleMutation = useMutation({
+    mutationFn: ({ type, enabled }: { type: string; enabled: boolean }) =>
+      api.patch("/api/notifications/preferences", { type, enabled }),
+    onSuccess: (_data, { type, enabled }) => {
+      const label = TYPE_CONFIG[type]?.label || type;
+      toast.success(`${label} ${enabled ? "enabled" : "disabled"}`);
+      void preferencesQuery.refetch();
+    },
+    onError: () => toast.error("Failed to update preference"),
+  });
+  const savingType = toggleMutation.isPending
+    ? (toggleMutation.variables?.type ?? null)
+    : null;
+
+  function toggle(type: string) {
+    const newVal = !(preferences[type] ?? true);
+    toggleMutation.mutate({ type, enabled: newVal });
   }
 
-  async function handleSaveName() {
+  const updateProfileMutation = useMutation({
+    mutationFn: (name: string) => api.patch("/api/auth/me/profile", { name }),
+    onSuccess: () => {
+      toast.success("Profile name updated");
+      void meQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  function handleSaveName() {
     if (!nameInput.trim() || nameInput.trim().length < 2) {
       toast.error("Name must be at least 2 characters");
       return;
     }
-    setSavingName(true);
-    try {
-      await api.patch("/api/auth/me/profile", { name: nameInput.trim() });
-      setProfileName(nameInput.trim());
-      toast.success("Profile name updated");
-    } catch (e: unknown) {
-      toast.error(
-        (e as { response?: { data?: { error?: string } } })?.response?.data
-          ?.error || "Failed to update name",
-      );
-    } finally {
-      setSavingName(false);
-    }
+    updateProfileMutation.mutate(nameInput.trim());
   }
 
   const hasPrefs = Object.keys(preferences).length > 0;
@@ -209,12 +187,6 @@ export default function AdminSettingsPage() {
       label: "Notifications",
       icon: <IconBell size={18} />,
       description: "Manage alert preferences",
-    },
-    {
-      id: "appearance",
-      label: "Appearance",
-      icon: <IconPalette size={18} />,
-      description: "Theme and display",
     },
   ];
 
@@ -260,11 +232,16 @@ export default function AdminSettingsPage() {
               />
               <button
                 onClick={handleSaveName}
-                disabled={savingName || nameInput.trim() === profileName}
+                disabled={
+                  updateProfileMutation.isPending ||
+                  nameInput.trim() === profileName
+                }
                 className="btn-primary flex items-center gap-2 px-4 py-2.5 disabled:opacity-50"
               >
                 <IconCheck size={16} />
-                <span>{savingName ? "Saving..." : "Save"}</span>
+                <span>
+                  {updateProfileMutation.isPending ? "Saving..." : "Save"}
+                </span>
               </button>
             </div>
           </div>
@@ -290,7 +267,7 @@ export default function AdminSettingsPage() {
   }
 
   function renderNotifications() {
-    if (loading) {
+    if (preferencesQuery.isPending) {
       return (
         <div className="animate-pulse space-y-3 p-6">
           {[1, 2, 3, 4, 5].map((i) => (
@@ -353,10 +330,12 @@ export default function AdminSettingsPage() {
                 </div>
                 <button
                   onClick={() => toggle(type)}
-                  disabled={saving === type}
+                  disabled={savingType === type}
                   className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
                     enabled ? "bg-primary" : "bg-border"
-                  } ${saving === type ? "opacity-50 pointer-events-none" : ""}`}
+                  } ${
+                    savingType === type ? "opacity-50 pointer-events-none" : ""
+                  }`}
                 >
                   <span
                     className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
@@ -375,44 +354,6 @@ export default function AdminSettingsPage() {
           </div>
         )}
       </>
-    );
-  }
-
-  function renderAppearance() {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
-            <IconPalette size={20} />
-          </div>
-          <div>
-            <p className="font-semibold text-foreground">Appearance</p>
-            <p className="text-sm text-muted-foreground">
-              Customize your visual preferences.
-            </p>
-          </div>
-        </div>
-
-        <div className="glass-card p-5 space-y-4">
-          <p className="text-sm font-medium text-foreground">Theme</p>
-          <p className="text-xs text-muted-foreground">
-            Use the moon/sun toggle in the top header bar to switch between dark
-            and light modes. Your preference is saved automatically.
-          </p>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-20 rounded-lg bg-[#0b1020] border border-border/60 flex items-center justify-center">
-              <span className="text-[10px] font-medium text-white/70">
-                Dark
-              </span>
-            </div>
-            <div className="h-10 w-20 rounded-lg bg-[#f4f7ff] border border-border/60 flex items-center justify-center">
-              <span className="text-[10px] font-medium text-[#1a2238]">
-                Light
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
     );
   }
 
@@ -519,9 +460,8 @@ export default function AdminSettingsPage() {
         <div className="lg:col-span-8 xl:col-span-9 rounded-xl border border-border/60 bg-card overflow-hidden">
           {activeSection === "profile" && renderProfile()}
           {activeSection === "security" && <SecuritySettings />}
-          {activeSection === "notifications" && renderNotifications()}
-          {activeSection === "appearance" && renderAppearance()}
-        </div>
+{activeSection === "notifications" && renderNotifications()}
+          </div>
       </div>
     </div>
   );

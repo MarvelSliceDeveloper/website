@@ -196,6 +196,39 @@ export async function getCourseContentProgress(
   };
 }
 
+export interface CertificationExamEligibility {
+  eligible: boolean;
+  totalQuizzes: number;
+  completedQuizzes: number;
+  totalAssignments: number;
+  completedAssignments: number;
+}
+
+/**
+ * A student may attempt the certification exam only after completing every
+ * quiz and assignment in the course's regular (non-certification) modules.
+ * Lessons are not counted — only quizzes and assignments gate the exam.
+ */
+export async function getCertificationExamEligibility(
+  userId: string,
+  courseId: string,
+): Promise<CertificationExamEligibility> {
+  const progress = await getCourseContentProgress(courseId, userId);
+  const { totalQuizzes, completedQuizzes, totalAssignments, completedAssignments } =
+    progress.details;
+
+  const eligible =
+    completedQuizzes >= totalQuizzes && completedAssignments >= totalAssignments;
+
+  return {
+    eligible,
+    totalQuizzes,
+    completedQuizzes,
+    totalAssignments,
+    completedAssignments,
+  };
+}
+
 export async function checkAndIssueCertificate(
   userId: string,
   courseId: string,

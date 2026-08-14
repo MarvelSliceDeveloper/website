@@ -875,11 +875,34 @@ export const notificationService = {
   },
 
   /**
+   * List custom notifications sent by a user (admin/instructor "Sent" inbox).
+   */
+  async listSent(userId: string, limit = 50) {
+    if (!prisma || !("sentNotification" in prisma)) return [];
+    try {
+      return await prisma.sentNotification.findMany({
+        where: { senderId: userId },
+        orderBy: { createdAt: "desc" },
+        take: limit,
+      });
+    } catch (err: unknown) {
+      console.error(
+        "Error fetching sent notifications:",
+        (err as Error)?.message ?? err,
+      );
+      return [];
+    }
+  },
+
+  /**
    * Send a custom notification to a targeted audience.
    * - ADMIN can target ALL_USERS, INSTRUCTORS, STUDENTS, BATCH, COURSE,
    *   INTERN (all interns), or INTERN_FIELD (interns in a specific field)
    * - INSTRUCTOR can only target BATCH and must be the assigned instructor
    * Optional attachment (zip/pdf) is included in emails.
+   *
+   * `channel` controls delivery: "IN_APP" (inbox only), "EMAIL" (email only),
+   * or "BOTH" (default) — inbox + email.
    */
   async sendNotification(
     senderId: string,
@@ -897,6 +920,7 @@ export const notificationService = {
       title: string;
       message: string;
       type?: string;
+      channel?: "IN_APP" | "EMAIL" | "BOTH";
       emailTemplateId?: string;
       attachmentUrl?: string;
       attachmentName?: string;
@@ -907,11 +931,13 @@ export const notificationService = {
       targetIds,
       title,
       message,
+      channel,
       emailTemplateId,
       attachmentUrl,
       attachmentName,
     } = options;
     const type = options.type ?? "CUSTOM_NOTIFICATION";
+    const deliveryChannel = channel ?? "BOTH";
 
     if (senderRole !== UserRole.ADMIN && senderRole !== UserRole.INSTRUCTOR) {
       return { count: 0 };
@@ -1040,15 +1066,46 @@ export const notificationService = {
       },
     }));
 
-    const count = await this.createMany(notifications);
-    dispatchEmailsForNotification(
-      userIds,
-      type,
-      { title, message, sentBy: senderId, senderRole, targetType, targetIds },
-      emailTemplateId,
-      attachmentUrl,
-      attachmentName,
-    );
+    let count = 0;
+    if (deliveryChannel !== "EMAIL") {
+      count = await this.createMany(notifications);
+    }
+    if (deliveryChannel !== "IN_APP") {
+      dispatchEmailsForNotification(
+        userIds,
+        type,
+        { title, message, sentBy: senderId, senderRole, targetType, targetIds },
+        emailTemplateId,
+        attachmentUrl,
+        attachmentName,
+      );
+    }
+
+    if (prisma && "sentNotification" in prisma) {
+      try {
+        await prisma.sentNotification.create({
+          data: {
+            senderId,
+            title,
+            message,
+            type,
+            targetType,
+            targetIds: targetIds.length > 0 ? targetIds : undefined,
+            channel: deliveryChannel,
+            recipientCount: userIds.length,
+            emailTemplateId: emailTemplateId ?? undefined,
+            attachmentUrl: attachmentUrl ?? undefined,
+            attachmentName: attachmentName ?? undefined,
+          },
+        });
+      } catch (err: unknown) {
+        console.error(
+          "Error recording sent notification:",
+          (err as Error)?.message ?? err,
+        );
+      }
+    }
+
     return { count };
   },
 };

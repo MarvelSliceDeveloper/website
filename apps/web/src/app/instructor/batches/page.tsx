@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { api } from "@/lib/api";
 import {
   IconCalendar,
   IconUserCheck,
@@ -10,6 +9,7 @@ import {
   IconClock,
 } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 type CourseSummary = { id: string; title: string };
@@ -51,31 +51,14 @@ export default function InstructorBatchesPage() {
 function BatchesPageContent() {
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status");
-  const [batches, setBatches] = useState<Batch[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  // Fetches batches assigned to this instructor from the instructor-specific endpoint.
-  // The /api/instructor/batches endpoint filters by the logged-in instructor's ID.
-  useEffect(() => {
-    async function loadBatches() {
-      try {
-        const data = await api.get<Batch[]>("/api/instructor/batches");
-        setBatches(Array.isArray(data) ? data : []);
-      } catch (err: unknown) {
-        console.error("Failed to load batches:", err);
-        if (
-          err instanceof Error &&
-          (err.message?.includes("Authentication") ||
-            err.message?.includes("401"))
-        ) {
-          window.location.href = "/login";
-        }
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadBatches();
-  }, []);
+  // Shares the cache key with the instructor dashboard's ["instructor","batches"].
+  const batchesQuery = useApiQuery<Batch[]>(
+    ["instructor", "batches"],
+    "/api/instructor/batches",
+  );
+  const batches = batchesQuery.data ?? [];
+  const loading = batchesQuery.isPending;
 
   const now = new Date();
   let filteredBatches = batches;

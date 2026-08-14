@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
@@ -45,10 +47,7 @@ function generateRandomCode(): string {
 export default function AdminCouponsPage() {
   usePageTitle("Coupons");
   const confirmDelete = useConfirmDialog();
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [saving, setSaving] = useState(false);
 
   // Form fields
   const [formTitle, setFormTitle] = useState("");
@@ -62,21 +61,12 @@ export default function AdminCouponsPage() {
   const [formMaxDiscountAmount, setFormMaxDiscountAmount] = useState("");
   const [formExpiresAt, setFormExpiresAt] = useState("");
 
-  const fetchCoupons = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await api.get<Coupon[]>("/api/coupons");
-      setCoupons(data ?? []);
-    } catch {
-      setCoupons([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchCoupons();
-  }, [fetchCoupons]);
+  const couponsQuery = useApiQuery<Coupon[]>(
+    ["admin", "coupons"],
+    "/api/coupons",
+  );
+  const coupons = couponsQuery.data ?? [];
+  const loading = couponsQuery.isPending;
 
   function resetForm() {
     setShowForm(false);
@@ -90,7 +80,26 @@ export default function AdminCouponsPage() {
     setFormExpiresAt("");
   }
 
-  async function handleCreate() {
+  const createMutation = useMutation({
+    mutationFn: (payload: {
+      title: string;
+      code?: string;
+      discountType: "PERCENTAGE" | "FIXED";
+      discountValue: number;
+      usageLimit: number | null;
+      minOrderAmount: number;
+      maxDiscountAmount: number | null;
+      expiresAt: string | null;
+    }) => api.post("/api/coupons", payload),
+    onSuccess: () => {
+      toast.success("Coupon created successfully!");
+      resetForm();
+      void couponsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  function handleCreate() {
     if (!formTitle.trim()) {
       toast.error("Coupon title is required");
       return;
@@ -103,39 +112,36 @@ export default function AdminCouponsPage() {
       toast.error("Percentage discount cannot exceed 100%");
       return;
     }
-
-    setSaving(true);
-    try {
-      await api.post("/api/coupons", {
-        title: formTitle.trim(),
-        code: formCode.trim() || undefined,
-        discountType: formDiscountType,
-        discountValue: Number(formDiscountValue),
-        usageLimit: formUsageLimit ? Number(formUsageLimit) : null,
-        minOrderAmount: formMinOrderAmount ? Number(formMinOrderAmount) : 0,
-        maxDiscountAmount: formMaxDiscountAmount
-          ? Number(formMaxDiscountAmount)
-          : null,
-        expiresAt: formExpiresAt || null,
-      });
-      toast.success("Coupon created successfully!");
-      resetForm();
-      fetchCoupons();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSaving(false);
-    }
+    createMutation.mutate({
+      title: formTitle.trim(),
+      code: formCode.trim() || undefined,
+      discountType: formDiscountType,
+      discountValue: Number(formDiscountValue),
+      usageLimit: formUsageLimit ? Number(formUsageLimit) : null,
+      minOrderAmount: formMinOrderAmount ? Number(formMinOrderAmount) : 0,
+      maxDiscountAmount: formMaxDiscountAmount
+        ? Number(formMaxDiscountAmount)
+        : null,
+      expiresAt: formExpiresAt || null,
+    });
   }
 
-  async function handleToggle(id: string) {
-    try {
-      await api.patch(`/api/coupons/${id}/toggle`);
-      fetchCoupons();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
-  }
+  const toggleMutation = useMutation({
+    mutationFn: (id: string) => api.patch(`/api/coupons/${id}/toggle`),
+    onSuccess: () => void couponsQuery.refetch(),
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleToggle = (id: string) => toggleMutation.mutate(id);
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/coupons/${id}`),
+    onSuccess: () => {
+      toast.success("Coupon deleted");
+      void couponsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   async function handleDelete(id: string, code: string) {
     if (
@@ -145,13 +151,7 @@ export default function AdminCouponsPage() {
       }))
     )
       return;
-    try {
-      await api.delete(`/api/coupons/${id}`);
-      toast.success("Coupon deleted");
-      fetchCoupons();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
+    deleteMutation.mutate(id);
   }
 
   function copyCode(code: string) {
@@ -204,7 +204,7 @@ export default function AdminCouponsPage() {
         action={
           <div className="flex items-center gap-2">
             <button
-              onClick={fetchCoupons}
+              onClick={() => void couponsQuery.refetch()}
               className="btn-secondary text-xs py-2 flex items-center gap-1.5"
             >
               <IconRefresh size={14} /> Refresh
@@ -394,10 +394,10 @@ export default function AdminCouponsPage() {
           <div className="flex items-center gap-2 pt-2 border-t border-border">
             <button
               onClick={handleCreate}
-              disabled={saving || !formTitle.trim() || !formDiscountValue}
+              disabled={createMutation.isPending || !formTitle.trim() || !formDiscountValue}
               className="btn-primary text-xs py-2 disabled:opacity-40"
             >
-              {saving ? "Adding..." : "Add Coupon"}
+              {createMutation.isPending ? "Adding..." : "Add Coupon"}
             </button>
             <button onClick={resetForm} className="btn-secondary text-xs py-2">
               Cancel

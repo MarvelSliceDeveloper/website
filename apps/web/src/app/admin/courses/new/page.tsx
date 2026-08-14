@@ -4,9 +4,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { IconArrowLeft, IconPlus, IconX } from "@tabler/icons-react";
 import {
@@ -33,15 +35,27 @@ const ALLOWED_THUMBNAIL_TYPES = new Set([
 export default function CreateCoursePage() {
   usePageTitle("New Course");
   const router = useRouter();
-  const [submitting, setSubmitting] = useState(false);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [newTag, setNewTag] = useState("");
 
-  // DB-backed options (fall back to static suggestions when unavailable)
-  const [dbTitles, setDbTitles] = useState<string[]>([]);
-  const [dbCategories, setDbCategories] = useState<string[]>([]);
-  const [dbTags, setDbTags] = useState<string[]>([]);
+  const titlesQuery = useApiQuery<{ titles: { name: string }[] }>(
+    ["admin", "content", "titles"],
+    "/api/admin/content/titles",
+  );
+  const categoriesQuery = useApiQuery<{ categories: { name: string }[] }>(
+    ["admin", "content", "categories"],
+    "/api/admin/content/categories",
+  );
+  const tagsQuery = useApiQuery<{ tags: { name: string }[] }>(
+    ["admin", "content", "tags"],
+    "/api/admin/content/tags",
+  );
+
+  const dbTitles = titlesQuery.data?.titles.map((t) => t.name) ?? [];
+  const dbCategories =
+    categoriesQuery.data?.categories.map((c) => c.name) ?? [];
+  const dbTags = tagsQuery.data?.tags.map((t) => t.name) ?? [];
 
   const [form, setForm] = useState({
     title: "",
@@ -52,23 +66,6 @@ export default function CreateCoursePage() {
 
   const update = (field: string, value: string | number) =>
     setForm((prev) => ({ ...prev, [field]: value }));
-
-  useEffect(() => {
-    Promise.all([
-      api
-        .get<{ titles: { name: string }[] }>("/api/admin/content/titles")
-        .then((d) => setDbTitles(d.titles.map((t) => t.name)))
-        .catch(() => {}),
-      api
-        .get<{ categories: { name: string }[] }>("/api/admin/content/categories")
-        .then((d) => setDbCategories(d.categories.map((c) => c.name)))
-        .catch(() => {}),
-      api
-        .get<{ tags: { name: string }[] }>("/api/admin/content/tags")
-        .then((d) => setDbTags(d.tags.map((t) => t.name)))
-        .catch(() => {}),
-    ]);
-  }, []);
 
   const titleOptions = dbTitles.length
     ? dbTitles
@@ -170,21 +167,21 @@ export default function CreateCoursePage() {
     return true;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) return;
-
-    setSubmitting(true);
-
-    try {
-      const course = await api.post<{ id: string }>("/api/admin/courses", {
-        title: form.title,
-        description: form.description,
-        category: form.category || undefined,
-        tags: form.tags,
-        slug:form.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-      });
+  const createCourseMutation = useMutation({
+    mutationFn: async () => {
+      const course = await api.post<{ id: string; slug: string }>(
+        "/api/admin/courses",
+        {
+          title: form.title,
+          description: form.description,
+          category: form.category || undefined,
+          tags: form.tags,
+          slug: form.title
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9-]/g, ""),
+        },
+      );
 
       if (thumbnailFile) {
         const uploadData = new FormData();
@@ -195,23 +192,24 @@ export default function CreateCoursePage() {
             uploadData,
           );
         } catch (uploadError: unknown) {
-          toast.error(
-            (uploadError instanceof Error
-              ? uploadError.message
-              : String(uploadError)) ||
-              "Course created, but thumbnail upload failed. You can upload it in the editor.",
-          );
+          toast.error(getErrorMessage(uploadError));
         }
       }
 
+      return course;
+    },
+    onSuccess: (course) => {
       router.push(`/admin/courses/${course.slug || course.id}`);
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to create course",
-      );
-    } finally {
-      setSubmitting(false);
-    }
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
+    createCourseMutation.mutate();
   };
 
   return (
@@ -431,8 +429,12 @@ export default function CreateCoursePage() {
           <Link href="/admin/courses" className="btn-secondary text-sm">
             Cancel
           </Link>
-          <button type="submit" className="btn-primary" disabled={submitting}>
-            {submitting ? "Adding..." : "Add Course"}
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={createCourseMutation.isPending}
+          >
+            {createCourseMutation.isPending ? "Adding..." : "Add Course"}
           </button>
         </div>
       </form>

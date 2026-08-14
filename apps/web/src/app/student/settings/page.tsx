@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import StudentPortalShell from "@/components/StudentPortalShell";
 import {
   IconBell,
@@ -22,7 +24,6 @@ import {
   IconHelp,
   IconInbox,
   IconChevronRight,
-  IconPalette,
   IconEdit,
   IconCreditCard,
   IconPhone,
@@ -30,7 +31,6 @@ import {
   IconMapPin,
   IconBuildingSkyscraper,
   IconFlag,
-  IconCheck,
 } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
 import { getTimezoneLabel } from "@/lib/location-data";
@@ -98,29 +98,31 @@ const TYPE_CONFIG: Record<
   },
 };
 
-type SettingsSection = "profile" | "notifications" | "appearance" | "payments";
+type SettingsSection = "profile" | "notifications" | "payments";
 
 export default function SettingsPage() {
   usePageTitle("Settings");
   const router = useRouter();
-  const [preferences, setPreferences] = useState<Record<string, boolean>>({});
-  const [saving, setSaving] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [studentName, setStudentName] = useState("Student");
-  const [studentEmail, setStudentEmail] = useState("");
-  const [studentRole, setStudentRole] = useState("STUDENT");
+  const queryClient = useQueryClient();
   const [activeSection, setActiveSection] =
     useState<SettingsSection>("profile");
 
-  const [studentPhone, setStudentPhone] = useState("");
-  const [studentTimezone, setStudentTimezone] = useState("");
-  const [studentAddress, setStudentAddress] = useState("");
-  const [studentState, setStudentState] = useState("");
-  const [studentCountry, setStudentCountry] = useState("");
-  const [profileLoading, setProfileLoading] = useState(true);
-
-  const [payments, setPayments] = useState<
-    Array<{
+  // Shared cached queries — /api/auth/me and /api/student/profile use the same
+  // keys as the student portal, so navigating here reads from cache instantly.
+  const meQuery = useApiQuery<{
+    user: { name: string; email: string; role: string };
+  }>(["auth", "me"], "/api/auth/me");
+  const profileQuery = useApiQuery<{
+    user: {
+      phone?: string;
+      timezone?: string;
+      address?: string;
+      state?: string;
+      country?: string;
+    };
+  }>(["student", "profile"], "/api/student/profile");
+  const paymentsQuery = useApiQuery<{
+    payments: Array<{
       id: string;
       amount: number;
       currency: string;
@@ -129,109 +131,74 @@ export default function SettingsPage() {
       razorpayPaymentId: string | null;
       createdAt: string;
       package: { name: string } | null;
-    }>
-  >([]);
-  const [paymentsLoading, setPaymentsLoading] = useState(true);
+    }>;
+  }>(["student", "payments"], "/api/student/payments");
+  const preferencesQuery = useApiQuery<{
+    preferences: { type: string; enabled: boolean }[];
+  }>(["student", "notification-preferences"], "/api/notifications/preferences");
 
-  useEffect(() => {
-    api
-      .get<{ preferences: { type: string; enabled: boolean }[] }>(
-        "/api/notifications/preferences",
-      )
-      .then((data) => {
-        const map: Record<string, boolean> = {};
-        for (const p of data.preferences || []) {
-          map[p.type] = p.enabled;
-        }
-        setPreferences(map);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+  const studentName = meQuery.data?.user?.name || "Student";
+  const studentEmail = meQuery.data?.user?.email || "";
+  const studentRole = meQuery.data?.user?.role || "STUDENT";
 
-  // Load user profile for shell header
-  useEffect(() => {
-    api
-      .get<{ user: { name: string; email: string; role: string } }>(
-        "/api/auth/me",
-      )
-      .then((res) => {
-        if (res?.user) {
-          setStudentName(res.user.name || "Student");
-          setStudentEmail(res.user.email || "");
-          setStudentRole(res.user.role || "STUDENT");
-        }
-      })
-      .catch(() => {});
-  }, []);
+  const studentPhone = profileQuery.data?.user?.phone ?? "";
+  const studentTimezone = profileQuery.data?.user?.timezone ?? "";
+  const studentAddress = profileQuery.data?.user?.address ?? "";
+  const studentState = profileQuery.data?.user?.state ?? "";
+  const studentCountry = profileQuery.data?.user?.country ?? "";
+  const profileLoading = profileQuery.isPending;
 
-  // Load student profile details
-  useEffect(() => {
-    api
-      .get<{
-        user: {
-          phone?: string;
-          timezone?: string;
-          address?: string;
-          state?: string;
-          country?: string;
-        };
-      }>("/api/student/profile")
-      .then((res) => {
-        if (res?.user) {
-          setStudentPhone(res.user.phone || "");
-          setStudentTimezone(res.user.timezone || "");
-          setStudentAddress(res.user.address || "");
-          setStudentState(res.user.state || "");
-          setStudentCountry(res.user.country || "");
-        }
-      })
-      .catch(() => {})
-      .finally(() => setProfileLoading(false));
-  }, []);
+  const payments = paymentsQuery.data?.payments ?? [];
+  const paymentsLoading = paymentsQuery.isPending;
 
-  // Load payment history
-  useEffect(() => {
-    setPaymentsLoading(true);
-    api
-      .get<{
-        payments: Array<{
-          id: string;
-          amount: number;
-          currency: string;
-          status: string;
-          method: string | null;
-          razorpayPaymentId: string | null;
-          createdAt: string;
-          package: { name: string } | null;
-        }>;
-      }>("/api/student/payments")
-      .then((res) => setPayments(res.payments || []))
-      .catch(() => {})
-      .finally(() => setPaymentsLoading(false));
-  }, []);
-
-  async function toggle(type: string) {
-    const newVal = !(preferences[type] ?? true);
-    setSaving(type);
-    const label = TYPE_CONFIG[type]?.label || type;
-    const promise = api.patch("/api/notifications/preferences", {
-      type,
-      enabled: newVal,
-    });
-    toast.promise(promise, {
-      loading: `${label}: ${newVal ? "enabling" : "disabling"}...`,
-      success: `${label} ${newVal ? "enabled" : "disabled"}`,
-      error: "Failed to update preference",
-    });
-    try {
-      await promise;
-      setPreferences((prev) => ({ ...prev, [type]: newVal }));
-    } catch {
-      /* handled by toast */
-    } finally {
-      setSaving(null);
+  // Notification preferences as a type → enabled map.
+  const preferences = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    for (const p of preferencesQuery.data?.preferences ?? []) {
+      map[p.type] = p.enabled;
     }
+    return map;
+  }, [preferencesQuery.data]);
+  const loading = preferencesQuery.isPending;
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ type, enabled }: { type: string; enabled: boolean }) => {
+      await api.patch("/api/notifications/preferences", { type, enabled });
+      return { type, enabled };
+    },
+    onMutate: ({ type, enabled }) => {
+      const label = TYPE_CONFIG[type]?.label || type;
+      toast.loading(`${label}: ${enabled ? "enabling" : "disabling"}...`);
+    },
+    onSuccess: (_, { type, enabled }) => {
+      const label = TYPE_CONFIG[type]?.label || type;
+      toast.success(`${label} ${enabled ? "enabled" : "disabled"}`);
+      // Reflect the new value in the cached preferences so the switch updates.
+      queryClient.setQueryData<
+        { preferences: { type: string; enabled: boolean }[] }
+      >(["student", "notification-preferences"], (old) => {
+        const prefs = old?.preferences ?? [];
+        const existing = prefs.find((p) => p.type === type);
+        return {
+          preferences: existing
+            ? prefs.map((p) => (p.type === type ? { ...p, enabled } : p))
+            : [...prefs, { type, enabled }],
+        };
+      });
+    },
+    onError: () => {
+      toast.error("Failed to update preference");
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["student", "notification-preferences"],
+      });
+    },
+  });
+
+  function toggle(type: string) {
+    const newVal = !(preferences[type] ?? true);
+    toggleMutation.mutate({ type, enabled: newVal });
   }
 
   const hasPrefs = Object.keys(preferences).length > 0;
@@ -257,12 +224,6 @@ export default function SettingsPage() {
       label: "Notifications",
       icon: <IconBell size={18} />,
       description: "Manage alert preferences",
-    },
-    {
-      id: "appearance",
-      label: "Appearance",
-      icon: <IconPalette size={18} />,
-      description: "Theme and display",
     },
     {
       id: "payments",
@@ -454,10 +415,18 @@ export default function SettingsPage() {
                 </div>
                 <button
                   onClick={() => toggle(type)}
-                  disabled={saving === type}
+                  disabled={
+                    toggleMutation.isPending &&
+                    toggleMutation.variables?.type === type
+                  }
                   className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
                     enabled ? "bg-primary" : "bg-border"
-                  } ${saving === type ? "opacity-50 pointer-events-none" : ""}`}
+                  } ${
+                    toggleMutation.isPending &&
+                    toggleMutation.variables?.type === type
+                      ? "opacity-50 pointer-events-none"
+                      : ""
+                  }`}
                 >
                   <span
                     className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
@@ -480,44 +449,6 @@ export default function SettingsPage() {
   }
 
   // ── Appearance panel ───────────────────────────────────────────────
-
-  function renderAppearance() {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
-            <IconPalette size={20} />
-          </div>
-          <div>
-            <p className="font-semibold text-foreground">Appearance</p>
-            <p className="text-sm text-muted-foreground">
-              Customize your visual preferences.
-            </p>
-          </div>
-        </div>
-
-        <div className="glass-card p-5 space-y-4">
-          <p className="text-sm font-medium text-foreground">Theme</p>
-          <p className="text-xs text-muted-foreground">
-            Use the moon/sun toggle in the top header bar to switch between dark
-            and light modes. Your preference is saved automatically.
-          </p>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-20 rounded-lg bg-[#0b1020] border border-border/60 flex items-center justify-center">
-              <span className="text-[10px] font-medium text-white/70">
-                Dark
-              </span>
-            </div>
-            <div className="h-10 w-20 rounded-lg bg-[#f4f7ff] border border-border/60 flex items-center justify-center">
-              <span className="text-[10px] font-medium text-[#1a2238]">
-                Light
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // ── Payment history panel ──────────────────────────────────────────
 
@@ -729,7 +660,6 @@ export default function SettingsPage() {
           <div className="lg:col-span-8 xl:col-span-9 rounded-xl border border-border/60 bg-card overflow-hidden">
             {activeSection === "profile" && renderProfile()}
             {activeSection === "notifications" && renderNotifications()}
-            {activeSection === "appearance" && renderAppearance()}
             {activeSection === "payments" && renderPayments()}
           </div>
         </div>

@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
-import { toast } from "sonner";
 import Link from "next/link";
 
 interface HealthData {
@@ -43,16 +41,13 @@ function StatCard({ label, value, status }: StatCardProps) {
 
 export default function SuperAdminPage() {
   usePageTitle("Super Admin");
-  const [health, setHealth] = useState<HealthData | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    api
-      .get<HealthData>("/api/admin/users/health")
-      .then(setHealth)
-      .catch(() => toast.error("Failed to fetch health data"))
-      .finally(() => setLoading(false));
-  }, []);
+  const healthQuery = useApiQuery<HealthData>(
+    ["admin", "super-admin", "health"],
+    "/api/admin/users/health",
+  );
+  const loading = healthQuery.isLoading;
+  const health = healthQuery.data ?? null;
 
   const formatUptime = (seconds: number) => {
     const d = Math.floor(seconds / 86400);

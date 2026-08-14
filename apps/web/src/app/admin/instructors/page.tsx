@@ -1,7 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -48,6 +51,7 @@ type ApiRawItem = {
     createdAt: string;
   } | null;
   activeBatchCount: number;
+  totalStudents: number;
 };
 
 type ApiResponse = {
@@ -159,9 +163,6 @@ function StarRating({ rating }: { rating: number }) {
 
 export default function AdminInstructorsPage() {
   usePageTitle("Instructors");
-  const [instructors, setInstructors] = useState<Instructor[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const [search, setSearch] = useState("");
@@ -174,60 +175,63 @@ export default function AdminInstructorsPage() {
     "overview" | "professional" | "contact"
   >("overview");
 
-  async function fetchInstructors() {
-    setLoading(true);
-    try {
-      const params: Record<string, string> = {
-        page: String(page),
-        limit: String(pageSize),
+  // List query keyed on filter/search/page; includes `search` in the key so
+  // typing in the box refetches (the original effect missed search changes
+  // while on page 1).
+  const instructorsQuery = useApiQuery<ApiResponse>(
+    [
+      "admin",
+      "instructors",
+      statusFilter,
+      search.trim() || "all",
+      page,
+    ],
+    "/api/admin/instructors",
+    {
+      page: String(page),
+      limit: String(pageSize),
+      ...(statusFilter !== "ALL" ? { status: statusFilter } : {}),
+      ...(search.trim() ? { search: search.trim() } : {}),
+    },
+  );
+
+  const instructors: Instructor[] = (instructorsQuery.data?.items ?? []).map(
+    (item) => {
+      const p = item.instructorProfile;
+      return {
+        id: item.id,
+        name: item.name,
+        email: item.email,
+        status: (p?.status ?? "PENDING") as Instructor["status"],
+        designation: p?.designation ?? null,
+        experience: p?.experienceYears ?? null,
+        currentCompany: p?.companyName ?? null,
+        activeBatches: item.activeBatchCount ?? 0,
+        totalStudents: item.totalStudents ?? 0,
+        rating: p?.rating ?? null,
+        createdAt: p?.createdAt ?? null,
       };
-      if (statusFilter !== "ALL") params.status = statusFilter;
-      if (search.trim()) params.search = search.trim();
-
-      const data = await api.get<ApiResponse>("/api/admin/instructors", params);
-      const mapped: Instructor[] = (data.items ?? []).map((item) => {
-        const p = item.instructorProfile;
-        return {
-          id: item.id,
-          name: item.name,
-          email: item.email,
-          status: (p?.status ?? "PENDING") as Instructor["status"],
-          designation: p?.designation ?? null,
-          experience: p?.experienceYears ?? null,
-          currentCompany: p?.companyName ?? null,
-          activeBatches: item.activeBatchCount ?? 0,
-          totalStudents: item.totalStudents ?? 0,
-          rating: p?.rating ?? null,
-          createdAt: p?.createdAt ?? null,
-        };
-      });
-      setInstructors(mapped);
-      setTotal(data.total ?? 0);
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-      setInstructors([]);
-      setTotal(0);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchInstructors();
-  }, [page, statusFilter]);
+    },
+  );
+  const total = instructorsQuery.data?.total ?? 0;
+  const loading = instructorsQuery.isPending;
 
   useEffect(() => {
     setPage(1);
   }, [search, statusFilter]);
 
-  const handleVerify = async (instructorId: string) => {
-    try {
-      await api.put(`/api/admin/instructors/${instructorId}/verify`);
+  const verifyMutation = useMutation({
+    mutationFn: (instructorId: string) =>
+      api.put(`/api/admin/instructors/${instructorId}/verify`),
+    onSuccess: () => {
       toast.success("Instructor verified successfully");
-      fetchInstructors();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
+      void instructorsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleVerify = (instructorId: string) => {
+    verifyMutation.mutate(instructorId);
   };
 
   const openDetail = async (instructorId: string) => {
@@ -367,9 +371,8 @@ export default function AdminInstructorsPage() {
           { label: "Instructors", href: "/admin/instructors" },
         ]}
         action={
-          <a href="/admin/instructors/new" className="btn-primary text-sm shadow-md flex items-center gap-1.5">
-            <IconPlus size={16} /> Add Instructor
-          </a>
+          <Link href="/admin/instructors/new" className="btn-primary text-sm shadow-md flex items-center gap-1.5">
+            <IconPlus size={16} /> Add Instructor`n          </Link>
         }
       />
 

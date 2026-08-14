@@ -12,6 +12,7 @@ const router = Router();
 router.use(requireAuth);
 
 router.get("/", notificationController.list);
+router.get("/sent", notificationController.listSent);
 router.patch("/:id/read", notificationController.markAsRead);
 router.post("/read-all", notificationController.markAllAsRead);
 router.delete("/:id", notificationController.delete);

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { useState } from "react";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
@@ -36,10 +36,7 @@ const ACTION_OPTIONS = [
 
 export default function AdminAuditLogsPage() {
   usePageTitle("Audit Logs");
-  const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
   const limit = 50;
 
   const [filterEmail, setFilterEmail] = useState("");
@@ -47,47 +44,57 @@ export default function AdminAuditLogsPage() {
   const [filterEntityType, setFilterEntityType] = useState("");
   const [filterDateStart, setFilterDateStart] = useState("");
   const [filterDateEnd, setFilterDateEnd] = useState("");
+  const [appliedFilters, setAppliedFilters] = useState({
+    email: "",
+    action: "ALL",
+    entityType: "",
+    startDate: "",
+    endDate: "",
+  });
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const isFiltered =
-    filterEmail.trim() ||
-    filterAction !== "ALL" ||
-    filterEntityType.trim() ||
-    filterDateStart ||
-    filterDateEnd;
 
-  async function fetchLogs() {
-    setLoading(true);
-    try {
-      const params: Record<string, string> = {
-        page: String(page),
-        limit: String(limit),
-      };
-      if (filterEmail.trim()) params.email = filterEmail.trim();
-      if (filterAction !== "ALL") params.action = filterAction;
-      if (filterEntityType.trim()) params.entityType = filterEntityType.trim();
-      if (filterDateStart) params.startDate = filterDateStart;
-      if (filterDateEnd) params.endDate = filterDateEnd;
-
-      const data = await api.get<{
-        logs: AuditLog[];
-        total: number;
-      }>("/api/admin/audit-logs", params);
-      setLogs(data.logs);
-      setTotal(data.total);
-    } catch {
-      setLogs([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchLogs();
-  }, [page]);
+  // List query keyed on the search-applied filters + page.
+  const logsQuery = useApiQuery<{ logs: AuditLog[]; total: number }>(
+    [
+      "admin",
+      "audit-logs",
+      appliedFilters.email || "all",
+      appliedFilters.action,
+      appliedFilters.entityType || "all",
+      appliedFilters.startDate || "all",
+      appliedFilters.endDate || "all",
+      page,
+    ],
+    "/api/admin/audit-logs",
+    {
+      page: String(page),
+      limit: String(limit),
+      ...(appliedFilters.email ? { email: appliedFilters.email } : {}),
+      ...(appliedFilters.action !== "ALL"
+        ? { action: appliedFilters.action }
+        : {}),
+      ...(appliedFilters.entityType
+        ? { entityType: appliedFilters.entityType }
+        : {}),
+      ...(appliedFilters.startDate
+        ? { startDate: appliedFilters.startDate }
+        : {}),
+      ...(appliedFilters.endDate ? { endDate: appliedFilters.endDate } : {}),
+    },
+  );
+  const logs = logsQuery.data?.logs ?? [];
+  const total = logsQuery.data?.total ?? 0;
+  const loading = logsQuery.isPending;
 
   function handleSearch() {
     setPage(1);
-    fetchLogs();
+    setAppliedFilters({
+      email: filterEmail.trim(),
+      action: filterAction,
+      entityType: filterEntityType.trim(),
+      startDate: filterDateStart,
+      endDate: filterDateEnd,
+    });
   }
 
   const totalPages = Math.ceil(total / limit);
@@ -101,7 +108,7 @@ export default function AdminAuditLogsPage() {
         role="Administration"
         action={
           <button
-            onClick={fetchLogs}
+            onClick={() => void logsQuery.refetch()}
             className="btn-secondary text-xs py-2 flex items-center gap-1.5"
           >
             <IconRefresh size={14} /> Refresh
