@@ -52,6 +52,7 @@ import { consentLogRouter } from "./modules/logs/consent-log.routes";
 import { trashRouter } from "./modules/super-admin/trash.routes";
 import { youtubeRouter } from "./modules/youtube/youtube.routes";
 import { couponRouter } from "./modules/coupons/coupon.routes";
+import { referralRouter } from "./modules/referrals/referral.routes";
 import {
   paymentRouter,
   adminPaymentRouter,
@@ -241,7 +242,9 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use(limiter);
+if (process.env.DISABLE_RATE_LIMIT !== "true") {
+  app.use(limiter);
+}
 
 // ── Routes ──
 app.use(maintenanceMiddleware);
@@ -363,7 +366,8 @@ app.use("/api/admin/cache", cacheRouter);
 app.use("/api/youtube", youtubeRouter);
 
 // ── Payments & Coupons ──
-app.use("/api/coupons", couponRouter);
+  app.use("/api/coupons", couponRouter);
+  app.use("/api/referrals", referralRouter);
 app.use("/api/payments", paymentRouter);
 app.use("/api/admin/payments", adminPaymentRouter);
 

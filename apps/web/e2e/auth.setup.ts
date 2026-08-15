@@ -3,6 +3,11 @@ import { test as setup, expect, type Page } from "@playwright/test";
 /** Demo credentials matching the seed data. */
 const CREDENTIALS = {
   admin: { email: "admin@lms.local", password: "admin123", role: "ADMIN" },
+  superadmin: {
+    email: "superadmin@lms.local",
+    password: "superadmin123",
+    role: "SUPER_ADMIN",
+  },
   instructor: {
     email: "instructor@lms.local",
     password: "instructor123",

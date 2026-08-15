@@ -125,12 +125,12 @@ test.describe("Student Portal — Workflows", () => {
     const batchId = courses[0].batchId;
     if (!batchId) return;
 
-    await page.goto(`/student?view=recording&batchId=${batchId}&recordingId=dummy`);
-    await page.waitForTimeout(3000);
-    const h1 = page.locator("h1").first();
-    if (await h1.isVisible({ timeout: 3000 }).catch(() => false)) {
-      expect(await h1.isVisible()).toBeTruthy();
-    }
+    await page.goto(
+      `/student?view=recording&batchId=${batchId}&recordingId=dummy`,
+    );
+    const player = page.locator("h1").first();
+    const notFound = page.getByText("Recording not found");
+    await expect(player.or(notFound)).toBeVisible({ timeout: 15000 });
   });
 
   test("TC-STU-W6: Settings page loads", async ({ page }) => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Image from "next/image";
+import CourseThumb from "@/components/student/CourseThumb";
 import { IconArrowRight, IconClock, IconSearch } from "@tabler/icons-react";
 import type { ViewState } from "../_types/student-portal";
 import type { EnrolledCourse } from "@/lib/api-types";
@@ -99,35 +99,22 @@ export default function CoursesView({ courses, navigate }: CoursesViewProps) {
               >
                 {/* Thumbnail */}
                 <div className="relative aspect-video w-full overflow-hidden bg-card">
-                  {(() => {
-                    const thumb =
+                  <CourseThumb
+                    title={course.title}
+                    thumbnail={
                       (course as EnrolledCourse & { thumbnailUrl?: string })
-                        .thumbnailUrl || course.thumbnail;
-                    const isValidUrl =
-                      thumb &&
-                      (thumb.startsWith("/") || thumb.startsWith("http"));
-                    return isValidUrl ? (
-                      <Image
-                        src={thumb}
-                        className="object-cover"
-                        alt={course.title}
-                        fill
-                        unoptimized
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                          const parent = e.currentTarget.parentElement;
-                          if (parent) {
-                            parent.innerHTML =
-                              '<div class="flex h-full w-full items-center justify-center text-5xl bg-gradient-to-br from-primary/20 to-accent/20">📚</div>';
-                          }
-                        }}
-                      />
-                    ) : (
+                        .thumbnailUrl || course.thumbnail
+                    }
+                    alt={course.title}
+                    fill
+                    imageClassName="object-cover"
+                    iconClassName="absolute inset-0 m-auto h-16 w-16 object-contain"
+                    fallback={
                       <div className="flex h-full w-full items-center justify-center text-5xl bg-gradient-to-br from-primary/20 to-accent/20">
-                        {thumb || "📚"}
+                        📚
                       </div>
-                    );
-                  })()}
+                    }
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-card/80 via-transparent to-transparent" />
                   {/* Status Badge */}
                   <span

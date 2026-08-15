@@ -7,7 +7,6 @@ import type { LiveSession } from "@/lib/api-types";
 
 const POLL_INTERVAL_MS = 60_000;
 const DEFAULT_END_FALLBACK_MS = 2 * 60 * 60 * 1000;
-
 function resolveEndTime(session: LiveSession): number {
   const start = new Date(session.scheduledAt).getTime();
   const end = session.endDateTime
@@ -21,14 +20,17 @@ function getSessionStatus(
   upcomingWindowMinutes: number,
   nowMs: number,
 ): "live" | "scheduled" | "hidden" {
-  if (session.status === "COMPLETED" || session.status === "PAST" || session.status === "CANCELLED") {
+  if (session.status === "PAST") {
     return "hidden";
   }
   if (!session.scheduledAt) return "hidden";
-  const start = new Date(session.scheduledAt).getTime();
-  const end = resolveEndTime(session);
 
-  // If current time has reached or passed the end time, strictly hide the banner
+  const start = new Date(session.scheduledAt).getTime();
+  if (Number.isNaN(start)) return "hidden";
+
+  const end = resolveEndTime(session);
+  if (Number.isNaN(end)) return "hidden";
+
   if (nowMs >= end) return "hidden";
 
   if (session.status === "LIVE") return "live";
@@ -173,11 +175,10 @@ export default function LiveSessionBanner({
       <button
         onClick={handleJoin}
         disabled={!hasUrl && !onJoin}
-        className={`shrink-0 inline-flex items-center justify-center gap-2 bg-white text-slate-900 hover:bg-slate-50 font-extrabold rounded-xl px-5 py-2.5 text-sm shadow-md transition-all duration-200 active:scale-95 ${
-          !hasUrl && !onJoin
-            ? "opacity-75 cursor-not-allowed"
-            : "cursor-pointer hover:shadow-lg hover:translate-y-[-1px]"
-        }`}
+        className={`shrink-0 inline-flex items-center justify-center gap-2 bg-white text-slate-900 hover:bg-slate-50 font-extrabold rounded-xl px-5 py-2.5 text-sm shadow-md transition-all duration-200 active:scale-95 ${!hasUrl && !onJoin
+          ? "opacity-75 cursor-not-allowed"
+          : "cursor-pointer hover:shadow-lg hover:translate-y-[-1px]"
+          }`}
         title={!hasUrl ? "Meeting link pending instructor release" : undefined}
       >
         {isLive ? (

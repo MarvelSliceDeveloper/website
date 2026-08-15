@@ -1,6 +1,6 @@
 // k6 shared helpers
 
-export const BASE_URL = "http://localhost:4000";
+export const BASE_URL = __ENV.BASE_URL || "http://localhost:4000";
 
 export const SEED_USERS = [
   { email: "admin@lms.local", password: "admin123", role: "admin" },

@@ -143,10 +143,11 @@ model User {
   grantedExtensions       BatchAssignmentExtension[]
   refundsInitiated        Refund[]                   @relation("RefundInitiator")
   refundsApproved         Refund[]                   @relation("RefundApprover")
-  twoFactorAuth           TwoFactorAuth?
-  instructorProfile       InstructorProfile?
-   instructorVerifications InstructorProfile[]        @relation("InstructorVerifier")
-   internField            InternField?               @relation("InternField", fields: [internFieldId], references: [id])
+   twoFactorAuth           TwoFactorAuth?
+   instructorProfile       InstructorProfile?
+    instructorVerifications InstructorProfile[]        @relation("InstructorVerifier")
+    internField            InternField?               @relation("InternField", fields: [internFieldId], references: [id])
+    referrals              Referral[]
 
    @@index([role])
 }
@@ -1081,6 +1082,34 @@ model Refund {
 enum DiscountType {
   PERCENTAGE
   FIXED
+}
+
+enum ReferralStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COUPON_SENT
+}
+
+model Referral {
+  id            String         @id @default(cuid())
+  referrerId    String
+  referrerName  String
+  referrerEmail String
+  refereeName   String
+  refereeEmail  String
+  refereePhone  String?
+  status        ReferralStatus @default(PENDING)
+  couponId      String?
+  couponCode    String?
+  adminNote     String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  referrer User @relation(fields: [referrerId], references: [id], onDelete: Cascade)
+
+  @@index([referrerId])
+  @@index([status])
 }
 
 model Coupon {

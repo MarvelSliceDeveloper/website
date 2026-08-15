@@ -281,11 +281,10 @@ export default function MicrosoftIntegrationPage() {
                         </td>
                         <td className="py-2.5 pr-3">
                           <span
-                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                              log.success
+                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${log.success
                                 ? "bg-emerald-500/10 text-emerald-400"
                                 : "bg-danger/10 text-danger"
-                            }`}
+                              }`}
                           >
                             {log.success ? (
                               <>

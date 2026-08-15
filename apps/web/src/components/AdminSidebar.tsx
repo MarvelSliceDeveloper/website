@@ -28,6 +28,7 @@ import {
   IconRefresh,
   IconAlarmSmoke,
   IconHeartHandshake,
+  IconUserShare,
 } from "@tabler/icons-react";
 
 import type { NavItem, NavItemChild } from "@/components/shared/SidebarTypes";
@@ -419,6 +420,15 @@ export default function AdminSidebar({
                 }>,
               },
               {
+                label: "Referrals",
+                href: "/admin/referrals",
+                icon: IconUserShare as React.ComponentType<{
+                  size?: number | string;
+                  stroke?: number | string;
+                  className?: string;
+                }>,
+              },
+              {
                 label: "Mentorship",
                 href: "/admin/mentorship",
                 icon: IconHeartHandshake,
@@ -622,6 +632,15 @@ export default function AdminSidebar({
                 ],
               },
               { label: "Payments", href: "/admin/payments", icon: IconPackage },
+              {
+                label: "Referrals",
+                href: "/admin/referrals",
+                icon: IconUserShare as React.ComponentType<{
+                  size?: number | string;
+                  stroke?: number | string;
+                  className?: string;
+                }>,
+              },
               {
                 label: "Certificates",
                 href: "/admin/certificates",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import CourseThumb from "@/components/student/CourseThumb";
 import type { CatalogueCourse } from "@/lib/api-types";
 
 interface CourseDetailViewProps {
@@ -34,27 +34,18 @@ export default function CourseDetailView({
       <div className="glass-card overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card p-6">
         <div className="flex items-start gap-5">
           <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-4xl shadow-lg overflow-hidden">
-            {course.thumbnail &&
-            (course.thumbnail.startsWith("/") ||
-              course.thumbnail.startsWith("http")) ? (
-              <Image
-                src={course.thumbnail}
-                className="h-full w-full object-cover"
-                alt=""
-                width={64}
-                height={64}
-                unoptimized
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  const parent = e.currentTarget.parentElement;
-                  if (parent) {
-                    parent.textContent = "📚";
-                  }
-                }}
-              />
-            ) : (
-              course.thumbnail || "📚"
-            )}
+            <CourseThumb
+              title={course.title}
+              thumbnail={course.thumbnail}
+              alt={course.title}
+              width={64}
+              height={64}
+              imageClassName="h-full w-full object-cover"
+              iconClassName="h-1/2 w-1/2 object-contain"
+              fallback={
+                <span className="text-4xl">{course.thumbnail || "📚"}</span>
+              }
+            />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap gap-1.5">

@@ -9,24 +9,18 @@ test.describe("Password — Forgot & Reset Flow", () => {
     await expect(page.locator("h1").first()).toBeVisible({ timeout: 15000 });
   });
 
-  test("TC-PWD-F2: Forgot password form submits successfully", async ({
+  test("TC-PWD-F2: Forgot password form submits and shows confirmation", async ({
     page,
   }) => {
     await page.goto("/forgot-password");
     await expect(page.locator("h1").first()).toBeVisible({ timeout: 15000 });
 
-    const emailInput = page.locator('input[type="email"]').first();
-    if (await emailInput.isVisible()) {
-      await emailInput.fill("student@lms.local");
+    await page.fill('input[type="email"]', "student@lms.local");
+    await page.click('button[type="submit"]');
 
-      const submitBtn = page.locator('button[type="submit"]').first();
-      if (await submitBtn.isVisible()) {
-        await submitBtn.click();
-        await page.waitForTimeout(3000);
-      }
-    }
-
-    await expect(page.locator("h1").first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Check Your Email")).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   test("TC-PWD-F3: Reset password page with token loads", async ({ page }) => {
@@ -34,28 +28,22 @@ test.describe("Password — Forgot & Reset Flow", () => {
     await expect(page.locator("h1").first()).toBeVisible({ timeout: 15000 });
   });
 
-  test("TC-PWD-F4: Reset password page without token shows error or redirects", async ({
+  test("TC-PWD-F4: Reset password page without token shows invalid link", async ({
     page,
   }) => {
     await page.goto("/reset-password");
-    await page.waitForTimeout(3000);
-    const h1 = page.locator("h1").first();
-    if (await h1.isVisible({ timeout: 5000 }).catch(() => false)) {
-      expect(await h1.isVisible()).toBeTruthy();
-    }
+    await expect(page.getByText("Invalid Link")).toBeVisible({
+      timeout: 15000,
+    });
   });
 });
 
 test.describe("Password — Set Password Flow", () => {
-  test("TC-PWD-S1: Set password page loads when logged in with mustChangePassword flag", async ({
+  test("TC-PWD-S1: Set password page redirects to login when unauthenticated", async ({
     page,
   }) => {
     await page.goto("/set-password");
-    await page.waitForTimeout(3000);
-    const h1 = page.locator("h1").first();
-    if (await h1.isVisible({ timeout: 5000 }).catch(() => false)) {
-      expect(await h1.isVisible()).toBeTruthy();
-    }
+    await expect(page).toHaveURL(/\/login/, { timeout: 15000 });
   });
 
   test("TC-PWD-S2: Redirected away from set-password when mustChangePassword is false", async ({
@@ -63,15 +51,7 @@ test.describe("Password — Set Password Flow", () => {
   }) => {
     await loginAs(page, "student");
     await page.goto("/set-password");
-    await page.waitForTimeout(5000);
-
-    const currentUrl = page.url();
-    if (currentUrl.includes("/set-password")) {
-      const h1 = page.locator("h1").first();
-      if (await h1.isVisible({ timeout: 3000 }).catch(() => false)) {
-        expect(await h1.isVisible()).toBeTruthy();
-      }
-    }
+    await expect(page).toHaveURL(/\/student/, { timeout: 15000 });
   });
 });
 

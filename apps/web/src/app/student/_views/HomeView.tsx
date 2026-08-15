@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import CourseThumb from "@/components/student/CourseThumb";
 import {
   IconBook,
   IconCalendar,
@@ -37,7 +37,7 @@ import type {
   StudentResultItem,
 } from "@/lib/api-types";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, getErrorMessage } from "@/lib/toast";
 import StudentStatTiles from "@/components/student/StudentStatTiles";
 import LiveSessionBanner from "@/components/LiveSessionBanner";
 import { useLiveSessionPresence } from "@/hooks/use-live-session-presence";
@@ -81,6 +81,7 @@ export default function HomeView({
   enrolledCourses = [],
   calendarEvents = [],
   studentName = "Student",
+  studentEmail = "",
   firstBatchId,
   navigate,
   onMentorshipSubmit,
@@ -97,6 +98,7 @@ export default function HomeView({
   const [referralName, setReferralName] = useState("");
   const [referralEmail, setReferralEmail] = useState("");
   const [referralPhone, setReferralPhone] = useState("");
+  const [referralSubmitting, setReferralSubmitting] = useState(false);
 
   const [mentorQueryType, setMentorQueryType] = useState<
     "course" | "generic" | "career" | "other"
@@ -188,12 +190,30 @@ export default function HomeView({
   const latestAssignment = results.find((r) => r.type === "ASSIGNMENT") ?? null;
   const latestQuiz = results.find((r) => r.type === "QUIZ") ?? null;
 
-  function handleReferralSubmit(e: React.FormEvent) {
+  async function handleReferralSubmit(e: React.FormEvent) {
     e.preventDefault();
-    alert(`Thank you! Referral for ${referralName} submitted successfully.`);
-    setReferralName("");
-    setReferralEmail("");
-    setReferralPhone("");
+    if (!studentEmail) {
+      toast.error("Unable to identify your account. Please refresh and try again.");
+      return;
+    }
+    setReferralSubmitting(true);
+    try {
+      await api.post("/api/referrals", {
+        refereeName: referralName,
+        refereeEmail: referralEmail,
+        refereePhone: referralPhone,
+      });
+      toast.success(
+        `Thank you! Referral for ${referralName} submitted successfully.`,
+      );
+      setReferralName("");
+      setReferralEmail("");
+      setReferralPhone("");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setReferralSubmitting(false);
+    }
   }
 
   async function handleJoinSession(session: LiveSession) {
@@ -528,7 +548,18 @@ export default function HomeView({
                               className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border border-border bg-card/50"
                             >
                               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-success/10 border border-success/20 overflow-hidden">
-                                <IconBook size={22} className="text-success" />
+                                <CourseThumb
+                                  title={c.title}
+                                  thumbnail={c.thumbnail}
+                                  alt={c.title}
+                                  width={48}
+                                  height={48}
+                                  imageClassName="h-full w-full object-cover"
+                                  iconClassName="h-1/2 w-1/2 object-contain"
+                                  fallback={
+                                    <IconBook size={22} className="text-success" />
+                                  }
+                                />
                               </div>
                               <div className="min-w-0 flex-1">
                                 <p className="font-bold text-sm text-foreground truncate">
@@ -569,20 +600,16 @@ export default function HomeView({
                             className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border border-border bg-card shadow-sm hover:border-primary/40 transition-colors"
                           >
                             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-sm overflow-hidden">
-                              {item.thumbnail &&
-                              (item.thumbnail.startsWith("/") ||
-                                item.thumbnail.startsWith("http")) ? (
-                                <Image
-                                  src={item.thumbnail}
-                                  alt={item.courseTitle}
-                                  width={48}
-                                  height={48}
-                                  className="h-full w-full object-cover"
-                                  unoptimized
-                                />
-                              ) : (
-                                <IconBook size={20} />
-                              )}
+                              <CourseThumb
+                                title={item.courseTitle}
+                                thumbnail={item.thumbnail}
+                                alt={item.courseTitle}
+                                width={48}
+                                height={48}
+                                imageClassName="h-full w-full object-cover"
+                                iconClassName="h-1/2 w-1/2 object-contain"
+                                fallback={<IconBook size={20} />}
+                              />
                             </div>
                             <div className="min-w-0 flex-1">
                               <p className="font-bold text-sm text-foreground truncate">
@@ -651,8 +678,19 @@ export default function HomeView({
                             className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border border-border bg-card/50 hover:bg-card hover:border-primary/30 transition-all duration-200"
                           >
                             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary/10 to-accent/10 border border-border/60 shadow-inner overflow-hidden">
-                            <IconBook size={22} className="text-primary" />
-                          </div>
+                              <CourseThumb
+                                title={c.title}
+                                thumbnail={c.thumbnail}
+                                alt={c.title}
+                                width={48}
+                                height={48}
+                                imageClassName="h-full w-full object-cover"
+                                iconClassName="h-1/2 w-1/2 object-contain"
+                                fallback={
+                                  <IconBook size={22} className="text-primary" />
+                                }
+                              />
+                            </div>
                             <div className="min-w-0 flex-1">
                               <p className="font-bold text-sm text-foreground truncate">
                                 {c.title}
@@ -766,9 +804,12 @@ export default function HomeView({
                     </div>
                     <button
                       type="submit"
-                      className="w-full bg-orange-600 cursor-pointer text-white  rounded-2xl py-2.5 text-sm font-semibold hover:bg-orange-600/80 transition-colors mt-1"
+                      disabled={referralSubmitting}
+                      className="w-full bg-orange-600 cursor-pointer text-white  rounded-2xl py-2.5 text-sm font-semibold hover:bg-orange-600/80 transition-colors mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Submit Referral
+                      {referralSubmitting
+                        ? "Submitting..."
+                        : "Submit Referral"}
                     </button>
                   </form>
                 </div>

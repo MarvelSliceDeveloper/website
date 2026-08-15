@@ -40,6 +40,7 @@ test.describe("Admin Portal — Page Load", () => {
     { route: "/admin/categories", name: "Categories" },
     { route: "/admin/tags", name: "Tags" },
     { route: "/admin/coupons", name: "Coupons" },
+    { route: "/admin/referrals", name: "Referrals" },
     { route: "/admin/packages", name: "Packages" },
     { route: "/admin/packages/new", name: "Package create" },
     { route: "/admin/packages/enrollments", name: "Package enrollments" },
@@ -72,7 +73,7 @@ test.describe("Admin Portal — Page Load", () => {
 
 test.describe("Admin Portal — Super Admin pages", () => {
   test.beforeEach(async ({ page }) => {
-    await loginAs(page, "admin");
+    await loginAs(page, "superadmin");
   });
 
   test("TC-ADM-SUPER: Super admin dashboard loads", async ({ page }) => {

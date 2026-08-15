@@ -9,6 +9,7 @@ export const options = {
   scenarios: {
     admins: {
       executor: "ramping-vus",
+      exec: "adminFlow",
       startVUs: 0,
       stages: [
         { duration: "30s", target: 3 },
@@ -19,6 +20,7 @@ export const options = {
     },
     instructors: {
       executor: "ramping-vus",
+      exec: "instructorFlow",
       startVUs: 0,
       stages: [
         { duration: "20s", target: 5 },
@@ -29,6 +31,7 @@ export const options = {
     },
     students: {
       executor: "ramping-vus",
+      exec: "studentFlow",
       startVUs: 0,
       stages: [
         { duration: "10s", target: 30 },
@@ -44,35 +47,17 @@ export const options = {
   },
 };
 
-export function setup() {
-  // Pre-login all users and return auth tokens
-  return {
-    admin: login(http, BASE_URL, "admin@lms.local", "admin123"),
-    instructor: login(http, BASE_URL, "instructor@lms.local", "instructor123"),
-    student: login(http, BASE_URL, "student@lms.local", "student123"),
-  };
+function loginCheck(role, res) {
+  check(res, { [`${role} login 200`]: (r) => r.status === 200 });
 }
 
-export default function (authData) {
-  // Pick flow based on scenario tags
-  // Each VU runs requests matching their role
-  const role = __ENV?.SCENARIO_ROLE || "student";
+export function adminFlow() {
+  // Each VU logs in with its own cookie jar (setup() cookies don't propagate)
+  loginCheck(
+    "admin",
+    login(http, BASE_URL, "admin@lms.local", "admin123"),
+  );
 
-  switch (role) {
-    case "admin":
-      adminFlow(authData.admin);
-      break;
-    case "instructor":
-      instructorFlow(authData.instructor);
-      break;
-    default:
-      studentFlow(authData.student);
-  }
-
-  sleep(Math.random() * 5 + 2);
-}
-
-function adminFlow() {
   // Admin: manage mentorship, view all courses, view stats
   http.get(`${BASE_URL}/api/mentorship/tickets`, {
     tags: { name: "admin_tickets" },
@@ -87,9 +72,16 @@ function adminFlow() {
     tags: { name: "admin_courses" },
   });
   http.get(`${BASE_URL}/api/sessions`, { tags: { name: "admin_sessions" } });
+
+  sleep(Math.random() * 5 + 2);
 }
 
-function instructorFlow() {
+export function instructorFlow() {
+  loginCheck(
+    "instructor",
+    login(http, BASE_URL, "instructor@lms.local", "instructor123"),
+  );
+
   // Instructor: view assigned tickets, sessions
   http.get(`${BASE_URL}/api/mentorship/tickets`, {
     tags: { name: "instructor_tickets" },
@@ -100,9 +92,16 @@ function instructorFlow() {
   http.get(`${BASE_URL}/api/courses/enrolled`, {
     tags: { name: "instructor_courses" },
   });
+
+  sleep(Math.random() * 5 + 2);
 }
 
-function studentFlow() {
+export function studentFlow() {
+  loginCheck(
+    "student",
+    login(http, BASE_URL, "student@lms.local", "student123"),
+  );
+
   // Student: enrolled courses, live sessions, mentorship tickets
   http.get(`${BASE_URL}/api/courses/enrolled`, {
     tags: { name: "student_courses" },
@@ -112,4 +111,6 @@ function studentFlow() {
     tags: { name: "student_tickets" },
   });
   http.get(`${BASE_URL}/api/auth/me`, { tags: { name: "student_me" } });
+
+  sleep(Math.random() * 5 + 2);
 }
