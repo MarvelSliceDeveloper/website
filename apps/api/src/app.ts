@@ -86,7 +86,6 @@ import { profileRouter } from "./modules/instructor/profile.routes";
 import { auditMiddleware } from "./utils/audit";
 import { maintenanceMiddleware } from "./middleware/maintenance.middleware";
 import { maintenanceRouter } from "./modules/admin/maintenance/maintenance.routes";
-import gdprRouter from "./modules/admin/gdpr/gdpr.routes";
 import backupRouter from "./modules/admin/backup/backup.routes";
 import alertingWebhooksRouter from "./modules/admin/webhooks/alerting-webhooks.routes";
 import { refundsRouter } from "./modules/admin/refunds/refunds.routes";
@@ -385,9 +384,6 @@ app.use("/api/admin/assignments/review", assignmentReviewRouter);
 
 // ── Instructor Management ──
 app.use("/api/admin/instructors", instructorsRouter);
-
-// ── GDPR (data export & anonymization) ──
-app.use("/api/admin/gdpr", gdprRouter);
 
 // ── Database Backup / Restore ──
 app.use("/api/admin/backup", backupRouter);

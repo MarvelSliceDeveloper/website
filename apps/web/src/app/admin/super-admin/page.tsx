@@ -100,7 +100,7 @@ export default function SuperAdminPage() {
     {
       label: "Consent Logs",
       href: "/admin/consent-logs",
-      desc: "User consent history (GDPR)",
+      desc: "User consent history",
     },
     {
       label: "Trash",

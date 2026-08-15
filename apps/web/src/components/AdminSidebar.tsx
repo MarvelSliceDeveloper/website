@@ -531,19 +531,6 @@ export default function AdminSidebar({
               },
             ],
           },
-          {
-            label: "Compliance",
-            items: [
-              {
-                label: "GDPR",
-                href: "/admin/gdpr",
-                icon: IconShield,
-                children: [
-                  { label: "Data Export", href: "/admin/gdpr" },
-                ],
-              },
-            ],
-          },
         ]
       : [
           {

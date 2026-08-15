@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeAll } from "vitest";
-import gdprRouter from "../../modules/admin/gdpr/gdpr.routes";
 import backupRouter from "../../modules/admin/backup/backup.routes";
 import webhooksRouter from "../../modules/admin/webhooks/alerting-webhooks.routes";
 
@@ -16,21 +15,7 @@ function mockRouter(router: any) {
   return routes;
 }
 
-describe("Admin Features: GDPR, Backup, Alerting Webhooks", () => {
-  describe("GDPR Routes", () => {
-    const routes = mockRouter(gdprRouter);
-
-    it("registers GET /export/:userId", () => {
-      const route = routes.find((r) => r.path === "/export/:userId" && r.method === "GET");
-      expect(route).toBeDefined();
-    });
-
-    it("registers POST /anonymize/:userId", () => {
-      const route = routes.find((r) => r.path === "/anonymize/:userId" && r.method === "POST");
-      expect(route).toBeDefined();
-    });
-  });
-
+describe("Admin Features: Backup, Alerting Webhooks", () => {
   describe("Backup Routes", () => {
     const routes = mockRouter(backupRouter);
 
