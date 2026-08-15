@@ -2,9 +2,11 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 type FormState = {
@@ -60,157 +62,12 @@ interface InstructorResponse {
   instructorProfile: InstructorProfileData | null;
 }
 
-export default function EditInstructorPage() {
-  usePageTitle("Edit Instructor");
-  const router = useRouter();
-  const params = useParams<{ id: string }>();
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [attempted, setAttempted] = useState(false);
-
-  const [form, setForm] = useState<FormState>({
-    designation: "",
-    qualification: "",
-    experienceYears: "",
-    skills: "",
-    currentlyEmployed: false,
-    companyName: "",
-    availableTime: "",
-    phone: "",
-    bio: "",
-    address: "",
-    city: "",
-    state: "",
-    country: "",
-    languages: "",
-    linkedin: "",
-    github: "",
-    portfolio: "",
-    bankName: "",
-    bankAccountNumber: "",
-    bankIfscCode: "",
-    bankAccountHolderName: "",
-    upiId: "",
-  });
-
-  useEffect(() => {
-    async function fetchInstructor() {
-      try {
-        const data = await api.get<InstructorResponse>(
-          `/api/admin/instructors/${params.id}`,
-        );
-        const p = data.instructorProfile ?? ({} as InstructorProfileData);
-        const toCsv = (v: unknown) =>
-          Array.isArray(v) ? v.join(", ") : typeof v === "string" ? v : "";
-        setForm({
-          designation: p.designation ?? "",
-          qualification: p.qualification ?? "",
-          experienceYears: p.experienceYears?.toString() ?? "",
-          skills: toCsv(p.skills),
-          currentlyEmployed: p.currentlyEmployed ?? false,
-          companyName: p.companyName ?? "",
-          availableTime: p.availableTime ?? "",
-          phone: p.phone ?? "",
-          bio: p.bio ?? "",
-          address: p.address ?? "",
-          city: p.city ?? "",
-          state: p.state ?? "",
-          country: p.country ?? "",
-          languages: toCsv(p.languages),
-          linkedin: p.socialLinks?.linkedin ?? "",
-          github: p.socialLinks?.github ?? "",
-          portfolio: p.socialLinks?.portfolio ?? "",
-          bankName: p.bankName ?? "",
-          bankAccountNumber: p.bankAccountNumber ?? "",
-          bankIfscCode: p.bankIfscCode ?? "",
-          bankAccountHolderName: p.bankAccountHolderName ?? "",
-          upiId: p.upiId ?? "",
-        });
-      } catch (err) {
-        toast.error(getErrorMessage(err));
-        router.push("/admin/instructors");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchInstructor();
-  }, [params.id, router]);
-
-  const update = <K extends keyof FormState>(field: K, value: FormState[K]) =>
-    setForm((p) => ({ ...p, [field]: value }));
-
-  const errors = useMemo(() => {
-    const e: Partial<Record<keyof FormState, string>> = {};
-    if (
-      form.experienceYears &&
-      (Number(form.experienceYears) < 0 || Number(form.experienceYears) > 70)
-    )
-      e.experienceYears = "Enter a valid number (0-70)";
-    return e;
-  }, [form]);
-
-  const isValid = Object.keys(errors).length === 0;
-
-  function buildPayload() {
-    const skills = form.skills
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const languages = form.languages
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const socialLinks: Record<string, string> = {};
-    if (form.linkedin.trim()) socialLinks.linkedin = form.linkedin.trim();
-    if (form.github.trim()) socialLinks.github = form.github.trim();
-    if (form.portfolio.trim()) socialLinks.portfolio = form.portfolio.trim();
-
-    return {
-      designation: form.designation.trim() || undefined,
-      qualification: form.qualification.trim() || undefined,
-      experienceYears: form.experienceYears ? Number(form.experienceYears) : undefined,
-      skills: skills.length ? skills : undefined,
-      currentlyEmployed: form.currentlyEmployed || undefined,
-      companyName: form.companyName.trim() || undefined,
-      availableTime: form.availableTime.trim() || undefined,
-      phone: form.phone.trim() || undefined,
-      bio: form.bio.trim() || undefined,
-      address: form.address.trim() || undefined,
-      city: form.city.trim() || undefined,
-      state: form.state.trim() || undefined,
-      country: form.country.trim() || undefined,
-      languages: languages.length ? languages : undefined,
-      socialLinks: Object.keys(socialLinks).length ? socialLinks : undefined,
-      bankName: form.bankName.trim() || undefined,
-      bankAccountNumber: form.bankAccountNumber.trim() || undefined,
-      bankIfscCode: form.bankIfscCode.trim() || undefined,
-      bankAccountHolderName: form.bankAccountHolderName.trim() || undefined,
-      upiId: form.upiId.trim() || undefined,
-    };
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAttempted(true);
-
-    if (!isValid) {
-      const firstError = Object.values(errors)[0];
-      toast.error(firstError ?? "Please fix the highlighted fields");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      await api.put(`/api/admin/instructors/${params.id}`, buildPayload());
-      toast.success("Instructor updated successfully!");
-      router.push(`/admin/instructors/${params.id}`);
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
+function makeFormParts(
+  form: FormState,
+  update: <K extends keyof FormState>(field: K, value: FormState[K]) => void,
+  errors: Partial<Record<keyof FormState, string>>,
+  attempted: boolean,
+) {
   const showError = (field: keyof FormState) =>
     attempted && errors[field] ? (
       <p className="mt-1 text-xs text-danger">{errors[field]}</p>
@@ -310,6 +167,170 @@ export default function EditInstructorPage() {
       </label>
     );
   }
+
+  return { Field, TagField, CardSection, CheckboxField };
+}
+
+export default function EditInstructorPage() {
+  usePageTitle("Edit Instructor");
+  const router = useRouter();
+  const params = useParams<{ id: string }>();
+  const [attempted, setAttempted] = useState(false);
+
+  const [form, setForm] = useState<FormState>({
+    designation: "",
+    qualification: "",
+    experienceYears: "",
+    skills: "",
+    currentlyEmployed: false,
+    companyName: "",
+    availableTime: "",
+    phone: "",
+    bio: "",
+    address: "",
+    city: "",
+    state: "",
+    country: "",
+    languages: "",
+    linkedin: "",
+    github: "",
+    portfolio: "",
+    bankName: "",
+    bankAccountNumber: "",
+    bankIfscCode: "",
+    bankAccountHolderName: "",
+    upiId: "",
+  });
+
+  const instructorQuery = useApiQuery<InstructorResponse>(
+    ["admin", "instructors", params.id],
+    `/api/admin/instructors/${params.id}`,
+  );
+  const loading = instructorQuery.isPending;
+
+  // Populate the form once the profile data is available.
+  useEffect(() => {
+    const data = instructorQuery.data;
+    if (!data) return;
+    const p = data.instructorProfile ?? ({} as InstructorProfileData);
+    const toCsv = (v: unknown) =>
+      Array.isArray(v) ? v.join(", ") : typeof v === "string" ? v : "";
+    setForm({
+      designation: p.designation ?? "",
+      qualification: p.qualification ?? "",
+      experienceYears: p.experienceYears?.toString() ?? "",
+      skills: toCsv(p.skills),
+      currentlyEmployed: p.currentlyEmployed ?? false,
+      companyName: p.companyName ?? "",
+      availableTime: p.availableTime ?? "",
+      phone: p.phone ?? "",
+      bio: p.bio ?? "",
+      address: p.address ?? "",
+      city: p.city ?? "",
+      state: p.state ?? "",
+      country: p.country ?? "",
+      languages: toCsv(p.languages),
+      linkedin: p.socialLinks?.linkedin ?? "",
+      github: p.socialLinks?.github ?? "",
+      portfolio: p.socialLinks?.portfolio ?? "",
+      bankName: p.bankName ?? "",
+      bankAccountNumber: p.bankAccountNumber ?? "",
+      bankIfscCode: p.bankIfscCode ?? "",
+      bankAccountHolderName: p.bankAccountHolderName ?? "",
+      upiId: p.upiId ?? "",
+    });
+  }, [instructorQuery.data]);
+
+  // Redirect back to the list if the profile fails to load.
+  useEffect(() => {
+    if (instructorQuery.isError) {
+      toast.error(getErrorMessage(instructorQuery.error));
+      router.push("/admin/instructors");
+    }
+  }, [instructorQuery.isError, instructorQuery.error, router]);
+
+  const update = <K extends keyof FormState>(field: K, value: FormState[K]) =>
+    setForm((p) => ({ ...p, [field]: value }));
+
+  const errors = useMemo(() => {
+    const e: Partial<Record<keyof FormState, string>> = {};
+    if (
+      form.experienceYears &&
+      (Number(form.experienceYears) < 0 || Number(form.experienceYears) > 70)
+    )
+      e.experienceYears = "Enter a valid number (0-70)";
+    return e;
+  }, [form]);
+
+  const isValid = Object.keys(errors).length === 0;
+
+  function buildPayload() {
+    const skills = form.skills
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const languages = form.languages
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const socialLinks: Record<string, string> = {};
+    if (form.linkedin.trim()) socialLinks.linkedin = form.linkedin.trim();
+    if (form.github.trim()) socialLinks.github = form.github.trim();
+    if (form.portfolio.trim()) socialLinks.portfolio = form.portfolio.trim();
+
+    return {
+      designation: form.designation.trim() || undefined,
+      qualification: form.qualification.trim() || undefined,
+      experienceYears: form.experienceYears ? Number(form.experienceYears) : undefined,
+      skills: skills.length ? skills : undefined,
+      currentlyEmployed: form.currentlyEmployed || undefined,
+      companyName: form.companyName.trim() || undefined,
+      availableTime: form.availableTime.trim() || undefined,
+      phone: form.phone.trim() || undefined,
+      bio: form.bio.trim() || undefined,
+      address: form.address.trim() || undefined,
+      city: form.city.trim() || undefined,
+      state: form.state.trim() || undefined,
+      country: form.country.trim() || undefined,
+      languages: languages.length ? languages : undefined,
+      socialLinks: Object.keys(socialLinks).length ? socialLinks : undefined,
+      bankName: form.bankName.trim() || undefined,
+      bankAccountNumber: form.bankAccountNumber.trim() || undefined,
+      bankIfscCode: form.bankIfscCode.trim() || undefined,
+      bankAccountHolderName: form.bankAccountHolderName.trim() || undefined,
+      upiId: form.upiId.trim() || undefined,
+    };
+  }
+
+  const updateInstructorMutation = useMutation({
+    mutationFn: (payload: ReturnType<typeof buildPayload>) =>
+      api.put(`/api/admin/instructors/${params.id}`, payload),
+    onSuccess: () => {
+      toast.success("Instructor updated successfully!");
+      router.push(`/admin/instructors/${params.id}`);
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAttempted(true);
+
+    if (!isValid) {
+      const firstError = Object.values(errors)[0];
+      toast.error(firstError ?? "Please fix the highlighted fields");
+      return;
+    }
+
+    updateInstructorMutation.mutate(buildPayload());
+  };
+
+  const { Field, TagField, CardSection, CheckboxField } = makeFormParts(
+    form,
+    update,
+    errors,
+    attempted,
+  );
 
   if (loading) {
     return (
@@ -479,9 +500,9 @@ export default function EditInstructorPage() {
           <button
             type="submit"
             className="btn-primary"
-            disabled={submitting || !isValid}
+            disabled={updateInstructorMutation.isPending || !isValid}
           >
-            {submitting ? "Saving..." : "Save Changes"}
+            {updateInstructorMutation.isPending ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </form>

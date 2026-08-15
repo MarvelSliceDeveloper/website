@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, getErrorMessage } from "@/lib/toast";
 import {
   IconX,
   IconPlus,
@@ -111,8 +112,6 @@ export default function QuizCard({
       options: q.options.map((o) => ({ ...o })),
     })),
   );
-  const [loading, setLoading] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   const addQuestion = () => {
     setQuestions([
@@ -178,10 +177,37 @@ export default function QuizCard({
     }
   };
 
-  // Validates quiz data and sends PUT request to update the quiz.
+  const updateMutation = useMutation({
+    mutationFn: () =>
+      api.put(`/api/admin/courses/modules/quizzes/${quiz.id}`, {
+        title,
+        daysFromEnrollment:
+          daysFromEnrollment !== "" ? Number(daysFromEnrollment) : null,
+        passingScore: Number(passingScore),
+        examType:
+          hasMcq && hasAssignment && hasCoding ? "ALL_IN_ONE" : examType,
+        hasMcq,
+        hasAssignment,
+        hasCoding,
+        assignmentInstructions: hasAssignment
+          ? assignmentInstructions
+          : undefined,
+        assignmentPdfUrl: hasAssignment ? assignmentPdfUrl : undefined,
+        codingPrompt: hasCoding ? codingPrompt : undefined,
+        testCases: hasCoding ? testCases : undefined,
+        questions: hasMcq ? questions : [],
+      }),
+    onSuccess: () => {
+      toast.success("Quiz updated successfully");
+      setEditing(false);
+      onUpdate();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  // Validates quiz data and triggers the update mutation.
   // Checks: title required, each MCQ question needs text + correct answer.
-  // Sends only relevant fields based on enabled features (MCQ, assignment, coding).
-  const handleUpdate = async () => {
+  const handleUpdate = () => {
     if (!title.trim()) {
       toast.error("Please enter a title");
       return;
@@ -201,52 +227,20 @@ export default function QuizCard({
       }
     }
 
-    setLoading(true);
-    try {
-      await api.put(`/api/admin/courses/modules/quizzes/${quiz.id}`, {
-        title,
-        daysFromEnrollment: daysFromEnrollment !== "" ? Number(daysFromEnrollment) : null,
-        passingScore: Number(passingScore),
-        examType:
-          hasMcq && hasAssignment && hasCoding ? "ALL_IN_ONE" : examType,
-        hasMcq,
-        hasAssignment,
-        hasCoding,
-        assignmentInstructions: hasAssignment
-          ? assignmentInstructions
-          : undefined,
-        assignmentPdfUrl: hasAssignment ? assignmentPdfUrl : undefined,
-        codingPrompt: hasCoding ? codingPrompt : undefined,
-        testCases: hasCoding ? testCases : undefined,
-        questions: hasMcq ? questions : [],
-      });
-      toast.success("Quiz updated successfully");
-      setEditing(false);
-      onUpdate();
-    } catch (error) {
-      console.error("Failed to update quiz:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to update quiz",
-      );
-    } finally {
-      setLoading(false);
-    }
+    updateMutation.mutate();
   };
 
-  // Deletes this quiz after confirmation. Calls onUpdate to refresh the parent list.
-  const handleDelete = async () => {
-    setDeleting(true);
-    try {
-      await api.delete(`/api/admin/courses/modules/quizzes/${quiz.id}`);
+  const deleteMutation = useMutation({
+    mutationFn: () =>
+      api.delete(`/api/admin/courses/modules/quizzes/${quiz.id}`),
+    onSuccess: () => {
       toast.success("Deleted successfully");
       onUpdate();
-    } catch (error) {
-      console.error("Failed to delete:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to delete");
-    } finally {
-      setDeleting(false);
-    }
-  };
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleDelete = () => deleteMutation.mutate();
 
   // Resets all form state back to the original quiz values and exits edit mode.
   const cancelEdit = () => {
@@ -280,10 +274,10 @@ export default function QuizCard({
       </button>
       <button
         onClick={handleUpdate}
-        disabled={loading}
+        disabled={updateMutation.isPending}
         className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1 disabled:opacity-50"
       >
-        {loading ? "Saving..." : "Save Changes"}
+        {updateMutation.isPending ? "Saving..." : "Save Changes"}
       </button>
     </>
   );
@@ -598,7 +592,7 @@ export default function QuizCard({
           </button>
           <button
             onClick={handleDelete}
-            disabled={deleting}
+            disabled={deleteMutation.isPending}
             className="rounded-md p-1 text-[#8b8da3] transition-colors hover:bg-danger/12 hover:text-danger"
           >
             <IconTrash size={12} />

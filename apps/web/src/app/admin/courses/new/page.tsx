@@ -4,11 +4,26 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { IconArrowLeft, IconPlus, IconX } from "@tabler/icons-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  SUGGESTED_COURSE_TITLES,
+  SUGGESTED_CATEGORIES,
+  SUGGESTED_TAGS,
+  getSuggestedCourseMeta,
+} from "@/lib/suggestions";
 
 const MAX_THUMBNAIL_BYTES = 5 * 1024 * 1024;
 const ALLOWED_THUMBNAIL_TYPES = new Set([
@@ -20,18 +35,69 @@ const ALLOWED_THUMBNAIL_TYPES = new Set([
 export default function CreateCoursePage() {
   usePageTitle("New Course");
   const router = useRouter();
-  const [submitting, setSubmitting] = useState(false);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [newTag, setNewTag] = useState("");
+
+  const titlesQuery = useApiQuery<{ titles: { name: string }[] }>(
+    ["admin", "content", "titles"],
+    "/api/admin/content/titles",
+  );
+  const categoriesQuery = useApiQuery<{ categories: { name: string }[] }>(
+    ["admin", "content", "categories"],
+    "/api/admin/content/categories",
+  );
+  const tagsQuery = useApiQuery<{ tags: { name: string }[] }>(
+    ["admin", "content", "tags"],
+    "/api/admin/content/tags",
+  );
+
+  const dbTitles = titlesQuery.data?.titles.map((t) => t.name) ?? [];
+  const dbCategories =
+    categoriesQuery.data?.categories.map((c) => c.name) ?? [];
+  const dbTags = tagsQuery.data?.tags.map((t) => t.name) ?? [];
 
   const [form, setForm] = useState({
     title: "",
     description: "",
     category: "",
+    tags: [] as string[],
   });
 
   const update = (field: string, value: string | number) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  const titleOptions = dbTitles.length
+    ? dbTitles
+    : (SUGGESTED_COURSE_TITLES as readonly string[]);
+  const categoryOptions = dbCategories.length
+    ? dbCategories
+    : (SUGGESTED_CATEGORIES as readonly string[]);
+  const tagOptions = dbTags.length
+    ? dbTags
+    : (SUGGESTED_TAGS as readonly string[]);
+
+  // Auto-fill category + tags based on the selected course title.
+  useEffect(() => {
+    if (!form.title.trim()) return;
+    const { category, tags } = getSuggestedCourseMeta(form.title);
+    setForm((prev) => ({
+      ...prev,
+      category: prev.category || category,
+      tags: prev.tags.length > 0 ? prev.tags : tags,
+    }));
+  }, [form.title]);
+
+  const addTag = () => {
+    if (newTag.trim() && !form.tags.includes(newTag.trim())) {
+      setForm((prev) => ({ ...prev, tags: [...prev.tags, newTag.trim()] }));
+      setNewTag("");
+    }
+  };
+
+  const removeTag = (tag: string) => {
+    setForm((prev) => ({ ...prev, tags: prev.tags.filter((t) => t !== tag) }));
+  };
 
   useEffect(() => {
     if (!thumbnailFile) {
@@ -82,16 +148,16 @@ export default function CreateCoursePage() {
       toast.error("Course Title must be at least 3 characters.");
       return false;
     }
+    if (!thumbnailFile) {
+      toast.error("Thumbnail is required.");
+      return false;
+    }
     if (!form.description.trim()) {
       toast.error("Description is required.");
       return false;
     }
     if (form.description.trim().length < 10) {
       toast.error("Description must be at least 10 characters.");
-      return false;
-    }
-    if (!thumbnailFile) {
-      toast.error("Thumbnail is required.");
       return false;
     }
     if (!form.category.trim()) {
@@ -101,20 +167,21 @@ export default function CreateCoursePage() {
     return true;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) return;
-
-    setSubmitting(true);
-
-    try {
-      const course = await api.post<{ id: string }>("/api/admin/courses", {
-        title: form.title,
-        description: form.description,
-        category: form.category || undefined,
-        slug:form.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-      });
+  const createCourseMutation = useMutation({
+    mutationFn: async () => {
+      const course = await api.post<{ id: string; slug: string }>(
+        "/api/admin/courses",
+        {
+          title: form.title,
+          description: form.description,
+          category: form.category || undefined,
+          tags: form.tags,
+          slug: form.title
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9-]/g, ""),
+        },
+      );
 
       if (thumbnailFile) {
         const uploadData = new FormData();
@@ -125,23 +192,24 @@ export default function CreateCoursePage() {
             uploadData,
           );
         } catch (uploadError: unknown) {
-          toast.error(
-            (uploadError instanceof Error
-              ? uploadError.message
-              : String(uploadError)) ||
-              "Course created, but thumbnail upload failed. You can upload it in the editor.",
-          );
+          toast.error(getErrorMessage(uploadError));
         }
       }
 
+      return course;
+    },
+    onSuccess: (course) => {
       router.push(`/admin/courses/${course.slug || course.id}`);
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to create course",
-      );
-    } finally {
-      setSubmitting(false);
-    }
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
+    createCourseMutation.mutate();
   };
 
   return (
@@ -174,33 +242,30 @@ export default function CreateCoursePage() {
             <label className="mb-1.5 block text-sm font-medium text-foreground">
               Course Title <span className="text-danger">*</span>
             </label>
-            <input
-              type="text"
+            <Select
               value={form.title}
-              onChange={(e) => update("title", e.target.value)}
-              placeholder="e.g. Advanced TypeScript Patterns"
-              className="field w-full"
-              required
-              minLength={3}
-              maxLength={200}
-            />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Description <span className="text-danger">*</span>
-            </label>
-            <textarea
-              value={form.description}
-              onChange={(e) => update("description", e.target.value)}
-              placeholder="What will students learn in this course?"
-              className="field w-full min-h-[120px] resize-y"
-              required
-              minLength={10}
-            />
-            <p className="mt-1 text-xs text-muted">
-              You can add rich formatting in the Course Designer later.
-            </p>
+              onValueChange={(val) => update("title", val || "")}
+            >
+              <SelectTrigger className="field w-full">
+                <SelectValue placeholder="-- Select a title --" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">
+                  <span>-- Select a title --</span>
+                </SelectItem>
+                {titleOptions.map((title) => (
+                  <SelectItem key={title} value={title}>
+                    {title}
+                  </SelectItem>
+                ))}
+                {form.title &&
+                  !(titleOptions as readonly string[]).includes(
+                    form.title,
+                  ) && (
+                    <SelectItem value={form.title}>{form.title}</SelectItem>
+                  )}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -237,16 +302,117 @@ export default function CreateCoursePage() {
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Description <span className="text-danger">*</span>
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) => update("description", e.target.value)}
+              placeholder="What will students learn in this course?"
+              className="field w-full min-h-[120px] resize-y"
+              required
+              minLength={10}
+            />
+            <p className="mt-1 text-xs text-muted">
+              You can add rich formatting in the Course Designer later.
+            </p>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
               Category <span className="text-danger">*</span>
             </label>
-            <input
-              type="text"
+            <Select
               value={form.category}
-              onChange={(e) => update("category", e.target.value)}
-              placeholder="e.g. Programming, Design"
-              className="field w-full"
-              required
-            />
+              onValueChange={(val) => update("category", val || "")}
+            >
+              <SelectTrigger className="field w-full">
+                <SelectValue placeholder="-- Select a category --" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">
+                  <span>-- Select a category --</span>
+                </SelectItem>
+                {categoryOptions.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
+                ))}
+                {form.category &&
+                  !(categoryOptions as readonly string[]).includes(
+                    form.category,
+                  ) && (
+                    <SelectItem value={form.category}>
+                      {form.category}
+                    </SelectItem>
+                  )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              Tags
+            </label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {form.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-primary/10 text-primary rounded-md"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(tag)}
+                    className="hover:text-primary/70"
+                  >
+                    <IconX size={12} />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Select
+                onValueChange={(val) =>
+                  val &&
+                  !form.tags.includes(val) &&
+                  setForm((prev) => ({ ...prev, tags: [...prev.tags, val] }))
+                }
+              >
+                <SelectTrigger className="field">
+                  <SelectValue placeholder="-- Select a tag --" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">
+                    <span>-- Select a tag --</span>
+                  </SelectItem>
+                  {tagOptions.map((tag) => (
+                    <SelectItem key={tag} value={tag}>
+                      {tag}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <input
+                type="text"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), addTag())
+                }
+                placeholder="Add a custom tag"
+                className="field flex-1"
+              />
+              <button
+                type="button"
+                onClick={addTag}
+                className="btn-secondary text-xs px-3"
+              >
+                <IconPlus size={14} />
+              </button>
+            </div>
+            <p className="mt-1 text-xs text-muted">
+              Tags auto-fill from the course title. You can add or remove them.
+            </p>
           </div>
         </div>
 
@@ -263,8 +429,12 @@ export default function CreateCoursePage() {
           <Link href="/admin/courses" className="btn-secondary text-sm">
             Cancel
           </Link>
-          <button type="submit" className="btn-primary" disabled={submitting}>
-            {submitting ? "Adding..." : "Add Course"}
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={createCourseMutation.isPending}
+          >
+            {createCourseMutation.isPending ? "Adding..." : "Add Course"}
           </button>
         </div>
       </form>

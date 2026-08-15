@@ -193,7 +193,14 @@ export const packageController = {
       const { prisma } = await import("../../utils/prisma");
       const courses = await prisma.course.findMany({
         where: { status: "PUBLISHED" },
-        select: { id: true, title: true, slug: true, thumbnailUrl: true },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          thumbnailUrl: true,
+          category: true,
+          tags: true,
+        },
         orderBy: { title: "asc" },
       });
       return res.json({ courses });

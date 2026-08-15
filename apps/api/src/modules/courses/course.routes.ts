@@ -11,6 +11,7 @@ import { requireAuth, requireRole, AuthRequest } from "../../middleware/auth.mid
 import { UserRole } from "@lms/types";
 import { prisma } from "../../utils/prisma";
 import { moduleService } from "./module.service";
+import { courseService } from "./course.service";
 import { handleControllerError } from "../../utils/errors";
 
 const router = Router();
@@ -328,8 +329,11 @@ router.get(
   requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
   async (req: AuthRequest, res: Response) => {
     try {
-      const certModule = await moduleService.getCertificationModule(
+      const courseId = await courseService.resolveCourseId(
         req.params.courseId,
+      );
+      const certModule = await moduleService.getCertificationModule(
+        courseId,
       );
       return res.json({
         module: certModule
@@ -372,11 +376,14 @@ router.put(
   requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
   async (req: AuthRequest, res: Response) => {
     try {
-      const certModule = await moduleService.ensureCertificationModule(
+      const courseId = await courseService.resolveCourseId(
         req.params.courseId,
       );
+      const certModule = await moduleService.ensureCertificationModule(
+        courseId,
+      );
       const updated = await moduleService.updateCertificationModule(
-        req.params.courseId,
+        courseId,
         req.body,
       );
       return res.json(updated || certModule);
@@ -402,15 +409,18 @@ router.post(
       if (!file) {
         return res.status(400).json({ error: "No PDF file uploaded" });
       }
+      const courseId = await courseService.resolveCourseId(
+        req.params.courseId,
+      );
       const url = buildCertificationPdfUrl(
         req,
-        req.params.courseId,
+        courseId,
         file.filename,
       );
 
       // Update the certification quiz's assignmentPdfUrl
       const certModule = await moduleService.getCertificationModule(
-        req.params.courseId,
+        courseId,
       );
       if (certModule?.quizzes[0]) {
         await prisma.quiz.update({

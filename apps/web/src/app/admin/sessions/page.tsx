@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
   IconEdit,
@@ -12,7 +13,8 @@ import {
   IconVideo,
 } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FormModal } from "@/components/admin/FormModal";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
@@ -40,34 +42,20 @@ type SessionsResponse = {
 
 export default function AdminSessionsPage() {
   usePageTitle("Sessions");
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // Edit modal state
   const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editStart, setEditStart] = useState("");
   const [editEnd, setEditEnd] = useState("");
-  const [editSubmitting, setEditSubmitting] = useState(false);
-
-  // Sync state
-  const [syncingId, setSyncingId] = useState<string | null>(null);
   const confirmDelete = useConfirmDialog();
 
-  const fetchSessions = () => {
-    setLoading(true);
-    api
-      .get<SessionsResponse>("/api/sessions")
-      .then((response) => {
-        setSessions(Array.isArray(response.sessions) ? response.sessions : []);
-      })
-      .catch(() => setSessions([]))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    Promise.resolve().then(() => fetchSessions());
-  }, []);
+  const sessionsQuery = useApiQuery<SessionsResponse>(
+    ["admin", "sessions"],
+    "/api/sessions",
+  );
+  const sessions = sessionsQuery.data?.sessions ?? [];
+  const loading = sessionsQuery.isPending;
 
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now();
@@ -94,27 +82,50 @@ export default function AdminSessionsPage() {
     setEditEnd(new Date(session.scheduledEndAt).toISOString().slice(0, 16));
   };
 
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingSession) return;
-    setEditSubmitting(true);
-    try {
-      await api.patch(`/api/sessions/${editingSession.id}`, {
-        title: editTitle,
-        startDateTime: new Date(editStart).toISOString(),
-        endDateTime: new Date(editEnd).toISOString(),
-      });
+  const editMutation = useMutation({
+    mutationFn: ({
+      id,
+      title,
+      startDateTime,
+      endDateTime,
+    }: {
+      id: string;
+      title: string;
+      startDateTime: string;
+      endDateTime: string;
+    }) =>
+      api.patch(`/api/sessions/${id}`, {
+        title,
+        startDateTime,
+        endDateTime,
+      }),
+    onSuccess: () => {
       toast.success("Session updated successfully");
       setEditingSession(null);
-      fetchSessions();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to update session",
-      );
-    } finally {
-      setEditSubmitting(false);
-    }
+      void sessionsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSession) return;
+    editMutation.mutate({
+      id: editingSession.id,
+      title: editTitle,
+      startDateTime: new Date(editStart).toISOString(),
+      endDateTime: new Date(editEnd).toISOString(),
+    });
   };
+
+  const deleteMutation = useMutation({
+    mutationFn: (sessionId: string) =>
+      api.delete(`/api/sessions/${sessionId}`),
+    onSuccess: () => {
+      void sessionsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   const handleDelete = async (sessionId: string) => {
     if (
@@ -125,32 +136,18 @@ export default function AdminSessionsPage() {
       }))
     )
       return;
-    try {
-      await api.delete(`/api/sessions/${sessionId}`);
-      fetchSessions();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to cancel session",
-      );
-    }
+    deleteMutation.mutate(sessionId);
   };
 
-  const handleSync = async (sessionId: string) => {
-    setSyncingId(sessionId);
-    try {
-      await api.post(`/api/recordings/${sessionId}/sync`);
+  const syncMutation = useMutation({
+    mutationFn: (sessionId: string) =>
+      api.post(`/api/recordings/${sessionId}/sync`),
+    onSuccess: () => {
       toast.success("Recording synced successfully!");
-      fetchSessions();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error
-          ? err.message
-          : "No recording found yet. Teams recordings may take a few minutes to become available.",
-      );
-    } finally {
-      setSyncingId(null);
-    }
-  };
+      void sessionsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   return (
     <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -218,8 +215,11 @@ export default function AdminSessionsPage() {
                     upcoming={false}
                     onEdit={openEdit}
                     onDelete={handleDelete}
-                    onSync={handleSync}
-                    syncing={syncingId === session.id}
+                    onSync={(id) => syncMutation.mutate(id)}
+                    syncing={
+                      syncMutation.isPending &&
+                      syncMutation.variables === session.id
+                    }
                   />
                 ))}
               </div>
@@ -246,10 +246,10 @@ export default function AdminSessionsPage() {
             <button
               type="submit"
               form="edit-session-form"
-              disabled={editSubmitting}
+              disabled={editMutation.isPending}
               className="btn-primary text-xs px-4"
             >
-              {editSubmitting ? "Saving..." : "Save Changes"}
+              {editMutation.isPending ? "Saving..." : "Save Changes"}
             </button>
           </>
         }

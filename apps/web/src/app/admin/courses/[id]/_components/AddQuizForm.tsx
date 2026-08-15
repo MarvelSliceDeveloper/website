@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, getErrorMessage } from "@/lib/toast";
 import {
   IconPlus,
   IconX,
@@ -64,8 +65,35 @@ export default function AddQuizForm({
     { input: "", expectedOutput: "", isHidden: false },
   ]);
 
-  const [loading, setLoading] = useState(false);
   const excelInputRef = useRef<HTMLInputElement>(null);
+
+  const createQuizMutation = useMutation({
+    mutationFn: () =>
+      api.post(`/api/admin/courses/modules/${moduleId}/quizzes`, {
+        title,
+        daysFromEnrollment:
+          daysFromEnrollment !== "" ? Number(daysFromEnrollment) : undefined,
+        passingScore: 65,
+        examType:
+          hasMcq && hasAssignment && hasCoding ? "ALL_IN_ONE" : examType,
+        hasMcq,
+        hasAssignment,
+        hasCoding,
+        assignmentInstructions: hasAssignment
+          ? assignmentInstructions
+          : undefined,
+        assignmentPdfUrl: hasAssignment ? assignmentPdfUrl : undefined,
+        codingPrompt: hasCoding ? codingPrompt : undefined,
+        testCases: hasCoding ? testCases : undefined,
+        questions: hasMcq ? questions : [],
+      }),
+    onSuccess: () => {
+      toast.success("Quiz added successfully");
+      resetForm();
+      onSuccess();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   const handleExcelImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -205,7 +233,7 @@ export default function AddQuizForm({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
       toast.error("Please enter a title");
@@ -233,36 +261,7 @@ export default function AddQuizForm({
       }
     }
 
-    setLoading(true);
-    try {
-      await api.post(`/api/admin/courses/modules/${moduleId}/quizzes`, {
-        title,
-        daysFromEnrollment: daysFromEnrollment !== "" ? Number(daysFromEnrollment) : undefined,
-        passingScore: 65,
-        examType:
-          hasMcq && hasAssignment && hasCoding ? "ALL_IN_ONE" : examType,
-        hasMcq,
-        hasAssignment,
-        hasCoding,
-        assignmentInstructions: hasAssignment
-          ? assignmentInstructions
-          : undefined,
-        assignmentPdfUrl: hasAssignment ? assignmentPdfUrl : undefined,
-        codingPrompt: hasCoding ? codingPrompt : undefined,
-        testCases: hasCoding ? testCases : undefined,
-        questions: hasMcq ? questions : [],
-      });
-      toast.success("Quiz added successfully");
-      resetForm();
-      onSuccess();
-    } catch (error) {
-      console.error("Failed to add quiz:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to add quiz",
-      );
-    } finally {
-      setLoading(false);
-    }
+    createQuizMutation.mutate();
   };
 
   const footer = (
@@ -272,11 +271,11 @@ export default function AddQuizForm({
       </button>
       <button
         type="submit"
-        disabled={loading}
+        disabled={createQuizMutation.isPending}
         className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1"
         form="add-quiz-form"
       >
-        {loading ? "Adding..." : "Add Quiz"}
+        {createQuizMutation.isPending ? "Adding..." : "Add Quiz"}
       </button>
     </>
   );

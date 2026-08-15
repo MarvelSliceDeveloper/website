@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, getErrorMessage, withLoadingToast } from "@/lib/toast";
 import { IconRefresh } from "@tabler/icons-react";
 import RichEditor from "@/components/editor/RichEditor";
 import { FormModal } from "@/components/admin/FormModal";
@@ -24,8 +25,24 @@ export default function AddLessonForm({
   const [durationSeconds, setDurationSeconds] = useState<number | null>(null);
   const [fetchingInfo, setFetchingInfo] = useState(false);
   const [isFreePreview, setIsFreePreview] = useState(false);
-  const [adding, setAdding] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const addLessonMutation = useMutation({
+    mutationFn: () =>
+      api.post(`/api/admin/courses/modules/${moduleId}/lessons`, {
+        title,
+        description: desc || undefined,
+        videoUrl: videoUrl || undefined,
+        durationSeconds: durationSeconds ?? undefined,
+        isFreePreview,
+      }),
+    onSuccess: () => {
+      onClose();
+      toast.success("Lesson added");
+      onAdded();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   useEffect(() => {
     if (open) {
@@ -40,12 +57,18 @@ export default function AddLessonForm({
     }
     setFetchingInfo(true);
     try {
-      const data = await api.get<{
-        videoId: string;
-        title: string;
-        durationSeconds: number;
-        thumbnail: string;
-      }>(`/api/youtube/video-info?url=${encodeURIComponent(url)}`);
+      const data = await withLoadingToast(
+        api.get<{
+          videoId: string;
+          title: string;
+          durationSeconds: number;
+          thumbnail: string;
+        }>(`/api/youtube/video-info?url=${encodeURIComponent(url)}`),
+        {
+          loading: "Fetching video info...",
+          success: (d) => `Duration: ${Math.floor(d.durationSeconds / 60)} min`,
+        },
+      );
       setDurationSeconds(data.durationSeconds);
       if (data.title && !title) setTitle(data.title);
     } catch {
@@ -56,25 +79,9 @@ export default function AddLessonForm({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setAdding(true);
-    try {
-      await api.post(`/api/admin/courses/modules/${moduleId}/lessons`, {
-        title,
-        description: desc || undefined,
-        videoUrl: videoUrl || undefined,
-        durationSeconds: durationSeconds ?? undefined,
-        isFreePreview,
-      });
-      onClose();
-      toast.success("Lesson added");
-      onAdded();
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to add lesson");
-    } finally {
-      setAdding(false);
-    }
+    addLessonMutation.mutate();
   };
 
   return (
@@ -94,11 +101,11 @@ export default function AddLessonForm({
           </button>
           <button
             type="submit"
-            disabled={adding}
+            disabled={addLessonMutation.isPending}
             className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1"
             form="add-lesson-form"
           >
-            {adding ? "Adding..." : "Add Lesson"}
+            {addLessonMutation.isPending ? "Adding..." : "Add Lesson"}
           </button>
         </>
       }

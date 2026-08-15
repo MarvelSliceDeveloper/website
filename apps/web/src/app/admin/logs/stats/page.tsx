@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { IconChartBar, IconRefresh } from "@tabler/icons-react";
 
@@ -16,24 +15,12 @@ type StatsData = {
 
 export default function LogStatsPage() {
   usePageTitle("Log Stats");
-  const [stats, setStats] = useState<StatsData["stats"] | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  async function fetchStats() {
-    setLoading(true);
-    try {
-      const data = await api.get<StatsData>("/api/admin/logs/stats");
-      setStats(data.stats);
-    } catch {
-      setStats(null);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  const statsQuery = useApiQuery<StatsData>(
+    ["admin", "logs", "stats"],
+    "/api/admin/logs/stats",
+  );
+  const stats = statsQuery.data?.stats ?? null;
+  const loading = statsQuery.isPending;
 
   return (
     <div className="space-y-6">
@@ -51,7 +38,7 @@ export default function LogStatsPage() {
           </p>
         </div>
         <button
-          onClick={fetchStats}
+          onClick={() => void statsQuery.refetch()}
           className="btn-secondary text-xs py-2 flex items-center gap-1.5"
         >
           <IconRefresh size={14} /> Refresh

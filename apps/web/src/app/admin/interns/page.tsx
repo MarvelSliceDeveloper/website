@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -111,15 +113,10 @@ export default function AdminInternsPage() {
   const [tab, setTab] = useState<Tab>("interns");
 
   // Interns tab
-  const [interns, setInterns] = useState<Intern[]>([]);
-  const [fieldOptions, setFieldOptions] = useState<InternField[]>([]);
   const [fieldFilter, setFieldFilter] = useState("");
-  const [loadingInterns, setLoadingInterns] = useState(true);
   const [search, setSearch] = useState("");
 
   // Fields tab
-  const [fields, setFields] = useState<InternField[]>([]);
-  const [savingFieldId, setSavingFieldId] = useState<string | null>(null);
   const [showFieldModal, setShowFieldModal] = useState(false);
   const [editingField, setEditingField] = useState<InternField | null>(null);
   const [fieldForm, setFieldForm] = useState({
@@ -129,37 +126,54 @@ export default function AdminInternsPage() {
     isActive: true,
   });
 
-  const fetchInterns = () => {
-    setLoadingInterns(true);
-    const params = new URLSearchParams();
-    if (fieldFilter) params.set("fieldId", fieldFilter);
-    api
-      .get<{ items: Intern[] }>(
-        `/api/admin/interns${params.toString() ? `?${params.toString()}` : ""}`,
-      )
-      .then((res) => setInterns(res.items ?? []))
-      .catch((err) => {
-        toast.error(getErrorMessage(err));
-        setInterns([]);
-      })
-      .finally(() => setLoadingInterns(false));
-  };
+  // Interns list query keyed on the field filter so switching tabs refetches.
+  const internsQuery = useApiQuery<{ items: Intern[] }>(
+    ["admin", "interns", fieldFilter || "all"],
+    "/api/admin/interns",
+    fieldFilter ? { fieldId: fieldFilter } : undefined,
+  );
+  const interns = internsQuery.data?.items ?? [];
+  const loadingInterns = internsQuery.isPending;
 
-  const fetchFields = () => {
-    api
-      .get<{ fields: InternField[] }>("/api/admin/interns/fields")
-      .then((res) => {
-        const fieldsData = res.fields ?? [];
-        setFields(fieldsData);
-        setFieldOptions(fieldsData);
-      })
-      .catch(() => setFields([]));
-  };
+  const fieldsQuery = useApiQuery<{ fields: InternField[] }>(
+    ["admin", "interns", "fields"],
+    "/api/admin/interns/fields",
+  );
+  const fields = fieldsQuery.data?.fields ?? [];
+  const fieldOptions = fields;
 
-  useEffect(() => {
-    fetchInterns();
-    fetchFields();
-  }, [fieldFilter]);
+  const saveFieldMutation = useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id?: string;
+      payload: {
+        name: string;
+        description?: string;
+        fee: number;
+        isActive: boolean;
+      };
+    }) =>
+      id
+        ? api.patch(`/api/admin/interns/fields/${id}`, payload)
+        : api.post("/api/admin/interns/fields", payload),
+    onSuccess: (_res, variables) => {
+      toast.success(variables.id ? "Field updated" : "Field added");
+      setShowFieldModal(false);
+      void fieldsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const deleteFieldMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/admin/interns/fields/${id}`),
+    onSuccess: () => {
+      toast.success("Field deleted");
+      void fieldsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   const openFieldModal = (field?: InternField) => {
     setEditingField(field ?? null);
@@ -172,7 +186,7 @@ export default function AdminInternsPage() {
     setShowFieldModal(true);
   };
 
-  const handleSaveField = async (e: React.FormEvent) => {
+  const handleSaveField = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fieldForm.name.trim()) {
       toast.error("Field name is required");
@@ -184,32 +198,15 @@ export default function AdminInternsPage() {
       return;
     }
     const fee = Math.round(feeRupees * 100);
-    setSavingFieldId(editingField?.id ?? "__new__");
-    try {
-      if (editingField) {
-        await api.patch(`/api/admin/interns/fields/${editingField.id}`, {
-          name: fieldForm.name.trim(),
-          description: fieldForm.description || undefined,
-          fee,
-          isActive: fieldForm.isActive,
-        });
-        toast.success("Field updated");
-      } else {
-        await api.post("/api/admin/interns/fields", {
-          name: fieldForm.name.trim(),
-          description: fieldForm.description || undefined,
-          fee,
-          isActive: fieldForm.isActive,
-        });
-        toast.success("Field added");
-      }
-      setShowFieldModal(false);
-      fetchFields();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSavingFieldId(null);
-    }
+    saveFieldMutation.mutate({
+      id: editingField?.id,
+      payload: {
+        name: fieldForm.name.trim(),
+        description: fieldForm.description || undefined,
+        fee,
+        isActive: fieldForm.isActive,
+      },
+    });
   };
 
   const handleDeleteField = async (field: InternField) => {
@@ -220,13 +217,7 @@ export default function AdminInternsPage() {
       }))
     )
       return;
-    try {
-      await api.delete(`/api/admin/interns/fields/${field.id}`);
-      toast.success("Field deleted");
-      fetchFields();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
+    deleteFieldMutation.mutate(field.id);
   };
 
   const filteredInterns = useMemo(
@@ -605,10 +596,10 @@ export default function AdminInternsPage() {
                     </button>
                     <button
                       type="submit"
-                      disabled={savingFieldId !== null}
+                      disabled={saveFieldMutation.isPending}
                       className="btn-primary text-xs px-3 py-2"
                     >
-                      {savingFieldId !== null ? "Saving..." : "Save"}
+                      {saveFieldMutation.isPending ? "Saving..." : "Save"}
                     </button>
                   </div>
                 </form>

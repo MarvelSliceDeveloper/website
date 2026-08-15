@@ -1,12 +1,31 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { IconTrash, IconCheck, IconEye } from "@tabler/icons-react";
+import { IconTrash, IconCheck, IconEye, IconSend } from "@tabler/icons-react";
 import { timeAgo } from "@/lib/time-ago";
 import type { NotificationItem } from "@/lib/notifications";
 import { usePageTitle } from "@/lib/use-page-title";
 import { NotificationIcon } from "@/lib/notifications";
+import { useApiQuery } from "@/lib/query";
+import { toast } from "@/lib/toast";
+
+type SentNotificationItem = {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  targetType: string;
+  channel: "IN_APP" | "EMAIL" | "BOTH";
+  recipientCount: number;
+  createdAt: string;
+};
+
+const CHANNEL_LABEL: Record<SentNotificationItem["channel"], string> = {
+  IN_APP: "In-app",
+  EMAIL: "Email",
+  BOTH: "In-app + email",
+};
 
 export default function AdminInboxPage() {
   usePageTitle("Inbox");
@@ -21,57 +40,164 @@ export default function AdminInboxPage() {
           Notifications
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          View and manage your notifications.
+          View your inbox and notifications you&apos;ve sent.
         </p>
       </div>
 
+      <SentTab />
       <NotificationsTab />
     </div>
   );
 }
 
-function NotificationsTab() {
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [loading, setLoading] = useState(true);
+function SentTab() {
+  const sentQuery = useApiQuery<{ sent: SentNotificationItem[] }>(
+    ["notifications", "sent"],
+    "/api/notifications/sent",
+  );
+  const sent = sentQuery.data?.sent ?? [];
+  const loading = sentQuery.isPending;
 
-  const fetch = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await api.get<{ notifications: NotificationItem[] }>(
-        "/api/notifications",
-      );
-      setNotifications(data.notifications || []);
-    } catch {
-      /* ignore */
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    api
-      .get<{ notifications: NotificationItem[] }>("/api/notifications")
-      .then((data) => setNotifications(data.notifications || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  async function markAsRead(id: string) {
-    await api.patch(`/api/notifications/${id}/read`, {});
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+  if (loading) {
+    return (
+      <div>
+        <SectionTitle title="Sent" count={undefined} />
+        <div className="space-y-3">
+          {[1, 2].map((i) => (
+            <div
+              key={i}
+              className="h-24 animate-pulse rounded-2xl bg-card-hover/60 border border-border/40"
+            />
+          ))}
+        </div>
+      </div>
     );
   }
 
-  async function deleteNotification(id: string) {
-    await api.delete(`/api/notifications/${id}`);
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  }
+  return (
+    <div>
+      <SectionTitle title="Sent" count={sent.length} />
+      {sent.length === 0 ? (
+        <div className="glass-card flex flex-col items-center justify-center py-8 text-center">
+          <p className="font-semibold text-foreground">
+            No notifications sent yet
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            Send a notification to reach your users.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {sent.map((n) => (
+            <div
+              key={n.id}
+              className="group flex items-start gap-3 rounded-xl border border-border/60 bg-card/50 p-4 transition-colors"
+            >
+              <div className="mt-0.5">
+                <NotificationIcon type={n.type || "CUSTOM_NOTIFICATION"} withContainer={false} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-medium text-foreground">
+                    {n.title}
+                  </p>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary-hover">
+                    <IconSend size={10} />
+                    {CHANNEL_LABEL[n.channel] ?? n.channel}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-sm leading-snug text-muted-foreground">
+                  {n.message}
+                </p>
+                <p className="mt-1 text-[11px] text-muted">
+                  {timeAgo(n.createdAt)} · {n.recipientCount} recipient
+                  {n.recipientCount !== 1 ? "s" : ""} · {n.targetType.replace(/_/g, " ")}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
-  async function markAllRead() {
-    await api.post("/api/notifications/read-all");
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  }
+function SectionTitle({
+  title,
+  count,
+}: {
+  title: string;
+  count?: number;
+}) {
+  return (
+    <div className="mb-3 flex items-center gap-2">
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </h2>
+      {count !== undefined && count > 0 && (
+        <span className="rounded-full bg-border/60 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+          {count}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function NotificationsTab() {
+  const queryClient = useQueryClient();
+
+  // Shares the ["notifications"] cache with the instructor/student inboxes.
+  const notificationsQuery = useApiQuery<{
+    notifications: NotificationItem[];
+  }>(["notifications"], "/api/notifications");
+  const notifications = notificationsQuery.data?.notifications ?? [];
+  const loading = notificationsQuery.isPending;
+
+  // Optimistic cache updates so the list reacts instantly, without a refetch
+  // per action.
+  const readMutation = useMutation({
+    mutationFn: (id: string) => api.patch(`/api/notifications/${id}/read`, {}),
+    onSuccess: (_, id) => {
+      queryClient.setQueryData<{ notifications: NotificationItem[] }>(
+        ["notifications"],
+        (old) => ({
+          notifications: (old?.notifications ?? []).map((n) =>
+            n.id === id ? { ...n, read: true } : n,
+          ),
+        }),
+      );
+    },
+    onError: () => toast.error("Failed to mark as read"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/notifications/${id}`),
+    onSuccess: (_, id) => {
+      queryClient.setQueryData<{ notifications: NotificationItem[] }>(
+        ["notifications"],
+        (old) => ({
+          notifications: (old?.notifications ?? []).filter((n) => n.id !== id),
+        }),
+      );
+    },
+    onError: () => toast.error("Failed to delete"),
+  });
+
+  const markAllMutation = useMutation({
+    mutationFn: () => api.post("/api/notifications/read-all"),
+    onSuccess: () => {
+      queryClient.setQueryData<{ notifications: NotificationItem[] }>(
+        ["notifications"],
+        (old) => ({
+          notifications: (old?.notifications ?? []).map((n) => ({
+            ...n,
+            read: true,
+          })),
+        }),
+      );
+    },
+    onError: () => toast.error("Failed to mark all as read"),
+  });
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -81,67 +207,89 @@ function NotificationsTab() {
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="h-16 animate-pulse rounded-xl bg-card-hover border border-border"
+            className="h-24 animate-pulse rounded-2xl bg-card-hover/60 border border-border/40"
           />
         ))}
       </div>
     );
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-muted-foreground">
-          {unreadCount > 0 ? `${unreadCount} unread` : "All read"}
-        </p>
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Inbox
+          </h2>
+          {notifications.length > 0 && (
+            <span className="rounded-full bg-border/60 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              {notifications.length}
+            </span>
+          )}
+        </div>
         {unreadCount > 0 && (
           <button
-            onClick={markAllRead}
+            onClick={() => markAllMutation.mutate()}
             className="btn-secondary text-xs flex items-center gap-1.5"
           >
             <IconCheck size={14} /> Mark all read
           </button>
         )}
       </div>
+      {unreadCount > 0 && (
+        <p className="mb-2 text-sm text-muted-foreground">
+          {unreadCount} unread
+        </p>
+      )}
       {notifications.length === 0 ? (
-        <div className="glass-card flex flex-col items-center justify-center py-12 text-center">
+        <div className="glass-card flex flex-col items-center justify-center rounded-2xl py-12 text-center">
           <p className="font-semibold text-foreground">No notifications</p>
         </div>
       ) : (
         notifications.map((n) => (
           <div
             key={n.id}
-            className={`group flex items-start gap-3 rounded-xl border p-4 transition-colors ${
+            className={`group relative flex items-start gap-4 overflow-hidden rounded-2xl border p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-200 ${
               n.read
-                ? "border-border/60 bg-card/50"
-                : "border-primary/20 bg-primary/5"
+                ? "border-border/50 bg-card/40 hover:bg-card-hover/60 hover:shadow-[0_4px_14px_rgba(15,23,42,0.07)]"
+                : "border-primary/25 bg-primary/[0.04] hover:bg-primary/[0.07] hover:shadow-[0_4px_14px_rgba(15,23,42,0.07)]"
             }`}
           >
+            {!n.read && (
+              <span className="absolute left-0 top-4 bottom-4 w-1 rounded-r-full bg-primary" />
+            )}
             <div className="mt-0.5">
-              <NotificationIcon type={n.type} withContainer={false} />
+              <NotificationIcon type={n.type} />
             </div>
             <div className="min-w-0 flex-1">
-              <p
-                className={`text-sm leading-snug ${n.read ? "text-muted-foreground" : "text-foreground font-medium"}`}
-              >
+              <div className="flex items-start justify-between gap-3">
+                <p className={`text-[15px] font-bold ${n.read ? "text-foreground/80" : "text-foreground"}`}>
+                  {n.title || n.type.replace(/_/g, " ")}
+                </p>
+                {!n.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary animate-pulse" />}
+              </div>
+              <p className={`mt-1 text-sm leading-relaxed line-clamp-2 ${n.read ? "text-muted-foreground" : "text-foreground/90"}`}>
                 {n.message}
               </p>
-              <p className="mt-1 text-[11px] text-muted">
-                {timeAgo(n.createdAt)}
-              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <span className="text-[11px] text-muted">{timeAgo(n.createdAt)}</span>
+                <span className="inline-flex items-center rounded-full border border-border/60 bg-card-hover/60 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                  {n.type.replace(/_/g, " ")}
+                </span>
+              </div>
             </div>
             <div className="flex shrink-0 gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               {!n.read && (
                 <button
-                  onClick={() => markAsRead(n.id)}
-                  className="rounded-lg p-1.5 text-muted hover:text-primary hover:bg-primary/10"
+                  onClick={() => readMutation.mutate(n.id)}
+                  className="rounded-lg p-2 text-muted hover:text-primary hover:bg-primary/10"
                   title="Mark as read"
                 >
                   <IconEye size={15} />
                 </button>
               )}
               <button
-                onClick={() => deleteNotification(n.id)}
-                className="rounded-lg p-1.5 text-muted hover:text-danger hover:bg-danger/10"
+                onClick={() => deleteMutation.mutate(n.id)}
+                className="rounded-lg p-2 text-muted hover:text-danger hover:bg-danger/10"
                 title="Delete"
               >
                 <IconTrash size={15} />

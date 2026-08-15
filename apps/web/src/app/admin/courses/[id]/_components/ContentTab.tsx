@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { IconPlus } from "@tabler/icons-react";
@@ -22,26 +23,33 @@ export default function ContentTab({
     [modules],
   );
 
+  const reorderMutation = useMutation({
+    mutationFn: async (moduleIds: string[]) => {
+      const promise = api.patch(
+        `/api/admin/courses/${courseId}/modules/reorder`,
+        { moduleIds },
+      );
+      toast.promise(promise, {
+        loading: "Saving order...",
+        success: "Module order saved",
+        error: "Failed to reorder",
+      });
+      return promise;
+    },
+  });
+
   const handleMoveModule = async (fromIdx: number, dir: -1 | 1) => {
     const toIdx = fromIdx + dir;
     if (toIdx < 0 || toIdx >= regularModules.length) return;
     const reordered = [...regularModules];
     const [moved] = reordered.splice(fromIdx, 1);
     reordered.splice(toIdx, 0, moved);
-    const promise = api.patch(`/api/admin/courses/${courseId}/modules/reorder`, {
-      moduleIds: reordered.map((m) => m.id),
-    });
-    toast.promise(promise, {
-      loading: "Saving order...",
-      success: "Module order saved",
-      error: "Failed to reorder",
-    });
     try {
-      await promise;
-      onContentChanged();
+      await reorderMutation.mutateAsync(reordered.map((m) => m.id));
     } catch {
-      onContentChanged();
+      // error toast handled inside mutationFn
     }
+    onContentChanged();
   };
 
   return (

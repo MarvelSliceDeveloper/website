@@ -332,13 +332,14 @@ export default function AdminSidebar({
             items: [
               {
                 label: "Content",
-                href: "/admin/categories",
+                href: "/admin/content",
                 icon: IconBook as React.ComponentType<{
                   size?: number | string;
                   stroke?: number | string;
                   className?: string;
                 }>,
                 children: [
+                  { label: "Content", href: "/admin/content" },
                   { label: "Categories", href: "/admin/categories" },
                   { label: "Tags", href: "/admin/tags" },
                   { label: "Static Pages", href: "/admin/static-pages" },

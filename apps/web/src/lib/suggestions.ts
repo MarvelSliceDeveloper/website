@@ -75,6 +75,418 @@ export const SUGGESTED_TAGS = [
   "Interview Prep",
 ] as const;
 
+export const SUGGESTED_COURSE_TITLES = [
+  "Web Development Bootcamp",
+  "Full Stack Development",
+  "MERN Stack Development",
+  "MEAN Stack Development",
+  "Frontend Development",
+  "Backend Development",
+  "JavaScript Mastery",
+  "TypeScript Essentials",
+  "React & Next.js Advanced",
+  "Node.js Backend Development",
+  "Python for Beginners",
+  "Advanced Python Programming",
+  "HTML & CSS Fundamentals",
+  "Tailwind CSS Essentials",
+  "SQL & Databases for Beginners",
+  "Excel for Data Analysis",
+  "WordPress Essentials",
+  "Shopify Store Setup",
+  "Data Science Fundamentals",
+  "Data Analysis with Pandas",
+  "Machine Learning with Python",
+  "Deep Learning & Neural Networks",
+  "Artificial Intelligence Foundations",
+  "Natural Language Processing",
+  "Computer Vision with OpenCV",
+  "DevOps Essentials",
+  "Docker & Kubernetes Mastery",
+  "AWS Cloud Practitioner",
+  "Azure Cloud Fundamentals",
+  "Google Cloud Platform Basics",
+  "Linux for Beginners",
+  "Cybersecurity Fundamentals",
+  "Ethical Hacking & Penetration Testing",
+  "Networking Fundamentals",
+  "Database Design & SQL",
+  "PostgreSQL Mastery",
+  "MongoDB for Developers",
+  "GraphQL API Development",
+  "REST API Design",
+  "Microservices Architecture",
+  "System Design Fundamentals",
+  "UI/UX Design Fundamentals",
+  "Figma Masterclass",
+  "Graphic Design Basics",
+  "Adobe Photoshop Essentials",
+  "Mobile App Development with Flutter",
+  "Android Development with Kotlin",
+  "iOS Development with Swift",
+  "React Native App Development",
+  "Game Development with Unity",
+  "Blockchain Development",
+  "Web3 & Smart Contracts",
+  "Digital Marketing Masterclass",
+  "SEO Fundamentals",
+  "Social Media Marketing",
+  "Google Ads Essentials",
+  "Content Writing & Copywriting",
+  "Business Analytics",
+  "Financial Modeling & Analysis",
+  "Project Management Professional",
+  "Agile & Scrum Fundamentals",
+  "Leadership & Communication Skills",
+  "Interview Preparation Masterclass",
+] as const;
+
+export const SUGGESTED_PACKAGE_NAMES = [
+  "Full Stack Development Package",
+  "MERN Stack Developer Track",
+  "Frontend Developer Package",
+  "Backend Developer Package",
+  "JavaScript Developer Track",
+  "Python Developer Package",
+  "Data Science Career Track",
+  "Machine Learning Engineer Track",
+  "Web Development Starter Pack",
+  "Frontend Development Bundle",
+  "Backend Development Bundle",
+  "Mobile Development Mastery",
+  "Android Developer Package",
+  "iOS Developer Package",
+  "DevOps Engineer Track",
+  "Cloud Computing Career Track",
+  "AI & Machine Learning Package",
+  "Cybersecurity Professional Package",
+  "Digital Marketing Bundle",
+  "Blockchain & Web3 Bundle",
+  "UI/UX Design Package",
+  "Data Engineering Track",
+  "Software Testing & QA Package",
+  "Game Development Bundle",
+  "Business Analytics Package",
+  "Project Management Bundle",
+] as const;
+
+const COURSE_TITLE_CATEGORY_KEYWORDS: Record<string, string> = {
+  javascript: "Programming",
+  typescript: "Programming",
+  react: "Web Development",
+  "next.js": "Web Development",
+  nextjs: "Web Development",
+  "node.js": "Web Development",
+  node: "Web Development",
+  python: "Data Science",
+  java: "Programming",
+  "c++": "Programming",
+  "c#": "Programming",
+  php: "Programming",
+  ruby: "Programming",
+  go: "Programming",
+  rust: "Programming",
+  swift: "Programming",
+  kotlin: "Programming",
+  django: "Web Development",
+  flask: "Web Development",
+  express: "Web Development",
+  html: "Web Development",
+  css: "Web Development",
+  "tailwind css": "Web Development",
+  sql: "Database Design",
+  postgresql: "Database Design",
+  mongodb: "Database Design",
+  mysql: "Database Design",
+  redis: "Database Design",
+  "machine learning": "Machine Learning & AI",
+  "deep learning": "Machine Learning & AI",
+  "artificial intelligence": "Machine Learning & AI",
+  "data science": "Machine Learning & AI",
+  "data analysis": "Machine Learning & AI",
+  "big data": "Machine Learning & AI",
+  pandas: "Machine Learning & AI",
+  numpy: "Machine Learning & AI",
+  "computer vision": "Machine Learning & AI",
+  nlp: "Machine Learning & AI",
+  docker: "DevOps & Cloud",
+  kubernetes: "DevOps & Cloud",
+  aws: "DevOps & Cloud",
+  azure: "DevOps & Cloud",
+  gcp: "DevOps & Cloud",
+  "cloud computing": "DevOps & Cloud",
+  devops: "DevOps & Cloud",
+  git: "DevOps & Cloud",
+  github: "DevOps & Cloud",
+  "ci/cd": "DevOps & Cloud",
+  cybersecurity: "Cybersecurity",
+  networking: "Networking",
+  blockchain: "Blockchain & Web3",
+  web3: "Blockchain & Web3",
+  api: "Programming",
+  rest: "Programming",
+  graphql: "Programming",
+  microservices: "Programming",
+  "mobile development": "Mobile Development",
+  android: "Mobile Development",
+  ios: "Mobile Development",
+  flutter: "Mobile Development",
+  "react native": "Mobile Development",
+  "ui/ux": "Design & UI/UX",
+  figma: "Design & UI/UX",
+  "graphic design": "Design & UI/UX",
+  "game development": "Game Development",
+  unity: "Game Development",
+  "digital marketing": "Marketing",
+  seo: "Marketing",
+  "social media": "Marketing",
+  finance: "Business & Finance",
+  accounting: "Business & Finance",
+  excel: "Business & Finance",
+  "project management": "Project Management",
+  leadership: "Project Management",
+  communication: "Project Management",
+  "interview prep": "Project Management",
+};
+
+export type SuggestedCourseMeta = {
+  category: string;
+  tags: string[];
+};
+
+/**
+ * Given a course title, suggest a category and tags based on keyword matches.
+ * Category defaults to "" when no keyword matches the title.
+ */
+export function getSuggestedCourseMeta(
+  title: string,
+): SuggestedCourseMeta {
+  const lowerTitle = title.toLowerCase();
+
+  let category = "";
+  for (const [keyword, cat] of Object.entries(COURSE_TITLE_CATEGORY_KEYWORDS)) {
+    if (lowerTitle.includes(keyword)) {
+      category = cat;
+      break;
+    }
+  }
+
+  const tags: string[] = [];
+  for (const tag of SUGGESTED_TAGS) {
+    if (lowerTitle.includes(tag.toLowerCase()) && !tags.includes(tag)) {
+      tags.push(tag);
+    }
+  }
+
+  return { category, tags };
+}
+
+/**
+ * Maps a suggested package name to the topics/categories its courses cover,
+ * used to pre-select related courses in the package form.
+ */
+const PACKAGE_COURSE_KEYWORDS: Record<string, string[]> = {
+  "Full Stack Development Package": [
+    "web development",
+    "frontend",
+    "backend",
+    "mern",
+    "mean",
+    "javascript",
+    "typescript",
+    "react",
+    "node.js",
+    "html & css",
+    "sql",
+    "database",
+  ],
+  "MERN Stack Developer Track": [
+    "mern",
+    "mongodb",
+    "express",
+    "react",
+    "node.js",
+    "javascript",
+  ],
+  "Frontend Developer Package": [
+    "frontend",
+    "react",
+    "javascript",
+    "typescript",
+    "html & css",
+    "tailwind css",
+    "ui/ux",
+    "next.js",
+  ],
+  "Backend Developer Package": [
+    "backend",
+    "node.js",
+    "express",
+    "sql",
+    "postgresql",
+    "mongodb",
+    "api",
+    "rest",
+    "graphql",
+    "microservices",
+  ],
+  "JavaScript Developer Track": [
+    "javascript",
+    "typescript",
+    "react",
+    "node.js",
+  ],
+  "Python Developer Package": ["python", "django", "flask"],
+  "Data Science Career Track": [
+    "data science",
+    "python",
+    "pandas",
+    "numpy",
+    "data analysis",
+    "excel",
+    "sql",
+  ],
+  "Machine Learning Engineer Track": [
+    "machine learning",
+    "deep learning",
+    "artificial intelligence",
+    "nlp",
+    "computer vision",
+    "python",
+    "data science",
+  ],
+  "Web Development Starter Pack": [
+    "web development",
+    "html & css",
+    "javascript",
+    "frontend",
+  ],
+  "Frontend Development Bundle": [
+    "frontend",
+    "react",
+    "javascript",
+    "typescript",
+    "html & css",
+    "ui/ux",
+  ],
+  "Backend Development Bundle": [
+    "backend",
+    "node.js",
+    "express",
+    "sql",
+    "postgresql",
+    "mongodb",
+    "api",
+  ],
+  "Mobile Development Mastery": [
+    "mobile development",
+    "android",
+    "ios",
+    "flutter",
+    "react native",
+  ],
+  "Android Developer Package": ["android", "kotlin", "mobile development"],
+  "iOS Developer Package": ["ios", "swift", "mobile development"],
+  "DevOps Engineer Track": [
+    "devops",
+    "docker",
+    "kubernetes",
+    "aws",
+    "azure",
+    "gcp",
+    "linux",
+    "cloud computing",
+  ],
+  "Cloud Computing Career Track": [
+    "cloud computing",
+    "aws",
+    "azure",
+    "gcp",
+    "devops",
+    "docker",
+    "linux",
+  ],
+  "AI & Machine Learning Package": [
+    "artificial intelligence",
+    "machine learning",
+    "deep learning",
+    "nlp",
+    "computer vision",
+    "python",
+  ],
+  "Cybersecurity Professional Package": [
+    "cybersecurity",
+    "ethical hacking",
+    "networking",
+  ],
+  "Digital Marketing Bundle": [
+    "digital marketing",
+    "seo",
+    "social media",
+    "google ads",
+    "content writing",
+  ],
+  "Blockchain & Web3 Bundle": ["blockchain", "web3", "smart contracts"],
+  "UI/UX Design Package": ["ui/ux", "figma", "graphic design"],
+  "Data Engineering Track": [
+    "data science",
+    "data analysis",
+    "big data",
+    "python",
+    "pandas",
+    "sql",
+    "postgresql",
+  ],
+  "Software Testing & QA Package": ["software testing", "api"],
+  "Game Development Bundle": ["game development", "unity"],
+  "Business Analytics Package": [
+    "business analytics",
+    "excel",
+    "data analysis",
+    "financial modeling",
+  ],
+  "Project Management Bundle": [
+    "project management",
+    "agile & scrum",
+    "leadership",
+    "interview preparation",
+  ],
+};
+
+export type PackagedCourse = {
+  id: string;
+  title: string;
+  slug: string;
+  thumbnailUrl: string | null;
+  category: string | null;
+  tags: string[] | null;
+};
+
+/**
+ * Returns the indices of courses related to a package name, matched by
+ * title / category / tags keywords.
+ */
+export function getRelatedCourseIds(
+  packageName: string,
+  courses: PackagedCourse[],
+): string[] {
+  const keywords = PACKAGE_COURSE_KEYWORDS[packageName];
+  if (!keywords || keywords.length === 0) return [];
+
+  const haystack = (c: PackagedCourse) =>
+    `${c.title} ${c.category ?? ""} ${(c.tags ?? []).join(" ")}`.toLowerCase();
+
+  return courses
+    .filter((course) => {
+      const text = haystack(course);
+      return keywords.some(
+        (keyword) =>
+          text.includes(keyword) || course.title.toLowerCase().includes(keyword),
+      );
+    })
+    .map((course) => course.id);
+}
+
 export const SUGGESTED_CATEGORIES = [
   "Programming",
   "Web Development",

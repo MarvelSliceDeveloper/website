@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -23,7 +24,6 @@ export default function ImportUsersPage() {
   const [csvText, setCsvText] = useState("");
   const [parsedRows, setParsedRows] = useState<ImportRow[]>([]);
   const [parseError, setParseError] = useState("");
-  const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [dragOver, setDragOver] = useState(false);
 
@@ -85,32 +85,30 @@ export default function ImportUsersPage() {
     [handleFile],
   );
 
-  const handleImport = async () => {
-    if (parsedRows.length === 0) return;
-    setImporting(true);
-
-    try {
-      const lines = [
-        "name,email,role",
-        ...parsedRows.map((r) => `${r.name},${r.email},${r.role}`),
-      ];
-      const blob = new Blob([lines.join("\n")], { type: "text/csv" });
-      const file = new File([blob], "users.csv", { type: "text/csv" });
-
+  const importMutation = useMutation({
+    mutationFn: (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
-
-      const res = await api.post<ImportResult>(
-        "/api/admin/users/import",
-        formData,
-      );
+      return api.post<ImportResult>("/api/admin/users/import", formData);
+    },
+    onSuccess: (res) => {
       setResult(res);
       toast.success(`Imported ${res.imported} user(s)`);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setImporting(false);
-    }
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleImport = () => {
+    if (parsedRows.length === 0) return;
+
+    const lines = [
+      "name,email,role",
+      ...parsedRows.map((r) => `${r.name},${r.email},${r.role}`),
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const file = new File([blob], "users.csv", { type: "text/csv" });
+
+    importMutation.mutate(file);
   };
 
   const roleStyles: Record<string, string> = {
@@ -189,10 +187,10 @@ export default function ImportUsersPage() {
             </div>
             <button
               onClick={handleImport}
-              disabled={importing}
+              disabled={importMutation.isPending}
               className="btn-primary text-sm flex items-center gap-1.5"
             >
-              {importing ? (
+              {importMutation.isPending ? (
                 <>
                   <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
                   Importing...

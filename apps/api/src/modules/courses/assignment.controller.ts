@@ -18,20 +18,17 @@ export const assignmentController = {
         return res.status(400).json({ error: "courseId is required" });
       }
 
-      let { batchId } = req.body;
+      // batchId is optional — assignments can be tied to a course/module
+      // alone. If a batch is provided, use it; otherwise fall back to the
+      // course's first batch when one exists.
+      let batchId: string | null = req.body.batchId || null;
       if (!batchId) {
         const firstBatch = await prisma.batch.findFirst({
           where: { courseId },
           select: { id: true },
           orderBy: { startDate: "asc" },
         });
-        batchId = firstBatch?.id || "";
-        if (!batchId) {
-          return res.status(400).json({
-            error:
-              "No batches found for this course. Please create a batch first, or provide a batchId.",
-          });
-        }
+        batchId = firstBatch?.id || null;
       }
       const assignment = await assignmentService.addAssignment(
         req.params.moduleId,

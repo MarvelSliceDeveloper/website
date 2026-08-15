@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
@@ -61,31 +63,63 @@ type InstructorProfile = {
 
 export default function ApprovalsPage() {
   usePageTitle("Approvals");
-  const [users, setUsers] = useState<PendingUser[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [reviewUser, setReviewUser] = useState<InstructorProfile | null>(null);
   const [reviewLoading, setReviewLoading] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  const fetchPending = useCallback(() => {
-    setLoading(true);
-    api
-      .get<{ users: PendingUser[] }>("/api/admin/users/pending")
-      .then((res) => {
-        setUsers(res.users ?? []);
-      })
-      .catch((err) => {
-        toast.error(getErrorMessage(err));
-        setUsers([]);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  const approvalsQuery = useApiQuery<{ users: PendingUser[] }>(
+    ["admin", "approvals", "pending"],
+    "/api/admin/users/pending",
+  );
+  const users = approvalsQuery.data?.users ?? [];
+  const loading = approvalsQuery.isPending;
 
-  useEffect(() => {
-    fetchPending();
-  }, [fetchPending]);
+  // Remove the reviewed user from the pending list once a decision lands.
+  const removeFromList = (id: string) => {
+    queryClient.setQueryData<{ users: PendingUser[] }>(
+      ["admin", "approvals", "pending"],
+      (old) => ({
+        users: (old?.users ?? []).filter((u) => u.id !== id),
+      }),
+    );
+  };
+
+  const approveMutation = useMutation({
+    mutationFn: (user: InstructorProfile) =>
+      api.put(`/api/admin/instructors/${user.id}/verify`, {
+        action: "approve",
+      }),
+    onSuccess: (_data, user) => {
+      toast.success(`${user.name} approved successfully`);
+      removeFromList(user.id);
+      closeReview();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: ({
+      user,
+      reason,
+    }: {
+      user: InstructorProfile;
+      reason: string;
+    }) =>
+      api.put(`/api/admin/instructors/${user.id}/verify`, {
+        action: "reject",
+        rejectionReason: reason,
+      }),
+    onSuccess: (_data, { user }) => {
+      toast.success(`${user.name} rejected`);
+      removeFromList(user.id);
+      closeReview();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const actionLoading = approveMutation.isPending || rejectMutation.isPending;
 
   const openReview = async (userId: string) => {
     setReviewLoading(true);
@@ -110,43 +144,21 @@ export default function ApprovalsPage() {
     setRejectionReason("");
   };
 
-  const handleApprove = async () => {
+  const handleApprove = () => {
     if (!reviewUser) return;
-    setActionLoading(true);
-    try {
-      await api.put(`/api/admin/instructors/${reviewUser.id}/verify`, {
-        action: "approve",
-      });
-      toast.success(`${reviewUser.name} approved successfully`);
-      setUsers((prev) => prev.filter((u) => u.id !== reviewUser.id));
-      closeReview();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setActionLoading(false);
-    }
+    approveMutation.mutate(reviewUser);
   };
 
-  const handleReject = async () => {
+  const handleReject = () => {
     if (!reviewUser) return;
     if (!rejectionReason.trim()) {
       toast.error("Please provide a rejection reason");
       return;
     }
-    setActionLoading(true);
-    try {
-      await api.put(`/api/admin/instructors/${reviewUser.id}/verify`, {
-        action: "reject",
-        rejectionReason: rejectionReason.trim(),
-      });
-      toast.success(`${reviewUser.name} rejected`);
-      setUsers((prev) => prev.filter((u) => u.id !== reviewUser.id));
-      closeReview();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setActionLoading(false);
-    }
+    rejectMutation.mutate({
+      user: reviewUser,
+      reason: rejectionReason.trim(),
+    });
   };
 
   const roleIcon = (role: string) => {
@@ -170,7 +182,7 @@ export default function ApprovalsPage() {
         breadcrumbs={[{ label: "Approvals", href: "/admin/approvals" }]}
         action={
           <button
-            onClick={fetchPending}
+            onClick={() => void approvalsQuery.refetch()}
             className="btn-secondary text-sm flex items-center gap-2"
           >
             <IconRefresh size={14} />

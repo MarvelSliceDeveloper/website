@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { ConfirmModal } from "@/components/admin/ConfirmModal";
+import { useApiQuery } from "@/lib/query";
 import {
   IconDatabase,
   IconRefresh,
@@ -22,41 +23,33 @@ type CacheStatus = {
 };
 
 export default function CachePage() {
-  const [status, setStatus] = useState<CacheStatus | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [flushing, setFlushing] = useState(false);
+  const queryClient = useQueryClient();
   const [showFlushConfirm, setShowFlushConfirm] = useState(false);
 
-  const fetchStatus = () => {
-    setLoading(true);
-    api
-      .get<{ data: CacheStatus }>("/api/admin/cache/status")
-      .then((res) => setStatus(res.data))
-      .catch(() => toast.error("Failed to load cache status"))
-      .finally(() => setLoading(false));
-  };
+  const cacheQuery = useApiQuery<{ data: CacheStatus }>(
+    ["admin", "cache", "status"],
+    "/api/admin/cache/status",
+  );
+  const status = cacheQuery.data?.data ?? null;
+  const loading = cacheQuery.isPending;
 
-  useEffect(() => {
-    fetchStatus();
-  }, []);
-
-  const handleFlush = async () => {
-    setFlushing(true);
-    try {
-      const res = await api.post<{ flushedAt: string }>(
-        "/api/admin/cache/flush",
-      );
+  const flushMutation = useMutation({
+    mutationFn: () => api.post<{ flushedAt: string }>("/api/admin/cache/flush"),
+    onSuccess: (res) => {
       setShowFlushConfirm(false);
       toast.success("Cache flushed");
-      setStatus((prev) =>
-        prev ? { ...prev, lastFlushAt: res.flushedAt } : prev,
+      queryClient.setQueryData<{ data: CacheStatus }>(
+        ["admin", "cache", "status"],
+        (old) =>
+          old ? { data: { ...old.data, lastFlushAt: res.flushedAt } } : old,
       );
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setFlushing(false);
-    }
-  };
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  function handleFlush() {
+    flushMutation.mutate();
+  }
 
   return (
     <div className="space-y-6">
@@ -66,7 +59,7 @@ export default function CachePage() {
         breadcrumbs={[{ label: "Cache", href: "/admin/cache" }]}
         action={
           <button
-            onClick={fetchStatus}
+            onClick={() => void cacheQuery.refetch()}
             className="btn-secondary text-sm flex items-center gap-1.5"
           >
             <IconRefresh size={14} />
@@ -189,7 +182,7 @@ export default function CachePage() {
         description="This will clear all cached data. The application may experience temporary performance degradation until the cache is rebuilt."
         variant="danger"
         confirmLabel="Yes, Flush"
-        confirmLoading={flushing}
+        confirmLoading={flushMutation.isPending}
       />
     </div>
   );

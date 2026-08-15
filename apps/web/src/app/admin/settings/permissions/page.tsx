@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
 import { IconLock, IconRefresh } from "@tabler/icons-react";
+import { Switch } from "@/components/ui/Switch";
 
 type Override = {
   id: string;
@@ -35,31 +38,19 @@ const ROLES = ["SUPER_ADMIN", "ADMIN", "INSTRUCTOR"];
 
 export default function PermissionsPage() {
   usePageTitle("Permissions");
-  const [overrides, setOverrides] = useState<Override[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dirty, setDirty] = useState(false);
   const [localOverrides, setLocalOverrides] = useState<Override[]>([]);
-  const [saving, setSaving] = useState(false);
 
-  async function fetchOverrides() {
-    setLoading(true);
-    try {
-      const data = await api.get<{ overrides: Override[] }>(
-        "/api/admin/permissions",
-      );
-      setOverrides(data.overrides);
-      setLocalOverrides(data.overrides);
-      setDirty(false);
-    } catch {
-      toast.error("Failed to load permissions");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const overridesQuery = useApiQuery<{ overrides: Override[] }>(
+    ["admin", "permissions"],
+    "/api/admin/permissions",
+  );
+  const loading = overridesQuery.isPending;
 
   useEffect(() => {
-    fetchOverrides();
-  }, []);
+    setLocalOverrides(overridesQuery.data?.overrides ?? []);
+    setDirty(false);
+  }, [overridesQuery.data]);
 
   function isAllowed(role: string, permission: string): boolean {
     const override = localOverrides.find(
@@ -120,18 +111,19 @@ export default function PermissionsPage() {
     return isAllowed(role, permission);
   }
 
-  async function handleSave() {
-    setSaving(true);
-    try {
-      await api.put("/api/admin/permissions", { overrides: localOverrides });
+  const saveMutation = useMutation({
+    mutationFn: (overrides: Override[]) =>
+      api.put("/api/admin/permissions", { overrides }),
+    onSuccess: () => {
       toast.success("Permissions saved successfully");
-      setOverrides(localOverrides);
       setDirty(false);
-    } catch {
-      toast.error("Failed to save permissions");
-    } finally {
-      setSaving(false);
-    }
+      void overridesQuery.refetch();
+    },
+    onError: () => toast.error("Failed to save permissions"),
+  });
+
+  function handleSave() {
+    saveMutation.mutate(localOverrides);
   }
 
   return (
@@ -158,13 +150,13 @@ export default function PermissionsPage() {
           )}
           <button
             onClick={handleSave}
-            disabled={saving || !dirty}
+            disabled={saveMutation.isPending || !dirty}
             className="btn-primary text-xs py-2 px-4 flex items-center gap-1.5 disabled:opacity-40"
           >
-            {saving ? "Saving..." : "Save Changes"}
+            {saveMutation.isPending ? "Saving..." : "Save Changes"}
           </button>
           <button
-            onClick={fetchOverrides}
+            onClick={() => void overridesQuery.refetch()}
             className="btn-secondary text-xs py-2 flex items-center gap-1.5"
           >
             <IconRefresh size={14} /> Refresh
@@ -203,22 +195,14 @@ export default function PermissionsPage() {
                   </td>
                   {ROLES.map((role) => (
                     <td key={role} className="py-3 pr-4 text-center">
-                      <button
-                        onClick={() => toggleLocal(role, perm.permission)}
-                        className={`w-10 h-6 rounded-full transition-all duration-200 relative ${
-                          isToggled(role, perm.permission)
-                            ? "bg-primary"
-                            : "bg-gray-200 dark:bg-slate-600"
-                        }`}
-                      >
-                        <span
-                          className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md ring-1 ring-black/5 transition-all duration-200 ${
-                            isToggled(role, perm.permission)
-                              ? "translate-x-[18px]"
-                              : "translate-x-0.5"
-                          }`}
+                      <div className="flex items-center justify-center">
+                        <Switch
+                          checked={isToggled(role, perm.permission)}
+                          onChange={() => toggleLocal(role, perm.permission)}
+                          size="sm"
+                          label={`${perm.label} — ${role}`}
                         />
-                      </button>
+                      </div>
                     </td>
                   ))}
                 </tr>

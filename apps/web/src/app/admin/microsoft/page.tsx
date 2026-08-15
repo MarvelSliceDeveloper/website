@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { useState } from "react";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import {
   IconBrandWindows,
@@ -38,25 +38,14 @@ type StatusData = {
 
 export default function MicrosoftIntegrationPage() {
   usePageTitle("Microsoft Integration");
-  const [status, setStatus] = useState<StatusData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [linking, setLinking] = useState(false);
 
-  async function loadStatus() {
-    setLoading(true);
-    try {
-      const data = await api.get<StatusData>("/api/auth/azure-ad/status");
-      setStatus(data);
-    } catch {
-      setStatus(null);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    Promise.resolve().then(() => loadStatus());
-  }, []);
+  const statusQuery = useApiQuery<StatusData>(
+    ["admin", "microsoft", "status"],
+    "/api/auth/azure-ad/status",
+  );
+  const status = statusQuery.data ?? null;
+  const loading = statusQuery.isPending;
 
   function handleLinkAccount() {
     setLinking(true);
@@ -89,7 +78,7 @@ export default function MicrosoftIntegrationPage() {
           <p className="mt-2 font-semibold text-foreground">
             Failed to load status
           </p>
-          <button onClick={loadStatus} className="btn-primary mt-4 text-xs">
+          <button onClick={() => void statusQuery.refetch()} className="btn-primary mt-4 text-xs">
             Retry
           </button>
         </div>
@@ -221,7 +210,7 @@ export default function MicrosoftIntegrationPage() {
               </div>
               <div className="mt-4 space-y-2">
                 <button
-                  onClick={loadStatus}
+                  onClick={() => void statusQuery.refetch()}
                   className="btn-secondary w-full justify-center text-xs py-2 flex items-center gap-1.5"
                 >
                   <IconRefresh size={14} /> Refresh Status
@@ -245,7 +234,7 @@ export default function MicrosoftIntegrationPage() {
                 <IconClock size={15} /> Recent Graph API Activity
               </h2>
               <button
-                onClick={loadStatus}
+                onClick={() => void statusQuery.refetch()}
                 className="text-xs text-violet-400 hover:text-violet-300 font-medium flex items-center gap-1"
               >
                 <IconRefresh size={13} /> Refresh

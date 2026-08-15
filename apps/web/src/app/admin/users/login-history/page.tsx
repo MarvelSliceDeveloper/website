@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { useState } from "react";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { IconHistory, IconRefresh } from "@tabler/icons-react";
 
@@ -17,30 +17,18 @@ type LoginEntry = {
 
 export default function LoginHistoryPage() {
   usePageTitle("Login History");
-  const [logs, setLogs] = useState<LoginEntry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
 
-  async function fetchLogs() {
-    setLoading(true);
-    try {
-      const data = await api.get<{
-        logs: LoginEntry[];
-        pagination: { total: number };
-      }>("/api/admin/login-history", { page: String(page), limit: "50" });
-      setLogs(data.logs);
-      setTotal(data.pagination.total);
-    } catch {
-      // silent
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchLogs();
-  }, [page]);
+  const loginHistoryQuery = useApiQuery<{
+    logs: LoginEntry[];
+    pagination: { total: number };
+  }>(["admin", "login-history", page], "/api/admin/login-history", {
+    page: String(page),
+    limit: "50",
+  });
+  const logs = loginHistoryQuery.data?.logs ?? [];
+  const total = loginHistoryQuery.data?.pagination.total ?? 0;
+  const loading = loginHistoryQuery.isPending;
 
   return (
     <div className="space-y-6">
@@ -58,7 +46,7 @@ export default function LoginHistoryPage() {
       </div>
 
       <button
-        onClick={fetchLogs}
+        onClick={() => void loginHistoryQuery.refetch()}
         className="btn-secondary text-xs py-2 flex items-center gap-1.5 w-fit"
       >
         <IconRefresh size={14} /> Refresh

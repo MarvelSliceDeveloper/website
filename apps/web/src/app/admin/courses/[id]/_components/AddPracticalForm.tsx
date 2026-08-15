@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, getErrorMessage, withLoadingToast } from "@/lib/toast";
 import { IconPlus, IconX, IconFile } from "@tabler/icons-react";
 import { FormModal } from "@/components/admin/FormModal";
 
@@ -24,9 +25,42 @@ export default function AddPracticalForm({
   const [videoUrl, setVideoUrl] = useState("");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfName, setPdfName] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const createPracticalMutation = useMutation({
+    mutationFn: async () => {
+      let pdfUrl: string | undefined;
+
+      if (pdfFile) {
+        const formData = new FormData();
+        formData.append("pdf", pdfFile);
+        const uploadRes = await withLoadingToast(
+          api.post<{ url: string }>(
+            `/api/admin/courses/${courseId}/practicals/pdf`,
+            formData,
+          ),
+          {
+            loading: "Uploading PDF...",
+            success: () => "PDF uploaded",
+          },
+        );
+        pdfUrl = uploadRes.url;
+      }
+
+      await api.post(`/api/admin/courses/modules/${moduleId}/practicals`, {
+        title: title.trim(),
+        description: description || undefined,
+        videoUrl: videoUrl || undefined,
+        pdfUrl,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Practical added");
+      resetForm();
+      onSuccess();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   const resetForm = () => {
     setTitle("");
@@ -58,7 +92,7 @@ export default function AddPracticalForm({
     setPdfName(file.name);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
       toast.error("Title is required");
@@ -69,39 +103,7 @@ export default function AddPracticalForm({
       return;
     }
 
-    setSubmitting(true);
-    try {
-      let pdfUrl: string | undefined;
-
-      if (pdfFile) {
-        setUploading(true);
-        const formData = new FormData();
-        formData.append("pdf", pdfFile);
-        const uploadRes = await api.post<{ url: string }>(
-          `/api/admin/courses/${courseId}/practicals/pdf`,
-          formData,
-        );
-        pdfUrl = uploadRes.url;
-        setUploading(false);
-      }
-
-      await api.post(`/api/admin/courses/modules/${moduleId}/practicals`, {
-        title: title.trim(),
-        description: description || undefined,
-        videoUrl: videoUrl || undefined,
-        pdfUrl,
-      });
-      toast.success("Practical added");
-      resetForm();
-      onSuccess();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to add practical",
-      );
-    } finally {
-      setSubmitting(false);
-      setUploading(false);
-    }
+    createPracticalMutation.mutate();
   };
 
   const footer = (
@@ -111,16 +113,12 @@ export default function AddPracticalForm({
       </button>
       <button
         type="submit"
-        disabled={submitting || uploading}
+        disabled={createPracticalMutation.isPending}
         className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1 disabled:opacity-50"
         form="add-practical-form"
       >
         <IconPlus size={12} />
-        {uploading
-          ? "Uploading PDF..."
-          : submitting
-            ? "Adding..."
-            : "Add Practical"}
+        {createPracticalMutation.isPending ? "Adding..." : "Add Practical"}
       </button>
     </>
   );

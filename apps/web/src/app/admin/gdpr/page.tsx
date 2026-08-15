@@ -1,37 +1,39 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { IconSearch, IconDownload, IconTrash, IconUser, IconAlertTriangle } from "@tabler/icons-react";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
+
+type GdprUser = { id: string; name: string; email: string; role: string };
 
 export default function GdprPage() {
   usePageTitle("GDPR Compliance");
   const [searchQuery, setSearchQuery] = useState("");
-  const [users, setUsers] = useState<{ id: string; name: string; email: string; role: string }[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [submittedQuery, setSubmittedQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [exportData, setExportData] = useState<Record<string, unknown> | null>(null);
   const [exporting, setExporting] = useState(false);
-  const [anonymizing, setAnonymizing] = useState(false);
   const confirmDelete = useConfirmDialog();
 
-  const searchUsers = useCallback(async () => {
-    if (!searchQuery.trim()) return;
-    setLoading(true);
-    try {
-      const res = await api.get<{ items: { id: string; name: string; email: string; role: string }[] }>(
-        `/api/admin/users?search=${encodeURIComponent(searchQuery)}&limit=10`,
-      );
-      setUsers(res.items || []);
-    } catch {
-      toast.error("Failed to search users");
-    } finally {
-      setLoading(false);
-    }
-  }, [searchQuery]);
+  const searchQueryResult = useApiQuery<{ items: GdprUser[] }>(
+    ["admin", "users", "search", submittedQuery],
+    `/api/admin/users?search=${encodeURIComponent(submittedQuery)}&limit=10`,
+    undefined,
+    { enabled: submittedQuery.trim().length > 0 },
+  );
+  const users = searchQueryResult.data?.items ?? [];
+  const loading = searchQueryResult.isPending;
+
+  function searchUsers() {
+    const q = searchQuery.trim();
+    if (!q) return;
+    setSubmittedQuery(q);
+  }
 
   const handleExport = async (userId: string) => {
     setExporting(true);
@@ -48,6 +50,18 @@ export default function GdprPage() {
     }
   };
 
+  const anonymizeMutation = useMutation({
+    mutationFn: (userId: string) =>
+      api.post(`/api/admin/gdpr/anonymize/${userId}`, {}),
+    onSuccess: () => {
+      toast.success("User data anonymized successfully");
+      setExportData(null);
+      setSelectedUser(null);
+      void searchQueryResult.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
   const handleAnonymize = async (userId: string) => {
     if (
       !(await confirmDelete({
@@ -58,18 +72,7 @@ export default function GdprPage() {
     ) {
       return;
     }
-    setAnonymizing(true);
-    try {
-      await api.post(`/api/admin/gdpr/anonymize/${userId}`, {});
-      toast.success("User data anonymized successfully");
-      setExportData(null);
-      setSelectedUser(null);
-      searchUsers();
-    } catch {
-      toast.error("Failed to anonymize user data");
-    } finally {
-      setAnonymizing(false);
-    }
+    anonymizeMutation.mutate(userId);
   };
 
   return (
@@ -117,7 +120,7 @@ export default function GdprPage() {
                 </button>
                 <button
                   onClick={() => handleAnonymize(user.id)}
-                  disabled={anonymizing}
+                  disabled={anonymizeMutation.isPending}
                   className="text-sm px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 flex items-center gap-1.5"
                 >
                   <IconTrash size={14} />

@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import {
   IconTrash,
   IconBell,
@@ -79,51 +81,61 @@ export default function InstructorInboxPage() {
 }
 
 function NotificationsTab() {
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetch = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await api.get<{ notifications: NotificationItem[] }>(
-        "/api/notifications",
+  // Shares the ["notifications"] cache with the student inbox (and any header
+  // unread badge that polls the same endpoint).
+  const notificationsQuery = useApiQuery<{
+    notifications: NotificationItem[];
+  }>(["notifications"], "/api/notifications");
+  const notifications = notificationsQuery.data?.notifications ?? [];
+  const loading = notificationsQuery.isPending;
+
+  // Optimistic cache updates so the list reacts instantly, without a refetch
+  // per action.
+  const readMutation = useMutation({
+    mutationFn: (id: string) => api.patch(`/api/notifications/${id}/read`, {}),
+    onSuccess: (_, id) => {
+      queryClient.setQueryData<{ notifications: NotificationItem[] }>(
+        ["notifications"],
+        (old) => ({
+          notifications: (old?.notifications ?? []).map((n) =>
+            n.id === id ? { ...n, read: true } : n,
+          ),
+        }),
       );
-      setNotifications(data.notifications || []);
-    } catch {
-      /* ignore */
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    onError: () => toast.error("Failed to mark as read"),
+  });
 
-  useEffect(() => {
-    api
-      .get<{ notifications: NotificationItem[] }>("/api/notifications")
-      .then((data) => {
-        setNotifications(data.notifications || []);
-      })
-      .catch(() => {})
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/notifications/${id}`),
+    onSuccess: (_, id) => {
+      queryClient.setQueryData<{ notifications: NotificationItem[] }>(
+        ["notifications"],
+        (old) => ({
+          notifications: (old?.notifications ?? []).filter((n) => n.id !== id),
+        }),
+      );
+    },
+    onError: () => toast.error("Failed to delete"),
+  });
 
-  async function markAsRead(id: string) {
-    await api.patch(`/api/notifications/${id}/read`, {});
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
-    );
-  }
-
-  async function deleteNotification(id: string) {
-    await api.delete(`/api/notifications/${id}`);
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  }
-
-  async function markAllRead() {
-    await api.post("/api/notifications/read-all");
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  }
+  const markAllMutation = useMutation({
+    mutationFn: () => api.post("/api/notifications/read-all"),
+    onSuccess: () => {
+      queryClient.setQueryData<{ notifications: NotificationItem[] }>(
+        ["notifications"],
+        (old) => ({
+          notifications: (old?.notifications ?? []).map((n) => ({
+            ...n,
+            read: true,
+          })),
+        }),
+      );
+    },
+    onError: () => toast.error("Failed to mark all as read"),
+  });
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -133,7 +145,7 @@ function NotificationsTab() {
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="h-16 animate-pulse rounded-xl bg-card-hover border border-border"
+            className="h-24 animate-pulse rounded-2xl bg-card-hover/60 border border-border/40"
           />
         ))}
       </div>
@@ -147,7 +159,7 @@ function NotificationsTab() {
         </p>
         {unreadCount > 0 && (
           <button
-            onClick={markAllRead}
+            onClick={() => markAllMutation.mutate()}
             className="btn-secondary text-xs flex items-center gap-1.5"
           >
             <IconCheck size={14} /> Mark all read
@@ -155,45 +167,55 @@ function NotificationsTab() {
         )}
       </div>
       {notifications.length === 0 ? (
-        <div className="glass-card flex flex-col items-center justify-center py-12 text-center">
+        <div className="glass-card flex flex-col items-center justify-center rounded-2xl py-12 text-center">
           <p className="font-semibold text-foreground">No notifications</p>
         </div>
       ) : (
         notifications.map((n) => (
           <div
             key={n.id}
-            className={`group flex items-start gap-3 rounded-xl border p-4 transition-colors ${
+            className={`group relative flex items-start gap-4 overflow-hidden rounded-2xl border p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-200 ${
               n.read
-                ? "border-border/60 bg-card/50"
-                : "border-primary/20 bg-primary/5"
+                ? "border-border/50 bg-card/40 hover:bg-card-hover/60 hover:shadow-[0_4px_14px_rgba(15,23,42,0.07)]"
+                : "border-primary/25 bg-primary/[0.04] hover:bg-primary/[0.07] hover:shadow-[0_4px_14px_rgba(15,23,42,0.07)]"
             }`}
           >
+            {!n.read && (
+              <span className="absolute left-0 top-4 bottom-4 w-1 rounded-r-full bg-primary" />
+            )}
             <div className="mt-0.5">
-              <NotificationIcon type={n.type} withContainer={false} />
+              <NotificationIcon type={n.type} />
             </div>
             <div className="min-w-0 flex-1">
-              <p
-                className={`text-sm leading-snug ${n.read ? "text-muted-foreground" : "text-foreground font-medium"}`}
-              >
+              <div className="flex items-start justify-between gap-3">
+                <p className={`text-[15px] font-bold ${n.read ? "text-foreground/80" : "text-foreground"}`}>
+                  {n.title || n.type.replace(/_/g, " ")}
+                </p>
+                {!n.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary animate-pulse" />}
+              </div>
+              <p className={`mt-1 text-sm leading-relaxed line-clamp-2 ${n.read ? "text-muted-foreground" : "text-foreground/90"}`}>
                 {n.message}
               </p>
-              <p className="mt-1 text-[11px] text-muted">
-                {timeAgo(n.createdAt)}
-              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <span className="text-[11px] text-muted">{timeAgo(n.createdAt)}</span>
+                <span className="inline-flex items-center rounded-full border border-border/60 bg-card-hover/60 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                  {n.type.replace(/_/g, " ")}
+                </span>
+              </div>
             </div>
             <div className="flex shrink-0 gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               {!n.read && (
                 <button
-                  onClick={() => markAsRead(n.id)}
-                  className="rounded-lg p-1.5 text-muted hover:text-primary hover:bg-primary/10"
+                  onClick={() => readMutation.mutate(n.id)}
+                  className="rounded-lg p-2 text-muted hover:text-primary hover:bg-primary/10"
                   title="Mark as read"
                 >
                   <IconEye size={15} />
                 </button>
               )}
               <button
-                onClick={() => deleteNotification(n.id)}
-                className="rounded-lg p-1.5 text-muted hover:text-danger hover:bg-danger/10"
+                onClick={() => deleteMutation.mutate(n.id)}
+                className="rounded-lg p-2 text-muted hover:text-danger hover:bg-danger/10"
                 title="Delete"
               >
                 <IconTrash size={15} />
@@ -207,66 +229,53 @@ function NotificationsTab() {
 }
 
 function MessagesTab() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [thread, setThread] = useState<MessageRecord[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [sending, setSending] = useState(false);
 
-  const fetchConversations = useCallback(async () => {
-    try {
-      const data = await api.get<{ conversations: Conversation[] }>(
-        "/api/messages/conversations",
-      );
-      setConversations(data.conversations || []);
-    } catch {
-      /* ignore */
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Shares the ["messages","conversations"] cache with the student inbox.
+  const conversationsQuery = useApiQuery<{ conversations: Conversation[] }>(
+    ["messages", "conversations"],
+    "/api/messages/conversations",
+  );
+  const conversations = conversationsQuery.data?.conversations ?? [];
+  const loading = conversationsQuery.isPending;
 
-  useEffect(() => {
-    api
-      .get<{ conversations: Conversation[] }>("/api/messages/conversations")
-      .then((data) => {
-        setConversations(data.conversations || []);
-      })
-      .catch(() => {})
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+  // Thread is a dependent query — enabled only once a conversation is selected.
+  const threadQuery = useApiQuery<{ messages: MessageRecord[] }>(
+    ["messages", "thread", selectedUserId ?? ""],
+    selectedUserId ? `/api/messages/${selectedUserId}` : "",
+    undefined,
+    { enabled: Boolean(selectedUserId) },
+  );
+  const thread = threadQuery.data?.messages ?? [];
 
-  const openThread = async (userId: string) => {
-    setSelectedUserId(userId);
-    try {
-      const data = await api.get<{ messages: MessageRecord[] }>(
-        `/api/messages/${userId}`,
-      );
-      setThread(data.messages || []);
-    } catch {
-      setThread([]);
-    }
-  };
-
-  const sendMessage = async () => {
-    if (!selectedUserId || !newMessage.trim() || sending) return;
-    setSending(true);
-    try {
-      await api.post("/api/messages", {
-        receiverId: selectedUserId,
-        body: newMessage,
-      });
+  const sendMutation = useMutation({
+    mutationFn: ({
+      receiverId,
+      body,
+    }: {
+      receiverId: string;
+      body: string;
+    }) => api.post("/api/messages", { receiverId, body }),
+    onSuccess: (_, { receiverId }) => {
       toast.success("Message sent");
       setNewMessage("");
-      openThread(selectedUserId);
-    } catch {
-      toast.error("Failed to send message");
-    } finally {
-      setSending(false);
-    }
+      void queryClient.invalidateQueries({
+        queryKey: ["messages", "thread", receiverId],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["messages", "conversations"],
+      });
+    },
+    onError: () => toast.error("Failed to send message"),
+  });
+
+  const openThread = (userId: string) => setSelectedUserId(userId);
+
+  const sendMessage = () => {
+    if (!selectedUserId || !newMessage.trim()) return;
+    sendMutation.mutate({ receiverId: selectedUserId, body: newMessage });
   };
 
   if (loading)
@@ -343,17 +352,19 @@ function MessagesTab() {
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && !sending && sendMessage()}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && !sendMutation.isPending && sendMessage()
+                  }
                   placeholder="Type a message..."
-                  disabled={sending}
+                  disabled={sendMutation.isPending}
                   className="field flex-1"
                 />
                 <button
                   onClick={sendMessage}
-                  disabled={!newMessage.trim() || sending}
+                  disabled={!newMessage.trim() || sendMutation.isPending}
                   className="btn-primary text-sm"
                 >
-                  {sending ? "Sending..." : "Send"}
+                  {sendMutation.isPending ? "Sending..." : "Send"}
                 </button>
               </div>
             </div>

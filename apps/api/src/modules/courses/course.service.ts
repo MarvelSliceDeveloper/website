@@ -240,12 +240,19 @@ export const courseService = {
     });
   },
 
-  // Soft-deletes a course (sets status to ARCHIVED)
-  async deleteCourse(courseId: string, deletedBy?: string) {
-    const existing = await prisma.course.findUnique({
-      where: { id: courseId },
+  // Resolves a course id or slug to its primary id.
+  async resolveCourseId(idOrSlug: string): Promise<string> {
+    const existing = await prisma.course.findFirst({
+      where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
+      select: { id: true },
     });
     if (!existing) throw new AppError(404, "Course not found");
+    return existing.id;
+  },
+
+  // Soft-deletes a course (sets status to ARCHIVED)
+  async deleteCourse(idOrSlug: string, deletedBy?: string) {
+    const courseId = await this.resolveCourseId(idOrSlug);
 
     return prisma.course.update({
       where: { id: courseId },
@@ -258,7 +265,8 @@ export const courseService = {
   },
 
   // Publishes a course after validation checklist
-  async publishCourse(courseId: string) {
+  async publishCourse(idOrSlug: string) {
+    const courseId = await this.resolveCourseId(idOrSlug);
     const course = await prisma.course.findUnique({
       where: { id: courseId },
       include: {
@@ -314,7 +322,8 @@ export const courseService = {
   },
 
   // Unpublishes a course (reverts to DRAFT)
-  async unpublishCourse(courseId: string) {
+  async unpublishCourse(idOrSlug: string) {
+    const courseId = await this.resolveCourseId(idOrSlug);
     const existing = await prisma.course.findUnique({
       where: { id: courseId },
     });
@@ -328,7 +337,8 @@ export const courseService = {
     });
   },
 
-  async recoverCourse(courseId: string, restoredBy?: string) {
+  async recoverCourse(idOrSlug: string, restoredBy?: string) {
+    const courseId = await this.resolveCourseId(idOrSlug);
     const existing = await prisma.course.findUnique({
       where: { id: courseId },
     });
@@ -349,7 +359,8 @@ export const courseService = {
   },
 
   // Permanently deletes a course and all related records (irreversible)
-  async permanentDeleteCourse(courseId: string) {
+  async permanentDeleteCourse(idOrSlug: string) {
+    const courseId = await this.resolveCourseId(idOrSlug);
     const existing = await prisma.course.findUnique({
       where: { id: courseId },
     });

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, getErrorMessage, withLoadingToast } from "@/lib/toast";
 import {
   IconX,
   IconExternalLink,
@@ -16,7 +17,6 @@ import {
   IconLink,
   IconUpload,
 } from "@tabler/icons-react";
-import { useRef } from "react";
 import RichEditor from "@/components/editor/RichEditor";
 import { FormModal } from "@/components/admin/FormModal";
 
@@ -73,19 +73,57 @@ export default function AssignmentCard({
   );
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfName, setPdfName] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [copied, setCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const copyId = async () => {
-    await navigator.clipboard.writeText(assignment.id);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      let savedPdfUrl: string | undefined;
 
-  const handleUpdate = async () => {
+      if (pdfSource === "upload") {
+        if (pdfFile) {
+          const formData = new FormData();
+          formData.append("questionPdf", pdfFile);
+          const uploadRes = await withLoadingToast(
+            api.post<{ fileUrl: string }>(
+              "/api/assignments/upload-pdf",
+              formData,
+            ),
+            {
+              loading: "Uploading PDF...",
+              success: () => "PDF uploaded",
+            },
+          );
+          savedPdfUrl = uploadRes.fileUrl;
+        } else {
+          savedPdfUrl = assignment.questionPdfUrl || undefined;
+        }
+      } else {
+        savedPdfUrl = questionPdfUrl.trim() || undefined;
+      }
+
+      await api.put(
+        `/api/admin/courses/modules/assignments/${assignment.id}`,
+        {
+          title,
+          description,
+          dueDate: undefined,
+          daysFromEnrollment:
+            daysFromEnrollment !== "" ? Number(daysFromEnrollment) : null,
+          maxPoints,
+          questionPdfUrl: savedPdfUrl,
+        },
+      );
+    },
+    onSuccess: () => {
+      toast.success("Assignment updated successfully");
+      setEditing(false);
+      onUpdate();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleUpdate = () => {
     if (!title.trim()) {
       toast.error("Please enter an assignment title");
       return;
@@ -99,45 +137,13 @@ export default function AssignmentCard({
       return;
     }
 
-    setLoading(true);
-    try {
-      let savedPdfUrl: string | undefined;
+    updateMutation.mutate();
+  };
 
-      if (pdfSource === "upload") {
-        if (pdfFile) {
-          setUploading(true);
-          const formData = new FormData();
-          formData.append("questionPdf", pdfFile);
-          const uploadRes = await api.post<{ fileUrl: string }>(
-            "/api/assignments/upload-pdf",
-            formData,
-          );
-          savedPdfUrl = uploadRes.fileUrl;
-          setUploading(false);
-        } else {
-          savedPdfUrl = assignment.questionPdfUrl || undefined;
-        }
-      } else {
-        savedPdfUrl = questionPdfUrl.trim() || undefined;
-      }
-
-      await api.put(`/api/admin/courses/modules/assignments/${assignment.id}`, {
-        title,
-        description,
-        dueDate: undefined,
-        daysFromEnrollment: daysFromEnrollment !== "" ? Number(daysFromEnrollment) : null,
-        maxPoints,
-        questionPdfUrl: savedPdfUrl,
-      });
-      toast.success("Assignment updated successfully");
-      setEditing(false);
-      onUpdate();
-    } catch {
-      toast.error("Failed to update assignment");
-    } finally {
-      setLoading(false);
-      setUploading(false);
-    }
+  const copyId = async () => {
+    await navigator.clipboard.writeText(assignment.id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   };
 
   const handlePdfSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,18 +164,19 @@ export default function AssignmentCard({
     if (fileRef.current) fileRef.current.value = "";
   };
 
-  const handleDelete = async () => {
-    setDeleting(true);
-    try {
-      await api.delete(`/api/admin/courses/modules/assignments/${assignment.id}`);
+  const deleteMutation = useMutation({
+    mutationFn: () =>
+      api.delete(
+        `/api/admin/courses/modules/assignments/${assignment.id}`,
+      ),
+    onSuccess: () => {
       toast.success("Assignment deleted successfully");
       onUpdate();
-    } catch {
-      toast.error("Failed to delete assignment");
-    } finally {
-      setDeleting(false);
-    }
-  };
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleDelete = () => deleteMutation.mutate();
 
   const cancelEdit = () => {
     setEditing(false);
@@ -198,10 +205,10 @@ export default function AssignmentCard({
       </button>
       <button
         onClick={handleUpdate}
-        disabled={loading || uploading}
+        disabled={updateMutation.isPending}
         className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1 disabled:opacity-50"
       >
-        {uploading ? "Uploading PDF..." : loading ? "Saving..." : "Save Changes"}
+        {updateMutation.isPending ? "Saving..." : "Save Changes"}
       </button>
     </>
   );
@@ -291,6 +298,7 @@ export default function AssignmentCard({
           <div className="space-y-2">
             <label className="text-xs font-medium">Google Drive PDF Link</label>
             <input
+              key="drive-link"
               type="url"
               value={questionPdfUrl}
               onChange={(e) => setQuestionPdfUrl(e.target.value)}
@@ -305,6 +313,7 @@ export default function AssignmentCard({
           <div className="space-y-2">
             <label className="text-xs font-medium">PDF Upload</label>
             <input
+              key="pdf-file"
               ref={fileRef}
               type="file"
               accept=".pdf,application/pdf"
@@ -437,7 +446,7 @@ export default function AssignmentCard({
           </button>
           <button
             onClick={handleDelete}
-            disabled={deleting}
+            disabled={deleteMutation.isPending}
             className="rounded-md p-1 text-[#8b8da3] transition-colors hover:bg-danger/12 hover:text-danger"
           >
             <IconTrash size={12} />

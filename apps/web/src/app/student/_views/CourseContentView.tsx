@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   IconBook2,
   IconCalendarEvent,
@@ -10,10 +11,12 @@ import {
   IconPencil,
   IconNotes,
   IconVideo,
+  IconX,
   IconChevronDown,
   IconClipboardCheck,
   IconFileSpreadsheet,
   IconFile,
+  IconList,
   IconDownload,
   IconDeviceSpeaker,
   IconClock,
@@ -21,7 +24,8 @@ import {
   IconAward,
 } from "@tabler/icons-react";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { useLiveSessionPresence } from "@/hooks/use-live-session-presence";
 
 import { VideoPlayer } from "./_comps/VideoPlayer";
@@ -201,10 +205,7 @@ export default function CourseContentView({
   initialResourceUrl,
   initialResourceName,
 }: CourseContentViewProps) {
-  const [data, setData] = useState<CourseContentData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
+  const queryClient = useQueryClient();
   const [contentPanel, setContentPanel] = useState<ContentPanel>("content");
 
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
@@ -216,7 +217,8 @@ export default function CourseContentView({
   const [expandedModuleId, setExpandedModuleId] = useState<string | null>(
     null,
   );
-  const [retryKey, setRetryKey] = useState(0);
+
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const [showStickyWidget, setShowStickyWidget] = useState(false);
   const [bookmarks, setBookmarks] = useState<string[]>([]);
@@ -246,7 +248,6 @@ export default function CourseContentView({
     Record<string, string>
   >({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
-  const [quizSubmitting, setQuizSubmitting] = useState(false);
   const [quizResult, setQuizResult] = useState<{
     score: number;
     total: number;
@@ -274,58 +275,59 @@ export default function CourseContentView({
   const [joiningSessionId, setJoiningSessionId] = useState<string | null>(null);
   const presence = useLiveSessionPresence();
   const [showCertificationExam, setShowCertificationExam] = useState(false);
-  const [certQuizPassed, setCertQuizPassed] = useState(false);
 
   // ── Data fetching ──────────────────────────────────────────────────────
 
+  const contentQuery = useApiQuery<CourseContentData>(
+    ["student", "course-content", courseId],
+    `/api/courses/${courseId}/content`,
+  );
+  const data = contentQuery.data ?? null;
+  const loading = contentQuery.isPending;
+  const error = contentQuery.isError
+    ? getErrorMessage(contentQuery.error)
+    : "";
+
+  // Certification exam status — fetched only when the course has a cert module.
+  const hasCertModule = Boolean(
+    data?.modules.some((m) => m.isCertificationModule),
+  );
+  const certQuery = useQuery({
+    queryKey: ["student", "course-certification", courseId],
+    queryFn: () =>
+      api.get<{
+        attempt: { isPassed: boolean } | null;
+        eligible: boolean;
+      }>(`/api/courses/${courseId}/certification`),
+    enabled: hasCertModule,
+  });
+  const certQuizPassed = certQuery.data?.attempt?.isPassed ?? false;
+  const certExamEligible = certQuery.data?.eligible ?? false;
+
+  // One-time init: preselect the first module/lesson (or the one matching
+  // initialLessonId) once the content loads.
+  const initializedForCourse = useRef<string | null>(null);
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const res = await api.get<CourseContentData>(
-          `/api/courses/${courseId}/content`,
-        );
-        if (cancelled) return;
-        setData(res);
-        if (res.modules.find((m) => m.isCertificationModule)) {
-          const certRes = await api.get<{
-            attempt: { isPassed: boolean } | null;
-          }>(`/api/courses/${courseId}/certification`);
-          if (!cancelled) {
-            setCertQuizPassed(certRes.attempt?.isPassed ?? false);
-          }
-        }
-        if (res.modules.length > 0) {
-          const firstModule = res.modules[0];
-          const targetModule = initialLessonId
-            ? (res.modules.find((m) =>
-                m.lessons.some((l) => l.id === initialLessonId),
-              ) ?? firstModule)
-            : firstModule;
-          setSelectedModuleId(targetModule.id);
-          setExpandedModuleId(targetModule.id);
-          const targetLesson = initialLessonId
-            ? targetModule.lessons.find((l) => l.id === initialLessonId)
-            : targetModule.lessons[0];
-          if (targetLesson) {
-            setSelectedLessonId(targetLesson.id);
-          }
-        }
-      } catch (err: unknown) {
-        if (cancelled) return;
-        const message =
-          err instanceof Error ? err.message : "Failed to load course content";
-        setError(message);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [courseId, retryKey, initialLessonId]);
+    if (!data || initializedForCourse.current === courseId) return;
+    initializedForCourse.current = courseId;
+    const firstModule = data.modules[0];
+    if (!firstModule) return;
+    const targetModule = initialLessonId
+      ? (data.modules.find((m) =>
+          m.lessons.some((l) => l.id === initialLessonId),
+        ) ?? firstModule)
+      : firstModule;
+    /* eslint-disable react-hooks/set-state-in-effect -- one-time init from fetched course content */
+    setSelectedModuleId(targetModule.id);
+    setExpandedModuleId(targetModule.id);
+    const targetLesson = initialLessonId
+      ? targetModule.lessons.find((l) => l.id === initialLessonId)
+      : targetModule.lessons[0];
+    if (targetLesson) {
+      setSelectedLessonId(targetLesson.id);
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [data, courseId, initialLessonId]);
 
   // ── Navigation ─────────────────────────────────────────────────────────
 
@@ -336,6 +338,7 @@ export default function CourseContentView({
   };
 
   const selectModule = (moduleId: string) => {
+    setMobileSidebarOpen(false);
     setSelectedModuleId(moduleId);
     setSelectedRecordingId(null);
     setContentPanel("content");
@@ -349,6 +352,7 @@ export default function CourseContentView({
     setExpandedModuleId(moduleId);
   };
   const selectLesson = (lesson: { id: string }, moduleId: string) => {
+    setMobileSidebarOpen(false);
     setSelectedLessonId(lesson.id);
     setSelectedModuleId(moduleId);
     setSelectedRecordingId(null);
@@ -365,6 +369,7 @@ export default function CourseContentView({
   };
 
   const selectRecording = (recordingId: string) => {
+    setMobileSidebarOpen(false);
     setSelectedRecordingId(recordingId || null);
     setSelectedResource(null);
     setSelectedQuizId(null);
@@ -376,6 +381,7 @@ export default function CourseContentView({
   const clearRecording = () => setSelectedRecordingId(null);
 
   const selectQuiz = async (quizId: string) => {
+    setMobileSidebarOpen(false);
     setSelectedQuizId(quizId);
     setSelectedResource(null);
     setSelectedLessonId(null);
@@ -457,6 +463,7 @@ export default function CourseContentView({
     type: string;
     dueDate: string;
   }) => {
+    setMobileSidebarOpen(false);
     setSelectedAssignmentId(assignment.id);
     setSelectedQuizId(null);
     setQuizData(null);
@@ -467,6 +474,7 @@ export default function CourseContentView({
   };
 
   const selectResource = (name: string, url: string) => {
+    setMobileSidebarOpen(false);
     setSelectedResource({ name, url });
     setSelectedQuizId(null);
     setQuizData(null);
@@ -477,6 +485,7 @@ export default function CourseContentView({
   };
 
   const selectPractical = (practicalId: string) => {
+    setMobileSidebarOpen(false);
     setSelectedPracticalId(practicalId);
     setSelectedLessonId(null);
     setSelectedQuizId(null);
@@ -519,17 +528,16 @@ export default function CourseContentView({
     setQuizData(null);
   };
 
-  const handleSubmitQuiz = async () => {
-    if (!quizData) return;
-    setQuizSubmitting(true);
-    try {
-      const answers = Object.entries(selectedAnswers).map(
-        ([questionId, selectedOptionId]) => ({
-          questionId,
-          selectedOptionId,
-        }),
-      );
-      const res = await api.post<{
+  // Quiz submission mutation — writes the attempt, then shows the result.
+  const quizSubmitMutation = useMutation({
+    mutationFn: ({
+      quizId,
+      answers,
+    }: {
+      quizId: string;
+      answers: Array<{ questionId: string; selectedOptionId: string }>;
+    }) =>
+      api.post<{
         score: number;
         total: number;
         percentage: number;
@@ -538,7 +546,8 @@ export default function CourseContentView({
           selectedOptionId: string;
           isCorrect: boolean;
         }>;
-      }>(`/api/courses/quizzes/${quizData.id}/submit`, { answers });
+      }>(`/api/courses/quizzes/${quizId}/submit`, { answers }),
+    onSuccess: (res) => {
       setQuizResult({
         score: res.score,
         total: res.total,
@@ -546,13 +555,23 @@ export default function CourseContentView({
         answers: res.answers,
       });
       setQuizSubmitted(true);
-    } catch (err: unknown) {
+    },
+    onError: (err: unknown) => {
       console.error("Failed to submit quiz:", err);
       const msg = err instanceof Error ? err.message : "Failed to submit quiz";
       toast.error(msg);
-    } finally {
-      setQuizSubmitting(false);
-    }
+    },
+  });
+
+  const handleSubmitQuiz = () => {
+    if (!quizData) return;
+    const answers = Object.entries(selectedAnswers).map(
+      ([questionId, selectedOptionId]) => ({
+        questionId,
+        selectedOptionId,
+      }),
+    );
+    quizSubmitMutation.mutate({ quizId: quizData.id, answers });
   };
 
   const clearResourcePreview = () => setSelectedResource(null);
@@ -575,7 +594,9 @@ export default function CourseContentView({
       lesson?: { id: string; watchedPercent: number; isCompleted: boolean };
       recording?: { id: string; watchedPercent: number; isCompleted: boolean };
     }) => {
-      setData((prev) => {
+      queryClient.setQueryData<CourseContentData>(
+        ["student", "course-content", courseId],
+        (prev) => {
         if (!prev) return prev;
 
         const recordings = patch.recording
@@ -627,9 +648,10 @@ export default function CourseContentView({
             : 0;
 
         return { ...prev, modules, recordings, overallProgress };
-      });
+      },
+      );
     },
-    [],
+    [courseId, queryClient],
   );
 
   const handleWatchProgress = (watchedSeconds: number, completed?: boolean) => {
@@ -708,7 +730,7 @@ export default function CourseContentView({
         </p>
         <p className="text-sm text-muted-foreground">{error}</p>
         <button
-          onClick={() => setRetryKey((k) => k + 1)}
+          onClick={() => void contentQuery.refetch()}
           className="btn-primary text-sm"
         >
           Retry
@@ -746,7 +768,7 @@ export default function CourseContentView({
           quizData={quizData}
           selectedAnswers={selectedAnswers}
           quizSubmitted={quizSubmitted}
-          quizSubmitting={quizSubmitting}
+          quizSubmitting={quizSubmitMutation.isPending}
           quizResult={quizResult}
           onAnswerSelect={(questionId, optionId) =>
             setSelectedAnswers((prev) => ({ ...prev, [questionId]: optionId }))
@@ -1398,6 +1420,29 @@ export default function CourseContentView({
     if (!certModule) return null;
     if (d?.batch?.examEnabled === false) return null;
     if (certQuizPassed) return null;
+
+    if (!certExamEligible) {
+      return (
+        <div className="p-3">
+          <div className="rounded-xl border border-border/60 overflow-hidden opacity-80">
+            <div className="w-full flex items-center gap-3 px-4 py-3 text-left">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/40">
+                <IconAward size={16} className="text-muted-foreground" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[13px] font-semibold leading-snug text-muted-foreground">
+                  Certification Exam
+                </span>
+                <span className="block text-[11px] mt-0.5 text-muted-foreground/80">
+                  Complete all quizzes and assignments to unlock
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="p-3">
         <div className="rounded-xl border border-amber-500/30 overflow-hidden">
@@ -1591,9 +1636,18 @@ export default function CourseContentView({
   return (
     <div className="flex h-[calc(100vh-var(--shell-header-height,56px))] gap-0 overflow-hidden">
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-5 bg-mist">{renderMain()}</div>
+        <div className="flex-1 overflow-y-auto p-3 sm:p-5 bg-mist">
+          {renderMain()}
+        </div>
 
-        <div className="flex items-center gap-3 px-5 py-2.5 bg-card border-t border-border shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 bg-card border-t border-border shrink-0">
+          <button
+            onClick={() => setMobileSidebarOpen(true)}
+            className="lg:hidden flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
+            aria-label="Open course contents"
+          >
+            <IconList size={13} /> Contents
+          </button>
           <button
             onClick={() => {
               // Guard: navigation position isn't tracked while a study
@@ -1665,7 +1719,7 @@ export default function CourseContentView({
             <IconArrowLeft size={13} /> Previous
           </button>
           <div className="flex-1" />
-          <span className="text-xs text-muted-foreground">
+          <span className="hidden md:inline text-xs text-muted-foreground">
             {selectedModule &&
               !selectedResource &&
               (() => {
@@ -1695,8 +1749,10 @@ export default function CourseContentView({
             }`}
             aria-pressed={showStickyWidget}
           >
-            <IconPencil size={13} />{" "}
-            {showStickyWidget ? "Close Notes" : "Take Note"}
+            <IconPencil size={13} />
+            <span className="hidden sm:inline">
+              {showStickyWidget ? "Close Notes" : "Take Note"}
+            </span>
           </button>
           <button
             onClick={() => {
@@ -1769,9 +1825,38 @@ export default function CourseContentView({
         </div>
       </div>
 
-      <div className="w-115 shrink-0 border-l border-hairline bg-paper overflow-hidden">
-        {renderContentPanel()}
-      </div>
+      {/* Mobile sidebar backdrop */}
+      {mobileSidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          onClick={() => setMobileSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Content panel: static on desktop, slide-in drawer on mobile */}
+      <aside
+        className={`fixed inset-y-0 right-0 z-50 flex w-80 max-w-[85vw] flex-col border-l border-hairline bg-paper shadow-xl transition-transform duration-300 ease-out lg:static lg:z-auto lg:w-115 lg:max-w-none lg:shrink-0 lg:shadow-none lg:translate-x-0 ${
+          mobileSidebarOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+        aria-label="Course contents"
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-border lg:hidden">
+          <span className="px-4 py-3 text-xs font-semibold text-muted-foreground">
+            Contents
+          </span>
+          <button
+            onClick={() => setMobileSidebarOpen(false)}
+            className="flex h-10 w-10 items-center justify-center text-muted-foreground hover:text-foreground"
+            aria-label="Close contents"
+          >
+            <IconX size={18} />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-hidden">
+          {renderContentPanel()}
+        </div>
+      </aside>
 
       {selectedModuleId && showStickyWidget && (
         <StickyNoteWidget

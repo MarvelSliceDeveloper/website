@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { useState } from "react";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { IconRefresh } from "@tabler/icons-react";
@@ -17,30 +17,16 @@ type ConsentEntry = {
 
 export default function ConsentLogsPage() {
   usePageTitle("Consent Logs");
-  const [logs, setLogs] = useState<ConsentEntry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
 
-  async function fetchLogs() {
-    setLoading(true);
-    try {
-      const data = await api.get<{ logs: ConsentEntry[] }>(
-        "/api/admin/consent-logs",
-        { page: String(page), limit: "50" },
-      );
-      setLogs(data.logs);
-      setTotal(data.logs.length);
-    } catch {
-      // silent
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchLogs();
-  }, [page]);
+  const logsQuery = useApiQuery<{ logs: ConsentEntry[] }>(
+    ["admin", "consent-logs", page],
+    "/api/admin/consent-logs",
+    { page: String(page), limit: "50" },
+  );
+  const logs = logsQuery.data?.logs ?? [];
+  const total = logs.length;
+  const loading = logsQuery.isPending;
 
   return (
     <div className="space-y-6">
@@ -51,7 +37,7 @@ export default function ConsentLogsPage() {
       />
 
       <button
-        onClick={fetchLogs}
+        onClick={() => void logsQuery.refetch()}
         className="btn-secondary text-xs py-2 flex items-center gap-1.5 w-fit"
       >
         <IconRefresh size={14} /> Refresh

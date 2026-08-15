@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
@@ -97,96 +99,59 @@ export default function SessionDetailPage() {
   const params = useParams();
   const sessionId = params.sessionId as string;
 
-  const [session, setSession] = useState<SessionDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
-  const [loadingUrl, setLoadingUrl] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [error, setError] = useState(false);
   const [nowMs] = useState(() => Date.now());
 
-  const fetchSession = useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      const data = await api.get<{ session: SessionDetail }>(
-        `/api/sessions/${sessionId}`,
-      );
-      setSession(data.session);
-    } catch {
-      setError(true);
-      toast.error("Failed to load session details");
-    } finally {
-      setLoading(false);
-    }
-  }, [sessionId]);
-
-  useEffect(() => {
-    fetchSession();
-  }, [fetchSession]);
+  const sessionQuery = useApiQuery<{ session: SessionDetail }>(
+    ["admin", "session", sessionId],
+    `/api/sessions/${sessionId}`,
+  );
+  const session = sessionQuery.data?.session ?? null;
+  const loading = sessionQuery.isPending;
+  const error = sessionQuery.isError;
 
   const recordingId = session?.recording?.id;
+  const playbackQuery = useApiQuery<{ url: string }>(
+    ["admin", "session", "playback", recordingId ?? ""],
+    recordingId ? `/api/recordings/${recordingId}/url` : "",
+    undefined,
+    { enabled: Boolean(recordingId) },
+  );
+  const playbackUrl = playbackQuery.data?.url ?? null;
+  const loadingUrl = playbackQuery.isPending;
 
-  useEffect(() => {
-    if (recordingId) {
-      setLoadingUrl(true);
-      api
-        .get<{ url: string }>(`/api/recordings/${recordingId}/url`)
-        .then((data) => setPlaybackUrl(data.url))
-        .catch(() => setPlaybackUrl(null))
-        .finally(() => setLoadingUrl(false));
-    } else {
-      setPlaybackUrl(null);
-    }
-  }, [recordingId]);
+  const liveNow =
+    !!session &&
+    !session.endedAt &&
+    new Date(session.scheduledAt).getTime() <= nowMs &&
+    new Date(session.scheduledEndAt).getTime() >= nowMs;
 
-  const [stats, setStats] = useState<SessionStats | null>(null);
-  const [attendance, setAttendance] = useState<AttendanceRow[]>([]);
+  const statsQuery = useApiQuery<{ stats: SessionStats }>(
+    ["admin", "session", "stats", sessionId],
+    `/api/attendance/${sessionId}/stats`,
+    undefined,
+    { enabled: Boolean(session), refetchInterval: liveNow ? 30_000 : false },
+  );
+  const stats = statsQuery.data?.stats ?? null;
 
-  const fetchAnalytics = useCallback(async () => {
-    try {
-      const [statsRes, attRes] = await Promise.all([
-        api.get<{ stats: SessionStats }>(
-          `/api/attendance/${sessionId}/stats`,
-        ),
-        api.get<{ attendance: AttendanceRow[] }>(
-          `/api/attendance/${sessionId}`,
-        ),
-      ]);
-      setStats(statsRes.stats);
-      setAttendance(attRes.attendance);
-    } catch {
-      // Analytics are best-effort — keep whatever is already loaded
-    }
-  }, [sessionId]);
+  const attendanceQuery = useApiQuery<{ attendance: AttendanceRow[] }>(
+    ["admin", "session", "attendance", sessionId],
+    `/api/attendance/${sessionId}`,
+    undefined,
+    { enabled: Boolean(session), refetchInterval: liveNow ? 30_000 : false },
+  );
+  const attendance = attendanceQuery.data?.attendance ?? [];
 
-  useEffect(() => {
-    if (!session) return;
-    fetchAnalytics();
-    const live =
-      !session.endedAt &&
-      new Date(session.scheduledAt).getTime() <= Date.now() &&
-      new Date(session.scheduledEndAt).getTime() >= Date.now();
-    if (!live) return;
-    const interval = setInterval(fetchAnalytics, 30_000);
-    return () => clearInterval(interval);
-  }, [session, fetchAnalytics]);
-
-  const handleSync = async () => {
-    setSyncing(true);
-    try {
-      await api.post(`/api/recordings/${sessionId}/sync`);
+  const syncMutation = useMutation({
+    mutationFn: () => api.post(`/api/recordings/${sessionId}/sync`),
+    onSuccess: () => {
       toast.success("Recording synced successfully!");
-      fetchSession();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error
-          ? err.message
-          : "No recording found yet. Teams recordings may take a few minutes to become available.",
-      );
-    } finally {
-      setSyncing(false);
-    }
+      void sessionQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSync = () => {
+    syncMutation.mutate();
   };
 
   if (loading) {
@@ -636,14 +601,14 @@ export default function SessionDetailPage() {
                   </p>
                   <button
                     onClick={handleSync}
-                    disabled={syncing}
+                    disabled={syncMutation.isPending}
                     className="btn-secondary text-xs flex items-center gap-1.5"
                   >
                     <IconRefresh
                       size={14}
-                      className={syncing ? "animate-spin" : ""}
+                      className={syncMutation.isPending ? "animate-spin" : ""}
                     />
-                    {syncing ? "Syncing..." : "Sync Recording"}
+                    {syncMutation.isPending ? "Syncing..." : "Sync Recording"}
                   </button>
                 </div>
               )}
@@ -666,14 +631,14 @@ export default function SessionDetailPage() {
             </a>
             <button
               onClick={handleSync}
-              disabled={syncing || !!session.recording}
+              disabled={syncMutation.isPending || !!session.recording}
               className="btn-secondary w-full text-xs flex items-center justify-center gap-1.5 disabled:opacity-40"
             >
               <IconRefresh
                 size={14}
-                className={syncing ? "animate-spin" : ""}
+                className={syncMutation.isPending ? "animate-spin" : ""}
               />
-              {syncing ? "Syncing..." : "Sync Recording"}
+              {syncMutation.isPending ? "Syncing..." : "Sync Recording"}
             </button>
             <Link
               href="/admin/sessions"

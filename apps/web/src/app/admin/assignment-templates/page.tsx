@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
-import { toast } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { IconRefresh, IconPlus } from "@tabler/icons-react";
 
@@ -20,26 +18,13 @@ type AssignmentTemplate = {
 export default function AssignmentTemplatesPage() {
   usePageTitle("Assignment Templates");
   const router = useRouter();
-  const [templates, setTemplates] = useState<AssignmentTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  async function fetchTemplates() {
-    setLoading(true);
-    try {
-      const data = await api.get<{ templates: AssignmentTemplate[] }>(
-        "/api/admin/assignment-templates",
-      );
-      setTemplates(data.templates);
-    } catch {
-      toast.error("Failed to load assignment templates");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchTemplates();
-  }, []);
+  const templatesQuery = useApiQuery<{ templates: AssignmentTemplate[] }>(
+    ["admin", "assignment-templates"],
+    "/api/admin/assignment-templates",
+  );
+  const templates = templatesQuery.data?.templates ?? [];
+  const loading = templatesQuery.isPending;
 
   return (
     <div className="space-y-6">
@@ -59,7 +44,7 @@ export default function AssignmentTemplatesPage() {
       />
 
       <button
-        onClick={fetchTemplates}
+        onClick={() => void templatesQuery.refetch()}
         className="btn-secondary text-xs py-2 flex items-center gap-1.5"
       >
         <IconRefresh size={14} /> Refresh

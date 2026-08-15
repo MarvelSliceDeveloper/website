@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
 import { IconSettings, IconRefresh } from "@tabler/icons-react";
 
 type Setting = {
@@ -16,44 +18,37 @@ type Setting = {
 
 export default function SystemSettingsPage() {
   usePageTitle("System Settings");
-  const [settings, setSettings] = useState<Setting[]>([]);
-  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Record<string, string>>({});
-  const [saving, setSaving] = useState<string | null>(null);
 
-  async function fetchSettings() {
-    setLoading(true);
-    try {
-      const data = await api.get<{ settings: Setting[] }>(
-        "/api/admin/settings",
-      );
-      setSettings(data.settings);
-      const map: Record<string, string> = {};
-      data.settings.forEach((s) => {
-        map[s.key] = s.value;
-      });
-      setEditing(map);
-    } catch {
-      toast.error("Failed to load settings");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const settingsQuery = useApiQuery<{ settings: Setting[] }>(
+    ["admin", "settings", "system"],
+    "/api/admin/settings",
+  );
+  const settings = settingsQuery.data?.settings ?? [];
+  const loading = settingsQuery.isPending;
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  async function handleSave(key: string) {
-    setSaving(key);
-    try {
-      await api.put(`/api/admin/settings/${key}`, { value: editing[key] });
-      toast.success(`Setting "${key}" updated`);
-    } catch {
-      toast.error("Failed to update setting");
-    } finally {
-      setSaving(null);
+    const map: Record<string, string> = {};
+    for (const s of settingsQuery.data?.settings ?? []) {
+      map[s.key] = s.value;
     }
+    setEditing(map);
+  }, [settingsQuery.data]);
+
+  const saveSettingMutation = useMutation({
+    mutationFn: ({ key, value }: { key: string; value: string }) =>
+      api.put(`/api/admin/settings/${key}`, { value }),
+    onSuccess: (_data, { key }) => {
+      toast.success(`Setting "${key}" updated`);
+    },
+    onError: () => toast.error("Failed to update setting"),
+  });
+  const savingKey = saveSettingMutation.isPending
+    ? (saveSettingMutation.variables?.key ?? null)
+    : null;
+
+  function handleSave(key: string) {
+    saveSettingMutation.mutate({ key, value: editing[key] });
   }
 
   return (
@@ -72,7 +67,7 @@ export default function SystemSettingsPage() {
           </p>
         </div>
         <button
-          onClick={fetchSettings}
+          onClick={() => void settingsQuery.refetch()}
           className="btn-secondary text-xs py-2 flex items-center gap-1.5"
         >
           <IconRefresh size={14} /> Refresh
@@ -125,10 +120,10 @@ export default function SystemSettingsPage() {
                     <td className="py-3">
                       <button
                         onClick={() => handleSave(setting.key)}
-                        disabled={saving === setting.key}
+                        disabled={savingKey === setting.key}
                         className="btn-primary text-[10px] py-1.5 px-3 disabled:opacity-40"
                       >
-                        {saving === setting.key ? "Saving..." : "Save"}
+                        {savingKey === setting.key ? "Saving..." : "Save"}
                       </button>
                     </td>
                   </tr>

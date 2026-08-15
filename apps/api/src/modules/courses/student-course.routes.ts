@@ -13,7 +13,10 @@ import {
   requestEnrollment,
   updateLessonProgress,
 } from "./student-course.service";
-import { getCourseContentProgress } from "../certificates/certificate-completion.service";
+import {
+  getCourseContentProgress,
+  getCertificationExamEligibility,
+} from "../certificates/certificate-completion.service";
 
 const router = Router();
 
@@ -152,11 +155,29 @@ router.post(
 
       const quiz = await prisma.quiz.findUnique({
         where: { id: quizId },
-        include: { questions: true },
+        include: {
+          questions: true,
+          module: { select: { isCertificationModule: true, courseId: true } },
+        },
       });
 
       if (!quiz) {
         return res.status(404).json({ error: "Quiz not found" });
+      }
+
+      // Certification exam: student must first complete every quiz and
+      // assignment in the course's regular modules before attempting it.
+      if (quiz.module?.isCertificationModule) {
+        const eligibility = await getCertificationExamEligibility(
+          userId,
+          quiz.module.courseId,
+        );
+        if (!eligibility.eligible) {
+          return res.status(403).json({
+            error:
+              "Complete all quizzes and assignments before attempting the certification exam.",
+          });
+        }
       }
 
       // Check for existing attempt — allow re-attempt only if previous was failed
@@ -348,9 +369,18 @@ router.get(
           })
         : null;
 
+      const eligibility = await getCertificationExamEligibility(userId, courseId);
+
       return res.json({
         module: { id: certModule.id, title: certModule.title },
         quiz: quizWithQuestions,
+        eligible: eligibility.eligible,
+        requirements: {
+          totalQuizzes: eligibility.totalQuizzes,
+          completedQuizzes: eligibility.completedQuizzes,
+          totalAssignments: eligibility.totalAssignments,
+          completedAssignments: eligibility.completedAssignments,
+        },
         attempt: existingAttempt
           ? {
               id: existingAttempt.id,

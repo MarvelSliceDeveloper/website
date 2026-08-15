@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { api } from "@/lib/api";
+import { useMutation } from "@tanstack/react-query";
 import {
   IconRefresh,
   IconUsers,
@@ -13,6 +13,8 @@ import {
 } from "@tabler/icons-react";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
+import { api } from "@/lib/api";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
@@ -58,9 +60,14 @@ function SessionsPageContent() {
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status");
   const confirmDelete = useConfirmDialog();
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [syncingId, setSyncingId] = useState<string | null>(null);
+
+  // Shares the cache key with the instructor dashboard's ["instructor","sessions"].
+  const sessionsQuery = useApiQuery<{ sessions?: Session[] }>(
+    ["instructor", "sessions"],
+    "/api/sessions",
+  );
+  const sessions = sessionsQuery.data?.sessions ?? [];
+  const loading = sessionsQuery.isPending;
 
   // Attendance modal state
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
@@ -80,49 +87,46 @@ function SessionsPageContent() {
     customJoinUrl: "",
   });
 
-  const [submitting, setSubmitting] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const editMutation = useMutation({
+    mutationFn: ({
+      sessionId,
+      payload,
+    }: {
+      sessionId: string;
+      payload: {
+        title?: string;
+        startDateTime: string;
+        endDateTime: string;
+      };
+    }) => api.patch(`/api/sessions/${sessionId}`, payload),
+    onSuccess: () => {
+      setShowEditModal(false);
+      setEditingSession(null);
+      void sessionsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  const fetchSessions = async () => {
-    try {
-      const response = await api.get<{ sessions?: Session[] }>("/api/sessions");
-      setSessions(Array.isArray(response.sessions) ? response.sessions : []);
-    } catch (err: unknown) {
-      console.error(err);
-      if (
-        err instanceof Error &&
-        (err.message?.includes("Authentication") ||
-          err.message?.includes("401"))
-      ) {
-        window.location.href = "/login";
-      }
-      setSessions([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const deleteMutation = useMutation({
+    mutationFn: (sessionId: string) => api.delete(`/api/sessions/${sessionId}`),
+    onSuccess: () => {
+      toast.success("Session cancelled successfully!");
+      void sessionsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  useEffect(() => {
-    api
-      .get<{ sessions?: Session[] }>("/api/sessions")
-      .then((response) => {
-        setSessions(Array.isArray(response.sessions) ? response.sessions : []);
-      })
-      .catch((err: unknown) => {
-        console.error(err);
-        if (
-          err instanceof Error &&
-          (err.message?.includes("Authentication") ||
-            err.message?.includes("401"))
-        ) {
-          window.location.href = "/login";
-        }
-        setSessions([]);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+  const syncMutation = useMutation({
+    mutationFn: (sessionId: string) =>
+      api.post(`/api/recordings/${sessionId}/sync`),
+    onSuccess: () => {
+      toast.success(
+        "Recording synced successfully! The video is now available for students.",
+      );
+      void sessionsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   const openEditModal = (session: Session) => {
     setEditingSession(session);
@@ -143,26 +147,17 @@ function SessionsPageContent() {
     setShowEditModal(true);
   };
 
-  const handleEditSession = async (e: React.FormEvent) => {
+  const handleEditSession = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSession) return;
-    setSubmitting(true);
-
-    try {
-      await api.patch(`/api/sessions/${editingSession.id}`, {
+    editMutation.mutate({
+      sessionId: editingSession.id,
+      payload: {
         title: form.title || undefined,
         startDateTime: new Date(form.startDateTime).toISOString(),
         endDateTime: new Date(form.endDateTime).toISOString(),
-      });
-
-      setShowEditModal(false);
-      setEditingSession(null);
-      fetchSessions();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSubmitting(false);
-    }
+      },
+    });
   };
 
   const handleDeleteSession = async (sessionId: string) => {
@@ -174,31 +169,11 @@ function SessionsPageContent() {
       }))
     )
       return;
-    setDeletingId(sessionId);
-    try {
-      await api.delete(`/api/sessions/${sessionId}`);
-      toast.success("Session cancelled successfully!");
-      fetchSessions();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setDeletingId(null);
-    }
+    deleteMutation.mutate(sessionId);
   };
 
-  const handleSyncRecording = async (sessionId: string) => {
-    setSyncingId(sessionId);
-    try {
-      await api.post(`/api/recordings/${sessionId}/sync`);
-      toast.success(
-        "Recording synced successfully! The video is now available for students.",
-      );
-      fetchSessions();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSyncingId(null);
-    }
+  const handleSyncRecording = (sessionId: string) => {
+    syncMutation.mutate(sessionId);
   };
 
   const handleViewAttendance = async (session: Session) => {
@@ -276,7 +251,7 @@ function SessionsPageContent() {
                     key={session.id}
                     session={session}
                     upcoming
-                    deleting={deletingId === session.id}
+                    deleting={deleteMutation.isPending && deleteMutation.variables === session.id}
                     onViewAttendance={handleViewAttendance}
                     onEdit={openEditModal}
                     onDelete={handleDeleteSession}
@@ -299,8 +274,8 @@ function SessionsPageContent() {
                     key={session.id}
                     session={session}
                     upcoming={false}
-                    syncing={syncingId === session.id}
-                    deleting={deletingId === session.id}
+                    syncing={syncMutation.isPending && syncMutation.variables === session.id}
+                    deleting={deleteMutation.isPending && deleteMutation.variables === session.id}
                     onSyncRecording={handleSyncRecording}
                     onViewAttendance={handleViewAttendance}
                     onEdit={openEditModal}
@@ -380,13 +355,13 @@ function SessionsPageContent() {
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="btn-primary text-xs px-4"
-                >
-                  {submitting ? "Updating..." : "Update Session"}
-                </button>
+<button
+                    type="submit"
+                    disabled={editMutation.isPending}
+                    className="btn-primary text-xs px-4"
+                  >
+                    {editMutation.isPending ? "Updating..." : "Update Session"}
+                  </button>
               </div>
             </form>
           </div>

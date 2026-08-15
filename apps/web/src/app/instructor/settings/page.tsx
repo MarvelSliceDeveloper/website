@@ -21,7 +21,6 @@ import {
   IconHelp,
   IconInbox,
   IconChevronRight,
-  IconPalette,
   IconCheck,
   IconBriefcase,
   IconMapPin,
@@ -102,7 +101,7 @@ const TYPE_CONFIG: Record<
   },
 };
 
-type SettingsSection = "profile" | "notifications" | "appearance";
+type SettingsSection = "profile" | "notifications";
 
 export default function InstructorSettingsPage() {
   usePageTitle("Settings");
@@ -252,12 +251,6 @@ export default function InstructorSettingsPage() {
       label: "Notifications",
       icon: <IconBell size={18} />,
       description: "Manage alert preferences",
-    },
-    {
-      id: "appearance",
-      label: "Appearance",
-      icon: <IconPalette size={18} />,
-      description: "Theme and display",
     },
   ];
 
@@ -493,7 +486,7 @@ export default function InstructorSettingsPage() {
         <div className="divide-y divide-border/60">
           {NOTIFICATION_TYPES.map((type) => {
             const config = TYPE_CONFIG[type];
-            const enabled = preferences[type] ?? true;
+const enabled = preferences[type] ?? true;
             return (
               <div
                 key={type}
@@ -544,44 +537,6 @@ export default function InstructorSettingsPage() {
           </div>
         )}
       </>
-    );
-  }
-
-  function renderAppearance() {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
-            <IconPalette size={20} />
-          </div>
-          <div>
-            <p className="font-semibold text-foreground">Appearance</p>
-            <p className="text-sm text-muted-foreground">
-              Customize your visual preferences.
-            </p>
-          </div>
-        </div>
-
-        <div className="glass-card p-5 space-y-4">
-          <p className="text-sm font-medium text-foreground">Theme</p>
-          <p className="text-xs text-muted-foreground">
-            Use the moon/sun toggle in the top header bar to switch between dark
-            and light modes. Your preference is saved automatically.
-          </p>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-20 rounded-lg bg-[#0b1020] border border-border/60 flex items-center justify-center">
-              <span className="text-[10px] font-medium text-white/70">
-                Dark
-              </span>
-            </div>
-            <div className="h-10 w-20 rounded-lg bg-[#f4f7ff] border border-border/60 flex items-center justify-center">
-              <span className="text-[10px] font-medium text-[#1a2238]">
-                Light
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
     );
   }
 
@@ -689,7 +644,6 @@ export default function InstructorSettingsPage() {
         <div className="lg:col-span-8 xl:col-span-9 rounded-xl border border-border/60 bg-card overflow-hidden">
           {activeSection === "profile" && renderProfile()}
           {activeSection === "notifications" && renderNotifications()}
-          {activeSection === "appearance" && renderAppearance()}
         </div>
       </div>
     </div>

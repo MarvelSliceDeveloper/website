@@ -27,7 +27,7 @@ export const assignmentService = {
   async addAssignment(
     moduleId: string,
     courseId: string,
-    batchId: string,
+    batchId: string | null,
     data: z.infer<typeof CreateAssignmentSchema>,
   ) {
     const module = await prisma.module.findUnique({ where: { id: moduleId } });
@@ -36,7 +36,7 @@ export const assignmentService = {
     const assignment = await prisma.assignment.create({
       data: {
         courseId,
-        batchId,
+        ...(batchId ? { batchId } : {}),
         moduleId,
         title: data.title,
         type: data.type,

@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef, useMemo, memo } from "react";
+import { useEffect, useState, useMemo, memo } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -110,91 +112,138 @@ const TrackerRow = memo(function TrackerRow({
 export default function InternAssignmentsPage() {
   usePageTitle("Assignment Tracker");
   const confirmDelete = useConfirmDialog();
+  const queryClient = useQueryClient();
 
-  const [savedSheets, setSavedSheets] = useState<SavedSheet[]>([]);
   const [selectedSheetId, setSelectedSheetId] = useState<string | null>(null);
   const [showAddSheet, setShowAddSheet] = useState(false);
   const [newSheetId, setNewSheetId] = useState("");
   const [newSheetName, setNewSheetName] = useState("");
   const [newSheetGid, setNewSheetGid] = useState("0");
-  const [data, setData] = useState<SheetData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [loadingSheets, setLoadingSheets] = useState(true);
   const [search, setSearch] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [sheetMetadata, setSheetMetadata] = useState<SheetMetadata | null>(
-    null,
+  const [refreshCount, setRefreshCount] = useState(0);
+
+  const savedSheetsQuery = useApiQuery<{ sheets: SavedSheet[] }>(
+    ["admin", "interns", "assignments", "sheets"],
+    "/api/admin/interns/assignments/sheets",
   );
-  const [loadingTabs, setLoadingTabs] = useState(false);
-  const tabsLoadedForRef = useRef<string | null>(null);
+  const savedSheets = savedSheetsQuery.data?.sheets ?? [];
+  const loadingSheets = savedSheetsQuery.isPending;
 
-  const fetchSavedSheets = () => {
-    setLoadingSheets(true);
-    api
-      .get<{ sheets: SavedSheet[] }>("/api/admin/interns/assignments/sheets")
-      .then((res) => {
-        const sheets = res.sheets ?? [];
-        setSavedSheets(sheets);
-        if (sheets.length > 0 && !selectedSheetId) {
-          const s = sheets[0];
-          if (s) {
-            const key = `${s.id}|${s.gid ?? "0"}`;
-            setSelectedSheetId(key);
-          }
-        }
-      })
-      .catch(() => setSavedSheets([]))
-      .finally(() => setLoadingSheets(false));
-  };
-
-  const fetchSheet = useCallback((compositeKey: string, force = false) => {
-    const [sheetId, gid] = compositeKey.split("|");
-    if (!sheetId) return;
-    setLoading(true);
-    const query = `/api/admin/interns/assignments?sheetId=${encodeURIComponent(sheetId)}&gid=${encodeURIComponent(gid ?? "0")}`;
-    api
-      .get<SheetData>(force ? `${query}&refresh=1` : query)
-      .then((res) => setData(res))
-      .catch((err: unknown) => {
-        toast.error(getErrorMessage(err));
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  const handleAddSheet = async () => {
-    const sheetId = extractSheetId(newSheetId);
-    if (!sheetId) {
-      toast.error("Sheet ID is required");
-      return;
+  // Auto-select the first saved sheet once the list loads.
+  useEffect(() => {
+    if (savedSheets.length > 0 && !selectedSheetId) {
+      const s = savedSheets[0];
+      if (s) {
+        const key = `${s.id}|${s.gid ?? "0"}`;
+        setSelectedSheetId(key);
+      }
     }
-    setSaving(true);
-    try {
-      const res = await api.post<{ sheets: SavedSheet[] }>(
+  }, [savedSheets, selectedSheetId]);
+
+  const [sheetId, gid] = selectedSheetId?.split("|") ?? ["", ""];
+
+  // Sheet data is a dependent query gated on a selection being active.
+  const sheetQuery = useApiQuery<SheetData>(
+    [
+      "admin",
+      "interns",
+      "assignments",
+      "sheet",
+      sheetId,
+      gid ?? "0",
+      refreshCount,
+    ],
+    selectedSheetId
+      ? `/api/admin/interns/assignments?sheetId=${encodeURIComponent(sheetId)}&gid=${encodeURIComponent(gid ?? "0")}${refreshCount > 0 ? "&refresh=1" : ""}`
+      : "",
+    undefined,
+    { enabled: Boolean(selectedSheetId) },
+  );
+  const data = sheetQuery.data ?? null;
+  const loading = sheetQuery.isPending;
+  const refreshing = sheetQuery.isFetching;
+
+  // Tab lists are per-spreadsheet, not per-tab — keyed on sheetId alone so the
+  // cache is shared across tab switches within one spreadsheet.
+  const tabsQuery = useApiQuery<SheetMetadata>(
+    ["admin", "interns", "assignments", "tabs", sheetId],
+    sheetId
+      ? `/api/admin/interns/assignments/tabs?sheetId=${encodeURIComponent(sheetId)}`
+      : "",
+    undefined,
+    { enabled: Boolean(sheetId) },
+  );
+  const sheetMetadata = tabsQuery.data ?? null;
+  const loadingTabs = tabsQuery.isPending;
+
+  const addSheetMutation = useMutation({
+    mutationFn: (input: {
+      sheetId: string;
+      name?: string;
+      gid?: string;
+    }) =>
+      api.post<{ sheets: SavedSheet[] }>(
         "/api/admin/interns/assignments/sheets",
         {
-          id: sheetId,
-          name: newSheetName.trim() || undefined,
-          gid: newSheetGid || undefined,
+          id: input.sheetId,
+          name: input.name || undefined,
+          gid: input.gid || undefined,
         },
+      ),
+    onSuccess: (res, variables) => {
+      queryClient.setQueryData(
+        ["admin", "interns", "assignments", "sheets"],
+        { sheets: res.sheets ?? [] },
       );
-      setSavedSheets(res.sheets ?? []);
-      const key = `${sheetId}|${newSheetGid || "0"}`;
+      const key = `${variables.sheetId}|${variables.gid || "0"}`;
       setSelectedSheetId(key);
       setShowAddSheet(false);
       setNewSheetId("");
       setNewSheetName("");
       setNewSheetGid("0");
       toast.success("Sheet saved");
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSaving(false);
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleAddSheet = () => {
+    const sheetIdValue = extractSheetId(newSheetId);
+    if (!sheetIdValue) {
+      toast.error("Sheet ID is required");
+      return;
     }
+    addSheetMutation.mutate({
+      sheetId: sheetIdValue,
+      name: newSheetName.trim() || undefined,
+      gid: newSheetGid || undefined,
+    });
   };
 
+  const deleteSheetMutation = useMutation({
+    mutationFn: ({
+      sheetId: sheetIdValue,
+      gid: gidValue,
+    }: {
+      sheetId: string;
+      gid: string;
+    }) =>
+      api.delete<{ sheets: SavedSheet[] }>(
+        `/api/admin/interns/assignments/sheets/${sheetIdValue}?gid=${encodeURIComponent(gidValue)}`,
+      ),
+    onSuccess: (res, variables) => {
+      queryClient.setQueryData(
+        ["admin", "interns", "assignments", "sheets"],
+        { sheets: res.sheets ?? [] },
+      );
+      const compositeKey = `${variables.sheetId}|${variables.gid}`;
+      if (selectedSheetId === compositeKey) setSelectedSheetId(null);
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
   const handleDeleteSheet = async (compositeKey: string) => {
-    const [sheetId, gid] = compositeKey.split("|");
-    const actualGid = gid ?? "0";
+    const [sheetIdValue, gidValue] = compositeKey.split("|");
+    const actualGid = gidValue ?? "0";
     if (
       !(await confirmDelete({
         title: "Remove Sheet",
@@ -202,49 +251,8 @@ export default function InternAssignmentsPage() {
       }))
     )
       return;
-    try {
-      const res = await api.delete<{ sheets: SavedSheet[] }>(
-        `/api/admin/interns/assignments/sheets/${sheetId}?gid=${encodeURIComponent(actualGid)}`,
-      );
-      setSavedSheets(res.sheets ?? []);
-      if (selectedSheetId === compositeKey) setSelectedSheetId(null);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    }
+    deleteSheetMutation.mutate({ sheetId: sheetIdValue, gid: actualGid });
   };
-
-  useEffect(() => {
-    fetchSavedSheets();
-  }, []);
-
-  useEffect(() => {
-    if (selectedSheetId) {
-      const [sheetId] = selectedSheetId.split("|");
-      fetchSheet(selectedSheetId);
-      // Tab lists are per-spreadsheet, not per-tab — fetch them only once.
-      if (tabsLoadedForRef.current !== sheetId) {
-        setLoadingTabs(true);
-        api
-          .get<SheetMetadata>(
-            `/api/admin/interns/assignments/tabs?sheetId=${encodeURIComponent(sheetId)}`,
-          )
-          .then((res) => {
-            setSheetMetadata(res);
-            tabsLoadedForRef.current = sheetId;
-          })
-          .catch(() => {
-            setSheetMetadata(null);
-            tabsLoadedForRef.current = null;
-          })
-          .finally(() => setLoadingTabs(false));
-      }
-    } else {
-      setData(null);
-      setLoading(false);
-      setSheetMetadata(null);
-      tabsLoadedForRef.current = null;
-    }
-  }, [selectedSheetId, fetchSheet]);
 
   const colFlags = useMemo<ColumnFlags>(
     () =>
@@ -280,8 +288,8 @@ export default function InternAssignmentsPage() {
     : undefined;
 
   const handleTabSwitch = (compositeKey: string) => {
-    // The selectedSheetId effect handles the fetch — calling fetchSheet here
-    // too would double every tab switch request.
+    // Setting the selection drives the dependent sheet query — calling a fetch
+    // here too would double every tab switch request.
     setSelectedSheetId(compositeKey);
   };
 
@@ -305,15 +313,13 @@ export default function InternAssignmentsPage() {
           !data ? null : (
             <div className="flex items-center gap-3">
               <button
-                onClick={() =>
-                  selectedSheetId && fetchSheet(selectedSheetId, true)
-                }
-                disabled={loading}
+                onClick={() => setRefreshCount((c) => c + 1)}
+                disabled={refreshing}
                 className="btn-secondary text-sm flex items-center gap-1.5"
               >
                 <IconRefresh
                   size={14}
-                  className={loading ? "animate-spin" : ""}
+                  className={refreshing ? "animate-spin" : ""}
                 />
                 Refresh
               </button>
@@ -436,7 +442,7 @@ export default function InternAssignmentsPage() {
                   docs.google.com/spreadsheets/d/.../edit
                 </code>
                 ) or just the ID. The sheet must be publicly readable (Share →
-                "Anyone with the link can view").
+                &quot;Anyone with the link can view&quot;).
               </p>
             </div>
             <div>
@@ -463,19 +469,19 @@ export default function InternAssignmentsPage() {
                 className="field w-full text-sm"
               />
               <p className="mt-1 text-[11px] text-muted-foreground">
-                "0" is the first tab. Not sure of the gid? Save with "0" first,
-                then use the Tab dropdown below (once real tab names load) to
-                switch to the right one.
+                &quot;0&quot; is the first tab. Not sure of the gid? Save with
+                &quot;0&quot; first, then use the Tab dropdown below (once real
+                tab names load) to switch to the right one.
               </p>
             </div>
           </div>
           <div className="mt-3 flex gap-2">
             <button
               onClick={handleAddSheet}
-              disabled={saving || !extractSheetId(newSheetId)}
+              disabled={addSheetMutation.isPending || !extractSheetId(newSheetId)}
               className="btn-primary text-xs px-3 py-2"
             >
-              {saving ? "Saving..." : "Save Sheet"}
+              {addSheetMutation.isPending ? "Saving..." : "Save Sheet"}
             </button>
             <button
               onClick={() => {

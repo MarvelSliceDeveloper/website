@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FilterTabs } from "@/components/shared/FilterTabs";
 import { TableSkeleton } from "@/components/admin/LoadingSkeleton";
@@ -51,34 +53,28 @@ const statusConfig: Record<string, { label: string; classes: string }> = {
 export default function AdminPackagesPage() {
   usePageTitle("Packages");
   const confirmDelete = useConfirmDialog();
-  const [packages, setPackages] = useState<Package[]>([]);
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
   const PAGE_SIZE = 10;
 
-  const fetchPackages = async () => {
-    setLoading(true);
-    try {
-      const params: Record<string, string> = {};
-      if (statusFilter) params.status = statusFilter;
-      const data = await api.get<{ items: Package[] }>(
-        "/api/admin/packages",
-        params,
-      );
-      setPackages(data.items || []);
-    } catch {
-      setPackages([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const packagesQuery = useApiQuery<{ items: Package[] }>(
+    ["admin", "packages", statusFilter || "all"],
+    "/api/admin/packages",
+    statusFilter ? { status: statusFilter } : undefined,
+  );
+  const packages = packagesQuery.data?.items ?? [];
+  const loading = packagesQuery.isPending;
 
-  useEffect(() => {
-    fetchPackages();
-  }, [statusFilter]);
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/admin/packages/${id}`),
+    onSuccess: () => {
+      toast.success("Package deleted");
+      void packagesQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   const handleDelete = async (id: string, name: string) => {
     if (
@@ -88,13 +84,7 @@ export default function AdminPackagesPage() {
       }))
     )
       return;
-    try {
-      await api.delete(`/api/admin/packages/${id}`);
-      toast.success("Package deleted");
-      fetchPackages();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
+    deleteMutation.mutate(id);
   };
 
   const filteredPackages = useMemo(() => {
@@ -207,9 +197,18 @@ export default function AdminPackagesPage() {
           {pkg.status === "DRAFT" && (
             <button
               onClick={() => handleDelete(pkg.id, pkg.name)}
+              disabled={
+                deleteMutation.isPending &&
+                deleteMutation.variables === pkg.id
+              }
               className="btn-danger text-xs flex items-center gap-1"
             >
-              <IconTrash size={14} stroke={1.5} />
+              {deleteMutation.isPending &&
+              deleteMutation.variables === pkg.id ? (
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border border-danger border-t-transparent" />
+              ) : (
+                <IconTrash size={14} stroke={1.5} />
+              )}
               Delete
             </button>
           )}

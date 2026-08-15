@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -63,69 +65,70 @@ function ColorField({
 export default function BrandingPage() {
   usePageTitle("Branding");
   const [config, setConfig] = useState<BrandingConfig>(defaultConfig);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [uploadingLogo, setUploadingLogo] = useState(false);
-  const [uploadingFavicon, setUploadingFavicon] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const faviconInputRef = useRef<HTMLInputElement>(null);
 
+  const brandingQuery = useApiQuery<{ data: BrandingConfig }>(
+    ["admin", "branding"],
+    "/api/admin/branding",
+  );
+  const loading = brandingQuery.isPending;
+
   useEffect(() => {
-    api
-      .get<{ data: BrandingConfig }>("/api/admin/branding")
-      .then((res) => {
-        setConfig({ ...defaultConfig, ...res.data });
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await api.put("/api/admin/branding", config);
-      toast.success("Branding settings saved");
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSaving(false);
+    if (brandingQuery.data) {
+      setConfig({ ...defaultConfig, ...brandingQuery.data.data });
     }
-  };
+  }, [brandingQuery.data]);
 
-  const handleLogoUpload = async (file: File) => {
-    setUploadingLogo(true);
-    try {
+  const saveMutation = useMutation({
+    mutationFn: (config: BrandingConfig) =>
+      api.put("/api/admin/branding", config),
+    onSuccess: () => toast.success("Branding settings saved"),
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const logoUploadMutation = useMutation({
+    mutationFn: (file: File) => {
       const formData = new FormData();
       formData.append("logo", file);
-      const res = await api.post<{ data: BrandingConfig }>(
+      return api.post<{ data: BrandingConfig }>(
         "/api/admin/branding/logo",
         formData,
       );
+    },
+    onSuccess: (res) => {
       setConfig(res.data);
       toast.success("Logo uploaded");
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setUploadingLogo(false);
-    }
-  };
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  const handleFaviconUpload = async (file: File) => {
-    setUploadingFavicon(true);
-    try {
+  const faviconUploadMutation = useMutation({
+    mutationFn: (file: File) => {
       const formData = new FormData();
       formData.append("favicon", file);
-      const res = await api.post<{ data: BrandingConfig }>(
+      return api.post<{ data: BrandingConfig }>(
         "/api/admin/branding/favicon",
         formData,
       );
+    },
+    onSuccess: (res) => {
       setConfig(res.data);
       toast.success("Favicon uploaded");
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setUploadingFavicon(false);
-    }
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSave = () => {
+    saveMutation.mutate(config);
+  };
+
+  const handleLogoUpload = (file: File) => {
+    logoUploadMutation.mutate(file);
+  };
+
+  const handleFaviconUpload = (file: File) => {
+    faviconUploadMutation.mutate(file);
   };
 
   if (loading) {
@@ -154,10 +157,10 @@ export default function BrandingPage() {
         action={
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saveMutation.isPending}
             className="btn-primary text-sm flex items-center gap-1.5"
           >
-            {saving ? (
+            {saveMutation.isPending ? (
               <>
                 <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
                 Saving...
@@ -286,10 +289,10 @@ export default function BrandingPage() {
               />
               <button
                 onClick={() => logoInputRef.current?.click()}
-                disabled={uploadingLogo}
+                disabled={logoUploadMutation.isPending}
                 className="btn-secondary text-sm flex items-center gap-1.5"
               >
-                {uploadingLogo ? (
+                {logoUploadMutation.isPending ? (
                   <span className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
                 ) : (
                   <IconUpload size={14} />
@@ -331,10 +334,10 @@ export default function BrandingPage() {
               />
               <button
                 onClick={() => faviconInputRef.current?.click()}
-                disabled={uploadingFavicon}
+                disabled={faviconUploadMutation.isPending}
                 className="btn-secondary text-sm flex items-center gap-1.5"
               >
-                {uploadingFavicon ? (
+                {faviconUploadMutation.isPending ? (
                   <span className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
                 ) : (
                   <IconUpload size={14} />

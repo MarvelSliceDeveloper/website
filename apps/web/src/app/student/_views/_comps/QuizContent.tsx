@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import {
@@ -262,9 +263,19 @@ export default function QuizContent({
 
   // Assignment file upload state
   const [assignmentFile, setAssignmentFile] = useState<File | null>(null);
-  const [assignmentUploading, setAssignmentUploading] = useState(false);
   const [assignmentSubmitted, setAssignmentSubmitted] = useState(false);
   const assignmentFileRef = useRef<HTMLInputElement>(null);
+
+  // Assignment file submission mutation (quiz ID doubles as the pseudo-assignment).
+  const assignmentSubmitMutation = useMutation({
+    mutationFn: (formData: FormData) =>
+      api.post(`/api/assignments/${quizData.id}/submit/file`, formData),
+    onSuccess: () => {
+      setAssignmentSubmitted(true);
+      toast.success("Assignment file submitted successfully!");
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   function handleAssignmentFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -279,24 +290,14 @@ export default function QuizContent({
     setAssignmentSubmitted(false);
   }
 
-  async function handleAssignmentSubmit() {
+  function handleAssignmentSubmit() {
     if (!assignmentFile) {
       toast.error("Please select a file to upload.");
       return;
     }
     const formData = new FormData();
     formData.append("answerFile", assignmentFile);
-    try {
-      setAssignmentUploading(true);
-      // Use the quiz ID as a pseudo-assignment for the submission endpoint
-      await api.post(`/api/assignments/${quizData.id}/submit/file`, formData);
-      setAssignmentSubmitted(true);
-      toast.success("Assignment file submitted successfully!");
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setAssignmentUploading(false);
-    }
+    assignmentSubmitMutation.mutate(formData);
   }
 
   // Once the parent confirms the submission landed, jump to the results screen.
@@ -324,7 +325,7 @@ export default function QuizContent({
 // ── Intro ────────────────────────────────────────────────────────────
   if (phase === "intro") {
     const isOverdue = quizData.dueDate
-      ? new Date(quizData.dueDate).getTime() < Date.now()
+      ? new Date(quizData.dueDate).getTime() < new Date().getTime()
       : false;
 
     return (
@@ -715,10 +716,10 @@ export default function QuizContent({
             <div className="flex justify-end pt-1">
               <button
                 onClick={handleAssignmentSubmit}
-                disabled={!assignmentFile || assignmentUploading}
+                disabled={!assignmentFile || assignmentSubmitMutation.isPending}
                 className="btn-primary text-sm px-6 py-2.5 flex items-center gap-2 disabled:opacity-50"
               >
-                {assignmentUploading ? (
+                {assignmentSubmitMutation.isPending ? (
                   "Uploading..."
                 ) : assignmentSubmitted ? (
                   <>

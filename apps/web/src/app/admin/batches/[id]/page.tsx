@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { SearchInput } from "@/components/ui/SearchInput";
@@ -44,6 +46,29 @@ type Session = {
   recording: { id: string; syncedAt: string } | null;
 };
 
+type Extension = {
+  id: string;
+  assignment?: { title: string } | null;
+  quiz?: { title: string } | null;
+  originalDueDate: string;
+  extendedDueDate: string;
+  grantedBy?: { name: string } | null;
+  reason?: string | null;
+};
+
+type Mentor = {
+  id: string;
+  courseId: string;
+  course?: { id: string; title: string } | null;
+  mentor?: { id: string; name: string; email: string } | null;
+};
+
+type InstructorOption = {
+  id: string;
+  name: string;
+  email: string;
+};
+
 type Batch = {
   id: string;
   name: string;
@@ -77,21 +102,50 @@ const statusStyles: Record<string, string> = {
 export default function BatchDetailPage() {
   usePageTitle("Batch Details");
   const { id } = useParams<{ id: string }>();
-  const [batch, setBatch] = useState<Batch | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"students" | "sessions" | "courses" | "extensions" | "mentors">(
-    "students",
+  const queryClient = useQueryClient();
+
+  const [tab, setTab] = useState<
+    "students" | "sessions" | "courses" | "extensions" | "mentors"
+  >("students");
+
+  const batchQuery = useApiQuery<Batch>(
+    ["admin", "batches", id],
+    `/api/admin/batches/${id}`,
   );
-  const [courses, setCourses] = useState<BatchCourse[]>([]);
-  const [toggling, setToggling] = useState<string | null>(null);
-  const [togglingExam, setTogglingExam] = useState<string | null>(null);
+  const coursesQuery = useApiQuery<{ courses: BatchCourse[] }>(
+    ["admin", "batches", id, "courses"],
+    `/api/admin/batches/${id}/courses`,
+    undefined,
+    { enabled: tab === "courses" || tab === "mentors" },
+  );
+  const extensionsQuery = useApiQuery<Extension[]>(
+    ["admin", "batches", id, "extensions"],
+    `/api/admin/batches/${id}/extensions`,
+    undefined,
+    { enabled: tab === "extensions" },
+  );
+  const mentorsQuery = useApiQuery<Mentor[]>(
+    ["admin", "batches", id, "mentors"],
+    `/api/admin/batches/${id}/mentors`,
+    undefined,
+    { enabled: tab === "mentors" },
+  );
+  const instructorsQuery = useApiQuery<InstructorOption[]>(
+    ["admin", "batches", "instructors"],
+    "/api/admin/batches/instructors",
+    undefined,
+    { enabled: tab === "mentors" },
+  );
+
+  const courses = coursesQuery.data?.courses ?? [];
+  const extensions = extensionsQuery.data ?? [];
+  const mentors = mentorsQuery.data ?? [];
+  const instructorOptions = instructorsQuery.data ?? [];
 
   // Sessions search
   const [sessionSearch, setSessionSearch] = useState("");
 
   // Extensions state
-  const [extensions, setExtensions] = useState<any[]>([]);
-  const [extLoading, setExtLoading] = useState(false);
   const [showAddExt, setShowAddExt] = useState(false);
   const [extAssignmentId, setExtAssignmentId] = useState("");
   const [extQuizId, setExtQuizId] = useState("");
@@ -99,133 +153,145 @@ export default function BatchDetailPage() {
   const [extReason, setExtReason] = useState("");
 
   // Mentors state
-  const [mentors, setMentors] = useState<any[]>([]);
-  const [mentorLoading, setMentorLoading] = useState(false);
   const [showAddMentor, setShowAddMentor] = useState(false);
   const [mentorCourseId, setMentorCourseId] = useState("");
   const [mentorUserId, setMentorUserId] = useState("");
   const [editingMentorId, setEditingMentorId] = useState<string | null>(null);
-  const [instructorOptions, setInstructorOptions] = useState<any[]>([]);
 
-  const fetchBatch = useCallback(async () => {
-    try {
-      const data = await api.get<Batch>(`/api/admin/batches/${id}`);
-      setBatch(data);
-    } catch {
-      setBatch(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
-
-  const fetchCourses = useCallback(async () => {
-    try {
-      const data = await api.get<{ courses: BatchCourse[] }>(
-        `/api/admin/batches/${id}/courses`,
-      );
-      setCourses(data.courses);
-    } catch {
-      setCourses([]);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    fetchBatch();
-  }, [fetchBatch]);
-
-  const fetchExtensions = useCallback(async () => {
-    setExtLoading(true);
-    try {
-      const data = await api.get<any[]>(`/api/admin/batches/${id}/extensions`);
-      setExtensions(data);
-    } catch {
-      setExtensions([]);
-    } finally {
-      setExtLoading(false);
-    }
-  }, [id]);
-
-  const fetchMentors = useCallback(async () => {
-    setMentorLoading(true);
-    try {
-      const data = await api.get<any[]>(`/api/admin/batches/${id}/mentors`);
-      setMentors(data);
-    } catch {
-      setMentors([]);
-    } finally {
-      setMentorLoading(false);
-    }
-  }, [id]);
-
-  const fetchInstructors = useCallback(async () => {
-    try {
-      const data = await api.get<any[]>("/api/admin/batches/instructors");
-      setInstructorOptions(data);
-    } catch {
-      setInstructorOptions([]);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (tab === "courses" || tab === "mentors") {
-      fetchCourses();
-    }
-    if (tab === "extensions") {
-      fetchExtensions();
-    }
-    if (tab === "mentors") {
-      fetchMentors();
-      fetchInstructors();
-    }
-  }, [tab, fetchCourses, fetchExtensions, fetchMentors, fetchInstructors]);
-
-  const handleToggleVisibility = async (courseId: string) => {
-    setToggling(courseId);
-    try {
-      const result = await api.put<BatchCourse>(
+  const toggleVisibilityMutation = useMutation({
+    mutationFn: (courseId: string) =>
+      api.put<BatchCourse>(
         `/api/admin/batches/${id}/courses/${courseId}/visibility`,
-      );
-      setCourses((prev) =>
-        prev.map((c) =>
-          c.courseId === result.courseId
-            ? { ...c, isVisible: result.isVisible }
-            : c,
-        ),
+      ),
+    onSuccess: (result) => {
+      queryClient.setQueryData<{ courses: BatchCourse[] }>(
+        ["admin", "batches", id, "courses"],
+        (old) =>
+          old
+            ? {
+                courses: old.courses.map((c) =>
+                  c.courseId === result.courseId
+                    ? { ...c, isVisible: result.isVisible }
+                    : c,
+                ),
+              }
+            : old,
       );
       toast.success(
         result.isVisible ? "Course is now visible" : "Course is now hidden",
       );
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setToggling(null);
-    }
-  };
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  const handleToggleExamRequired = async (courseId: string) => {
-    setTogglingExam(courseId);
-    try {
-      const result = await api.put<BatchCourse>(
+  const handleToggleVisibility = (courseId: string) =>
+    toggleVisibilityMutation.mutate(courseId);
+
+  const toggleExamRequiredMutation = useMutation({
+    mutationFn: (courseId: string) =>
+      api.put<BatchCourse>(
         `/api/admin/batches/${id}/courses/${courseId}/exam-required`,
-      );
-      setCourses((prev) =>
-        prev.map((c) =>
-          c.courseId === result.courseId
-            ? { ...c, isExamRequired: result.isExamRequired }
-            : c,
-        ),
+      ),
+    onSuccess: (result) => {
+      queryClient.setQueryData<{ courses: BatchCourse[] }>(
+        ["admin", "batches", id, "courses"],
+        (old) =>
+          old
+            ? {
+                courses: old.courses.map((c) =>
+                  c.courseId === result.courseId
+                    ? { ...c, isExamRequired: result.isExamRequired }
+                    : c,
+                ),
+              }
+            : old,
       );
       toast.success(
         result.isExamRequired
           ? "Course certificate enabled"
           : "Course certificate disabled",
       );
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setTogglingExam(null);
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleToggleExamRequired = (courseId: string) =>
+    toggleExamRequiredMutation.mutate(courseId);
+
+  const grantExtMutation = useMutation({
+    mutationFn: () =>
+      api.post(`/api/admin/batches/${id}/extensions`, {
+        assignmentId: extAssignmentId || undefined,
+        quizId: extQuizId || undefined,
+        extendedDueDate: new Date(extNewDate).toISOString(),
+        reason: extReason || undefined,
+      }),
+    onSuccess: () => {
+      toast.success("Extension granted");
+      setShowAddExt(false);
+      setExtAssignmentId("");
+      setExtQuizId("");
+      setExtNewDate("");
+      setExtReason("");
+      void extensionsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleGrantExt = () => {
+    if (!extNewDate || (!extAssignmentId && !extQuizId)) {
+      toast.error("Provide a due date and either an Assignment or Quiz ID");
+      return;
     }
+    grantExtMutation.mutate();
   };
+
+  const revokeExtMutation = useMutation({
+    mutationFn: (extensionId: string) =>
+      api.delete(`/api/admin/batches/${id}/extensions/${extensionId}`),
+    onSuccess: () => {
+      toast.success("Extension revoked");
+      void extensionsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const mentorMutation = useMutation({
+    mutationFn: () =>
+      api.post(`/api/admin/batches/${id}/mentors`, {
+        courseId: mentorCourseId,
+        mentorId: mentorUserId,
+      }),
+    onSuccess: () => {
+      toast.success(editingMentorId ? "Mentor updated" : "Mentor assigned");
+      setShowAddMentor(false);
+      setMentorCourseId("");
+      setMentorUserId("");
+      setEditingMentorId(null);
+      void mentorsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleMentorSave = () => {
+    if (!mentorCourseId || !mentorUserId) {
+      toast.error("Select a course and an instructor");
+      return;
+    }
+    mentorMutation.mutate();
+  };
+
+  const removeMentorMutation = useMutation({
+    mutationFn: (courseId: string) =>
+      api.delete(`/api/admin/batches/${id}/mentors/${courseId}`),
+    onSuccess: () => {
+      toast.success("Mentor removed");
+      void mentorsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const batch = batchQuery.data;
 
   const uniqueStudents = useMemo(() => {
     if (!batch) return [];
@@ -285,7 +351,7 @@ export default function BatchDetailPage() {
     });
   }, [batch, sessionSearch]);
 
-  if (loading) {
+  if (batchQuery.isPending) {
     return (
       <div className="flex items-center justify-center py-20">
         <p className="text-muted animate-pulse">Loading batch...</p>
@@ -647,38 +713,17 @@ export default function BatchDetailPage() {
               <div className="flex justify-end gap-2">
                 <button onClick={() => setShowAddExt(false)} className="btn-secondary text-xs">Cancel</button>
                 <button
-                  onClick={async () => {
-                    if (!extNewDate || (!extAssignmentId && !extQuizId)) {
-                      toast.error("Provide a due date and either an Assignment or Quiz ID");
-                      return;
-                    }
-                    try {
-                      await api.post(`/api/admin/batches/${id}/extensions`, {
-                        assignmentId: extAssignmentId || undefined,
-                        quizId: extQuizId || undefined,
-                        extendedDueDate: new Date(extNewDate).toISOString(),
-                        reason: extReason || undefined,
-                      });
-                      toast.success("Extension granted");
-                      setShowAddExt(false);
-                      setExtAssignmentId("");
-                      setExtQuizId("");
-                      setExtNewDate("");
-                      setExtReason("");
-                      fetchExtensions();
-                    } catch (err) {
-                      toast.error(getErrorMessage(err));
-                    }
-                  }}
+                  onClick={handleGrantExt}
                   className="btn-primary text-xs"
+                  disabled={grantExtMutation.isPending}
                 >
-                  Grant
+                  {grantExtMutation.isPending ? "Granting..." : "Grant"}
                 </button>
               </div>
             </div>
           )}
 
-          {extLoading ? (
+          {extensionsQuery.isPending ? (
             <p className="text-sm text-muted animate-pulse">Loading...</p>
           ) : extensions.length === 0 ? (
             <div className="glass-card p-8 text-center">
@@ -698,7 +743,7 @@ export default function BatchDetailPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
-                  {extensions.map((ext: any) => (
+                  {extensions.map((ext: Extension) => (
                     <tr key={ext.id} className="hover:bg-card-hover/50 transition-colors">
                       <td className="px-5 py-3 text-sm">
                         {ext.assignment?.title || ext.quiz?.title || "—"}
@@ -713,15 +758,8 @@ export default function BatchDetailPage() {
                       <td className="px-5 py-3 text-xs text-muted">{ext.reason || "—"}</td>
                       <td className="px-5 py-3">
                         <button
-                          onClick={async () => {
-                            try {
-                              await api.delete(`/api/admin/batches/${id}/extensions/${ext.id}`);
-                              toast.success("Extension revoked");
-                              fetchExtensions();
-                            } catch (err) {
-                              toast.error(getErrorMessage(err));
-                            }
-                          }}
+                          onClick={() => revokeExtMutation.mutate(ext.id)}
+                          disabled={revokeExtMutation.isPending}
                           className="text-danger hover:text-danger text-xs"
                         >
                           <IconTrash size={14} />
@@ -776,7 +814,7 @@ export default function BatchDetailPage() {
                     className="field text-xs"
                   >
                     <option value="">Select instructor...</option>
-                    {instructorOptions.map((inst: any) => (
+                    {instructorOptions.map((inst: InstructorOption) => (
                       <option key={inst.id} value={inst.id}>
                         {inst.name} ({inst.email})
                       </option>
@@ -792,35 +830,21 @@ export default function BatchDetailPage() {
                   setEditingMentorId(null);
                 }} className="btn-secondary text-xs">Cancel</button>
                 <button
-                  onClick={async () => {
-                    if (!mentorCourseId || !mentorUserId) {
-                      toast.error("Select a course and an instructor");
-                      return;
-                    }
-                    try {
-                      await api.post(`/api/admin/batches/${id}/mentors`, {
-                        courseId: mentorCourseId,
-                        mentorId: mentorUserId,
-                      });
-                      toast.success(editingMentorId ? "Mentor updated" : "Mentor assigned");
-                      setShowAddMentor(false);
-                      setMentorCourseId("");
-                      setMentorUserId("");
-                      setEditingMentorId(null);
-                      fetchMentors();
-                    } catch (err) {
-                      toast.error(getErrorMessage(err));
-                    }
-                  }}
+                  onClick={handleMentorSave}
                   className="btn-primary text-xs"
+                  disabled={mentorMutation.isPending}
                 >
-                  {editingMentorId ? "Update" : "Assign"}
+                  {mentorMutation.isPending
+                    ? "Saving..."
+                    : editingMentorId
+                      ? "Update"
+                      : "Assign"}
                 </button>
               </div>
             </div>
           )}
 
-          {mentorLoading ? (
+          {mentorsQuery.isPending ? (
             <p className="text-sm text-muted animate-pulse">Loading...</p>
           ) : (
             <div className="space-y-4">
@@ -858,7 +882,7 @@ export default function BatchDetailPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/50">
-                      {mentors.map((m: any) => (
+                      {mentors.map((m: Mentor) => (
                         <tr key={m.id} className="hover:bg-card-hover/50 transition-colors">
                           <td className="px-5 py-3 text-sm font-medium">{m.course?.title}</td>
                           <td className="px-5 py-3 text-sm">{m.mentor?.name}</td>
@@ -878,15 +902,10 @@ export default function BatchDetailPage() {
                                 <IconEdit size={14} />
                               </button>
                               <button
-                                onClick={async () => {
-                                  try {
-                                    await api.delete(`/api/admin/batches/${id}/mentors/${m.courseId}`);
-                                    toast.success("Mentor removed");
-                                    fetchMentors();
-                                  } catch (err) {
-                                    toast.error(getErrorMessage(err));
-                                  }
-                                }}
+                                onClick={() =>
+                                  removeMentorMutation.mutate(m.courseId)
+                                }
+                                disabled={removeMentorMutation.isPending}
                                 className="text-danger hover:text-danger text-xs"
                               >
                                 <IconTrash size={14} />
@@ -986,14 +1005,20 @@ export default function BatchDetailPage() {
                             onClick={() =>
                               handleToggleExamRequired(bc.courseId)
                             }
-                            disabled={togglingExam === bc.courseId}
+                            disabled={
+                              toggleExamRequiredMutation.isPending &&
+                              toggleExamRequiredMutation.variables ===
+                                bc.courseId
+                            }
                             className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${
                               bc.isExamRequired !== false
                                 ? "border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
                                 : "border-border text-muted-foreground hover:bg-card-hover"
                             } disabled:opacity-50`}
                           >
-                            {togglingExam === bc.courseId ? (
+                            {toggleExamRequiredMutation.isPending &&
+                            toggleExamRequiredMutation.variables ===
+                              bc.courseId ? (
                               <span className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
                             ) : bc.isExamRequired !== false ? (
                               "Disable Course Certificate"
@@ -1003,14 +1028,19 @@ export default function BatchDetailPage() {
                           </button>
                           <button
                             onClick={() => handleToggleVisibility(bc.courseId)}
-                            disabled={toggling === bc.courseId}
+                            disabled={
+                              toggleVisibilityMutation.isPending &&
+                              toggleVisibilityMutation.variables === bc.courseId
+                            }
                             className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
                               bc.isVisible
                                 ? "border-warning/30 text-warning hover:bg-warning/10"
                                 : "border-primary/30 text-primary hover:bg-primary/10"
                             } disabled:opacity-50`}
                           >
-                            {toggling === bc.courseId ? (
+                            {toggleVisibilityMutation.isPending &&
+                            toggleVisibilityMutation.variables ===
+                              bc.courseId ? (
                               <span className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
                             ) : bc.isVisible ? (
                               <>

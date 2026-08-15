@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { IconArrowLeft, IconUser } from "@tabler/icons-react";
 import {
@@ -48,13 +50,7 @@ type CourseInstructor = {
 export default function CreateBatchPage() {
   usePageTitle("New Batch");
   const router = useRouter();
-  const [submitting, setSubmitting] = useState(false);
   const [attempted, setAttempted] = useState(false);
-
-  const [packages, setPackages] = useState<PackageOption[]>([]);
-  const [instructors, setInstructors] = useState<InstructorOption[]>([]);
-  const [packageCourses, setPackageCourses] = useState<CourseOption[]>([]);
-  const [courseInstructors, setCourseInstructors] = useState<CourseInstructor[]>([]);
 
   const [form, setForm] = useState<FormState>({
     packageId: "",
@@ -67,51 +63,53 @@ export default function CreateBatchPage() {
     defaultDaysToComplete: "",
   });
 
-  // Fetch active packages and instructors on mount
-  useEffect(() => {
-    api
-      .get<{ items: Array<{ id: string; name: string; status: string }> }>(
-        "/api/admin/packages",
-      )
-      .then((res) => {
-        const active = (res.items ?? []).filter((p) => p.status === "ACTIVE");
-        setPackages(active.map((p) => ({ id: p.id, name: p.name })));
-      })
-      .catch(() => {});
-    api
-      .get<InstructorOption[]>("/api/admin/batches/instructors")
-      .then(setInstructors)
-      .catch(() => {});
-  }, []);
+  const packagesQuery = useApiQuery<{
+    items: Array<{ id: string; name: string; status: string }>;
+  }>(["admin", "packages"], "/api/admin/packages");
+  const instructorsQuery = useApiQuery<InstructorOption[]>(
+    ["admin", "batches", "instructors"],
+    "/api/admin/batches/instructors",
+  );
+  const packageCoursesQuery = useApiQuery<{
+    id: string;
+    name: string;
+    courses: Array<{
+      course: { id: string; title: string; slug: string };
+    }>;
+  }>(
+    ["admin", "packages", form.packageId],
+    `/api/admin/packages/${form.packageId}`,
+    undefined,
+    { enabled: !!form.packageId },
+  );
 
-  // When package changes, fetch its courses
+  const packages = useMemo(
+    () =>
+      (packagesQuery.data?.items ?? [])
+        .filter((p) => p.status === "ACTIVE")
+        .map((p) => ({ id: p.id, name: p.name })),
+    [packagesQuery.data],
+  );
+  const instructors = instructorsQuery.data ?? [];
+
+  const packageCourses = useMemo(
+    () =>
+      (packageCoursesQuery.data?.courses ?? []).map((pc) => ({
+        id: pc.course.id,
+        courseId: pc.course.id,
+        course: pc.course,
+      })),
+    [packageCoursesQuery.data],
+  );
+  const [courseInstructors, setCourseInstructors] = useState<CourseInstructor[]>(
+    [],
+  );
+
   useEffect(() => {
-    if (!form.packageId) {
-      setPackageCourses([]);
-      setCourseInstructors([]);
-      return;
-    }
-    api
-      .get<{
-        id: string;
-        name: string;
-        courses: Array<{
-          course: { id: string; title: string; slug: string };
-        }>;
-      }>(`/api/admin/packages/${form.packageId}`)
-      .then((res) => {
-        const courses = (res.courses ?? []).map((pc) => ({
-          id: pc.course.id,
-          courseId: pc.course.id,
-          course: pc.course,
-        }));
-        setPackageCourses(courses);
-        setCourseInstructors(
-          courses.map((c) => ({ courseId: c.courseId, instructorId: "" })),
-        );
-      })
-      .catch(() => {});
-  }, [form.packageId]);
+    setCourseInstructors(
+      packageCourses.map((c) => ({ courseId: c.courseId, instructorId: "" })),
+    );
+  }, [packageCourses]);
 
   const update = (field: keyof FormState, value: string) =>
     setForm((p) => ({ ...p, [field]: value }));
@@ -152,18 +150,8 @@ export default function CreateBatchPage() {
 
   const isValid = Object.keys(errors).length === 0;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAttempted(true);
-
-    if (!isValid) {
-      const firstError = Object.values(errors)[0];
-      toast.error(firstError ?? "Please fix the highlighted fields");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
+    const createBatchMutation = useMutation({
+    mutationFn: async () => {
       const body: Record<string, unknown> = {
         packageId: form.packageId,
         name: form.name,
@@ -183,18 +171,26 @@ export default function CreateBatchPage() {
       );
       if (assigned.length > 0) body.courseInstructors = assigned;
 
-      const result = await api.post<{ id: string; name: string }>(
-        "/api/admin/batches",
-            body,
-          );
-
+      return api.post<{ id: string; name: string }>("/api/admin/batches", body);
+    },
+    onSuccess: (result) => {
       toast.success(`Created batch "${result.name}"`);
       router.push("/admin/batches");
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSubmitting(false);
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAttempted(true);
+
+    if (!isValid) {
+      const firstError = Object.values(errors)[0];
+      toast.error(firstError ?? "Please fix the highlighted fields");
+      return;
     }
+
+    createBatchMutation.mutate();
   };
 
   const showError = (field: keyof FormState) =>
@@ -425,9 +421,9 @@ export default function CreateBatchPage() {
           <button
             type="submit"
             className="btn-primary"
-            disabled={submitting}
+            disabled={createBatchMutation.isPending}
           >
-            {submitting ? "Adding..." : "Add Batch"}
+            {createBatchMutation.isPending ? "Adding..." : "Add Batch"}
           </button>
         </div>
       </form>

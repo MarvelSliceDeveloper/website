@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { IconRefresh, IconRestore } from "@tabler/icons-react";
+import { IconRefresh, IconRestore, IconTrash } from "@tabler/icons-react";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type TrashEntity = {
   id: string;
@@ -18,36 +21,48 @@ type TrashEntity = {
 
 export default function TrashPage() {
   usePageTitle("Trash");
-  const [trash, setTrash] = useState<Record<string, TrashEntity[]>>({});
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("users");
+  const confirmDelete = useConfirmDialog();
 
-  async function fetchTrash() {
-    setLoading(true);
-    try {
-      const data = await api.get<{ trash: Record<string, TrashEntity[]> }>(
-        "/api/admin/trash",
-      );
-      setTrash(data.trash);
-    } catch {
-      toast.error("Failed to load trash");
-    } finally {
-      setLoading(false);
-    }
+  const trashQuery = useApiQuery<{ trash: Record<string, TrashEntity[]> }>(
+    ["admin", "trash"],
+    "/api/admin/trash",
+  );
+  const trash = trashQuery.data?.trash ?? {};
+  const loading = trashQuery.isPending;
+
+  const restoreMutation = useMutation({
+    mutationFn: ({ type, id }: { type: string; id: string }) =>
+      api.post(`/api/admin/trash/${type}/${id}/restore`),
+    onSuccess: (_res, vars) => {
+      toast.success(`${vars.type} restored`);
+      void trashQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  function handleRestore(type: string, id: string) {
+    restoreMutation.mutate({ type, id });
   }
 
-  useEffect(() => {
-    fetchTrash();
-  }, []);
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/admin/courses/${id}/permanent`),
+    onSuccess: () => {
+      toast.success("Course permanently deleted");
+      void trashQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  async function handleRestore(type: string, id: string) {
-    try {
-      await api.post(`/api/admin/trash/${type}/${id}/restore`);
-      toast.success(`${type} restored`);
-      fetchTrash();
-    } catch {
-      toast.error("Failed to restore");
-    }
+  async function handlePermanentDelete(id: string, title?: string) {
+    if (
+      !(await confirmDelete({
+        title: "Permanently Delete Course",
+        message: `Permanently delete "${title || "this course"}"? This will remove all associated modules, batches, enrollments, and data. This cannot be undone.`,
+      }))
+    )
+      return;
+    deleteMutation.mutate(id);
   }
 
   const tabs = [
@@ -69,7 +84,7 @@ export default function TrashPage() {
         role="Administration"
         action={
           <button
-            onClick={fetchTrash}
+            onClick={() => void trashQuery.refetch()}
             className="btn-secondary text-xs py-2 flex items-center gap-1.5"
           >
             <IconRefresh size={14} /> Refresh
@@ -129,12 +144,35 @@ export default function TrashPage() {
                       {new Date(item.deletedAt).toLocaleString("en-IN")}
                     </td>
                     <td className="py-3">
-                      <button
-                        onClick={() => handleRestore(activeTab, item.id)}
-                        className="text-emerald-400 hover:text-emerald-300 text-[10px] flex items-center gap-1"
-                      >
-                        <IconRestore size={12} /> Restore
-                      </button>
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={() => handleRestore(activeTab, item.id)}
+                          className="text-emerald-400 hover:text-emerald-300 text-[10px] flex items-center gap-1"
+                        >
+                          <IconRestore size={12} /> Restore
+                        </button>
+                        {activeTab === "courses" && (
+                          <button
+                            onClick={() =>
+                              handlePermanentDelete(item.id, item.title)
+                            }
+                            disabled={
+                              deleteMutation.isPending &&
+                              deleteMutation.variables === item.id
+                            }
+                            className="text-danger hover:text-danger/70 text-[10px] flex items-center gap-1 disabled:opacity-50"
+                          >
+                            {deleteMutation.isPending &&
+                            deleteMutation.variables === item.id ? (
+                              <span className="h-3 w-3 animate-spin rounded-full border border-danger border-t-transparent" />
+                            ) : (
+                              <>
+                                <IconTrash size={12} /> Delete Permanently
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

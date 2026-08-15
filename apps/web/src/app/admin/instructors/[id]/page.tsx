@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { useApiQuery } from "@/lib/query";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -168,217 +170,119 @@ function StarRating({ rating }: { rating: number }) {
 export default function InstructorDetailPage() {
   usePageTitle("Instructor Details");
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
-
-  const [instructor, setInstructor] = useState<InstructorDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<
     "overview" | "login-history" | "sessions" | "courses-batches" | "assignments" | "mentorship" | "performance"
   >("overview");
 
   // Login history
-  const [loginLogs, setLoginLogs] = useState<LoginEntry[]>([]);
   const [loginPage, setLoginPage] = useState(1);
-  const [loginTotal, setLoginTotal] = useState(0);
-  const [loginLoading, setLoginLoading] = useState(false);
 
   // Sessions
-  const [sessions, setSessions] = useState<SessionEntry[]>([]);
   const [sessionPage, setSessionPage] = useState(1);
-  const [sessionTotal, setSessionTotal] = useState(0);
-  const [sessionLoading, setSessionLoading] = useState(false);
 
   // Assignments
-  const [assignments, setAssignments] = useState<AssignmentEntry[]>([]);
   const [assignmentPage, setAssignmentPage] = useState(1);
-  const [assignmentTotal, setAssignmentTotal] = useState(0);
-  const [assignmentLoading, setAssignmentLoading] = useState(false);
 
   // Mentorship
-  const [mentorships, setMentorships] = useState<MentorshipEntry[]>([]);
   const [mentorshipPage, setMentorshipPage] = useState(1);
-  const [mentorshipTotal, setMentorshipTotal] = useState(0);
-  const [mentorshipLoading, setMentorshipLoading] = useState(false);
-
-  // Performance
-  const [performance, setPerformance] = useState<PerformanceData | null>(null);
-  const [performanceLoading, setPerformanceLoading] = useState(false);
 
   // Rejection reason dialog
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  const fetchInstructor = useCallback(async () => {
-    try {
-      const data = await api.get<InstructorDetail>(`/api/admin/instructors/${id}`);
-      setInstructor(data);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
+  const instructorQuery = useApiQuery<InstructorDetail>(
+    ["admin", "instructors", id],
+    `/api/admin/instructors/${id}`,
+  );
+  const instructor = instructorQuery.data ?? null;
+  const loading = instructorQuery.isPending;
 
-  useEffect(() => {
-    fetchInstructor();
-    api
-      .get<{ user: { role: string } }>("/api/auth/me")
-      .then((res) => {
-        if (res?.user) setCurrentUserRole(res.user.role);
-      })
-      .catch(() => {});
-  }, [fetchInstructor]);
+  const meQuery = useApiQuery<{ user: { role: string } }>(
+    ["auth", "me"],
+    "/api/auth/me",
+  );
+  const currentUserRole = meQuery.data?.user?.role ?? null;
 
-  const fetchLoginHistory = useCallback(async () => {
-    setLoginLoading(true);
-    try {
-      const data = await api.get<PaginatedResponse<LoginEntry>>(
-        `/api/admin/instructors/${id}/login-history`,
-        { page: String(loginPage), limit: "20" },
-      );
-      setLoginLogs(data.items);
-      setLoginTotal(data.total);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setLoginLoading(false);
-    }
-  }, [id, loginPage]);
+  // Paginated section queries — enabled only while their tab is active so
+  // each tab fetches on first open and stays cached for later revisits.
+  const loginHistoryQuery = useApiQuery<PaginatedResponse<LoginEntry>>(
+    ["admin", "instructors", id, "login-history", loginPage],
+    `/api/admin/instructors/${id}/login-history`,
+    { page: String(loginPage), limit: "20" },
+    { enabled: activeTab === "login-history" },
+  );
+  const loginLogs = loginHistoryQuery.data?.items ?? [];
+  const loginTotal = loginHistoryQuery.data?.total ?? 0;
+  const loginLoading = loginHistoryQuery.isPending;
 
-  useEffect(() => {
-    if (activeTab === "login-history") fetchLoginHistory();
-  }, [activeTab, fetchLoginHistory]);
+  const sessionsQuery = useApiQuery<PaginatedResponse<SessionEntry>>(
+    ["admin", "instructors", id, "sessions", sessionPage],
+    `/api/admin/instructors/${id}/sessions`,
+    { page: String(sessionPage), limit: "20" },
+    { enabled: activeTab === "sessions" },
+  );
+  const sessions = sessionsQuery.data?.items ?? [];
+  const sessionTotal = sessionsQuery.data?.total ?? 0;
+  const sessionLoading = sessionsQuery.isPending;
 
-  const fetchSessions = useCallback(async () => {
-    setSessionLoading(true);
-    try {
-      const data = await api.get<PaginatedResponse<SessionEntry>>(
-        `/api/admin/instructors/${id}/sessions`,
-        { page: String(sessionPage), limit: "20" },
-      );
-      setSessions(data.items);
-      setSessionTotal(data.total);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSessionLoading(false);
-    }
-  }, [id, sessionPage]);
+  const assignmentsQuery = useApiQuery<PaginatedResponse<AssignmentEntry>>(
+    ["admin", "instructors", id, "assignments", assignmentPage],
+    `/api/admin/instructors/${id}/assignments`,
+    { page: String(assignmentPage), limit: "20" },
+    { enabled: activeTab === "assignments" },
+  );
+  const assignments = assignmentsQuery.data?.items ?? [];
+  const assignmentTotal = assignmentsQuery.data?.total ?? 0;
+  const assignmentLoading = assignmentsQuery.isPending;
 
-  useEffect(() => {
-    if (activeTab === "sessions") fetchSessions();
-  }, [activeTab, fetchSessions]);
+  const mentorshipsQuery = useApiQuery<PaginatedResponse<MentorshipEntry>>(
+    ["admin", "instructors", id, "mentorship", mentorshipPage],
+    `/api/admin/instructors/${id}/mentorship`,
+    { page: String(mentorshipPage), limit: "20" },
+    { enabled: activeTab === "mentorship" },
+  );
+  const mentorships = mentorshipsQuery.data?.items ?? [];
+  const mentorshipTotal = mentorshipsQuery.data?.total ?? 0;
+  const mentorshipLoading = mentorshipsQuery.isPending;
 
-  const fetchAssignments = useCallback(async () => {
-    setAssignmentLoading(true);
-    try {
-      const data = await api.get<PaginatedResponse<AssignmentEntry>>(
-        `/api/admin/instructors/${id}/assignments`,
-        { page: String(assignmentPage), limit: "20" },
-      );
-      setAssignments(data.items);
-      setAssignmentTotal(data.total);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setAssignmentLoading(false);
-    }
-  }, [id, assignmentPage]);
+  const performanceQuery = useApiQuery<PerformanceData>(
+    ["admin", "instructors", id, "performance"],
+    `/api/admin/instructors/${id}/performance`,
+    undefined,
+    { enabled: activeTab === "performance" },
+  );
+  const performance = performanceQuery.data ?? null;
+  const performanceLoading = performanceQuery.isPending;
 
-  useEffect(() => {
-    if (activeTab === "assignments") fetchAssignments();
-  }, [activeTab, fetchAssignments]);
-
-  const fetchMentorships = useCallback(async () => {
-    setMentorshipLoading(true);
-    try {
-      const data = await api.get<PaginatedResponse<MentorshipEntry>>(
-        `/api/admin/instructors/${id}/mentorship`,
-        { page: String(mentorshipPage), limit: "20" },
-      );
-      setMentorships(data.items);
-      setMentorshipTotal(data.total);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setMentorshipLoading(false);
-    }
-  }, [id, mentorshipPage]);
-
-  useEffect(() => {
-    if (activeTab === "mentorship") fetchMentorships();
-  }, [activeTab, fetchMentorships]);
-
-  const fetchPerformance = useCallback(async () => {
-    setPerformanceLoading(true);
-    try {
-      const data = await api.get<PerformanceData>(
-        `/api/admin/instructors/${id}/performance`,
-      );
-      setPerformance(data);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setPerformanceLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    if (activeTab === "performance") fetchPerformance();
-  }, [activeTab, fetchPerformance]);
-
-  const handleVerify = async (action: "approve" | "reject", reason?: string) => {
-    try {
-      await api.put(`/api/admin/instructors/${id}/verify`, {
+  const verifyMutation = useMutation({
+    mutationFn: ({
+      action,
+      reason,
+    }: {
+      action: "approve" | "reject";
+      reason?: string;
+    }) =>
+      api.put(`/api/admin/instructors/${id}/verify`, {
         action,
         ...(reason ? { rejectionReason: reason } : {}),
-      });
-      toast.success(action === "approve" ? "Instructor approved" : "Instructor rejected");
+      }),
+    onSuccess: (_res, variables) => {
+      toast.success(
+        variables.action === "approve"
+          ? "Instructor approved"
+          : "Instructor rejected",
+      );
       setShowRejectDialog(false);
       setRejectionReason("");
-      fetchInstructor();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    }
-  };
+      void instructorQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  function RejectDialog() {
-    if (!showRejectDialog) return null;
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-        <div className="w-full max-w-md rounded-2xl bg-card p-6 shadow-2xl border border-border">
-          <h3 className="text-lg font-bold text-foreground">Reject Instructor</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Provide a reason the instructor will see on their onboarding page.
-          </p>
-          <textarea
-            value={rejectionReason}
-            onChange={(e) => setRejectionReason(e.target.value)}
-            rows={4}
-            className="mt-4 w-full rounded-xl border border-border bg-muted/5 px-4 py-3 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/20 resize-none"
-            placeholder="Explain why the profile was rejected..."
-          />
-          <div className="mt-5 flex items-center justify-end gap-3">
-            <button
-              onClick={() => { setShowRejectDialog(false); setRejectionReason(""); }}
-              className="btn-secondary text-sm px-4 py-2"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => handleVerify("reject", rejectionReason)}
-              disabled={!rejectionReason.trim()}
-              className="btn-danger text-sm px-4 py-2 disabled:opacity-50"
-            >
-              Reject
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleVerify = (action: "approve" | "reject", reason?: string) => {
+    verifyMutation.mutate({ action, reason });
+  };
 
   const profile = instructor?.instructorProfile;
   const initials = instructor?.name
@@ -625,7 +529,7 @@ export default function InstructorDetailPage() {
             <p className="text-sm text-muted-foreground">
               {loginTotal} login{loginTotal !== 1 ? "s" : ""} recorded
             </p>
-            <button onClick={fetchLoginHistory} className="btn-secondary text-xs flex items-center gap-1.5">
+            <button onClick={() => void loginHistoryQuery.refetch()} className="btn-secondary text-xs flex items-center gap-1.5">
               <IconRefresh size={14} /> Refresh
             </button>
           </div>
@@ -909,7 +813,38 @@ export default function InstructorDetailPage() {
           )}
         </div>
       )}
-      <RejectDialog />
+      {showRejectDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-card p-6 shadow-2xl border border-border">
+            <h3 className="text-lg font-bold text-foreground">Reject Instructor</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Provide a reason the instructor will see on their onboarding page.
+            </p>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              rows={4}
+              className="mt-4 w-full rounded-xl border border-border bg-muted/5 px-4 py-3 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/20 resize-none"
+              placeholder="Explain why the profile was rejected..."
+            />
+            <div className="mt-5 flex items-center justify-end gap-3">
+              <button
+                onClick={() => { setShowRejectDialog(false); setRejectionReason(""); }}
+                className="btn-secondary text-sm px-4 py-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleVerify("reject", rejectionReason)}
+                disabled={!rejectionReason.trim()}
+                className="btn-danger text-sm px-4 py-2 disabled:opacity-50"
+              >
+                Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

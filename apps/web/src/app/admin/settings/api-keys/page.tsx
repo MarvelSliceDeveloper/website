@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import {
   IconKey,
   IconRefresh,
@@ -27,8 +29,6 @@ type ApiKeyEntry = {
 export default function ApiKeysPage() {
   usePageTitle("API Keys");
   const confirmDelete = useConfirmDialog();
-  const [keys, setKeys] = useState<ApiKeyEntry[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const [newKeyDesc, setNewKeyDesc] = useState("");
@@ -36,61 +36,53 @@ export default function ApiKeysPage() {
   const [editingKey, setEditingKey] = useState<ApiKeyEntry | null>(null);
   const [editName, setEditName] = useState("");
   const [editDesc, setEditDesc] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [youtubeStatus, setYoutubeStatus] = useState<{
+
+  const keysQuery = useApiQuery<{ keys: ApiKeyEntry[] }>(
+    ["admin", "api-keys"],
+    "/api/admin/api-keys",
+  );
+  const keys = keysQuery.data?.keys ?? [];
+  const loading = keysQuery.isPending;
+
+  const youtubeStatusQuery = useApiQuery<{
     configured: boolean;
     masked: string | null;
-  } | null>(null);
+  }>(["admin", "api-keys", "youtube-status"], "/api/admin/api-keys/youtube-status");
+  const youtubeStatus = youtubeStatusQuery.isPending
+    ? null
+    : (youtubeStatusQuery.data ?? { configured: false, masked: null });
 
-  async function fetchKeys() {
-    setLoading(true);
-    try {
-      const data = await api.get<{ keys: ApiKeyEntry[] }>(
+  const createMutation = useMutation({
+    mutationFn: (body: { name: string; description?: string }) =>
+      api.post<{ id: string; name: string; key: string }>(
         "/api/admin/api-keys",
-      );
-      setKeys(data.keys);
-    } catch {
-      toast.error("Failed to load API keys");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function fetchYoutubeStatus() {
-    try {
-      const data = await api.get<{
-        configured: boolean;
-        masked: string | null;
-      }>("/api/admin/api-keys/youtube-status");
-      setYoutubeStatus(data);
-    } catch {
-      // silent
-    }
-  }
-
-  useEffect(() => {
-    fetchKeys();
-    fetchYoutubeStatus();
-  }, []);
-
-  async function handleCreate() {
-    if (!newKeyName.trim()) return;
-    try {
-      const data = await api.post<{ id: string; name: string; key: string }>(
-        "/api/admin/api-keys",
-        {
-          name: newKeyName.trim(),
-          description: newKeyDesc.trim() || undefined,
-        },
-      );
+        body,
+      ),
+    onSuccess: (data) => {
       setCreatedKey(data.key);
       setNewKeyName("");
       setNewKeyDesc("");
-      fetchKeys();
-    } catch {
-      toast.error("Failed to create API key");
-    }
+      void keysQuery.refetch();
+    },
+    onError: () => toast.error("Failed to create API key"),
+  });
+
+  function handleCreate() {
+    if (!newKeyName.trim()) return;
+    createMutation.mutate({
+      name: newKeyName.trim(),
+      description: newKeyDesc.trim() || undefined,
+    });
   }
+
+  const revokeMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/api/admin/api-keys/${id}`),
+    onSuccess: () => {
+      toast.success("API key revoked");
+      void keysQuery.refetch();
+    },
+    onError: () => toast.error("Failed to revoke API key"),
+  });
 
   async function handleRevoke(id: string, name: string) {
     if (
@@ -100,23 +92,21 @@ export default function ApiKeysPage() {
       }))
     )
       return;
-    try {
-      await api.delete(`/api/admin/api-keys/${id}`);
-      toast.success("API key revoked");
-      fetchKeys();
-    } catch {
-      toast.error("Failed to revoke API key");
-    }
+    revokeMutation.mutate(id);
   }
 
-  async function handleReactivate(id: string) {
-    try {
-      await api.patch(`/api/admin/api-keys/${id}`, { active: true });
+  const reactivateMutation = useMutation({
+    mutationFn: (id: string) =>
+      api.patch(`/api/admin/api-keys/${id}`, { active: true }),
+    onSuccess: () => {
       toast.success("API key reactivated");
-      fetchKeys();
-    } catch {
-      toast.error("Failed to reactivate API key");
-    }
+      void keysQuery.refetch();
+    },
+    onError: () => toast.error("Failed to reactivate API key"),
+  });
+
+  function handleReactivate(id: string) {
+    reactivateMutation.mutate(id);
   }
 
   function openEdit(key: ApiKeyEntry) {
@@ -127,26 +117,35 @@ export default function ApiKeysPage() {
     setCreatedKey(null);
   }
 
-  async function handleUpdate() {
+  const updateMutation = useMutation({
+    mutationFn: (payload: {
+      id: string;
+      name: string;
+      description: string | null;
+    }) =>
+      api.patch(`/api/admin/api-keys/${payload.id}`, {
+        name: payload.name,
+        description: payload.description,
+      }),
+    onSuccess: () => {
+      toast.success("API key updated");
+      setEditingKey(null);
+      void keysQuery.refetch();
+    },
+    onError: () => toast.error("Failed to update API key"),
+  });
+
+  function handleUpdate() {
     if (!editingKey) return;
     if (!editName.trim()) {
       toast.error("Name is required");
       return;
     }
-    setSaving(true);
-    try {
-      await api.patch(`/api/admin/api-keys/${editingKey.id}`, {
-        name: editName.trim(),
-        description: editDesc.trim() || null,
-      });
-      toast.success("API key updated");
-      setEditingKey(null);
-      fetchKeys();
-    } catch {
-      toast.error("Failed to update API key");
-    } finally {
-      setSaving(false);
-    }
+    updateMutation.mutate({
+      id: editingKey.id,
+      name: editName.trim(),
+      description: editDesc.trim() || null,
+    });
   }
 
   return (
@@ -166,7 +165,7 @@ export default function ApiKeysPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={fetchKeys}
+            onClick={() => void keysQuery.refetch()}
             className="btn-secondary text-xs py-2 flex items-center gap-1.5"
           >
             <IconRefresh size={14} /> Refresh
@@ -290,10 +289,10 @@ export default function ApiKeysPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleUpdate}
-                disabled={saving || !editName.trim()}
+                disabled={updateMutation.isPending || !editName.trim()}
                 className="btn-primary text-xs py-2 disabled:opacity-40"
               >
-                {saving ? "Saving..." : "Save Changes"}
+                {updateMutation.isPending ? "Saving..." : "Save Changes"}
               </button>
               <button
                 onClick={() => setEditingKey(null)}

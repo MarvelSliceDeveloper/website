@@ -1,5 +1,94 @@
 # Changelog
 
+## 2026-08-14 — TanStack Query Migration (Phase 4 complete: all remaining admin pages)
+
+User decision 2026-08-14: "everything left" — converted every remaining admin page (56 pages + shared `useReportData` hook). Completes the admin migration.
+
+### Frontend
+- Finance/CRM: `payments` (list + revenue), `refunds` (lookup/create mutations + `["auth","me"]` gate), `refunds/approvals` (tab-keyed + approve/reject), `coupons` (create/toggle/delete), `packages` (status-keyed + delete), `packages/enrollments` (shared `CourseBatchSelect` child + approve/reject), `packages/new`, `packages/[id]` (detail + dependent students + status/enroll/approve/reject).
+- Templates/review: `assignment-templates`, `assignment-templates/[id]`, `quiz-templates`, `quiz-templates/[id]` (dependent detail + save/delete with `isLoading` guard so `isNew` editor renders without flash), `email-templates` (save/preview), `assignments/review` (submissions + stats + grade).
+- Users: `users/login-history` (page-keyed), `users/import` (FormData import mutation).
+- Sessions: `sessions`, `sessions/new` (batches/instructors/modules + schedule/bulk-upload; fixed TDZ), `sessions/[sessionId]` (dependent playback/stats/attendance with `refetchInterval` polling + sync), `session-management` (kill/kill-all).
+- Analytics/logs: `analytics`, `audit-logs` (`appliedFilters` state), `logs` (polling via `refetchInterval`), `logs/stats`, `consent-logs`, `trash` (restore/permanent-delete).
+- Settings/system: `settings`, `settings/api-keys` (keys + youtube-status + 4 mutations), `settings/backup`, `settings/permissions`, `settings/system`, `settings/webhooks`, `health` (4 composed queries; fixed `react-hooks/purity` Date.now), `maintenance`, `cache` (optimistic flush).
+- Misc: `microsoft` (status query), `branding` (save + logo/favicon uploads), `gdpr` (enabled search + anonymize), `i18n` (locales + dependent translations + save/create), `static-pages` (`<a>`→`<Link>`), `notifications/send` (4 option queries + typed send payload), `content` (4 tab queries + save/delete).
+- Complex: `dashboard` (all 11 reads → queries; super-admin/admin dispatcher from `meQuery`), `courses/new` (create mutation typed to return `slug` — **fixes pre-existing tsc error**), `courses/[id]` + `_components/*` (course-builder reads → queries, writes → mutations; `CertificationTab` dead PDF-upload code removed; YouTube video-info transient fetch kept), `batches/new` (fixed TDZ), `batches/[id]` (tab-gated queries + optimistic toggle updates).
+- People: `interns` (+fields CRUD), `interns/assignments` (sheets + dependent sheet/tabs + cache updates), `interns/schedule`, `instructors/new`, `instructors/[id]` (5 dependent tab queries + verify), `instructors/[id]/edit`; fixed pre-existing `static-components` lint via module-scope `makeFormParts` factory.
+- Missed-in-first-scan (had API calls despite 0-count scan): `calendar` (instructors + sessions queries, events/colorMap via `useMemo`), `inbox/tickets` (mentorship tickets), `super-admin` (health query).
+- Shared hook: `lib/report-utils.ts` `useReportData` → current + previous-period `useApiQuery`s gated on range (powers `admin/reports`, `admin/reports/course`, `admin/reports/payment`).
+
+### Notes
+- Deliberate exceptions kept as handler-fetch (transient read-on-click): `gdpr` export modal, YouTube video-info blur fetch in `LessonCard`/`AddLessonForm`, instructor detail viewer, approvals/users modals.
+- Phase 4 verification: web `tsc` only the 3 pre-existing errors (down from 4 — `courses/new` slug fixed), eslint 0 across all `src/app/admin/**` + `src/lib/report-utils.ts`, all 64 static admin routes smoke-test 307 (auth guard).
+
+## 2026-08-14 — TanStack Query Migration (Phase 3 complete: admin pages)
+
+### Frontend
+- Converted the most important admin list/CRUD pages (slim scope per user decision 2026-08-14; settings/health/audit-logs/static-pages/branding/i18n/gdpr/cache/trash/etc. skipped):
+  - `admin/certificates/page.tsx` — `["admin","certificates",page]` + `["admin","certificates","stats"]` + `["admin","certificate-templates"]`; revoke/save/set-default/delete/uploadPdf/removePdf mutations (2 tabs).
+  - `admin/mentorship/page.tsx` — `["admin","mentorship",...]` tickets/mentors/stats queries + 4 modal mutations (assign/schedule/complete/cancel); `isSubmitting` derived; fixed circular `MentorshipStats` type.
+  - `admin/categories/page.tsx`, `admin/tags/page.tsx` — list query + save (create/update, `suggested`-aware toasts) + delete mutations.
+  - `admin/users/page.tsx` — list query keyed on package filter + active-packages query + dependent by-package batch queries (shared `["admin","batches","by-package",id]` key); create/edit/delete mutations; profile viewer stays handler-fetch (transient).
+  - `admin/courses/page.tsx` — query keyed on status/search/page + publish/unpublish/archive mutations (publish keeps `withLoadingToast` for the checklist result).
+  - `admin/batches/page.tsx` — query keyed on status/search/page + delete mutation.
+  - `admin/enrollments/page.tsx` — query keyed on status filter + dependent all-batches query (enabled only when approve modal open) + approve/reject mutations.
+  - `admin/inbox/page.tsx` — shares `["notifications"]`; optimistic `setQueryData` read/delete/mark-all (same pattern as instructor inbox).
+  - `admin/inbox/support/page.tsx` — tickets query + dependent per-ticket query + reply/status mutations.
+  - `admin/instructors/page.tsx` — query keyed on filter/search/page + verify mutation; added missing `totalStudents` to `ApiRawItem` (API returns it — also fixes a pre-existing tsc error).
+  - `admin/approvals/page.tsx` — pending-users query + approve/reject mutations removing the reviewed user from the cache; review modal stays handler-fetch (transient).
+  - `admin/announcements/page.tsx` — list + packages + batches queries + send mutation.
+- Global `QueryCache.onError` 401→`/login` covers admin reads (no per-page manual redirects needed).
+
+### Notes
+- Deliberate exceptions kept as handler-fetch (transient read-on-click modals): `admin/instructors` detail viewer, `admin/approvals` review modal, `admin/users` profile viewer.
+- Phase 3 verification: web `tsc` only the 4 pre-existing errors (down from 5 — instructors `totalStudents` fixed), eslint 0 across all 13 converted files, all 13 admin routes smoke-test OK (307 = auth guard).
+
+## 2026-08-14 — TanStack Query Migration (Phase 2 complete: instructor pages)
+
+### Frontend
+- Converted the high-value instructor pages (slim scope per user decision 2026-08-14; form-heavy pages skipped):
+  - `instructor/batches/page.tsx` — `["instructor","batches"]` (shares dashboard key); dropped manual load + 401 redirect (global `QueryCache.onError` handles it).
+  - `instructor/sessions/page.tsx` — `["instructor","sessions"]`; edit/delete/sync-recording → 3 `useMutation`s; attendance modal stays a handler-fetch (transient).
+  - `instructor/assignments/page.tsx` — `["instructor","assignments"]`; submissions → dependent `useQuery` keyed on the selected assignment; grade → `useMutation` invalidating the submissions key.
+  - `instructor/analytics/page.tsx` — `["instructor","analytics"]`.
+  - `instructor/inbox/page.tsx` — reuses the student inbox's shared keys `["notifications"]` (optimistic `setQueryData` read/delete/mark-all) and `["messages","conversations"]` + dependent `["messages","thread",userId]`.
+  - `instructor/mentorship/page.tsx` — `["instructor","mentorship-tickets"]`; schedule/complete/cancel → 3 `useMutation`s; `processing` derived from `isPending`.
+
+### Notes
+- Skipped (form-heavy / low value): `instructor/settings`, `onboarding`, `notifications/send`, `support` (+`_comps/*`), `courses`.
+- Phase 2 verification: web `tsc` only the 5 pre-existing errors, eslint 0 errors across `src/app/instructor/**`, all 7 instructor routes smoke-test OK (307 = auth guard).
+
+## 2026-08-14 — TanStack Query Migration (Phase 1: dashboards + student pages)
+
+### Frontend
+- Introduced TanStack Query for data fetching in `apps/web` (`useApiQuery` wrapper in `lib/query.ts`; `QueryClientProvider` in `providers.tsx` with `staleTime 60s`, `retry 1`, `refetchOnWindowFocus false`).
+- Global `QueryCache.onError` redirects to `/login` when the API returns `401`.
+- Converted to queries/mutations (cached reads + `invalidateQueries` instead of manual `loadData()`):
+  - `student/page.tsx` (portal dashboard — 4 parallel queries assembled by a pure `assemblePortalData`)
+  - `instructor/dashboard/page.tsx` (3 queries + dependent submissions aggregation)
+  - `student/certificates/page.tsx`, `student/settings/page.tsx`, `student/inbox/page.tsx`, `student/notes/page.tsx`, `student/support/page.tsx`
+- Shared cache keys: `["auth","me"]`, `["student","profile"]`, `["instructor","sessions"]`, `["instructor","batches"]`, `["instructor","assignments"]`, etc.
+- Removed several dead helpers/unused imports found during conversion (`renderTicketCard`, `EmptyState` in support; duplicate `claimPackageCert` copies in certificates).
+
+### Notes
+- `useQuery` (v5) has no `onError`/`onSuccess` options — error/empty states rendered inline; mutations use `onMutate`/`onSuccess`/`onError` lifecycle toasts (sonner `toast.promise` returns a non-Promise type).
+- Phase 1 remaining: student `_views` that fetch on mount (`CourseContentView`, `CertificatesView`, `AssignmentOverdueView`, `QuizOverdueView`, `_comps/*`) — tracked in `working.md`; Phases 2–4 per `docs/plan-to-work/tanstack-query-migration.md`.
+
+## 2026-08-14 — TanStack Query Migration (Phase 1 complete: student `_views`)
+
+### Frontend
+- Converted the remaining Phase 1 student `_views`:
+  - `CourseContentView` — main content fetch → `useApiQuery(["student","course-content",courseId])`; certification status → dependent `useQuery`; progress overlay written via `queryClient.setQueryData`; quiz submit → `useMutation`; retry → `contentQuery.refetch()`.
+  - `CertificatesView` — certificates + dependent per-course progress + per-package exam progress queries; claim → `useMutation` invalidating `["student","certificates"]`.
+  - `AssignmentOverdueView` / `QuizOverdueView` — file/MCQ submit → `useMutation` invalidating `["student","overdue"]`; removed the local "submitted" overrides (server refetch now reflects status).
+  - `_comps/QuizContent` (assignment file submit mutation), `_comps/CertificationExamView` (exam submit mutation).
+- Fixed pre-existing lint errors: `react-hooks/purity` `Date.now()` in `_comps/QuizContent.tsx` and `_views/HomeView.tsx` → `new Date().getTime()`.
+- `AssignmentContent` needed no conversion (only a file download + SSR portal guard, no display reads).
+
+### Notes
+- Deliberate exceptions (documented in the plan doc): transient read-on-click flows that populate ephemeral sub-views keep handler-fetched state; their writes are `useMutation`. `OnboardingWizardView` deferred to the Phase 2 sweep.
+- Phase 1 verification: `npx tsc` clean (only 5 pre-existing errors), eslint 0 errors across `src/app/student/**`, all student/instructor routes smoke-test OK.
+
 ## 2026-08-07 - Student Portal Performance Optimization
 
 ### Backend API

@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   Select,
@@ -93,46 +95,45 @@ function timeAgo(dateStr: string): string {
 
 export default function AdminMentorshipPage() {
   usePageTitle("Mentorship");
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [mentors, setMentors] = useState<Mentor[]>([]);
-  const [stats, setStats] = useState({
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+
+  const ticketsQuery = useApiQuery<{ tickets?: Ticket[] }>(
+    ["admin", "mentorship", "tickets"],
+    "/api/mentorship/tickets",
+  );
+  const tickets = ticketsQuery.data?.tickets ?? [];
+  const mentorsQuery = useApiQuery<{ mentors?: Mentor[] }>(
+    ["admin", "mentorship", "mentors"],
+    "/api/mentorship/mentors",
+  );
+  const mentors = mentorsQuery.data?.mentors ?? [];
+  type MentorshipStats = {
+    total: number;
+    open: number;
+    assigned: number;
+    scheduled: number;
+    completed: number;
+  };
+
+  const statsQuery = useApiQuery<{ stats: MentorshipStats }>(
+    ["admin", "mentorship", "stats"],
+    "/api/mentorship/stats",
+  );
+  const stats: MentorshipStats = statsQuery.data?.stats ?? {
     total: 0,
     open: 0,
     assigned: 0,
     scheduled: 0,
     completed: 0,
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const [ticketsRes, mentorsRes, statsRes] = await Promise.allSettled([
-        api.get<{ tickets?: Ticket[] }>("/api/mentorship/tickets"),
-        api.get<{ mentors?: Mentor[] }>("/api/mentorship/mentors"),
-        api.get<{ stats: typeof stats }>("/api/mentorship/stats"),
-      ]);
-
-      if (ticketsRes.status === "fulfilled") {
-        setTickets(ticketsRes.value.tickets || []);
-      }
-      if (mentorsRes.status === "fulfilled") {
-        setMentors(mentorsRes.value.mentors || []);
-      }
-      if (statsRes.status === "fulfilled") {
-        setStats(statsRes.value.stats);
-      }
-    } catch (error) {
-      console.error("Failed to fetch mentorship data:", error);
-    } finally {
-      setIsLoading(false);
-    }
   };
+  const isLoading =
+    ticketsQuery.isPending || mentorsQuery.isPending || statsQuery.isPending;
 
-  useEffect(() => {
-    Promise.resolve().then(() => fetchData());
-  }, []);
+  const refetchAll = () => {
+    void ticketsQuery.refetch();
+    void mentorsQuery.refetch();
+    void statsQuery.refetch();
+  };
 
   const visibleTickets = tickets;
 
@@ -144,7 +145,7 @@ export default function AdminMentorshipPage() {
         breadcrumbs={[{ label: "Mentorship", href: "/admin/mentorship" }]}
         action={
           <button
-            onClick={fetchData}
+            onClick={refetchAll}
             className="btn-secondary text-xs py-2 flex items-center gap-1.5"
           >
             <IconRefresh size={14} /> Refresh
@@ -343,7 +344,7 @@ export default function AdminMentorshipPage() {
           ticket={selectedTicket}
           mentors={mentors}
           onClose={() => setSelectedTicket(null)}
-          onUpdate={fetchData}
+          onUpdate={refetchAll}
         />
       )}
     </div>
@@ -408,83 +409,92 @@ function TicketManageModal({
   const [joinUrl, setJoinUrl] = useState(ticket.joinUrl || "");
   const [completionNotes, setCompletionNotes] = useState("");
   const [showNotesInput, setShowNotesInput] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleAssignMentor = async () => {
+  const assignMutation = useMutation({
+    mutationFn: () =>
+      api.patch(`/api/mentorship/tickets/${ticket.id}/assign`, {
+        mentorId: selectedMentor,
+      }),
+    onSuccess: () => {
+      toast.success("Mentor assigned successfully");
+      onUpdate();
+    },
+    onError: (err: unknown) =>
+      toast.error(
+        err instanceof Error ? err.message : "Failed to assign mentor",
+      ),
+  });
+
+  const scheduleMutation = useMutation({
+    mutationFn: () =>
+      api.patch(`/api/mentorship/tickets/${ticket.id}/schedule`, {
+        scheduledAt: new Date(scheduledDate).toISOString(),
+        joinUrl: joinUrl || undefined,
+      }),
+    onSuccess: () => {
+      toast.success("Session scheduled successfully");
+      onUpdate();
+    },
+    onError: (err: unknown) =>
+      toast.error(
+        err instanceof Error ? err.message : "Failed to schedule session",
+      ),
+  });
+
+  const completeMutation = useMutation({
+    mutationFn: () =>
+      api.patch(`/api/mentorship/tickets/${ticket.id}/complete`, {
+        notes: completionNotes || undefined,
+      }),
+    onSuccess: () => {
+      toast.success("Mentorship marked as completed");
+      onUpdate();
+      onClose();
+    },
+    onError: (err: unknown) =>
+      toast.error(err instanceof Error ? err.message : "Failed to complete"),
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: () =>
+      api.patch(`/api/mentorship/tickets/${ticket.id}/cancel`, {}),
+    onSuccess: () => {
+      toast.success("Mentorship request cancelled");
+      onUpdate();
+      onClose();
+    },
+    onError: (err: unknown) =>
+      toast.error(err instanceof Error ? err.message : "Failed to cancel"),
+  });
+
+  const isSubmitting =
+    assignMutation.isPending ||
+    scheduleMutation.isPending ||
+    completeMutation.isPending ||
+    cancelMutation.isPending;
+
+  const handleAssignMentor = () => {
     if (!selectedMentor) {
       toast.error("Please select a mentor");
       return;
     }
-
-    setIsSubmitting(true);
-
-    try {
-      await api.patch(`/api/mentorship/tickets/${ticket.id}/assign`, {
-        mentorId: selectedMentor,
-      });
-      toast.success("Mentor assigned successfully");
-      onUpdate();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to assign mentor",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+    assignMutation.mutate();
   };
 
-  const handleSchedule = async () => {
+  const handleSchedule = () => {
     if (!scheduledDate) {
       toast.error("Please select a date and time");
       return;
     }
-
-    setIsSubmitting(true);
-
-    try {
-      await api.patch(`/api/mentorship/tickets/${ticket.id}/schedule`, {
-        scheduledAt: new Date(scheduledDate).toISOString(),
-        joinUrl: joinUrl || undefined,
-      });
-      toast.success("Session scheduled successfully");
-      onUpdate();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to schedule session",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+    scheduleMutation.mutate();
   };
 
-  const handleComplete = async () => {
-    setIsSubmitting(true);
-    try {
-      await api.patch(`/api/mentorship/tickets/${ticket.id}/complete`, {
-        notes: completionNotes || undefined,
-      });
-      toast.success("Mentorship marked as completed");
-      onUpdate();
-      onClose();
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to complete");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleComplete = () => {
+    completeMutation.mutate();
   };
 
-  const handleCancel = async () => {
-    setIsSubmitting(true);
-    try {
-      await api.patch(`/api/mentorship/tickets/${ticket.id}/cancel`, {});
-      toast.success("Mentorship request cancelled");
-      onUpdate();
-      onClose();
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to cancel");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleCancel = () => {
+    cancelMutation.mutate();
   };
 
   return (

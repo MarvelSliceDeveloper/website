@@ -2,8 +2,10 @@
 
 import { useEffect, useState, type ComponentType } from "react";
 import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FormModal } from "@/components/admin/FormModal";
 import { CardSkeleton } from "@/components/admin/LoadingSkeleton";
@@ -67,71 +69,112 @@ const statusIcons: Record<
   REJECTED: IconCircleX,
 };
 
+function CourseBatchSelect({
+  courseId,
+  courseTitle,
+  value,
+  onChange,
+}: {
+  courseId: string;
+  courseTitle: string;
+  value: string;
+  onChange: (batchId: string) => void;
+}) {
+  const batchesQuery = useApiQuery<{ batches: Batch[] }>(
+    ["admin", "batches", "course", courseId],
+    "/api/admin/batches",
+    { courseId },
+    { enabled: Boolean(courseId) },
+  );
+  const batches = batchesQuery.data?.batches ?? [];
+  const loadingBatches = batchesQuery.isPending;
+
+  if (loadingBatches) {
+    return (
+      <div>
+        <label className="mb-1 block text-xs font-medium text-muted-foreground">
+          {courseTitle}
+        </label>
+        <div className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <label className="mb-1 block text-xs font-medium text-muted-foreground">
+        {courseTitle}
+      </label>
+      <Select
+        value={value || ""}
+        onValueChange={(val) => onChange(val || "")}
+      >
+        <SelectTrigger className="field w-full">
+          <SelectValue placeholder="-- Select Batch --" />
+        </SelectTrigger>
+        <SelectContent>
+          {batches.length === 0 ? (
+            <SelectItem value="none" disabled>
+              No batches for this course
+            </SelectItem>
+          ) : (
+            batches.map((batch) => (
+              <SelectItem key={batch.id} value={batch.id}>
+                {batch.name} — {batch._count?.enrollments || 0}
+                {batch.maxStudents ? `/${batch.maxStudents}` : ""} students
+              </SelectItem>
+            ))
+          )}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 export default function PackageEnrollmentsPage() {
   usePageTitle("Package Enrollments");
   const confirmDelete = useConfirmDialog();
-  const [enrollments, setEnrollments] = useState<PackageEnrollment[]>([]);
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("PENDING");
 
   // Approve modal state
   const [approveModal, setApproveModal] = useState<PackageEnrollment | null>(
     null,
   );
-  const [batchesMap, setBatchesMap] = useState<Record<string, Batch[]>>({});
-  const [loadingBatches, setLoadingBatches] = useState(false);
   const [batchAssignments, setBatchAssignments] = useState<
     Record<string, string>
   >({});
-  const [processing, setProcessing] = useState(false);
 
-  const fetchEnrollments = async () => {
-    setLoading(true);
-    try {
-      const data = await api.get<{ items: PackageEnrollment[] }>(
-        `/api/admin/package-enrollments?status=${statusFilter}`,
-      );
-      setEnrollments(data.items || []);
-    } catch {
-      setEnrollments([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const enrollmentsQuery = useApiQuery<{ items: PackageEnrollment[] }>(
+    ["admin", "package-enrollments", statusFilter],
+    `/api/admin/package-enrollments?status=${statusFilter}`,
+  );
+  const enrollments = enrollmentsQuery.data?.items ?? [];
+  const loading = enrollmentsQuery.isPending;
 
   useEffect(() => {
-    fetchEnrollments();
-  }, [statusFilter]);
-
-  // Fetch batches for approve modal
-  useEffect(() => {
-    if (!approveModal) return;
-    setLoadingBatches(true);
-    setBatchAssignments({});
-
-    const fetchAllBatches = async () => {
-      const map: Record<string, Batch[]> = {};
-      // Get unique course IDs from the enrollment's package courses
-      const courseIds = [
-        ...new Set(approveModal.courses.map((c) => c.courseId)),
-      ];
-      for (const courseId of courseIds) {
-        try {
-          const data = await api.get<{ batches: Batch[] }>(
-            `/api/admin/batches?courseId=${courseId}`,
-          );
-          map[courseId] = data.batches || [];
-        } catch {
-          map[courseId] = [];
-        }
-      }
-      setBatchesMap(map);
-      setLoadingBatches(false);
-    };
-    fetchAllBatches();
+    if (approveModal) setBatchAssignments({});
   }, [approveModal]);
 
-  const handleApprove = async () => {
+  const approveMutation = useMutation({
+    mutationFn: ({
+      id,
+      assignments,
+    }: {
+      id: string;
+      assignments: { courseId: string; batchId: string }[];
+    }) =>
+      api.patch(`/api/admin/package-enrollments/${id}/approve`, {
+        courseBatchAssignments: assignments,
+      }),
+    onSuccess: () => {
+      toast.success("Enrollment approved and batches assigned");
+      setApproveModal(null);
+      void enrollmentsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleApprove = () => {
     if (!approveModal) return;
     const assignments = Object.entries(batchAssignments)
       .filter(([_, batchId]) => batchId)
@@ -143,21 +186,18 @@ export default function PackageEnrollmentsPage() {
       return;
     }
 
-    setProcessing(true);
-    try {
-      await api.patch(
-        `/api/admin/package-enrollments/${approveModal.id}/approve`,
-        { courseBatchAssignments: assignments },
-      );
-      toast.success("Enrollment approved and batches assigned");
-      setApproveModal(null);
-      fetchEnrollments();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setProcessing(false);
-    }
+    approveMutation.mutate({ id: approveModal.id, assignments });
   };
+
+  const rejectMutation = useMutation({
+    mutationFn: (id: string) =>
+      api.patch(`/api/admin/package-enrollments/${id}/reject`),
+    onSuccess: () => {
+      toast.success("Enrollment rejected");
+      void enrollmentsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   const handleReject = async (id: string) => {
     if (
@@ -167,13 +207,7 @@ export default function PackageEnrollmentsPage() {
       }))
     )
       return;
-    try {
-      await api.patch(`/api/admin/package-enrollments/${id}/reject`);
-      toast.success("Enrollment rejected");
-      fetchEnrollments();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
+    rejectMutation.mutate(id);
   };
 
   return (
@@ -339,16 +373,16 @@ export default function PackageEnrollmentsPage() {
               <button
                 onClick={() => setApproveModal(null)}
                 className="btn-secondary text-sm"
-                disabled={processing}
+                disabled={approveMutation.isPending}
               >
                 Cancel
               </button>
               <button
                 onClick={handleApprove}
-                disabled={processing}
+                disabled={approveMutation.isPending}
                 className="btn-primary text-sm flex items-center gap-1.5"
               >
-                {processing ? (
+                {approveMutation.isPending ? (
                   <>
                     <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
                     Approving...
@@ -379,54 +413,22 @@ export default function PackageEnrollmentsPage() {
             <p className="text-sm font-medium text-foreground">
               Assign a batch for each course:
             </p>
-            {loadingBatches ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border"
-                  />
-                ))}
-              </div>
-            ) : (
-              approveModal.courses.map((ec) => (
-                <div key={ec.courseId}>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                    {ec.course.title}
-                  </label>
-                  <Select
-                    value={batchAssignments[ec.courseId] || ""}
-                    onValueChange={(val) =>
-                      setBatchAssignments((prev) => ({
-                        ...prev,
-                        [ec.courseId]: val,
-                      }))
-                    }
-                  >
-                    <SelectTrigger className="field w-full">
-                      <SelectValue placeholder="-- Select Batch --" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(batchesMap[ec.courseId] || []).length === 0 ? (
-                        <SelectItem value="none" disabled>
-                          No batches for this course
-                        </SelectItem>
-                      ) : (
-                        (batchesMap[ec.courseId] || []).map((batch) => (
-                          <SelectItem key={batch.id} value={batch.id}>
-                            {batch.name} — {batch._count?.enrollments || 0}
-                            {batch.maxStudents
-                              ? `/${batch.maxStudents}`
-                              : ""}{" "}
-                            students
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))
-            )}
+            <div className="space-y-3">
+              {approveModal.courses.map((ec) => (
+                <CourseBatchSelect
+                  key={ec.courseId}
+                  courseId={ec.courseId}
+                  courseTitle={ec.course.title}
+                  value={batchAssignments[ec.courseId] || ""}
+                  onChange={(val) =>
+                    setBatchAssignments((prev) => ({
+                      ...prev,
+                      [ec.courseId]: val,
+                    }))
+                  }
+                />
+              ))}
+            </div>
           </div>
         </FormModal>
       )}

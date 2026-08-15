@@ -119,6 +119,7 @@ model User {
   ticketsAssigned         MentorshipTicket[]       @relation("TicketMentor")
   notifications           Notification[]
   notificationPreferences NotificationPreference[]
+  sentNotifications       SentNotification[]
   attendance              Attendance[]
   sessionsLed             LiveSession[]            @relation("SessionInstructor")
   assignmentSubmissions   AssignmentSubmission[]
@@ -693,6 +694,26 @@ model NotificationPreference {
   @@unique([userId, type])
 }
 
+// Track custom notifications sent by admins/instructors (the "Sent" inbox)
+model SentNotification {
+  id              String   @id @default(cuid())
+  senderId        String
+  title           String
+  message         String
+  type            String // CUSTOM_NOTIFICATION, etc.
+  targetType      String // ALL_USERS, BATCH, COURSE, INTERN, INTERN_FIELD, INSTRUCTORS, STUDENTS
+  targetIds       Json? // batch/course/field ids the notification was sent to
+  channel         String   @default("BOTH") // IN_APP | EMAIL | BOTH
+  recipientCount  Int      @default(0)
+  emailTemplateId String?
+  attachmentUrl   String?
+  attachmentName  String?
+  createdAt       DateTime @default(now())
+  sender          User     @relation(fields: [senderId], references: [id])
+
+  @@index([senderId, createdAt])
+}
+
 // Attendance tracking — logged when a student clicks "Join Now"
 model Attendance {
   id        String      @id @default(cuid())
@@ -735,7 +756,7 @@ enum SubmissionStatus {
 model Assignment {
   id             String                 @id @default(cuid())
   courseId       String
-  batchId        String
+  batchId        String?
   moduleId       String?
   title          String
   description    String                 @db.Text
@@ -748,7 +769,7 @@ model Assignment {
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt
   course         Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  batch          Batch                  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  batch          Batch?                 @relation(fields: [batchId], references: [id], onDelete: Cascade)
   module         Module?                @relation(fields: [moduleId], references: [id], onDelete: SetNull)
 
   @@index([courseId])
@@ -1166,6 +1187,22 @@ model CourseTag {
   @@unique([courseId, tagId])
   @@index([courseId])
   @@index([tagId])
+}
+
+model CourseTitle {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PackageName {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // === STATIC PAGES (CMS) ===

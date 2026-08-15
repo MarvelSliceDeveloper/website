@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
 import { IconArrowLeft, IconTrash } from "@tabler/icons-react";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
@@ -12,6 +14,15 @@ type QuestionForm = {
   text: string;
   marks: number;
   options: { optionText: string; isCorrect: boolean }[];
+};
+
+type TemplateDetail = {
+  template: {
+    title: string;
+    description: string | null;
+    category: string | null;
+    questions: QuestionForm[];
+  };
 };
 
 export default function QuizTemplateEditorPage() {
@@ -25,41 +36,35 @@ export default function QuizTemplateEditorPage() {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [questions, setQuestions] = useState<QuestionForm[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(!isNew);
   const confirmDelete = useConfirmDialog();
+  const queryClient = useQueryClient();
+
+  const detailQuery = useApiQuery<TemplateDetail>(
+    ["admin", "quiz-templates", id],
+    isNew ? "" : `/api/admin/quiz-templates/${id}`,
+    undefined,
+    { enabled: !isNew },
+  );
+  const loading = detailQuery.isLoading;
 
   useEffect(() => {
-    if (!isNew) {
-      api
-        .get<{
-          template: {
-            title: string;
-            description: string | null;
-            category: string | null;
-            questions: QuestionForm[];
-          };
-        }>(`/api/admin/quiz-templates/${id}`)
-        .then((data) => {
-          const t = data.template;
-          setTitle(t.title);
-          setDescription(t.description || "");
-          setCategory(t.category || "");
-          setQuestions(
-            t.questions.map((q) => ({
-              text: q.text,
-              marks: q.marks,
-              options: q.options.map((o) => ({
-                optionText: o.optionText,
-                isCorrect: o.isCorrect,
-              })),
-            })),
-          );
-        })
-        .catch(() => toast.error("Failed to load template"))
-        .finally(() => setLoading(false));
+    if (detailQuery.data) {
+      const t = detailQuery.data.template;
+      setTitle(t.title);
+      setDescription(t.description || "");
+      setCategory(t.category || "");
+      setQuestions(
+        t.questions.map((q) => ({
+          text: q.text,
+          marks: q.marks,
+          options: q.options.map((o) => ({
+            optionText: o.optionText,
+            isCorrect: o.isCorrect,
+          })),
+        })),
+      );
     }
-  }, [id, isNew]);
+  }, [detailQuery.data]);
 
   function addQuestion() {
     setQuestions((prev) => [
@@ -97,37 +102,58 @@ export default function QuizTemplateEditorPage() {
     });
   }
 
-  async function handleSave() {
-    if (!title.trim()) return toast.error("Title is required");
-    setSaving(true);
-    try {
-      const payload = {
-        title: title.trim(),
-        description: description.trim() || undefined,
-        category: category.trim() || undefined,
-        questions: questions.map((q) => ({
-          text: q.text,
-          marks: q.marks,
-          options: q.options,
-        })),
-      };
-
-      if (isNew) {
-        await api.post("/api/admin/quiz-templates", payload);
-        toast.success("Quiz template created");
-      } else {
-        await api.put(`/api/admin/quiz-templates/${id}`, payload);
-        toast.success("Quiz template updated");
-      }
+  const saveMutation = useMutation({
+    mutationFn: (payload: {
+      title: string;
+      description?: string;
+      category?: string;
+      questions: QuestionForm[];
+    }) =>
+      isNew
+        ? api.post("/api/admin/quiz-templates", payload)
+        : api.put(`/api/admin/quiz-templates/${id}`, payload),
+    onSuccess: () => {
+      toast.success(
+        isNew ? "Quiz template created" : "Quiz template updated",
+      );
+      void queryClient.invalidateQueries({
+        queryKey: ["admin", "quiz-templates"],
+      });
       router.push("/admin/quiz-templates");
-    } catch {
-      toast.error("Failed to save");
-    } finally {
-      setSaving(false);
-    }
-  }
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  async function handleDelete() {
+  const deleteMutation = useMutation({
+    mutationFn: () => api.delete(`/api/admin/quiz-templates/${id}`),
+    onSuccess: () => {
+      toast.success("Deleted");
+      void queryClient.invalidateQueries({
+        queryKey: ["admin", "quiz-templates"],
+      });
+      router.push("/admin/quiz-templates");
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSave = () => {
+    if (!title.trim()) {
+      toast.error("Title is required");
+      return;
+    }
+    saveMutation.mutate({
+      title: title.trim(),
+      description: description.trim() || undefined,
+      category: category.trim() || undefined,
+      questions: questions.map((q) => ({
+        text: q.text,
+        marks: q.marks,
+        options: q.options,
+      })),
+    });
+  };
+
+  const handleDelete = async () => {
     if (
       !(await confirmDelete({
         title: "Delete Template",
@@ -135,14 +161,8 @@ export default function QuizTemplateEditorPage() {
       }))
     )
       return;
-    try {
-      await api.delete(`/api/admin/quiz-templates/${id}`);
-      toast.success("Deleted");
-      router.push("/admin/quiz-templates");
-    } catch {
-      toast.error("Failed to delete");
-    }
-  }
+    deleteMutation.mutate();
+  };
 
   if (loading) {
     return (
@@ -313,10 +333,14 @@ export default function QuizTemplateEditorPage() {
       <div className="flex items-center gap-2">
         <button
           onClick={handleSave}
-          disabled={saving}
+          disabled={saveMutation.isPending}
           className="btn-primary text-sm py-2.5 px-6 disabled:opacity-40"
         >
-          {saving ? "Saving..." : isNew ? "Add Template" : "Save Changes"}
+          {saveMutation.isPending
+            ? "Saving..."
+            : isNew
+              ? "Add Template"
+              : "Save Changes"}
         </button>
         <button
           onClick={() => router.push("/admin/quiz-templates")}

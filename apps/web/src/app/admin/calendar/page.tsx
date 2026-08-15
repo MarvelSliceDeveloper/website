@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { useMemo, useState } from "react";
+import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -30,16 +30,6 @@ type SessionData = {
   batch?: { name: string; course?: { title: string } };
 };
 
-type CalendarEvent = {
-  id: string;
-  title: string;
-  start: string;
-  end: string;
-  backgroundColor: string;
-  borderColor: string;
-  url?: string;
-};
-
 const COURSE_COLORS = [
   "#6d7dff",
   "#22c55e",
@@ -55,59 +45,49 @@ const COURSE_COLORS = [
 
 export default function AdminCalendarPage() {
   usePageTitle("Calendar");
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [instructors, setInstructors] = useState<Instructor[]>([]);
   const [selectedInstructor, setSelectedInstructor] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [courseColorMap, setCourseColorMap] = useState<Record<string, string>>(
-    {},
+
+  const instructorsQuery = useApiQuery<Instructor[]>(
+    ["admin", "batches", "instructors"],
+    "/api/admin/batches/instructors",
   );
 
-  useEffect(() => {
-    api
-      .get<Instructor[]>("/api/admin/batches/instructors")
-      .then((data) => setInstructors(data || []))
-      .catch(() => {});
-  }, []);
+  const sessionsQuery = useApiQuery<{ sessions: SessionData[] }>(
+    ["admin", "calendar", "sessions", selectedInstructor || "all"],
+    "/api/sessions",
+    selectedInstructor ? { instructorId: selectedInstructor } : undefined,
+  );
 
-  useEffect(() => {
-    setLoading(true);
-    const params: Record<string, string> = {};
-    if (selectedInstructor) params.instructorId = selectedInstructor;
-    api
-      .get<{ sessions: SessionData[] }>("/api/sessions", params)
-      .then((data) => {
-        const sessions = Array.isArray(data.sessions) ? data.sessions : [];
-        const colorMap: Record<string, string> = {};
-        let colorIdx = 0;
-        const mapped = sessions.map((s: SessionData) => {
-          const courseTitle = s.batch?.course?.title || "Unknown";
-          if (!colorMap[courseTitle]) {
-            colorMap[courseTitle] =
-              COURSE_COLORS[colorIdx % COURSE_COLORS.length];
-            colorIdx++;
-          }
-          const color = colorMap[courseTitle];
-          const startStr = s.scheduledAt;
-          const endMs = s.endedAt
-            ? new Date(s.endedAt).getTime()
-            : new Date(startStr).getTime() + 3600000;
-          return {
-            id: s.id,
-            title: `${courseTitle} - ${s.batch?.name || ""}`,
-            start: startStr,
-            end: new Date(endMs).toISOString(),
-            backgroundColor: color,
-            borderColor: color,
-            url: s.joinUrl,
-          };
-        });
-        setEvents(mapped);
-        setCourseColorMap(colorMap);
-      })
-      .catch(() => setEvents([]))
-      .finally(() => setLoading(false));
-  }, [selectedInstructor]);
+  const { events, courseColorMap } = useMemo(() => {
+    const sessions = Array.isArray(sessionsQuery.data?.sessions)
+      ? sessionsQuery.data.sessions
+      : [];
+    const colorMap: Record<string, string> = {};
+    let colorIdx = 0;
+    const mapped = sessions.map((s: SessionData) => {
+      const courseTitle = s.batch?.course?.title || "Unknown";
+      if (!colorMap[courseTitle]) {
+        colorMap[courseTitle] =
+          COURSE_COLORS[colorIdx % COURSE_COLORS.length];
+        colorIdx++;
+      }
+      const color = colorMap[courseTitle];
+      const startStr = s.scheduledAt;
+      const endMs = s.endedAt
+        ? new Date(s.endedAt).getTime()
+        : new Date(startStr).getTime() + 3600000;
+      return {
+        id: s.id,
+        title: `${courseTitle} - ${s.batch?.name || ""}`,
+        start: startStr,
+        end: new Date(endMs).toISOString(),
+        backgroundColor: color,
+        borderColor: color,
+        url: s.joinUrl,
+      };
+    });
+    return { events: mapped, courseColorMap: colorMap };
+  }, [sessionsQuery.data]);
 
   function handleEventClick(info: EventClickArg) {
     if (info.event.url) {
@@ -141,7 +121,7 @@ export default function AdminCalendarPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">All Instructors</SelectItem>
-              {instructors.map((inst) => (
+              {instructorsQuery.data?.map((inst) => (
                 <SelectItem key={inst.id} value={inst.id}>
                   {inst.name}
                 </SelectItem>
@@ -167,7 +147,7 @@ export default function AdminCalendarPage() {
         </div>
       )}
 
-      {loading ? (
+      {sessionsQuery.isLoading ? (
         <div className="glass-card p-12 text-center">
           <p className="text-muted animate-pulse">Loading calendar...</p>
         </div>

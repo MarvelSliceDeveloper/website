@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { IconArrowLeft, IconSend } from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { timeAgo } from "@/lib/time-ago";
+import { useApiQuery } from "@/lib/query";
 
 interface SupportTicketItem {
   id: string;
@@ -52,80 +54,69 @@ const SUPPORT_STATUS_CONFIG: Record<
 
 export default function AdminInboxSupportPage() {
   usePageTitle("Support");
-  const [tickets, setTickets] = useState<SupportTicketItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedTicket, setSelectedTicket] =
-    useState<SupportTicketItem | null>(null);
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
-  const [sendingReply, setSendingReply] = useState(false);
-  const [updatingStatus, setUpdatingStatus] = useState(false);
 
-  const fetchTickets = useCallback(async () => {
-    try {
-      const data = await api.get<{ tickets: SupportTicketItem[] }>(
-        "/api/support/tickets",
-      );
-      setTickets(data.tickets || []);
-    } catch {
-      /* ignore */
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const ticketsQuery = useApiQuery<{ tickets: SupportTicketItem[] }>(
+    ["admin", "support", "tickets"],
+    "/api/support/tickets",
+  );
+  const tickets = ticketsQuery.data?.tickets ?? [];
+  const loading = ticketsQuery.isPending;
 
-  useEffect(() => {
-    api
-      .get<{ tickets: SupportTicketItem[] }>("/api/support/tickets")
-      .then((data) => setTickets(data.tickets || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+  // Detail is a dependent query — enabled only once a ticket is selected.
+  const selectedTicketQuery = useApiQuery<{ ticket: SupportTicketItem }>(
+    ["admin", "support", "ticket", selectedTicketId ?? ""],
+    selectedTicketId ? `/api/support/tickets/${selectedTicketId}` : "",
+    undefined,
+    { enabled: Boolean(selectedTicketId) },
+  );
+  const selectedTicket = selectedTicketQuery.data?.ticket ?? null;
 
-  async function openTicket(ticketId: string) {
-    try {
-      const data = await api.get<{ ticket: SupportTicketItem }>(
-        `/api/support/tickets/${ticketId}`,
-      );
-      setSelectedTicket(data.ticket);
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
-  }
+  const openTicket = (ticketId: string) => setSelectedTicketId(ticketId);
 
-  async function sendReply() {
-    if (!selectedTicket || !replyText.trim()) return;
-    setSendingReply(true);
-    try {
-      await api.post(`/api/support/tickets/${selectedTicket.id}/messages`, {
-        message: replyText,
-      });
+  const sendReplyMutation = useMutation({
+    mutationFn: (message: string) =>
+      api.post(`/api/support/tickets/${selectedTicketId}/messages`, {
+        message,
+      }),
+    onSuccess: () => {
+      toast.success("Reply sent");
       setReplyText("");
-      openTicket(selectedTicket.id);
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSendingReply(false);
-    }
-  }
+      void selectedTicketQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  async function updateStatus(status: string) {
-    if (!selectedTicket) return;
-    setUpdatingStatus(true);
-    try {
-      await api.patch(`/api/support/tickets/${selectedTicket.id}/status`, {
+  const sendReply = () => {
+    if (!selectedTicketId || !replyText.trim()) return;
+    sendReplyMutation.mutate(replyText);
+  };
+
+  const updateStatusMutation = useMutation({
+    mutationFn: (status: string) =>
+      api.patch(`/api/support/tickets/${selectedTicketId}/status`, {
         status,
-      });
+      }),
+    onSuccess: () => {
       toast.success("Status updated");
-      openTicket(selectedTicket.id);
-      fetchTickets();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setUpdatingStatus(false);
-    }
-  }
+      void selectedTicketQuery.refetch();
+      void ticketsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const updateStatus = (status: string) => {
+    if (!selectedTicketId) return;
+    updateStatusMutation.mutate(status);
+  };
 
   if (loading)
+    return (
+      <div className="h-40 animate-pulse rounded-xl bg-card-hover border border-border" />
+    );
+
+  if (selectedTicketId && selectedTicketQuery.isPending)
     return (
       <div className="h-40 animate-pulse rounded-xl bg-card-hover border border-border" />
     );
@@ -148,7 +139,7 @@ export default function AdminInboxSupportPage() {
             <div className="rounded-xl border border-border/60 bg-card">
               <div className="border-b border-border px-4 py-3 flex items-center gap-2">
                 <button
-                  onClick={() => setSelectedTicket(null)}
+                  onClick={() => setSelectedTicketId(null)}
                   className="text-muted hover:text-foreground"
                 >
                   <IconArrowLeft size={16} />
@@ -201,7 +192,7 @@ export default function AdminInboxSupportPage() {
                       {selectedTicket.status !== "IN_PROGRESS" && (
                         <button
                           onClick={() => updateStatus("IN_PROGRESS")}
-                          disabled={updatingStatus}
+                          disabled={updateStatusMutation.isPending}
                           className="btn-secondary text-xs"
                         >
                           Mark In Progress
@@ -210,7 +201,7 @@ export default function AdminInboxSupportPage() {
                       {selectedTicket.status !== "RESOLVED" && (
                         <button
                           onClick={() => updateStatus("RESOLVED")}
-                          disabled={updatingStatus}
+                          disabled={updateStatusMutation.isPending}
                           className="btn-secondary text-xs"
                         >
                           Mark Resolved
@@ -218,7 +209,7 @@ export default function AdminInboxSupportPage() {
                       )}
                       <button
                         onClick={() => updateStatus("CLOSED")}
-                        disabled={updatingStatus}
+                        disabled={updateStatusMutation.isPending}
                         className="btn-secondary text-xs"
                       >
                         Close
@@ -284,7 +275,7 @@ export default function AdminInboxSupportPage() {
                   />
                   <button
                     onClick={sendReply}
-                    disabled={!replyText.trim() || sendingReply}
+                    disabled={!replyText.trim() || sendReplyMutation.isPending}
                     className="btn-primary text-sm flex items-center gap-1.5"
                   >
                     <IconSend size={14} /> Send

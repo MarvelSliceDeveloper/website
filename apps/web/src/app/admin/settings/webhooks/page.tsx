@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import {
   IconBell,
@@ -10,8 +11,9 @@ import {
   IconRefresh,
   IconWebhook,
 } from "@tabler/icons-react";
-import { toast } from "sonner";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 type Webhook = {
@@ -33,27 +35,17 @@ const EVENT_OPTIONS = [
 
 export default function WebhooksPage() {
   usePageTitle("Alerting Webhooks");
-  const [webhooks, setWebhooks] = useState<Webhook[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", url: "", events: [] as string[], active: true });
-  const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const confirmDelete = useConfirmDialog();
 
-  const fetchWebhooks = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get<{ webhooks: Webhook[] }>("/api/admin/alerting-webhooks");
-      setWebhooks(res.webhooks || []);
-    } catch {
-      toast.error("Failed to fetch webhooks");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchWebhooks(); }, []);
+  const webhooksQuery = useApiQuery<{ webhooks: Webhook[] }>(
+    ["admin", "webhooks"],
+    "/api/admin/alerting-webhooks",
+  );
+  const webhooks = webhooksQuery.data?.webhooks ?? [];
+  const loading = webhooksQuery.isPending;
 
   const toggleEvent = (event: string) => {
     setForm((prev) => ({
@@ -64,29 +56,30 @@ export default function WebhooksPage() {
     }));
   };
 
-  const handleSave = async () => {
+  const saveMutation = useMutation({
+    mutationFn: (payload: {
+      id: string | null;
+      data: { name: string; url: string; events: string[]; active: boolean };
+    }) =>
+      payload.id
+        ? api.put(`/api/admin/alerting-webhooks/${payload.id}`, payload.data)
+        : api.post("/api/admin/alerting-webhooks", payload.data),
+    onSuccess: (_res, payload) => {
+      toast.success(payload.id ? "Webhook updated" : "Webhook created");
+      setShowForm(false);
+      setEditingId(null);
+      setForm({ name: "", url: "", events: [], active: true });
+      void webhooksQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSave = () => {
     if (!form.name || !form.url || form.events.length === 0) {
       toast.error("Name, URL, and at least one event are required");
       return;
     }
-    setSaving(true);
-    try {
-      if (editingId) {
-        await api.put(`/api/admin/alerting-webhooks/${editingId}`, form);
-        toast.success("Webhook updated");
-      } else {
-        await api.post("/api/admin/alerting-webhooks", form);
-        toast.success("Webhook created");
-      }
-      setShowForm(false);
-      setEditingId(null);
-      setForm({ name: "", url: "", events: [], active: true });
-      fetchWebhooks();
-    } catch {
-      toast.error("Failed to save webhook");
-    } finally {
-      setSaving(false);
-    }
+    saveMutation.mutate({ id: editingId, data: form });
   };
 
   const handleEdit = (w: Webhook) => {
@@ -94,6 +87,16 @@ export default function WebhooksPage() {
     setEditingId(w.id);
     setShowForm(true);
   };
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) =>
+      api.delete(`/api/admin/alerting-webhooks/${id}`),
+    onSuccess: () => {
+      toast.success("Webhook deleted");
+      void webhooksQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   const handleDelete = async (id: string) => {
     if (
@@ -103,32 +106,37 @@ export default function WebhooksPage() {
       }))
     )
       return;
-    try {
-      await api.delete(`/api/admin/alerting-webhooks/${id}`);
-      toast.success("Webhook deleted");
-      fetchWebhooks();
-    } catch {
-      toast.error("Failed to delete webhook");
-    }
+    deleteMutation.mutate(id);
   };
 
-  const handleTest = async (id: string) => {
-    try {
-      const res = await api.post<{ statusCode: number; statusText: string }>(`/api/admin/alerting-webhooks/${id}/test`, {});
+  const testMutation = useMutation({
+    mutationFn: (id: string) =>
+      api.post<{ statusCode: number; statusText: string }>(
+        `/api/admin/alerting-webhooks/${id}/test`,
+        {},
+      ),
+    onSuccess: (res) => {
       toast.success(`Test sent — ${res.statusCode} ${res.statusText}`);
-    } catch {
-      toast.error("Webhook test failed");
-    }
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleTest = (id: string) => {
+    testMutation.mutate(id);
   };
 
-  const handleToggleActive = async (w: Webhook) => {
-    try {
-      await api.put(`/api/admin/alerting-webhooks/${w.id}`, { active: !w.active });
+  const toggleActiveMutation = useMutation({
+    mutationFn: (w: Webhook) =>
+      api.put(`/api/admin/alerting-webhooks/${w.id}`, { active: !w.active }),
+    onSuccess: (_res, w) => {
       toast.success(w.active ? "Webhook disabled" : "Webhook enabled");
-      fetchWebhooks();
-    } catch {
-      toast.error("Failed to update webhook");
-    }
+      void webhooksQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleToggleActive = (w: Webhook) => {
+    toggleActiveMutation.mutate(w);
   };
 
   return (
@@ -139,7 +147,7 @@ export default function WebhooksPage() {
           <p className="text-foreground/60 mt-1">Configure webhook endpoints for system alerts</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={fetchWebhooks} className="px-3 py-2 rounded-xl border border-border text-sm hover:bg-muted/50 flex items-center gap-1">
+          <button onClick={() => void webhooksQuery.refetch()} className="px-3 py-2 rounded-xl border border-border text-sm hover:bg-muted/50 flex items-center gap-1">
             <IconRefresh size={16} /> Refresh
           </button>
           <button
@@ -198,8 +206,8 @@ export default function WebhooksPage() {
             <button onClick={() => { setShowForm(false); setEditingId(null); }} className="px-4 py-2 rounded-xl border border-border text-sm hover:bg-muted/50">
               Cancel
             </button>
-            <button onClick={handleSave} disabled={saving} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90">
-              {saving ? "Saving..." : editingId ? "Update" : "Create"}
+            <button onClick={handleSave} disabled={saveMutation.isPending} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90">
+              {saveMutation.isPending ? "Saving..." : editingId ? "Update" : "Create"}
             </button>
           </div>
         </div>

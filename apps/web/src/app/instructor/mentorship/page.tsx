@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
@@ -82,8 +84,6 @@ function InstructorMentorshipContent() {
   const initialStatus = (searchParams.get("status") as TicketStatus) || "all";
   const confirmDelete = useConfirmDialog();
 
-  const [tickets, setTickets] = useState<MentorshipTicket[]>([]);
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<TicketStatus | "all">(
     initialStatus,
   );
@@ -93,35 +93,62 @@ function InstructorMentorshipContent() {
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleTime, setScheduleTime] = useState("");
   const [joinUrl, setJoinUrl] = useState("");
-  const [processing, setProcessing] = useState(false);
 
-  const fetchTickets = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await api.get<{ tickets: MentorshipTicket[] }>(
-        "/api/mentorship/tickets",
-      );
-      setTickets(data.tickets || []);
-    } catch {
-      setTickets([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const ticketsQuery = useApiQuery<{ tickets: MentorshipTicket[] }>(
+    ["instructor", "mentorship-tickets"],
+    "/api/mentorship/tickets",
+  );
+  const tickets = ticketsQuery.data?.tickets ?? [];
+  const loading = ticketsQuery.isPending;
 
-  useEffect(() => {
-    api
-      .get<{ tickets: MentorshipTicket[] }>("/api/mentorship/tickets")
-      .then((data) => {
-        setTickets(data.tickets || []);
-      })
-      .catch(() => {
-        setTickets([]);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+  const scheduleMutation = useMutation({
+    mutationFn: ({
+      ticketId,
+      payload,
+    }: {
+      ticketId: string;
+      payload: { scheduledAt: string; joinUrl?: string };
+    }) => api.patch(`/api/mentorship/tickets/${ticketId}/schedule`, payload),
+    onSuccess: () => {
+      toast.success("Mentorship session scheduled");
+      setActionTicket(null);
+      void ticketsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const completeMutation = useMutation({
+    mutationFn: ({
+      ticketId,
+      notes,
+    }: {
+      ticketId: string;
+      notes?: string;
+    }) =>
+      api.patch(`/api/mentorship/tickets/${ticketId}/complete`, {
+        notes: notes || undefined,
+      }),
+    onSuccess: () => {
+      toast.success("Mentorship session marked as completed");
+      void ticketsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: (ticketId: string) =>
+      api.patch(`/api/mentorship/tickets/${ticketId}/cancel`),
+    onSuccess: () => {
+      toast.success("Mentorship request cancelled");
+      void ticketsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const processing =
+    scheduleMutation.isPending ||
+    completeMutation.isPending ||
+    cancelMutation.isPending;
 
   const filtered =
     statusFilter === "all"
@@ -141,57 +168,27 @@ function InstructorMentorshipContent() {
     setJoinUrl(ticket.joinUrl || "");
   };
 
-  const handleSchedule = async () => {
+  const handleSchedule = () => {
     if (!actionTicket) return;
-    setProcessing(true);
-    try {
-      const scheduledAt = new Date(
-        `${scheduleDate}T${scheduleTime}`,
-      ).toISOString();
-      await api.patch(`/api/mentorship/tickets/${actionTicket.id}/schedule`, {
-        scheduledAt,
-        joinUrl: joinUrl || undefined,
-      });
-      toast.success("Mentorship session scheduled");
-      setActionTicket(null);
-      fetchTickets();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setProcessing(false);
-    }
+    const scheduledAt = new Date(
+      `${scheduleDate}T${scheduleTime}`,
+    ).toISOString();
+    scheduleMutation.mutate({
+      ticketId: actionTicket.id,
+      payload: { scheduledAt, joinUrl: joinUrl || undefined },
+    });
   };
 
-  const handleComplete = async (ticketId: string) => {
+  const handleComplete = (ticketId: string) => {
     const notes = window.prompt("Session notes (optional):");
     if (notes === null) return;
-    setProcessing(true);
-    try {
-      await api.patch(`/api/mentorship/tickets/${ticketId}/complete`, {
-        notes: notes || undefined,
-      });
-      toast.success("Mentorship session marked as completed");
-      fetchTickets();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setProcessing(false);
-    }
+    completeMutation.mutate({ ticketId, notes: notes || undefined });
   };
 
   const handleCancel = async (ticketId: string) => {
     if (!(await confirmDelete({ title: "Cancel Request", message: "Cancel this mentorship request?" })))
       return;
-    setProcessing(true);
-    try {
-      await api.patch(`/api/mentorship/tickets/${ticketId}/cancel`);
-      toast.success("Mentorship request cancelled");
-      fetchTickets();
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setProcessing(false);
-    }
+    cancelMutation.mutate(ticketId);
   };
 
   return (

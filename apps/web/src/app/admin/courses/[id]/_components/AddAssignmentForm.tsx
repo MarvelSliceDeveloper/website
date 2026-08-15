@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, getErrorMessage, withLoadingToast } from "@/lib/toast";
 import RichEditor from "@/components/editor/RichEditor";
 import { FormModal } from "@/components/admin/FormModal";
 import {
@@ -41,9 +42,49 @@ export default function AddAssignmentForm({
   const [driveUrl, setDriveUrl] = useState("");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [pdfName, setPdfName] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [loading, setLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const createAssignmentMutation = useMutation({
+    mutationFn: async () => {
+      let questionPdfUrl: string | undefined;
+
+      if (pdfSource === "upload" && pdfFile) {
+        const formData = new FormData();
+        formData.append("questionPdf", pdfFile);
+        const uploadRes = await withLoadingToast(
+          api.post<{ fileUrl: string }>(
+            "/api/assignments/upload-pdf",
+            formData,
+          ),
+          {
+            loading: "Uploading PDF...",
+            success: () => "PDF uploaded",
+          },
+        );
+        questionPdfUrl = uploadRes.fileUrl;
+      } else if (pdfSource === "drive") {
+        questionPdfUrl = driveUrl.trim();
+      }
+
+      await api.post(`/api/admin/courses/modules/${moduleId}/assignments`, {
+        title,
+        description,
+        dueDate: undefined,
+        daysFromEnrollment:
+          daysFromEnrollment !== "" ? Number(daysFromEnrollment) : undefined,
+        maxPoints,
+        questionPdfUrl: questionPdfUrl || undefined,
+        courseId,
+        batchId,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Assignment added successfully");
+      resetForm();
+      onSuccess();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
   const resetForm = () => {
     setTitle("");
@@ -81,7 +122,7 @@ export default function AddAssignmentForm({
     if (fileRef.current) fileRef.current.value = "";
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
       toast.error("Please enter an assignment title");
@@ -96,43 +137,7 @@ export default function AddAssignmentForm({
       return;
     }
 
-    setLoading(true);
-    try {
-      let questionPdfUrl: string | undefined;
-
-      if (pdfSource === "upload" && pdfFile) {
-        setUploading(true);
-        const formData = new FormData();
-        formData.append("questionPdf", pdfFile);
-        const uploadRes = await api.post<{ fileUrl: string }>(
-          "/api/assignments/upload-pdf",
-          formData,
-        );
-        questionPdfUrl = uploadRes.fileUrl;
-        setUploading(false);
-      } else if (pdfSource === "drive") {
-        questionPdfUrl = driveUrl.trim();
-      }
-
-      await api.post(`/api/admin/courses/modules/${moduleId}/assignments`, {
-        title,
-        description,
-        dueDate: undefined,
-        daysFromEnrollment: daysFromEnrollment !== "" ? Number(daysFromEnrollment) : undefined,
-        maxPoints,
-        questionPdfUrl: questionPdfUrl || undefined,
-        courseId,
-        batchId,
-      });
-      toast.success("Assignment added successfully");
-      resetForm();
-      onSuccess();
-    } catch {
-      toast.error("Failed to add assignment");
-    } finally {
-      setLoading(false);
-      setUploading(false);
-    }
+    createAssignmentMutation.mutate();
   };
 
   const footer = (
@@ -142,11 +147,13 @@ export default function AddAssignmentForm({
       </button>
       <button
         type="submit"
-        disabled={loading || uploading}
+        disabled={createAssignmentMutation.isPending}
         className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1 disabled:opacity-50"
         form="add-assignment-form"
       >
-        {uploading ? "Uploading PDF..." : loading ? "Adding..." : "Add Assignment"}
+        {createAssignmentMutation.isPending
+          ? "Adding..."
+          : "Add Assignment"}
       </button>
     </>
   );
@@ -219,6 +226,7 @@ export default function AddAssignmentForm({
             Google Drive PDF Link
           </label>
           <input
+            key="drive-link"
             type="url"
             value={driveUrl}
             onChange={(e) => setDriveUrl(e.target.value)}
@@ -232,6 +240,7 @@ export default function AddAssignmentForm({
             PDF Upload
           </label>
           <input
+            key="pdf-file"
             ref={fileRef}
             type="file"
             accept=".pdf,application/pdf"

@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { usePageTitle } from "@/lib/use-page-title";
 import { IconArrowLeft, IconPackage, IconX } from "@tabler/icons-react";
@@ -14,14 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SUGGESTED_PACKAGE_NAMES, getRelatedCourseIds } from "@/lib/suggestions";
+import type { PackagedCourse } from "@/lib/suggestions";
 import Link from "next/link";
 
-type Course = {
-  id: string;
-  title: string;
-  slug: string;
-  thumbnailUrl: string | null;
-};
+type Course = PackagedCourse;
 
 export default function CreatePackagePage() {
   usePageTitle("New Package");
@@ -30,18 +29,39 @@ export default function CreatePackagePage() {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [isInternship, setIsInternship] = useState(false);
-  const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
   const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingCourses, setLoadingCourses] = useState(true);
+  const [relatedCourseIds, setRelatedCourseIds] = useState<string[]>([]);
 
+  // DB-backed package names (fall back to static suggestions)
+  const packageNamesQuery = useApiQuery<{ packageNames: { name: string }[] }>(
+    ["admin", "content", "package-names"],
+    "/api/admin/content/package-names",
+  );
+  const dbPackageNames =
+    packageNamesQuery.data?.packageNames.map((p) => p.name) ?? [];
+
+  const coursesQuery = useApiQuery<{ courses: Course[] }>(
+    ["admin", "packages", "courses"],
+    "/api/admin/packages/courses",
+  );
+  const availableCourses = coursesQuery.data?.courses ?? [];
+  const loadingCourses = coursesQuery.isPending;
+
+  const packageNameOptions = dbPackageNames.length
+    ? dbPackageNames
+    : (SUGGESTED_PACKAGE_NAMES as readonly string[]);
+
+  // When a package name is chosen, auto-select the related courses so the
+  // admin gets a sensible starter set (they can still add/remove via the UI).
   useEffect(() => {
-    api
-      .get<{ courses: Course[] }>("/api/admin/packages/courses")
-      .then((data) => setAvailableCourses(data.courses || []))
-      .catch(() => setAvailableCourses([]))
-      .finally(() => setLoadingCourses(false));
-  }, []);
+    const ids = name ? getRelatedCourseIds(name, availableCourses) : [];
+    setRelatedCourseIds(ids);
+    setSelectedCourseIds((prev) => {
+      const union = new Set([...prev, ...ids]);
+      if (prev.length === union.size) return prev;
+      return [...union];
+    });
+  }, [name, availableCourses]);
 
   const addCourse = (courseId: string) => {
     if (!selectedCourseIds.includes(courseId)) {
@@ -53,7 +73,26 @@ export default function CreatePackagePage() {
     setSelectedCourseIds(selectedCourseIds.filter((id) => id !== courseId));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const createMutation = useMutation({
+    mutationFn: (payload: {
+      name: string;
+      description?: string;
+      price?: number;
+      courseIds: string[];
+      isInternship: boolean;
+    }) => api.post("/api/admin/packages", payload),
+    onSuccess: () => {
+      toast.success(
+        isInternship
+          ? "Internship package created successfully"
+          : "Package created successfully",
+      );
+      router.push("/admin/packages");
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       toast.error("Package name is required");
@@ -64,25 +103,14 @@ export default function CreatePackagePage() {
       return;
     }
 
-    setLoading(true);
-    try {
-      const priceNum = price ? parseInt(price, 10) * 100 : undefined;
-      await api.post("/api/admin/packages", {
-        name: name.trim(),
-        description: description.trim() || undefined,
-        price: priceNum,
-        courseIds: selectedCourseIds,
-        isInternship,
-      });
-      toast.success(
-        isInternship ? "Internship package created successfully" : "Package created successfully",
-      );
-      router.push("/admin/packages");
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
+    const priceNum = price ? parseInt(price, 10) * 100 : undefined;
+    createMutation.mutate({
+      name: name.trim(),
+      description: description.trim() || undefined,
+      price: priceNum,
+      courseIds: selectedCourseIds,
+      isInternship,
+    });
   };
 
   const selectedCourses = availableCourses.filter((c) =>
@@ -93,7 +121,7 @@ export default function CreatePackagePage() {
   );
 
   return (
-    <div className="space-y-6 motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500 max-w-3xl">
+    <div className="motion-reduce:animate-none animate-in fade-in slide-in-from-bottom-2 duration-500 w-full">
       <AdminPageHeader
         title="Add Package"
         description="Bundle courses together into a single package."
@@ -112,9 +140,9 @@ export default function CreatePackagePage() {
         }
       />
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="w-full space-y-6">
         {/* Basic Info */}
-        <div className="glass-card p-6 space-y-4">
+        <div className="w-full glass-card p-6 space-y-4">
           <h2 className="text-sm font-semibold text-foreground">
             Package Details
           </h2>
@@ -123,14 +151,30 @@ export default function CreatePackagePage() {
             <label className="mb-1.5 block text-sm font-medium text-foreground">
               Name <span className="text-danger">*</span>
             </label>
-            <input
-              type="text"
+            <Select
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Backend Development"
-              className="field w-full"
-              required
-            />
+              onValueChange={(val) => setName(val || "")}
+            >
+              <SelectTrigger className="field w-full">
+                <SelectValue placeholder="-- Select a package name --" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">
+                  <span>-- Select a package name --</span>
+                </SelectItem>
+                {packageNameOptions.filter((n) => n !== name).map((n) => (
+                  <SelectItem key={n} value={n}>
+                    {n}
+                  </SelectItem>
+                ))}
+                {name &&
+                  !(packageNameOptions as readonly string[]).includes(
+                    name,
+                  ) && (
+                    <SelectItem value={name}>{name}</SelectItem>
+                  )}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -185,7 +229,7 @@ export default function CreatePackagePage() {
 
         {/* Course Selection */}
         {!isInternship && (
-          <div className="glass-card p-6 space-y-4">
+          <div className="w-full glass-card p-6 space-y-4">
             <h2 className="text-sm font-semibold text-foreground">
               Courses <span className="text-danger">*</span>
             </h2>
@@ -203,7 +247,8 @@ export default function CreatePackagePage() {
             <>
               <div>
                 <label className="mb-1.5 block text-xs text-muted-foreground">
-                  Select courses to add to this package
+                  Courses matching this package were auto-selected below. You
+                  can add more or remove any course.
                 </label>
                 <Select onValueChange={addCourse}>
                   <SelectTrigger className="field w-full">
@@ -243,6 +288,11 @@ export default function CreatePackagePage() {
                           <span className="text-sm font-medium text-foreground">
                             {course.title}
                           </span>
+                          {relatedCourseIds.includes(course.id) && (
+                            <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                              Related
+                            </span>
+                          )}
                         </div>
                         <button
                           type="button"
@@ -275,16 +325,16 @@ export default function CreatePackagePage() {
         )}
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-2">
+        <div className="w-full flex items-center justify-end gap-2">
           <Link href="/admin/packages" className="btn-secondary text-sm">
             Cancel
           </Link>
           <button
             type="submit"
-            disabled={loading || (!isInternship && selectedCourseIds.length === 0)}
-            className="btn-primary text-sm flex items-center gap-1.5"
+            disabled={createMutation.isPending || (!isInternship && selectedCourseIds.length === 0)}
+            className="btn-primary w-full text-sm flex items-center gap-1.5"
           >
-            {loading ? (
+            {createMutation.isPending ? (
               <>
                 <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
                 Adding...

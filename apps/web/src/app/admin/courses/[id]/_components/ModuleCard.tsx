@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { toast } from "@/lib/toast";
+import { toast, getErrorMessage } from "@/lib/toast";
 import {
   IconTrash,
   IconFile,
@@ -155,8 +156,6 @@ export default function ModuleCard({
   const [resourceLessonId, setResourceLessonId] = useState<string>(
     mod.lessons[0]?.id || "",
   );
-  const [uploadingResource, setUploadingResource] = useState(false);
-  const [resourceError, setResourceError] = useState("");
   const [addContentPopoverOpen, setAddContentPopoverOpen] = useState(false);
   const confirmDelete = useConfirmDialog();
 
@@ -191,21 +190,21 @@ export default function ModuleCard({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [addContentPopoverOpen]);
 
-  const handleSave = async () => {
-    try {
-      await api.put(`/api/admin/courses/modules/${mod.id}`, {
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      api.put(`/api/admin/courses/modules/${mod.id}`, {
         title: editForm.title,
         description: editForm.description || undefined,
-      });
+      }),
+    onSuccess: () => {
       setEditing(false);
       toast.success("Module updated");
       onChanged();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to update module",
-      );
-    }
-  };
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleSave = () => saveMutation.mutate();
 
   const editFooter = (
     <>
@@ -257,22 +256,48 @@ export default function ModuleCard({
     </div>
   );
 
-  const handleDelete = async () => {
-    if (
-      !(await confirmDelete({
-        title: "Delete Module",
-        message: `Delete module "${mod.title}"? This will also delete all ${mod.lessons.length} lesson(s), ${mod.quizzes.length} quiz(zes), and ${mod.assignments.length} assignment(s) in this module. This action cannot be undone.`,
-      }))
-    )
-      return;
-    try {
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (
+        !(await confirmDelete({
+          title: "Delete Module",
+          message: `Delete module "${mod.title}"? This will also delete all ${mod.lessons.length} lesson(s), ${mod.quizzes.length} quiz(zes), and ${mod.assignments.length} assignment(s) in this module. This action cannot be undone.`,
+        }))
+      )
+        throw new Error("cancelled");
       await api.delete(`/api/admin/courses/modules/${mod.id}`);
+    },
+    onSuccess: () => {
       toast.success("Module deleted");
       onChanged();
-    } catch {
-      toast.error("Failed to delete module");
-    }
-  };
+    },
+    onError: (err: unknown) => {
+      if ((err as Error).message === "cancelled") return;
+      toast.error(getErrorMessage(err));
+    },
+  });
+
+  const handleDelete = () => deleteMutation.mutate();
+
+  const moveContentMutation = useMutation({
+    mutationFn: async (reordered: UnifiedItem[]) => {
+      const promise = api.patch(
+        `/api/admin/courses/modules/${mod.id}/content/reorder`,
+        {
+          contentOrder: reordered.map((item) => ({
+            type: item.type,
+            id: item.data.id,
+          })),
+        },
+      );
+      toast.promise(promise, {
+        loading: "Saving order...",
+        success: "Content order saved",
+        error: "Failed to reorder content",
+      });
+      return promise;
+    },
+  });
 
   const handleMoveContent = async (fromIdx: number, dir: -1 | 1) => {
     const toIdx = fromIdx + dir;
@@ -280,27 +305,31 @@ export default function ModuleCard({
     const reordered = [...unifiedItems];
     const [moved] = reordered.splice(fromIdx, 1);
     reordered.splice(toIdx, 0, moved);
-    const promise = api.patch(
-      `/api/admin/courses/modules/${mod.id}/content/reorder`,
-      {
-        contentOrder: reordered.map((item) => ({
-          type: item.type,
-          id: item.data.id,
-        })),
-      },
-    );
-    toast.promise(promise, {
-      loading: "Saving order...",
-      success: "Content order saved",
-      error: "Failed to reorder content",
-    });
     try {
-      await promise;
-      onChanged();
+      await moveContentMutation.mutateAsync(reordered);
     } catch {
-      onChanged();
+      // error toast handled inside mutationFn
     }
+    onChanged();
   };
+
+  const moveResourceMutation = useMutation({
+    mutationFn: async (groupedByLesson: Record<string, string[]>) => {
+      const promise = Promise.all(
+        Object.entries(groupedByLesson).map(([lessonId, resourceIds]) =>
+          api.patch(`/api/admin/courses/lessons/${lessonId}/resources/reorder`, {
+            resourceIds,
+          }),
+        ),
+      );
+      toast.promise(promise, {
+        loading: "Saving order...",
+        success: "Study material order saved",
+        error: "Failed to reorder resources",
+      });
+      return promise;
+    },
+  });
 
   const handleMoveResource = async (fromIdx: number, dir: -1 | 1) => {
     const toIdx = fromIdx + dir;
@@ -315,39 +344,38 @@ export default function ModuleCard({
       groupedByLesson[r.lessonId].push(r.id);
     }
 
-    const promise = Promise.all(
-      Object.entries(groupedByLesson).map(([lessonId, resourceIds]) =>
-        api.patch(
-          `/api/admin/courses/lessons/${lessonId}/resources/reorder`,
-          {
-            resourceIds,
-          },
-        ),
-      ),
-    );
-    toast.promise(promise, {
-      loading: "Saving order...",
-      success: "Study material order saved",
-      error: "Failed to reorder resources",
-    });
     try {
-      await promise;
-      onChanged();
+      await moveResourceMutation.mutateAsync(groupedByLesson);
     } catch {
-      onChanged();
+      // error toast handled inside mutationFn
     }
+    onChanged();
   };
 
-  const handleResourceUpload = async (
+  const resourceUploadMutation = useMutation({
+    mutationFn: async ({ file, lessonId }: { file: File; lessonId: string }) => {
+      const uploadData = new FormData();
+      uploadData.append("resource", file);
+      await api.post(
+        `/api/admin/courses/${courseId}/lessons/${lessonId}/resources`,
+        uploadData,
+      );
+    },
+    onSuccess: () => {
+      toast.success("Resource uploaded");
+      onChanged();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  const handleResourceUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setResourceError("");
-
     if (!ALLOWED_RESOURCE_TYPES.has(file.type)) {
-      setResourceError(
+      toast.error(
         "File type not allowed. Upload PDF, DOCX, PPTX, XLSX, or images.",
       );
       e.target.value = "";
@@ -355,49 +383,59 @@ export default function ModuleCard({
     }
 
     if (file.size > MAX_RESOURCE_SIZE) {
-      setResourceError("File too large. Maximum size is 50 MB.");
+      toast.error("File too large. Maximum size is 50 MB.");
       e.target.value = "";
       return;
     }
 
     const lessonId = resourceLessonId || mod.lessons[0]?.id;
     if (!lessonId) {
-      setResourceError("No lesson available to attach resources to.");
+      toast.error("No lesson available to attach resources to.");
       e.target.value = "";
       return;
     }
 
-    setUploadingResource(true);
-    try {
-      const uploadData = new FormData();
-      uploadData.append("resource", file);
-      await api.post(
-        `/api/admin/courses/${courseId}/lessons/${lessonId}/resources`,
-        uploadData,
-      );
-      toast.success("Resource uploaded");
-      onChanged();
-      e.target.value = "";
-    } catch (err: unknown) {
-      setResourceError(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setUploadingResource(false);
-    }
+    resourceUploadMutation.mutate(
+      { file, lessonId },
+      {
+        onSettled: () => {
+          e.target.value = "";
+        },
+      },
+    );
   };
 
-  const handleDeleteResource = async (lessonId: string, resourceId: string) => {
-    if (!(await confirmDelete({ title: "Delete Resource", message: "Delete this resource?" })))
-      return;
-    try {
+  const deleteResourceMutation = useMutation({
+    mutationFn: async ({
+      lessonId,
+      resourceId,
+    }: {
+      lessonId: string;
+      resourceId: string;
+    }) => {
+      if (
+        !(await confirmDelete({
+          title: "Delete Resource",
+          message: "Delete this resource?",
+        }))
+      )
+        throw new Error("cancelled");
       await api.delete(
         `/api/admin/courses/lessons/${lessonId}/resources/${resourceId}`,
       );
+    },
+    onSuccess: () => {
       toast.success("Resource deleted");
       onChanged();
-    } catch {
-      toast.error("Failed to delete resource");
-    }
-  };
+    },
+    onError: (err: unknown) => {
+      if ((err as Error).message === "cancelled") return;
+      toast.error(getErrorMessage(err));
+    },
+  });
+
+  const handleDeleteResource = (lessonId: string, resourceId: string) =>
+    deleteResourceMutation.mutate({ lessonId, resourceId });
 
   const itemCount =
     mod.lessons.length +

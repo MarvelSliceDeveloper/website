@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
+import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { FormModal } from "@/components/admin/FormModal";
 import {
@@ -111,37 +113,25 @@ function formatDate(dateStr: string) {
 
 export default function AdminRefundsPage() {
   usePageTitle("Refunds");
-  const [refunds, setRefunds] = useState<Refund[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [saving, setSaving] = useState(false);
 
   const [formPaymentId, setFormPaymentId] = useState("");
   const [lookupResult, setLookupResult] = useState<LookupResult | null>(null);
-  const [verifying, setVerifying] = useState(false);
   const [formAmount, setFormAmount] = useState("");
   const [formReason, setFormReason] = useState("");
 
-  async function fetchRefunds() {
-    setLoading(true);
-    try {
-      const data = await api.get<ApiResponse>("/api/admin/refunds");
-      setRefunds(data.items ?? []);
-    } catch {
-      setRefunds([]);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const refundsQuery = useApiQuery<ApiResponse>(
+    ["admin", "refunds"],
+    "/api/admin/refunds",
+  );
+  const refunds = refundsQuery.data?.items ?? [];
+  const loading = refundsQuery.isPending;
 
-  useEffect(() => {
-    fetchRefunds();
-    api
-      .get<{ user: { role: string } }>("/api/auth/me")
-      .then((res) => setIsSuperAdmin(res?.user?.role === "SUPER_ADMIN"))
-      .catch(() => {});
-  }, []);
+  const meQuery = useApiQuery<{ user: { role: string } }>(
+    ["auth", "me"],
+    "/api/auth/me",
+  );
+  const isSuperAdmin = meQuery.data?.user?.role === "SUPER_ADMIN";
 
   function resetForm() {
     setShowForm(false);
@@ -151,33 +141,49 @@ export default function AdminRefundsPage() {
     setFormReason("");
   }
 
-  async function handleVerify() {
-    const id = formPaymentId.trim();
-    if (!id) {
-      toast.error("Payment ID is required");
-      return;
-    }
-
-    setVerifying(true);
-    setLookupResult(null);
-    try {
-      const result = await api.post<LookupResult>("/api/admin/refunds/lookup", {
+  const lookupMutation = useMutation({
+    mutationFn: (id: string) =>
+      api.post<LookupResult>("/api/admin/refunds/lookup", {
         razorpayPaymentId: id,
-      });
+      }),
+    onSuccess: (result) => {
       setLookupResult(result);
       if (result.payment.status !== "PAID") {
         toast.warning(
           `This payment is ${result.payment.status}. Only PAID payments can be refunded.`,
         );
       }
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setVerifying(false);
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  function handleVerify() {
+    const id = formPaymentId.trim();
+    if (!id) {
+      toast.error("Payment ID is required");
+      return;
     }
+    setLookupResult(null);
+    lookupMutation.mutate(id);
   }
 
-  async function handleRequestRefund() {
+  const createRefundMutation = useMutation({
+    mutationFn: (payload: {
+      razorpayPaymentId: string | null;
+      amount: number;
+      reason?: string;
+    }) => api.post("/api/admin/refunds", payload),
+    onSuccess: () => {
+      toast.success(
+        "Refund requested. It will be processed after superadmin approval.",
+      );
+      resetForm();
+      void refundsQuery.refetch();
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
+
+  function handleRequestRefund() {
     if (!lookupResult) return;
     if (!formAmount || Number(formAmount) <= 0) {
       toast.error("Amount must be greater than 0");
@@ -190,22 +196,11 @@ export default function AdminRefundsPage() {
       );
       return;
     }
-
-    setSaving(true);
-    try {
-      await api.post("/api/admin/refunds", {
-        razorpayPaymentId: lookupResult.payment.razorpayPaymentId,
-        amount: amountInPaise,
-        reason: formReason.trim() || undefined,
-      });
-      toast.success("Refund requested. It will be processed after superadmin approval.");
-      resetForm();
-      fetchRefunds();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSaving(false);
-    }
+    createRefundMutation.mutate({
+      razorpayPaymentId: lookupResult.payment.razorpayPaymentId,
+      amount: amountInPaise,
+      reason: formReason.trim() || undefined,
+    });
   }
 
   const remaining = lookupResult?.payment.remaining ?? 0;
@@ -222,7 +217,7 @@ export default function AdminRefundsPage() {
         action={
           <div className="flex items-center gap-2">
             <button
-              onClick={fetchRefunds}
+              onClick={() => void refundsQuery.refetch()}
               className="btn-secondary text-xs py-2 flex items-center gap-1.5"
             >
               <IconRefresh size={14} /> Refresh
@@ -256,17 +251,17 @@ export default function AdminRefundsPage() {
             <button
               onClick={resetForm}
               className="btn-secondary text-sm"
-              disabled={saving || verifying}
+              disabled={createRefundMutation.isPending || lookupMutation.isPending}
             >
               Cancel
             </button>
             {lookupResult ? (
               <button
                 onClick={handleRequestRefund}
-                disabled={saving}
+                disabled={createRefundMutation.isPending}
                 className="btn-primary text-sm flex items-center gap-1.5"
               >
-                {saving ? (
+                {createRefundMutation.isPending ? (
                   <>
                     <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
                     Requesting...
@@ -278,10 +273,10 @@ export default function AdminRefundsPage() {
             ) : (
               <button
                 onClick={handleVerify}
-                disabled={verifying || !formPaymentId.trim()}
+                disabled={lookupMutation.isPending || !formPaymentId.trim()}
                 className="btn-primary text-sm flex items-center gap-1.5"
               >
-                {verifying ? (
+                {lookupMutation.isPending ? (
                   <>
                     <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
                     Verifying...
@@ -308,7 +303,7 @@ export default function AdminRefundsPage() {
               setFormPaymentId(e.target.value);
               setLookupResult(null);
             }}
-            disabled={verifying}
+            disabled={lookupMutation.isPending}
             className="field text-xs w-full"
           />
           <p className="text-[10px] text-muted-foreground mt-1">
@@ -317,7 +312,7 @@ export default function AdminRefundsPage() {
           </p>
         </div>
 
-        {verifying && (
+        {lookupMutation.isPending && (
           <div className="text-xs text-muted-foreground flex items-center gap-2">
             <span className="h-3.5 w-3.5 animate-spin rounded-full border border-border border-t-primary" />
             Fetching payment details...
