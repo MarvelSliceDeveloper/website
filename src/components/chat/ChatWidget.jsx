@@ -429,9 +429,26 @@ export default function ChatWidget() {
       {!open && (
         <button
           onClick={handleOpen}
-          className="fixed top-1/2 -translate-y-1/2 right-4 sm:right-6 z-50 w-10 h-10 rounded-full bg-brand-green text-white shadow-lg hover:bg-brand-green/90 transition-all hover:scale-105 active:scale-95 flex items-center justify-center cursor-pointer"
+          className="chat-widget-mild fixed top-1/2 -translate-y-1/2 right-4 sm:right-6 z-50 w-10 h-10 rounded-full bg-brand-green text-white shadow-lg hover:bg-brand-green/90 transition-all hover:scale-105 active:scale-95 flex items-center justify-center cursor-pointer"
         >
-          <FiMessageCircle className="w-5 h-5" />
+          <span className="relative w-5 h-5 shrink-0">
+            <FiMessageCircle className="w-5 h-5" />
+            <svg className="absolute inset-0 w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              {[0, 1, 2].map((i) => (
+                <circle
+                  key={i}
+                  cx={9 + i * 3}
+                  cy="12.5"
+                  r="1.4"
+                  fill="currentColor"
+                  style={{
+                    transformBox: 'fill-box',
+                    animation: `chat-dot-bounce 1.2s ease-in-out ${i * 0.2}s infinite`,
+                  }}
+                />
+              ))}
+            </svg>
+          </span>
         </button>
       )}
 

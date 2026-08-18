@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from "../../lib/supabaseClient";
 import ImageUploader from "../components/ImageUploader";
 import AddButton from "../components/AddButton";
-import { FiTrash2, FiMove, FiArrowLeft, FiLayers, FiCheck, FiClock, FiVideo, FiCode, FiAward, FiCalendar, FiRefreshCw, FiMessageCircle, FiUsers, FiStar, FiBarChart2, FiBookOpen, FiBriefcase, FiTarget, FiGlobe, FiCpu, FiDatabase, FiZap, FiShield, FiTrendingUp, FiChevronDown, FiChevronUp, FiSettings, FiFileText, FiTag, FiAlertCircle, FiSave, FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
+import { FiTrash2, FiMove, FiArrowLeft, FiLayers, FiCheck, FiClock, FiVideo, FiCode, FiAward, FiCalendar, FiRefreshCw, FiMessageCircle, FiUsers, FiStar, FiBarChart2, FiBookOpen, FiBriefcase, FiTarget, FiGlobe, FiCpu, FiDatabase, FiZap, FiShield, FiTrendingUp, FiChevronDown, FiChevronUp, FiSettings, FiFileText, FiTag, FiAlertCircle, FiSave, FiChevronLeft, FiChevronRight, FiX, FiSearch } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 import PageShell from '../components/ui/PageShell';
 import SectionSelect from '../components/ui/SectionSelect';
@@ -13,6 +13,15 @@ import SaveCancelBar from '../components/SaveCancelBar';
 import useDirty from '../hooks/useDirty';
 import { toDateTimeLocal, fromDateTimeLocal } from '../../lib/datetime';
 import DateTimePicker from '../components/ui/DateTimePicker';
+function limitDescriptionText(val) {
+  if (!val) return "";
+  let text = val.slice(0, 300);
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length > 35) {
+    text = words.slice(0, 35).join(" ");
+  }
+  return text;
+}
 
 function ListEditor({ items, onChange, fields, labelKey = "label" }) {
   const addItem = () =>
@@ -156,7 +165,6 @@ const ICON_OPTIONS = [
 
 const tabMeta = {
   basic: { label: "Basic", Icon: FiSettings },
-  curriculum: { label: "Curriculum", Icon: FiLayers },
   hero: { label: "Hero", Icon: FiVideo },
   tabs: { label: "Tabs", Icon: FiFileText },
   highlights: { label: "Highlights", Icon: FiStar },
@@ -172,7 +180,8 @@ export default function CourseEditor() {
   const { user: currentUser } = useAuth();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
-  const returnUrl = searchParams.get("return") || "/admin/courses";
+  const rawReturn = searchParams.get("return");
+  const returnUrl = rawReturn ? decodeURIComponent(rawReturn) : "/admin/courses";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -187,6 +196,7 @@ export default function CourseEditor() {
   const [allTags, setAllTags] = useState([]);
   const [courseTags, setCourseTags] = useState([]);
   const [tagsDropdownOpen, setTagsDropdownOpen] = useState(false);
+  const [tagSearch, setTagSearch] = useState("");
   const [navItems, setNavItems] = useState([]);
   const [availablePaths, setAvailablePaths] = useState([]);
   const [catL1, setCatL1] = useState("");
@@ -386,6 +396,15 @@ export default function CourseEditor() {
     if (delErr) throw new Error(delErr.message);
     if (records.length > 0) {
       const clean = records.map((r, i) => {
+        if (table === "course_tabs") {
+          return {
+            course_id: id,
+            sort_order: i,
+            label: r.label || r.title || "Tab",
+            content_type: r.content_type || "overview",
+            content: r.content || {}
+          };
+        }
         const { id: _, ...rest } = r;
         return { ...rest, course_id: id, sort_order: i };
       });
@@ -394,14 +413,54 @@ export default function CourseEditor() {
     }
   }
 
+  const isSavingRef = useRef(false);
+
   async function handleSave() {
+    if (isSavingRef.current || saving) return;
+    isSavingRef.current = true;
     setSaving(true);
     setMessage("");
+    if (!course.title?.trim()) {
+      setTab('basic');
+      setMessage('Cannot save course: Course Title is required.');
+      setSaveError('Course Title is required.');
+      isSavingRef.current = false;
+      setSaving(false);
+      return;
+    }
+    // Only enforce full required fields if status is Active or Coming Soon (bypassed in Draft mode)
+    if (course.status !== 'Draft') {
+      if ((course.highlights || []).length < 9) {
+        setTab('highlights');
+        setMessage(`Cannot save course: Minimum 9 Key Highlights are required for ${course.status} status. Currently configured: ${(course.highlights || []).length}/9.`);
+        setSaveError(`Minimum 9 Key Highlights are required (currently ${(course.highlights || []).length}/9). Use preset buttons to add 9, 12, or 15 items.`);
+        isSavingRef.current = false;
+        setSaving(false);
+        return;
+      }
+      if ((course.projects || []).length !== 3) {
+        setTab('projects');
+        setMessage(`Cannot save course: Exactly 3 Projects are required for ${course.status} status. Currently configured: ${(course.projects || []).length}/3.`);
+        setSaveError(`Exactly 3 Projects are required (currently ${(course.projects || []).length}/3). Please configure exactly 3 projects.`);
+        isSavingRef.current = false;
+        setSaving(false);
+        return;
+      }
+      if ((course.faqs || []).length > 4) {
+        setTab('faqs');
+        setMessage(`Cannot save course: Maximum 4 General FAQs allowed. Currently configured: ${(course.faqs || []).length}/4.`);
+        setSaveError(`Maximum 4 General FAQs allowed (currently ${(course.faqs || []).length}/4). Please remove extra FAQs.`);
+        isSavingRef.current = false;
+        setSaving(false);
+        return;
+      }
+    }
     if (course.status === 'Coming Soon' && !course.start_date) {
       setStartDateError(true);
       setTab('basic');
       setMessage('Please set the start date and time — it is required for "Coming Soon" courses.');
       setSaveError('Start date and time is required for "Coming Soon" courses.');
+      isSavingRef.current = false;
       setSaving(false);
       return;
     }
@@ -444,7 +503,7 @@ export default function CourseEditor() {
         status: course.status,
         start_date: course.start_date ? fromDateTimeLocal(course.start_date) : null,
         checklist_items: (course.checklist_items || []).filter(Boolean),
-        curriculum: course.curriculum,
+        curriculum: [],
       };
       if (isNew) {
         const { data, error } = await supabase
@@ -512,12 +571,13 @@ export default function CourseEditor() {
       setMessage(err.message);
       setSaveError(err.message);
     }
+    isSavingRef.current = false;
     setSaving(false);
   }
 
   return (
     <PageShell
-      backTo="/admin/courses"
+      backTo={returnUrl}
       title={isNew ? "New Course" : `Edit: ${course.title || "Untitled"}`}
     >
       {message && (
@@ -600,37 +660,50 @@ export default function CourseEditor() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-black mb-1">
-                  Subtitle
-                </label>
-                <input
-                  value={course.subtitle || ""}
-                  onChange={(e) => update("subtitle", e.target.value)}
-                  className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-black mb-1">
-                  Description
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-semibold text-black">
+                    Description
+                  </label>
+                  <span className={`text-xs font-semibold ${
+                    (course.description || "").length >= 300 || ((course.description || "").trim().split(/\s+/).filter(Boolean).length >= 35)
+                      ? "text-amber-600 font-bold"
+                      : "text-neutral-400"
+                  }`}>
+                    {(course.description || "").trim().split(/\s+/).filter(Boolean).length}/35 words | {(course.description || "").length}/300 chars
+                  </span>
+                </div>
                 <textarea
                   value={course.description || ""}
-                  onChange={(e) => update("description", e.target.value)}
+                  onChange={(e) => update("description", limitDescriptionText(e.target.value))}
+                  maxLength={300}
                   rows={4}
                   className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
+                  placeholder="Detailed course description (max 35 words / 300 characters)..."
                 />
               </div>
               <div className="border-t border-admin-200 pt-4 mt-4">
                 <h3 className="text-sm font-semibold text-neutral-700 mb-3">Hero Section</h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-semibold text-black mb-1">Feature Bullet Points (one per line)</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-sm font-semibold text-black">Feature Bullet Points (one per line) <span className="text-xs text-neutral-400 font-normal">(Max 80 chars per line)</span></label>
+                      <span className="text-xs font-semibold text-neutral-400">
+                        {((course.checklist_items || []).slice(0, 6)).length}/6 items max
+                      </span>
+                    </div>
                     <textarea
-                      value={(course.checklist_items || []).join('\n')}
-                      onChange={(e) => update("checklist_items", e.target.value.split('\n').filter(Boolean))}
+                      value={(course.checklist_items || []).map(line => (line || '').slice(0, 80)).slice(0, 6).join('\n')}
+                      onChange={(e) => {
+                        const items = e.target.value
+                          .split('\n')
+                          .map(line => line.slice(0, 80))
+                          .filter(Boolean)
+                          .slice(0, 6);
+                        update("checklist_items", items);
+                      }}
                       rows={4}
                       className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
-                      placeholder="Expert Led Live Training Sessions&#10;Angular Fundamentals to Advanced Concepts&#10;Real Time Project Development Experience"
+                      placeholder="Expert Led Live Training Sessions (max 80 chars per line)&#10;Angular Fundamentals to Advanced Concepts&#10;Real Time Project Development Experience"
                     />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -771,25 +844,11 @@ export default function CourseEditor() {
                       className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
                       placeholder="Enroll now and gain industry-ready skills with expert mentors." />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-black mb-1">Button Text</label>
-                      <input value={course.cta_text || ''} onChange={(e) => update('cta_text', e.target.value)}
-                        className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
-                        placeholder="Enroll Now" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-black mb-1">Button Link (URL)</label>
-                      <input value={course.cta_link || ''} onChange={(e) => update('cta_link', e.target.value)}
-                        className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
-                        placeholder="/courses or https://..." />
-                    </div>
-                  </div>
                   <div>
-                    <label className="block text-sm font-semibold text-black mb-1">Phone Number (tel:)</label>
-                    <input value={course.cta_phone || ''} onChange={(e) => update('cta_phone', e.target.value)}
+                    <label className="block text-sm font-semibold text-black mb-1">Button Text</label>
+                    <input value={course.cta_text || ''} onChange={(e) => update('cta_text', e.target.value)}
                       className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
-                      placeholder="+916380957390" />
+                      placeholder="Enroll Now" />
                   </div>
                   <div>
                     <ImageUploader value={course.cta_background_image || ''} onChange={(v) => update('cta_background_image', v)} label="Background Image" />
@@ -799,54 +858,7 @@ export default function CourseEditor() {
             </div>
           )}
 
-          {tab === "curriculum" && (
-            <div className="space-y-6 max-w-3xl">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-black">Curriculum / Modules</h2>
-                <AddButton onClick={() => update("curriculum", [...course.curriculum, { title: "", topics: [] }])} label="Add Module" />
-              </div>
-              {course.curriculum.length === 0 && (
-                <div className="text-center py-12 text-neutral-400 bg-white rounded-xl border-2 border-dashed border-admin-200">
-                  <FiLayers className="w-10 h-10 mx-auto mb-2 opacity-40" />
-                  <p className="text-sm">No modules yet. Click "Add Module" to build your curriculum.</p>
-                </div>
-              )}
-              <div className="space-y-3">
-                {course.curriculum.map((mod, i) => (
-                  <div key={i} className="border border-admin-200 rounded-lg p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Module {i + 1}</span>
-                      <button onClick={() => update("curriculum", course.curriculum.filter((_, j) => j !== i))}
-                        className="p-1 text-red-500 hover:text-red-600 rounded hover:bg-destructive-50 transition-colors">
-                        <FiTrash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <input value={mod.title || ""}
-                      onChange={(e) => { const n = [...course.curriculum]; n[i] = { ...n[i], title: e.target.value }; update("curriculum", n); }}
-                      className="w-full px-3 py-2.5 border border-admin-300 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-admin-500 focus:border-admin-500 mb-3"
-                      placeholder="Module title (e.g. Introduction to HTML)" />
-                    <div className="space-y-2">
-                      {(mod.topics || []).map((topic, j) => (
-                        <div key={j} className="flex items-center gap-2">
-                          <span className="text-xs text-neutral-400 w-5 text-right shrink-0">{j + 1}.</span>
-                          <input value={topic}
-                            onChange={(e) => { const n = [...course.curriculum]; const topics = [...(n[i].topics || [])]; topics[j] = e.target.value; n[i] = { ...n[i], topics }; update("curriculum", n); }}
-                            className="flex-1 px-3 py-1.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500"
-                            placeholder="Topic" />
-                          <button onClick={() => { const n = [...course.curriculum]; n[i] = { ...n[i], topics: n[i].topics.filter((_, k) => k !== j) }; update("curriculum", n); }}
-                            className="p-1 text-destructive-300 hover:text-destructive-500 transition-colors">
-                            <FiTrash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                      <AddButton onClick={() => { const n = [...course.curriculum]; n[i] = { ...n[i], topics: [...(n[i].topics || []), ""] }; update("curriculum", n); }}
-                        size="xs" label="Add Topic" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+
 
           {tab === "hero" && (
             <div className="space-y-6">
@@ -886,322 +898,544 @@ export default function CourseEditor() {
 
           {tab === "tabs" && !isNew && (
             <div className="space-y-6">
-              <h3 className="font-semibold text-black mb-3">Course Tabs <span className="text-destructive-500">*</span></h3>
-              {course.tabs.map((t, i) => (
-                <div
-                  key={t.id || i}
-                  className="border border-admin-200 rounded-lg p-4 space-y-3"
-                >
-                  <div className="flex gap-3">
-                    <div className="flex-1">
-                      <label className="block text-sm font-semibold text-black mb-1">
-                        Label <span className="text-destructive-500">*</span>
-                      </label>
-                      <input
-                        value={t.label}
-                        onChange={(e) => {
-                          const n = [...course.tabs];
-                          n[i] = { ...n[i], label: e.target.value };
-                          update("tabs", n);
-                        }}
-                        required
-                        className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
-                      />
+              {(() => {
+                const contentTabs = course.tabs.filter(t => t.content_type === "overview" || t.content_type === "syllabus");
+                const qaCounts = contentTabs.map(t => (t.content?.qa || []).length);
+                const maxQA = qaCounts.length > 0 ? Math.max(...qaCounts) : 0;
+                const minQA = qaCounts.length > 0 ? Math.min(...qaCounts) : 0;
+                const qaDiff = maxQA - minQA;
+                const isUnbalanced = contentTabs.length > 1 && maxQA > 0 && minQA === 0;
+
+                return (
+                  <div className={`rounded-xl p-4 mb-4 border transition-all ${
+                    isUnbalanced
+                      ? 'bg-amber-50/90 border-amber-300 text-amber-900 shadow-xs'
+                      : 'bg-blue-50/70 border-blue-200/80 text-blue-900'
+                  }`}>
+                    <div className="flex items-center justify-between gap-2 mb-1.5 font-bold text-xs uppercase tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <FiAlertCircle className={`w-4 h-4 shrink-0 ${isUnbalanced ? 'text-amber-600' : 'text-blue-600'}`} />
+                        <span>{isUnbalanced ? '⚠️ Tab Content Unbalanced' : 'Tab Content Balance Guidance'}</span>
+                      </div>
+                      {contentTabs.length > 1 && (
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${isUnbalanced ? 'bg-amber-200 text-amber-900' : 'bg-blue-200/70 text-blue-900'}`}>
+                          Tally Diff: {qaDiff} items
+                        </span>
+                      )}
                     </div>
-                    <div className="flex-1">
-                      <label className="block text-sm font-semibold text-black mb-1">
-                        Content Type
-                      </label>
-                      <select
-                        value={t.content_type}
-                        onChange={(e) => {
-                          const n = [...course.tabs];
-                          n[i] = { ...n[i], content_type: e.target.value };
-                          update("tabs", n);
-                        }}
-                        className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
-                      >
-                        <option value="overview">Overview</option>
-                        <option value="syllabus">Syllabus</option>
-                        <option value="apply_now">Apply Now</option>
-                      </select>
-                    </div>
-                    <div className="flex items-end">
-                      <button
-                        onClick={async () => {
-                          await supabase
-                            .from("course_tabs")
-                            .delete()
-                            .eq("id", t.id);
-                          update(
-                            "tabs",
-                            course.tabs.filter((_, j) => j !== i),
-                          );
-                        }}
-                        className="text-destructive-500 hover:text-destructive-700 text-sm px-3 py-2"
-                      >
-                        Remove
-                      </button>
+                    {isUnbalanced ? (
+                      <p className="text-xs leading-relaxed text-amber-800 font-medium">
+                        <strong>Attention:</strong> One or more tabs have {maxQA} Q&A items while another tab has 0 Q&A items. To keep the course page looking balanced and even, please add Q&A items to all tabs or keep item counts matched!
+                      </p>
+                    ) : (
+                      <p className="text-xs leading-relaxed text-blue-800">
+                        To ensure tabs look even on the course page, aim for consistent content density across overview & syllabus tabs:
+                      </p>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2.5 text-xs font-medium">
+                      <div className="bg-white/80 border border-slate-200/80 rounded-lg px-3 py-2 flex items-center gap-1.5">
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${isUnbalanced ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                        <span><strong>Q&A Items:</strong> 2 – 4 per tab</span>
+                      </div>
+                      <div className="bg-white/80 border border-slate-200/80 rounded-lg px-3 py-2 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                        <span><strong>Paragraph Text:</strong> 30 – 80 words</span>
+                      </div>
+                      <div className="bg-white/80 border border-slate-200/80 rounded-lg px-3 py-2 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                        <span><strong>First Accordion:</strong> Opens automatically</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-6">
-                    {["heading","paragraph","subheading","text"].map(field => {
-                      const alignKey = field + "Align";
-                      const align = t.content?.[alignKey] || "center";
-                      return (
-                        <div key={field}>
+                );
+              })()}
+
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-black">Course Tabs <span className="text-destructive-500">*</span></h3>
+                <AddButton
+                  onClick={() => {
+                    const n = [...course.tabs, { label: "New Tab", content_type: "overview", content: { headingAlign: "center", paragraphAlign: "left" } }];
+                    update("tabs", n);
+                  }}
+                  label="Add Tab"
+                />
+              </div>
+              <div className="space-y-4">
+                {course.tabs.map((t, i) => (
+                  <div key={t.id || i} className="border border-admin-200 rounded-xl p-5 bg-white shadow-xs space-y-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-admin-100">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-bold text-neutral-500">Tab #{i + 1}</span>
+                        {(() => {
+                          const contentTabs = course.tabs.filter(tab => tab.content_type === "overview" || tab.content_type === "syllabus");
+                          const qaCounts = contentTabs.map(tab => (tab.content?.qa || []).length);
+                          const maxQA = qaCounts.length > 0 ? Math.max(...qaCounts) : 0;
+                          const qaCount = (t.content?.qa || []).length;
+                          const textWords = ((t.content?.paragraph || '') + ' ' + (t.content?.heading || '')).trim().split(/\s+/).filter(Boolean).length;
+                          
+                          let badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-200";
+                          let badgeLabel = `✓ Balanced Content (${qaCount} Q&As, ~${textWords} words)`;
+                          
+                          if (t.content_type === "apply_now") {
+                            badgeColor = "bg-purple-50 text-purple-700 border-purple-200";
+                            badgeLabel = "Form Action Tab";
+                          } else if (qaCount === 0 && maxQA > 0) {
+                            badgeColor = "bg-amber-100 text-amber-900 border-amber-300 font-bold";
+                            badgeLabel = `⚠ Unbalanced: 0 Q&As (vs ${maxQA} in other tabs)`;
+                          } else if (qaCount === 0 && textWords < 15) {
+                            badgeColor = "bg-amber-50 text-amber-700 border-amber-200";
+                            badgeLabel = `⚠ Light Content (~${textWords} words)`;
+                          } else if (qaCount > 5) {
+                            badgeColor = "bg-blue-50 text-blue-700 border-blue-200";
+                            badgeLabel = `ℹ Heavy Content (${qaCount} Q&As)`;
+                          }
+                          return (
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${badgeColor}`}>
+                              {badgeLabel}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 pb-3 border-b border-admin-100">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-bold text-neutral-500">Tab #{i + 1}</span>
+                        {(() => {
+                          const contentTabs = course.tabs.filter(tab => tab.content_type === "overview" || tab.content_type === "syllabus");
+                          const qaCounts = contentTabs.map(tab => (tab.content?.qa || []).length);
+                          const maxQA = qaCounts.length > 0 ? Math.max(...qaCounts) : 0;
+                          const qaCount = (t.content?.qa || []).length;
+                          const textWords = ((t.content?.paragraph || '') + ' ' + (t.content?.heading || '')).trim().split(/\s+/).filter(Boolean).length;
+                          
+                          let badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-200";
+                          let badgeLabel = `✓ Balanced Content (${qaCount} Q&As, ~${textWords} words)`;
+                          
+                          if (t.content_type === "apply_now") {
+                            badgeColor = "bg-purple-50 text-purple-700 border-purple-200";
+                            badgeLabel = "Form Action Tab";
+                          } else if (qaCount === 0 && maxQA > 0) {
+                            badgeColor = "bg-amber-100 text-amber-900 border-amber-300 font-bold";
+                            badgeLabel = `⚠ Unbalanced: 0 Q&As (vs ${maxQA} in other tabs)`;
+                          } else if (qaCount === 0 && textWords < 15) {
+                            badgeColor = "bg-amber-50 text-amber-700 border-amber-200";
+                            badgeLabel = `⚠ Light Content (~${textWords} words)`;
+                          } else if (qaCount > 5) {
+                            badgeColor = "bg-blue-50 text-blue-700 border-blue-200";
+                            badgeLabel = `ℹ Heavy Content (${qaCount} Q&As)`;
+                          }
+                          return (
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${badgeColor}`}>
+                              {badgeLabel}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (t.id) {
+                            await supabase.from("course_tabs").delete().eq("id", t.id);
+                          }
+                          update("tabs", course.tabs.filter((_, j) => j !== i));
+                        }}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 transition-colors shrink-0 cursor-pointer"
+                      >
+                        <FiTrash2 className="w-3.5 h-3.5" /> Remove Tab
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1 w-full pt-1">
+                      <div>
+                        <div className="flex items-center justify-between h-6 mb-1">
+                          <label className="text-xs font-semibold text-neutral-600">Tab Label <span className="text-destructive-500">*</span></label>
+                        </div>
+                        <input
+                          value={t.label || ""}
+                          onChange={(e) => {
+                            const n = [...course.tabs];
+                            n[i] = { ...n[i], content_type: "overview", label: e.target.value };
+                            update("tabs", n);
+                          }}
+                          required
+                          className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20"
+                          placeholder="e.g. Overview"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between h-6 mb-1">
+                          <label className="text-xs font-semibold text-neutral-600">Section Heading <span className="text-destructive-500">*</span></label>
+                          <div className="flex items-center gap-1 bg-neutral-100 p-0.5 rounded-lg">
+                            <span className="text-[10px] text-neutral-400 font-medium px-1">Align:</span>
+                            {['left', 'center', 'right'].map((align) => (
+                              <button
+                                key={align}
+                                type="button"
+                                onClick={() => {
+                                  const n = [...course.tabs];
+                                  n[i] = { ...n[i], content_type: "overview", content: { ...n[i].content, headingAlign: align } };
+                                  update("tabs", n);
+                                }}
+                                className={`px-2 py-0.5 rounded text-xs font-semibold capitalize transition-all ${
+                                  (t.content?.headingAlign || 'left') === align
+                                    ? 'bg-admin-600 text-white shadow-xs'
+                                    : 'text-neutral-600 hover:text-neutral-900'
+                                }`}
+                              >
+                                {align}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <input
+                          value={t.content?.heading || ""}
+                          onChange={(e) => {
+                            const n = [...course.tabs];
+                            n[i] = { ...n[i], content_type: "overview", content: { ...n[i].content, heading: e.target.value } };
+                            update("tabs", n);
+                          }}
+                          required
+                          className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20"
+                          placeholder="Heading text (left-aligned by default)"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 pt-1">
+
+                        {/* Paragraph (Description) */}
+                        <div>
                           <div className="flex items-center justify-between mb-1">
-                            <label className="text-xs font-medium text-neutral-500 capitalize">{field}{field === "heading" || field === "paragraph" ? <span className="text-destructive-500"> *</span> : null}</label>
-                            <div className="flex items-center gap-1">
-                              {["left","center","right"].map(a => (
+                            <label className="text-xs font-semibold text-neutral-700">Paragraph / Description <span className="text-destructive-500">*</span></label>
+                            <div className="flex items-center gap-1 bg-neutral-100 p-0.5 rounded-lg">
+                              <span className="text-[10px] text-neutral-400 font-medium px-1">Align:</span>
+                              {['left', 'center', 'right'].map((align) => (
                                 <button
-                                  key={a}
+                                  key={align}
                                   type="button"
                                   onClick={() => {
                                     const n = [...course.tabs];
-                                    n[i] = { ...n[i], content: { ...n[i].content, [alignKey]: a } };
+                                    n[i] = { ...n[i], content: { ...n[i].content, paragraphAlign: align } };
                                     update("tabs", n);
                                   }}
-                                  className={`w-7 h-7 flex items-center justify-center rounded text-xs font-bold border transition-colors ${
-                                    align === a
-                                      ? "bg-admin-100 border-admin-500 text-admin-700"
-                                      : "border-admin-200 text-admin-400 hover:border-admin-300"
+                                  className={`px-2 py-0.5 rounded text-xs font-semibold capitalize transition-all ${
+                                    (t.content?.paragraphAlign || 'left') === align
+                                      ? 'bg-admin-600 text-white shadow-xs'
+                                      : 'text-neutral-600 hover:text-neutral-900'
                                   }`}
-                                  title={`Align ${a}`}
                                 >
-                                  {a === "left" ? "≡" : a === "center" ? "≣" : "≡"}
+                                  {align}
                                 </button>
                               ))}
                             </div>
                           </div>
-                          {field === "text" || field === "paragraph" ? (
-                            <textarea
-                              value={t.content?.[field] || ""}
-                              onChange={(e) => {
-                                const n = [...course.tabs];
-                                n[i] = { ...n[i], content: { ...n[i].content, [field]: e.target.value } };
-                                update("tabs", n);
-                              }}
-                              rows={field === "text" ? 6 : 2}
-                              required={field === "paragraph"}
-                              className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
-                              placeholder={`${field.charAt(0).toUpperCase() + field.slice(1)} content`}
-                            />
-                          ) : (
-                            <input
-                              value={t.content?.[field] || ""}
-                              onChange={(e) => {
-                                const n = [...course.tabs];
-                                n[i] = { ...n[i], content: { ...n[i].content, [field]: e.target.value } };
-                                update("tabs", n);
-                              }}
-                              required={field === "heading"}
-                              className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
-                              placeholder={`${field.charAt(0).toUpperCase() + field.slice(1)} content`}
-                            />
-                          )}
+                          <textarea
+                            value={t.content?.paragraph || ""}
+                            onChange={(e) => {
+                              const n = [...course.tabs];
+                              n[i] = { ...n[i], content: { ...n[i].content, paragraph: e.target.value } };
+                              update("tabs", n);
+                            }}
+                            rows={3}
+                            required
+                            className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20"
+                            placeholder="Description text (left-aligned by default)"
+                          />
                         </div>
-                      );
-                    })}
-                    
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="text-xs font-medium text-neutral-500">Q&A Items</label>
-                        <AddButton
-                          onClick={() => {
-                            const n = [...course.tabs];
-                            const qa = [...(n[i].content?.qa || []), { question: "", answers: [""] }];
-                            n[i] = { ...n[i], content: { ...n[i].content, qa } };
-                            update("tabs", n);
-                          }}
-                          size="xs"
-                          label="Add Question"
-                        />
-                      </div>
-                      <div className="space-y-3">
-                        {(t.content?.qa || []).map((qa, qi) => (
-                          <div key={qi} className="border border-admin-200 rounded-lg p-3">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-xs font-semibold text-neutral-500">Question {qi + 1}</span>
-                              <button
-                                onClick={() => {
-                                  const n = [...course.tabs];
-                                  const qa = n[i].content.qa.filter((_, j) => j !== qi);
-                                  n[i] = { ...n[i], content: { ...n[i].content, qa } };
-                                  update("tabs", n);
-                                }}
-                                className="text-xs text-destructive-500 hover:underline"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                            <input
-                              value={qa.question}
-                              onChange={(e) => {
-                                const n = [...course.tabs];
-                                const qa = [...n[i].content.qa];
-                                qa[qi] = { ...qa[qi], question: e.target.value };
-                                n[i] = { ...n[i], content: { ...n[i].content, qa } };
-                                update("tabs", n);
-                              }}
-                              className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all mb-2"
-                              placeholder="Question"
-                            />
-                            <div>
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="text-xs text-neutral-500">Answers (one per line)</span>
-                                <AddButton
+
+                        {/* Subheading */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="text-xs font-semibold text-neutral-700">Sub Heading</label>
+                            <div className="flex items-center gap-1 bg-neutral-100 p-0.5 rounded-lg">
+                              <span className="text-[10px] text-neutral-400 font-medium px-1">Align:</span>
+                              {['left', 'center', 'right'].map((align) => (
+                                <button
+                                  key={align}
+                                  type="button"
                                   onClick={() => {
                                     const n = [...course.tabs];
-                                    const qa = [...n[i].content.qa];
-                                    qa[qi] = { ...qa[qi], answers: [...qa[qi].answers, ""] };
-                                    n[i] = { ...n[i], content: { ...n[i].content, qa } };
+                                    n[i] = { ...n[i], content: { ...n[i].content, subheadingAlign: align } };
                                     update("tabs", n);
                                   }}
-                                  size="xs"
-                                  label="Add Bullet"
-                                />
-                              </div>
-                              {qa.answers.map((ans, ai) => (
-                                <div key={ai} className="flex items-center gap-2 mb-1">
-                                  <span className="text-xs text-neutral-400">•</span>
-                                  <input
-                                    value={ans}
-                                    onChange={(e) => {
-                                      const n = [...course.tabs];
-                                      const qa = [...n[i].content.qa];
-                                      const answers = [...qa[qi].answers];
-                                      answers[ai] = e.target.value;
-                                      qa[qi] = { ...qa[qi], answers };
-                                      n[i] = { ...n[i], content: { ...n[i].content, qa } };
-                                      update("tabs", n);
-                                    }}
-                                    className="flex-1 px-2 py-1 border border-admin-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-admin-500"
-                                    placeholder="Answer bullet"
-                                  />
-                                  <button
-                                    onClick={() => {
-                                      const n = [...course.tabs];
-                                      const qa = [...n[i].content.qa];
-                                      qa[qi] = { ...qa[qi], answers: qa[qi].answers.filter((_, j) => j !== ai) };
-                                      n[i] = { ...n[i], content: { ...n[i].content, qa } };
-                                      update("tabs", n);
-                                    }}
-                                    className="text-xs text-red-500 hover:text-red-600"
-                                    >
-                                    ×
-                                  </button>
-                                </div>
+                                  className={`px-2 py-0.5 rounded text-xs font-semibold capitalize transition-all ${
+                                    (t.content?.subheadingAlign || 'left') === align
+                                      ? 'bg-admin-600 text-white shadow-xs'
+                                      : 'text-neutral-600 hover:text-neutral-900'
+                                  }`}
+                                >
+                                  {align}
+                                </button>
                               ))}
                             </div>
                           </div>
-                        ))}
+                          <input
+                            value={t.content?.subheading || ""}
+                            onChange={(e) => {
+                              const n = [...course.tabs];
+                              n[i] = { ...n[i], content: { ...n[i].content, subheading: e.target.value } };
+                              update("tabs", n);
+                            }}
+                            className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20"
+                            placeholder="Sub heading text"
+                          />
+                        </div>
+
+                        {/* Features / Q&A Items */}
+                        <div className="pt-2">
+                          <div className="flex items-center justify-between mb-3">
+                            <label className="text-xs font-bold text-neutral-800 uppercase tracking-wider">Features / Q&A Items</label>
+                            <AddButton
+                              onClick={() => {
+                                const n = [...course.tabs];
+                                const qa = [...(n[i].content?.qa || []), { question: "", answers: [""] }];
+                                n[i] = { ...n[i], content: { ...n[i].content, qa } };
+                                update("tabs", n);
+                              }}
+                              size="xs"
+                              label="Add Question / Feature"
+                            />
+                          </div>
+                          <div className="space-y-4">
+                            {(t.content?.qa || []).map((qa, qi) => (
+                              <div key={qi} className="bg-neutral-50/80 border border-admin-200 rounded-xl p-4 space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-bold text-admin-600 uppercase tracking-wider">Feature #{qi + 1}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const n = [...course.tabs];
+                                      const qa = n[i].content.qa.filter((_, j) => j !== qi);
+                                      n[i] = { ...n[i], content: { ...n[i].content, qa } };
+                                      update("tabs", n);
+                                    }}
+                                    className="text-xs text-red-500 hover:text-red-700 font-medium hover:underline"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-neutral-600 mb-1">Title / Question</label>
+                                  <input
+                                    value={qa.question || ""}
+                                    onChange={(e) => {
+                                      const n = [...course.tabs];
+                                      const qa = [...n[i].content.qa];
+                                      qa[qi] = { ...qa[qi], question: e.target.value };
+                                      n[i] = { ...n[i], content: { ...n[i].content, qa } };
+                                      update("tabs", n);
+                                    }}
+                                    required
+                                    className="w-full px-3 py-2 bg-white border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20"
+                                    placeholder="Feature title or question"
+                                  />
+                                </div>
+                                <div>
+                                  <div className="flex items-center justify-between mb-1.5">
+                                    <label className="block text-xs font-medium text-neutral-600">Feature Bullets / Answers (one per line)</label>
+                                    <span className="text-[10px] text-neutral-400 font-medium">1 bullet point per line</span>
+                                  </div>
+                                  <textarea
+                                    value={(qa.answers || []).join("\n")}
+                                    onChange={(e) => {
+                                      const n = [...course.tabs];
+                                      const qaArr = [...n[i].content.qa];
+                                      qaArr[qi] = { ...qaArr[qi], answers: e.target.value.split("\n") };
+                                      n[i] = { ...n[i], content: { ...n[i].content, qa: qaArr } };
+                                      update("tabs", n);
+                                    }}
+                                    rows={3}
+                                    className="w-full px-3 py-2 bg-white border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 font-sans"
+                                    placeholder="Enter bullet point 1&#10;Enter bullet point 2&#10;Enter bullet point 3"
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                    </div>
                   </div>
-                </div>
-              ))}
-              <AddButton
-                onClick={async () => {
-                  const { data } = await supabase
-                    .from("course_tabs")
-                    .insert({
-                      course_id: id,
-                      label: "New Tab",
-                      content_type: "overview",
-                      content: {},
-                      sort_order: course.tabs.length,
-                    })
-                    .select()
-                    .single();
-                  if (data) update("tabs", [...course.tabs, data]);
-                }}
-                label="Add Tab"
-              />
+                ))}
+              </div>
             </div>
           )}
 
           {tab === "highlights" && !isNew && (
-            <div className="max-w-2xl">
-              <h3 className="font-semibold text-black mb-4">
-                Key Highlights
-              </h3>
-              <div className="space-y-6">
+            <div className="max-w-3xl space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-admin-200">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-black text-lg">Key Highlights</h3>
+                  {course.highlights.length < 9 ? (
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                      ⚠ Minimum 9 Required ({course.highlights.length}/9)
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      ✓ Grid Ready ({course.highlights.length} items = {Math.ceil(course.highlights.length / 3)} rows)
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-neutral-500 font-medium">Presets:</span>
+                  {[9, 12, 15].map((count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => {
+                        const current = [...course.highlights];
+                        if (current.length < count) {
+                          const added = Array.from({ length: count - current.length }, () => ({ icon: "star", label: "" }));
+                          update("highlights", [...current, ...added]);
+                        } else {
+                          update("highlights", current.slice(0, count));
+                        }
+                      }}
+                      className={`px-2.5 py-1 rounded text-xs font-bold transition-colors cursor-pointer ${
+                        course.highlights.length === count
+                          ? 'bg-admin-600 text-white shadow-xs'
+                          : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-700'
+                      }`}
+                    >
+                      {count} Items
+                    </button>
+                  ))}
+                  <AddButton
+                    onClick={() =>
+                      update("highlights", [
+                        ...course.highlights,
+                        { icon: "star", label: "" },
+                      ])
+                    }
+                    label="Add"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-neutral-500">
+                Key Highlights display as a 3-column grid on the course page. Require at least <strong>9 items</strong> (recommended <strong>9, 12, or 15 items</strong> for balanced rows).
+              </p>
+              <div className="space-y-4">
                 {course.highlights.map((h, i) => (
                   <div
                     key={i}
-                    className="border border-admin-200 rounded-lg p-4 space-y-3 relative"
+                    className="border border-admin-200 rounded-lg p-4 space-y-3 relative bg-white"
                   >
-                    <button
-                      onClick={() =>
-                        update(
-                          "highlights",
-                          course.highlights.filter((_, j) => j !== i),
-                        )
-                      }
-                      className="absolute top-3 right-3 text-red-500 hover:text-red-600"
-                    >
-                      <FiTrash2 className="w-4 h-4" />
-                    </button>
-                    <IconPicker
-                      value={h.icon || ""}
-                      onChange={(val) => {
-                        const n = [...course.highlights];
-                        n[i] = { ...n[i], icon: val };
-                        update("highlights", n);
-                      }}
-                    />
-                    <div>
-                      <label className="block text-sm font-semibold text-black mb-1">
-                        Label
-                      </label>
-                      <input
-                        value={h.label || ""}
-                        onChange={(e) => {
-                          const n = [...course.highlights];
-                          n[i] = { ...n[i], label: e.target.value };
-                          update("highlights", n);
-                        }}
-                        className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
-                      />
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-neutral-500">Highlight #{i + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          update(
+                            "highlights",
+                            course.highlights.filter((_, j) => j !== i),
+                          )
+                        }
+                        className="text-xs text-red-500 hover:text-red-600 font-medium hover:underline flex items-center gap-1"
+                      >
+                        <FiTrash2 className="w-3.5 h-3.5" /> Remove
+                      </button>
+                    </div>
+                    <div className="grid sm:grid-cols-3 gap-3 items-center">
+                      <div>
+                        <label className="block text-xs font-semibold text-neutral-600 mb-1">Icon</label>
+                        <IconPicker
+                          value={h.icon || "star"}
+                          onChange={(val) => {
+                            const n = [...course.highlights];
+                            n[i] = { ...n[i], icon: val };
+                            update("highlights", n);
+                          }}
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-neutral-600 mb-1">
+                          Label
+                        </label>
+                        <input
+                          value={h.label || ""}
+                          onChange={(e) => {
+                            const n = [...course.highlights];
+                            n[i] = { ...n[i], label: e.target.value };
+                            update("highlights", n);
+                          }}
+                          placeholder={`Highlight #${i + 1} label...`}
+                          className="w-full px-3 py-2 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
-                <AddButton
-                  onClick={() =>
-                    update("highlights", [
-                      ...course.highlights,
-                      { icon: "", label: "" },
-                    ])
-                  }
-                  label="Add Highlight"
-                />
               </div>
             </div>
           )}
 
           {tab === "projects" && !isNew && (
-            <div className="max-w-2xl">
-              <h3 className="font-semibold text-black mb-4">Projects</h3>
-              <div className="space-y-6">
-                {course.projects.map((p, i) => (
-                  <div
-                    key={i}
-                    className="border border-admin-200 rounded-lg p-4 space-y-3 relative"
-                  >
+            <div className="max-w-3xl space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-admin-200">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-black text-lg">Projects</h3>
+                  {course.projects.length !== 3 ? (
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                      ⚠ Exactly 3 Required ({course.projects.length}/3)
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      ✓ Exactly 3 Projects Configured
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {course.projects.length !== 3 && (
                     <button
+                      type="button"
                       onClick={() =>
                         update(
                           "projects",
-                          course.projects.filter((_, j) => j !== i),
+                          Array.from({ length: 3 }, (_, idx) => course.projects[idx] || { title: "", description: "" })
                         )
                       }
-                      className="absolute top-3 right-3 text-red-500 hover:text-red-600"
+                      className="px-2.5 py-1 bg-admin-600 hover:bg-admin-700 text-white rounded text-xs font-bold transition-colors cursor-pointer"
                     >
-                      <FiTrash2 className="w-4 h-4" />
+                      Reset to 3 Projects
                     </button>
+                  )}
+                  {course.projects.length < 3 && (
+                    <AddButton
+                      onClick={() =>
+                        update("projects", [
+                          ...course.projects,
+                          { title: "", description: "" },
+                        ])
+                      }
+                      label="Add Project"
+                    />
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-neutral-500">
+                Each course requires <strong>exactly 3 projects</strong> to display in a balanced 3-column row on the course page.
+              </p>
+              <div className="space-y-4">
+                {course.projects.map((p, i) => (
+                  <div
+                    key={i}
+                    className="border border-admin-200 rounded-lg p-4 space-y-3 relative bg-white"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-neutral-500">Project #{i + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          update(
+                            "projects",
+                            course.projects.filter((_, j) => j !== i),
+                          )
+                        }
+                        className="text-xs text-red-500 hover:text-red-600 font-medium hover:underline flex items-center gap-1"
+                      >
+                        <FiTrash2 className="w-3.5 h-3.5" /> Remove
+                      </button>
+                    </div>
                     <div>
-                      <label className="block text-sm font-semibold text-black mb-1">
+                      <label className="block text-xs font-semibold text-neutral-600 mb-1">
                         Title
                       </label>
                       <input
@@ -1211,11 +1445,12 @@ export default function CourseEditor() {
                           n[i] = { ...n[i], title: e.target.value };
                           update("projects", n);
                         }}
+                        placeholder={`Project #${i + 1} title...`}
                         className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-black mb-1">
+                      <label className="block text-xs font-semibold text-neutral-600 mb-1">
                         Description
                       </label>
                       <textarea
@@ -1225,28 +1460,33 @@ export default function CourseEditor() {
                           n[i] = { ...n[i], description: e.target.value };
                           update("projects", n);
                         }}
+                        placeholder={`Project #${i + 1} description...`}
                         rows={3}
                         className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
                       />
                     </div>
                   </div>
                 ))}
-                <AddButton
-                  onClick={() =>
-                    update("projects", [
-                      ...course.projects,
-                      { title: "", description: "" },
-                    ])
-                  }
-                  label="Add Project"
-                />
               </div>
             </div>
           )}
 
           {tab === "certification" && (
-            <div className="max-w-2xl space-y-4">
-              <h3 className="font-semibold text-black mb-4">Certification <span className="text-destructive-500">*</span></h3>
+            <div className="max-w-3xl space-y-6">
+              <div className="flex items-center justify-between pb-3 border-b border-admin-200">
+                <h3 className="font-semibold text-black text-lg">Certification <span className="text-destructive-500">*</span></h3>
+                {course.certifications.length < 2 && (
+                  <AddButton
+                    onClick={() =>
+                      update("certifications", [
+                        ...course.certifications,
+                        { description: "", certificate_image_url: "", recognized_companies: [] },
+                      ])
+                    }
+                    label="Add Certification"
+                  />
+                )}
+              </div>
               {(course.certifications.length === 0
                 ? [
                     {
@@ -1257,10 +1497,27 @@ export default function CourseEditor() {
                   ]
                 : course.certifications
               ).map((cert, i) => (
-                <div key={i} className="border border-admin-200 rounded-lg p-4 space-y-4">
+                <div key={i} className="bg-white border border-admin-200 rounded-xl p-5 shadow-xs space-y-4 relative">
+                  <div className="flex items-center justify-between pb-2 border-b border-admin-100">
+                    <span className="text-xs font-bold text-neutral-500">Certification #{i + 1}</span>
+                    {course.certifications.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          update(
+                            "certifications",
+                            course.certifications.filter((_, j) => j !== i)
+                          )
+                        }
+                        className="text-xs text-red-500 hover:text-red-600 font-medium hover:underline flex items-center gap-1"
+                      >
+                        <FiTrash2 className="w-3.5 h-3.5" /> Remove
+                      </button>
+                    )}
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                     <div>
-                      <label className="block text-sm font-semibold text-black mb-1">
+                      <label className="block text-xs font-semibold text-neutral-600 mb-1">
                         Description <span className="text-destructive-500">*</span>
                       </label>
                       <textarea
@@ -1276,11 +1533,12 @@ export default function CourseEditor() {
                         }}
                         rows={4}
                         required
-                        className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
+                        className="w-full px-3 py-2.5 bg-white border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
+                        placeholder="Describe the certification value..."
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-black mb-1">
+                      <label className="block text-xs font-semibold text-neutral-600 mb-1">
                         Recognized Companies (one per line) <span className="text-destructive-500">*</span>
                       </label>
                       <textarea
@@ -1293,19 +1551,19 @@ export default function CourseEditor() {
                           ];
                           n[i] = {
                             ...n[i],
-                            recognized_companies: e.target.value
-                              .split("\n"),
+                            recognized_companies: e.target.value.split("\n"),
                           };
                           update("certifications", n);
                         }}
                         rows={4}
                         required
-                        className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
+                        className="w-full px-3 py-2.5 bg-white border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
+                        placeholder="Google&#10;Microsoft&#10;Amazon"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-black mb-1">
+                    <label className="block text-xs font-semibold text-neutral-600 mb-1">
                       Certificate Image <span className="text-destructive-500">*</span>
                     </label>
                     <ImageUploader
@@ -1328,27 +1586,52 @@ export default function CourseEditor() {
           )}
 
           {tab === "faqs" && !isNew && (
-            <div className="max-w-2xl">
-              <h3 className="font-semibold text-black mb-4">General FAQs</h3>
-              <div className="space-y-6">
+            <div className="max-w-3xl space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-admin-200">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-black text-lg">General FAQs</h3>
+                  {course.faqs.length > 4 ? (
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                      ⚠ Maximum 4 Allowed ({course.faqs.length}/4)
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      ✓ Max 4 Limit ({course.faqs.length}/4)
+                    </span>
+                  )}
+                </div>
+                {course.faqs.length < 4 && (
+                  <AddButton
+                    onClick={() =>
+                      update("faqs", [...course.faqs, { question: "", answer: "" }])
+                    }
+                    label="Add FAQ"
+                  />
+                )}
+              </div>
+              <div className="space-y-4">
                 {course.faqs.map((faq, i) => (
                   <div
                     key={i}
-                    className="border border-admin-200 rounded-lg p-4 space-y-3 relative"
+                    className="bg-white border border-admin-200 rounded-xl p-5 shadow-xs space-y-4 relative"
                   >
-                    <button
-                      onClick={() =>
-                        update(
-                          "faqs",
-                          course.faqs.filter((_, j) => j !== i),
-                        )
-                      }
-                      className="absolute top-3 right-3 text-red-500 hover:text-red-600"
-                    >
-                      <FiTrash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center justify-between pb-2 border-b border-admin-100">
+                      <span className="text-xs font-bold text-neutral-500">FAQ #{i + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          update(
+                            "faqs",
+                            course.faqs.filter((_, j) => j !== i)
+                          )
+                        }
+                        className="text-xs text-red-500 hover:text-red-600 font-medium hover:underline flex items-center gap-1"
+                      >
+                        <FiTrash2 className="w-3.5 h-3.5" /> Remove
+                      </button>
+                    </div>
                     <div>
-                      <label className="block text-sm font-semibold text-black mb-1">
+                      <label className="block text-xs font-semibold text-neutral-600 mb-1">
                         Question
                       </label>
                       <input
@@ -1358,11 +1641,12 @@ export default function CourseEditor() {
                           n[i] = { ...n[i], question: e.target.value };
                           update("faqs", n);
                         }}
+                        placeholder={`General FAQ #${i + 1} question...`}
                         className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-black mb-1">
+                      <label className="block text-xs font-semibold text-neutral-600 mb-1">
                         Answer
                       </label>
                       <textarea
@@ -1373,17 +1657,12 @@ export default function CourseEditor() {
                           update("faqs", n);
                         }}
                         rows={3}
+                        placeholder={`General FAQ #${i + 1} answer...`}
                         className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all"
                       />
                     </div>
                   </div>
                 ))}
-                <AddButton
-                  onClick={() =>
-                    update("faqs", [...course.faqs, { question: "", answer: "" }])
-                  }
-                  label="Add FAQ"
-                />
               </div>
             </div>
           )}
@@ -1423,25 +1702,56 @@ export default function CourseEditor() {
                   </div>
                   {tagsDropdownOpen && (
                     <>
-                      <div className="fixed inset-0 z-10" onClick={() => setTagsDropdownOpen(false)} />
-                      <div className="absolute top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto admin-scrollbar bg-white border border-admin-200 rounded-lg shadow-lg z-20 py-1">
-                        {allTags.map(tag => (
-                          <label key={tag.id} className="flex items-center gap-2 px-3 py-2 hover:bg-neutral-50 cursor-pointer">
+                      <div className="fixed inset-0 z-10" onClick={() => { setTagsDropdownOpen(false); setTagSearch(""); }} />
+                      <div className="absolute top-full left-0 right-0 mt-1 max-h-60 overflow-hidden bg-white border border-admin-200 rounded-lg shadow-lg z-20 flex flex-col">
+                        <div className="p-2 border-b border-admin-100 bg-neutral-50 shrink-0">
+                          <div className="relative flex items-center">
+                            <FiSearch className="absolute left-2.5 w-3.5 h-3.5 text-neutral-400" />
                             <input
-                              type="checkbox"
-                              checked={courseTags.includes(tag.id)}
-                              onChange={() => {
-                                handleCourseTagsChange(
-                                  courseTags.includes(tag.id)
-                                    ? courseTags.filter(t => t !== tag.id)
-                                    : [...courseTags, tag.id]
-                                );
-                              }}
-                              className="rounded border-admin-300 text-admin-600 focus:ring-admin-500"
+                              type="text"
+                              value={tagSearch}
+                              onChange={(e) => setTagSearch(e.target.value)}
+                              placeholder="Search tags..."
+                              className="w-full pl-8 pr-7 py-1.5 bg-white border border-admin-200 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-admin-500/20"
+                              onClick={(e) => e.stopPropagation()}
+                              autoFocus
                             />
-                            <span className="text-sm text-neutral-700">{tag.name}</span>
-                          </label>
-                        ))}
+                            {tagSearch && (
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setTagSearch(""); }}
+                                className="absolute right-2 text-neutral-400 hover:text-neutral-600"
+                              >
+                                <FiX className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="max-h-44 overflow-y-auto admin-scrollbar py-1">
+                          {allTags.filter(t => (t.name || '').toLowerCase().includes(tagSearch.toLowerCase())).length === 0 ? (
+                            <div className="px-3 py-2.5 text-xs text-neutral-400 italic text-center">No matching tags found</div>
+                          ) : (
+                            allTags
+                              .filter(t => (t.name || '').toLowerCase().includes(tagSearch.toLowerCase()))
+                              .map(tag => (
+                                <label key={tag.id} className="flex items-center gap-2 px-3 py-2 hover:bg-neutral-50 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={courseTags.includes(tag.id)}
+                                    onChange={() => {
+                                      handleCourseTagsChange(
+                                        courseTags.includes(tag.id)
+                                          ? courseTags.filter(t => t !== tag.id)
+                                          : [...courseTags, tag.id]
+                                      );
+                                    }}
+                                    className="rounded border-admin-300 text-admin-600 focus:ring-admin-500"
+                                  />
+                                  <span className="text-sm text-neutral-700">{tag.name}</span>
+                                </label>
+                              ))
+                          )}
+                        </div>
                       </div>
                     </>
                   )}
@@ -1453,7 +1763,7 @@ export default function CourseEditor() {
         </div>
       </div>
       </div>
-      <SaveCancelBar saving={saving} saved={saved} saveError={saveError} onSave={handleSave} onDiscard={() => window.location.reload()} />
+      <SaveCancelBar saving={saving} saved={saved} saveError={saveError} onSave={handleSave} onDiscard={() => navigate(returnUrl)} />
     </PageShell>
   );
 }

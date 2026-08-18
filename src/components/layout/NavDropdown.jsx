@@ -388,7 +388,7 @@ function MobileNavItem({
     return (
       <Link
         to={item.path || "#"}
-        className={`block pl-[17px] pr-5 py-3 text-sm transition-all duration-200 border-l-[3px] ${
+        className={`block pl-[17px] pr-5 py-3 text-sm font-medium transition-all duration-200 border-l-[3px] ${
           isActive
             ? "border-brand-blue text-brand-blue font-semibold"
             : "border-transparent text-gray-600 hover:border-brand-blue/50 hover:text-brand-blue"
@@ -408,17 +408,17 @@ function MobileNavItem({
       <button
         onClick={onToggle}
         aria-expanded={isOpen}
-        className={`w-full flex items-center justify-between pl-[17px] pr-5 py-3 text-base transition-all duration-200 cursor-pointer border-l-[3px] ${
+        className={`w-full flex items-center justify-between pl-[17px] pr-5 py-3 text-sm font-medium transition-all duration-200 cursor-pointer border-l-[3px] ${
           depth === 0
-            ? hasActiveChild
-              ? "border-brand-blue font-medium text-brand-blue"
-              : "border-transparent font-medium text-gray-900 hover:border-brand-blue/50 hover:text-brand-blue"
-            : "border-transparent text-gray-700 hover:border-brand-blue/50 hover:text-brand-blue"
+            ? isOpen || hasActiveChild
+              ? "border-brand-blue text-brand-blue font-semibold"
+              : "border-transparent text-gray-600 hover:border-brand-blue/50 hover:text-brand-blue"
+            : "border-transparent text-gray-600 hover:border-brand-blue/50 hover:text-brand-blue"
         }`}
       >
         <span>{item.label}</span>
         <FiChevronDown
-          className={`w-5 h-5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
       <AnimatePresence initial={false}>

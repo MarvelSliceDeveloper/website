@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { full_name, email, phone, message } = req.body;
+  const { full_name, email, phone, message, course_title, button_clicked } = req.body;
 
   if (!full_name || !email) {
     return res.status(400).json({ error: 'Name and email are required' });
@@ -30,26 +30,58 @@ export default async function handler(req, res) {
     timeZone: 'Asia/Kolkata',
   });
 
+  const isCourseEnquiry = Boolean(course_title || button_clicked);
+
+  const adminSubject = isCourseEnquiry
+    ? `New Course Enquiry for ${course_title || 'Course'} from ${full_name}`
+    : `New Contact Request from ${full_name}`;
+
+  const adminHeaderTitle = isCourseEnquiry ? 'New Course Enquiry' : 'New Contact Request';
+
+  const userSubject = isCourseEnquiry
+    ? `Enquiry Confirmation: ${course_title || 'Course'} — Marvel Slice`
+    : 'Thank You for Contacting Us — Marvel Slice';
+
   const adminHtml = `
     <div style="font-family:'Inter',Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
       <div style="background:linear-gradient(135deg,#0B2D6B,#1E56C7);padding:24px 32px;">
-        <h1 style="color:#fff;margin:0;font-size:22px;">New Contact Request</h1>
+        <h1 style="color:#fff;margin:0;font-size:22px;">${adminHeaderTitle}</h1>
         <p style="color:rgba(255,255,255,0.8);margin:6px 0 0;font-size:14px;">Submitted on ${submittedAt}</p>
       </div>
       <div style="padding:24px 32px;">
         <table style="width:100%;border-collapse:collapse;">
           ${row('Full Name', full_name)}
           ${row('Email', email)}
-          ${row('Phone', phone || '\u2014')}
-          ${row('Message', (message || '\u2014').replace(/\n/g, '<br>'))}
+          ${row('Phone', phone || '—')}
+          ${course_title ? row('Course Title', course_title) : ''}
+          ${button_clicked ? row('Button Action', button_clicked) : ''}
+          ${message ? row('Message', message.replace(/\n/g, '<br>')) : ''}
         </table>
       </div>
       <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">
-        Marvel Slice — Contact Page
+        Marvel Slice
       </div>
     </div>`;
 
-  const autoReplyHtml = `
+  const userAutoReplyHtml = isCourseEnquiry ? `
+    <div style="font-family:'Inter',Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+      <div style="background:linear-gradient(135deg,#0B2D6B,#1E56C7);padding:24px 32px;">
+        <h1 style="color:#fff;margin:0;font-size:22px;">We Received Your Enquiry!</h1>
+      </div>
+      <div style="padding:24px 32px;">
+        <p style="font-size:15px;color:#1B2333;line-height:1.7;">Hi ${full_name},</p>
+        <p style="font-size:15px;color:#1B2333;line-height:1.7;">Thank you for your interest in <strong>${course_title || 'our courses'}</strong> at <strong>Marvel Slice</strong>.</p>
+        <p style="font-size:15px;color:#1B2333;line-height:1.7;">We have successfully received your submission via <strong>"${button_clicked || 'Apply Now'}"</strong>.</p>
+        <div style="margin:24px 0;padding:16px 20px;background:#F5F6F8;border-radius:8px;font-size:13px;color:#5F6B7A;">
+          <p style="margin:0 0 4px;font-weight:600;color:#1B2333;">What happens next?</p>
+          <p style="margin:0;">Our senior course advisor will review your profile and contact you on <strong>${phone || email}</strong> shortly with complete curriculum details and fee structures.</p>
+        </div>
+        <p style="font-size:15px;color:#1B2333;line-height:1.7;">Best regards,<br/>The Marvel Slice Learning Team</p>
+      </div>
+      <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">
+        Marvel Slice
+      </div>
+    </div>` : `
     <div style="font-family:'Inter',Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
       <div style="background:linear-gradient(135deg,#0B2D6B,#1E56C7);padding:24px 32px;">
         <h1 style="color:#fff;margin:0;font-size:22px;">Thank You for Contacting Us</h1>
@@ -58,9 +90,6 @@ export default async function handler(req, res) {
         <p style="font-size:15px;color:#1B2333;line-height:1.7;">Hi ${full_name},</p>
         <p style="font-size:15px;color:#1B2333;line-height:1.7;">Thank you for reaching out to <strong>Marvel Slice</strong>. We have received your message.</p>
         <p style="font-size:15px;color:#1B2333;line-height:1.7;">Our team will review your inquiry and get back to you within 24 hours.</p>
-        <div style="margin:24px 0;padding:16px 20px;background:#F5F6F8;border-radius:8px;font-size:13px;color:#5F6B7A;">
-          <p style="margin:0 0 4px;">If you have any urgent questions, feel free to call us directly.</p>
-        </div>
         <p style="font-size:15px;color:#1B2333;line-height:1.7;">Best regards,<br/>The Marvel Slice Team</p>
       </div>
       <div style="padding:16px 32px;background:#F5F6F8;font-size:12px;color:#5F6B7A;text-align:center;border-top:1px solid #e5e7eb;">
@@ -72,17 +101,17 @@ export default async function handler(req, res) {
     await transporter.sendMail({
       from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`,
       to: adminEmail,
-      subject: `New Contact Request from ${full_name}`,
+      subject: adminSubject,
       html: adminHtml,
     });
     await transporter.sendMail({
       from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`,
       to: email,
-      subject: 'Thank You for Contacting Us — Marvel Slice',
-      html: autoReplyHtml,
+      subject: userSubject,
+      html: userAutoReplyHtml,
     });
   } catch (emailError) {
-    console.error('Contact email send failed:', emailError);
+    console.error('Email send failed:', emailError);
   }
 
   return res.status(200).json({ success: true });

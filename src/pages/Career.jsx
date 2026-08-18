@@ -158,12 +158,12 @@ function BookDemoForm() {
               <input type="checkbox" checked={demoAgree} onChange={(e) => {
                 setDemoAgree(e.target.checked);
                 if (demoMsg?.type === 'error') setDemoMsg(null);
-              }} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600/20" />
+              }} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-brand-orange focus:ring-brand-orange/20" />
               <span className="text-xs text-slate-600 leading-relaxed">
                 I agree to the{' '}
-                <a href="/terms" className="text-blue-600 underline hover:text-blue-700">Terms of Use</a>
+                <a href="/terms" className="text-brand-orange underline hover:text-brand-orange/80">Terms of Use</a>
                 {' '}and{' '}
-                <a href="/privacy" className="text-blue-600 underline hover:text-blue-700">Privacy Policy</a>.
+                <a href="/privacy" className="text-brand-orange underline hover:text-brand-orange/80">Privacy Policy</a>.
               </span>
             </label>
             <button
@@ -442,7 +442,7 @@ export default function Career() {
             <h3 className="text-lg font-bold text-slate-800 mb-1">Application Submitted!</h3>
             <p className="text-sm text-slate-500 mb-6">{status.message}</p>
             <button onClick={() => { setShowForm(false); setSelectedJob(null); }}
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-all text-sm cursor-pointer">
+              className="inline-flex items-center gap-2 bg-brand-orange hover:bg-brand-orange/90 text-white font-semibold px-6 py-2.5 rounded-xl transition-all text-sm cursor-pointer">
               Close
             </button>
           </motion.div>
@@ -475,7 +475,7 @@ export default function Career() {
             {fieldDefs.full_name.enabled !== false && (
               <Field label={fieldDefs.full_name.label} required={fieldDefs.full_name.required !== false} error={errors.full_name}>
                 <input name="full_name" value={form.full_name} onChange={handleChange}
-                  className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all outline-none placeholder:text-slate-400 ${
+                  className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/15 transition-all outline-none placeholder:text-slate-400 ${
                     errors.full_name ? 'border-red-300' : 'border-slate-200'
                   }`} placeholder={fieldDefs.full_name.placeholder} />
               </Field>
@@ -483,7 +483,7 @@ export default function Career() {
             {fieldDefs.email.enabled !== false && (
               <Field label={fieldDefs.email.label} required={fieldDefs.email.required !== false} error={errors.email}>
                 <input name="email" type="email" value={form.email} onChange={handleChange}
-                  className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all outline-none placeholder:text-slate-400 ${
+                  className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/15 transition-all outline-none placeholder:text-slate-400 ${
                     errors.email ? 'border-red-300' : 'border-slate-200'
                   }`} placeholder={fieldDefs.email.placeholder} />
               </Field>
@@ -492,7 +492,7 @@ export default function Career() {
             {fieldDefs.phone.enabled !== false && (
               <Field label={fieldDefs.phone.label} required={fieldDefs.phone.required !== false} error={errors.phone}>
                 <input name="phone" type="tel" value={form.phone} onChange={handleChange}
-                  className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all outline-none placeholder:text-slate-400 ${
+                  className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/15 transition-all outline-none placeholder:text-slate-400 ${
                     errors.phone ? 'border-red-300' : 'border-slate-200'
                   }`} placeholder={fieldDefs.phone.placeholder} />
               </Field>
@@ -514,7 +514,7 @@ export default function Career() {
                     <>
                       <select name="category" value={form.category} onChange={handleChange}
                         style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}
-                        className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all outline-none ${
+                        className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/15 transition-all outline-none ${
                           errors.category ? 'border-red-300' : 'border-slate-200'
                         } ${!form.category ? 'text-slate-400' : ''}`}>
                         <option value="" disabled>{fieldDefs.category.placeholder}</option>
@@ -531,7 +531,7 @@ export default function Career() {
               <div className="sm:col-span-2">
                 <Field label={fieldDefs.description.label} required={fieldDefs.description.required !== false} error={errors.description}>
                   <textarea name="description" value={form.description} onChange={handleChange} rows={3}
-                    className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all outline-none placeholder:text-slate-400 resize-y ${
+                    className={`w-full px-4 py-2.5 rounded-xl border bg-slate-50/50 text-slate-800 text-sm focus:bg-white focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/15 transition-all outline-none placeholder:text-slate-400 resize-y ${
                       errors.description ? 'border-red-300' : 'border-slate-200'
                     }`} placeholder={fieldDefs.description.placeholder} />
                 </Field>
@@ -544,16 +544,14 @@ export default function Career() {
                   <label className={`relative flex flex-col items-center justify-center p-5 border-2 border-dashed rounded-2xl cursor-pointer transition-all group ${
                     errors.file
                       ? 'border-red-300 bg-red-50/50'
-                      : isInternship
-                        ? 'border-blue-200 hover:border-blue-500 bg-blue-50/30 hover:bg-blue-50/70'
-                        : 'border-brand-orange/40 hover:border-brand-orange bg-orange-50/40 hover:bg-orange-50/80'
+                      : 'border-brand-orange/40 hover:border-brand-orange bg-orange-50/40 hover:bg-orange-50/80'
                   }`}>
-                    <div className={`w-10 h-10 ${isInternship ? 'bg-blue-100 text-blue-600' : 'bg-brand-orange/10 text-brand-orange'} rounded-full flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform`}>
+                    <div className="w-10 h-10 bg-brand-orange/10 text-brand-orange rounded-full flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
                       <FiUpload className="w-5 h-5" />
                     </div>
                     <div className="text-center">
                       {file ? (
-                        <span className={`text-sm font-semibold ${isInternship ? 'text-blue-600' : 'text-brand-orange'}`}>{file.name}</span>
+                        <span className="text-sm font-semibold text-brand-orange">{file.name}</span>
                       ) : (
                         <>
                           <p className="text-sm font-semibold text-slate-700">Click to upload or drag and drop</p>
@@ -582,12 +580,12 @@ export default function Career() {
                 <input type="checkbox" checked={agreeTerms} onChange={(e) => {
                   setAgreeTerms(e.target.checked);
                   if (errors.agree) setErrors(prev => ({ ...prev, agree: '' }));
-                }} className={`mt-0.5 w-4 h-4 rounded border-slate-300 ${isInternship ? 'text-blue-600 focus:ring-blue-600/20' : 'text-brand-orange focus:ring-brand-orange/20'}`} />
+                }} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-brand-orange focus:ring-brand-orange/20" />
                 <span className="text-sm text-slate-600 leading-relaxed">
                   I agree to the{' '}
-                  <a href="/terms" className={`underline hover:opacity-80 ${isInternship ? 'text-blue-600' : 'text-brand-orange'}`}>Terms of Use</a>
+                  <a href="/terms" className="underline hover:opacity-80 text-brand-orange">Terms of Use</a>
                   {' '}and{' '}
-                  <a href="/privacy" className={`underline hover:opacity-80 ${isInternship ? 'text-blue-600' : 'text-brand-orange'}`}>Privacy Policy</a>.
+                  <a href="/privacy" className="underline hover:opacity-80 text-brand-orange">Privacy Policy</a>.
                 </span>
               </label>
               {errors.agree && <p className="text-xs text-red-500 mt-1">{errors.agree}</p>}
@@ -595,7 +593,7 @@ export default function Career() {
 
             <div className="sm:col-span-2 pt-1">
               <button type="submit" disabled={submitting || uploading}
-                className={`w-fit mx-auto ${isInternship ? 'bg-blue-600 hover:bg-blue-700' : 'bg-brand-orange hover:bg-brand-orange/90'} active:scale-[0.99] text-white font-semibold py-2 px-5 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer`}>
+                className="w-fit mx-auto bg-brand-orange hover:bg-brand-orange/90 active:scale-[0.99] text-white font-semibold py-2 px-5 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                 {uploading ? (
                   <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Uploading...</>
                 ) : submitting ? (
@@ -631,7 +629,7 @@ export default function Career() {
     <div>
 
       {pageContent?.hero_image ? (
-        <div className="relative w-full max-w-[1900px] mx-auto h-[400px] overflow-hidden">
+        <div className="relative w-full max-w-[1900px] mx-auto h-auto sm:h-[400px] lg:h-[400px] overflow-hidden">
           <img src={pageContent.hero_image} alt="" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
           <div className="absolute inset-0 flex items-end">
@@ -668,7 +666,7 @@ export default function Career() {
 
       <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 text-center">
         {fc.headline && (
-          <h2 className="text-4xl font-extrabold text-blue-600">
+          <h2 className="text-4xl font-extrabold text-brand-orange">
             {fc.headline}
           </h2>
         )}
@@ -688,11 +686,11 @@ export default function Career() {
 
         <div className="mt-10">
         {fc.categoriesSubtitle && (
-          <h3 className="text-2xl font-bold text-blue-600 mt-1">
+          <h3 className="text-2xl font-bold text-brand-orange mt-1">
             {fc.categoriesSubtitle}
           </h3>
         )}
-        <div className="w-12 h-1 bg-blue-600 mx-auto rounded-full mt-2" />
+        <div className="w-12 h-1 bg-brand-orange mx-auto rounded-full mt-2" />
 
         {roleCategories?.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 max-w-6xl mx-auto text-left">
@@ -721,7 +719,7 @@ export default function Career() {
 
       <CTABannerSection section={ctaSection} />
 
-      <div ref={jobsRef} className="bg-gradient-to-b from-blue-50/40 via-slate-50 to-slate-50">
+      <div ref={jobsRef} className="bg-gradient-to-b from-orange-50/40 via-slate-50 to-slate-50">
         <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
           <div className={`mb-10 text-${section2HeadingAlign}`}>
             {pageContent?.section2_heading && (
@@ -734,7 +732,7 @@ export default function Career() {
                 {pageContent.section2_subheading}
               </p>
             )}
-            <div className="w-12 h-1 bg-blue-500 mx-auto rounded-full mt-3" />
+            <div className="w-12 h-1 bg-brand-orange mx-auto rounded-full mt-3" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8 items-start">
@@ -761,24 +759,27 @@ export default function Career() {
                           className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all p-5 flex flex-col"
                         >
                           <div className="flex items-center gap-3">
+                            <div className="bg-brand-orange/10 text-brand-orange p-2.5 rounded-xl shrink-0">
+                              <FiBriefcase className="w-5 h-5" />
+                            </div>
                             <h3 className="flex-1 font-bold text-slate-800 text-lg leading-tight">{item.title}</h3>
-                            <span className="text-xs font-semibold text-blue-500 bg-blue-50 px-2.5 py-1 rounded-full shrink-0">Internship</span>
+                            <span className="text-xs font-semibold text-brand-orange bg-orange-50 px-2.5 py-1 rounded-full shrink-0">Internship</span>
                           </div>
                           {(item.duration || item.stipend || item.experience) && (
-                            <div className="flex items-center gap-4 flex-wrap border-y border-slate-100 py-2.5 px-3 my-3 rounded-lg bg-blue-50/40 text-sm text-slate-600">
+                            <div className="flex items-center gap-4 flex-wrap border-y border-slate-100 py-2.5 px-3 my-3 rounded-lg bg-orange-50/40 text-sm text-slate-600">
                               {item.duration && (
                                 <span className="flex items-center gap-1.5">
-                                  <FiClock className="w-3.5 h-3.5 text-blue-500" />{item.duration}
+                                  <FiClock className="w-3.5 h-3.5 text-brand-orange" />{item.duration}
                                 </span>
                               )}
                               {item.stipend && (
                                 <span className="flex items-center gap-1.5">
-                                  <FiDollarSign className="w-3.5 h-3.5 text-blue-500" />{item.stipend}
+                                  <FiDollarSign className="w-3.5 h-3.5 text-brand-orange" />{item.stipend}
                                 </span>
                               )}
                               {item.experience && (
                                 <span className="flex items-center gap-1.5">
-                                  <FiBriefcase className="w-3.5 h-3.5 text-blue-500" />{item.experience}
+                                  <FiBriefcase className="w-3.5 h-3.5 text-brand-orange" />{item.experience}
                                 </span>
                               )}
                             </div>
@@ -803,7 +804,7 @@ export default function Career() {
                                   setShowForm(true);
                                 }
                               }}
-                              className="inline-flex items-center gap-1.5 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-5 py-2.5 rounded-full text-sm transition-all cursor-pointer">
+                              className="inline-flex items-center gap-1.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-semibold px-5 py-2.5 rounded-full text-sm transition-all cursor-pointer">
                               Apply Now <FiArrowRight className="w-3.5 h-3.5" />
                             </button>
                           </div>
@@ -820,7 +821,7 @@ export default function Career() {
                         className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all p-5 flex flex-col"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="bg-brand-orange/10 text-brand-orange p-2.5 rounded-xl shrink-0">
+                          <div className="bg-brand-blue/10 text-brand-blue p-2.5 rounded-xl shrink-0">
                             <FiBriefcase className="w-5 h-5" />
                           </div>
                           <h3 className="flex-1 font-bold text-slate-800 text-lg leading-tight">{item.title}</h3>
@@ -860,7 +861,7 @@ export default function Career() {
                                 setShowForm(true);
                               }
                             }}
-                            className="inline-flex items-center gap-1.5 bg-brand-orange hover:bg-brand-orange/90 text-white font-semibold px-5 py-2.5 rounded-full text-sm transition-all cursor-pointer">
+                            className="inline-flex items-center gap-1.5 bg-brand-blue hover:bg-brand-blue/90 text-white font-semibold px-5 py-2.5 rounded-full text-sm transition-all cursor-pointer">
                             Apply Now <FiArrowRight className="w-3.5 h-3.5" />
                           </button>
                         </div>
@@ -873,7 +874,7 @@ export default function Career() {
                 <div className="flex justify-end mt-4">
                   <Link
                     to="/career/jobs"
-                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-orange hover:text-brand-orange/80 transition-colors cursor-pointer"
                   >
                     View More <FiArrowRight className="w-3.5 h-3.5" />
                   </Link>
@@ -903,12 +904,12 @@ export default function Career() {
             className="bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto border border-slate-100"
             onClick={e => e.stopPropagation()}
           >
-            <div className={`${isInternship ? 'bg-gradient-to-r from-blue-600 to-indigo-600' : 'bg-brand-orange'} px-6 py-4 text-white relative`}>
+            <div className="bg-brand-orange px-6 py-4 text-white relative">
               <button onClick={() => { setShowForm(false); setSelectedJob(null); }} className="absolute top-3 right-3 bg-white shadow-md text-slate-600 hover:text-slate-800 p-1.5 rounded-full transition-all cursor-pointer border border-slate-200 z-10" aria-label="Close">
                 <FiX className="w-4 h-4" />
               </button>
               {selectedJob && (
-                <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-blue-50 mt-1 border border-white/10">
+                <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md px-3 py-0.5 rounded-full text-xs font-medium text-white/90 mt-1 border border-white/10">
                   Applying for: <span className="font-semibold">{selectedJob.title}</span>
                 </span>
               )}

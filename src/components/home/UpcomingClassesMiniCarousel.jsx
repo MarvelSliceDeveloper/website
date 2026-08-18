@@ -143,8 +143,7 @@ export default function UpcomingClassesMiniCarousel({ title = 'Upcoming Classes'
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="font-bold text-dark-navy text-lg">{title}</h3>
+      <div className="flex items-center justify-end gap-3">
         {canSlide && (
           <div className="flex items-center gap-2 shrink-0">
             <button

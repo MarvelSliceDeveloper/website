@@ -330,13 +330,16 @@ function SubEditor({ section, onChange }) {
           <hr className="border-admin-200" />
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Stat Items</span>
-              <AddButton onClick={() => set({ items: [...(section.items || []), { number: '', label: '' }] })} label="Add Stat" />
+              <AddButton onClick={() => set({ items: [...(section.items || []), { number: '', label: '', icon: '' }] })} label="Add Stat" />
           </div>
           <ReorderableList
             items={section.items || []}
             onChange={(v) => set({ items: v })}
             renderItem={(item, i, onItemChange) => (
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-3 gap-4">
+                <div>
+                  <IconPicker value={item.icon} onChange={(v) => onItemChange({ ...item, icon: v })} />
+                </div>
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Number</label>
                   <input type="text" value={item.number} onChange={(e) => onItemChange({ ...item, number: e.target.value })} placeholder="Number (e.g. 500+)" className="w-full px-3 py-2.5 bg-white border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all" />
@@ -588,10 +591,10 @@ const queryClient = useQueryClient();
   function validate() {
     const errors = [];
     sections.forEach((sec, i) => {
-      if (sec.section_type === 'feature_grid') {
+      if (sec.section_type === 'feature_grid' || sec.section_type === 'text_stats') {
         (sec.items || []).forEach((item, j) => {
           if (item.icon && !LUCIDE_ICON_NAMES.includes(item.icon)) {
-            errors.push(`Section ${i + 1} (Feature Grid), Item ${j + 1}: "${item.icon}" is not a valid Lucide icon name`);
+            errors.push(`Section ${i + 1} (${SECTION_TYPE_LABELS[sec.section_type] || sec.section_type}), Item ${j + 1}: "${item.icon}" is not a valid Lucide icon name`);
           }
         });
       }
@@ -706,10 +709,10 @@ const queryClient = useQueryClient();
                   onDragStart={() => handleDragStart(i)}
                   onDragOver={(e) => handleDragOver(e, i)}
                   onDragEnd={handleDragEnd}
-                  className={`flex items-stretch border border-admin-200 rounded-lg overflow-hidden transition-shadow bg-white ${dragIdx === i ? 'shadow-lg ring-2 ring-admin-500' : ''} ${sec.hidden ? 'opacity-50' : ''}`}
+                  className={`flex items-stretch border border-admin-200 rounded-lg transition-shadow bg-white ${dragIdx === i ? 'shadow-lg ring-2 ring-admin-500' : ''} ${sec.hidden ? 'opacity-50' : ''} ${expandedIdx === i ? '' : 'overflow-hidden'}`}
                 >
                   <div
-                    className="flex flex-col items-center justify-center px-3 cursor-grab active:cursor-grabbing border-r border-dashed border-admin-200 bg-neutral-50 hover:bg-admin-50 group"
+                    className="flex flex-col items-center justify-center px-3 cursor-grab active:cursor-grabbing border-r border-dashed border-admin-200 bg-neutral-50 hover:bg-admin-50 group rounded-l-lg"
                     onClick={(e) => e.stopPropagation()}
                     onMouseDown={(e) => e.stopPropagation()}
                     title="Drag to reorder"
@@ -738,7 +741,7 @@ const queryClient = useQueryClient();
                     </div>
                   </div>
                   {expandedIdx === i && (
-                    <div className="p-4 border-t border-admin-200">
+                    <div className="p-4 border-t border-admin-200 rounded-b-lg">
                       <SubEditor section={sec} onChange={(updated) => updateSection(i, updated)} />
                     </div>
                   )}

@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { FiBookOpen, FiUsers, FiBriefcase, FiStar, FiClock, FiAward, FiCheckCircle, FiLoader, FiX } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import Reveal, { Stagger, StaggerItem } from '../ui/Reveal';
-import UpcomingClassesMiniCarousel from './UpcomingClassesMiniCarousel';
 import { supabase } from '../../lib/supabaseClient';
 import { trackFormSubmit } from '../../lib/analytics';
 
@@ -19,16 +18,16 @@ function getStatIcon(label) {
 
 function CourseButtons() {
   return (
-    <div className="flex flex-wrap gap-2 pt-1">
+    <div className="flex flex-col sm:flex-row gap-3 pt-1 w-full max-w-md sm:max-w-none mx-auto lg:mx-0 justify-center lg:justify-start">
       <Link
         to="/courses?parent=software-learning"
-        className="inline-flex items-center justify-center gap-2 flex-1 min-w-0 sm:flex-none px-4 sm:px-[30px] py-3 sm:py-[15px] rounded-full bg-brand-orange text-white font-semibold text-xs sm:text-sm hover:bg-brand-orange/90 transition-colors"
+        className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 rounded-full bg-brand-orange text-white font-bold text-xs sm:text-sm hover:bg-brand-orange/90 transition-all shadow-md active:scale-95 text-center"
       >
         Software Learning
       </Link>
       <Link
         to="/courses?parent=competitive-exam"
-        className="inline-flex items-center justify-center gap-2 flex-1 min-w-0 sm:flex-none px-4 sm:px-[30px] py-3 sm:py-[15px] rounded-full bg-brand-green text-white font-semibold text-xs sm:text-sm hover:bg-brand-green/90 transition-colors"
+        className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 rounded-full bg-[#74a916] text-white font-bold text-xs sm:text-sm hover:bg-[#74a916]/90 transition-all shadow-md active:scale-95 text-center"
       >
         Competitive Exam
       </Link>
@@ -38,17 +37,17 @@ function CourseButtons() {
 
 function StatsGrid({ stats }) {
   return (
-    <Stagger className="grid grid-cols-3 gap-3 sm:gap-4">
+    <Stagger className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-md sm:max-w-none mx-auto">
       {stats.map((stat, i) => {
         const Icon = getStatIcon(stat.label);
         return (
-          <StaggerItem key={i}>
-            <div className="bg-white rounded-xl border border-gray-100 p-3 sm:p-4 text-center hover:-translate-y-1 transition-all duration-300 max-w-[238px] mx-auto" style={{ boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto rounded-lg bg-brand-orange/10 flex items-center justify-center mb-2">
-                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-orange" />
+          <StaggerItem key={i} className="w-full">
+            <div className="bg-white rounded-xl border border-gray-100 p-3.5 sm:p-4 text-center hover:-translate-y-1 transition-all duration-300 w-full h-full min-h-[88px] sm:min-h-[104px] flex flex-col items-center justify-center shadow-md">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto rounded-lg bg-brand-orange/10 flex items-center justify-center mb-1.5 sm:mb-2 shrink-0">
+                <Icon className="w-4 h-4 text-brand-orange" />
               </div>
-              <p className="text-base sm:text-2xl font-extrabold" style={{ color: '#175cdd' }}>{stat.value}</p>
-              <p className="text-[10px] sm:text-xs mt-0.5" style={{ color: '#000000' }}>{stat.label}</p>
+              <p className="text-lg sm:text-2xl font-extrabold text-brand-blue leading-none">{stat.value}</p>
+              <p className="text-[11px] sm:text-xs mt-1 text-slate-800 font-medium leading-snug">{stat.label}</p>
             </div>
           </StaggerItem>
         );
@@ -59,14 +58,14 @@ function StatsGrid({ stats }) {
 
 function PillGrid({ pills }) {
   return (
-    <Stagger className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+    <Stagger className="grid grid-cols-2 gap-2 sm:gap-2.5 w-full max-w-md sm:max-w-none mx-auto">
       {pills.map((label, i) => (
-        <StaggerItem key={i}>
-          <div className="flex items-center gap-2 bg-white rounded-lg border border-gray-100 px-3 py-2.5 shadow-sm">
-            <div className="w-7 h-7 rounded-lg bg-brand-green/10 flex items-center justify-center shrink-0">
-              <FiCheckCircle className="w-3.5 h-3.5 text-brand-green" />
+        <StaggerItem key={i} className="min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-white rounded-lg border border-gray-100 px-2.5 sm:px-3 py-2.5 shadow-sm min-w-0 h-full min-h-[48px]">
+            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-brand-blue/10 flex items-center justify-center shrink-0">
+              <FiCheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-brand-blue" />
             </div>
-            <span className="text-xs font-bold text-brand-blue leading-tight">{label}</span>
+            <span className="text-[11px] sm:text-xs font-bold text-brand-blue leading-tight whitespace-nowrap flex-1 min-w-0 truncate">{label}</span>
           </div>
         </StaggerItem>
       ))}
@@ -134,31 +133,29 @@ export default function IntroFormSection({ section }) {
 
   return (
     <section className="relative overflow-hidden bg-white">
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <div className="grid lg:grid-cols-6 gap-8 lg:gap-12">
-          <Reveal variant="up" className="lg:col-span-4 space-y-6 self-start">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10 sm:py-16">
+        <div className="grid lg:grid-cols-6 gap-6 sm:gap-8 lg:gap-12">
+          <Reveal variant="up" className="lg:col-span-4 space-y-4 sm:space-y-6 self-start text-center lg:text-left">
             {heading && (
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-dark-navy -mt-2">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-dark-navy -mt-1 sm:-mt-2 text-center lg:text-left leading-tight sm:leading-snug max-w-2xl mx-auto lg:mx-0">
                 {heading}
               </h2>
             )}
             {introText && (
-              <p className="text-sm sm:text-base leading-relaxed text-justify text-text-gray">
+              <p className="text-xs sm:text-base leading-relaxed text-center lg:text-justify text-text-gray max-w-2xl mx-auto lg:mx-0 px-1 sm:px-0">
                 {introText}
               </p>
             )}
 
-            <div className="mt-10 hidden lg:block space-y-6">
-              {rawPills.length > 0 && <PillGrid pills={rawPills} />}
-              {stats.length > 0 && <div className="pt-4"><StatsGrid stats={stats} /></div>}
-              <div className="pt-4"><CourseButtons /></div>
+            <div className="mt-6 hidden lg:block space-y-6">
+              {stats.length > 0 && <StatsGrid stats={stats} />}
+              <CourseButtons />
             </div>
           </Reveal>
 
-          <Reveal variant="right" className="lg:col-span-2 self-start">
-            <p className="text-base font-[600] text-center mb-2" style={{ color: '#ef4444' }}>Book Your Demo Now!</p>
+          <Reveal variant="right" className="lg:col-span-2 self-start w-full max-w-md mx-auto lg:max-w-none">
+            <p className="text-sm sm:text-base font-[600] text-center mb-2" style={{ color: '#ef4444' }}>Book Your Demo Now!</p>
             <div className="rounded-2xl overflow-hidden max-w-sm w-full mx-auto lg:ml-auto" style={{ backgroundColor: '#74a916', boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px' }}>
-              {/* diagonal header: white left / orange right */}
               <div className="relative h-16" style={{ backgroundColor: '#f59e0b' }}>
                 <div
                   className="absolute inset-0"
@@ -178,8 +175,7 @@ export default function IntroFormSection({ section }) {
                 </div>
               </div>
 
-              {/* green body with subtle texture */}
-              <div className="relative p-5">
+              <div className="relative p-4 sm:p-5">
                 <div
                   className="absolute inset-0 pointer-events-none opacity-[0.04]"
                   style={{
@@ -207,7 +203,7 @@ export default function IntroFormSection({ section }) {
                     <p className="!text-red-600 text-xs">{formMsg.text}</p>
                   )}
                   <label className="flex items-start gap-2 cursor-pointer">
-                    <input type="checkbox" checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)} className="mt-0.5 w-3.5 h-3.5 border-white/50 accent-white" />
+                    <input type="checkbox" checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)} className="mt-0.5 w-3.5 h-3.5 border-white/50 accent-white shrink-0" />
                     <span className="text-xs text-white/90 leading-relaxed">
                       I agree to the{' '}
                       <a href="/terms" className="text-blue-300 underline hover:text-blue-200">Terms of Use</a>
@@ -215,7 +211,7 @@ export default function IntroFormSection({ section }) {
                       <a href="/privacy" className="text-blue-300 underline hover:text-blue-200">Privacy Policy</a>.
                     </span>
                   </label>
-                  <button type="submit" disabled={submitting} className="w-full flex items-center justify-center gap-2 px-[30px] py-[15px] bg-[#f59e0b] text-white font-semibold rounded hover:bg-[#f59e0b]/90 transition-colors disabled:opacity-70 text-sm">
+                  <button type="submit" disabled={submitting} className="w-full flex items-center justify-center gap-2 px-[30px] py-[15px] bg-[#f59e0b] text-white font-semibold rounded hover:bg-[#f59e0b]/90 transition-colors disabled:opacity-70 text-sm cursor-pointer active:scale-95">
                     {submitting ? <FiLoader className="w-4 h-4 animate-spin" /> : null}
                     {submitting ? 'Submitting...' : 'Send Message'}
                   </button>
@@ -223,13 +219,18 @@ export default function IntroFormSection({ section }) {
               </div>
             </div>
 
-            <UpcomingClassesMiniCarousel />
+            <div className="mt-6 hidden lg:block max-w-md w-full mx-auto lg:ml-auto">
+              {rawPills.length > 0 && <PillGrid pills={rawPills} />}
+            </div>
           </Reveal>
 
-          <div className="lg:hidden mt-8 space-y-6">
-            {rawPills.length > 0 && <PillGrid pills={rawPills} />}
+          {/* Mobile Only: Flow order -> Form (28px gap) -> Stats stack (1-col) (24px gap) -> Features (2-col) (24px gap) -> Action Buttons (32px to Upcoming Classes) */}
+          <div className="lg:hidden mt-7 space-y-6 w-full max-w-md mx-auto mb-4 sm:mb-0">
             {stats.length > 0 && <StatsGrid stats={stats} />}
-            <CourseButtons />
+            {rawPills.length > 0 && <PillGrid pills={rawPills} />}
+            <Reveal variant="up">
+              <CourseButtons />
+            </Reveal>
           </div>
         </div>
       </div>

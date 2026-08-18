@@ -167,7 +167,7 @@ export default function UpcomingClassesSection({ section }) {
 
         {classes.length > 0 && (
           isSlider ? (
-            <div className="relative mx-auto lg:max-w-[85%] mt-16" onMouseEnter={stopAutoScroll} onMouseLeave={() => { if (isSlider) startAutoScroll(); }}>
+            <div className="relative mx-auto w-full mt-16" onMouseEnter={stopAutoScroll} onMouseLeave={() => { if (isSlider) startAutoScroll(); }}>
               <div className="overflow-hidden">
                 <motion.div
                   animate={{ x: `-${pos * (100 / visible)}%` }}
@@ -182,7 +182,7 @@ export default function UpcomingClassesSection({ section }) {
                 >
                   {doubled.map((cls, i) => (
                     <div key={`${cls.id}-${i}`} className="shrink-0 px-3" style={{ width: `${100 / visible}%` }}>
-                      <div className="group w-full bg-white rounded-xl p-5 flex flex-col shadow-md border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 h-full">
+                      <div className="group w-full bg-white rounded-xl p-5 flex flex-col shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 h-full">
                         <h4 className="text-dark-navy text-xl font-medium">{cls.course_name}</h4>
                         {cls.date_time && (
                           <p className="text-text-gray text-[15px] mt-3">
@@ -232,9 +232,9 @@ export default function UpcomingClassesSection({ section }) {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center mx-auto lg:max-w-[80%] mt-16">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center mx-auto w-full mt-16">
               {classes.map((cls) => (
-                <div key={cls.id} className="group w-full max-w-[500px] bg-white rounded-xl p-5 flex flex-col shadow-md border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+                <div key={cls.id} className="group w-full bg-white rounded-xl p-5 flex flex-col shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200">
                   <h4 className="text-dark-navy text-xl font-medium">{cls.course_name}</h4>
                   {cls.date_time && (
                     <p className="text-text-gray text-[15px] mt-3">

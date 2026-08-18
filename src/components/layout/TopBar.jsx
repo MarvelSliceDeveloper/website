@@ -12,7 +12,7 @@ export default function TopBar() {
 
   return (
     <div className="bg-brand-blue text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-[10px]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-2">
         <div className="flex items-center gap-3">
           {email && (
             <a
@@ -38,11 +38,19 @@ export default function TopBar() {
           <span className="text-white/40">|</span>
           <a href="#" className="hover:underline font-semibold" onClick={() => trackCtaClick('Sign Up', 'topbar')}>SIGN UP</a>
           <span className="text-white/40">|</span>
-          <div className="flex items-center gap-2">
-            <a href={social.twitter || '#'} aria-label="Twitter"><FaTwitter className="w-3 h-3 hover:text-brand-orange transition-colors" /></a>
-            <a href={social.facebook || '#'} aria-label="Facebook"><FaFacebookF className="w-3 h-3 hover:text-brand-orange transition-colors" /></a>
-            <a href={social.instagram || '#'} aria-label="Instagram"><FaInstagram className="w-3 h-3 hover:text-brand-orange transition-colors" /></a>
-            <a href={social.linkedin || '#'} aria-label="LinkedIn"><FaLinkedinIn className="w-3 h-3 hover:text-brand-orange transition-colors" /></a>
+          <div className="flex items-center gap-3 ml-2">
+            <a href={social.twitter || '#'} aria-label="Twitter" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
+              <FaTwitter className="w-2.5 h-2.5" />
+            </a>
+            <a href={social.facebook || '#'} aria-label="Facebook" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
+              <FaFacebookF className="w-2.5 h-2.5" />
+            </a>
+            <a href={social.instagram || '#'} aria-label="Instagram" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
+              <FaInstagram className="w-2.5 h-2.5" />
+            </a>
+            <a href={social.linkedin || '#'} aria-label="LinkedIn" className="flex h-5 w-5 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition-all duration-300 hover:border-transparent hover:bg-brand-orange hover:-translate-y-0.5">
+              <FaLinkedinIn className="w-2.5 h-2.5" />
+            </a>
           </div>
         </div>
       </div>

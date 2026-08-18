@@ -137,12 +137,12 @@ export default function UpcomingCoursesSection({ section }) {
   if (!heading && courses.length === 0) return null;
 
   return (
-    <section className="pt-8 pb-16 bg-white">
+    <section className="pt-8 pb-16 bg-neutral-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
-          <div className="flex items-start justify-between gap-4">
-            <div className="text-left">
-              <div className="inline-flex flex-col items-start">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 text-center sm:text-left">
+            <div className="text-center sm:text-left">
+              <div className="inline-flex flex-col items-center sm:items-start">
                 {heading && (
                   <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy">{heading}</h2>
                 )}

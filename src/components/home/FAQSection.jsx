@@ -12,8 +12,8 @@ export default function FAQSection({ section }) {
   if (items.length === 0) return null;
 
   return (
-    <section className="pt-8 pb-16 bg-neutral-50">
-      <div className="w-full max-w-[92%] sm:max-w-[70%] mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="pt-8 pb-16 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center">
             <div className="inline-flex flex-col items-center">
@@ -22,7 +22,7 @@ export default function FAQSection({ section }) {
             </div>
           </div>
         </Reveal>
-        <Stagger className="space-y-2 mt-16">
+        <Stagger className="space-y-2 mt-16 w-full">
           {items.map((item, i) => (
             <StaggerItem key={i}>
               <AccordionItem

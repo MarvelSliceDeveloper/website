@@ -4,7 +4,8 @@
 -- Run in Supabase SQL Editor. No auth / RLS required.
 -- Run the RLS disable block at the bottom if tables were created with RLS enabled.
 -- Uncomment to reset:
--- drop schema public cascade; create schema public;
+-- drop schema public cascade; create
+--  schema public;
 -- ============================================================
 -- NOTE: If site_settings already exists without blog_heading/blog_subheading,
 -- run the alter statements at the bottom of this file (search "ALTER TABLE site_settings").
@@ -748,6 +749,7 @@ end $$;
 create table if not exists upcoming_classes (
   id uuid primary key default gen_random_uuid(),
   course_name text not null,
+  batch text,
   date_time text,
   is_active boolean default true,
   sort_order int default 0,
@@ -785,6 +787,7 @@ create table if not exists upcoming_class_registrations (
   upcoming_class_id uuid references upcoming_classes(id) on delete set null,
   course_id uuid references courses(id) on delete set null,
   course_name text,
+  batch text,
   full_name text not null,
   email text not null,
   phone text not null,
@@ -818,7 +821,30 @@ do $$ begin
   end if;
 end $$;
 
-create table if not exists course_interests (
+create table if not exists course_enquiries (
+  id uuid primary key default gen_random_uuid(),
+  course_id uuid references courses(id) on delete set null,
+  course_title text,
+  button_clicked text default 'Apply Now',
+  terms_accepted boolean default true,
+  full_name text not null,
+  email text not null,
+  phone text,
+  is_read boolean default false,
+  created_at timestamptz default now()
+);
+
+alter table course_enquiries enable row level security;
+drop policy if exists "Allow public insert course_enquiries" on course_enquiries;
+create policy "Allow public insert course_enquiries" on course_enquiries for insert to anon, authenticated with check (true);
+drop policy if exists "Allow public select course_enquiries" on course_enquiries;
+create policy "Allow public select course_enquiries" on course_enquiries for select to anon, authenticated using (true);
+drop policy if exists "Allow public update course_enquiries" on course_enquiries;
+create policy "Allow public update course_enquiries" on course_enquiries for update to anon, authenticated using (true);
+drop policy if exists "Allow public delete course_enquiries" on course_enquiries;
+create policy "Allow public delete course_enquiries" on course_enquiries for delete to anon, authenticated using (true);
+
+create table if not exists upcoming_course_interests (
   id uuid primary key default gen_random_uuid(),
   course_id uuid references courses(id) on delete set null,
   course_title text,
@@ -830,29 +856,15 @@ create table if not exists course_interests (
   created_at timestamptz default now()
 );
 
-alter table course_interests enable row level security;
-do $$ begin
-  if not exists (select 1 from pg_policies where policyname = 'Allow public insert course_interests') then
-    create policy "Allow public insert course_interests"
-    on course_interests for insert to anon, authenticated
-    with check (true);
-  end if;
-  if not exists (select 1 from pg_policies where policyname = 'Allow public select course_interests') then
-    create policy "Allow public select course_interests"
-    on course_interests for select to anon, authenticated
-    using (true);
-  end if;
-  if not exists (select 1 from pg_policies where policyname = 'Allow public update course_interests') then
-    create policy "Allow public update course_interests"
-    on course_interests for update to anon, authenticated
-    using (true);
-  end if;
-  if not exists (select 1 from pg_policies where policyname = 'Allow public delete course_interests') then
-    create policy "Allow public delete course_interests"
-    on course_interests for delete to anon, authenticated
-    using (true);
-  end if;
-end $$;
+alter table upcoming_course_interests enable row level security;
+drop policy if exists "Allow public insert upcoming_course_interests" on upcoming_course_interests;
+create policy "Allow public insert upcoming_course_interests" on upcoming_course_interests for insert to anon, authenticated with check (true);
+drop policy if exists "Allow public select upcoming_course_interests" on upcoming_course_interests;
+create policy "Allow public select upcoming_course_interests" on upcoming_course_interests for select to anon, authenticated using (true);
+drop policy if exists "Allow public update upcoming_course_interests" on upcoming_course_interests;
+create policy "Allow public update upcoming_course_interests" on upcoming_course_interests for update to anon, authenticated using (true);
+drop policy if exists "Allow public delete upcoming_course_interests" on upcoming_course_interests;
+create policy "Allow public delete upcoming_course_interests" on upcoming_course_interests for delete to anon, authenticated using (true);
 
 -- 25c. Auto-promote: courses set to 'Coming Soon' move to 'Active' once their start date arrives
 create or replace function promote_upcoming_courses()

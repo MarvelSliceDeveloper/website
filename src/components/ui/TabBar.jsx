@@ -14,7 +14,7 @@ const styles = {
   tab: {
     position: 'relative',
     padding: '8px 14px',
-    border: 'none',
+    border: '1px solid #e5e7eb',
     borderRadius: '8px 8px 0 0',
     fontSize: '14px',
     fontWeight: 600,

@@ -13,6 +13,7 @@ export default function UpcomingClassAdd() {
 
   const [loading, setLoading] = useState(!isNew);
   const [courseName, setCourseName] = useState('');
+  const [batch, setBatch] = useState('');
   const [dateTime, setDateTime] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -26,6 +27,7 @@ export default function UpcomingClassAdd() {
       const { data } = await supabase.from('upcoming_classes').select('*').eq('id', id).single();
       if (data) {
         setCourseName(data.course_name || '');
+        setBatch(data.batch || '');
         setDateTime(data.date_time || '');
         setIsActive(data.is_active !== false);
       }
@@ -46,6 +48,7 @@ export default function UpcomingClassAdd() {
     try {
       const payload = {
         course_name: courseName.trim(),
+        batch: batch || null,
         date_time: dateTime,
         is_active: isActive,
       };
@@ -80,6 +83,17 @@ export default function UpcomingClassAdd() {
               placeholder="e.g. Full-Stack Web Development"
               className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all bg-white ${errors.courseName ? 'border-destructive-500 ring-2 ring-destructive-100' : 'border-admin-200'}`} />
             {errors.courseName && <p className="text-xs text-destructive-500 mt-1.5">{errors.courseName}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-black mb-1">Batch</label>
+            <select value={batch} onChange={(e) => setBatch(e.target.value)}
+              className="w-full px-3 py-2.5 border border-admin-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-admin-500/20 transition-all bg-white">
+              <option value="">Select batch</option>
+              <option value="Batch 1">Batch 1</option>
+              <option value="Batch 2">Batch 2</option>
+              <option value="Batch 3">Batch 3</option>
+              <option value="Batch 4">Batch 4</option>
+            </select>
           </div>
           <div>
             <label className="block text-sm font-semibold text-black mb-1">Date & Time <span className="text-destructive-500">*</span></label>
