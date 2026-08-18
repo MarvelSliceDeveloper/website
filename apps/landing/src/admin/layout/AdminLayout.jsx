@@ -33,8 +33,12 @@ function relativeTime(dateStr) {
   return new Date(dateStr).toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
+import { useSiteSettings } from "../../hooks/useSupabase";
+
 export default function AdminLayout() {
   const { user, logout } = useAuth();
+  const { data: settings } = useSiteSettings();
+  const logoUrl = settings?.logo_url || settings?.logo || "/apple-touch-icon.png";
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -134,11 +138,9 @@ export default function AdminLayout() {
               <FiMenu className="w-5 h-5" />
             </button>
             <div className="hidden lg:flex min-w-0"></div>
-            <Link to="/admin" className="flex items-center gap-2 text-sm font-semibold text-neutral-900 lg:hidden">
-              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-admin-500 to-admin-800 flex items-center justify-center">
-                <FiGrid className="w-3 h-3 text-white" />
-              </div>
-              Marvel Slice
+            <Link to="/admin" className="flex items-center gap-2 text-sm font-bold text-neutral-900 lg:hidden">
+              <img src={logoUrl} alt="Marvel Slice Logo" className="w-7 h-7 object-contain rounded-md shrink-0" />
+              <span>Marvel <span className="text-brand-orange">Slice</span></span>
             </Link>
           </div>
 
@@ -255,7 +257,7 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto admin-scrollbar p-4 lg:p-6 admin-scrollbar">
+        <main className="flex-1 overflow-y-auto admin-scrollbar p-4 lg:p-6 w-full max-w-full min-w-0 box-border">
           <Outlet />
         </main>
       </div>

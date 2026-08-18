@@ -5,6 +5,7 @@ import TopBar from './components/layout/TopBar';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import ChatWidget from './components/chat/ChatWidget';
+import FloatingContactButton from './components/FloatingContactButton';
 import { trackPageView } from './lib/analytics';
 import Home from './pages/Home';
 import Courses from './pages/Courses';
@@ -107,6 +108,7 @@ function PublicLayout() {
         <AnimatedRoutes />
       </main>
       <Footer />
+      <FloatingContactButton />
       <ChatWidget />
     </div>
   );

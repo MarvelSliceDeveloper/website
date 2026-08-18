@@ -9,7 +9,7 @@ export default function EmpoweringSection({ section }) {
   if (!heading && !description) return null;
 
   return (
-    <section className="pt-16 pb-16 bg-neutral-100">
+    <section className="pt-16 pb-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center">

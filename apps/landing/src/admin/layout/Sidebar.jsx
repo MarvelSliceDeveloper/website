@@ -1,7 +1,7 @@
 import { FiBriefcase } from "react-icons/fi";
 import { useState, useEffect, useCallback } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
-import { FiHome, FiFile, FiBookOpen, FiGrid, FiChevronDown, FiFileText, FiLayers, FiInbox, FiMenu, FiSettings, FiMessageCircle, FiServer, FiZap, FiX, FiBarChart2, FiPlusCircle, FiClock, FiDownload, FiClipboard, FiMail, FiMessageSquare, FiTag, FiImage, FiUsers, FiUser, FiHelpCircle, FiTarget, FiStar, FiInfo, FiCalendar } from "react-icons/fi";
+import { FiHome, FiFile, FiBookOpen, FiGrid, FiChevronDown, FiChevronLeft, FiChevronRight, FiFileText, FiLayers, FiInbox, FiMenu, FiSettings, FiMessageCircle, FiServer, FiZap, FiX, FiBarChart2, FiPlusCircle, FiClock, FiDownload, FiClipboard, FiMail, FiMessageSquare, FiTag, FiImage, FiUsers, FiUser, FiHelpCircle, FiTarget, FiStar, FiInfo, FiCalendar, FiBell } from "react-icons/fi";
 import { useSiteSettings } from "../../hooks/useSupabase";
 
 const navGroups = [
@@ -26,7 +26,7 @@ const navGroups = [
     ]},
 
   {
-    label: "Training", icon: FiZap, parentTo: "/admin/training/new", items: [
+    label: "Training", icon: FiZap, items: [
       { to: "/admin/training/new", label: "Add Program", icon: FiPlusCircle },
       { to: "/admin/training", label: "All Programs", icon: FiZap, catchSubRoutes: true, siblingRoutes: ["/admin/training/new"] },
       { to: "/admin/training-categories", label: "Categories", icon: FiGrid }
@@ -49,7 +49,8 @@ const navGroups = [
     { to: "/admin/contact-submissions", label: "Contact Submissions", icon: FiMessageSquare },
     { to: "/admin/about-submissions", label: "About Submissions", icon: FiInfo },
     { to: "/admin/upcoming-class-submissions", label: "Upcoming Class Registrations", icon: FiCalendar },
-    { to: "/admin/course-interests", label: "Course Interests", icon: FiCalendar },
+    { to: "/admin/course-interests", label: "Course Enquiries", icon: FiMessageSquare },
+    { to: "/admin/upcoming-course-interests", label: "Upcoming Course Interests", icon: FiBell },
     { to: "/admin/chat-submissions", label: "Chat Submissions", icon: FiMessageCircle },
     { to: "/admin/courses/reports", label: "Reports", icon: FiBarChart2 }
     ]},
@@ -471,19 +472,11 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
   const content = (
     <div className="flex flex-col h-full" style={{ background: 'linear-gradient(to bottom, #0C1028, #0A0E20)' }}>
       <div className="flex items-center justify-between h-14 shrink-0 px-4 border-b border-gray-200" style={{ background: 'white' }}>
-        <NavLink to="/admin" className="flex items-center gap-2.5 min-w-0 group">
-          <div className="w-9 h-9 flex items-center justify-center shrink-0 overflow-hidden transition-transform duration-200 group-hover:scale-105">
-            {settings?.logo_url ? (
-              <img src={settings.logo_url} alt="Marvel Slice" className="h-9 w-auto object-contain" />
-            ) : (
-              <div className="w-8 h-8 flex items-center justify-center transition-transform duration-200" style={{ background: 'linear-gradient(to bottom right, rgba(91,80,236,0.3), rgba(91,80,236,0.05))' }}>
-                <FiGrid className="w-4 h-4" style={{ color: '#5B50EC' }} />
-              </div>
-            )}
-          </div>
+        <NavLink to="/admin" onClick={onMobileClose} className="flex items-center gap-2.5 min-w-0 group">
+          <img src={settings?.logo_url || settings?.logo || "/apple-touch-icon.png"} alt="Marvel Slice Logo" className="w-8 h-8 object-contain rounded-md shrink-0 transition-transform duration-200 group-hover:scale-105" />
           <div className="min-w-0">
-            <span className="text-sm font-semibold block leading-tight" style={{ color: '#0C1028' }}>Marvel Slice</span>
-            <span className="text-[11px] font-medium" style={{ color: '#6b7280' }}>Management Portal</span>
+            <span className="text-sm font-bold block leading-tight text-dark-navy">Marvel <span className="text-brand-orange">Slice</span></span>
+            <span className="text-[10px] font-medium text-neutral-500">Management Portal</span>
           </div>
         </NavLink>
         <button
@@ -524,7 +517,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
             onClick={onMobileClose}
           />
           <aside
-            className="fixed left-0 top-0 h-full w-72 shadow-elevated z-50 overflow-hidden animate-[slideIn_0.25s_ease-out]"
+            className="fixed left-0 top-0 h-full w-[min(84vw,340px)] shadow-elevated z-50 overflow-hidden animate-[slideIn_0.25s_ease-out]"
             style={{ background: 'linear-gradient(to bottom, #0C1028, #0A0E20)' }}
             role="dialog"
             aria-modal="true"
@@ -539,5 +532,117 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
         @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
       `}</style>
     </>
+  );
+}
+
+function HierarchicalMobileNav({ onMobileClose, pathname }) {
+  const [navStack, setNavStack] = useState([{ title: 'Marvel Slice Admin', items: navGroups }]);
+
+  const currentLevel = navStack[navStack.length - 1];
+  const canGoBack = navStack.length > 1;
+
+  function handleGoBack() {
+    if (canGoBack) {
+      setNavStack(prev => prev.slice(0, -1));
+    }
+  }
+
+  function handleItemClick(item) {
+    const subItems = item.items || item.children;
+    if (subItems && subItems.length > 0) {
+      setNavStack(prev => [...prev, { title: item.label, items: subItems }]);
+    }
+  }
+
+  return (
+    <div className="flex flex-col h-full text-white" style={{ background: 'linear-gradient(to bottom, #0C1028, #0A0E20)' }}>
+      <div className="flex items-center justify-between h-14 px-4 border-b border-white/10 shrink-0">
+        {canGoBack ? (
+          <button
+            type="button"
+            onClick={handleGoBack}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-white hover:text-brand-orange transition-colors min-h-[44px] cursor-pointer"
+          >
+            <FiChevronLeft className="w-5 h-5 text-brand-orange" />
+            <span className="truncate max-w-[190px]">{currentLevel.title}</span>
+          </button>
+        ) : (
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-orange to-amber-600 flex items-center justify-center font-black text-white text-sm shadow-md">
+              M
+            </div>
+            <span className="text-base font-extrabold text-white tracking-wide">
+              Marvel <span className="text-brand-orange">Slice</span>
+            </span>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={onMobileClose}
+          className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-neutral-400 hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-white/10"
+          aria-label="Close menu"
+        >
+          <FiX className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto admin-scrollbar py-3 px-3 space-y-1">
+        {currentLevel.items.map((item, idx) => {
+          const subItems = item.items || item.children;
+          const hasSub = subItems && subItems.length > 0;
+          const Icon = item.icon || FiFile;
+
+          if (hasSub) {
+            return (
+              <button
+                key={item.label || idx}
+                type="button"
+                onClick={() => handleItemClick(item)}
+                className="w-full flex items-center justify-between min-h-[44px] px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer group active:scale-[0.98]"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  {Icon && <Icon className="w-4 h-4 text-brand-orange shrink-0" />}
+                  <span className="truncate">{item.label}</span>
+                </div>
+                <div className="flex items-center gap-1 shrink-0 text-neutral-400 group-hover:text-white">
+                  <span className="text-xs text-neutral-400 font-mono">({subItems.length})</span>
+                  <FiChevronRight className="w-4 h-4" />
+                </div>
+              </button>
+            );
+          }
+
+          const active = item.to ? isActive(pathname, item) : false;
+
+          return (
+            <NavLink
+              key={item.to || item.label || idx}
+              to={item.to || '#'}
+              onClick={onMobileClose}
+              className={`flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                active
+                  ? 'bg-brand-blue text-white shadow-md'
+                  : 'text-neutral-300 hover:text-white hover:bg-white/[0.08]'
+              }`}
+            >
+              {Icon && <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-white' : 'text-neutral-400'}`} />}
+              <span className="truncate">{item.label}</span>
+            </NavLink>
+          );
+        })}
+      </div>
+
+      <div className="px-4 py-3 shrink-0 border-t border-white/10 bg-black/20">
+        <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.05)' }}>
+          <div className="w-6 h-6 rounded-full bg-brand-orange/20 text-brand-orange flex items-center justify-center text-[10px] font-extrabold shrink-0">
+            M
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold text-white truncate">Marvel Slice Admin</p>
+            <p className="text-[10px] text-neutral-400">v1.0 Mobile Admin</p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,0 +1,120 @@
+================================================================================
+                    MARVEL SLICE ADMIN PORTAL UI ALIGNMENT SPECIFICATION
+================================================================================
+
+1. EXECUTIVE OVERVIEW
+--------------------------------------------------------------------------------
+This document defines the unified UI alignment, layout structure, typography, 
+table rendering, and editor standards across all Admin Portal pages in Marvel Slice.
+
+The admin interface is engineered for maximum clarity, consistent element spacing, 
+fluid responsiveness, and frictionless data management.
+
+2. GLOBAL ADMIN LAYOUT & SHELL ALIGNMENT
+--------------------------------------------------------------------------------
+- Component: AdminLayout.jsx & PageShell.jsx
+- Outer Boundary: Full viewport height with fixed collapsible Sidebar and sticky Top Navbar.
+- Content Area Padding:
+  * Desktop (>= 1024px): 32px (p-8)
+  * Tablet (640px - 1023px): 24px (p-6)
+  * Mobile (< 640px): 16px (p-4)
+- Header Bar Divider:
+  * Title: text-xl sm:text-2xl font-extrabold text-[#1B365D] (Dark Navy)
+  * Subtitle: text-sm text-neutral-500 mt-1
+  * Divider: border-b border-gray-200 pb-4 mb-6
+  * Action Buttons: Aligned to the top right of the header section (flex items-center gap-3)
+
+3. DATA TABLES & INBOX ALIGNMENT
+--------------------------------------------------------------------------------
+- Components: DataTable.jsx & SubmissionsInbox.jsx
+- Outer Container:
+  * Rounded Corners: rounded-xl (12px radius)
+  * Border: border border-admin-200 (gray-200)
+  * Background: bg-white with shadow-sm
+- Search & Filter Toolbar:
+  * Height: h-9 (36px)
+  * Input Fields: rounded-lg border border-admin-200 px-3 text-sm placeholder:text-neutral-400
+  * Search Button: bg-admin-800 text-white text-sm font-medium rounded-lg px-4 hover:bg-admin-900
+  * Clear Button: text-xs font-semibold text-neutral-500 hover:text-neutral-700
+- Table Columns & Cells:
+  * Header Row: bg-brand-blue (#1B3A6B) with white bold text (text-xs font-bold uppercase tracking-wider)
+  * Cell Padding: px-4 py-3.5 (balanced 14px vertical padding)
+  * Cell Alignment: align-middle across all data cells
+  * Alternating Row Background: Even rows bg-white, Odd rows bg-gray-50/60
+  * Hover State: hover:bg-blue-50/40 smooth 150ms transition
+- Action Column:
+  * Fixed right alignment (text-right or text-center)
+  * Edit Button: text-blue-600 hover:bg-blue-50 p-1.5 rounded-md
+  * Delete Button: text-red-600 hover:bg-red-50 p-1.5 rounded-md
+  * View / Details Button: text-slate-600 hover:bg-slate-100 p-1.5 rounded-md
+
+4. PAGE EDITORS & WIZARDS ALIGNMENT
+--------------------------------------------------------------------------------
+- Components: PageEditorLayout.jsx, SectionSidebar.jsx, SectionAccordion.jsx
+- Layout Architecture: 2-column sidebar layout
+  * Left Navigation Sidebar: w-full lg:w-[220px] shrink-0 sticky top-6
+  * Right Content Column: flex-1 min-w-0
+- Section Accordions:
+  * Card Wrapper: bg-white rounded-xl border border-admin-200 shadow-sm p-4 lg:p-6 mb-6
+  * Section Headers: text-base font-bold text-gray-900 with flex items-center justify-between
+- Input Fields & Form Controls:
+  * FormRow Label: text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5
+  * Text Inputs / Textareas / Selects: w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20
+  * Image Uploaders: ImageUploader.jsx with drag-and-drop preview box (aspect ratio preserved, rounded-xl border-dashed)
+- Save / Discard Bar:
+  * Sticky bottom action bar (SaveBar.jsx / SaveCancelBar.jsx)
+  * Save Button: bg-brand-orange (#f59e0b) hover:bg-brand-orange/90 text-white font-semibold rounded-lg px-6 py-2.5 shadow-md
+  * Discard / Cancel Button: bg-white border border-slate-300 text-slate-700 rounded-lg px-4 py-2.5
+
+5. INDIVIDUAL PAGES ALIGNMENT INDEX
+--------------------------------------------------------------------------------
+A. Dashboard (Dashboard.jsx)
+   - Stat Cards: 4-column responsive grid (grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5)
+   - Recent Submissions & Quick Actions: 2-column grid (lg:grid-cols-2 gap-6)
+
+B. Home Page Editor (HomePageEditor.jsx)
+   - Hero Carousel Editor, Intro Section Editor, Stats Editor, Feature Cards Editor, Services Editor, Testimonials Editor, FAQ Editor.
+
+C. Courses List & Editor (CoursesList.jsx, CourseEditor.jsx, CourseWizard.jsx)
+   - Category Tree Filter + Search Header.
+   - Course Form Fields: Title, Slug, Description, Category, Duration, Price, Modules, Benefits, Status Badges (Active / Draft / Coming Soon).
+
+D. Services Manager & Editor (ServicesManager.jsx, ServiceEditor.jsx, ServiceWizard.jsx)
+   - Services Table & Category Selector.
+   - Detailed Service Fields: Features List, Eligibility, Learning Outcomes, Curriculum Modules, Banner Media.
+
+E. Training Manager & Editor (TrainingManager.jsx, TrainingEditor.jsx, TrainingWizard.jsx)
+   - Training Programs Table & Workshop Schedules.
+   - Program Modules, Prerequisites, Trainer Profiles, Certification Details.
+
+F. Career & Jobs Manager (CareerJobsManager.jsx, JobEditor.jsx, InternshipsManager.jsx, InternEditor.jsx)
+   - Job Openings Table & Internship Applications.
+   - Job Title, Location, Type (Full-time / Part-time / Remote), Experience Level, Requirements List, Salary Range.
+
+G. Blog Manager & Editor (BlogManager.jsx, BlogPostEditor.jsx, BlogCategoriesManager.jsx)
+   - Blog Posts Table with Category Filter Pills.
+   - Markdown / Rich Content Editor, Author Info, Cover Image, Publish Date, Meta SEO.
+
+H. Submissions & Inbox Pages (SubmissionsInbox.jsx, FormSubmissions.jsx, ContactSubmissions.jsx, BrochureDownloads.jsx, CourseInterests.jsx, UpcomingCourseInterests.jsx, UpcomingClassSubmissions.jsx)
+   - Filterable Inbox with Unread/Read Status Badges, Email Reply Modal, CSV/PDF Export.
+
+I. Navigation Menu Manager (NavMenuManager.jsx, NavItemManager.jsx, NavItemChildren.jsx)
+   - Hierarchical Tree View with Reorder Drag Handles, Route Path Mapping, Dynamic Child Items.
+
+J. Site & System Settings (SiteSettings.jsx, ProfileSettings.jsx, AdminUsersManager.jsx, FooterManager.jsx)
+   - Logo Upload, Social Links, Contact Phone/Email, SEO Meta Tags, Admin User Roles (Super Admin / Editor).
+
+6. RESPONSIVE BREAKPOINTS
+--------------------------------------------------------------------------------
+- 320px - 639px (Mobile):
+  * Sidebar converts to overlay slide-out drawer (FiMenu trigger).
+  * Tables render with horizontal scroll overflow (overflow-x-auto) or compact card view.
+  * Form buttons stack vertically with full width.
+- 640px - 1023px (Tablet):
+  * 2-column card grids and compact navigation headers.
+- 1024px+ (Desktop):
+  * Full 2-column sidebar & page editor split view with sticky section navigation.
+
+================================================================================
+                        END OF SPECIFICATION FILE
+================================================================================

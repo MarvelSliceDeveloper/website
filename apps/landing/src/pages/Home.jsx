@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import HeroSection from '../components/home/HeroSection';
 import IntroFormSection from '../components/home/IntroFormSection';
 import EmpoweringSection from '../components/home/EmpoweringSection';
+import UpcomingClassesTableSection from '../components/home/UpcomingClassesTableSection';
 import FeatureCardsSection from '../components/home/FeatureCardsSection';
 import UpcomingCoursesSection from '../components/home/UpcomingCoursesSection';
 import ServicesSection from '../components/home/ServicesSection';
@@ -36,14 +37,15 @@ export default function Home() {
     <>
       <HeroSection section={sec('hero')} />
       <IntroFormSection section={sec('intro_form')} />
+      <UpcomingClassesTableSection section={{ ...(sec('upcoming_classes') || {}), heading: 'Upcoming Classes' }} imageSection={sec('upcoming_image')} />
       <EmpoweringSection section={sec('empowering')} />
       <FeatureCardsSection section={sec('featured_courses')} />
       <ServicesSection section={sec('services')} />
       <UpcomingCoursesSection section={{ ...(sec('upcoming_classes') || {}), heading: 'Upcoming Courses' }} />
       <CTABannerSection section={sec('cta_banner')} />
       <TestimonialsSection section={sec('testimonials')} />
-      <LatestBlogSection section={sec('latest_blog')} />
       <FAQSection section={sec('faqs')} />
+      <LatestBlogSection section={sec('latest_blog')} />
     </>
   );
 }

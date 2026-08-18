@@ -5,13 +5,13 @@ import Badge from "../components/Badge";
 import EmptyState from "../components/EmptyState";
 import Card from "../components/ui/Card";
 import DataTable from "../components/ui/DataTable";
-import { FiBookOpen, FiSearch, FiEdit3, FiTrash2, FiChevronDown, FiArrowLeft, FiX } from "react-icons/fi";
+import { FiBookOpen, FiSearch, FiEdit3, FiTrash2, FiChevronDown, FiArrowLeft, FiX, FiCheckSquare } from "react-icons/fi";
 import PageShell from '../components/ui/PageShell';
 import useConfirm from '../hooks/useConfirm';
 
 export default function CoursesList() {
   const location = useLocation();
-const [confirm, confirmDialog] = useConfirm();
+  const [confirm, confirmDialog] = useConfirm();
   const [courses, setCourses] = useState([]);
   const [navItems, setNavItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +71,7 @@ const [confirm, confirmDialog] = useConfirm();
     if (!(await confirm(`Delete "${title}"? This cannot be undone.`))) return;
     await supabase.from("courses").delete().eq("id", id);
     setCourses((prev) => prev.filter((c) => c.id !== id));
+    setSelectedIds((prev) => prev.filter((item) => item !== id));
   }
 
   const filteredCourses = courses.filter((c) => {
@@ -122,10 +123,69 @@ const [confirm, confirmDialog] = useConfirm();
   const l1Options = activeCategory ? navItems.filter(p => p.parent_label === activeCategory && !p.parent_id) : [];
   const l2Options = catL1 !== 'All' ? navItems.filter(p => p.parent_id === catL1) : [];
 
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectionMode, setSelectionMode] = useState(false);
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [activeCategory, statusFilter, catL1, catL2, activeSearch, selectionMode]);
+
+  const isAllSelected = filteredCourses.length > 0 && filteredCourses.every(c => selectedIds.includes(c.id));
+
+  function toggleSelectAll() {
+    if (isAllSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredCourses.map(c => c.id));
+    }
+  }
+
+  function toggleSelectOne(id) {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  }
+
+  function exitSelectionMode() {
+    setSelectionMode(false);
+    setSelectedIds([]);
+  }
+
+  async function handleBulkDelete() {
+    if (selectedIds.length === 0) return;
+    const count = selectedIds.length;
+    if (!(await confirm(`Delete ${count} selected course${count > 1 ? 's' : ''}? This cannot be undone.`))) return;
+    
+    await supabase.from("courses").delete().in("id", selectedIds);
+    setCourses((prev) => prev.filter((c) => !selectedIds.includes(c.id)));
+    setSelectedIds([]);
+    setSelectionMode(false);
+  }
+
   const columns = [
+    ...(selectionMode ? [{
+      header: (
+        <input
+          type="checkbox"
+          checked={isAllSelected}
+          onChange={toggleSelectAll}
+          className="w-4 h-4 rounded border-gray-300 text-admin-600 focus:ring-admin-500 cursor-pointer"
+          title="Select All"
+        />
+      ),
+      className: 'w-10 text-center',
+      cell: (row) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.includes(row.id)}
+          onChange={() => toggleSelectOne(row.id)}
+          className="w-4 h-4 rounded border-gray-300 text-admin-600 focus:ring-admin-500 cursor-pointer"
+        />
+      ),
+    }] : []),
     {
       header: 'SL NO',
-      className: 'w-20',
+      className: 'w-16',
       cell: (row, index) => <span className="text-sm text-neutral-900 font-medium">{index + 1}</span>,
     },
     {
@@ -173,6 +233,47 @@ const [confirm, confirmDialog] = useConfirm();
     <PageShell backTo="/admin"
       title={activeCategory ? `${activeCategory} Courses` : "Courses"}
       subtitle={`${courses.length} course${courses.length !== 1 ? 's' : ''} total`}
+      actions={
+        courses.length > 0 ? (
+          <div className="flex items-center gap-2">
+            {!selectionMode ? (
+              <button
+                onClick={() => setSelectionMode(true)}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold border border-admin-200 bg-white text-neutral-700 hover:bg-slate-50 hover:border-neutral-300 transition-all shadow-xs cursor-pointer"
+              >
+                <FiCheckSquare className="w-4 h-4 text-admin-600" />
+                Select to Delete
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={toggleSelectAll}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-all cursor-pointer"
+                >
+                  <FiCheckSquare className="w-3.5 h-3.5 text-admin-600" />
+                  {isAllSelected ? 'Deselect All' : 'Select All'}
+                </button>
+                {selectedIds.length > 0 && (
+                  <button
+                    onClick={handleBulkDelete}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+                  >
+                    <FiTrash2 className="w-3.5 h-3.5" />
+                    Delete Selected ({selectedIds.length})
+                  </button>
+                )}
+                <button
+                  onClick={exitSelectionMode}
+                  className="inline-flex items-center gap-1 px-2.5 py-2 text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                >
+                  <FiX className="w-3.5 h-3.5" />
+                  Cancel
+                </button>
+              </>
+            )}
+          </div>
+        ) : null
+      }
     >
       {courses.length > 0 && (
         <div className="bg-white border border-admin-200 p-5 mb-4">
