@@ -30,7 +30,7 @@ type Batch = {
   isActive: boolean;
   maxStudents: number | null;
   course: { id: string; title: string };
-  instructor: { id: string; name: string; email: string };
+  instructor: { id: string; name: string; email: string } | null;
   package: { id: string; name: string } | null;
   _count: {
     enrollments: number;
@@ -147,7 +147,7 @@ function BatchesPageContent() {
       label: "Instructor",
       render: (_, batch) => (
         <span className="text-sm text-muted-foreground">
-          {batch.instructor.name}
+          {batch.instructor?.name ?? "Unassigned"}
         </span>
       ),
     },
