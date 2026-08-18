@@ -43,7 +43,7 @@ type Lesson = {
   videoEmbedId: string | null;
   durationSeconds: number | null;
   isFreePreview: boolean;
-  resources: Resource[];
+  resources: Resource[] | null;
 };
 
 type QuizQuestion = {
@@ -91,7 +91,7 @@ type Practical = {
   videoUrl: string | null;
   videoEmbedId: string | null;
   pdfUrl: string | null;
-  resources: Resource[];
+  resources: Resource[] | null;
 };
 
 type Module = {

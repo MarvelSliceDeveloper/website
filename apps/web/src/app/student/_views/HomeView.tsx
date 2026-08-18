@@ -1092,10 +1092,12 @@ export default function HomeView({
                                 </p>
                                 <p className="text-[10px] text-danger font-semibold mt-1">
                                   Due Date:{" "}
-                                  {new Date(item.dueDate).toLocaleDateString(
-                                    "en-IN",
-                                    { day: "numeric", month: "short" },
-                                  )}
+                                  {item.dueDate
+                                    ? new Date(item.dueDate).toLocaleDateString(
+                                        "en-IN",
+                                        { day: "numeric", month: "short" },
+                                      )
+                                    : "—"}
                                 </p>
                               </div>
                             </div>

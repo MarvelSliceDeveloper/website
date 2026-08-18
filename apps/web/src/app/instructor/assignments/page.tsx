@@ -22,7 +22,7 @@ type Assignment = {
   dueDate: string;
   type: "QUIZ" | "ASSIGNMENT";
   course: { title: string };
-  batch: { name: string; passingScore: number };
+  batch: { name: string; passingScore: number } | null;
   _count: { submissions: number };
 };
 
@@ -151,7 +151,7 @@ export default function InstructorAssignmentsPage() {
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {selectedAssignment.course.title} ·{" "}
-              {selectedAssignment.batch.name}
+              {selectedAssignment.batch?.name ?? "—"}
             </p>
           </div>
         </div>
@@ -348,7 +348,7 @@ export default function InstructorAssignmentsPage() {
                   />
                   <PassFailPreview
                     gradeInput={gradeInput}
-                    passingScore={selectedAssignment?.batch.passingScore ?? 50}
+                    passingScore={selectedAssignment?.batch?.passingScore ?? 50}
                   />
                 </div>
 
@@ -429,7 +429,7 @@ export default function InstructorAssignmentsPage() {
                     {a.title}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {a.course.title} · {a.batch.name} · {a.type}
+                    {a.course.title} · {a.batch?.name ?? "—"} · {a.type}
                   </p>
                 </div>
               </div>

@@ -10,7 +10,7 @@ export interface CourseLesson {
   videoEmbedId: string | null;
   durationSeconds: number | null;
   isFreePreview: boolean;
-  resources: Array<{ name: string; url: string }>;
+  resources: Array<{ name: string; url: string }> | null;
   watchedPercent?: number;
   watchedSeconds?: number;
   isCompleted?: boolean;
@@ -47,7 +47,7 @@ export interface PracticalInfo {
   videoUrl: string | null;
   videoEmbedId: string | null;
   pdfUrl: string | null;
-  resources: Array<{ name: string; url: string }>;
+  resources: Array<{ name: string; url: string }> | null;
 }
 
 export interface ContentOrderItem {

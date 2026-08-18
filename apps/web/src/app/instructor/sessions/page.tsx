@@ -27,7 +27,7 @@ type Session = {
   createdBy: string;
   batchId: string;
   moduleId: string | null;
-  batch: { id: string; name: string; course: { id: string; title: string } };
+  batch: { id: string; name: string; course: { id: string; title: string } | null } | null;
   recording: { id: string } | null;
 };
 

@@ -1355,7 +1355,7 @@ export default function CourseContentView({
                     {module.lessons
                       .filter((l) => l.resources && l.resources.length > 0)
                       .flatMap((l) =>
-                        l.resources.map((r) => {
+                        (l.resources ?? []).map((r) => {
                           const isActive = selectedResource?.url === r.url;
                           return (
                             <li

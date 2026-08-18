@@ -127,8 +127,8 @@ interface ApiMentorshipTicket {
 interface ApiBatchDetailResponse {
   batch: {
     id: string;
-    course: { id: string; title: string };
-    instructor: { id: string; name: string; email: string };
+    course: { id: string; title: string } | null;
+    instructor: { id: string; name: string; email: string } | null;
     name: string;
     startDate: string;
     endDate: string;
@@ -419,9 +419,9 @@ async function fetchBatch(batchId: string): Promise<Batch | null> {
 
     return {
       id: batch.id,
-      courseTitle: batch.course.title,
+      courseTitle: batch.course?.title ?? "Course",
       batchLabel: batch.name,
-      instructor: batch.instructor.name,
+      instructor: batch.instructor?.name ?? "Unassigned",
       startDate: batch.startDate,
       endDate: batch.endDate,
       overallProgress:
@@ -441,7 +441,7 @@ async function fetchBatch(batchId: string): Promise<Batch | null> {
         ),
         scheduledAt: session.scheduledAt,
         endDateTime: session.scheduledEndAt,
-        instructor: batch.instructor.name,
+        instructor: batch.instructor?.name ?? "Unassigned",
       })),
       recordings,
       modules,
