@@ -355,10 +355,23 @@ Served as a **static site** by Nginx at `marvelslice.com` (the LMS portal is a s
 
 ## Updating from upstream
 
-This app is vendored from https://github.com/Lethinkj/marvel-slice via `git subtree`. The upstream repo is registered as the `marvel-slice` git remote:
+This app is vendored from https://github.com/Lethinkj/marvel-slice via `git subtree`. The upstream repo is registered as the `marvel-slice` git remote.
+
+One command from the repo root pulls the latest upstream and squashes it in (auto-registers the `marvel-slice` remote if it's missing, e.g. on a fresh clone):
 
 ```bash
-# From the repo root
+pnpm update:landing
+```
+
+To pull a specific upstream branch:
+
+```bash
+node scripts/update-landing.mjs <branch>   # default: master
+```
+
+Equivalent manual commands:
+
+```bash
 git fetch marvel-slice
 git subtree pull --prefix apps/landing marvel-slice master --squash
 ```
