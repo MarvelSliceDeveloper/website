@@ -3,6 +3,11 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+// Demo: seeds ~140 realistic students over the last 12 months to populate admin
+// dashboard charts for client demos. Set to `false` (or delete the DEMO DATA
+// block + demo helper functions) for production seeding.
+const SEED_DEMO_COHORT = true;
+
 async function main() {
   console.log("🌱 Seeding database...");
 
@@ -279,6 +284,54 @@ async function main() {
       "Understand supervised and unsupervised learning",
       "Build classification and regression models",
       "Evaluate model performance",
+    ],
+  });
+
+  // Course 4: React & Modern Frontend (catalogue entry)
+  const reactCourse = await upsertCourse({
+    slug: "react-modern-frontend",
+    title: "React & Modern Frontend",
+    description:
+      "Build interactive, component-based frontends with React, TypeScript, and Tailwind CSS.",
+    category: "Web Development",
+    createdBy: instructor.id,
+    tags: ["react", "javascript", "frontend", "typescript"],
+    learningObjectives: [
+      "Build reusable React components",
+      "Manage state with hooks and context",
+      "Style modern UIs with Tailwind CSS",
+    ],
+  });
+
+  // Course 5: Backend with Node.js & Express (catalogue entry)
+  const nodeCourse = await upsertCourse({
+    slug: "backend-node-express",
+    title: "Backend with Node.js & Express",
+    description:
+      "Design REST APIs and backend services with Node.js, Express, Prisma, and PostgreSQL.",
+    category: "Web Development",
+    createdBy: instructor.id,
+    tags: ["nodejs", "express", "backend", "api"],
+    learningObjectives: [
+      "Build REST APIs with Express",
+      "Model data with Prisma and PostgreSQL",
+      "Secure APIs with JWT authentication",
+    ],
+  });
+
+  // Course 6: Business Analytics & Excel (catalogue entry)
+  const analyticsCourse = await upsertCourse({
+    slug: "business-analytics-excel",
+    title: "Business Analytics & Excel",
+    description:
+      "Turn business data into decisions with Excel, dashboards, and data storytelling.",
+    category: "Business Analytics",
+    createdBy: instructor.id,
+    tags: ["excel", "analytics", "business", "dashboards"],
+    learningObjectives: [
+      "Analyze business data in Excel",
+      "Build interactive dashboards",
+      "Present data-driven insights",
     ],
   });
 
@@ -870,6 +923,65 @@ async function main() {
     },
   });
   console.log("✅ Package created");
+
+  // ─── Additional Packages (catalogue) ────────────────────────────────────────
+  const fullStackPkg = await prisma.coursePackage.upsert({
+    where: { id: "pkg-fullstack" },
+    update: {},
+    create: {
+      id: "pkg-fullstack",
+      name: "Full Stack Developer Package",
+      slug: "full-stack-developer-package",
+      description:
+        "Full-stack program: Python, React, and Node.js end-to-end web development.",
+      price: 5990000,
+      status: "ACTIVE",
+      courses: {
+        create: [
+          { courseId: pythonCourse.id, order: 0 },
+          { courseId: reactCourse.id, order: 1 },
+          { courseId: nodeCourse.id, order: 2 },
+        ],
+      },
+    },
+  });
+
+  const frontendPkg = await prisma.coursePackage.upsert({
+    where: { id: "pkg-frontend" },
+    update: {},
+    create: {
+      id: "pkg-frontend",
+      name: "Frontend Developer Package",
+      slug: "frontend-developer-package",
+      description:
+        "Frontend-focused track: React, TypeScript, and modern UI development.",
+      price: 2990000,
+      status: "ACTIVE",
+      courses: { create: [{ courseId: reactCourse.id, order: 0 }] },
+    },
+  });
+
+  const analyticsPkg = await prisma.coursePackage.upsert({
+    where: { id: "pkg-analytics" },
+    update: {},
+    create: {
+      id: "pkg-analytics",
+      name: "Business Analytics Package",
+      slug: "business-analytics-package",
+      description:
+        "Analytics track: SQL, machine learning, and business intelligence.",
+      price: 3990000,
+      status: "ACTIVE",
+      courses: {
+        create: [
+          { courseId: sqlCourse.id, order: 0 },
+          { courseId: mlCourse.id, order: 1 },
+          { courseId: analyticsCourse.id, order: 2 },
+        ],
+      },
+    },
+  });
+  console.log("✅ Full Stack, Frontend, and Business Analytics packages created");
 
   // ─── Internship Package (fee for intern applications) ────────────────────────
   await prisma.coursePackage.upsert({
@@ -1646,6 +1758,23 @@ async function main() {
     console.log("✅ Payment already exists");
   }
 
+  // ─── DEMO DATA ───────────────────────────────────────────────────────────────
+  // Populates admin dashboard charts for client demos. FOR PRODUCTION: set
+  // `SEED_DEMO_COHORT=false` (or delete this block + the demo helpers at the
+  // bottom of the file). Deterministic — re-running produces identical data.
+  if (SEED_DEMO_COHORT) {
+    const demoStudentsCreated = await seedDemoStudents({
+      adminId: admin.id,
+      packages: [
+        { id: dataSciencePkg.id, weight: 30 },
+        { id: fullStackPkg.id, weight: 25 },
+        { id: frontendPkg.id, weight: 20 },
+        { id: analyticsPkg.id, weight: 25 },
+      ],
+    });
+    console.log(`✅ Demo cohort seeded (${demoStudentsCreated} students)`);
+  }
+
   // ─── Notification Preferences ────────────────────────────────────────────────
   const allUsers = [superAdmin, admin, instructor, student];
   const notifTypes = [
@@ -1699,6 +1828,200 @@ async function main() {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+// ─── DEMO DATA HELPERS (production: remove along with the DEMO DATA block) ──
+function demoRng(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const DEMO_FIRST_NAMES = [
+  "Aarav", "Aditi", "Arjun", "Ananya", "Divya", "Ishaan", "Kavya", "Lakshmi",
+  "Manoj", "Nisha", "Priya", "Rahul", "Rohit", "Sneha", "Varun", "Vikram",
+  "Anjali", "Karan", "Meera", "Ravi", "Sanya", "Tarun", "Neha", "Deepak",
+  "Pooja", "Rakesh", "Shreya", "Amit", "Kiran", "Pallavi", "Suresh", "Vandana",
+  "Gaurav", "Ritika", "Naveen", "Swati", "Harish", "Ankita", "Mohan", "Sonal",
+];
+const DEMO_LAST_NAMES = [
+  "Sharma", "Verma", "Patel", "Reddy", "Nair", "Iyer", "Gupta", "Singh",
+  "Kumar", "Rao", "Mehta", "Joshi", "Desai", "Chatterjee", "Bose", "Khan",
+  "Menon", "Pillai", "Das", "Chopra", "Bhat", "Kulkarni", "Mishra", "Tiwari",
+  "Jain", "Agarwal", "Malhotra", "Kapoor", "Saxena", "Bajaj",
+];
+
+function demoStudentName(rng: () => number): string {
+  const first = DEMO_FIRST_NAMES[Math.floor(rng() * DEMO_FIRST_NAMES.length)];
+  const last = DEMO_LAST_NAMES[Math.floor(rng() * DEMO_LAST_NAMES.length)];
+  return `${first} ${last}`;
+}
+
+function pickDemoPackage(
+  packages: { id: string; weight: number }[],
+  rng: () => number,
+): string {
+  const total = packages.reduce((sum, p) => sum + p.weight, 0);
+  let r = rng() * total;
+  for (const p of packages) {
+    r -= p.weight;
+    if (r <= 0) return p.id;
+  }
+  return packages[packages.length - 1].id;
+}
+
+async function seedDemoStudents(opts: {
+  adminId: string;
+  packages: { id: string; weight: number }[];
+}): Promise<number> {
+  const rng = demoRng(20260814);
+  const monthlyCounts = [4, 5, 6, 7, 9, 10, 12, 13, 15, 17, 20, 22];
+  const now = new Date();
+
+  const pkgCourses = await prisma.packageCourse.findMany({
+    select: { packageId: true, courseId: true },
+  });
+  const pkgCourseMap = new Map<string, string[]>();
+  for (const pc of pkgCourses) {
+    const arr = pkgCourseMap.get(pc.packageId) ?? [];
+    arr.push(pc.courseId);
+    pkgCourseMap.set(pc.packageId, arr);
+  }
+  const pkgPrices = new Map(
+    (
+      await prisma.coursePackage.findMany({
+        select: { id: true, price: true },
+      })
+    ).map((p) => [p.id, p.price ?? 0]),
+  );
+
+  let created = 0;
+  let seq = 1;
+  for (let m = 0; m < monthlyCounts.length; m++) {
+    const count = monthlyCounts[m];
+    const joinDate = new Date(
+      now.getFullYear(),
+      now.getMonth() - (11 - m),
+      1 + Math.floor(rng() * 27),
+    );
+    for (let i = 0; i < count; i++) {
+      const email = `student.${String(seq).padStart(3, "0")}@demo.local`;
+      if (await prisma.user.findUnique({ where: { email } })) {
+        seq++;
+        continue;
+      }
+      const packageId = pickDemoPackage(opts.packages, rng);
+      const courseIds = pkgCourseMap.get(packageId) ?? [];
+      const amount = pkgPrices.get(packageId) ?? 0;
+
+      const user = await prisma.user.create({
+        data: {
+          name: demoStudentName(rng),
+          email,
+          passwordHash: await bcrypt.hash("demo123", 10),
+          role: "STUDENT",
+          onboardingComplete: true,
+          createdAt: joinDate,
+        },
+      });
+
+      const enrollment = await prisma.packageEnrollment.create({
+        data: {
+          userId: user.id,
+          packageId,
+          status: "APPROVED",
+          createdAt: joinDate,
+        },
+      });
+      for (const courseId of courseIds) {
+        await prisma.packageEnrollmentCourse.create({
+          data: { enrollmentId: enrollment.id, courseId },
+        });
+      }
+
+      const roll = rng();
+      if (roll < 0.9) {
+        await prisma.payment.create({
+          data: {
+            userId: user.id,
+            packageId,
+            amount,
+            currency: "INR",
+            status: "PAID",
+            razorpayOrderId: `order_demo_${seq}`,
+            razorpayPaymentId: `pay_demo_${seq}`,
+            razorpaySignature: `sig_demo_${seq}`,
+            createdAt: joinDate,
+          },
+        });
+      } else if (roll < 0.95) {
+        await prisma.payment.create({
+          data: {
+            userId: user.id,
+            packageId,
+            amount,
+            currency: "INR",
+            status: "PENDING",
+            razorpayOrderId: `order_demo_${seq}`,
+            createdAt: joinDate,
+          },
+        });
+      } else {
+        const payment = await prisma.payment.create({
+          data: {
+            userId: user.id,
+            packageId,
+            amount,
+            currency: "INR",
+            status: "REFUNDED",
+            razorpayOrderId: `order_demo_${seq}`,
+            razorpayPaymentId: `pay_demo_${seq}`,
+            razorpaySignature: `sig_demo_${seq}`,
+            createdAt: joinDate,
+          },
+        });
+        await prisma.refund.create({
+          data: {
+            paymentId: payment.id,
+            amount,
+            currency: "INR",
+            status: "COMPLETED",
+            reason: "Student requested cancellation within the refund window",
+            initiatedById: opts.adminId,
+            razorpayRefundId: `rfnd_demo_${seq}`,
+            createdAt: joinDate,
+          },
+        });
+      }
+
+      const certChance = Math.max(0.15, 0.6 - m * 0.04);
+      if (courseIds.length > 0 && rng() < certChance) {
+        const courseId = courseIds[Math.floor(rng() * courseIds.length)];
+        const issuedAt = new Date(
+          Math.min(now.getTime(), joinDate.getTime() + 45 * 86400000),
+        );
+        await prisma.certificate.create({
+          data: {
+            userId: user.id,
+            courseId,
+            packageId,
+            status: "ISSUED",
+            issuedAt,
+            autoIssued: true,
+          },
+        });
+      }
+
+      created++;
+      seq++;
+    }
+  }
+  return created;
+}
+
 async function upsertUser(
   email: string,
   name: string,
@@ -1722,6 +2045,8 @@ async function upsertCourse(data: {
   createdBy: string;
   tags: string[];
   learningObjectives: string[];
+  thumbnailUrl?: string;
+  coverImageUrl?: string;
 }) {
   return prisma.course.upsert({
     where: { slug: data.slug },
@@ -1730,6 +2055,12 @@ async function upsertCourse(data: {
       ...data,
       status: "PUBLISHED",
       publishedAt: new Date(),
+      thumbnailUrl:
+        data.thumbnailUrl ??
+        `https://picsum.photos/seed/${data.slug}/640/360`,
+      coverImageUrl:
+        data.coverImageUrl ??
+        `https://picsum.photos/seed/${data.slug}/1280/720`,
     },
   });
 }
