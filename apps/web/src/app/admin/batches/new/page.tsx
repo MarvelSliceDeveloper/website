@@ -33,7 +33,6 @@ type CourseOption = {
 
 type FormState = {
   packageId: string;
-  instructorId: string;
   name: string;
   startDate: string;
   endDate: string;
@@ -54,7 +53,6 @@ export default function CreateBatchPage() {
 
   const [form, setForm] = useState<FormState>({
     packageId: "",
-    instructorId: "",
     name: "",
     startDate: "",
     endDate: "",
@@ -119,15 +117,6 @@ export default function CreateBatchPage() {
       prev.map((ci) => (ci.courseId === courseId ? { ...ci, instructorId } : ci)),
     );
 
-  const selectedInstructorIds = useMemo(() => {
-    const ids = new Set<string>();
-    if (form.instructorId) ids.add(form.instructorId);
-    courseInstructors.forEach((ci) => {
-      if (ci.instructorId) ids.add(ci.instructorId);
-    });
-    return ids;
-  }, [form.instructorId, courseInstructors]);
-
   const errors = useMemo(() => {
     const e: Partial<Record<keyof FormState, string>> = {};
     if (!form.packageId) e.packageId = "Please select a package";
@@ -163,8 +152,6 @@ export default function CreateBatchPage() {
           ? Number(form.defaultDaysToComplete)
           : undefined,
       };
-
-      if (form.instructorId) body.instructorId = form.instructorId;
 
       const assigned = courseInstructors.filter(
         (ci) => ci.instructorId && ci.instructorId.trim(),
@@ -249,27 +236,6 @@ export default function CreateBatchPage() {
               </p>
             )}
             {showError("packageId")}
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Batch Primary Instructor <span className="text-xs text-muted-foreground">(optional — fallback if no per-course instructor is set)</span>
-            </label>
-            <Select
-              value={form.instructorId}
-              onValueChange={(v) => update("instructorId", v)}
-            >
-              <SelectTrigger className="field w-full">
-                <SelectValue placeholder="No primary instructor" />
-              </SelectTrigger>
-              <SelectContent>
-                {instructors.map((i) => (
-                  <SelectItem key={i.id} value={i.id}>
-                    {i.name} ({i.role})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div>
