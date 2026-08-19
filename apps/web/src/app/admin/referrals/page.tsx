@@ -202,8 +202,8 @@ export default function AdminReferralsPage() {
             onClick={() => setActiveTab(tab.key)}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
               activeTab === tab.key
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
+                ? "bg-primary text-white border-primary"
+                : "bg-card text-black border-border hover:border-primary/40 hover:text-foreground"
             }`}
           >
             {tab.label}

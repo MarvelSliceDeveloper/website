@@ -33,7 +33,7 @@
   --danger-tint: #fbeaea;
   --warning: #f59e0b;
   --muted: #6b7280;
-  --muted-foreground: #989aa1;
+  --muted-foreground: black;
   --text-secondary: #ededee;
   --radius: 14px;
 }

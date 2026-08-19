@@ -556,6 +556,7 @@ export default function HomeView({
                                   height={48}
                                   imageClassName="h-full w-full object-cover"
                                   iconClassName="h-1/2 w-1/2 object-contain"
+                                  forceIcon
                                   fallback={
                                     <IconBook size={22} className="text-success" />
                                   }
@@ -608,6 +609,7 @@ export default function HomeView({
                                 height={48}
                                 imageClassName="h-full w-full object-cover"
                                 iconClassName="h-1/2 w-1/2 object-contain"
+                                forceIcon
                                 fallback={<IconBook size={20} />}
                               />
                             </div>
@@ -686,6 +688,7 @@ export default function HomeView({
                                 height={48}
                                 imageClassName="h-full w-full object-cover"
                                 iconClassName="h-1/2 w-1/2 object-contain"
+                                forceIcon
                                 fallback={
                                   <IconBook size={22} className="text-primary" />
                                 }

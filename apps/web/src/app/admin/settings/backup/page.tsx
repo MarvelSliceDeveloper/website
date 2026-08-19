@@ -55,7 +55,7 @@ export default function BackupPage() {
   const handleRestore = async () => {
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = ".sql";
+    input.accept = ".dump,.sql";
     input.onchange = async () => {
       const file = input.files?.[0];
       if (!file) return;
@@ -138,6 +138,7 @@ export default function BackupPage() {
           <IconAlertTriangle size={20} className="text-amber-500 shrink-0 mt-0.5" />
           <p className="text-sm text-foreground/60">
             Restoring a backup will overwrite the current database. This action cannot be undone.
+            A safety backup of the current database is created automatically before restoring.
           </p>
         </div>
       </div>
