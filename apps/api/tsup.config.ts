@@ -7,5 +7,10 @@ export default defineConfig({
   clean: true,
   sourcemap: true,
   skipNodeModulesBundle: true,
-  noExternal: ["@lms/types", "@lms/config", "@lms/utils"], // ← bundle workspace packages
+  noExternal: [
+    "@lms/types",
+    "@lms/config",
+    "@lms/utils",
+    "@lms/email-templates", // bundle workspace packages
+  ],
 });

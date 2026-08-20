@@ -1,0 +1,13 @@
+# One-time bootstrap override — swaps the nginx config for an HTTP-only one
+# so Let's Encrypt certificates can be issued on a fresh VPS.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml -f docker-compose.bootstrap.yml up -d nginx
+#   docker compose -f docker-compose.prod.yml -f docker-compose.bootstrap.yml run --rm --entrypoint certbot certbot certonly --webroot -w /var/www/certbot -d www.marvelslice.com -d lms.marvelslice.com --email you@example.com --agree-tos --no-eff-email
+#   docker compose -f docker-compose.prod.yml -f docker-compose.bootstrap.yml down
+#   docker compose -f docker-compose.prod.yml up -d
+
+services:
+  nginx:
+    volumes:
+      - ./nginx.prod.bootstrap.conf:/etc/nginx/nginx.conf:ro

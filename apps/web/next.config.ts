@@ -4,6 +4,7 @@ import path from "node:path";
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   turbopack: {
     root: path.resolve(process.cwd(), "../.."),
   },

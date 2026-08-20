@@ -1,0 +1,12 @@
+# syntax=docker/dockerfile:1
+# Minimal image for the landing contact/career form email API (dev-server.js).
+# Only needs Node + nodemailer.
+FROM node:20-alpine
+WORKDIR /app
+
+COPY apps/landing/dev-server.js ./dev-server.js
+RUN npm install nodemailer@^6.9.16 --no-save --ignore-scripts
+
+ENV NODE_ENV=production
+EXPOSE 3001
+CMD ["node", "dev-server.js"]
