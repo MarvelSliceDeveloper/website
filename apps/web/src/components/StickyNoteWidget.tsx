@@ -77,6 +77,17 @@ export default function StickyNoteWidget({
 
   const [contentLoaded, setContentLoaded] = useState(false);
 
+  // On phones the floating draggable/resizable box overflows the viewport, so
+  // we render it as a full-width bottom sheet instead.
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
   // Load existing note on mount
   useEffect(() => {
     if (!moduleId) return;
@@ -248,6 +259,7 @@ export default function StickyNoteWidget({
   const handleDragStart = (
     e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
   ) => {
+    if (isMobile) return;
     const target = e.target as HTMLElement;
     if (
       target.closest(".resize-handle") ||
@@ -266,16 +278,29 @@ export default function StickyNoteWidget({
   if (!moduleId) return null;
 
   return (
-    <div
-      ref={dragRef}
-      className={`fixed z-50 rounded-xl border border-amber-200/60 bg-amber-50/95 shadow-2xl shadow-black/20 backdrop-blur-sm transition-shadow overflow-hidden ${isDragging ? "shadow-black/40 scale-[1.02]" : ""} ${isResizing ? "select-none" : ""}`}
-      style={{
-        left: position.x,
-        top: position.y,
-        width: width,
-        height: height,
-      }}
-    >
+    <>
+      {isMobile && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40"
+          onClick={handleClose}
+          aria-hidden="true"
+        />
+      )}
+      <div
+        ref={dragRef}
+        className={`z-50 border border-amber-200/60 bg-amber-50/95 shadow-2xl shadow-black/20 backdrop-blur-sm transition-shadow overflow-hidden ${
+          isMobile
+            ? "fixed inset-x-0 bottom-0 flex w-full max-h-[85vh] flex-col rounded-t-2xl"
+            : "fixed flex flex-col rounded-xl"
+        } ${isDragging ? "shadow-black/40 scale-[1.02]" : ""} ${
+          isResizing ? "select-none" : ""
+        }`}
+        style={
+          isMobile
+            ? undefined
+            : { left: position.x, top: position.y, width, height }
+        }
+      >
       {/* Header - drag handle */}
       <div
         className="flex items-center justify-between px-3 py-2 border-b border-amber-200/60 cursor-move select-none shrink-0"
@@ -329,10 +354,7 @@ export default function StickyNoteWidget({
       </div>
 
       {/* Editor Area */}
-      <div
-        className="flex-1 overflow-y-auto p-2"
-        style={{ height: `calc(100% - 40px)` }}
-      >
+      <div className="min-h-0 flex-1 overflow-y-auto p-2">
         {contentLoaded ? (
           <RichEditor
             key={noteId || "new"}
@@ -351,7 +373,7 @@ export default function StickyNoteWidget({
 
       {/* Resize Handle */}
       <div
-        className="resize-handle absolute bottom-0 right-0 w-5 h-5 cursor-se-resize flex items-center justify-center text-amber-300/50 hover:text-amber-500 transition-colors"
+        className="resize-handle absolute bottom-0 right-0 hidden w-5 h-5 cursor-se-resize items-center justify-center text-amber-300/50 hover:text-amber-500 transition-colors md:flex"
         onMouseDown={handleResizeMouseDown}
         onTouchStart={handleResizeTouchStart}
       >
@@ -379,6 +401,7 @@ export default function StickyNoteWidget({
           />
         </svg>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

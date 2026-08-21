@@ -1,3 +1,4 @@
+
 -- CreateEnum
 CREATE TYPE "PackageStatus" AS ENUM ('DRAFT', 'ACTIVE', 'ARCHIVED');
 

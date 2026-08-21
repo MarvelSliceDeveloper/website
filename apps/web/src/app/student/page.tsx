@@ -1040,6 +1040,7 @@ function StudentPortalContent() {
       studentName={studentName}
       studentEmail={studentEmail}
       fullWidth={currentView.view === "COURSE_CONTENT"}
+      hideMobileNav={currentView.view === "COURSE_CONTENT"}
     >
       {/* View transition wrapper */}
       <div key={currentView.view} className="sp-view-enter">

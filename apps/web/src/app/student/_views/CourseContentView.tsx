@@ -11,6 +11,7 @@ import {
   IconPencil,
   IconNotes,
   IconVideo,
+  IconPlayerPlay,
   IconX,
   IconChevronDown,
   IconClipboardCheck,
@@ -975,7 +976,7 @@ export default function CourseContentView({
               selectedModule?.title ??
               "Select a lesson"}
           </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-xs text-white bg-muted-foreground mt-0.5">
             {selectedRecording ? (
               "Recorded live session"
             ) : (
@@ -993,7 +994,7 @@ export default function CourseContentView({
             )}
           </p>
           {d.batch?.instructor && (
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs text-white bg-muted-foreground mt-0.5">
               Instructor: {d.batch.instructor}
             </p>
           )}
@@ -1631,19 +1632,173 @@ export default function CourseContentView({
     </div>
   );
 
+  // ── Mobile lesson list (YouTube-style "up next" under the player) ────────
+  // Shown only on mobile (`md:hidden`). Mirrors the desktop sidebar's unified
+  // list but renders inline below the video so students can jump between
+  // lessons/quizzes/assignments without opening the Contents drawer.
+
+  const renderMobileLessonList = () => {
+    if (!d) return null;
+
+    const isCurrent = (type: UnifiedItem["type"], id: string) => {
+      if (type === "LESSON")
+        return (
+          id === selectedLessonId &&
+          !selectedRecordingId &&
+          !selectedQuizId &&
+          !selectedAssignmentId &&
+          !selectedPracticalId &&
+          !selectedResource
+        );
+      if (type === "QUIZ") return id === selectedQuizId;
+      if (type === "ASSIGNMENT") return id === selectedAssignmentId;
+      if (type === "PRACTICAL") return id === selectedPracticalId;
+      return false;
+    };
+
+    return (
+      <div className="mt-5 space-y-5 md:hidden">
+        <p className="px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          Course content
+        </p>
+        {d.modules
+          .filter((m) => !m.isCertificationModule)
+          .map((module, mIdx) => (
+            <div key={module.id}>
+              <div className="mb-2 flex items-baseline gap-2 px-1">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Module {mIdx + 1}
+                </span>
+                <span className="truncate text-[11px] text-muted-foreground">
+                  {module.title}
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                {buildUnifiedList(module).map((item, idx) => {
+                  const current = isCurrent(item.type, item.data.id);
+                  const completed =
+                    item.type === "LESSON" &&
+                    (item.data as CourseLesson).isCompleted;
+
+                  const meta = (() => {
+                    switch (item.type) {
+                      case "LESSON": {
+                        const l = item.data as CourseLesson;
+                        return {
+                          typeLabel: "Lesson",
+                          subtitle: l.durationSeconds
+                            ? formatMinutes(l.durationSeconds)
+                            : "Video",
+                          icon: IconVideo,
+                          iconBg: current
+                            ? "bg-brand-blue text-white"
+                            : completed
+                              ? "bg-emerald-500 text-white"
+                              : "bg-brand-blue-tint text-brand-blue",
+                        };
+                      }
+                      case "QUIZ":
+                        return {
+                          typeLabel: "Quiz",
+                          subtitle: `${(item.data as QuizInfo).questionCount} questions`,
+                          icon: IconClipboardCheck,
+                          iconBg: "bg-amber-100 text-amber-600",
+                        };
+                      case "ASSIGNMENT":
+                        return {
+                          typeLabel: "Assignment",
+                          subtitle: "Submit task",
+                          icon: IconFileSpreadsheet,
+                          iconBg: "bg-blue-100 text-blue-600",
+                        };
+                      case "PRACTICAL":
+                        return {
+                          typeLabel: "Practical",
+                          subtitle: "Hands-on",
+                          icon: IconDeviceSpeaker,
+                          iconBg: "bg-violet-100 text-violet-600",
+                        };
+                    }
+                  })();
+
+                  const title =
+                    (item.data as { title?: string }).title ?? "Untitled";
+
+                  return (
+                    <button
+                      key={item.data.id}
+                      onClick={() => {
+                        if (item.type === "LESSON")
+                          selectLesson(item.data as CourseLesson, module.id);
+                        else if (item.type === "QUIZ")
+                          selectQuiz(item.data.id);
+                        else if (item.type === "ASSIGNMENT")
+                          selectAssignment(item.data);
+                        else if (item.type === "PRACTICAL")
+                          selectPractical(item.data.id);
+                      }}
+                      className={`flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition-colors ${
+                        current
+                          ? "border-primary/40 bg-primary/10"
+                          : "border-border bg-card hover:bg-primary/5"
+                      }`}
+                    >
+                      <span
+                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${meta.iconBg}`}
+                      >
+                        <meta.icon size={18} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span
+                          className={`block truncate text-sm ${
+                            current
+                              ? "font-semibold text-foreground"
+                              : "font-medium text-foreground"
+                          }`}
+                        >
+                          {idx + 1}. {title}
+                        </span>
+                        <span className="block text-[11px] text-muted-foreground">
+                          {meta.typeLabel}
+                          {meta.subtitle ? ` · ${meta.subtitle}` : ""}
+                        </span>
+                      </span>
+                      {current && (
+                        <IconPlayerPlay
+                          size={16}
+                          className="shrink-0 text-primary"
+                        />
+                      )}
+                      {!current && completed && (
+                        <IconCheck
+                          size={16}
+                          className="shrink-0 text-emerald-500"
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+      </div>
+    );
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-[calc(100vh-var(--shell-header-height,56px))] gap-0 overflow-hidden">
+    <div className="flex h-[calc(100dvh-var(--shell-header-height,56px))] gap-0 overflow-hidden">
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <div className="flex-1 overflow-y-auto p-3 sm:p-5 bg-mist">
           {renderMain()}
+          {renderMobileLessonList()}
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 bg-card border-t border-border shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 px-3 sm:px-5 py-2.5 bg-card border-t border-border shrink-0">
           <button
             onClick={() => setMobileSidebarOpen(true)}
-            className="lg:hidden flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
+            className="hidden md:flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
             aria-label="Open course contents"
           >
             <IconList size={13} /> Contents
@@ -1818,7 +1973,7 @@ export default function CourseContentView({
               );
               return isAtLastInModule && modIdx >= d.modules.length - 1;
             })()}
-            className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg text-primary-foreground bg-primary hover:opacity-90 disabled:opacity-40 transition-opacity focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
+            className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-lg text-white bg-primary hover:opacity-90 disabled:opacity-40 transition-opacity focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2"
           >
             Continue <IconArrowRight size={13} />
           </button>
@@ -1836,7 +1991,7 @@ export default function CourseContentView({
 
       {/* Content panel: static on desktop, slide-in drawer on mobile */}
       <aside
-        className={`fixed inset-y-0 right-0 z-50 flex w-80 max-w-[85vw] flex-col border-l border-hairline bg-paper shadow-xl transition-transform duration-300 ease-out lg:static lg:z-auto lg:w-115 lg:max-w-none lg:shrink-0 lg:shadow-none lg:translate-x-0 ${
+        className={`hidden md:flex fixed inset-y-0 right-0 z-50 flex w-80 max-w-[85vw] flex-col border-l border-hairline bg-paper shadow-xl transition-transform duration-300 ease-out lg:static lg:z-auto lg:w-115 lg:max-w-none lg:shrink-0 lg:shadow-none lg:translate-x-0 ${
           mobileSidebarOpen ? "translate-x-0" : "translate-x-full"
         }`}
         aria-label="Course contents"
@@ -1869,7 +2024,7 @@ export default function CourseContentView({
 
       <button
         onClick={() => setShowStickyWidget((v) => !v)}
-        className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl transition-transform hover:scale-105 active:scale-95         focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
+        className="fixed bottom-6 right-6 z-40 hidden h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-xl transition-transform hover:scale-105 active:scale-95 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 md:flex"
         aria-label={
           showStickyWidget ? "Close sticky notes" : "Open sticky notes"
         }

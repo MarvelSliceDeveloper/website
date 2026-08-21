@@ -382,7 +382,7 @@ export default function HomeView({
                   RESULTS
                 </button>
               </div>
-              <div className="relative w-64">
+              <div className="relative w-full sm:w-64">
                 <IconSearch
                   size={16}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-slate"
