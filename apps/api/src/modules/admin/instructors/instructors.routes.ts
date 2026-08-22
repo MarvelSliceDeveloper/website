@@ -11,6 +11,25 @@ import {
 import { UserRole } from "@lms/types";
 import { paginate } from "../../../utils/paginate";
 import { handleControllerError, AppError } from "../../../utils/errors";
+import { passwordSchema } from "@lms/config";
+import { emailService } from "../../../services/email.service";
+
+function generateInstructorPassword(): string {
+  // 10 chars from unambiguous set, guaranteed to pass passwordSchema (upper+lower+digit)
+  const lower = "abcdefghjkmnpqrstuvwxyz";
+  const upper = "ABCDEFGHJKMNPQRSTUVWXYZ";
+  const digits = "23456789";
+  const all = lower + upper + digits;
+  const pick = (s: string) => s.charAt(crypto.randomInt(s.length));
+  // ensure at least one of each required class
+  let pw = pick(lower) + pick(upper) + pick(digits);
+  for (let i = 3; i < 10; i++) pw += pick(all);
+  // shuffle
+  return pw
+    .split("")
+    .sort(() => crypto.randomInt(3) - 1)
+    .join("");
+}
 
 const router = Router();
 
@@ -183,28 +202,45 @@ router.get("/:id", async (req: AuthRequest, res: Response) => {
 });
 
 // ── POST / — Create instructor account (SUPER_ADMIN only) ──
+// Admin provides name + email + optional one-time password. If password is
+// empty it is auto-generated. Instructor must change it on first login via
+// POST /api/auth/me/set-password (mustChangePassword=true). Remaining
+// profile fields are filled by the instructor during onboarding.
 router.post("/", requireSuperAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const { name, email, password } = req.body;
 
-    if (!name || !email) {
+    if (!name?.trim() || !email?.trim()) {
       throw new AppError(400, "name and email are required");
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = email.trim().toLowerCase();
+    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existing) {
       throw new AppError(409, "A user with this email already exists");
     }
 
-    const generatedPassword = password || crypto.randomBytes(8).toString("hex");
-    const passwordHash = await bcrypt.hash(generatedPassword, 10);
+    let plainPassword: string;
+    if (password?.trim()) {
+      const pwdCheck = passwordSchema.safeParse(password);
+      if (!pwdCheck.success) {
+        throw new AppError(400, pwdCheck.error.issues[0]?.message ?? "Weak password");
+      }
+      plainPassword = password;
+    } else {
+      plainPassword = generateInstructorPassword();
+    }
+
+    const passwordHash = await bcrypt.hash(plainPassword, 12);
 
     const user = await prisma.user.create({
       data: {
-        name,
-        email,
+        name: name.trim(),
+        email: normalizedEmail,
         passwordHash,
         role: UserRole.INSTRUCTOR,
+        mustChangePassword: true,
+        instructorOnboardingComplete: false,
       },
       select: {
         id: true,
@@ -214,9 +250,22 @@ router.post("/", requireSuperAdmin, async (req: AuthRequest, res: Response) => {
       },
     });
 
+    // Fire-and-forget welcome email with one-time credentials (no await — don't block response)
+    emailService
+      .sendWelcomeEmail({
+        name: user.name,
+        email: user.email,
+        credentials: { email: user.email, password: plainPassword },
+      })
+      .catch((err) => console.error("[instructors] Failed to send welcome email:", err));
+
+    // In non-production / when email is not configured, also return the
+    // generated password once so the admin can share it manually. Never
+    // log the plain password outside this response.
+    const includePassword = !password?.trim();
     return res.status(201).json({
       ...user,
-      generatedPassword: password ? undefined : generatedPassword,
+      ...(includePassword ? { generatedPassword: plainPassword } : {}),
     });
   } catch (err: unknown) {
     const { statusCode, body } = handleControllerError(err, (req as any).log);
