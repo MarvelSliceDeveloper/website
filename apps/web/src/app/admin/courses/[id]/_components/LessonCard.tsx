@@ -11,11 +11,20 @@ import {
   IconRefresh,
   IconChevronUp,
   IconChevronDown,
+  IconSparkles,
 } from "@tabler/icons-react";
 import type { Lesson } from "./types";
 import RichEditor from "@/components/editor/RichEditor";
 import { FormModal } from "@/components/admin/FormModal";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useAIGenerate } from "@/lib/use-ai-generate";
+
+function plainTextToHtml(text: string): string {
+  return text
+    .split(/\n{2,}/)
+    .map((para) => `<p>${para.replace(/\n/g, "<br/>")}</p>`)
+    .join("");
+}
 
 export default function LessonCard({
   lesson,
@@ -46,6 +55,31 @@ export default function LessonCard({
     lesson.durationSeconds ?? null,
   );
   const confirmDelete = useConfirmDialog();
+
+  // AI description generation
+  const aiGenerate = useAIGenerate<{ description: string }>();
+
+  const handleAiDescription = () => {
+    const lessonTitle = editForm.title.trim();
+    if (!lessonTitle) {
+      toast.error("Enter the lesson title first so the AI knows what to write about");
+      return;
+    }
+    aiGenerate.mutate(
+      { type: "LESSON_DESCRIPTION", prompt: lessonTitle, context: { lessonTitle } },
+      {
+        onSuccess: (res) => {
+          if (!res.data.description) {
+            toast.error("AI returned an empty description");
+            return;
+          }
+          setEditForm((p) => ({ ...p, description: plainTextToHtml(res.data.description) }));
+          toast.success("Description written — review before saving");
+        },
+        onError: (err: unknown) => toast.error(getErrorMessage(err)),
+      },
+    );
+  };
 
   const startEditing = () => {
     setEditForm({
@@ -173,7 +207,18 @@ export default function LessonCard({
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-xs font-medium">Description</label>
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-medium">Description</label>
+          <button
+            type="button"
+            onClick={handleAiDescription}
+            disabled={aiGenerate.isPending}
+            className="flex items-center gap-1 rounded-md border border-violet-300/60 bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-700 transition-colors hover:bg-violet-100 disabled:opacity-50"
+          >
+            <IconSparkles size={11} />
+            {aiGenerate.isPending ? "Writing…" : "Write with AI"}
+          </button>
+        </div>
         <RichEditor
           content={editForm.description}
           onChange={(html) =>

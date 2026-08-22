@@ -52,6 +52,10 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "core-js"
+    ],
+    "ignoredBuiltDependencies": [
+      "@google/genai",
+      "protobufjs"
     ]
   },
   "engines": {

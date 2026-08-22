@@ -14,7 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { IconFileZip, IconX } from "@tabler/icons-react";
+import { IconFileZip, IconX, IconSparkles } from "@tabler/icons-react";
+import { useAIGenerate } from "@/lib/use-ai-generate";
 
 type TargetType =
   | "ALL_USERS"
@@ -63,6 +64,28 @@ export default function AdminSendNotificationPage() {
   const [attachment, setAttachment] = useState<File | null>(null);
   const [confirmShow, setConfirmShow] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+
+  // AI draft generation
+  const [aiBrief, setAiBrief] = useState("");
+  const aiGenerate = useAIGenerate<{ title: string; message: string }>();
+
+  function handleAiDraft() {
+    if (!aiBrief.trim()) {
+      toast.error("Describe what the notification should say first");
+      return;
+    }
+    aiGenerate.mutate(
+      { type: "NOTIFICATION", prompt: aiBrief.trim() },
+      {
+        onSuccess: (res) => {
+          if (res.data.title) setTitle(res.data.title);
+          if (res.data.message) setMessage(res.data.message);
+          toast.success("Notification drafted — review before sending");
+        },
+        onError: (err: unknown) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }
 
   const coursesQuery = useApiQuery<CourseOption[]>(
     ["admin", "notifications", "courses"],
@@ -492,6 +515,31 @@ export default function AdminSendNotificationPage() {
             Up to 25 MB. Recipients receive the file with the notification
             email.
           </p>
+        </div>
+
+        {/* AI draft */}
+        <div className="space-y-2 rounded-xl border border-violet-300/50 bg-violet-500/5 p-3">
+          <div className="flex items-center gap-2">
+            <IconSparkles size={15} className="shrink-0 text-violet-500" />
+            <p className="text-xs font-semibold text-foreground">
+              Draft with AI
+            </p>
+          </div>
+          <textarea
+            value={aiBrief}
+            onChange={(e) => setAiBrief(e.target.value)}
+            placeholder="Describe what to announce, e.g. Live class moved from Friday 5pm to Saturday 11am for the Data Science batch"
+            className="field min-h-[60px] resize-y text-xs"
+            maxLength={2000}
+          />
+          <button
+            type="button"
+            onClick={handleAiDraft}
+            disabled={aiGenerate.isPending}
+            className="flex items-center gap-1 rounded-md border border-violet-300/60 bg-violet-50 px-2.5 py-1.5 text-[11px] font-semibold text-violet-700 transition-colors hover:bg-violet-100 disabled:opacity-50"
+          >
+            {aiGenerate.isPending ? "Drafting…" : "Generate Draft"}
+          </button>
         </div>
 
         {/* Title */}

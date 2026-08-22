@@ -8,6 +8,7 @@ import { IconPlus } from "@tabler/icons-react";
 import type { Module } from "./types";
 import ModuleCard from "./ModuleCard";
 import AddModuleForm from "./AddModuleForm";
+import AIModuleGenerator from "./AIModuleGenerator";
 
 export default function ContentTab({
   courseId,
@@ -98,7 +99,10 @@ export default function ContentTab({
         </div>
       )}
 
-      <AddModuleForm courseId={courseId} onAdded={onContentChanged} />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <AIModuleGenerator courseId={courseId} onAdded={onContentChanged} />
+        <AddModuleForm courseId={courseId} onAdded={onContentChanged} />
+      </div>
     </div>
   );
 }
