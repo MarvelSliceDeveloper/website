@@ -10,7 +10,8 @@ import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { IconArrowLeft, IconPlus, IconX } from "@tabler/icons-react";
+import { IconArrowLeft, IconPlus, IconSparkles, IconX } from "@tabler/icons-react";
+import { useAIGenerate } from "@/lib/use-ai-generate";
 import {
   Select,
   SelectContent,
@@ -63,9 +64,42 @@ export default function CreateCoursePage() {
     category: "",
     tags: [] as string[],
   });
+  const [aiTopic, setAiTopic] = useState("");
 
   const update = (field: string, value: string | number) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  const aiGenerate = useAIGenerate<{
+    title: string;
+    description: string;
+    category: string;
+    tags: string[];
+    objectives: string[];
+  }>();
+
+  const handleAiGenerate = () => {
+    if (!aiTopic.trim()) {
+      toast.error("Enter a course topic for the AI");
+      return;
+    }
+    aiGenerate.mutate(
+      { type: "COURSE_OUTLINE", prompt: aiTopic.trim() },
+      {
+        onSuccess: (res) => {
+          const d = res.data;
+          setForm((p) => ({
+            ...p,
+            ...(d.title ? { title: d.title } : {}),
+            ...(d.description ? { description: d.description } : {}),
+            ...(d.category ? { category: d.category } : {}),
+            ...(Array.isArray(d.tags) && d.tags.length ? { tags: [...d.tags] } : {}),
+          }));
+          toast.success("Course draft generated — review before adding");
+        },
+        onError: (err: unknown) => toast.error(getErrorMessage(err)),
+      },
+    );
+  };
 
   const titleOptions = dbTitles.length
     ? dbTitles
@@ -237,6 +271,30 @@ export default function CreateCoursePage() {
           <h2 className="text-sm font-semibold text-foreground">
             Course Details
           </h2>
+
+          {/* AI generation menu — same as edit course (CourseDetailsTab) */}
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-violet-300/50 bg-violet-500/5 p-3">
+            <IconSparkles size={16} className="shrink-0 text-violet-500" />
+            <input
+              type="text"
+              value={aiTopic}
+              onChange={(e) => setAiTopic(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAiGenerate())}
+              placeholder="Describe the course you want, e.g. Python for data analysis beginners"
+              className="field flex-1 min-w-[220px] text-xs"
+            />
+            <button
+              type="button"
+              onClick={handleAiGenerate}
+              disabled={aiGenerate.isPending}
+              className="flex items-center gap-1 rounded-md border border-violet-300/60 bg-violet-50 px-3 py-1.5 text-[11px] font-semibold text-violet-700 transition-colors hover:bg-violet-100 disabled:opacity-50"
+            >
+              {aiGenerate.isPending ? "Generating…" : "Generate Draft"}
+            </button>
+            <p className="w-full text-[10px] text-muted-foreground">
+              Fills title, description, category, and tags below — review and edit before adding.
+            </p>
+          </div>
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-foreground">
