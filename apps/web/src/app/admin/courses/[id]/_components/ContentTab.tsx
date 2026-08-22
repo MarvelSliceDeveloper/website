@@ -5,22 +5,31 @@ import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { IconPlus } from "@tabler/icons-react";
-import type { Module } from "./types";
+import type { Module, AIModuleContext } from "./types";
+import { toAIModules } from "./types";
 import ModuleCard from "./ModuleCard";
 import AddModuleForm from "./AddModuleForm";
 import AIModuleGenerator from "./AIModuleGenerator";
 
 export default function ContentTab({
   courseId,
+  courseTitle,
+  courseDescription,
   modules,
   onContentChanged,
 }: {
   courseId: string;
+  courseTitle?: string;
+  courseDescription?: string;
   modules: Module[];
   onContentChanged: () => void;
 }) {
   const regularModules = useMemo(
     () => modules.filter((m) => !m.isCertificationModule),
+    [modules],
+  );
+  const courseModules: AIModuleContext[] = useMemo(
+    () => toAIModules(modules),
     [modules],
   );
 
@@ -89,6 +98,9 @@ export default function ContentTab({
               module={mod}
               index={idx}
               courseId={courseId}
+              courseTitle={courseTitle}
+              courseDescription={courseDescription}
+              courseModules={courseModules}
               onChanged={onContentChanged}
               onMoveUp={() => handleMoveModule(idx, -1)}
               onMoveDown={() => handleMoveModule(idx, 1)}
@@ -100,7 +112,13 @@ export default function ContentTab({
       )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <AIModuleGenerator courseId={courseId} onAdded={onContentChanged} />
+        <AIModuleGenerator
+          courseId={courseId}
+          courseTitle={courseTitle}
+          courseDescription={courseDescription}
+          courseModules={courseModules}
+          onAdded={onContentChanged}
+        />
         <AddModuleForm courseId={courseId} onAdded={onContentChanged} />
       </div>
     </div>

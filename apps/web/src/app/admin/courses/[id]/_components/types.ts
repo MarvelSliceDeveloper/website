@@ -141,6 +141,18 @@ export type ChecklistItem = {
   message?: string;
 };
 
+export type AIModuleContext = {
+  title: string;
+  description?: string;
+};
+
+export function toAIModules(modules: Module[]): AIModuleContext[] {
+  return modules.map((m) => ({
+    title: m.title,
+    description: m.description ?? undefined,
+  }));
+}
+
 export type CourseFormData = {
   title: string;
   description: string;

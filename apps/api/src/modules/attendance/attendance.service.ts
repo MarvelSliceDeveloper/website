@@ -30,11 +30,29 @@ export const attendanceService = {
     }
 
     // 2. Verify student enrollment in the batch of this session
-    if (!session.batch || session.batch.enrollments.length === 0) {
+    // Supports both direct batch enrollments (EnrollmentRequest) and
+    // package-based enrollments (PackageEnrollmentCourse -> PackageEnrollment)
+    // since courses are accessed through batches via either path.
+    if (!session.batch) {
       throw new AppError(
         403,
         "You are not enrolled in the batch for this session",
       );
+    }
+    if (session.batch.enrollments.length === 0) {
+      const packageEnrollment = await prisma.packageEnrollmentCourse.findFirst({
+        where: {
+          batchId: session.batch.id,
+          enrollment: { userId, status: "APPROVED" },
+        },
+        select: { id: true },
+      });
+      if (!packageEnrollment) {
+        throw new AppError(
+          403,
+          "You are not enrolled in the batch for this session",
+        );
+      }
     }
 
     // 3. Create, reopen, or keep the attendance record

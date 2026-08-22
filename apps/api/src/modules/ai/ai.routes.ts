@@ -121,7 +121,16 @@ const generateBodySchema = z.object({
       courseTitle: z.string().max(200).optional(),
       courseDescription: z.string().max(2000).optional(),
       moduleTitle: z.string().max(200).optional(),
+      moduleDescription: z.string().max(1000).optional(),
       lessonTitle: z.string().max(200).optional(),
+      modules: z
+        .array(
+          z.object({
+            title: z.string().max(120),
+            description: z.string().max(500).optional(),
+          }),
+        )
+        .optional(),
       difficulty: z.string().max(30).optional(),
       questionCount: z.number().int().min(1).max(30).optional(),
     })

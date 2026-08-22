@@ -15,6 +15,7 @@ import { readSheet } from "read-excel-file/browser";
 import RichEditor from "@/components/editor/RichEditor";
 import { FormModal } from "@/components/admin/FormModal";
 import { useAIGenerate } from "@/lib/use-ai-generate";
+import type { AIModuleContext } from "./types";
 
 interface QuizOption {
   label: string;
@@ -36,6 +37,9 @@ interface AddQuizFormProps {
   moduleId: string;
   moduleTitle?: string;
   moduleDescription?: string;
+  courseTitle?: string;
+  courseDescription?: string;
+  courseModules?: AIModuleContext[];
   onSuccess: () => void;
   onCancel: () => void;
   open: boolean;
@@ -45,6 +49,9 @@ export default function AddQuizForm({
   moduleId,
   moduleTitle,
   moduleDescription,
+  courseTitle,
+  courseDescription,
+  courseModules,
   onSuccess,
   onCancel,
   open,
@@ -93,6 +100,9 @@ export default function AddQuizForm({
         context: {
           moduleTitle: moduleTitle?.trim(),
           moduleDescription: moduleDescription?.trim(),
+          courseTitle,
+          courseDescription,
+          modules: courseModules,
           questionCount: aiCount,
         },
       },

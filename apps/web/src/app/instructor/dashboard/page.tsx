@@ -83,6 +83,7 @@ export default function InstructorDashboardPage() {
   const sessionsQuery = useApiQuery<{ sessions?: Session[] }>(
     ["instructor", "sessions"],
     "/api/sessions",
+    { limit: "100" },
   );
   const batchesQuery = useApiQuery<Batch[]>(
     ["instructor", "batches"],

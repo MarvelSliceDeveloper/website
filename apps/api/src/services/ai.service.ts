@@ -40,6 +40,7 @@ export interface AIGenerationContext {
   moduleTitle?: string;
   moduleDescription?: string;
   lessonTitle?: string;
+  modules?: Array<{ title: string; description?: string }>;
   difficulty?: string;
   questionCount?: number;
 }
@@ -208,6 +209,13 @@ function contextLines(ctx: AIGenerationContext): string {
   const parts: string[] = [];
   if (ctx.courseTitle) parts.push(`Course: "${ctx.courseTitle}"`);
   if (ctx.courseDescription) parts.push(`Course description: ${ctx.courseDescription}`);
+  if (ctx.modules && ctx.modules.length > 0) {
+    parts.push(
+      `Course modules:\n${ctx.modules
+        .map((m, i) => `  ${i + 1}. ${m.title}${m.description ? ` — ${m.description}` : ""}`)
+        .join("\n")}`,
+    );
+  }
   if (ctx.moduleTitle) parts.push(`Module: "${ctx.moduleTitle}"`);
   if (ctx.moduleDescription) parts.push(`Module description: ${ctx.moduleDescription}`);
   if (ctx.lessonTitle) parts.push(`Lesson: "${ctx.lessonTitle}"`);
@@ -234,13 +242,14 @@ Propose a logical sequence of course modules for the topic given by the user.
 Rules:
 - Order modules from foundational to advanced.
 - Each module covers one coherent theme that builds on the previous ones.
+- If existing modules are provided in the context above, do not duplicate them — only propose new modules that come after them.
 - "title": max 60 characters. "description": 1-2 sentences on what the module teaches.${contextLines(ctx)}`;
 
     case "QUIZ": {
       const count = Math.min(Math.max(ctx.questionCount ?? 5, 1), 30);
       return `${BASE_PERSONA}
 
-Write a multiple-choice quiz based on the user's request. If module context is provided below, the questions MUST cover the material described there — the user's extra instructions only refine or narrow the focus.
+Write a multiple-choice quiz based on the user's request. If module context is provided below, the questions MUST cover the material described there — the user's extra instructions only refine or narrow the focus. Use the course modules list to place this quiz at the right point in the curriculum and avoid content already covered in previous modules.
 Rules:
 - Exactly ${count} question(s).
 - Each question has EXACTLY 4 options and EXACTLY ONE correct answer (isCorrect: true).
@@ -258,12 +267,13 @@ Create a practical hands-on assignment brief based on the topic given by the use
 Rules:
 - "description": structured brief with sections — Objective, Tasks (numbered), Deliverables, and Grading Criteria. Plain text with line breaks, no markdown headers.
 - Tasks must be doable individually and verifiable.
+- Align the assignment with the module context above when provided.
 - "maxPoints": suggested total score (typically 100).${difficultyLine(ctx)}${contextLines(ctx)}`;
 
     case "LESSON_DESCRIPTION":
       return `${BASE_PERSONA}
 
-Write a description for the video lesson named by the user.
+Write a description for the video lesson named by the user. Use the module and course context above to tailor the description to what this lesson teaches within the broader curriculum.
 Rules:
 - 2-4 sentences describing what the lesson covers and what the learner will be able to do afterwards.
 - No clickbait, no emoji, no bullet lists.${difficultyLine(ctx)}${contextLines(ctx)}`;

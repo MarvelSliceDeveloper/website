@@ -10,6 +10,7 @@ import {
 } from "@tabler/icons-react";
 import { FormModal } from "@/components/admin/FormModal";
 import { useAIGenerate } from "@/lib/use-ai-generate";
+import type { AIModuleContext } from "./types";
 
 interface ProposedModule {
   title: string;
@@ -19,10 +20,14 @@ interface ProposedModule {
 export default function AIModuleGenerator({
   courseId,
   courseTitle,
+  courseDescription,
+  courseModules,
   onAdded,
 }: {
   courseId: string;
   courseTitle?: string;
+  courseDescription?: string;
+  courseModules?: AIModuleContext[];
   onAdded: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -43,7 +48,13 @@ export default function AIModuleGenerator({
       {
         type: "MODULES",
         prompt: topic.trim(),
-        context: { questionCount: count, difficulty },
+        context: {
+          courseTitle,
+          courseDescription,
+          modules: courseModules,
+          questionCount: count,
+          difficulty,
+        },
       },
       {
         onSuccess: (res) => {

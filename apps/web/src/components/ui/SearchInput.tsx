@@ -16,7 +16,7 @@ interface SearchInputProps {
  * Debounces onChange to avoid excessive re-renders.
  */
 export function SearchInput({
-  placeholder = "  Search...",
+  placeholder = "Search...",
   value: controlledValue,
   onChange,
   debounceMs = 300,

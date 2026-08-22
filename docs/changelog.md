@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-08-23 — AI Integration: Course Module Context for Content & Quiz Generation
+
+When building course content or quizzes the AI can now "see the module". All generation calls now carry the course title/description, the full module list in order, and the current module title/description so the AI stays aligned with the curriculum instead of generating generic content.
+
+### Backend
+- `apps/api/src/services/ai.service.ts` — `AIGenerationContext` adds `modules: Array<{ title: string; description?: string }>`; `contextLines()` renders a numbered `Course modules:` block; `MODULES` prompt avoids duplicating existing modules, `QUIZ` aligns with the curriculum progression, `LESSON_DESCRIPTION` and `ASSIGNMENT` reference the module/course context.
+- `apps/api/src/modules/ai/ai.routes.ts` — Zod `generateBodySchema` now accepts `moduleDescription` (was stripped — bug fix) and `modules: Array<{ title, description? }>`; previously the AI never received module descriptions for quizzes.
+- `apps/api/src/__tests__/services/ai.service.test.ts` — new test: verifies `modules` + `moduleDescription` appear in `systemInstruction`.
+
+### Frontend
+- `apps/web/src/lib/use-ai-generate.ts` — `AIContext` adds `modules?: AIModuleContext[]`.
+- `apps/web/src/app/admin/courses/[id]/_components/types.ts` — adds `AIModuleContext` and `toAIModules()` helper.
+- `apps/web/src/app/admin/courses/[id]/page.tsx` — passes `courseTitle`/`courseDescription` to `ContentTab`.
+- `apps/web/src/app/admin/courses/[id]/_components/ContentTab.tsx` — accepts course props, derives `courseModules` via `toAIModules`, forwards to `AIModuleGenerator` and `ModuleCard`.
+- `apps/web/src/app/admin/courses/[id]/_components/ModuleCard.tsx` — accepts `courseTitle`/`courseDescription`/`courseModules`, forwards to `AddLessonForm`, `AddQuizForm`, and `LessonCard`.
+- `apps/web/src/app/admin/courses/[id]/_components/AIModuleGenerator.tsx` — sends `courseTitle`/`courseDescription`/`modules` with `MODULES` generation.
+- `apps/web/src/app/admin/courses/[id]/_components/AddQuizForm.tsx` — sends `courseTitle`/`courseDescription`/`modules` with `QUIZ` generation (previously only `moduleTitle`/`moduleDescription`/`questionCount`; course context never sent due to the Zod strip bug).
+- `apps/web/src/app/admin/courses/[id]/_components/AddLessonForm.tsx` & `LessonCard.tsx` — now send `moduleTitle`/`moduleDescription`/`courseTitle`/`courseDescription`/`modules` with `LESSON_DESCRIPTION` (previously only `lessonTitle`).
+- `apps/web/src/app/admin/courses/[id]/_components/CertificationTab.tsx` — sends `courseTitle`/`courseDescription`/`modules` with its `QUIZ` generation and forwards course context into its `ModuleCard`.
+
+### Verification
+- API `tsc --noEmit` clean; API `vitest` 18/18 `ai.service` tests pass.
+- Web `tsc --noEmit` only the 5 pre-existing `QuizOverdueView.tsx` errors (unrelated; `OverdueAssignment` missing `attempts`/`passingScore`).
+
 ## 2026-08-14 — TanStack Query Migration (Phase 4 complete: all remaining admin pages)
 
 User decision 2026-08-14: "everything left" — converted every remaining admin page (56 pages + shared `useReportData` hook). Completes the admin migration.

@@ -242,12 +242,21 @@ export const sessionService = {
     if (filters.courseId) batchFilter.courseId = filters.courseId;
 
     if (filters.instructorId) {
-      // Include batch sessions where the instructor teaches AND mentorship sessions where they are the mentor
       where.OR = [
         {
           batch: {
             instructorId: filters.instructorId,
             ...(filters.courseId ? { courseId: filters.courseId } : {}),
+          },
+        },
+        {
+          batch: {
+            courseMentors: {
+              some: {
+                mentorId: filters.instructorId,
+                ...(filters.courseId ? { courseId: filters.courseId } : {}),
+              },
+            },
           },
         },
         { instructorId: filters.instructorId, batchId: null },

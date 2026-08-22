@@ -8,6 +8,7 @@ import { IconRefresh, IconSparkles } from "@tabler/icons-react";
 import RichEditor from "@/components/editor/RichEditor";
 import { FormModal } from "@/components/admin/FormModal";
 import { useAIGenerate } from "@/lib/use-ai-generate";
+import type { AIModuleContext } from "./types";
 
 function plainTextToHtml(text: string): string {
   return text
@@ -18,11 +19,21 @@ function plainTextToHtml(text: string): string {
 
 export default function AddLessonForm({
   moduleId,
+  moduleTitle,
+  moduleDescription,
+  courseTitle,
+  courseDescription,
+  courseModules,
   onAdded,
   open,
   onClose,
 }: {
   moduleId: string;
+  moduleTitle?: string;
+  moduleDescription?: string;
+  courseTitle?: string;
+  courseDescription?: string;
+  courseModules?: AIModuleContext[];
   onAdded: () => void;
   open: boolean;
   onClose: () => void;
@@ -44,7 +55,18 @@ export default function AddLessonForm({
       return;
     }
     aiGenerate.mutate(
-      { type: "LESSON_DESCRIPTION", prompt: title.trim(), context: { lessonTitle: title.trim() } },
+      {
+        type: "LESSON_DESCRIPTION",
+        prompt: title.trim(),
+        context: {
+          lessonTitle: title.trim(),
+          moduleTitle: moduleTitle?.trim(),
+          moduleDescription: moduleDescription?.trim(),
+          courseTitle,
+          courseDescription,
+          modules: courseModules,
+        },
+      },
       {
         onSuccess: (res) => {
           if (!res.data.description) {

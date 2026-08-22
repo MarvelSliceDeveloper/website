@@ -11,12 +11,18 @@ export type AIGenerationType =
   | "LESSON_DESCRIPTION"
   | "NOTIFICATION";
 
+export type AIModuleContext = {
+  title: string;
+  description?: string;
+};
+
 export interface AIContext {
   courseTitle?: string;
   courseDescription?: string;
   moduleTitle?: string;
   moduleDescription?: string;
   lessonTitle?: string;
+  modules?: AIModuleContext[];
   difficulty?: string;
   questionCount?: number;
 }

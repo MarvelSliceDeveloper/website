@@ -18,6 +18,7 @@ import RichEditor from "@/components/editor/RichEditor";
 import { FormModal } from "@/components/admin/FormModal";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAIGenerate } from "@/lib/use-ai-generate";
+import type { AIModuleContext } from "./types";
 
 function plainTextToHtml(text: string): string {
   return text
@@ -29,6 +30,11 @@ function plainTextToHtml(text: string): string {
 export default function LessonCard({
   lesson,
   index,
+  moduleTitle,
+  moduleDescription,
+  courseTitle,
+  courseDescription,
+  courseModules,
   onChanged,
   onMoveUp,
   onMoveDown,
@@ -37,6 +43,11 @@ export default function LessonCard({
 }: {
   lesson: Lesson;
   index: number;
+  moduleTitle?: string;
+  moduleDescription?: string;
+  courseTitle?: string;
+  courseDescription?: string;
+  courseModules?: AIModuleContext[];
   onChanged: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
@@ -66,7 +77,18 @@ export default function LessonCard({
       return;
     }
     aiGenerate.mutate(
-      { type: "LESSON_DESCRIPTION", prompt: lessonTitle, context: { lessonTitle } },
+      {
+        type: "LESSON_DESCRIPTION",
+        prompt: lessonTitle,
+        context: {
+          lessonTitle,
+          moduleTitle: moduleTitle?.trim(),
+          moduleDescription: moduleDescription?.trim(),
+          courseTitle,
+          courseDescription,
+          modules: courseModules,
+        },
+      },
       {
         onSuccess: (res) => {
           if (!res.data.description) {

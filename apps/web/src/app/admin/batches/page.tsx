@@ -57,7 +57,7 @@ const PAGE_SIZE = 10;
 export default function AdminBatchesPage() {
   usePageTitle("Batches");
   return (
-    <Suspense fallback={<TableSkeleton rows={6} columns={7} />}>
+    <Suspense fallback={<TableSkeleton rows={6} columns={6} />}>
       <BatchesPageContent />
     </Suspense>
   );
@@ -139,15 +139,6 @@ function BatchesPageContent() {
           className={`inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[batch.status]}`}
         >
           {batch.status}
-        </span>
-      ),
-    },
-    {
-      key: "instructor",
-      label: "Instructor",
-      render: (_, batch) => (
-        <span className="text-sm text-muted-foreground">
-          {batch.instructor?.name ?? "Unassigned"}
         </span>
       ),
     },
@@ -253,7 +244,7 @@ function BatchesPageContent() {
 
       {/* Batch Table */}
       {loading ? (
-        <TableSkeleton rows={6} columns={7} />
+        <TableSkeleton rows={6} columns={6} />
       ) : batches.length === 0 ? (
         <EmptyState
           variant="glass"

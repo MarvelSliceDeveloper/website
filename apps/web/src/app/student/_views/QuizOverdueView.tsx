@@ -912,16 +912,8 @@ export default function QuizOverdueView({
           {filteredItems.map((quiz) => {
             const isPending = quiz.status === "PENDING";
             const passed =
-              !isPending &&
-              quiz.attempts != null &&
-              quiz.passingScore != null &&
-              (quiz.attempts as unknown as Record<string, number>[]).length >
-                0 &&
-              Math.max(
-                ...(quiz.attempts as unknown as { score: number }[]).map(
-                  (a) => a.score ?? 0,
-                ),
-              ) >= quiz.passingScore;
+              quiz.isPassed ??
+              (quiz.percentage == null ? true : quiz.percentage >= 60);
             const daysOverdue = isPending
               ? Math.floor(
                   (new Date().getTime() -

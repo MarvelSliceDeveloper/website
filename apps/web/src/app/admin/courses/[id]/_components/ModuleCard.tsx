@@ -22,6 +22,7 @@ import type {
   Quiz,
   Assignment,
   Practical,
+  AIModuleContext,
 } from "./types";
 import LessonCard from "./LessonCard";
 import AddLessonForm from "./AddLessonForm";
@@ -120,6 +121,9 @@ export default function ModuleCard({
   module: mod,
   index,
   courseId,
+  courseTitle,
+  courseDescription,
+  courseModules,
   onChanged,
   onMoveUp,
   onMoveDown,
@@ -134,6 +138,9 @@ export default function ModuleCard({
   module: Module;
   index: number;
   courseId: string;
+  courseTitle?: string;
+  courseDescription?: string;
+  courseModules?: AIModuleContext[];
   onChanged: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
@@ -656,6 +663,11 @@ export default function ModuleCard({
                     <LessonCard
                       lesson={item.data}
                       index={idx}
+                      moduleTitle={mod.title}
+                      moduleDescription={mod.description ?? undefined}
+                      courseTitle={courseTitle}
+                      courseDescription={courseDescription}
+                      courseModules={courseModules}
                       onChanged={onChanged}
                       onMoveUp={() => handleMoveContent(idx, -1)}
                       onMoveDown={() => handleMoveContent(idx, 1)}
@@ -780,6 +792,9 @@ export default function ModuleCard({
         moduleId={mod.id}
         moduleTitle={mod.title}
         moduleDescription={mod.description ?? undefined}
+        courseTitle={courseTitle}
+        courseDescription={courseDescription}
+        courseModules={courseModules}
         open={showAddQuiz}
         onSuccess={() => {
           setShowAddQuiz(false);
@@ -825,6 +840,11 @@ export default function ModuleCard({
       <AddLessonForm
         key={addLessonKey}
         moduleId={mod.id}
+        moduleTitle={mod.title}
+        moduleDescription={mod.description ?? undefined}
+        courseTitle={courseTitle}
+        courseDescription={courseDescription}
+        courseModules={courseModules}
         open={showAddLesson}
         onAdded={onChanged}
         onClose={() => setShowAddLesson(false)}

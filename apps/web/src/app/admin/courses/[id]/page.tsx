@@ -289,6 +289,8 @@ export default function CourseDetailPage() {
       {activeTab === "content" && (
         <ContentTab
           courseId={course.id}
+          courseTitle={course.title}
+          courseDescription={course.description}
           modules={sortedModules}
           onContentChanged={() => void courseQuery.refetch()}
         />

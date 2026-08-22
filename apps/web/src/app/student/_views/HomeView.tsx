@@ -223,6 +223,7 @@ export default function HomeView({
       await api.post(`/api/attendance/${session.id}/join`);
       presence.start(session.id);
     } catch (err) {
+      toast.error(getErrorMessage(err));
       console.error("Failed to log attendance:", err);
     } finally {
       setJoiningSessionId(null);

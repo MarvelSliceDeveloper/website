@@ -17,7 +17,8 @@ import {
   IconFileSpreadsheet,
   IconSparkles,
 } from "@tabler/icons-react";
-import type { Module } from "./types";
+import type { Course, Module } from "./types";
+import { toAIModules } from "./types";
 import ModuleCard from "./ModuleCard";
 import RichEditor from "@/components/editor/RichEditor";
 import { FormModal } from "@/components/admin/FormModal";
@@ -51,7 +52,7 @@ interface CertificationTabProps {
 }
 
 export default function CertificationTab({ courseId }: CertificationTabProps) {
-  const courseQuery = useApiQuery<{ modules: Module[] }>(
+  const courseQuery = useApiQuery<Course>(
     ["admin", "courses", courseId],
     `/api/admin/courses/${courseId}`,
   );
@@ -89,7 +90,13 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
       {
         type: "QUIZ",
         prompt: `Certification exam covering: ${aiTopic.trim()}`,
-        context: { questionCount: aiCount, difficulty: "intermediate" },
+        context: {
+          courseTitle: courseQuery.data?.title,
+          courseDescription: courseQuery.data?.description ?? undefined,
+          modules: toAIModules(courseQuery.data?.modules ?? []),
+          questionCount: aiCount,
+          difficulty: "intermediate",
+        },
       },
       {
         onSuccess: (res) => {
@@ -339,6 +346,9 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
           module={certModule}
           index={0}
           courseId={courseId}
+          courseTitle={courseQuery.data?.title}
+          courseDescription={courseQuery.data?.description ?? undefined}
+          courseModules={toAIModules(courseQuery.data?.modules ?? [])}
           onChanged={handleReload}
           certModule
           onAddQuestion={() => setShowQuestionsModal(true)}

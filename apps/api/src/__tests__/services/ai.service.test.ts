@@ -162,6 +162,42 @@ describe("ai.service", () => {
       expect(config.systemInstruction).toContain("EXACTLY ONE correct answer");
     });
 
+    it("passes course modules and moduleDescription into the system prompt", async () => {
+      let savedEncrypted: string | null = null;
+      mockPrisma.systemSetting.upsert.mockImplementation(async ({ update }) => {
+        if (!savedEncrypted) savedEncrypted = update.value;
+        return {};
+      });
+      await saveGeminiApiKey("AIzaSY-test-api-key-1234567890");
+      mockPrisma.systemSetting.findUnique.mockImplementation(async ({ where }) => {
+        if (where.key === "ai_gemini_api_key") return { value: savedEncrypted };
+        return null;
+      });
+
+      mockGenerateContent.mockResolvedValue(
+        geminiJsonResponse({
+          description: "A lesson covering loop fundamentals including for, while, and comprehension syntax.",
+        }),
+      );
+
+      await generate("LESSON_DESCRIPTION", "loop fundamentals", {
+        courseTitle: "Python for Data Analysis",
+        moduleTitle: "Control Flow",
+        moduleDescription: "If/else, loops, and comprehensions",
+        modules: [
+          { title: "Python Basics", description: "Variables and types" },
+          { title: "Data Structures" },
+        ],
+      });
+
+      const config = mockGenerateContent.mock.calls[0][0].config;
+      expect(config.systemInstruction).toContain("Python for Data Analysis");
+      expect(config.systemInstruction).toContain('Module: "Control Flow"');
+      expect(config.systemInstruction).toContain("Module description: If/else, loops, and comprehensions");
+      expect(config.systemInstruction).toContain("1. Python Basics — Variables and types");
+      expect(config.systemInstruction).toContain("2. Data Structures");
+    });
+
     it("retries once when the first response has zero correct answers, then succeeds", async () => {
       let savedEncrypted: string | null = null;
       mockPrisma.systemSetting.upsert.mockImplementation(async ({ update }) => {
