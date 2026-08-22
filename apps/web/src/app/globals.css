@@ -694,3 +694,10 @@ a:focus-visible {
   }
 }
 
+/* Respect reduced-motion: disable login entrance/decorative animations */
+@media (prefers-reduced-motion: reduce) {
+  .login-page [style*="animation"] {
+    animation: none !important;
+  }
+}
+
