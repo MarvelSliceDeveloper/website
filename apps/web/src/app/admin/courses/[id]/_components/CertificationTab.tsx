@@ -15,12 +15,14 @@ import {
   IconClipboardText,
   IconExternalLink,
   IconFileSpreadsheet,
+  IconSparkles,
 } from "@tabler/icons-react";
 import type { Module } from "./types";
 import ModuleCard from "./ModuleCard";
 import RichEditor from "@/components/editor/RichEditor";
 import { FormModal } from "@/components/admin/FormModal";
 import { readSheet } from "read-excel-file/browser";
+import { useAIGenerate } from "@/lib/use-ai-generate";
 
 interface CertQuestion {
   id?: string;
@@ -69,6 +71,47 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
   const [assignmentPdfUrl, setAssignmentPdfUrl] = useState("");
   const [showQuestionsModal, setShowQuestionsModal] = useState(false);
   const excelInputRef = useRef<HTMLInputElement>(null);
+
+  // AI generation for exam questions
+  const [aiTopic, setAiTopic] = useState("");
+  const [aiCount, setAiCount] = useState(10);
+  const aiGenerate = useAIGenerate<{
+    title: string;
+    questions: CertQuestion[];
+  }>();
+
+  const handleAiGenerate = () => {
+    if (!aiTopic.trim()) {
+      toast.error("Enter a topic for the AI to generate exam questions about");
+      return;
+    }
+    aiGenerate.mutate(
+      {
+        type: "QUIZ",
+        prompt: `Certification exam covering: ${aiTopic.trim()}`,
+        context: { questionCount: aiCount, difficulty: "intermediate" },
+      },
+      {
+        onSuccess: (res) => {
+          const generated = res.data;
+          if (!generated.questions?.length) {
+            toast.error("AI returned no questions");
+            return;
+          }
+          setQuestions(
+            generated.questions.map((q) => ({
+              text: q.text,
+              options: q.options.map((o) => ({ ...o })),
+            })),
+          );
+          toast.success(
+            `Generated ${generated.questions.length} exam question${generated.questions.length !== 1 ? "s" : ""} — review and save`,
+          );
+        },
+        onError: (err: unknown) => toast.error(getErrorMessage(err)),
+      },
+    );
+  };
 
   const applyData = (result: CertificationData) => {
     if (result.quiz) {
@@ -546,6 +589,42 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
               onChange={handleExcelImport}
               className="hidden"
             />
+          </div>
+
+          {/* AI generation row */}
+          <div className="flex flex-wrap items-center gap-2 rounded-md border border-violet-300/50 bg-violet-500/5 p-2.5">
+            <IconSparkles size={15} className="shrink-0 text-violet-500" />
+            <input
+              type="text"
+              value={aiTopic}
+              onChange={(e) => setAiTopic(e.target.value)}
+              onKeyDown={(e) =>
+                e.key === "Enter" && (e.preventDefault(), handleAiGenerate())
+              }
+              placeholder="AI topic, e.g. Full Python for Data Science syllabus"
+              className="field flex-1 min-w-[180px] text-xs"
+            />
+            <input
+              type="number"
+              value={aiCount}
+              onChange={(e) =>
+                setAiCount(
+                  Math.min(Math.max(parseInt(e.target.value) || 10, 1), 30),
+                )
+              }
+              min={1}
+              max={30}
+              title="Number of questions"
+              className="field w-16 text-xs"
+            />
+            <button
+              type="button"
+              onClick={handleAiGenerate}
+              disabled={aiGenerate.isPending}
+              className="flex items-center gap-1 rounded-md border border-violet-300/60 bg-violet-50 px-2.5 py-1.5 text-[11px] font-semibold text-violet-700 transition-colors hover:bg-violet-100 disabled:opacity-50"
+            >
+              {aiGenerate.isPending ? "Generating…" : "Generate with AI"}
+            </button>
           </div>
 
           {questions.map((q, qIndex) => (
