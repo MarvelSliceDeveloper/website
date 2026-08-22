@@ -31,6 +31,7 @@ test.describe("Admin Portal — Page Load", () => {
     { route: "/admin/settings/api-keys", name: "API keys" },
     { route: "/admin/settings/permissions", name: "Permissions" },
     { route: "/admin/settings/system", name: "System settings" },
+    { route: "/admin/settings/ai", name: "AI settings" },
     { route: "/admin/analytics", name: "Analytics" },
     { route: "/admin/mentorship", name: "Mentorship" },
     { route: "/admin/calendar", name: "Calendar" },
@@ -78,6 +79,13 @@ test.describe("Admin Portal — Super Admin pages", () => {
 
   test("TC-ADM-SUPER: Super admin dashboard loads", async ({ page }) => {
     await page.goto("/admin/super-admin");
+    await expect(page.locator("h1").first()).toBeVisible({ timeout: 15000 });
+  });
+
+  test("TC-ADM-SUPER-AI: AI integration settings page loads for superadmin", async ({
+    page,
+  }) => {
+    await page.goto("/admin/settings/ai");
     await expect(page.locator("h1").first()).toBeVisible({ timeout: 15000 });
   });
 });
@@ -383,5 +391,79 @@ test.describe("Admin Portal — Workflows", () => {
 
     await page.goto(`/admin/assignment-templates/${assignmentId}`);
     await expect(page.locator("h1").first()).toBeVisible({ timeout: 15000 });
+  });
+});
+
+test.describe("Admin API — CRUD spot-checks", () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAs(page, "admin");
+  });
+
+  test("TC-ADM-CRUD1: create tag via API and verify it in list", async ({
+    page,
+  }) => {
+    const csrfToken = await getCsrfToken(page);
+    const name = `E2E Tag ${Date.now()}`;
+
+    const createRes = await page.request.post(`${API_BASE}/api/admin/tags`, {
+      headers: { "x-csrf-token": csrfToken },
+      data: { name },
+    });
+    expect(createRes.status()).toBe(201);
+
+    const listRes = await page.request.get(`${API_BASE}/api/admin/tags`);
+    expect(listRes.status()).toBe(200);
+    const body = await listRes.json();
+    const tags: Array<{ name: string }> = body.data ?? body.tags ?? [];
+    expect(tags.some((t) => t.name === name)).toBe(true);
+  });
+
+  test("TC-ADM-CRUD2: duplicate tag creation returns 409", async ({ page }) => {
+    const csrfToken = await getCsrfToken(page);
+    const name = `E2E DupTag ${Date.now()}`;
+
+    const first = await page.request.post(`${API_BASE}/api/admin/tags`, {
+      headers: { "x-csrf-token": csrfToken },
+      data: { name },
+    });
+    expect(first.status()).toBe(201);
+
+    const dup = await page.request.post(`${API_BASE}/api/admin/tags`, {
+      headers: { "x-csrf-token": csrfToken },
+      data: { name },
+    });
+    expect(dup.status()).toBe(409);
+  });
+
+  test("TC-ADM-CRUD3: create category via API and verify it in list", async ({
+    page,
+  }) => {
+    const csrfToken = await getCsrfToken(page);
+    const name = `E2E Category ${Date.now()}`;
+
+    const createRes = await page.request.post(
+      `${API_BASE}/api/admin/categories`,
+      {
+        headers: { "x-csrf-token": csrfToken },
+        data: { name, description: "Created by Playwright E2E" },
+      },
+    );
+    expect(createRes.status()).toBe(201);
+
+    const listRes = await page.request.get(`${API_BASE}/api/admin/categories`);
+    expect(listRes.status()).toBe(200);
+    const body = await listRes.json();
+    const categories: Array<{ name: string }> = body.data ?? body.categories ?? [];
+    expect(categories.some((c) => c.name === name)).toBe(true);
+  });
+
+  test("TC-ADM-CRUD4: category without name returns 400", async ({ page }) => {
+    const csrfToken = await getCsrfToken(page);
+
+    const res = await page.request.post(`${API_BASE}/api/admin/categories`, {
+      headers: { "x-csrf-token": csrfToken },
+      data: { description: "missing name" },
+    });
+    expect(res.status()).toBe(400);
   });
 });
