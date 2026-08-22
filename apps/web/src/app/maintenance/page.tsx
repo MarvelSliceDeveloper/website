@@ -1,12 +1,33 @@
 import { IconTool } from "@tabler/icons-react";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Maintenance",
   description: "The platform is temporarily under maintenance.",
 };
 
-export default function MaintenancePage() {
+async function getMaintenanceMessage(): Promise<string> {
+  try {
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://localhost:4000";
+    const res = await fetch(`${apiUrl}/api/maintenance-status`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(3000),
+    });
+    if (res.ok) {
+      const data = (await res.json()) as { enabled?: boolean; message?: string };
+      return data.message || "";
+    }
+  } catch {
+    /* API unreachable — fall through to the default copy */
+  }
+  return "";
+}
+
+export default async function MaintenancePage() {
+  const message = await getMaintenanceMessage();
   return (
     <div
       className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-16"
@@ -117,8 +138,9 @@ export default function MaintenancePage() {
 
         {/* body copy */}
         <p className="mx-auto max-w-sm text-center text-sm leading-relaxed" style={{ color: "#93AFC9" }}>
-          Scheduled work is underway. The team is verifying every system before
-          reopening access — thanks for your patience while we finish the checks.
+          {message
+            ? message
+            : "Scheduled work is underway. The team is verifying every system before reopening access — thanks for your patience while we finish the checks."}
         </p>
 
         {/* status ticker */}

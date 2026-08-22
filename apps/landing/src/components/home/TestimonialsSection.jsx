@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { FiStar, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiStar } from 'react-icons/fi';
 import Reveal from '../ui/Reveal';
 import { supabase } from '../../lib/supabaseClient';
 import { useQuery } from '@tanstack/react-query';
@@ -50,7 +50,8 @@ export default function TestimonialsSection({ section }) {
         .select('*')
         .eq('is_active', true)
         .order('sort_order', { ascending: true })
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true })
+        .limit(3);
       if (error) {
         if (error.code === '42P01') return [];
         throw error;
@@ -106,17 +107,6 @@ export default function TestimonialsSection({ section }) {
     timerRef.current = null;
   }
 
-  function go(dir) {
-    if (dir < 0 && pos === 0) {
-      setAnimate(false);
-      setPos(n - 1);
-      setTimeout(() => setAnimate(true), 100);
-      return;
-    }
-    setAnimate(true);
-    setPos((prev) => prev + dir);
-  }
-
   function jumpTo(i) {
     setAnimate(false);
     setPos(i);
@@ -154,7 +144,7 @@ export default function TestimonialsSection({ section }) {
 
         {items.length > 0 && (
           isSlider ? (
-            <div className="relative mx-auto lg:max-w-[85%] mt-16" onMouseEnter={stopAutoScroll} onMouseLeave={() => { if (isSlider) startAutoScroll(); }}>
+            <div className="relative mx-auto w-full mt-16" onMouseEnter={stopAutoScroll} onMouseLeave={() => { if (isSlider) startAutoScroll(); }}>
               <div className="overflow-hidden py-4">
                 <motion.div
                   animate={{ x: `-${pos * (100 / visible)}%` }}
@@ -174,24 +164,8 @@ export default function TestimonialsSection({ section }) {
                   ))}
                 </motion.div>
               </div>
-              <button
-                type="button"
-                aria-label="Previous testimonials"
-                onClick={() => go(-1)}
-                className="hidden sm:flex absolute -left-2 sm:-left-6 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-[0_8px_20px_rgba(0,0,0,0.1)] border border-gray-200 items-center justify-center text-text-gray hover:text-brand-orange hover:border-brand-orange/40 hover:shadow-[0_12px_28px_rgba(0,0,0,0.14)] transition-all duration-300 cursor-pointer"
-              >
-                <FiChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                type="button"
-                aria-label="Next testimonials"
-                onClick={() => go(1)}
-                className="hidden sm:flex absolute -right-2 sm:-right-6 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-[0_8px_20px_rgba(0,0,0,0.1)] border border-gray-200 items-center justify-center text-text-gray hover:text-brand-orange hover:border-brand-orange/40 hover:shadow-[0_12px_28px_rgba(0,0,0,0.14)] transition-all duration-300 cursor-pointer"
-              >
-                <FiChevronRight className="w-5 h-5" />
-              </button>
               <div className="flex justify-center gap-2 mt-6">
-                {items.map((_, i) => (
+                {items.slice(0, 3).map((_, i) => (
                   <button
                     key={i}
                     type="button"
@@ -203,9 +177,9 @@ export default function TestimonialsSection({ section }) {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center mx-auto lg:max-w-[80%] mt-16">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center mx-auto w-full mt-16">
               {items.map((item) => (
-                <div key={item.id} className="w-full max-w-[500px] h-full">
+                <div key={item.id} className="w-full h-full">
                   <TestimonialCard item={item} />
                 </div>
               ))}

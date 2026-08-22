@@ -18,7 +18,7 @@ import {
   FiClock, FiVideo, FiCode, FiCalendar, FiRefreshCw,
   FiBarChart2, FiBookOpen, FiBriefcase, FiGlobe, FiCpu,
   FiDatabase, FiLayers, FiZap, FiShield, FiTrendingUp, FiChevronUp, FiChevronLeft, FiChevronRight,
-FiChevronDown} from 'react-icons/fi';
+FiChevronDown, FiImage} from 'react-icons/fi';
 
 const ICON_LIST = [
   { key: "briefcase", label: "Briefcase", Icon: FiBriefcase },
@@ -115,6 +115,14 @@ const sectionDefs = [
   },
   {
     key: 'upcoming_classes', label: 'Upcoming Classes', icon: FiCalendar, color: 'from-amber-400 to-amber-600',
+  },
+  {
+    key: 'upcoming_image', label: 'Upcoming Image', icon: FiImage, color: 'from-orange-400 to-orange-600',
+    contentOnly: true,
+    fields: [
+      { name: 'image_url', label: 'Image', type: 'image' },
+      { name: 'image_link', label: 'Link / Route (optional)', type: 'text' },
+    ],
   },
   {
     key: 'empowering', label: 'Empowering', icon: FiStar, color: 'from-blue-500 to-blue-600',
@@ -1081,7 +1089,7 @@ export default function HomePageEditor() {
 
   useEffect(() => {
     if (!loading) {
-      const validKeys = ['hero', 'intro_form', 'upcoming_classes', 'empowering', 'featured_courses', 'services', 'cta_banner', 'faqs', 'testimonials', 'latest_blog'];
+      const validKeys = ['hero', 'intro_form', 'upcoming_classes', 'upcoming_image', 'empowering', 'featured_courses', 'services', 'cta_banner', 'faqs', 'testimonials', 'latest_blog'];
       if (!section) navigate('/admin/home/hero', { replace: true });
       else if (!validKeys.includes(section)) navigate('/admin/home/hero', { replace: true });
     }

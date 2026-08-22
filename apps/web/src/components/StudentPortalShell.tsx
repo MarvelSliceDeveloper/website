@@ -37,6 +37,7 @@ import { timeAgo } from "@/lib/time-ago";
 import type { NotificationItem } from "@/lib/notifications";
 import { NotificationIcon } from "@/lib/notifications";
 import { useSocket, RealtimeNotification } from "@/lib/use-socket";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 export interface Breadcrumb {
   label: string;
@@ -54,6 +55,7 @@ interface StudentPortalShellProps {
   hideLogo?: boolean;
   hideHeader?: boolean;
   fullWidth?: boolean;
+  hideMobileNav?: boolean;
 }
 
 // Student portal shell with header, breadcrumbs, and notifications
@@ -68,6 +70,7 @@ export default function StudentPortalShell({
   hideLogo = false,
   hideHeader = false,
   fullWidth = false,
+  hideMobileNav = false,
 }: StudentPortalShellProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -183,7 +186,7 @@ export default function StudentPortalShell({
 
   return (
     <div
-      className="min-h-screen bg-background"
+      className="min-h-[100dvh] bg-background"
       style={
         { "--shell-header-height": headerHeight + "px" } as React.CSSProperties
       }
@@ -437,10 +440,24 @@ export default function StudentPortalShell({
         </header>
       )}
       <main
-        className={`w-full ${hideHeader || fullWidth ? "" : "mx-auto max-w-7xl px-4 py-6 md:px-6"}`}
+        className={`w-full ${
+          hideHeader || fullWidth
+            ? ""
+            : `mx-auto max-w-7xl px-4 ${
+                hideMobileNav ? "py-6" : "pt-6 pb-20 md:pb-6"
+              } md:px-6`
+        }`}
       >
         {children}
       </main>
+
+      {!hideMobileNav && (
+        <MobileBottomNav
+          studentName={studentName}
+          studentEmail={studentEmail}
+          onLogout={handleSignOut}
+        />
+      )}
     </div>
   );
 }

@@ -17,7 +17,7 @@ import {
 type BatchOption = {
   id: string;
   name: string;
-  course: { id: string; title: string };
+  course: { id: string; title: string } | null;
 };
 type EmailTemplateOption = {
   id: string;

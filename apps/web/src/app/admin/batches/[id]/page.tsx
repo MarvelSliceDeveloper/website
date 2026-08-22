@@ -80,7 +80,6 @@ type Batch = {
   description: string | null;
   course: { id: string; title: string } | null;
   package?: { id: string; name: string } | null;
-  instructor: { id: string; name: string; email: string } | null;
   enrollments: Student[];
   packageEnrollmentCourses: {
     enrollment: { user: { id: string; name: string; email: string } };
@@ -409,12 +408,6 @@ export default function BatchDetailPage() {
             {batch.maxStudents ?? "∞"}
           </p>
           <p className="text-xs text-muted">Capacity</p>
-        </div>
-        <div className="glass-card p-4 text-center">
-          <p className="text-sm font-medium text-foreground">
-            {batch.instructor?.name ?? "—"}
-          </p>
-          <p className="text-xs text-muted">Instructor</p>
         </div>
       </div>
 
@@ -848,23 +841,6 @@ export default function BatchDetailPage() {
             <p className="text-sm text-muted animate-pulse">Loading...</p>
           ) : (
             <div className="space-y-4">
-              {batch?.instructor && (
-                <div className="glass-card p-4">
-                  <h4 className="text-xs font-semibold uppercase text-muted mb-2">Primary Instructor</h4>
-                  <div className="flex items-center gap-3 text-sm">
-                    <span className="font-medium">{batch.instructor.name}</span>
-                    <span className="text-muted">{batch.instructor.email}</span>
-                    <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">Primary</span>
-                  </div>
-                </div>
-              )}
-              {!batch?.instructor && (
-                <div className="glass-card p-4">
-                  <h4 className="text-xs font-semibold uppercase text-muted mb-2">Primary Instructor</h4>
-                  <p className="text-sm text-muted-foreground">No primary instructor assigned. Use course mentors below.</p>
-                </div>
-              )}
-
               {mentors.length === 0 ? (
                 <div className="glass-card p-8 text-center">
                   <p className="text-muted-foreground text-sm">No per-course mentors assigned yet.</p>

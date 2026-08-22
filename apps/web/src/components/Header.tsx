@@ -142,9 +142,9 @@ export default function Header({
           <Image
             src="/images/logo.svg"
             alt="Marvel Slice"
-            width={36}
-            height={36}
-            className="h-9 w-auto object-contain"
+            width={44}
+            height={44}
+            className="h-11 w-auto object-contain"
           />
           <span className="text-base font-extrabold tracking-tight text-foreground hidden sm:inline">
             <span>Marvel</span>

@@ -382,7 +382,7 @@ export default function HomeView({
                   RESULTS
                 </button>
               </div>
-              <div className="relative w-64">
+              <div className="relative w-full sm:w-64">
                 <IconSearch
                   size={16}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-slate"
@@ -556,6 +556,7 @@ export default function HomeView({
                                   height={48}
                                   imageClassName="h-full w-full object-cover"
                                   iconClassName="h-1/2 w-1/2 object-contain"
+                                  forceIcon
                                   fallback={
                                     <IconBook size={22} className="text-success" />
                                   }
@@ -608,6 +609,7 @@ export default function HomeView({
                                 height={48}
                                 imageClassName="h-full w-full object-cover"
                                 iconClassName="h-1/2 w-1/2 object-contain"
+                                forceIcon
                                 fallback={<IconBook size={20} />}
                               />
                             </div>
@@ -686,6 +688,7 @@ export default function HomeView({
                                 height={48}
                                 imageClassName="h-full w-full object-cover"
                                 iconClassName="h-1/2 w-1/2 object-contain"
+                                forceIcon
                                 fallback={
                                   <IconBook size={22} className="text-primary" />
                                 }
@@ -1092,10 +1095,12 @@ export default function HomeView({
                                 </p>
                                 <p className="text-[10px] text-danger font-semibold mt-1">
                                   Due Date:{" "}
-                                  {new Date(item.dueDate).toLocaleDateString(
-                                    "en-IN",
-                                    { day: "numeric", month: "short" },
-                                  )}
+                                  {item.dueDate
+                                    ? new Date(item.dueDate).toLocaleDateString(
+                                        "en-IN",
+                                        { day: "numeric", month: "short" },
+                                      )
+                                    : "—"}
                                 </p>
                               </div>
                             </div>

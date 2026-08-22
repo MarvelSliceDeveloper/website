@@ -432,40 +432,40 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
           </div>
         </div>
 
-      <div className="grid xl:grid-cols-3 gap-4 items-start">
-        <div className={`${selected ? 'xl:col-span-2' : 'xl:col-span-3'}`}>
-          <div className="bg-white border border-admin-200 shadow-sm overflow-hidden">
+      <div className="grid xl:grid-cols-3 gap-4 items-start w-full max-w-full min-w-0">
+        <div className={`w-full max-w-full min-w-0 ${selected ? 'xl:col-span-2' : 'xl:col-span-3'}`}>
+          <div className="bg-white border border-admin-200 shadow-sm overflow-hidden rounded-xl w-full max-w-full min-w-0">
             {paged.length === 0 ? (
               <EmptyState title={search ? 'No results match your search' : 'No submissions yet'} description={search ? 'Try adjusting your search or filters.' : 'Submissions will appear here once received.'} />
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <div className="admin-table-scroll w-full max-w-full min-w-0 overflow-x-auto">
+                <table className="admin-table min-w-[760px] w-full">
                   <thead>
-                    <tr className="border-b border-admin-100 bg-blue-600">
-                      <th className="w-10 text-left text-xs font-semibold text-white uppercase tracking-wider px-4 py-3">#</th>
+                    <tr className="border-b border-admin-100 bg-brand-blue">
+                      <th className="w-10 text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3.5 whitespace-nowrap">#</th>
                       {columns.map((col, i) => (
-                        <th key={i} className={`text-left text-xs font-semibold text-white uppercase tracking-wider px-4 py-3 ${col.className || ''}`}>
+                        <th key={i} className={`text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3.5 whitespace-nowrap ${col.className || ''}`}>
                           {col.header}
                         </th>
                       ))}
-                      <th className="text-left text-xs font-semibold text-white uppercase tracking-wider px-4 py-3">Actions</th>
+                      <th className="text-left text-xs font-bold text-white uppercase tracking-wider px-4 py-3.5 whitespace-nowrap">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {paged.map((row, idx) => (
                       <tr key={row.id}
                         onClick={() => { setSelected(selected?.id === row.id ? null : row); if (!row.is_read) markRead(row); }}
-                        className={`border-b border-gray-100 last:border-0 cursor-pointer transition-colors ${idx % 2 === 1 ? 'bg-gray-50' : 'bg-white'} ${selected?.id === row.id ? 'bg-indigo-50' : 'hover:bg-gray-50'} ${!disableReply && !row.is_read ? 'border-l-2 border-l-warning-500 bg-warning-50/30' : ''}`}
+                        className={`border-b border-gray-100 last:border-0 cursor-pointer transition-colors ${idx % 2 === 1 ? 'bg-gray-50/60' : 'bg-white'} ${selected?.id === row.id ? 'bg-indigo-50/70' : 'hover:bg-gray-50'} ${!disableReply && !row.is_read ? 'border-l-2 border-l-warning-500 bg-warning-50/30' : ''}`}
                       >
-                        <td className="px-4 py-3 text-xs text-neutral-400 font-mono whitespace-nowrap text-left">{(page - 1) * pageSize + idx + 1}</td>
+                        <td className="px-4 py-3.5 text-xs text-neutral-400 font-mono whitespace-nowrap text-left">{(page - 1) * pageSize + idx + 1}</td>
                         {columns.map((col, i) => (
-                          <td key={i} className={`px-4 py-3 text-sm ${col.className || ''}`}>
+                          <td key={i} className={`px-4 py-3.5 text-sm align-middle ${col.className || ''}`}>
                             <div className={!disableReply && !row.is_read ? 'font-semibold text-neutral-900' : 'text-neutral-700'}>
                               {col.cell ? col.cell(row) : row[col.accessor]}
                             </div>
                           </td>
                         ))}
-                        <td className="px-4 py-3 whitespace-nowrap text-left">
+                        <td className="px-4 py-3.5 whitespace-nowrap text-left align-middle">
                           <div className="flex items-center gap-1">
                             {!disableReply && <button onClick={e => { e.stopPropagation(); row.is_read ? markUnread(row, e) : markRead(row, e); }}
                               className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-all ${row.is_read ? 'bg-success-50 text-success-700' : 'bg-neutral-100 text-neutral-500'}`}
@@ -474,13 +474,13 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
                               {row.is_read ? <><FiCheck className="w-3 h-3" /><span className="hidden md:inline">Read</span></> : <><FiMail className="w-3 h-3" /><span className="hidden md:inline">Unread</span></>}
                             </button>}
                             {!disableReply && <button onClick={e => { e.stopPropagation(); setReplyTo(row); }}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-white text-neutral-700 hover:bg-neutral-100 transition-all"
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-white text-neutral-700 hover:bg-neutral-100 transition-all border border-gray-200"
                               title="Reply"
                             >
                               <FiSend className="w-3 h-3" /><span className="hidden md:inline">Reply</span>
                             </button>}
                             <button onClick={e => { e.stopPropagation(); setSelected(selected?.id === row.id ? null : row); }}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-50 transition-all"
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all"
                               title="View details"
                             >
                               <FiEye className="w-3.5 h-3.5 text-blue-500" /><span className="hidden md:inline">View</span>
@@ -494,7 +494,7 @@ export default function SubmissionsInbox({ table, title, columns, fetchQuery, de
               </div>
             )}
 
-            <div className="px-4 py-3 border-t border-admin-100 bg-white">
+            <div className="px-4 py-3 border-t border-admin-100 bg-white w-full max-w-full min-w-0">
               <Pagination
                 totalItems={filtered.length}
                 itemsPerPage={pageSize}

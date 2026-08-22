@@ -29,6 +29,7 @@ import {
   IconAlarmSmoke,
   IconHeartHandshake,
   IconUserShare,
+  IconSparkles,
 } from "@tabler/icons-react";
 
 import type { NavItem, NavItemChild } from "@/components/shared/SidebarTypes";
@@ -496,6 +497,15 @@ export default function AdminSidebar({
                 label: "Health",
                 href: "/admin/health",
                 icon: IconServer as React.ComponentType<{
+                  size?: number | string;
+                  stroke?: number | string;
+                  className?: string;
+                }>,
+              },
+              {
+                label: "AI Integration",
+                href: "/admin/settings/ai",
+                icon: IconSparkles as React.ComponentType<{
                   size?: number | string;
                   stroke?: number | string;
                   className?: string;

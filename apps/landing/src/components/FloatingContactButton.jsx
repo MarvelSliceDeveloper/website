@@ -128,7 +128,7 @@ export default function FloatingContactButton() {
         }
       `}</style>
 
-      <div className="fixed bottom-24 left-10 z-40">
+      <div className="fixed bottom-4 left-3 sm:bottom-6 sm:left-6 z-40">
         <button
           type="button"
           onClick={() => setOpen(true)}

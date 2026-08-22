@@ -607,7 +607,7 @@ export default function ServiceDetail() {
       {/* ============ 6. CURRICULUM ============ */}
       {curriculum.length > 0 && (
         <section className="py-16">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal as="h2" className="text-2xl font-bold text-gray-900 mb-2">Program Curriculum</Reveal>
             <Reveal as="p" className="text-gray-500 mb-8" delay={0.1}>Structured modules designed for practical learning</Reveal>
             <Reveal>
@@ -786,7 +786,7 @@ export default function ServiceDetail() {
       {/* ============ 12. FAQS ============ */}
       {service.service_faqs?.filter((f) => f.is_active !== false).length > 0 && (
         <section className="py-16 bg-gray-50/50">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal as="h2" className="text-2xl font-bold text-gray-900 mb-2 text-center">Frequently Asked Questions</Reveal>
             <Reveal as="p" className="text-gray-500 mb-8 text-center" delay={0.1}>Everything you need to know</Reveal>
             <Reveal>

@@ -16,6 +16,8 @@ import {
   IconCircleX,
   IconRefresh,
   IconX,
+  IconPlayerPlay,
+  IconChecklist,
 } from "@tabler/icons-react";
 import type { OverdueAssignment } from "@/lib/api-types";
 import type { ViewState } from "../_types/student-portal";
@@ -696,8 +698,9 @@ export default function QuizOverdueView({
       </div>
 
       {filteredItems.length > 0 ? (
-        <div className="rounded-2xl border border-border/80 bg-card overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
+        <>
+          <div className="hidden md:block rounded-2xl border border-border/80 bg-card overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-border/70 bg-muted/30">
@@ -904,7 +907,173 @@ export default function QuizOverdueView({
             </table>
           </div>
         </div>
-      ) : (
+
+        <div className="md:hidden space-y-3">
+          {filteredItems.map((quiz) => {
+            const isPending = quiz.status === "PENDING";
+            const passed =
+              !isPending &&
+              quiz.attempts != null &&
+              quiz.passingScore != null &&
+              (quiz.attempts as unknown as Record<string, number>[]).length >
+                0 &&
+              Math.max(
+                ...(quiz.attempts as unknown as { score: number }[]).map(
+                  (a) => a.score ?? 0,
+                ),
+              ) >= quiz.passingScore;
+            const daysOverdue = isPending
+              ? Math.floor(
+                  (new Date().getTime() -
+                    new Date(quiz.dueDate).getTime()) /
+                    (1000 * 60 * 60 * 24),
+                )
+              : 0;
+            const isOverdue = daysOverdue > 0;
+            return (
+              <div
+                key={quiz.id}
+                className="rounded-2xl border border-border bg-card p-4 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${
+                        isPending
+                          ? "border-amber-500/30 bg-amber-500/10 text-amber-500"
+                          : passed
+                            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
+                            : "border-danger/30 bg-danger/10 text-danger"
+                      }`}
+                    >
+                      {isPending ? (
+                        <IconAlertCircle size={16} />
+                      ) : passed ? (
+                        <IconCheck size={16} />
+                      ) : (
+                        <IconX size={16} />
+                      )}
+                    </span>
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {quiz.assignmentName}
+                    </p>
+                  </div>
+                  {isPending ? (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-500">
+                      Pending
+                    </span>
+                  ) : passed ? (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">
+                      <IconCheck size={11} /> Passed
+                    </span>
+                  ) : (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-danger/15 px-2 py-0.5 text-[11px] font-semibold text-danger">
+                      <IconX size={11} /> Failed
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5 text-xs">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Course
+                    </p>
+                    <p className="truncate text-foreground">
+                      {quiz.courseName}
+                    </p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Module
+                    </p>
+                    <p className="truncate text-foreground">
+                      {quiz.moduleName}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Due
+                    </p>
+                    <p
+                      className={
+                        isOverdue
+                          ? "font-semibold text-danger"
+                          : isPending
+                            ? "text-amber-400"
+                            : "text-muted-foreground"
+                      }
+                    >
+                      {isPending
+                        ? isOverdue
+                          ? `${daysOverdue}d overdue`
+                          : quiz.dueDate
+                            ? new Date(quiz.dueDate).toLocaleDateString(
+                                "en-IN",
+                                { day: "numeric", month: "short" },
+                              )
+                            : "—"
+                        : quiz.dueDate
+                          ? new Date(quiz.dueDate).toLocaleDateString(
+                              "en-IN",
+                              { day: "numeric", month: "short" },
+                            )
+                          : "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Submitted
+                    </p>
+                    <p className="text-foreground">
+                      {isPending
+                        ? "—"
+                        : quiz.submittedAt
+                          ? new Date(quiz.submittedAt).toLocaleDateString(
+                              "en-IN",
+                              { day: "numeric", month: "short", year: "numeric" },
+                            )
+                          : "—"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center justify-end gap-2 border-t border-border/60 pt-3">
+                  {isPending ? (
+                    <button
+                      onClick={() => handleStartQuiz(quiz.id)}
+                      disabled={loading}
+                      className="btn-primary px-3 py-1.5 text-xs"
+                    >
+                      <IconPlayerPlay size={13} className="mr-1 inline" />
+                      Start Quiz
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handleStartQuiz(quiz.id)}
+                        disabled={loading}
+                        className="btn-primary px-3 py-1.5 text-xs"
+                      >
+                        <IconPlayerPlay size={13} className="mr-1 inline" />
+                        Retake Quiz
+                      </button>
+                      <button
+                        onClick={() => handleViewResult(quiz.id)}
+                        disabled={loading}
+                        className="btn-secondary px-3 py-1.5 text-xs"
+                        title="View Results"
+                      >
+                        <IconChecklist size={13} className="mr-1 inline" />
+                        Results
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </> ) : (
         <div className="rounded-2xl border border-dashed border-border/80 bg-card/50 flex flex-col items-center justify-center py-16 text-center">
           <span className="text-4xl mb-3">🎯</span>
           <p className="font-bold text-base text-foreground">

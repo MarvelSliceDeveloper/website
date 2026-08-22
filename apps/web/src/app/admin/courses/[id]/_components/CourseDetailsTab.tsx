@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { IconPlus, IconX } from "@tabler/icons-react";
+import { IconPlus, IconX, IconSparkles } from "@tabler/icons-react";
 import RichEditor from "@/components/editor/RichEditor";
 import {
   Select,
@@ -11,14 +11,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/lib/toast";
+import { toast, getErrorMessage } from "@/lib/toast";
 import { useApiQuery } from "@/lib/query";
+import { useAIGenerate } from "@/lib/use-ai-generate";
 import {
   SUGGESTED_CATEGORIES,
   SUGGESTED_TAGS,
   SUGGESTED_COURSE_TITLES,
 } from "@/lib/suggestions";
 import type { Course, CourseFormData } from "./types";
+
+function plainTextToHtml(text: string): string {
+  return text
+    .split(/\n{2,}/)
+    .map((para) => `<p>${para.replace(/\n/g, "<br/>")}</p>`)
+    .join("");
+}
 
 export default function CourseDetailsTab({
   course,
@@ -39,6 +47,42 @@ export default function CourseDetailsTab({
 }) {
   const [newTag, setNewTag] = useState("");
   const [newObjective, setNewObjective] = useState("");
+  const [aiTopic, setAiTopic] = useState("");
+
+  const aiGenerate = useAIGenerate<{
+    title: string;
+    description: string;
+    category: string;
+    tags: string[];
+    objectives: string[];
+  }>();
+
+  const handleAiGenerate = () => {
+    if (!aiTopic.trim()) {
+      toast.error("Enter a course topic for the AI");
+      return;
+    }
+    aiGenerate.mutate(
+      { type: "COURSE_OUTLINE", prompt: aiTopic.trim() },
+      {
+        onSuccess: (res) => {
+          const d = res.data;
+          setForm((p) => ({
+            ...p,
+            ...(d.title ? { title: d.title } : {}),
+            ...(d.description ? { description: plainTextToHtml(d.description) } : {}),
+            ...(d.category ? { category: d.category } : {}),
+            ...(Array.isArray(d.tags) && d.tags.length ? { tags: [...d.tags] } : {}),
+            ...(Array.isArray(d.objectives) && d.objectives.length
+              ? { learningObjectives: [...d.objectives] }
+              : {}),
+          }));
+          toast.success("Course draft generated — review before saving");
+        },
+        onError: (err: unknown) => toast.error(getErrorMessage(err)),
+      },
+    );
+  };
 
   const titlesQuery = useApiQuery<{ titles: { name: string }[] }>(
     ["admin", "content", "titles"],
@@ -232,6 +276,31 @@ export default function CourseDetailsTab({
       <h2 className="text-base font-semibold text-foreground">
         Course Details
       </h2>
+
+      {/* AI draft row */}
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-violet-300/50 bg-violet-500/5 p-3">
+        <IconSparkles size={16} className="shrink-0 text-violet-500" />
+        <input
+          type="text"
+          value={aiTopic}
+          onChange={(e) => setAiTopic(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAiGenerate())}
+          placeholder="Describe the course you want, e.g. Python for data analysis beginners"
+          className="field flex-1 min-w-[220px] text-xs"
+        />
+        <button
+          type="button"
+          onClick={handleAiGenerate}
+          disabled={aiGenerate.isPending}
+          className="flex items-center gap-1 rounded-md border border-violet-300/60 bg-violet-50 px-3 py-1.5 text-[11px] font-semibold text-violet-700 transition-colors hover:bg-violet-100 disabled:opacity-50"
+        >
+          {aiGenerate.isPending ? "Generating…" : "Generate Draft"}
+        </button>
+        <p className="w-full text-[10px] text-muted-foreground">
+          Fills title, description, category, tags, and objectives below —
+          review and edit before saving.
+        </p>
+      </div>
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-foreground">

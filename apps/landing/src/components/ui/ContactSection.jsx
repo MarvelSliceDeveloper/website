@@ -32,17 +32,17 @@ function hexToRgba(hex, alpha) {
 
 function ContactDetailItem({ icon: Icon, label, value, href, textColor }) {
   const content = href ? (
-    <a href={href} className="hover:opacity-80 transition-opacity text-sm leading-relaxed" style={{ color: hexToRgba(textColor, 0.9) }}>{value}</a>
+    <a href={href} className="hover:opacity-80 transition-opacity text-xs sm:text-sm leading-relaxed block break-words" style={{ color: hexToRgba(textColor, 0.9) }}>{value}</a>
   ) : (
-    <span className="text-sm leading-relaxed" style={{ color: hexToRgba(textColor, 0.9) }}>{value}</span>
+    <span className="text-xs sm:text-sm leading-relaxed block break-words" style={{ color: hexToRgba(textColor, 0.9) }}>{value}</span>
   );
   return (
-    <div className="flex items-start gap-4">
-      <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0 mt-0.5">
-        <Icon className="w-5 h-5" style={{ color: textColor }} />
+    <div className="flex flex-col sm:flex-row items-start text-left gap-2 sm:gap-3">
+      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0 mt-0.5">
+        <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: textColor }} />
       </div>
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: hexToRgba(textColor, 0.65) }}>{label}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: hexToRgba(textColor, 0.65) }}>{label}</p>
         {content}
       </div>
     </div>
@@ -122,139 +122,139 @@ export default function ContactSection({ section }) {
   }
 
   return (
-    <div className="bg-white border border-gray-300 rounded-xl" style={{ boxShadow: 'rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px' }}>
-      <div className="grid lg:grid-cols-2 min-h-[520px] rounded-xl overflow-hidden">
-      {/* Left: Details */}
-      <div
-        className="relative p-8 sm:p-10 flex flex-col justify-center"
-        style={{ background: `linear-gradient(135deg, ${c.gradient_start || '#0B2D6B'}, ${c.gradient_end || '#1E56C7'})` }}
-      >
-        <FloatingCircles />
-        <div className="relative z-10 space-y-7">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3" style={{ color: headingColor }}>
-              {leftHeading}
-              {c.left_heading_line_2 && <><br /><span style={{ color: c.heading_line_2_color || headingColor }}>{c.left_heading_line_2}</span></>}
-            </h2>
-            <p className="text-sm leading-relaxed" style={{ color: subheadingColor }}>{leftSubtitle}</p>
-          </div>
-          <div className="space-y-5">
-            {address && <ContactDetailItem icon={FiMapPin} label="Address" value={address} textColor={textColor} />}
-            {displayPhone && <ContactDetailItem icon={FiPhone} label="Phone" value={displayPhone} href={`tel:${telLink}`} textColor={textColor} />}
-            {companyEmail && <ContactDetailItem icon={FiMail} label="Email" value={companyEmail} href={`mailto:${companyEmail}`} textColor={textColor} />}
-            {businessHours && <ContactDetailItem icon={FiClock} label="Business Hours" value={businessHours} textColor={textColor} />}
+    <div className="bg-white border border-gray-300 rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-0 lg:min-h-[520px]">
+        {/* Left: Get in Touch */}
+        <div
+          className="relative p-6 sm:p-10 flex flex-col justify-center text-center lg:text-left h-auto min-h-0"
+          style={{ background: `linear-gradient(135deg, ${c.gradient_start || '#0B2D6B'}, ${c.gradient_end || '#1E56C7'})` }}
+        >
+          <FloatingCircles />
+          <div className="relative z-10 space-y-6 sm:space-y-7 max-w-md mx-auto lg:max-w-none w-full">
+            <div className="text-center lg:text-left">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2.5" style={{ color: headingColor }}>
+                {leftHeading}
+                {c.left_heading_line_2 && <><br /><span style={{ color: c.heading_line_2_color || headingColor }}>{c.left_heading_line_2}</span></>}
+              </h2>
+              <p className="text-xs sm:text-sm leading-relaxed max-w-xs sm:max-w-md mx-auto lg:mx-0" style={{ color: subheadingColor }}>{leftSubtitle}</p>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-1 gap-3.5 sm:gap-5 text-left w-full mx-auto lg:mx-0">
+              {address && <ContactDetailItem icon={FiMapPin} label="Address" value={address} textColor={textColor} />}
+              {displayPhone && <ContactDetailItem icon={FiPhone} label="Phone" value={displayPhone} href={`tel:${telLink}`} textColor={textColor} />}
+              {companyEmail && <ContactDetailItem icon={FiMail} label="Email" value={companyEmail} href={`mailto:${companyEmail}`} textColor={textColor} />}
+              {businessHours && <ContactDetailItem icon={FiClock} label="Business Hours" value={businessHours} textColor={textColor} />}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Right: Form */}
-      <div className="bg-white p-8 sm:p-10 flex flex-col justify-center">
-            <h3 className="text-xl sm:text-2xl font-bold text-[#0B2D6B] mb-1">Send us a Message</h3>
-            <p className="text-sm text-neutral-500 mb-6">Fill out the form below and we'll get back to you shortly.</p>
+        {/* Right: Send us a Message Form */}
+        <div className="bg-white p-6 sm:p-10 flex flex-col justify-center border-t border-gray-200 lg:border-t-0">
+          <h3 className="text-xl sm:text-2xl font-bold text-[#0B2D6B] mb-1 text-center lg:text-left">Send us a Message</h3>
+          <p className="text-xs sm:text-sm text-neutral-500 mb-6 text-center lg:text-left">Fill out the form below and we'll get back to you shortly.</p>
 
-            <AnimatePresence mode="wait">
-              {status === 'success' ? (
-                <motion.div
-                  key="success"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="flex flex-col items-center py-10 text-center"
-                >
-                  <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mb-4">
-                    <FiCheckCircle className="w-8 h-8 text-green-500" />
-                  </div>
-                  <h4 className="text-lg font-bold text-[#0B2D6B] mb-2">Thank You!</h4>
-                  <p className="text-sm text-neutral-500 max-w-xs">{successMessage}</p>
-                  <button onClick={() => setStatus('idle')} className="mt-6 text-sm font-semibold text-[#1E56C7] hover:underline">
-                    Send Another Message
-                  </button>
-                </motion.div>
-              ) : (
-                <motion.form
-                  key="form"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  onSubmit={handleSubmit}
-                  className="space-y-4"
-                >
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-1.5">Full Name <span className="text-red-400">*</span></label>
-                      <input
-                        type="text"
-                        required
-                        value={form.full_name}
-                        onChange={(e) => handleChange('full_name', e.target.value)}
-                        placeholder="John Doe"
-                        className={`w-full px-4 py-2.5 border rounded-lg text-sm outline-none transition-colors ${
-                          errors.full_name ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-neutral-300 focus:ring-2 focus:ring-[#1E56C7]/20 focus:border-[#1E56C7]'
-                        }`}
-                      />
-                      {errors.full_name && <p className="text-xs text-red-500 mt-1">{errors.full_name}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-1.5">Email Address <span className="text-red-400">*</span></label>
-                      <input
-                        type="email"
-                        required
-                        value={form.email}
-                        onChange={(e) => handleChange('email', e.target.value)}
-                        placeholder="john@example.com"
-                        className={`w-full px-4 py-2.5 border rounded-lg text-sm outline-none transition-colors ${
-                          errors.email ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-neutral-300 focus:ring-2 focus:ring-[#1E56C7]/20 focus:border-[#1E56C7]'
-                        }`}
-                      />
-                      {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
-                    </div>
-                  </div>
+          <AnimatePresence mode="wait">
+            {status === 'success' ? (
+              <motion.div
+                key="success"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="flex flex-col items-center py-8 sm:py-10 text-center"
+              >
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-green-50 flex items-center justify-center mb-4">
+                  <FiCheckCircle className="w-7 h-7 sm:w-8 sm:h-8 text-green-500" />
+                </div>
+                <h4 className="text-lg font-bold text-[#0B2D6B] mb-2">Thank You!</h4>
+                <p className="text-xs sm:text-sm text-neutral-500 max-w-xs">{successMessage}</p>
+                <button onClick={() => setStatus('idle')} className="mt-6 text-sm font-semibold text-[#1E56C7] hover:underline">
+                  Send Another Message
+                </button>
+              </motion.div>
+            ) : (
+              <motion.form
+                key="form"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onSubmit={handleSubmit}
+                className="space-y-4"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-1.5">Phone Number <span className="text-red-400">*</span></label>
+                    <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-1.5 text-left">Full Name <span className="text-red-400">*</span></label>
                     <input
-                      type="tel"
+                      type="text"
                       required
-                      value={form.phone}
-                      onChange={(e) => handleChange('phone', e.target.value)}
-                      placeholder="+1 (555) 019-2834"
-                      className={`w-full px-4 py-2.5 border rounded-lg text-sm outline-none transition-colors ${
-                        errors.phone ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-neutral-300 focus:ring-2 focus:ring-[#1E56C7]/20 focus:border-[#1E56C7]'
+                      value={form.full_name}
+                      onChange={(e) => handleChange('full_name', e.target.value)}
+                      placeholder="John Doe"
+                      className={`w-full px-3.5 sm:px-4 py-2.5 border rounded-lg text-sm outline-none transition-colors ${
+                        errors.full_name ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-neutral-300 focus:ring-2 focus:ring-[#1E56C7]/20 focus:border-[#1E56C7]'
                       }`}
                     />
-                    {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
+                    {errors.full_name && <p className="text-xs text-red-500 mt-1 text-left">{errors.full_name}</p>}
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-1.5">Message <span className="text-red-400">*</span></label>
-                    <textarea
-                      value={form.message}
+                    <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-1.5 text-left">Email Address <span className="text-red-400">*</span></label>
+                    <input
+                      type="email"
                       required
-                      onChange={(e) => handleChange('message', e.target.value)}
-                      rows={4}
-                      placeholder="Write your message here..."
-                      className={`w-full px-4 py-2.5 border rounded-lg text-sm outline-none transition-colors resize-none ${
-                        errors.message ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-neutral-300 focus:ring-2 focus:ring-[#1E56C7]/20 focus:border-[#1E56C7]'
+                      value={form.email}
+                      onChange={(e) => handleChange('email', e.target.value)}
+                      placeholder="john@example.com"
+                      className={`w-full px-3.5 sm:px-4 py-2.5 border rounded-lg text-sm outline-none transition-colors ${
+                        errors.email ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-neutral-300 focus:ring-2 focus:ring-[#1E56C7]/20 focus:border-[#1E56C7]'
                       }`}
                     />
-                    {errors.message && <p className="text-xs text-red-500 mt-1">{errors.message}</p>}
+                    {errors.email && <p className="text-xs text-red-500 mt-1 text-left">{errors.email}</p>}
                   </div>
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <input type="checkbox" checked={agreeTerms} onChange={(e) => {
-                      setAgreeTerms(e.target.checked);
-                      if (errors.agree) setErrors((prev) => ({ ...prev, agree: undefined }));
-                    }} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600/20" />
-                    <span className="text-xs text-slate-600 leading-relaxed">
-                      I agree to the{' '}
-                      <a href="/terms" className="text-blue-600 underline hover:text-blue-700">Terms of Use</a>
-                      {' '}and{' '}
-                      <a href="/privacy" className="text-blue-600 underline hover:text-blue-700">Privacy Policy</a>.
-                    </span>
-                  </label>
-                  {errors.agree && <p className="text-xs text-red-500 mt-1">{errors.agree}</p>}
-                  <div className="flex justify-center">
-                    <button
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-1.5 text-left">Phone Number <span className="text-red-400">*</span></label>
+                  <input
+                    type="tel"
+                    required
+                    value={form.phone}
+                    onChange={(e) => handleChange('phone', e.target.value)}
+                    placeholder="+1 (555) 019-2834"
+                    className={`w-full px-3.5 sm:px-4 py-2.5 border rounded-lg text-sm outline-none transition-colors ${
+                      errors.phone ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-neutral-300 focus:ring-2 focus:ring-[#1E56C7]/20 focus:border-[#1E56C7]'
+                    }`}
+                  />
+                  {errors.phone && <p className="text-xs text-red-500 mt-1 text-left">{errors.phone}</p>}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-1.5 text-left">Message <span className="text-red-400">*</span></label>
+                  <textarea
+                    value={form.message}
+                    required
+                    onChange={(e) => handleChange('message', e.target.value)}
+                    rows={4}
+                    placeholder="Write your message here..."
+                    className={`w-full px-3.5 sm:px-4 py-2.5 border rounded-lg text-sm outline-none transition-colors resize-none ${
+                      errors.message ? 'border-red-400 focus:ring-2 focus:ring-red-200' : 'border-neutral-300 focus:ring-2 focus:ring-[#1E56C7]/20 focus:border-[#1E56C7]'
+                    }`}
+                  />
+                  {errors.message && <p className="text-xs text-red-500 mt-1 text-left">{errors.message}</p>}
+                </div>
+                <label className="flex items-start gap-2.5 cursor-pointer text-left">
+                  <input type="checkbox" checked={agreeTerms} onChange={(e) => {
+                    setAgreeTerms(e.target.checked);
+                    if (errors.agree) setErrors((prev) => ({ ...prev, agree: undefined }));
+                  }} className="mt-0.5 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600/20 shrink-0" />
+                  <span className="text-xs text-slate-600 leading-relaxed">
+                    I agree to the{' '}
+                    <a href="/terms" className="text-blue-600 underline hover:text-blue-700">Terms of Use</a>
+                    {' '}and{' '}
+                    <a href="/privacy" className="text-blue-600 underline hover:text-blue-700">Privacy Policy</a>.
+                  </span>
+                </label>
+                {errors.agree && <p className="text-xs text-red-500 mt-1 text-left">{errors.agree}</p>}
+                <div className="flex justify-center pt-2">
+                  <button
                     type="submit"
                     disabled={status === 'submitting'}
-                    className="inline-flex items-center justify-center gap-2 px-[30px] py-[15px] rounded-full bg-[#1E56C7] text-white font-semibold text-sm hover:bg-[#1642a0] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="min-h-[48px] sm:min-h-[52px] px-8 sm:px-[36px] py-3 sm:py-[15px] rounded-full bg-[#1E56C7] text-white font-semibold text-sm hover:bg-[#1642a0] transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {status === 'submitting' ? (
                       <>
@@ -265,14 +265,14 @@ export default function ContactSection({ section }) {
                       'Send Message'
                     )}
                   </button>
-                  </div>
-                  {status === 'error' && (
-                    <p className="text-xs text-red-500 text-center">Something went wrong. Please try again.</p>
-                  )}
-                </motion.form>
-              )}
-            </AnimatePresence>
-          </div>
+                </div>
+                {status === 'error' && (
+                  <p className="text-xs text-red-500 text-center">Something went wrong. Please try again.</p>
+                )}
+              </motion.form>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );

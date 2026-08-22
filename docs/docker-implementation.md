@@ -1,746 +1,471 @@
-# Docker Implementation & CI/CD Deployment Guide
+# Docker Deployment Guide (Production)
 
-## Overview
+> **Beginner-friendly.** Every command in this guide is explained so you know what
+> it does — not just *that* it works. If you'd rather run the app **without Docker**,
+> see [manual-server-setup.md](manual-server-setup.md).
 
-This document describes the complete Docker-based deployment architecture for the LMS platform on a VPS using Docker Compose, Nginx reverse proxy, and GitHub Actions CI/CD pipeline.
+## What this doc covers
+
+This document explains how to deploy the LMS Portal to your own server (a VPS —
+DigitalOcean, Hetzner, OVH, Vultr, etc.) using **Docker Compose**. It covers:
+
+1. The architecture and how the pieces fit together
+2. Everything you need to do **once** (DNS, install Docker, secrets)
+3. Building and starting the stack
+4. SSL certificates for your two domains
+5. Deploying updates (manual + automatic via GitHub Actions)
+6. Backups, verification, and troubleshooting
 
 ## Architecture
 
+Your setup uses **two domains** pointing at one server:
+
+| Domain | What it serves |
+|--------|----------------|
+| `www.marvelslice.com` | The public marketing/landing site (Vite + React SPA) |
+| `lms.marvelslice.com` | The LMS app (Next.js web + Express API) |
+
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        VPS (Ubuntu 22.04+)                      │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │   Nginx      │  │   API        │  │   Web (LMS)  │          │
-│  │   :80/443    │──▶│   :4000      │  │   :3000      │          │
-│  │              │  │              │  │              │          │
-│  │  /      → Landing (static)  │  │              │          │
-│  │  /api    → API              │  │              │          │
-│  │  /student,              │  │              │          │
-│  │  /admin,                │  │              │          │
-│  │  /instructor → Web      │  │              │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-│         │                │                │                     │
-│         └────────────────┼────────────────┘                     │
-│                          ▼                                      │
-│                 ┌──────────────┐  ┌──────────────┐             │
-│                 │  PostgreSQL  │  │    Redis     │             │
-│                 │   :5432      │  │   :6379      │             │
-│                 └──────────────┘  └──────────────┘             │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-## Required Files
-
-### 1. `apps/api/Dockerfile`
-
-```dockerfile
-# ─── Base ───
-FROM node:20-alpine AS base
-RUN apk add --no-cache dumb-init
-WORKDIR /app
-
-# ─── Dependencies ───
-FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
-COPY prisma ./prisma/
-RUN corepack enable pnpm && pnpm install --frozen-lockfile --prod=false
-
-# ─── Builder ───
-FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN corepack enable pnpm && pnpm prisma:generate && pnpm build
-
-# ─── Runner ───
-FROM base AS runner
-ENV NODE_ENV=production
-RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
-COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/package.json ./package.json
-COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nodejs:nodejs /app/entrypoint.sh ./entrypoint.sh
-USER nodejs
-EXPOSE 4000
-ENTRYPOINT ["dumb-init", "./entrypoint.sh"]
+                          Internet
+                             │
+                     ┌───────▼───────┐
+                     │  nginx (SSL)  │  ports 80 + 443
+                     └───┬───────┬───┘
+          www.marvelslice.com   lms.marvelslice.com
+                 │                    │
+         ┌───────▼──────┐      ┌──────▼──────────────────────┐
+         │ landing       │      │ web (Next.js :3000)         │
+         │ (nginx :80)   │      │   /api → api:4000 (nginx)   │
+         │  └─ landing-  │      │   /uploads, /images → api   │
+         │     api:3001  │      │   /socket.io → api (WS)     │
+         └───────────────┘      └──────┬──────────────────────┘
+                                       │
+                              ┌────────▼────────┐
+                              │ api (Express    │
+                              │  :4000)         │
+                              └───┬───────┬─────┘
+                                  │       │
+                           postgres:5432  redis:6379
 ```
 
-### 2. `apps/api/entrypoint.sh`
+Six containers are started:
+
+| Container | Runs | Listens on |
+|-----------|------|------------|
+| `nginx` | Reverse proxy + SSL termination | host 80/443 |
+| `api` | Express + Prisma API | internal 4000 |
+| `web` | Next.js app (standalone build) | internal 3000 |
+| `landing` | Static landing site via nginx | internal 80 |
+| `landing-api` | Landing contact form email server | internal 3001 |
+| `postgres` | Database | internal 5432 |
+| `redis` | Cache / realtime pub-sub | internal 6379 |
+| `certbot` | Let's Encrypt SSL renewals | none (runs periodically) |
+
+## Prerequisites
+
+- A **VPS** running **Ubuntu 22.04 or 24.04** (min 2GB RAM recommended, 1GB works with swap)
+- SSH access to it as `root` (or a user with sudo)
+- The **two domain names** (`www.marvelslice.com`, `lms.marvelslice.com`)
+  pointing at the VPS's public IP
+- The LMS code pushed to a **GitHub repo** you own (for CI/CD)
+- A computer (laptop) with SSH — you'll do most work from the VPS
+
+## Part 0 — Point your domains at the server
+
+Log in to your DNS provider (where you bought the domain, or Cloudflare, etc.)
+and create two **A records**:
+
+| Host | Type | Value (your VPS public IP) |
+|------|------|-----------------------------|
+| `www` | A | `203.0.113.10` (your real IP) |
+| `lms` | A | `203.0.113.10` (same IP) |
+
+> A **DNS A record** says "this hostname → this IP address". Both hostnames go to
+> the same VPS; nginx tells them apart by the `Host` header.
+>
+> Wait 5–30 minutes for DNS to propagate. You can check later with:
+> `nslookup www.marvelslice.com`
+
+---
+
+## Part 1 — Connect to your server and install Docker (one-time)
+
+### 1.1 SSH into the server
 
 ```bash
-#!/bin/sh
-set -e
-
-# Run migrations
-echo "Running database migrations..."
-npx prisma migrate deploy
-
-# Start the application
-echo "Starting API server..."
-exec node dist/index.js
+ssh root@203.0.113.10
 ```
 
-### 3. `apps/web/Dockerfile`
-
-```dockerfile
-# ─── Base ───
-FROM node:20-alpine AS base
-WORKDIR /app
-
-# ─── Dependencies ───
-FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
-RUN corepack enable pnpm && pnpm install --frozen-lockfile --prod=false
-
-# ─── Builder ───
-FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN corepack enable pnpm && pnpm build
-
-# ─── Runner ───
-FROM base AS runner
-ENV NODE_ENV=production
-RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
-# Next.js standalone output
-COPY --from=builder --chown=nodejs:nodejs /app/public ./public
-COPY --from=builder --chown=nodejs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nodejs:nodejs /app/.next/static ./.next/static
-USER nodejs
-EXPOSE 3000
-CMD ["node", "server.js"]
-```
-
-### 4. `apps/landing/Dockerfile`
-
-```dockerfile
-# ─── Builder ───
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN corepack enable pnpm && pnpm install --frozen-lockfile
-COPY . .
-RUN corepack enable pnpm && pnpm build
-
-# ─── Runner (Nginx) ───
-FROM nginx:alpine AS runner
-COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.landing.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-```
-
-### 5. `apps/landing/nginx.landing.conf`
-
-```nginx
-server {
-    listen 80;
-    server_name localhost;
-    root /usr/share/nginx/html;
-    index index.html;
-
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Cache static assets
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-}
-```
-
-### 6. `docker-compose.prod.yml`
-
-```yaml
-version: '3.8'
-
-services:
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - api
-      - web
-      - landing
-    restart: unless-stopped
-    networks: [lms-network]
-
-  api:
-    image: ${REGISTRY}/${IMAGE_NAME}-api:${TAG}
-    env_file: .env.production
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-    networks: [lms-network]
-
-  web:
-    image: ${REGISTRY}/${IMAGE_NAME}-web:${TAG}
-    env_file: .env.production
-    environment:
-      - API_URL=http://api:4000
-      - NEXT_PUBLIC_API_URL=http://api:4000
-    depends_on:
-      - api
-    restart: unless-stopped
-    networks: [lms-network]
-
-  landing:
-    image: ${REGISTRY}/${IMAGE_NAME}-landing:${TAG}
-    restart: unless-stopped
-    networks: [lms-network]
-
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    restart: unless-stopped
-    networks: [lms-network]
-
-  redis:
-    image: redis:7-alpine
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    restart: unless-stopped
-    networks: [lms-network]
-
-volumes:
-  postgres_data:
-  redis_data:
-
-networks:
-  lms-network:
-    driver: bridge
-```
-
-### 7. `nginx.prod.conf`
-
-```nginx
-user nginx;
-worker_processes auto;
-error_log /var/log/nginx/error.log warn;
-pid /var/run/nginx.pid;
-
-events {
-    worker_connections 1024;
-}
-
-http {
-    include /etc/nginx/mime.types;
-    default_type application/octet-stream;
-
-    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
-                    '$status $body_bytes_sent "$http_referer" '
-                    '"$http_user_agent" "$http_x_forwarded_for"';
-
-    access_log /var/log/nginx/access.log main;
-
-    sendfile on;
-    tcp_nopush on;
-    tcp_nodelay on;
-    keepalive_timeout 65;
-    types_hash_max_size 2048;
-
-    # Gzip
-    gzip on;
-    gzip_vary on;
-    gzip_min_length 1024;
-    gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
-
-    # Upstreams
-    upstream api_backend {
-        server api:4000;
-        keepalive 32;
-    }
-
-    upstream web_backend {
-        server web:3000;
-        keepalive 32;
-    }
-
-    upstream landing_backend {
-        server landing:80;
-        keepalive 32;
-    }
-
-    # Rate limiting
-    limit_req_zone $binary_remote_addr zone=api_limit:10m rate=100r/s;
-    limit_req_zone $binary_remote_addr zone=auth_limit:10m rate=10r/s;
-
-    server {
-        listen 80;
-        server_name your-domain.com;  # Replace with actual domain
-
-        # Redirect HTTP to HTTPS (if using Let's Encrypt)
-        # return 301 https://$server_name$request_uri;
-
-        # Landing page (root)
-        location / {
-            proxy_pass http://landing_backend;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
-
-        # API routes
-        location /api/ {
-            limit_req zone=api_limit burst=200 nodelay;
-            proxy_pass http://api_backend;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            proxy_read_timeout 60s;
-            proxy_send_timeout 60s;
-        }
-
-        # Auth endpoints - stricter rate limit
-        location /api/auth/ {
-            limit_req zone=auth_limit burst=20 nodelay;
-            proxy_pass http://api_backend;
-            proxy_http_version 1.1;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
-
-        # Web (LMS) routes
-        location /student/ {
-            proxy_pass http://web_backend;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            proxy_read_timeout 60s;
-        }
-
-        location /admin/ {
-            proxy_pass http://web_backend;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
-
-        location /instructor/ {
-            proxy_pass http://web_backend;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
-
-        # Health check
-        location /health {
-            proxy_pass http://api_backend/health;
-            access_log off;
-        }
-    }
-}
-```
-
-### 8. `.github/workflows/ci-cd.yml`
-
-```yaml
-name: CI / CD
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
-jobs:
-  test:
-    name: Test & Lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: lms_test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: lms_test
-        ports: [5432:5432]
-        options: >-
-          --health-cmd="pg_isready -U lms_test"
-          --health-interval=5s --health-timeout=3s --health-retries=10
-      redis:
-        image: redis:7-alpine
-        ports: [6379:6379]
-        options: --health-cmd="redis-cli ping" --health-interval=5s --health-timeout=3s --health-retries=10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with: { version: 8, run_install: false }
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: pnpm-
-
-      - name: Cache Turbo
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: turbo-${{ github.sha }}
-          restore-keys: turbo-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma Client
-        run: pnpm prisma:generate
-
-      - name: Run migrations (test DB)
-        run: pnpm prisma:migrate:test
-        env:
-          DATABASE_URL: postgresql://lms_test:test@localhost:5432/lms_test
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Unit/Integration Tests
-        run: pnpm test
-
-  build:
-    name: Build & Push Images
-    needs: test
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata for API
-        id: meta-api
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-api
-          tags: |
-            type=sha
-            type=ref,event=branch
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build & push API
-        uses: docker/build-push-action@v5
-        with:
-          context: ./apps/api
-          file: ./apps/api/Dockerfile
-          push: true
-          tags: ${{ steps.meta-api.outputs.tags }}
-          labels: ${{ steps.meta-api.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Extract metadata for Web
-        id: meta-web
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web
-          tags: |
-            type=sha
-            type=ref,event=branch
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build & push Web
-        uses: docker/build-push-action@v5
-        with:
-          context: ./apps/web
-          file: ./apps/web/Dockerfile
-          push: true
-          tags: ${{ steps.meta-web.outputs.tags }}
-          labels: ${{ steps.meta-web.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Extract metadata for Landing
-        id: meta-landing
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-landing
-          tags: |
-            type=sha
-            type=ref,event=branch
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build & push Landing
-        uses: docker/build-push-action@v5
-        with:
-          context: ./apps/landing
-          file: ./apps/landing/Dockerfile
-          push: true
-          tags: ${{ steps.meta-landing.outputs.tags }}
-          labels: ${{ steps.meta-landing.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  deploy:
-    name: Deploy to VPS
-    needs: build
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    environment: production
-    steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            set -e
-            cd /opt/lms
-            
-            # Pull latest images
-            docker compose -f docker-compose.prod.yml pull
-            
-            # Run migrations before starting new containers
-            docker compose -f docker-compose.prod.yml run --rm api npx prisma migrate deploy
-            
-            # Start new containers (rolling update)
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
-            
-            # Clean up old images
-            docker image prune -f
-            
-            # Verify health
-            sleep 10
-            curl -f http://localhost/health || exit 1
-            echo "Deployment successful!"
-```
-
-## Required GitHub Secrets
-
-| Secret | Description |
-|--------|-------------|
-| `VPS_HOST` | VPS IP or hostname |
-| `VPS_USER` | SSH user (e.g., `root` or `ubuntu`) |
-| `VPS_SSH_KEY` | Private SSH key for VPS access |
-| `GITHUB_TOKEN` | Auto-provided (no action needed) |
-
-## VPS Setup Checklist (One-Time)
+- `ssh` = Secure Shell — encrypted remote login.
+- `root@` = log in as the admin user (or use `ubuntu@` on some providers).
+- `203.0.113.10` = your VPS's public IP (replace with the real one).
+
+### 1.2 Update the system
 
 ```bash
-# On VPS as root
-# 1. Install Docker + Compose
+apt update && apt upgrade -y
+```
+
+- `apt update` — refreshes the list of available software packages.
+- `apt upgrade -y` — installs security/software updates (`-y` = don't ask, just do it).
+
+### 1.3 Install Docker
+
+```bash
 curl -fsSL https://get.docker.com | sh
-apt-get update && apt-get install -y docker-compose-plugin
+```
 
-# 2. Create app directory
+- `curl` — downloads a file from a URL (`-fsSL` = fail silently, show errors).
+- `| sh` — pipes that download straight into the shell to run it.
+- This official script installs Docker Engine + the Compose plugin.
+
+### 1.4 Verify Docker works
+
+```bash
+docker --version
+docker compose version
+```
+
+- `docker --version` — shows the installed Docker version.
+- `docker compose version` — shows the Compose plugin (the `compose` subcommand).
+
+---
+
+## Part 2 — Get the code onto the server (one-time)
+
+### 2.1 Create an app directory
+
+```bash
 mkdir -p /opt/lms
 cd /opt/lms
+```
 
-# 3. Clone repo (or just copy docker-compose.prod.yml + nginx.prod.conf)
-git clone <your-repo> .  # or copy files manually
+- `mkdir -p /opt/lms` — **m**a**k**e **dir**ectory `-p` (create parents if missing) at `/opt/lms`.
+- `/opt` is the standard Linux location for third-party app software.
+- `cd /opt/lms` — **c**hange **d**irectory into it.
 
-# 4. Create .env.production
-cat > .env.production << 'EOF'
-# Database
-POSTGRES_USER=lms_prod
-POSTGRES_PASSWORD=<strong-random-password>
-POSTGRES_DB=lms_prod
+### 2.2 Clone your repository
 
-# Redis
-REDIS_URL=redis://redis:6379
+```bash
+git clone https://github.com/your-username/lms-portal.git .
+```
 
-# API
-JWT_SECRET=<32+ char random>
-TOKEN_ENCRYPTION_KEY=<32 char random>
-DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-API_URL=https://your-domain.com/api
-WEB_URL=https://your-domain.com
+- `git clone <url> .` — downloads the repo into the **current** directory (the `.`).
+- Replace the URL with your actual repository URL.
 
-# Web
-NEXT_PUBLIC_API_URL=https://your-domain.com/api
+### 2.3 Copy the example environment file
 
-# Registry (for docker compose pull)
-REGISTRY=ghcr.io
-IMAGE_NAME=your-github-username/lms
-TAG=latest
-EOF
+```bash
+cp .env.production.example .env.production
+```
 
-# 5. SSL certificates (Let's Encrypt recommended)
-# certbot --nginx -d your-domain.com
+- `cp` — co**p**ies a file.
+- `.env.production` holds all your **secrets and settings** for production.
+- It is **gitignored**, so it never gets committed to GitHub.
 
-# 6. First deploy
+### 2.4 Fill in your secrets
+
+Edit the file:
+
+```bash
+nano .env.production
+```
+
+- `nano` — a simple command-line text editor. Save with `Ctrl+O`, Enter; exit with `Ctrl+X`.
+
+At minimum, replace these placeholders (the file has comments explaining each):
+
+| Key | What to put | How to generate |
+|-----|-------------|-----------------|
+| `POSTGRES_PASSWORD` | Strong DB password | `openssl rand -base64 24` |
+| `JWT_SECRET` | Random 64-char string | `openssl rand -base64 48` |
+| `CSRF_SECRET` | Random 64-char string | `openssl rand -base64 48` |
+| `NEXTAUTH_SECRET` | Random 64-char string | `openssl rand -base64 48` |
+| `TOKEN_ENCRYPTION_KEY` | Random 32-byte base64 | `openssl rand -base64 32` |
+| `MS_WEBHOOK_CLIENT_STATE` | Random 64-char string | `openssl rand -base64 48` |
+| `BREVO_API_KEY` | Your Brevo API key | from Brevo dashboard |
+| `EMAIL_FROM_EMAIL` | `noreply@lms.marvelslice.com` | — |
+| `SMTP_EMAIL` / `SMTP_PASSWORD` | Gmail SMTP for landing forms | Gmail app password |
+| `ADMIN_EMAIL` | Your admin inbox | — |
+| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | Razorpay keys | Razorpay dashboard |
+| `YOUTUBE_API_KEY` | YouTube Data API key | Google Cloud Console |
+| `IMAGE_NAME` | `your-username/lms-portal` | your GitHub repo |
+| `API_URL`, `WEB_URL`, `NEXT_PUBLIC_API_URL`, `NEXTAUTH_URL` | `https://lms.marvelslice.com` (+ `/api` for `API_URL`) | already correct |
+
+> `openssl rand -base64 24` — generates 24 random bytes encoded as base64 text.
+> Good for passwords. The output looks like `fK3m...==`.
+
+---
+
+## Part 3 — First boot: get SSL certificates (one-time)
+
+Your `nginx.prod.conf` expects SSL certificate files. On a fresh server those
+don't exist yet, so you'll boot once with the **HTTP-only bootstrap config**,
+ask Let's Encrypt for certificates, then switch to the full HTTPS config.
+
+### 3.1 Start only nginx with the bootstrap config
+
+```bash
+docker compose -f docker-compose.prod.yml -f docker-compose.bootstrap.yml up -d nginx
+```
+
+Breaking it down:
+
+- `docker compose` — the multi-container orchestration command.
+- `-f docker-compose.prod.yml` — use this production compose file.
+- `-f docker-compose.bootstrap.yml` — layer a second file on top (overrides nginx to use the HTTP config).
+- `up` — create and start containers.
+- `-d` — **d**etached: run in the background, don't block the terminal.
+- `nginx` — only start this one service (we need port 80 open for the cert challenge).
+
+> ⚠️ If this fails with "port 80 already in use", stop Apache/nginx already on the
+> server first: `systemctl stop apache2` or `systemctl stop nginx`.
+
+### 3.2 Ask Let's Encrypt for certificates
+
+```bash
+docker compose -f docker-compose.prod.yml -f docker-compose.bootstrap.yml run --rm --entrypoint certbot certbot certonly --webroot -w /var/www/certbot -d www.marvelslice.com -d lms.marvelslice.com --email you@example.com --agree-tos --no-eff-email
+```
+
+- `run --rm certbot` — start the certbot container once, then remove it (`--rm`).
+- `--entrypoint certbot` — override the service's renew-loop entrypoint and run certbot directly.
+- `certonly` — only obtain certificates, don't try to reconfigure nginx.
+- `--webroot -w /var/www/certbot` — prove domain ownership by placing a file in the shared webroot that nginx serves.
+- `-d www.marvelslice.com -d lms.marvelslice.com` — issue one certificate covering **both** domains.
+- `--email` — where Let's Encrypt sends expiry notices.
+- `--agree-tos` — accept the Let's Encrypt terms of service.
+- `--no-eff-email` — don't subscribe to their newsletter.
+
+If it succeeds you'll see `Congratulations!`. Certificates are stored in the
+`certbot-conf` volume (shared with nginx).
+
+Because one SAN certificate covers both domains, the files land under
+`/etc/letsencrypt/live/www.marvelslice.com/fullchain.pem` and `privkey.pem`
+— **both** nginx server blocks in `nginx.prod.conf` reference this same path
+(valid for `lms.marvelslice.com` too, since it's in the certificate).
+
+### 3.3 Switch to the HTTPS config and start everything
+
+```bash
+docker compose -f docker-compose.prod.yml -f docker-compose.bootstrap.yml down
+```
+
+- `down` — stop and remove the bootstrap containers (frees the config mount).
+
+```bash
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-## Required Code Changes
+- Now the real `nginx.prod.conf` is used (HTTPS + ACME route for renewals).
+- This builds and starts **all** containers (api, web, landing, landing-api,
+  postgres, redis, nginx, certbot).
 
-### 1. Next.js Standalone Output
-
-Add to `apps/web/next.config.ts`:
-```typescript
-output: 'standalone',
-```
-
-### 2. Prisma Migration Baseline
-
-Run once locally before first production deploy:
-```bash
-pnpm prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/0_init/migration.sql
-pnpm prisma migrate resolve --applied 0_init
-```
-
-### 3. Package.json Scripts
-
-Ensure these scripts exist in root `package.json`:
-```json
-{
-  "scripts": {
-    "prisma:generate": "prisma generate",
-    "prisma:migrate:test": "prisma migrate deploy",
-    "prisma:migrate:prod": "prisma migrate deploy",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
-    "test": "vitest run"
-  }
-}
-```
-
-## Migration Strategy
-
-### How It Works
-
-1. **Every deploy runs `prisma migrate deploy`** — applies only new migration files
-2. **Same database, incremental migrations** — data persists in Docker volume (`postgres_data`)
-3. **No manual "cache" management** — Docker layer cache handles build speed
-4. **Switch from `db push` → `migrate dev`/`migrate deploy`** before first production deploy
-
-### What Happens Each Push
-
-| Scenario | Migration Files | `migrate deploy` Does |
-|----------|-----------------|----------------------|
-| Code only (no schema change) | 0 new | Nothing (0ms) |
-| Added a column | 1 new | Runs that 1 SQL file |
-| Renamed table | 1 new (careful!) | Runs that 1 SQL file |
-| First deploy ever | All migrations | Runs all in order |
-
-### Anti-patterns to Avoid
-
-| Anti-pattern | Why It's Wrong |
-|--------------|----------------|
-| `prisma db push` in prod | Destructive — bypasses migration history, can drop data |
-| `prisma migrate reset` in prod | Wipes database — dev only |
-| Skip migrations on deploy | New code expects columns that don't exist → 500 errors |
-| Run migrations after containers start | Race condition — requests hit old schema |
-
-## Decisions Needed
-
-| Decision | Options | Default |
-|----------|---------|---------|
-| **Domain** | What domain? (for nginx `server_name` + SSL) | — |
-| **SSL** | Let's Encrypt (certbot) / Cloudflare / self-signed | Let's Encrypt |
-| **Backup strategy** | pg_dump cron / S3 / managed backup | pg_dump daily cron |
-| **Log aggregation** | Loki / Datadog / local files only | Local for now |
-| **Monitoring** | UptimeRobot / Prometheus+Grafana / none | UptimeRobot free |
-
-## Verification Checklist
-
-Before merging to main:
-
-- [ ] All Dockerfiles created in correct locations
-- [ ] `entrypoint.sh` executable (`chmod +x apps/api/entrypoint.sh`)
-- [ ] `nginx.landing.conf` exists in `apps/landing/`
-- [ ] `next.config.ts` has `output: 'standalone'`
-- [ ] Prisma baseline migration created and committed
-- [ ] GitHub secrets configured (VPS_HOST, VPS_USER, VPS_SSH_KEY)
-- [ ] VPS has Docker + Compose installed
-- [ ] `.env.production` created on VPS with strong passwords
-- [ ] SSL certificates configured (Let's Encrypt recommended)
-- [ ] Health endpoint `/health` returns 200 (exists at `app.ts:247`)
-
-## Rollback Procedure
-
-If a deployment breaks:
+### 3.4 Check it's working
 
 ```bash
-# On VPS
+docker compose -f docker-compose.prod.yml ps
+```
+
+- `ps` — "process status": lists running containers, their health and ports.
+
+```bash
+curl -f http://localhost/health
+```
+
+- `curl -f` — fetch a URL, fail loudly if not HTTP 2xx.
+- The API health endpoint should return `{"status":"ok",...}`.
+
+Then open in your browser:
+
+- `https://www.marvelslice.com` → landing page
+- `https://lms.marvelslice.com` → LMS (you should be redirected to login)
+- `https://lms.marvelslice.com/health` → API health JSON
+
+---
+
+## Part 4 — Seed the database (one-time)
+
+The first time the API boots it runs `prisma db push` automatically (see
+`apps/api/entrypoint.sh`), which creates all tables. Now create the admin user:
+
+```bash
+docker compose -f docker-compose.prod.yml exec api npx prisma db seed
+```
+
+- `exec api ...` — run a command **inside** the running `api` container.
+- `npx prisma db seed` — runs `apps/api/prisma/seed.ts`, creating the default users.
+
+Default accounts (change passwords after first login!):
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | `admin@lms.local` | `admin123` |
+| Instructor | `instructor@lms.local` | `instructor123` |
+| Student | `student@lms.local` | `student123` |
+
+---
+
+## Part 5 — Daily operations
+
+### View logs
+
+```bash
+docker compose -f docker-compose.prod.yml logs -f api
+```
+
+- `logs` — print container logs. `-f` — **f**ollow (keep streaming).
+- Replace `api` with `web`, `nginx`, `postgres`, etc.
+
+### Restart a service
+
+```bash
+docker compose -f docker-compose.prod.yml restart api
+```
+
+### Stop everything
+
+```bash
+docker compose -f docker-compose.prod.yml down
+```
+
+- Stops and removes containers. **Your data survives** (it's in named volumes).
+
+### Complete teardown (only if you really want to delete data)
+
+```bash
+docker compose -f docker-compose.prod.yml down -v
+```
+
+- `-v` — also delete named **v**olumes (the database!). ⚠️ **This destroys all data.**
+
+---
+
+## Part 6 — Deploying updates
+
+### Manual deploy (you control when)
+
+On your **laptop**, in the repo:
+
+```bash
+git add -A && git commit -m "update" && git push origin main
+```
+
+On the **server**:
+
+```bash
 cd /opt/lms
-
-# List available images
-docker images | grep lms
-
-# Tag previous image as latest
-docker tag ghcr.io/username/lms-api:<previous-sha> ghcr.io/username/lms-api:latest
-docker tag ghcr.io/username/lms-web:<previous-sha> ghcr.io/username/lms-web:latest
-
-# Re-deploy
-docker compose -f docker-compose.prod.yml up -d --remove-orphans
+git pull
+docker compose -f docker-compose.prod.yml build
+docker compose -f docker-compose.prod.yml up -d
 ```
+
+- `git pull` — pull the latest code from GitHub.
+- `docker compose build` — rebuild images with the new code.
+- `docker compose up -d` — recreate containers with the new images (data untouched).
+
+### Automatic deploy (CI/CD)
+
+A GitHub Actions workflow (`.github/workflows/ci-cd.yml`) is included. It:
+
+1. **Runs tests** (`pnpm test`) on every push/PR to `main`
+2. On merge to `main`, **builds and pushes** Docker images to GitHub Container Registry (GHCR)
+3. **SSHes into the VPS**, pulls the images, syncs the schema, and restarts
+
+To enable it:
+
+1. Push the repo to GitHub (the workflow file is already there).
+2. In your repo: **Settings → Secrets and variables → Actions → New repository secret**:
+
+| Secret | Value |
+|--------|-------|
+| `VPS_HOST` | Your VPS IP (`203.0.113.10`) |
+| `VPS_USER` | `root` (or your SSH user) |
+| `VPS_SSH_KEY` | Your **private** SSH key (the content of `~/.ssh/id_ed25519`) |
+
+3. On the VPS, make sure `docker compose` can pull from GHCR. Public images need
+   no login; private repos do. If your repo is private, add the `GITHUB_TOKEN`
+   as a deploy token or make the package public (Packages → package → Settings).
+
+> 💡 **Tip:** for `VPS_SSH_KEY` to work with `appleboy/ssh-action`, the VPS must
+> allow key login. Test with: `ssh root@203.0.113.10` from your laptop without a
+> password prompt.
+
+---
+
+## Part 7 — Backups
+
+Two things are worth backing up: the **database** and **uploaded files**.
+
+### Database backup
+
+```bash
+docker compose -f docker-compose.prod.yml exec postgres pg_dump -U lms_prod lms_prod > backup_$(date +%F).sql
+```
+
+- `pg_dump -U lms_prod lms_prod` — dump the whole `lms_prod` database as SQL.
+- `> backup_2026-08-20.sql` — save output to a dated file.
+
+Restore later with:
+
+```bash
+cat backup_2026-08-20.sql | docker compose -f docker-compose.prod.yml exec -T postgres psql -U lms_prod lms_prod
+```
+
+> For scheduled/automated backups (including the admin UI's built-in backup
+> feature), see [docs/database-backup.md](database-backup.md).
+
+### Uploaded files
+
+Uploaded files live in the `uploads_data` volume. Back them up with:
+
+```bash
+docker run --rm -v lms-prod_uploads_data:/data -v /opt/lms/backups:/backup alpine tar czf /backup/uploads_$(date +%F).tar.gz -C /data .
+```
+
+- `docker run --rm` — one-off container.
+- `-v lms-prod_uploads_data:/data` — attach the uploads volume.
+- `-v /opt/lms/backups:/backup` — attach a folder on the host.
+- `alpine tar czf ...` — compress the volume contents into a `.tar.gz`.
+
+---
+
+## Part 8 — Troubleshooting
+
+| Problem | Likely cause | Fix |
+|---------|--------------|-----|
+| `ERR_CONNECTION_REFUSED` on `https://lms.marvelslice.com` | Nginx not started / firewall | Check `docker compose ps`; open ports 80/443 in your provider's firewall |
+| `Welcome to nginx` default page | Server block mismatch | Verify DNS A records point to the VPS IP |
+| `certbot ... HTTP-01` error | Port 80 blocked | Run with bootstrap config; check firewall |
+| API returns 503 on `/health` | DB not ready/migrated | `docker compose logs api` — check `prisma db push` output |
+| Uploads fail | Volume missing permissions | `docker compose logs api`; check `uploads_data` volume exists |
+| Port 5432/6379 conflict on host | Another Postgres/Redis running | Our containers don't expose DB ports to the host; nothing conflicts |
+| Container won't start, "port already allocated" | Something on host:80/443 | `ss -tlnp | grep -E ':(80|443)'` to find the process |
+
+### Key file reference
+
+| File | Purpose |
+|------|---------|
+| `docker-compose.prod.yml` | Production stack definition |
+| `docker-compose.bootstrap.yml` | One-time override for initial SSL issuance |
+| `nginx.prod.conf` | HTTPS reverse proxy (both domains) |
+| `nginx.prod.bootstrap.conf` | HTTP-only config for the first boot |
+| `.env.production.example` | Template for `.env.production` |
+| `apps/api/Dockerfile` | API image (multi-stage) |
+| `apps/api/entrypoint.sh` | Runs `prisma db push` then starts the server |
+| `apps/web/Dockerfile` | Next.js standalone image |
+| `apps/landing/Dockerfile` | Landing static image |
+| `apps/landing/Dockerfile.api` | Landing contact-form email server |
+| `apps/landing/nginx.landing.conf` | Static serving inside the landing container |
+| `.github/workflows/ci-cd.yml` | Test → build → deploy pipeline |
+
+## Verification checklist
+
+- [ ] DNS A records for `www` and `lms` point to the VPS
+- [ ] `.env.production` created with real secrets
+- [ ] Certificates issued for both domains
+- [ ] `https://www.marvelslice.com` loads the landing page
+- [ ] `https://lms.marvelslice.com` loads and you can log in
+- [ ] `/health` returns 200
+- [ ] Seed data loaded (admin user works)
+- [ ] UptimeRobot or similar monitors `/health`
+- [ ] Daily DB backup scheduled (see `docs/database-backup.md`)

@@ -12,20 +12,37 @@ function getTimeLeft(target) {
   };
 }
 
-export default function Countdown({ target, className = '' }) {
+export default function Countdown({ target, onFinish, className = '' }) {
   const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(target));
 
   useEffect(() => {
-    setTimeLeft(getTimeLeft(target));
+    const next = getTimeLeft(target);
+    setTimeLeft(next);
+    if (!next) {
+      onFinish?.();
+      return;
+    }
+
     const interval = setInterval(() => {
-      const next = getTimeLeft(target);
-      setTimeLeft(next);
-      if (!next) clearInterval(interval);
+      const current = getTimeLeft(target);
+      setTimeLeft(current);
+      if (!current) {
+        clearInterval(interval);
+        onFinish?.();
+      }
     }, 1000);
     return () => clearInterval(interval);
-  }, [target]);
+  }, [target, onFinish]);
 
   const pad = (n) => String(n).padStart(2, '0');
+
+  if (!timeLeft) {
+    return (
+      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
+        <p className="text-emerald-700 font-bold text-base">🚀 Course is Now Live!</p>
+      </div>
+    );
+  }
 
   return (
     <div className={`grid grid-cols-4 gap-3 ${className}`}>

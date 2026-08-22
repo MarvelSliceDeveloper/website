@@ -77,12 +77,19 @@ function IconPicker({ value, onChange }) {
 const PAGE_PATH = '/services';
 
 const DEFAULT_STEPS = [
-  { number: '01', title: '', description: '', image: '' },
-  { number: '02', title: '', description: '', image: '' },
-  { number: '03', title: '', description: '', image: '' },
-  { number: '04', title: '', description: '', image: '' },
-  { number: '05', title: '', description: '', image: '' },
-  { number: '06', title: '', description: '', image: '' },
+  { number: '01', title: 'Enroll', description: 'Select your program and begin your journey with guided counselor support.', icon: 'ClipboardCheck', colorHex: '#7C3AED' },
+  { number: '02', title: 'Learn', description: 'Master concepts through live sessions, labs, and expert-led courses.', icon: 'BookOpen', colorHex: '#EC4899' },
+  { number: '03', title: 'Build', description: 'Apply skills on real-world projects to build a professional portfolio.', icon: 'Wrench', colorHex: '#F59E0B' },
+  { number: '04', title: 'Assess', description: 'Track growth through evaluations, mock interviews, and feedback.', icon: 'ClipboardCheck', colorHex: '#06B6D4' },
+  { number: '05', title: 'Certify', description: 'Earn industry-recognized certifications that validate your expertise.', icon: 'Award', colorHex: '#3B82F6' },
+  { number: '06', title: 'Succeed', description: 'Launch your career with placement support and hiring-partner connections.', icon: 'Rocket', colorHex: '#22C55E' },
+];
+
+const DEFAULT_FEATURES = [
+  { title: 'Personalized Guidance', description: 'One-on-one counselor support at every stage.', icon: 'ClipboardCheck', colorHex: '#7C3AED' },
+  { title: 'Hands-on Learning', description: 'Projects & labs to build real industry skills.', icon: 'UserCheck', colorHex: '#EC4899' },
+  { title: 'Career Support', description: 'Resume building, mock interviews & placements.', icon: 'ClipboardList', colorHex: '#06B6D4' },
+  { title: 'Lifetime Access', description: 'Access resources & updates even after you succeed.', icon: 'ShieldCheck', colorHex: '#22C55E' },
 ];
 
 export default function ServicesPageEditor() {
@@ -98,10 +105,15 @@ export default function ServicesPageEditor() {
   const savingRef = useRef(false);
 
   const [services, setServices] = useState([]);
-  const [steps, setSteps] = useState([]);
+  const [journeyHeading, setJourneyHeading] = useState('Your Learning Journey');
+  const [journeySubheading, setJourneySubheading] = useState('A structured path from enrollment to career success.');
+  const [steps, setSteps] = useState(DEFAULT_STEPS);
+  const [journeyFeatures, setJourneyFeatures] = useState(DEFAULT_FEATURES);
+  const [faqHeading, setFaqHeading] = useState('Frequently Asked Questions');
+  const [faqSubheading, setFaqSubheading] = useState('');
   const [faqs, setFaqs] = useState([]);
   const [hero, setHero] = useState({ heading: '', subheading: '', hero_image: '' });
-  const { dirty, reset } = useDirty([hero, services, steps, faqs], loading);
+  const { dirty, reset } = useDirty([hero, services, journeyHeading, journeySubheading, steps, journeyFeatures, faqHeading, faqSubheading, faqs], loading);
 
   useEffect(() => {
     async function resolve() {
@@ -131,10 +143,23 @@ export default function ServicesPageEditor() {
           const cardsSec = secs.find(s => s.section_type === 'cards');
           if (cardsSec?.items) setServices(cardsSec.items.map(i => typeof i === 'string' ? { title: i, description: '', icon: '' } : { ...i, icon: i.icon || '' }));
           const timelineSec = secs.find(s => s.section_type === 'timeline');
-          if (timelineSec?.items?.length) setSteps(timelineSec.items);
-          else setSteps(DEFAULT_STEPS);
+          if (timelineSec) {
+            setJourneyHeading(timelineSec.heading || 'Your Learning Journey');
+            setJourneySubheading(timelineSec.subheading || 'A structured path from enrollment to career success.');
+            if (timelineSec.items?.length) setSteps(timelineSec.items);
+            else setSteps(DEFAULT_STEPS);
+            if (timelineSec.features?.length) setJourneyFeatures(timelineSec.features);
+            else setJourneyFeatures(DEFAULT_FEATURES);
+          } else {
+            setSteps(DEFAULT_STEPS);
+            setJourneyFeatures(DEFAULT_FEATURES);
+          }
           const faqSec = secs.find(s => s.section_type === 'faq_list');
-          if (faqSec?.items) setFaqs(faqSec.items);
+          if (faqSec) {
+            setFaqHeading(faqSec.heading || 'Frequently Asked Questions');
+            setFaqSubheading(faqSec.subheading || '');
+            if (faqSec.items) setFaqs(faqSec.items);
+          }
         }
       }
       setLoading(false);
@@ -156,6 +181,7 @@ export default function ServicesPageEditor() {
         if ((item.title || '').length > 50) return `${label} ${i + 1}: title exceeds 50 characters.`;
         if (wordCount(item.description) > 40) return `${label} ${i + 1}: description exceeds 40 words.`;
         if (item.number !== undefined && (item.number || '').length > 2) return `${label} ${i + 1}: step number exceeds 2 characters.`;
+        if (item.colorHex && !/^#[0-9a-fA-F]{6}$/.test(item.colorHex)) return `${label} ${i + 1}: color must be a valid hex (#RRGGBB).`;
       }
       return null;
     };
@@ -169,8 +195,19 @@ export default function ServicesPageEditor() {
 
     const sections = [
       services.length > 0 ? { section_type: 'cards', heading: 'What We Offer', items: services } : null,
-      steps.length > 0 ? { section_type: 'timeline', heading: 'Your Learning Journey', items: steps } : null,
-      faqs.length > 0 ? { section_type: 'faq_list', heading: 'Frequently Asked Questions', items: faqs } : null,
+      steps.length > 0 ? {
+        section_type: 'timeline',
+        heading: journeyHeading || 'Your Learning Journey',
+        subheading: journeySubheading || 'A structured path from enrollment to career success.',
+        items: steps,
+        features: journeyFeatures,
+      } : null,
+      faqs.length > 0 ? {
+        section_type: 'faq_list',
+        heading: faqHeading || 'Frequently Asked Questions',
+        subheading: faqSubheading || '',
+        items: faqs,
+      } : null,
     ].filter(Boolean);
     if (!navItemId && !navItemIdRef.current) { setSaveError('No nav item linked'); setSaving(false); savingRef.current = false; return; }
     const payload = { nav_item_id: navItemId || navItemIdRef.current, heading: hero.heading || null, subheading: hero.subheading, hero_image: hero.hero_image || null, sections, is_published: true };
@@ -191,6 +228,7 @@ export default function ServicesPageEditor() {
       queryClient.invalidateQueries({ queryKey: ['navPage', navItemId] });
       queryClient.invalidateQueries({ queryKey: ['navPageData'] });
       queryClient.invalidateQueries({ queryKey: ['servicesPage'] });
+      queryClient.invalidateQueries({ queryKey: ['learningJourney'] });
       setTimeout(() => setSaved(false), 2000);
       savingRef.current = false;
       setSaving(false);
@@ -261,7 +299,7 @@ export default function ServicesPageEditor() {
                         </div>
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Description (max 40 words)</label>
+                        <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Description</label>
                         <textarea
                           value={s.description}
                           onChange={(e) => {
@@ -284,28 +322,43 @@ export default function ServicesPageEditor() {
           )}
 
           {activeTab === 'journey' && (
-            <div className="space-y-6">
+            <div className="space-y-8">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
+                <h3 className="text-sm font-bold text-slate-800">Section Titles</h3>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Section Heading</label>
+                    <input type="text" value={journeyHeading} onChange={(e) => setJourneyHeading(e.target.value)} placeholder="Your Learning Journey" className={inputClass} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Section Subheading</label>
+                    <input type="text" value={journeySubheading} onChange={(e) => setJourneySubheading(e.target.value)} placeholder="A structured path from enrollment to career success." className={inputClass} />
+                  </div>
+                </div>
+              </div>
+
               <RepeatableItemList
                 title="Learning Journey Steps"
                 items={steps}
-                onAdd={() => setSteps([...steps, { number: String(steps.length + 1).padStart(2, '0'), title: '', description: '', image: '' }])}
+                onAdd={() => setSteps([...steps, { number: String(steps.length + 1).padStart(2, '0'), title: '', description: '', icon: 'ClipboardCheck' }])}
                 addLabel="Add Step"
                 renderItem={(s, i) => (
                   <RepeatableItemCard key={i} index={i} label="Step" onRemove={() => setSteps(steps.filter((_, j) => j !== i))}>
                     <div className="space-y-4">
-                      <div className="grid sm:grid-cols-[100px_1fr] gap-4">
+                      <div className="grid sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Step Number</label>
-                          <input type="text" value={s.number} onChange={(e) => { const u = [...steps]; u[i] = { ...u[i], number: e.target.value }; setSteps(u); }} placeholder="01" maxLength={2} className={inputClass} />
+                          <input type="text" value={s.number || String(i + 1).padStart(2, '0')} onChange={(e) => { const u = [...steps]; u[i] = { ...u[i], number: e.target.value }; setSteps(u); }} placeholder="01" maxLength={2} className={inputClass} />
                         </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Step Title (max 50 chars)</label>
-                          <input type="text" value={s.title} onChange={(e) => { const v = e.target.value.slice(0, 50); const u = [...steps]; u[i] = { ...u[i], title: v }; setSteps(u); }} placeholder="Step title" maxLength={50} className={inputClass} />
-                          <p className="text-[10px] text-neutral-400 mt-1">{(s.title || '').length}/50</p>
-                        </div>
+                        <IconPicker value={s.icon} onChange={(v) => { const u = [...steps]; u[i] = { ...u[i], icon: v }; setSteps(u); }} />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Description (max 40 words)</label>
+                        <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Step Title (max 50 chars)</label>
+                        <input type="text" value={s.title} onChange={(e) => { const v = e.target.value.slice(0, 50); const u = [...steps]; u[i] = { ...u[i], title: v }; setSteps(u); }} placeholder="Step title" maxLength={50} className={inputClass} />
+                        <p className="text-[10px] text-neutral-400 mt-1">{(s.title || '').length}/50</p>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Description</label>
                         <textarea
                           value={s.description}
                           onChange={(e) => {
@@ -320,9 +373,31 @@ export default function ServicesPageEditor() {
                         />
                         <p className="text-[10px] text-neutral-400 mt-1">{(s.description || '').trim().split(/\s+/).filter(Boolean).length}/40 words</p>
                       </div>
+                    </div>
+                  </RepeatableItemCard>
+                )}
+              />
+
+              <RepeatableItemList
+                title="Bottom Feature Banner Items"
+                items={journeyFeatures}
+                onAdd={() => setJourneyFeatures([...journeyFeatures, { title: '', description: '', icon: 'ClipboardCheck' }])}
+                addLabel="Add Feature"
+                renderItem={(f, i) => (
+                  <RepeatableItemCard key={i} index={i} label="Feature" onRemove={() => setJourneyFeatures(journeyFeatures.filter((_, j) => j !== i))}>
+                    <div className="space-y-4">
+                      {/* Icon & Title in 1 line */}
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <IconPicker value={f.icon} onChange={(v) => { const u = [...journeyFeatures]; u[i] = { ...u[i], icon: v }; setJourneyFeatures(u); }} />
+                        <div>
+                          <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Feature Title</label>
+                          <input type="text" value={f.title} onChange={(e) => { const u = [...journeyFeatures]; u[i] = { ...u[i], title: e.target.value }; setJourneyFeatures(u); }} placeholder="Feature title" className={inputClass} />
+                        </div>
+                      </div>
+                      {/* Description below */}
                       <div>
-                        <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Step Image (shown as a circle)</label>
-                        <ImageUploader value={s.image} onChange={(v) => { const u = [...steps]; u[i] = { ...u[i], image: v }; setSteps(u); }} bucket="pages" />
+                        <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Description</label>
+                        <input type="text" value={f.description} onChange={(e) => { const u = [...journeyFeatures]; u[i] = { ...u[i], description: e.target.value }; setJourneyFeatures(u); }} placeholder="Brief description..." className={inputClass} />
                       </div>
                     </div>
                   </RepeatableItemCard>
@@ -333,6 +408,20 @@ export default function ServicesPageEditor() {
 
           {activeTab === 'faqs' && (
             <div className="space-y-6">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
+                <h3 className="text-sm font-bold text-slate-800">FAQ Section Header</h3>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Heading</label>
+                    <input type="text" value={faqHeading} onChange={(e) => setFaqHeading(e.target.value)} placeholder="Frequently Asked Questions" className={inputClass} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-700 mb-1.5 uppercase tracking-wider">Subheading (Optional)</label>
+                    <input type="text" value={faqSubheading} onChange={(e) => setFaqSubheading(e.target.value)} placeholder="Find answers to common questions" className={inputClass} />
+                  </div>
+                </div>
+              </div>
+
               <RepeatableItemList
                 title="FAQs"
                 items={faqs}

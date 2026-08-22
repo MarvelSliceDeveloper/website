@@ -40,7 +40,7 @@ type Lesson = {
   videoEmbedId: string | null;
   durationSeconds: number | null;
   isFreePreview: boolean;
-  resources: Resource[];
+  resources: Resource[] | null;
 };
 
 type QuizQuestion = {
@@ -78,7 +78,7 @@ type Practical = {
   videoUrl: string | null;
   videoEmbedId: string | null;
   pdfUrl: string | null;
-  resources: Resource[];
+  resources: Resource[] | null;
 };
 
 type Module = {
@@ -832,7 +832,7 @@ export default function InstructorCourseContentView({
                     {module.lessons
                       .filter((l) => l.resources && l.resources.length > 0)
                       .flatMap((l) =>
-                        l.resources.map((r) => {
+                        (l.resources ?? []).map((r) => {
                           const isActive = selectedResource?.url === r.url;
                           return (
                             <li

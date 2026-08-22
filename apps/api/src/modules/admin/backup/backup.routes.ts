@@ -1,5 +1,4 @@
 import { Router, type Request, type Response } from "express";
-import { exec } from "child_process";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
@@ -8,71 +7,42 @@ import {
   requireSuperAdmin,
   type AuthRequest,
 } from "../../../middleware/auth.middleware";
+import {
+  BACKUP_DIR,
+  BACKUP_KEEP_COUNT,
+  createBackup,
+  listBackups,
+  pruneBackups,
+  deleteBackup,
+  restoreBackup,
+  getBackupDownloadPath,
+} from "./backup.service";
 
 const router = Router();
 
 router.use(requireAuth);
 router.use(requireSuperAdmin);
 
-const BACKUP_DIR = path.resolve(__dirname, "../../../../backups");
-fs.mkdirSync(BACKUP_DIR, { recursive: true });
-
 const upload = multer({ dest: path.join(BACKUP_DIR, "uploads") });
-
-function getDbUrl(): { host: string; port: string; database: string; user: string; password: string } {
-  const url = process.env.DATABASE_URL || "";
-  const dbUrl = new URL(url);
-  return {
-    host: dbUrl.hostname,
-    port: dbUrl.port || "5432",
-    database: dbUrl.pathname.replace(/^\//, ""),
-    user: decodeURIComponent(dbUrl.username),
-    password: decodeURIComponent(dbUrl.password),
-  };
-}
 
 router.post("/", async (_req: AuthRequest, res: Response) => {
   try {
-    const { host, port, database, user, password } = getDbUrl();
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const filename = `backup-${timestamp}.sql`;
-    const filepath = path.join(BACKUP_DIR, filename);
-
-    const env = { ...process.env, PGPASSWORD: password };
-
-    exec(
-      `pg_dump -h ${host} -p ${port} -U ${user} -d ${database} --no-owner --no-acl -f "${filepath}"`,
-      { env, timeout: 120000 },
-      (error, stdout, stderr) => {
-        if (error) {
-          return res.status(500).json({ error: `Backup failed: ${stderr || error.message}` });
-        }
-        return res.json({
-          message: "Backup created successfully",
-          filename,
-          size: fs.statSync(filepath).size,
-          createdAt: new Date().toISOString(),
-        });
-      },
-    );
+    const backup = await createBackup();
+    const pruned = pruneBackups(BACKUP_KEEP_COUNT);
+    return res.json({ ...backup, pruned });
   } catch (error: unknown) {
-    return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to create backup",
-    });
+    const message =
+      error instanceof Error ? error.message : "Failed to create backup";
+    const statusCode = error instanceof Error && "statusCode" in error
+      ? (error as { statusCode: number }).statusCode
+      : 500;
+    return res.status(statusCode).json({ error: message });
   }
 });
 
 router.get("/list", async (_req: AuthRequest, res: Response) => {
   try {
-    const files = fs.readdirSync(BACKUP_DIR)
-      .filter((f) => f.endsWith(".sql"))
-      .map((f) => {
-        const stat = fs.statSync(path.join(BACKUP_DIR, f));
-        return { filename: f, size: stat.size, createdAt: stat.birthtime.toISOString() };
-      })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-    return res.json({ backups: files });
+    return res.json({ backups: listBackups() });
   } catch (error: unknown) {
     return res.status(500).json({
       error: error instanceof Error ? error.message : "Failed to list backups",
@@ -85,60 +55,67 @@ router.post("/restore", upload.single("file"), async (req: AuthRequest, res: Res
     const file = req.file;
     if (!file) return res.status(400).json({ error: "Backup file is required" });
 
-    const { host, port, database, user, password } = getDbUrl();
-    const env = { ...process.env, PGPASSWORD: password };
+    // Safety: snapshot the current DB before overwriting so a restore can be undone.
+    let safetyBackup: { filename: string } | null = null;
+    try {
+      const sb = await createBackup();
+      pruneBackups(BACKUP_KEEP_COUNT);
+      safetyBackup = { filename: sb.filename };
+    } catch (e: unknown) {
+      // If the safety backup fails the DB is likely already broken — proceed but flag it.
+      safetyBackup = null;
+    }
 
-    exec(
-      `psql -h ${host} -p ${port} -U ${user} -d ${database} -f "${file.path}"`,
-      { env, timeout: 300000 },
-      (error, stdout, stderr) => {
-        fs.unlink(file.path, () => {});
-        if (error) {
-          return res.status(500).json({ error: `Restore failed: ${stderr || error.message}` });
-        }
-        return res.json({ message: "Database restored successfully" });
-      },
-    );
+    try {
+      await restoreBackup(file.path);
+      return res.json({
+        message: "Database restored successfully",
+        ...(safetyBackup ? { safetyBackup: safetyBackup.filename } : { warning: "Safety backup could not be created" }),
+      });
+    } finally {
+      fs.rmSync(file.path, { force: true });
+    }
   } catch (error: unknown) {
-    return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to restore backup",
-    });
+    const message =
+      error instanceof Error ? error.message : "Failed to restore backup";
+    const statusCode = error instanceof Error && "statusCode" in error
+      ? (error as { statusCode: number }).statusCode
+      : 500;
+    return res.status(statusCode).json({ error: message });
   }
 });
 
 router.delete("/:filename", async (req: AuthRequest, res: Response) => {
   try {
-    const filepath = path.join(BACKUP_DIR, req.params.filename);
-    if (!fs.existsSync(filepath)) {
-      return res.status(404).json({ error: "Backup file not found" });
-    }
-    fs.unlinkSync(filepath);
+    deleteBackup(req.params.filename);
     return res.json({ message: "Backup deleted successfully" });
   } catch (error: unknown) {
-    return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to delete backup",
-    });
+    const message =
+      error instanceof Error ? error.message : "Failed to delete backup";
+    const statusCode = error instanceof Error && "statusCode" in error
+      ? (error as { statusCode: number }).statusCode
+      : 500;
+    return res.status(statusCode).json({ error: message });
   }
 });
 
 router.get("/download/:filename", async (req: AuthRequest, res: Response) => {
   try {
-    const decoded = decodeURIComponent(req.params.filename);
-    const filepath = path.resolve(BACKUP_DIR, decoded);
-    if (!filepath.startsWith(path.resolve(BACKUP_DIR))) {
-      return res.status(400).json({ error: "Invalid filename" });
-    }
-    if (!fs.existsSync(filepath)) {
-      return res.status(404).json({ error: "Backup file not found" });
-    }
-    res.setHeader("Content-Type", "application/sql");
-    res.setHeader("Content-Disposition", `attachment; filename="${decoded}"`);
+    const filepath = getBackupDownloadPath(req.params.filename);
+    res.setHeader("Content-Type", "application/octet-stream");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${path.basename(filepath)}"`,
+    );
     const stream = fs.createReadStream(filepath);
     stream.pipe(res);
   } catch (error: unknown) {
-    return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to download backup",
-    });
+    const message =
+      error instanceof Error ? error.message : "Failed to download backup";
+    const statusCode = error instanceof Error && "statusCode" in error
+      ? (error as { statusCode: number }).statusCode
+      : 500;
+    return res.status(statusCode).json({ error: message });
   }
 });
 

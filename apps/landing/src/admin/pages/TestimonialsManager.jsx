@@ -88,7 +88,7 @@ export default function TestimonialsManager() {
   return (
     <PageShell backTo="/admin"
       title="Testimonials"
-      description="Testimonials shown here appear in the home page Testimonials section (slider when there are more than a few). Use 'Make Active' to control what is visible."
+      description="Testimonials shown here appear in the home page Testimonials section (up to 3 active testimonials are displayed on the home page). Use 'Status' toggle to control which ones are active."
     >
       <div className="bg-white shadow-sm border border-admin-200 overflow-hidden">
         {items.length > 0 ? (

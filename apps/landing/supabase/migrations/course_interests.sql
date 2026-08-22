@@ -2,6 +2,8 @@ create table if not exists course_interests (
   id uuid primary key default gen_random_uuid(),
   course_id uuid references courses(id) on delete set null,
   course_title text,
+  button_clicked text default 'Apply Now',
+  terms_accepted boolean default true,
   launch_date timestamptz,
   full_name text not null,
   email text not null,
@@ -9,6 +11,10 @@ create table if not exists course_interests (
   is_read boolean default false,
   created_at timestamptz default now()
 );
+
+alter table course_interests 
+add column if not exists button_clicked text default 'Apply Now',
+add column if not exists terms_accepted boolean default true;
 
 alter table course_interests enable row level security;
 do $$ begin

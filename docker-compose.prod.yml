@@ -1,0 +1,143 @@
+# Production stack — build from repo root (monorepo pnpm workspace)
+# Usage:
+#   docker compose -f docker-compose.prod.yml build
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Secrets come from .env.production (copy .env.production.example → .env.production).
+
+name: lms-prod
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: lms-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - certbot-webroot:/var/www/certbot:ro
+      - certbot-conf:/etc/letsencrypt:ro
+    depends_on:
+      - api
+      - web
+      - landing
+    restart: unless-stopped
+    networks: [lms-network]
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-your-gh-username/lms}-api:${TAG:-latest}
+    container_name: lms-api
+    env_file: .env.production
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-lms_prod}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-lms_prod}
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - uploads_data:/app/apps/api/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [lms-network]
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://lms.marvelslice.com
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-your-gh-username/lms}-web:${TAG:-latest}
+    container_name: lms-web
+    env_file: .env.production
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=https://lms.marvelslice.com
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks: [lms-network]
+
+  landing:
+    build:
+      context: .
+      dockerfile: apps/landing/Dockerfile
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-your-gh-username/lms}-landing:${TAG:-latest}
+    container_name: lms-landing
+    depends_on:
+      - landing-api
+    restart: unless-stopped
+    networks: [lms-network]
+
+  landing-api:
+    build:
+      context: .
+      dockerfile: apps/landing/Dockerfile.api
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-your-gh-username/lms}-landing-api:${TAG:-latest}
+    container_name: lms-landing-api
+    env_file: .env.production
+    environment:
+      - NODE_ENV=production
+      - DEV_API_PORT=3001
+    restart: unless-stopped
+    networks: [lms-network]
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: lms-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lms_prod}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-lms_prod}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lms_prod}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    networks: [lms-network]
+
+  redis:
+    image: redis:7-alpine
+    container_name: lms-redis
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    networks: [lms-network]
+
+  certbot:
+    build:
+      context: .
+      dockerfile: deploy/certbot/Dockerfile
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-your-gh-username/lms}-certbot:${TAG:-latest}
+    container_name: lms-certbot
+    volumes:
+      - certbot-webroot:/var/www/certbot
+      - certbot-conf:/etc/letsencrypt
+      # Docker socket so certbot can reload nginx after renewal (deploy hook)
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    networks: [lms-network]
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads_data:
+  certbot-webroot:
+  certbot-conf:
+
+networks:
+  lms-network:
+    driver: bridge

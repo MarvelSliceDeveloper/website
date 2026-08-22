@@ -182,16 +182,32 @@ const [confirm, confirmDialog] = useConfirm();
     <PageShell backTo="/admin"
       title="Media Library"
       actions={
-        <div className="flex items-center gap-3 self-start sm:self-auto">
-<AdminButton variant="primary" size="md" disabled={bucket === 'all'} onClick={() => uploadRef.current?.click()}>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <AdminButton variant="primary" size="md" className="w-full sm:w-auto min-h-[44px] justify-center" disabled={bucket === 'all'} onClick={() => uploadRef.current?.click()}>
             <FiUpload className="w-4 h-4" /> Upload
           </AdminButton>
           <input ref={uploadRef} type="file" multiple onChange={handleUpload} className="hidden" accept="image/*,.pdf,.svg" />
         </div>
       }
     >
-      <div className="flex gap-6">
-        <div className="w-48 shrink-0 flex flex-col gap-1 sticky top-6 self-start max-h-[calc(100vh-48px)] overflow-y-auto admin-scrollbar">
+      {/* Mobile Bucket Selector Dropdown */}
+      <div className="lg:hidden w-full mb-4">
+        <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-1.5">Bucket</label>
+        <select
+          value={bucket}
+          onChange={(e) => setBucket(e.target.value)}
+          className="w-full h-11 px-3.5 rounded-lg border border-admin-300 bg-white text-sm font-medium text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all"
+        >
+          <option value="all">All Buckets</option>
+          {BUCKETS.map((b) => (
+            <option key={b} value={b}>{b}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Desktop Bucket Sidebar */}
+        <div className="hidden lg:flex w-48 shrink-0 flex-col gap-1 sticky top-6 self-start max-h-[calc(100vh-48px)] overflow-y-auto admin-scrollbar">
           <button onClick={() => setBucket('all')}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
               bucket === 'all' ? 'bg-admin-600 text-white' : 'text-admin-600 hover:bg-admin-50'
@@ -210,6 +226,7 @@ const [confirm, confirmDialog] = useConfirm();
           ))}
         </div>
 
+        {/* Content Area */}
         <div className="flex-1 min-w-0"
           ref={dropRef}
           onDragOver={handleDragOver}
@@ -217,33 +234,33 @@ const [confirm, confirmDialog] = useConfirm();
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-black flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <h2 className="font-semibold text-black flex items-center gap-2 text-sm sm:text-base">
               {bucket === 'all' ? 'All Buckets' : bucket}
               <span className="text-xs font-normal text-neutral-400 bg-admin-100 px-2 py-0.5 rounded-full">{filtered.length} file{filtered.length !== 1 ? 's' : ''}</span>
             </h2>
-            <div className="flex gap-2 items-center">
-              <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400 pointer-events-none" />
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:w-64">
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
                 <input type="text" value={search} onChange={e => setSearch(e.target.value)}
                   placeholder="Search files..."
-                  className="w-48 pl-9 pr-3 h-9 border border-admin-200 rounded-lg text-sm text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all bg-white"
+                  className="w-full pl-9 pr-3 h-11 sm:h-9 border border-admin-200 rounded-lg text-sm text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all bg-white"
                 />
               </div>
-              <div className="flex border border-admin-200 rounded-lg overflow-hidden">
+              <div className="flex border border-admin-200 rounded-lg overflow-hidden shrink-0">
                 <button onClick={() => setViewMode('grid')}
-                  className={`p-2 transition-colors ${viewMode === 'grid' ? 'bg-admin-600 text-white' : 'bg-white text-admin-400 hover:text-admin-900'}`}>
+                  className={`p-2.5 sm:p-2 transition-colors min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center ${viewMode === 'grid' ? 'bg-admin-600 text-white' : 'bg-white text-admin-400 hover:text-admin-900'}`}>
                   <FiGrid className="w-4 h-4" />
                 </button>
                 <button onClick={() => setViewMode('list')}
-                  className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-admin-600 text-white' : 'bg-white text-admin-400 hover:text-admin-900'}`}>
+                  className={`p-2.5 sm:p-2 transition-colors min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center ${viewMode === 'list' ? 'bg-admin-600 text-white' : 'bg-white text-admin-400 hover:text-admin-900'}`}>
                   <FiList className="w-4 h-4" />
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="rounded-lg border border-admin-200 p-6">
+          <div className="rounded-xl border border-admin-200 p-3 sm:p-6 bg-white">
           {isDragging && bucket !== 'all' && (
             <div className="absolute inset-0 rounded-lg border-2 border-dashed border-admin-400 bg-white/80 flex items-center justify-center z-10">
               <div className="text-center">
@@ -254,10 +271,10 @@ const [confirm, confirmDialog] = useConfirm();
           )}
 
           {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="bg-admin-100 rounded-lg aspect-[4/3]" />
+                  <div className="bg-admin-100 rounded-lg aspect-[16/9] sm:aspect-[4/3]" />
                   <div className="mt-2 space-y-1.5">
                     <div className="h-3 bg-admin-100 rounded w-3/4" />
                     <div className="h-3 bg-admin-100 rounded w-1/2" />
@@ -266,23 +283,23 @@ const [confirm, confirmDialog] = useConfirm();
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="w-16 h-16 mx-auto bg-admin-100 rounded-full flex items-center justify-center mb-4">
-                <FiFile className="w-7 h-7 text-admin-400" />
+            <div className="text-center py-12 sm:py-16">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto bg-admin-100 rounded-full flex items-center justify-center mb-4">
+                <FiFile className="w-6 h-6 sm:w-7 sm:h-7 text-admin-400" />
               </div>
-              <p className="text-neutral-500">{search ? 'No files match your search.' : 'This bucket is empty.'}</p>
+              <p className="text-sm text-neutral-500">{search ? 'No files match your search.' : 'This bucket is empty.'}</p>
               {!search && bucket !== 'all' && (
-                <AdminButton variant="secondary" size="sm" className="mt-4" onClick={() => uploadRef.current?.click()}>
+                <AdminButton variant="secondary" size="sm" className="mt-4 min-h-[44px]" onClick={() => uploadRef.current?.click()}>
                   <FiUpload className="w-4 h-4" /> Upload your first file
                 </AdminButton>
               )}
             </div>
           ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
               {filtered.map((file) => (
-                <div key={file._path} className="group rounded-lg border border-admin-200 overflow-hidden bg-white">
+                <div key={file._path} className="group rounded-xl border border-admin-200 overflow-hidden bg-white min-w-0 w-full flex flex-col justify-between">
                   <button onClick={() => setPreview(file)} className="w-full block">
-                    <div className="aspect-[4/3] bg-white flex items-center justify-center overflow-hidden">
+                    <div className="aspect-[16/9] sm:aspect-[4/3] bg-neutral-100 flex items-center justify-center overflow-hidden">
                       {isImage(file.name) ? (
                         <img src={getUrl(file)} alt={file.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
                       ) : (
@@ -290,21 +307,25 @@ const [confirm, confirmDialog] = useConfirm();
                       )}
                     </div>
                   </button>
-                  <div className="p-2.5">
-                    <p className="text-xs text-black truncate font-medium">{file.name}</p>
-                    <p className="text-[10px] text-neutral-400 mt-0.5">{formatSize(file.metadata?.size)}</p>
-                    {bucket === 'all' && (
-                      <p className="text-[10px] text-neutral-500/70 mt-0.5 truncate">{file._bucket}</p>
-                    )}
-                    <div className="flex items-center gap-1 mt-2 pt-1.5 border-t border-admin-100 opacity-100">
+                  <div className="p-2.5 flex-1 flex flex-col justify-between min-w-0">
+                    <div className="min-w-0">
+                      <p className="text-xs text-black truncate font-semibold break-all" title={file.name}>{file.name}</p>
+                      <p className="text-[10px] text-neutral-400 mt-0.5">{formatSize(file.metadata?.size)}</p>
+                      {bucket === 'all' && (
+                        <p className="text-[10px] text-neutral-500/70 mt-0.5 truncate">{file._bucket}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 mt-2 pt-2 border-t border-admin-100">
                       <button onClick={() => copyUrl(file)}
-                        className="flex-1 text-[11px] text-admin-600 hover:bg-white rounded px-1.5 py-1 transition-colors flex items-center justify-center gap-1">
-                        {copied === file._path ? <FiCheck className="w-3 h-3 text-success-500" /> : <FiCopy className="w-3 h-3" />}
+                        className="flex-1 min-h-[40px] text-xs text-admin-600 font-semibold hover:bg-neutral-100 rounded-lg px-2 py-1.5 transition-colors flex items-center justify-center gap-1 active:scale-95">
+                        {copied === file._path ? <FiCheck className="w-3.5 h-3.5 text-emerald-600" /> : <FiCopy className="w-3.5 h-3.5" />}
                         {copied === file._path ? 'Copied' : 'Copy'}
                       </button>
                       <button onClick={() => deleteFile(file)}
-                        className="text-[11px] text-destructive-500 hover:text-destructive-700 hover:bg-destructive-50 rounded px-1.5 py-1 transition-colors flex items-center gap-1">
-                        <FiTrash2 className="w-3 h-3" /> Delete
+                        className="min-h-[40px] min-w-[40px] text-xs text-destructive-500 hover:text-destructive-700 hover:bg-destructive-50 rounded-lg p-1.5 transition-colors flex items-center justify-center active:scale-95"
+                        title="Delete file"
+                      >
+                        <FiTrash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
@@ -312,10 +333,10 @@ const [confirm, confirmDialog] = useConfirm();
               ))}
             </div>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-2">
               {filtered.map((file) => (
-                <div key={file._path} className="flex items-center gap-4 p-3 rounded-lg hover:bg-white transition-colors group">
-                  <button onClick={() => setPreview(file)} className="w-10 h-10 rounded-lg bg-white flex items-center justify-center overflow-hidden shrink-0 border border-admin-100">
+                <div key={file._path} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors min-w-0">
+                  <button onClick={() => setPreview(file)} className="w-12 h-12 rounded-lg bg-neutral-100 flex items-center justify-center overflow-hidden shrink-0 border border-admin-100">
                     {isImage(file.name) ? (
                       <img src={getUrl(file)} alt={file.name} className="w-full h-full object-cover" loading="lazy" />
                     ) : (
@@ -323,17 +344,17 @@ const [confirm, confirmDialog] = useConfirm();
                     )}
                   </button>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-black truncate">{file.name}</p>
-                    <p className="text-xs text-neutral-400">
+                    <p className="text-xs sm:text-sm font-semibold text-black truncate">{file.name}</p>
+                    <p className="text-[11px] text-neutral-400">
                       {formatSize(file.metadata?.size)} &middot; {formatDate(file.created_at)}
                       {bucket === 'all' && <span> &middot; <span className="text-neutral-500">{file._bucket}</span></span>}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 opacity-100 shrink-0">
-                    <button onClick={() => copyUrl(file)} className="p-2 text-violet-500 hover:text-violet-700 hover:bg-violet-50 rounded-lg transition-colors" title="Copy URL">
-                      {copied === file._path ? <FiCheck className="w-4 h-4 text-success-500" /> : <FiCopy className="w-4 h-4" />}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => copyUrl(file)} className="min-h-[44px] min-w-[44px] flex items-center justify-center text-violet-600 hover:bg-violet-50 rounded-lg transition-colors" title="Copy URL">
+                      {copied === file._path ? <FiCheck className="w-4 h-4 text-emerald-600" /> : <FiCopy className="w-4 h-4" />}
                     </button>
-                    <button onClick={() => deleteFile(file)} className="px-2.5 py-1.5 text-xs font-medium text-destructive-600 bg-destructive-50 hover:bg-destructive-100 rounded-md transition-colors">
+                    <button onClick={() => deleteFile(file)} className="min-h-[44px] px-3 text-xs font-semibold text-destructive-600 bg-destructive-50 hover:bg-destructive-100 rounded-lg transition-colors">
                       Delete
                     </button>
                   </div>

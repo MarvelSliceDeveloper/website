@@ -70,52 +70,6 @@ async function main() {
   });
   console.log("✅ Instructor profile created");
 
-  // ─── Second Instructor (for multi-instructor batch demo) ────────────────────
-  const instructor2 = await upsertUser(
-    "instructor2@lms.local",
-    "Jane Instructor",
-    "instructor123",
-    "INSTRUCTOR",
-    { instructorOnboardingComplete: true },
-  );
-  console.log("✅ Second Instructor:", instructor2.email);
-
-  await prisma.instructorProfile.upsert({
-    where: { userId: instructor2.id },
-    update: {},
-    create: {
-      userId: instructor2.id,
-      bio: "Database expert and educator with 6+ years teaching SQL and data engineering.",
-      designation: "Database Specialist",
-      qualification: "B.Tech in Information Technology",
-      experienceYears: 6,
-      skills: ["SQL", "Database Design", "PostgreSQL", "Data Modeling"],
-      currentlyEmployed: true,
-      companyName: "DataWorks Inc.",
-      availableTime: "15 hrs/week",
-      phone: "+91-9876543211",
-      city: "Mumbai",
-      state: "Maharashtra",
-      country: "India",
-      languages: ["English", "Hindi", "Marathi"],
-      socialLinks: {
-        linkedin: "https://linkedin.com/in/jane-instructor",
-      },
-      bankName: "HDFC Bank",
-      bankAccountNumber: "XXXX-XXXX-5678",
-      bankIfscCode: "HDFC0005678",
-      bankAccountHolderName: "Jane Instructor",
-      upiId: "jane@upi",
-      status: "APPROVED",
-      verifiedById: superAdmin.id,
-      verifiedAt: new Date(),
-      rating: 4.6,
-      totalStudents: 89,
-      completedSessions: 32,
-    },
-  });
-  console.log("✅ Second Instructor profile created");
-
   const student = await upsertUser(
     "student@lms.local",
     "Demo Student",
@@ -123,53 +77,6 @@ async function main() {
     "STUDENT",
   );
   console.log("✅ Student:", student.email);
-
-  const intern = await upsertUser(
-    "intern@lms.local",
-    "Demo Intern",
-    "intern123",
-    "INTERN",
-  );
-  await prisma.user.update({
-    where: { id: intern.id },
-    data: { designation: "STUDYING" },
-  });
-  console.log("✅ Intern:", intern.email);
-
-  // ─── Intern Fields (admin-managed field of choice) ───────────────────────────
-  const internFieldSeeds = [
-    { name: "Web Development", order: 0, fee: 299900 },
-    { name: "Backend Development", order: 1, fee: 349900 },
-    { name: "Cybersecurity", order: 2, fee: 399900 },
-    { name: "UI/UX Design", order: 3, fee: 279900 },
-    { name: "Data Analytics", order: 4, fee: 249900 },
-  ];
-  const webDevField = await prisma.internField.upsert({
-    where: { id: "ifield-webdev" },
-    update: { name: "Web Development", order: 0, fee: 299900 },
-    create: {
-      id: "ifield-webdev",
-      name: "Web Development",
-      order: 0,
-      fee: 299900,
-    },
-  });
-  for (const f of internFieldSeeds) {
-    if (f.name === "Web Development") continue;
-    const existing = await prisma.internField.findFirst({
-      where: { name: f.name, deletedAt: null },
-    });
-    if (!existing) {
-      await prisma.internField.create({
-        data: { name: f.name, order: f.order, fee: f.fee },
-      });
-    }
-  }
-  console.log("✅ Intern fields seeded");
-  await prisma.user.update({
-    where: { id: intern.id },
-    data: { internFieldId: webDevField.id },
-  });
 
   // ─── System Settings ────────────────────────────────────────────────────────
   const defaultSettings = [
@@ -871,39 +778,6 @@ async function main() {
   });
   console.log("✅ Package created");
 
-  // ─── Internship Package (fee for intern applications) ────────────────────────
-  await prisma.coursePackage.upsert({
-    where: { id: "pkg-internship" },
-    update: {},
-    create: {
-      id: "pkg-internship",
-      name: "Internship Program",
-      slug: "internship-program",
-      description: "Application fee for the Marvel Slice internship program.",
-      price: 150000,
-      status: "ACTIVE",
-      isInternship: true,
-    },
-  });
-  console.log("✅ Internship package created");
-
-  // ─── Sample Intern Session (for admin scheduling demo) ───────────────────────
-  const existingInternSession = await prisma.internSession.findFirst();
-  if (!existingInternSession) {
-    await prisma.internSession.create({
-      data: {
-        title: "Intern Onboarding Orientation",
-        description: "Welcome session for new interns — overview of the program.",
-        scheduledAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        scheduledEndAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000),
-        joinUrl: "https://meet.google.com/lms-intern-onboarding",
-        targetFieldId: webDevField.id,
-        createdBy: admin.id,
-      },
-    });
-    console.log("✅ Sample intern session created");
-  }
-
   // ─── Batch (needed before assignments — batchId is required) ─────────────────
   const pkgBatch = await prisma.batch.upsert({
     where: { id: "batch-datascience" },
@@ -925,7 +799,7 @@ async function main() {
   console.log("✅ Batch created");
 
   // ─── Per-Course Instructors (BatchCourseMentor) ─────────────────────────────
-  // Python → instructor (primary), SQL → instructor2, ML → no specific mentor
+  // Python → instructor (primary), SQL → instructor, ML → no specific mentor
   const pythonCourseMentor = await prisma.batchCourseMentor.upsert({
     where: {
       batchId_courseId: { batchId: pkgBatch.id, courseId: pythonCourse.id },
@@ -947,7 +821,7 @@ async function main() {
     create: {
       batchId: pkgBatch.id,
       courseId: sqlCourse.id,
-      mentorId: instructor2.id,
+      mentorId: instructor.id,
     },
   });
   console.log("✅ SQL course mentor set:", sqlCourseMentor.id);
@@ -1681,16 +1555,12 @@ async function main() {
   console.log("   Admin:       admin@lms.local / admin123");
   console.log("   Instructor:  instructor@lms.local / instructor123");
   console.log("   Student:     student@lms.local / student123");
-  console.log("   Intern:      intern@lms.local / intern123");
   console.log(
     "   Courses: Python for Data Science (full), SQL (placeholder), ML (placeholder)",
   );
   console.log(
     "   Package: Data Science Program — Batch: Data Science Batch — Jul 2025",
   );
-  console.log("   Internship Package: Internship Program (flat fee)");
-  console.log("   Intern Fields: Web Development, Backend Development, Cybersecurity, UI/UX Design, Data Analytics");
-  console.log("   Sample Intern Session: Intern Onboarding Orientation");
   console.log("   BatchCourseVisibility: Python course visible, others hidden");
   console.log("   Instructor Profile: Demo Instructor (approved)");
   console.log("   Payment + Refund: Sample data available");
@@ -1703,7 +1573,7 @@ async function upsertUser(
   email: string,
   name: string,
   password: string,
-  role: "SUPER_ADMIN" | "ADMIN" | "INSTRUCTOR" | "STUDENT" | "INTERN",
+  role: "SUPER_ADMIN" | "ADMIN" | "INSTRUCTOR" | "STUDENT",
   extraData?: Partial<{ instructorOnboardingComplete: boolean }>,
 ) {
   const hash = await bcrypt.hash(password, 10);
@@ -1722,6 +1592,8 @@ async function upsertCourse(data: {
   createdBy: string;
   tags: string[];
   learningObjectives: string[];
+  thumbnailUrl?: string;
+  coverImageUrl?: string;
 }) {
   return prisma.course.upsert({
     where: { slug: data.slug },
@@ -1730,6 +1602,12 @@ async function upsertCourse(data: {
       ...data,
       status: "PUBLISHED",
       publishedAt: new Date(),
+      thumbnailUrl:
+        data.thumbnailUrl ??
+        `https://picsum.photos/seed/${data.slug}/640/360`,
+      coverImageUrl:
+        data.coverImageUrl ??
+        `https://picsum.photos/seed/${data.slug}/1280/720`,
     },
   });
 }

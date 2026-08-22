@@ -24,6 +24,7 @@ import { logger } from "./utils/logger";
 import { app } from "./app";
 import { recordingSyncJob } from "./jobs/recording-sync.job";
 import { reconcileAttendanceJob } from "./jobs/reconcile-attendance.job";
+import { databaseBackupJob } from "./jobs/database-backup.job";
 import { prisma } from "./utils/prisma";
 
 import { socketService } from "./services/socket.service";
@@ -43,6 +44,7 @@ const server = app.listen(PORT, () => {
   if (enableBackgroundJobs) {
     recordingSyncJob.start();
     reconcileAttendanceJob.start();
+    databaseBackupJob.start();
   } else {
     logger.info("Background jobs disabled (ENABLE_BACKGROUND_JOBS=false)");
   }
@@ -52,6 +54,7 @@ const shutdown = async (signal: string) => {
   logger.info(`${signal} received — shutting down gracefully...`);
   recordingSyncJob.stop();
   reconcileAttendanceJob.stop();
+  databaseBackupJob.stop();
   server.close(async () => {
     await prisma.$disconnect();
     logger.info("Prisma disconnected, server closed.");

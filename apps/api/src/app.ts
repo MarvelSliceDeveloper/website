@@ -51,6 +51,7 @@ import { loginHistoryRouter } from "./modules/logs/login-history.routes";
 import { consentLogRouter } from "./modules/logs/consent-log.routes";
 import { trashRouter } from "./modules/super-admin/trash.routes";
 import { youtubeRouter } from "./modules/youtube/youtube.routes";
+import { aiRouter } from "./modules/ai/ai.routes";
 import { couponRouter } from "./modules/coupons/coupon.routes";
 import { referralRouter } from "./modules/referrals/referral.routes";
 import {
@@ -363,6 +364,7 @@ app.use("/api/admin/cache", cacheRouter);
 
 // ── YouTube API (authenticated) ──
 app.use("/api/youtube", youtubeRouter);
+app.use("/api/admin/ai", aiRouter);
 
 // ── Payments & Coupons ──
   app.use("/api/coupons", couponRouter);

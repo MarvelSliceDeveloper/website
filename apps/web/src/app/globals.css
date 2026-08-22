@@ -33,7 +33,7 @@
   --danger-tint: #fbeaea;
   --warning: #f59e0b;
   --muted: #6b7280;
-  --muted-foreground: #989aa1;
+  --muted-foreground: black;
   --text-secondary: #ededee;
   --radius: 14px;
 }
@@ -691,6 +691,13 @@ a:focus-visible {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Respect reduced-motion: disable login entrance/decorative animations */
+@media (prefers-reduced-motion: reduce) {
+  .login-page [style*="animation"] {
+    animation: none !important;
   }
 }
 

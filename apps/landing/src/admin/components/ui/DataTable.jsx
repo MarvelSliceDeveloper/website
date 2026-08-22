@@ -85,27 +85,29 @@ export default function DataTable({
   }
 
   const renderSearchBar = () => (
-    <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-admin-100">
-      <div className="flex items-center gap-2 w-full md:w-1/2 shrink-0">
-        <div className="relative flex-1">
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"><SearchIcon /></div>
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && applySearch()}
-          placeholder={searchPlaceholder}
-          className="w-full pl-9 pr-3 h-9 border border-admin-200 bg-white text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all"
-        />
-      </div>
-      <button onClick={applySearch} className="px-4 py-1.5 h-9 bg-admin-600 text-white text-sm font-medium rounded-lg hover:bg-admin-700 transition-colors">
-        Search
-      </button>
-      {activeSearch && (
-        <button onClick={clearSearch} className="px-3 py-1.5 h-9 text-xs font-medium text-neutral-500 hover:text-neutral-700 transition-colors">
-          Clear
-        </button>
-        )}
+    <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-admin-100 w-full min-w-0">
+      <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full md:w-1/2 min-w-0">
+        <div className="relative flex-1 min-w-[160px]">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"><SearchIcon /></div>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && applySearch()}
+            placeholder={searchPlaceholder}
+            className="w-full pl-9 pr-3 h-9 border border-admin-200 bg-white text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-500/20 focus:border-neutral-500 transition-all rounded-lg"
+          />
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button onClick={applySearch} className="px-4 py-1.5 h-9 bg-admin-600 text-white text-sm font-medium rounded-lg hover:bg-admin-700 transition-colors">
+            Search
+          </button>
+          {activeSearch && (
+            <button onClick={clearSearch} className="px-3 py-1.5 h-9 text-xs font-medium text-neutral-500 hover:text-neutral-700 transition-colors">
+              Clear
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -125,14 +127,14 @@ export default function DataTable({
 
   if (variant === 'cards') {
     return (
-      <div className="bg-white border border-admin-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-admin-200 shadow-sm overflow-hidden w-full max-w-full min-w-0">
         {searchable && renderSearchBar()}
         <div className="divide-y divide-admin-100">
           {paginated.map((row, rowIndex) => (
             <div
               key={`${row[rowKey]}-${rowIndex}`}
               onClick={() => onRowClick?.(row)}
-              className="px-5 py-4 flex items-center gap-4 hover:bg-white/80 transition-colors cursor-pointer"
+              className="px-5 py-4 flex items-center gap-4 hover:bg-neutral-50/80 transition-colors cursor-pointer"
             >
               {columns.map((col, i) => (
                 <div key={i} className={`${i === 0 ? 'flex-1 min-w-0' : 'shrink-0'} ${col.className || ''}`}>
@@ -148,15 +150,15 @@ export default function DataTable({
   }
 
   return (
-    <div className="bg-white border border-admin-200 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-xl border border-admin-200 shadow-sm overflow-hidden w-full max-w-full min-w-0">
       {searchable && renderSearchBar()}
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      <div className="admin-table-scroll w-full max-w-full overflow-x-auto">
+        <table className="admin-table min-w-[640px] w-full">
           <thead>
-            <tr className={`border-b border-admin-100 ${headerRowClass || 'bg-blue-600'}`}>
+            <tr className={`border-b border-admin-100 ${headerRowClass || 'bg-brand-blue'}`}>
               {columns.map((col, i) => (
-                <th key={i} className={`text-left text-xs font-semibold uppercase tracking-wider px-4 py-3 ${headerCellClass || 'text-white'} ${col.className || ''}`}>
+                <th key={i} className={`text-left text-xs font-bold uppercase tracking-wider px-4 py-3.5 whitespace-nowrap ${headerCellClass || 'text-white'} ${col.className || ''}`}>
                   {col.header}
                 </th>
               ))}
@@ -167,10 +169,10 @@ export default function DataTable({
               <tr
                 key={`${row[rowKey]}-${rowIndex}`}
                 onClick={() => onRowClick?.(row)}
-                className={`border-b border-gray-100 last:border-0 transition-colors ${rowIndex % 2 === 1 ? 'bg-gray-50' : 'bg-white'} ${onRowClick ? 'cursor-pointer hover:bg-gray-50' : 'hover:bg-gray-50'}`}
+                className={`border-b border-gray-100 last:border-0 transition-colors ${rowIndex % 2 === 1 ? 'bg-gray-50/60' : 'bg-white'} ${onRowClick ? 'cursor-pointer hover:bg-blue-50/40' : 'hover:bg-blue-50/40'}`}
               >
                 {columns.map((col, i) => (
-                  <td key={i} className={`px-4 py-3 text-sm text-neutral-700 ${col.className || ''}`}>
+                  <td key={i} className={`px-4 py-3.5 text-sm align-middle text-neutral-700 ${col.className || ''}`}>
                     {renderCell(row, col, (page - 1) * pageSize + rowIndex)}
                   </td>
                 ))}
@@ -180,7 +182,7 @@ export default function DataTable({
         </table>
       </div>
 
-      <div className="px-4 py-3 border-t border-admin-100 bg-white">
+      <div className="px-4 py-3 border-t border-admin-100 bg-white w-full min-w-0">
         <Pagination
           totalItems={filtered.length}
           itemsPerPage={pageSize}

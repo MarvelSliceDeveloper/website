@@ -9,10 +9,12 @@ import {
   IconX,
   IconTrash,
   IconFileSpreadsheet,
+  IconSparkles,
 } from "@tabler/icons-react";
 import { readSheet } from "read-excel-file/browser";
 import RichEditor from "@/components/editor/RichEditor";
 import { FormModal } from "@/components/admin/FormModal";
+import { useAIGenerate } from "@/lib/use-ai-generate";
 
 interface QuizOption {
   label: string;
@@ -32,6 +34,8 @@ interface TestCase {
 
 interface AddQuizFormProps {
   moduleId: string;
+  moduleTitle?: string;
+  moduleDescription?: string;
   onSuccess: () => void;
   onCancel: () => void;
   open: boolean;
@@ -39,6 +43,8 @@ interface AddQuizFormProps {
 
 export default function AddQuizForm({
   moduleId,
+  moduleTitle,
+  moduleDescription,
   onSuccess,
   onCancel,
   open,
@@ -66,6 +72,47 @@ export default function AddQuizForm({
   ]);
 
   const excelInputRef = useRef<HTMLInputElement>(null);
+
+  // AI generation
+  const [aiTopic, setAiTopic] = useState("");
+  const [aiCount, setAiCount] = useState(5);
+  const aiGenerate = useAIGenerate<{
+    title: string;
+    questions: QuizQuestion[];
+  }>();
+
+  const handleAiGenerate = () => {
+    if (!aiTopic.trim() && !moduleTitle?.trim()) {
+      toast.error("Enter a topic, or add the module title first");
+      return;
+    }
+    aiGenerate.mutate(
+      {
+        type: "QUIZ",
+        prompt: aiTopic.trim() || `Generate a quiz for this module's content`,
+        context: {
+          moduleTitle: moduleTitle?.trim(),
+          moduleDescription: moduleDescription?.trim(),
+          questionCount: aiCount,
+        },
+      },
+      {
+        onSuccess: (res) => {
+          const generated = res.data;
+          if (!generated.questions?.length) {
+            toast.error("AI returned no questions");
+            return;
+          }
+          setQuestions(generated.questions);
+          if (!title.trim() && generated.title) setTitle(generated.title);
+          toast.success(
+            `Generated ${generated.questions.length} question${generated.questions.length !== 1 ? "s" : ""} — review before saving`,
+          );
+        },
+        onError: (err: unknown) => toast.error(getErrorMessage(err)),
+      },
+    );
+  };
 
   const createQuizMutation = useMutation({
     mutationFn: () =>
@@ -336,6 +383,45 @@ export default function AddQuizForm({
           <p className="text-[10px] text-muted-foreground -mt-1">
             Excel columns: Question | A | B | C | D | Correct Answer (A/B/C/D)
           </p>
+
+          {/* AI generation row */}
+          <div className="flex flex-wrap items-center gap-2 rounded-md border border-violet-300/50 bg-violet-500/5 p-2.5">
+            <IconSparkles size={15} className="shrink-0 text-violet-500" />
+            <div className="min-w-0 flex-1">
+              <input
+                type="text"
+                value={aiTopic}
+                onChange={(e) => setAiTopic(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAiGenerate())}
+                placeholder="Optional — anything specific to focus on?"
+                className="field w-full text-xs"
+              />
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                {moduleTitle
+                  ? `Generates from this module: “${moduleTitle}${moduleDescription ? ` — ${moduleDescription.slice(0, 80)}${moduleDescription.length > 80 ? "…" : ""}` : ""}”`
+                  : "No module title set yet — enter a topic above"}
+              </p>
+            </div>
+            <input
+              type="number"
+              value={aiCount}
+              onChange={(e) =>
+                setAiCount(Math.min(Math.max(parseInt(e.target.value) || 5, 1), 30))
+              }
+              min={1}
+              max={30}
+              title="Number of questions"
+              className="field w-16 text-xs"
+            />
+            <button
+              type="button"
+              onClick={handleAiGenerate}
+              disabled={aiGenerate.isPending || (!aiTopic.trim() && !moduleTitle?.trim())}
+              className="flex items-center gap-1 rounded-md border border-violet-300/60 bg-violet-50 px-2.5 py-1.5 text-[11px] font-semibold text-violet-700 transition-colors hover:bg-violet-100 disabled:opacity-50"
+            >
+              {aiGenerate.isPending ? "Generating…" : "Generate with AI"}
+            </button>
+          </div>
           {questions.map((q, qIndex) => (
             <div
               key={qIndex}

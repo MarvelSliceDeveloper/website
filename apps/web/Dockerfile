@@ -1,0 +1,36 @@
+# syntax=docker/dockerfile:1
+# Build context = repo root (monorepo). Use: docker build -f apps/web/Dockerfile .
+FROM node:20-alpine AS base
+RUN corepack enable
+WORKDIR /app
+
+# ─── Dependencies ───
+FROM base AS deps
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json apps/web/package.json
+COPY apps/api/package.json apps/api/package.json
+COPY apps/landing/package.json apps/landing/package.json
+COPY packages/ packages/
+RUN pnpm install --frozen-lockfile --ignore-scripts
+
+# ─── Builder ───
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages ./packages
+COPY apps/web ./apps/web
+ARG NEXT_PUBLIC_API_URL=https://lms.marvelslice.com
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+RUN cd apps/web && pnpm build
+
+# ─── Runner ───
+FROM base AS runner
+ENV NODE_ENV=production
+ENV PORT=3000
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+# Standalone output preserves the monorepo path (apps/web/server.js)
+COPY --from=builder /app/apps/web/.next/standalone/apps/web ./
+COPY --from=builder /app/apps/web/.next/static ./.next/static
+COPY --from=builder /app/apps/web/public ./public
+USER nodejs
+EXPOSE 3000
+CMD ["node", "server.js"]

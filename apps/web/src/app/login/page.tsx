@@ -160,9 +160,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen overflow-x-hidden bg-background">
+    <div className="login-page flex min-h-screen overflow-x-hidden bg-gradient-to-br from-primary/10 via-background to-background">
       {/* ─── LEFT: Hero Panel (hidden on mobile/tablet) ─── */}
-      <section className="relative hidden w-full flex-col overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 px-12 lg:flex lg:w-[55%]">
+      <section className="relative hidden w-full flex-col overflow-hidden bg-primary px-12 lg:flex lg:w-[55%]">
         {/* Diagonal stripe texture overlay */}
         <div
           className="absolute inset-0 opacity-[0.04]"
@@ -274,7 +274,34 @@ export default function LoginPage() {
       </section>
 
       {/* ─── RIGHT: Login Form ─── */}
-      <section className="flex flex-1 items-center justify-center px-4 py-10 sm:px-8">
+      <section className="flex flex-1 items-center justify-center px-5 py-10 sm:px-8 pb-[env(safe-area-inset-bottom)]">
+        {/* Mobile compact branded header */}
+        <div
+          className="mb-8 text-center lg:hidden"
+          style={{
+            animation:
+              "login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both",
+          }}
+        >
+          <div className="flex items-center justify-center gap-2.5">
+            <Image
+              src="/images/logo.svg"
+              alt="Marvel Slice"
+              width={48}
+              height={48}
+              priority
+              loading="eager"
+              className="h-12 w-auto object-contain"
+            />
+            <span className="text-2xl font-extrabold tracking-tight">
+              <span className="text-primary">Marvel</span>{" "}
+              <span className="text-primary/80">Slice</span>
+            </span>
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Master new skills with expert mentors
+          </p>
+        </div>
         <div
           className="w-full max-w-[420px]"
           style={{
@@ -284,29 +311,9 @@ export default function LoginPage() {
           {/* Glass wrapper */}
           <div className="rounded-2xl bg-card/80 p-1 shadow-[0_8px_60px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-border/60">
             <div className="rounded-[14px] bg-card px-8 py-10">
-              {/* Logo (mobile only — on desktop the left panel has it) */}
-              <div
-                className="flex items-center justify-center gap-2.5 lg:hidden"
-                style={{ animation: "logo-pulse 4s ease-in-out infinite" }}
-              >
-                <Image
-                  src="/images/logo.svg"
-                  alt="Marvel Slice"
-                  width={44}
-                  height={44}
-                  priority
-                  loading="eager"
-                  className="h-11 w-auto object-contain"
-                />
-                <span className="text-2xl font-extrabold tracking-tight">
-                  <span className="text-blue-600">Marvel</span>{" "}
-                  <span className="text-blue-500">Slice</span>
-                </span>
-              </div>
-
               {/* Heading */}
               <div
-                className="mt-6 text-center lg:mt-0"
+                className="text-center"
                 style={{
                   animation:
                     "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both",
@@ -415,7 +422,7 @@ export default function LoginPage() {
                         backgroundSize: "200% 100%",
                         animation: isSubmitting
                           ? "none"
-                          : "shimmer-sweep 3s ease-in-out infinite",
+                          : "login-button-shimmer 1.5s linear infinite",
                       }}
                     >
                       {isSubmitting ? "Logging in..." : "Log In"}
