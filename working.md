@@ -44,7 +44,7 @@ User decision 2026-08-14: skip form-heavy pages (settings/onboarding/notificatio
 Skipped (form-heavy / low value): `instructor/settings`, `instructor/onboarding`, `instructor/notifications/send`, `instructor/support` (+`_comps/*`), `instructor/courses`.
 
 ## Phase 3 — Admin pages (SLIM — most important only)
-User decision 2026-08-14: convert only the most important admin list/CRUD pages. Skip settings/health/audit-logs/static-pages/branding/i18n/gdpr/cache/trash/etc.
+User decision 2026-08-14: convert only the most important admin list/CRUD pages. Skip settings/health/audit-logs/static-pages/branding/i18n/cache/trash/etc.
 
 | File | Status |
 | ---- | ------ |
@@ -104,7 +104,6 @@ Converted every remaining admin page (list/CRUD, complex builders, settings, sys
 | `admin/cache/page.tsx` | DONE (status query + flush mutation with optimistic setQueryData) |
 | `admin/microsoft/page.tsx` | DONE (status query; redirect action kept) |
 | `admin/branding/page.tsx` | DONE (query + save/logo/favicon mutations) |
-| `admin/gdpr/page.tsx` | DONE (enabled search query + anonymize mutation; export stays handler-fetch) |
 | `admin/i18n/page.tsx` | DONE (locales + dependent translations queries + save/create mutations) |
 | `admin/static-pages/page.tsx` | DONE (list + save/delete mutations; `<a>`→`<Link>`) |
 | `admin/notifications/send/page.tsx` | DONE (4 option queries + send mutation, typed payload) |

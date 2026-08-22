@@ -41,7 +41,7 @@ User decision 2026-08-14: skip form-heavy pages (settings/onboarding/notificatio
 - [x] Phase 2 sweep: web tsc only 5 pre-existing, eslint 0 errors on `src/app/instructor/**`, smoke-tested all routes (307 = auth guard)
 
 ### Phase 3 — Admin list pages (SLIM — most important only)
-User decision 2026-08-14: convert only the most important admin list/CRUD pages. Skip settings/health/audit-logs/static-pages/branding/i18n/gdpr/cache/trash/etc.
+User decision 2026-08-14: convert only the most important admin list/CRUD pages. Skip settings/health/audit-logs/static-pages/branding/i18n/cache/trash/etc.
 
 - [x] `admin/certificates/page.tsx` — `["admin","certificates",page]` + `["admin","certificates","stats"]` + `["admin","certificate-templates"]`; revoke/save/default/delete/uploadPdf/removePdf mutations
 - [x] `admin/mentorship/page.tsx` — `["admin","mentorship",...]` (tickets/mentors/stats) + 4 modal mutations
@@ -67,7 +67,7 @@ All remaining admin pages converted (56 pages + `useReportData` hook). Full per-
 - [x] Sessions: `sessions`, `sessions/new`, `sessions/[sessionId]`, `session-management`
 - [x] Analytics/logs: `analytics`, `audit-logs`, `logs`, `logs/stats`, `consent-logs`, `trash`
 - [x] Settings/system: `settings`, `settings/api-keys`, `settings/backup`, `settings/permissions`, `settings/system`, `settings/webhooks`, `health`, `maintenance`, `cache`
-- [x] Misc: `microsoft`, `branding`, `gdpr`, `i18n`, `static-pages`, `notifications/send`, `content`
+- [x] Misc: `microsoft`, `branding`, `i18n`, `static-pages`, `notifications/send`, `content`
 - [x] Complex: `dashboard`, `courses/new`, `courses/[id]` (course builder + `_components/*`), `batches/new`, `batches/[id]`
 - [x] People: `interns`, `interns/assignments`, `interns/schedule`, `instructors/new`, `instructors/[id]`, `instructors/[id]/edit`
 - [x] Missed-in-first-scan: `calendar`, `inbox/tickets`, `super-admin` (had API calls despite 0-count scan)

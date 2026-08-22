@@ -11,20 +11,20 @@ User decision 2026-08-14: "everything left" — converted every remaining admin 
 - Sessions: `sessions`, `sessions/new` (batches/instructors/modules + schedule/bulk-upload; fixed TDZ), `sessions/[sessionId]` (dependent playback/stats/attendance with `refetchInterval` polling + sync), `session-management` (kill/kill-all).
 - Analytics/logs: `analytics`, `audit-logs` (`appliedFilters` state), `logs` (polling via `refetchInterval`), `logs/stats`, `consent-logs`, `trash` (restore/permanent-delete).
 - Settings/system: `settings`, `settings/api-keys` (keys + youtube-status + 4 mutations), `settings/backup`, `settings/permissions`, `settings/system`, `settings/webhooks`, `health` (4 composed queries; fixed `react-hooks/purity` Date.now), `maintenance`, `cache` (optimistic flush).
-- Misc: `microsoft` (status query), `branding` (save + logo/favicon uploads), `gdpr` (enabled search + anonymize), `i18n` (locales + dependent translations + save/create), `static-pages` (`<a>`→`<Link>`), `notifications/send` (4 option queries + typed send payload), `content` (4 tab queries + save/delete).
+- Misc: `microsoft` (status query), `branding` (save + logo/favicon uploads), `i18n` (locales + dependent translations + save/create), `static-pages` (`<a>`→`<Link>`), `notifications/send` (4 option queries + typed send payload), `content` (4 tab queries + save/delete).
 - Complex: `dashboard` (all 11 reads → queries; super-admin/admin dispatcher from `meQuery`), `courses/new` (create mutation typed to return `slug` — **fixes pre-existing tsc error**), `courses/[id]` + `_components/*` (course-builder reads → queries, writes → mutations; `CertificationTab` dead PDF-upload code removed; YouTube video-info transient fetch kept), `batches/new` (fixed TDZ), `batches/[id]` (tab-gated queries + optimistic toggle updates).
 - People: `interns` (+fields CRUD), `interns/assignments` (sheets + dependent sheet/tabs + cache updates), `interns/schedule`, `instructors/new`, `instructors/[id]` (5 dependent tab queries + verify), `instructors/[id]/edit`; fixed pre-existing `static-components` lint via module-scope `makeFormParts` factory.
 - Missed-in-first-scan (had API calls despite 0-count scan): `calendar` (instructors + sessions queries, events/colorMap via `useMemo`), `inbox/tickets` (mentorship tickets), `super-admin` (health query).
 - Shared hook: `lib/report-utils.ts` `useReportData` → current + previous-period `useApiQuery`s gated on range (powers `admin/reports`, `admin/reports/course`, `admin/reports/payment`).
 
 ### Notes
-- Deliberate exceptions kept as handler-fetch (transient read-on-click): `gdpr` export modal, YouTube video-info blur fetch in `LessonCard`/`AddLessonForm`, instructor detail viewer, approvals/users modals.
+- Deliberate exceptions kept as handler-fetch (transient read-on-click): YouTube video-info blur fetch in `LessonCard`/`AddLessonForm`, instructor detail viewer, approvals/users modals.
 - Phase 4 verification: web `tsc` only the 3 pre-existing errors (down from 4 — `courses/new` slug fixed), eslint 0 across all `src/app/admin/**` + `src/lib/report-utils.ts`, all 64 static admin routes smoke-test 307 (auth guard).
 
 ## 2026-08-14 — TanStack Query Migration (Phase 3 complete: admin pages)
 
 ### Frontend
-- Converted the most important admin list/CRUD pages (slim scope per user decision 2026-08-14; settings/health/audit-logs/static-pages/branding/i18n/gdpr/cache/trash/etc. skipped):
+- Converted the most important admin list/CRUD pages (slim scope per user decision 2026-08-14; settings/health/audit-logs/static-pages/branding/i18n/cache/trash/etc. skipped):
   - `admin/certificates/page.tsx` — `["admin","certificates",page]` + `["admin","certificates","stats"]` + `["admin","certificate-templates"]`; revoke/save/set-default/delete/uploadPdf/removePdf mutations (2 tabs).
   - `admin/mentorship/page.tsx` — `["admin","mentorship",...]` tickets/mentors/stats queries + 4 modal mutations (assign/schedule/complete/cancel); `isSubmitting` derived; fixed circular `MentorshipStats` type.
   - `admin/categories/page.tsx`, `admin/tags/page.tsx` — list query + save (create/update, `suggested`-aware toasts) + delete mutations.
@@ -185,7 +185,7 @@ User decision 2026-08-14: "everything left" — converted every remaining admin 
 ### Docs
 - `docs/plan-completed/login-history-user-name-logout.md`
 
-## 2026-07-29 — Admin Security, Maintenance, GDPR, Backup & Alerting Features
+## 2026-07-29 — Admin Security, Maintenance, Backup & Alerting Features
 
 ### Database (Schema)
 - **User**: Added `twoFactorEnabled` (Boolean @default(false))
@@ -204,10 +204,6 @@ User decision 2026-08-14: "everything left" — converted every remaining admin 
 - `apps/api/src/modules/admin/maintenance/maintenance.routes.ts` — `GET /` (status), `PUT /` (toggle)
 - Registered in `app.ts` before all other routes
 
-### GDPR Compliance
-- `apps/api/src/modules/admin/gdpr/gdpr.routes.ts` — `GET /export/:userId` (exports user data: profile, enrollments, certificates, quiz attempts, submissions, notifications); `POST /anonymize/:userId` (destructive — blanks name/email, clears auth, suspends)
-- `apps/web/src/app/admin/gdpr/page.tsx` — search users, export as JSON preview, anonymize with warning
-
 ### Backup & Restore
 - `apps/api/src/modules/admin/backup/backup.routes.ts` — `POST /` (pg_dump), `GET /list`, `GET /download/:filename`, `POST /restore` (pg_restore via file upload), `DELETE /:filename`
 - `apps/web/src/app/admin/settings/backup/page.tsx` — create/restore/delete backups, file picker for restore
@@ -218,17 +214,16 @@ User decision 2026-08-14: "everything left" — converted every remaining admin 
 - `apps/web/src/app/admin/settings/webhooks/page.tsx` — create/edit/test/delete webhooks with event checkboxes
 
 ### UI/Sidebar Updates
-- `apps/web/src/components/AdminSidebar.tsx` — Added "Backup & Restore" and "Alerting Webhooks" under Settings → System; added "Compliance" section with GDPR; imported `IconShield`
+- `apps/web/src/components/AdminSidebar.tsx` — Added "Backup & Restore" and "Alerting Webhooks" under Settings → System
 
-### Tests (20 new tests, all passing)
+### Tests (18 new tests, all passing)
 - `apps/api/src/__tests__/features/session-security.test.ts` — 4 tests: AdminSession creation for ADMIN/SUPER_ADMIN, skipped for STUDENT, sessionTimeoutMin in JWT
 - `apps/api/src/__tests__/features/maintenance.test.ts` — 4 tests: blocks non-admin, allows through when off, allows admin routes, blocks health
-- `apps/api/src/__tests__/features/admin-features.test.ts` — 12 tests: route registration for GDPR (2), Backup (5), Alerting Webhooks (5)
+- `apps/api/src/__tests__/features/admin-features.test.ts` — 10 tests: route registration for Backup (5), Alerting Webhooks (5)
 
 ### Other
-- `apps/api/src/app.ts` — mounted `/api/admin/gdpr`, `/api/admin/backup`, `/api/admin/alerting-webhooks` routes
+- `apps/api/src/app.ts` — mounted `/api/admin/backup`, `/api/admin/alerting-webhooks` routes
 - All route mounts use `requireAuth` + `requireRole([ADMIN, SUPER_ADMIN])` (backup uses `requireSuperAdmin`)
-- Docs: `docs/plan-to-work/admin-gdpr-backup-alerting.md` → `docs/plan-completed/`
 
 Implemented a complete system for customizable due dates, late submission penalties, batch-level extensions, and course mentor assignment per batch.
 

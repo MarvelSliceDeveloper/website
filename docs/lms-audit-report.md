@@ -49,7 +49,6 @@ Generated from codebase analysis on 2026-07-23.
 
 | Feature                   | Details                                                                   |
 | ------------------------- | ------------------------------------------------------------------------- |
-| **Data export**           | No GDPR data export endpoint for users                                    |
 | **Payment refund flow**   | `PaymentStatus` has `REFUNDED` but no API to process refunds via Razorpay |
 | **Session management UI** | No page to view/revoke active sessions                                    |
 | **Audit logging**         | `AuditLog` model exists but most controllers don't write to it            |

@@ -291,7 +291,7 @@ COURSES = [
             {"title":"Linux Administration","topics":["User & Permissions","Process Management","Systemd & Services","Logging & Auditing"]},
             {"title":"Network Security","topics":["TCP/IP & OSI Model","Firewalls (iptables/nftables)","IDS/IPS (Snort/Suricata)","VPNs (WireGuard/OpenVPN)"]},
             {"title":"System Hardening","topics":["SSH Hardening","SELinux & AppArmor","Kernel Hardening","Security Benchmarks (CIS)"]},
-            {"title":"Compliance & Monitoring","topics":["SIEM (Wazuh/Splunk)","Incident Response","GDPR & PCI DSS","Security Policies"]},
+            {"title":"Compliance & Monitoring","topics":["SIEM (Wazuh/Splunk)","Incident Response","PCI DSS","Security Policies"]},
         ],
         "highlights": [{"icon":"code","label":"Linux Security"},{"icon":"star","label":"Lab Heavy"},{"icon":"award","label":"Certificate"},{"icon":"users","label":"CTF Challenges"},{"icon":"clock","label":"4 Months"},{"icon":"target","label":"SOC Ready"}],
         "fees": [{"plan_name":"Standard","price":29999,"features":["Full course","Certificate","Lifetime access"],"cta_label":"Enroll"},{"plan_name":"Pro","price":49999,"features":["Standard + Lab VMs","Mentorship","Resume Review"],"cta_label":"Get Pro"}],
