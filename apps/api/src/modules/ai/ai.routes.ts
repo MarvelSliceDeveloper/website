@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import rateLimit from "express-rate-limit";
+import multer from "multer";
 import { z } from "zod";
 import { UserRole } from "@lms/types";
 import {
@@ -14,6 +15,7 @@ import {
   AIGenerationType,
   deleteGeminiApiKey,
   generate,
+  generateAssignmentFromPdf,
   getAIStatus,
   healthCheck,
   saveAIModel,
@@ -22,6 +24,16 @@ import {
 import { AppError, handleControllerError } from "../../utils/errors";
 
 const router = Router();
+
+// PDF upload for assignment description generation (in-memory → Gemini)
+const aiPdfUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype === "application/pdf") cb(null, true);
+    else cb(new Error("Only PDF files are allowed"));
+  },
+});
 
 // Generation costs tokens — cap per user per minute
 const generateLimiter = rateLimit({
@@ -131,6 +143,35 @@ router.post(
         parsed.data.prompt,
         (parsed.data.context ?? {}) as AIGenerationContext,
       );
+      res.json(result);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
+    }
+  },
+);
+
+// ─── Assignment description from an uploaded question-paper PDF ──────────────
+
+const pdfNoteSchema = z.object({
+  note: z.string().max(2000).optional(),
+});
+
+router.post(
+  "/generate-from-pdf",
+  requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.INSTRUCTOR]),
+  generateLimiter,
+  aiPdfUpload.single("file"),
+  async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        throw new AppError(400, "Attach the question paper PDF to generate from");
+      }
+      const parsed = pdfNoteSchema.safeParse(req.body);
+      const result = await generateAssignmentFromPdf({
+        pdfBase64: req.file.buffer.toString("base64"),
+        note: parsed.success ? parsed.data.note : undefined,
+      });
       res.json(result);
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);

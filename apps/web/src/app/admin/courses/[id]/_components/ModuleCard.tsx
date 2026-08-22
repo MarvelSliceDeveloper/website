@@ -49,6 +49,10 @@ const ALLOWED_RESOURCE_TYPES = new Set([
 
 const MAX_RESOURCE_SIZE = 50 * 1024 * 1024;
 
+// Feature flag: hide the Practical (hands-on) UI without removing the code.
+// Flip to true to bring practicals back everywhere in this module card.
+const PRACTICALS_ENABLED = false;
+
 type UnifiedItem =
   | { type: "LESSON"; data: Lesson }
   | { type: "QUIZ"; data: Quiz }
@@ -532,13 +536,15 @@ export default function ModuleCard({
                   <IconFileText size={14} />
                   Assignment
                 </button>
-                <button
-                  onClick={() => setShowAddPractical(true)}
-                  className="flex items-center gap-1.5 rounded-lg border border-violet-300/60 bg-violet-50 px-2.5 py-1.5 text-xs font-semibold text-violet-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-violet-400/70 hover:bg-violet-100 hover:shadow"
-                >
-                  <IconBrain size={14} />
-                  Practical
-                </button>
+                {PRACTICALS_ENABLED && (
+                  <button
+                    onClick={() => setShowAddPractical(true)}
+                    className="flex items-center gap-1.5 rounded-lg border border-violet-300/60 bg-violet-50 px-2.5 py-1.5 text-xs font-semibold text-violet-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-violet-400/70 hover:bg-violet-100 hover:shadow"
+                  >
+                    <IconBrain size={14} />
+                    Practical
+                  </button>
+                )}
                 <button
                   onClick={() => setShowStudyMaterialUpload(true)}
                   className="flex items-center gap-1.5 rounded-lg border border-emerald-300/60 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-emerald-400/70 hover:bg-emerald-100 hover:shadow"
@@ -624,13 +630,15 @@ export default function ModuleCard({
                   <IconFileText size={14} />
                   Assignment
                 </button>
-                <button
-                  onClick={() => setShowAddPractical(true)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-violet-300/60 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-violet-400/70 hover:bg-violet-100 hover:shadow"
-                >
-                  <IconBrain size={14} />
-                  Practical
-                </button>
+                {PRACTICALS_ENABLED && (
+                  <button
+                    onClick={() => setShowAddPractical(true)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-violet-300/60 bg-violet-50 px-3 py-1.5 text-xs font-semibold text-violet-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-violet-400/70 hover:bg-violet-100 hover:shadow"
+                  >
+                    <IconBrain size={14} />
+                    Practical
+                  </button>
+                )}
                 <button
                   onClick={() => setShowStudyMaterialUpload(true)}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300/60 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-emerald-400/70 hover:bg-emerald-100 hover:shadow"
@@ -675,7 +683,7 @@ export default function ModuleCard({
                       canMoveDown={idx < unifiedItems.length - 1}
                     />
                   )}
-                  {item.type === "PRACTICAL" && (
+                  {PRACTICALS_ENABLED && item.type === "PRACTICAL" && (
                     <PracticalCard
                       practical={item.data}
                       index={idx}
@@ -770,6 +778,8 @@ export default function ModuleCard({
       {/* Modal Forms - controlled by parent state */}
       <AddQuizForm
         moduleId={mod.id}
+        moduleTitle={mod.title}
+        moduleDescription={mod.description ?? undefined}
         open={showAddQuiz}
         onSuccess={() => {
           setShowAddQuiz(false);
@@ -788,16 +798,18 @@ export default function ModuleCard({
         }}
         onCancel={() => setShowAddAssignment(false)}
       />
-      <AddPracticalForm
-        moduleId={mod.id}
-        courseId={courseId}
-        open={showAddPractical}
-        onSuccess={() => {
-          setShowAddPractical(false);
-          onChanged();
-        }}
-        onCancel={() => setShowAddPractical(false)}
-      />
+      {PRACTICALS_ENABLED && (
+        <AddPracticalForm
+          moduleId={mod.id}
+          courseId={courseId}
+          open={showAddPractical}
+          onSuccess={() => {
+            setShowAddPractical(false);
+            onChanged();
+          }}
+          onCancel={() => setShowAddPractical(false)}
+        />
+      )}
       <AddStudyMaterialForm
         courseId={courseId}
         lessons={mod.lessons}

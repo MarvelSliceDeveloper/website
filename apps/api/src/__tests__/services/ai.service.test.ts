@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   generate,
+  generateAssignmentFromPdf,
   healthCheck,
   saveGeminiApiKey,
   saveAIModel,
@@ -248,6 +249,53 @@ describe("ai.service", () => {
       expect((result.data as { description: string }).description).toContain(
         "perfectly adequate",
       );
+    });
+  });
+
+  describe("generateAssignmentFromPdf", () => {
+    it("sends the PDF as inline data and returns the assignment brief", async () => {
+      let savedEncrypted: string | null = null;
+      mockPrisma.systemSetting.upsert.mockImplementation(async ({ update }) => {
+        savedEncrypted ??= update.value;
+        return {};
+      });
+      await saveGeminiApiKey("AIzaSY-test-api-key-1234567890");
+      mockPrisma.systemSetting.findUnique.mockResolvedValue({
+        value: savedEncrypted,
+      });
+
+      mockGenerateContent.mockResolvedValue(
+        geminiJsonResponse({
+          title: "Pandas Data Cleaning Assignment",
+          description:
+            "Clean the provided messy dataset and produce a summary report of every transformation applied.",
+          maxPoints: 100,
+        }),
+      );
+
+      const result = await generateAssignmentFromPdf({
+        pdfBase64: "JVBERi0xLjQ=",
+        note: "It is a Pandas practice paper",
+      });
+
+      expect(result.type).toBe("ASSIGNMENT");
+      expect((result.data as { title: string }).title).toContain("Pandas");
+
+      const call = mockGenerateContent.mock.calls[0][0];
+      const parts = Array.isArray(call.contents) ? call.contents : [];
+      expect(parts[0].inlineData).toEqual({
+        mimeType: "application/pdf",
+        data: "JVBERi0xLjQ=",
+      });
+      expect(parts[1].text).toContain("Pandas practice paper");
+    });
+
+    it("throws when AI is not configured", async () => {
+      mockPrisma.systemSetting.findUnique.mockResolvedValue(null);
+      delete process.env.GEMINI_API_KEY;
+      await expect(
+        generateAssignmentFromPdf({ pdfBase64: "abc" }),
+      ).rejects.toMatchObject({ statusCode: 400 });
     });
   });
 

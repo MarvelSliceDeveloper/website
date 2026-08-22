@@ -13,7 +13,6 @@ import {
   IconX,
   IconSparkles,
 } from "@tabler/icons-react";
-import { useAIGenerate } from "@/lib/use-ai-generate";
 
 function plainTextToHtml(text: string): string {
   return text
@@ -53,32 +52,35 @@ export default function AddAssignmentForm({
   const [pdfName, setPdfName] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // AI generation
-  const [aiTopic, setAiTopic] = useState("");
-  const aiGenerate = useAIGenerate<{
-    title: string;
-    description: string;
-    maxPoints: number;
-  }>();
+  // AI description generation from the uploaded question paper PDF
+  const [aiNote, setAiNote] = useState("");
+  const aiPdfMutation = useMutation({
+    mutationFn: () => {
+      const fd = new FormData();
+      fd.append("file", pdfFile as File);
+      if (aiNote.trim()) fd.append("note", aiNote.trim());
+      return api.post<{
+        type: string;
+        data: { title: string; description: string; maxPoints: number };
+        model: string;
+      }>("/api/admin/ai/generate-from-pdf", fd);
+    },
+    onSuccess: (res) => {
+      const d = res.data;
+      if (d.description) setDescription(plainTextToHtml(d.description));
+      if (!title.trim() && d.title) setTitle(d.title);
+      if (d.maxPoints && Number.isFinite(d.maxPoints)) setMaxPoints(d.maxPoints);
+      toast.success("Description written from the PDF — review before saving");
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err)),
+  });
 
-  const handleAiGenerate = () => {
-    if (!aiTopic.trim()) {
-      toast.error("Enter a topic for the AI to generate an assignment about");
+  const handleAiFromPdf = () => {
+    if (!pdfFile) {
+      toast.error("Upload the question paper PDF first");
       return;
     }
-    aiGenerate.mutate(
-      { type: "ASSIGNMENT", prompt: aiTopic.trim() },
-      {
-        onSuccess: (res) => {
-          const d = res.data;
-          if (d.title) setTitle(d.title);
-          if (d.description) setDescription(plainTextToHtml(d.description));
-          if (d.maxPoints && Number.isFinite(d.maxPoints)) setMaxPoints(d.maxPoints);
-          toast.success("Assignment brief generated — review before saving");
-        },
-        onError: (err: unknown) => toast.error(getErrorMessage(err)),
-      },
-    );
+    aiPdfMutation.mutate();
   };
 
   const createAssignmentMutation = useMutation({
@@ -197,26 +199,28 @@ export default function AddAssignmentForm({
 
   const formContent = (
     <form id="add-assignment-form" onSubmit={handleSubmit} className="space-y-4">
-      {/* AI generation row */}
-      <div className="flex flex-wrap items-center gap-2 rounded-md border border-violet-300/50 bg-violet-500/5 p-2.5">
-        <IconSparkles size={15} className="shrink-0 text-violet-500" />
-        <input
-          type="text"
-          value={aiTopic}
-          onChange={(e) => setAiTopic(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAiGenerate())}
-          placeholder="AI topic, e.g. Build a data cleaning pipeline with Pandas"
-          className="field flex-1 min-w-[180px] text-xs"
-        />
-        <button
-          type="button"
-          onClick={handleAiGenerate}
-          disabled={aiGenerate.isPending}
-          className="flex items-center gap-1 rounded-md border border-violet-300/60 bg-violet-50 px-2.5 py-1.5 text-[11px] font-semibold text-violet-700 transition-colors hover:bg-violet-100 disabled:opacity-50"
-        >
-          {aiGenerate.isPending ? "Generating…" : "Generate with AI"}
-        </button>
-      </div>
+      {/* AI description from uploaded PDF */}
+      {pdfSource === "upload" && pdfFile && (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-violet-300/50 bg-violet-500/5 p-2.5">
+          <IconSparkles size={15} className="shrink-0 text-violet-500" />
+          <input
+            type="text"
+            value={aiNote}
+            onChange={(e) => setAiNote(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAiFromPdf())}
+            placeholder="Optional — tell the AI what this PDF is about…"
+            className="field flex-1 min-w-[180px] text-xs"
+          />
+          <button
+            type="button"
+            onClick={handleAiFromPdf}
+            disabled={aiPdfMutation.isPending}
+            className="flex items-center gap-1 rounded-md border border-violet-300/60 bg-violet-50 px-2.5 py-1.5 text-[11px] font-semibold text-violet-700 transition-colors hover:bg-violet-100 disabled:opacity-50"
+          >
+            {aiPdfMutation.isPending ? "Reading PDF…" : "Write Description"}
+          </button>
+        </div>
+      )}
 
       <div className="space-y-2">
         <label className="text-xs font-medium text-muted-foreground">

@@ -38,6 +38,7 @@ export interface AIGenerationContext {
   courseTitle?: string;
   courseDescription?: string;
   moduleTitle?: string;
+  moduleDescription?: string;
   lessonTitle?: string;
   difficulty?: string;
   questionCount?: number;
@@ -208,6 +209,7 @@ function contextLines(ctx: AIGenerationContext): string {
   if (ctx.courseTitle) parts.push(`Course: "${ctx.courseTitle}"`);
   if (ctx.courseDescription) parts.push(`Course description: ${ctx.courseDescription}`);
   if (ctx.moduleTitle) parts.push(`Module: "${ctx.moduleTitle}"`);
+  if (ctx.moduleDescription) parts.push(`Module description: ${ctx.moduleDescription}`);
   if (ctx.lessonTitle) parts.push(`Lesson: "${ctx.lessonTitle}"`);
   return parts.length ? `\n\nContext:\n${parts.join("\n")}` : "";
 }
@@ -238,7 +240,7 @@ Rules:
       const count = Math.min(Math.max(ctx.questionCount ?? 5, 1), 30);
       return `${BASE_PERSONA}
 
-Write a multiple-choice quiz based on the topic given by the user.
+Write a multiple-choice quiz based on the user's request. If module context is provided below, the questions MUST cover the material described there — the user's extra instructions only refine or narrow the focus.
 Rules:
 - Exactly ${count} question(s).
 - Each question has EXACTLY 4 options and EXACTLY ONE correct answer (isCorrect: true).
@@ -246,7 +248,7 @@ Rules:
 - Vary which position holds the correct answer across questions.
 - Never use options like "All of the above", "None of the above", or "Both A and B".
 - Questions must be self-contained, unambiguous, and have only one defensible correct answer.
-- "title": short quiz name, e.g. "Python Functions Quiz".${difficultyLine(ctx)}${contextLines(ctx)}`;
+- "title": short quiz name derived from the module topic, e.g. "Python Functions Quiz".${difficultyLine(ctx)}${contextLines(ctx)}`;
     }
 
     case "ASSIGNMENT":
@@ -395,11 +397,13 @@ interface GeminiCallResult {
   model: string;
 }
 
+type GeminiContents = string | Array<{ text?: string; inlineData?: { mimeType: string; data: string } }>;
+
 async function callGemini(opts: {
   apiKey: string;
   model: string;
   systemInstruction: string;
-  contents: string;
+  contents: GeminiContents;
   responseSchema?: Record<string, unknown>;
   timeoutMs?: number;
 }): Promise<GeminiCallResult> {
@@ -426,10 +430,70 @@ async function callGemini(opts: {
   return { text, model: opts.model };
 }
 
+const ASSIGNMENT_PDF_SYSTEM_PROMPT = `${BASE_PERSONA}
+
+The user has attached a question paper PDF for a course assignment. Read it carefully.
+Rules:
+- "title": short assignment name derived from what the paper covers (max 100 chars).
+- "description": a brief describing this assignment in plain text with line breaks — Objective, Tasks (numbered), Deliverables, Grading Criteria. Summarize the actual tasks from the PDF; do NOT invent unrelated requirements. If the admin note provides context, honor it.
+- "maxPoints": suggested total score (typically 100).`;
+
 export interface AIGenerateResult {
   type: AIGenerationType;
   data: unknown;
   model: string;
+}
+
+/**
+ * Generates an assignment brief (title/description/maxPoints) from an
+ * uploaded question-paper PDF using Gemini document understanding.
+ */
+export async function generateAssignmentFromPdf(opts: {
+  pdfBase64: string;
+  note?: string;
+  ctx?: AIGenerationContext;
+}): Promise<{ type: "ASSIGNMENT"; data: unknown; model: string }> {
+  const apiKey = await getGeminiApiKey();
+  if (!isAIConfiguredSync(apiKey)) {
+    throw new AppError(
+      400,
+      "AI is not configured. Ask your Super Admin to add a Gemini API key in Admin → Settings → AI Integration.",
+    );
+  }
+  const model = await getAIModel();
+  const contents: GeminiContents = [
+    {
+      inlineData: { mimeType: "application/pdf", data: opts.pdfBase64 },
+    },
+    {
+      text: `Write the assignment brief for this question paper.${
+        opts.note ? `\n\nAdmin note about this PDF: ${opts.note}` : ""
+      }`,
+    },
+  ];
+
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { text, model: usedModel } = await callGemini({
+      apiKey: apiKey!,
+      model,
+      systemInstruction: ASSIGNMENT_PDF_SYSTEM_PROMPT,
+      contents,
+      responseSchema: RESPONSE_SCHEMAS.ASSIGNMENT,
+    });
+    const parsed = extractJson(text);
+    const result = assignmentSchema.safeParse(parsed);
+    if (result.success) {
+      return { type: "ASSIGNMENT", data: result.data, model: usedModel };
+    }
+    lastError = new Error(
+      result.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "),
+    );
+  }
+  throw new AppError(
+    502,
+    `AI response failed validation twice: ${geminiErrorMessage(lastError)}`,
+  );
 }
 
 export async function generate(
@@ -480,9 +544,7 @@ export interface AIHealthResult {
   model?: string;
   latencyMs?: number;
   error?: string;
-}
-
-export async function healthCheck(): Promise<AIHealthResult> {
+}export async function healthCheck(): Promise<AIHealthResult> {
   const apiKey = await getGeminiApiKey();
   if (!isAIConfiguredSync(apiKey)) {
     return { ok: false, error: "No Gemini API key configured" };

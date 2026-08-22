@@ -15,6 +15,7 @@ export interface AIContext {
   courseTitle?: string;
   courseDescription?: string;
   moduleTitle?: string;
+  moduleDescription?: string;
   lessonTitle?: string;
   difficulty?: string;
   questionCount?: number;
