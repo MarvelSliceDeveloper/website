@@ -1,11 +1,11 @@
-import { useState } from "react";
-import AccordionItem from "../ui/AccordionItem";
-import Reveal, { Stagger, StaggerItem } from "../ui/Reveal";
+import { useState } from 'react';
+import AccordionItem from '../ui/AccordionItem';
+import Reveal, { Stagger, StaggerItem } from '../ui/Reveal';
 
 export default function FAQSection({ section }) {
   if (!section) return null;
 
-  const heading = section.heading || "Frequently Asked Questions";
+  const heading = section.heading || 'Frequently Asked Questions';
   const items = section.content?.items || [];
   const [openIdx, setOpenIdx] = useState(null);
 
@@ -17,9 +17,7 @@ export default function FAQSection({ section }) {
         <Reveal>
           <div className="text-center">
             <div className="inline-flex flex-col items-center">
-              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy">
-                {heading}
-              </h2>
+              <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy">{heading}</h2>
               <div className="mt-3 h-[3px] bg-brand-orange rounded-full w-4/5" />
             </div>
           </div>
@@ -32,9 +30,7 @@ export default function FAQSection({ section }) {
                 isOpen={openIdx === i}
                 onToggle={() => setOpenIdx(openIdx === i ? null : i)}
               >
-                <p className="text-gray-500 text-base leading-relaxed">
-                  {item.answer}
-                </p>
+                <p className="text-gray-500 text-base leading-relaxed">{item.answer}</p>
               </AccordionItem>
             </StaggerItem>
           ))}

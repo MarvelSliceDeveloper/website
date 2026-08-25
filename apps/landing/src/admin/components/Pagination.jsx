@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo } from 'react';
 
 export default function Pagination({
   totalItems,
@@ -18,29 +18,14 @@ export default function Pagination({
     }
 
     if (currentPage <= 3) {
-      return [1, 2, 3, 4, "...", totalPages];
+      return [1, 2, 3, 4, '...', totalPages];
     }
 
     if (currentPage >= totalPages - 2) {
-      return [
-        1,
-        "...",
-        totalPages - 3,
-        totalPages - 2,
-        totalPages - 1,
-        totalPages,
-      ];
+      return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
     }
 
-    return [
-      1,
-      "...",
-      currentPage - 1,
-      currentPage,
-      currentPage + 1,
-      "...",
-      totalPages,
-    ];
+    return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
   }, [totalPages, currentPage]);
 
   if (totalItems === 0) return null;
@@ -48,8 +33,7 @@ export default function Pagination({
   return (
     <div className="flex items-center justify-between w-full gap-x-4 gap-y-2 flex-wrap">
       <div className="text-xs sm:text-sm text-neutral-600 font-sans">
-        {startItem.toLocaleString()}-{endItem.toLocaleString()} of{" "}
-        {totalItems.toLocaleString()}
+        {startItem.toLocaleString()}-{endItem.toLocaleString()} of {totalItems.toLocaleString()}
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
@@ -62,11 +46,8 @@ export default function Pagination({
         </button>
 
         {pages.map((p, i) =>
-          p === "..." ? (
-            <span
-              key={`ellipsis-${i}`}
-              className="w-9 h-9 lg:w-7 lg:h-7 flex items-center justify-center text-xs text-neutral-400"
-            >
+          p === '...' ? (
+            <span key={`ellipsis-${i}`} className="w-9 h-9 lg:w-7 lg:h-7 flex items-center justify-center text-xs text-neutral-400">
               ...
             </span>
           ) : (
@@ -75,13 +56,13 @@ export default function Pagination({
               onClick={() => onPageChange(p)}
               className={`w-9 h-9 lg:w-7 lg:h-7 rounded flex items-center justify-center text-xs font-medium transition-colors ${
                 p === currentPage
-                  ? "bg-blue-600 text-white"
-                  : "bg-white border border-gray-200 text-neutral-600 hover:bg-gray-100"
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white border border-gray-200 text-neutral-600 hover:bg-gray-100'
               }`}
             >
               {p}
             </button>
-          ),
+          )
         )}
 
         <button
@@ -94,9 +75,7 @@ export default function Pagination({
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        <span className="hidden sm:inline text-sm text-neutral-600 whitespace-nowrap">
-          Result per page
-        </span>
+        <span className="hidden sm:inline text-sm text-neutral-600 whitespace-nowrap">Result per page</span>
         <div className="relative min-w-[80px]">
           <select
             value={itemsPerPage}

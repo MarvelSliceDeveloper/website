@@ -6,18 +6,18 @@ Dynamic education/lMS website built with React + Supabase. Features a DB-driven 
 
 ## Tech Stack
 
-| Layer              | Technology                                 |
-| ------------------ | ------------------------------------------ |
-| **Framework**      | React 19 + Vite 8                          |
-| **Routing**        | React Router v6                            |
-| **State / Server** | @tanstack/react-query v5                   |
-| **Styling**        | Tailwind CSS v4                            |
-| **UI Animation**   | Framer Motion                              |
-| **Icons**          | React Icons (Feather)                      |
-| **UI Library**     | Headless UI                                |
-| **Backend**        | Supabase (PostgreSQL + Storage + REST API) |
-| **Linting**        | Oxlint                                     |
-| **Deployment**     | Vercel (SPA with rewrites)                 |
+| Layer | Technology |
+|---|---|
+| **Framework** | React 19 + Vite 8 |
+| **Routing** | React Router v6 |
+| **State / Server** | @tanstack/react-query v5 |
+| **Styling** | Tailwind CSS v4 |
+| **UI Animation** | Framer Motion |
+| **Icons** | React Icons (Feather) |
+| **UI Library** | Headless UI |
+| **Backend** | Supabase (PostgreSQL + Storage + REST API) |
+| **Linting** | Oxlint |
+| **Deployment** | Vercel (SPA with rewrites) |
 
 ---
 
@@ -96,100 +96,93 @@ src/
 
 ### Public (`/`)
 
-| Route                             | Component      | Description                            |
-| --------------------------------- | -------------- | -------------------------------------- |
-| `/`                               | `Home`         | Home page with DB-driven sections      |
-| `/about`                          | `NavPage`      | About page                             |
-| `/blog`                           | `Blog`         | Blog listing with category/tag/search  |
-| `/blog/:slug`                     | `Blog`         | Single blog post                       |
-| `/contact`                        | `NavPage`      | Contact page                           |
-| `/career`                         | `NavPage`      | Career page                            |
-| `/courses`                        | `Courses`      | Course listing grouped by nav category |
-| `/courses/category/:categorySlug` | `Courses`      | Courses filtered by category           |
-| `/courses/:slug`                  | `CourseDetail` | Single course page with video          |
-| `/:slug`                          | `NavPage`      | Dynamic catch all for nav items        |
+| Route | Component | Description |
+|---|---|---|
+| `/` | `Home` | Home page with DB-driven sections |
+| `/about` | `NavPage` | About page |
+| `/blog` | `Blog` | Blog listing with category/tag/search |
+| `/blog/:slug` | `Blog` | Single blog post |
+| `/contact` | `NavPage` | Contact page |
+| `/career` | `NavPage` | Career page |
+| `/courses` | `Courses` | Course listing grouped by nav category |
+| `/courses/category/:categorySlug` | `Courses` | Courses filtered by category |
+| `/courses/:slug` | `CourseDetail` | Single course page with video |
+| `/:slug` | `NavPage` | Dynamic catch all for nav items |
 
 ### Admin (`/admin/*`)
 
-| Route                    | Page                                        |
-| ------------------------ | ------------------------------------------- |
-| `/admin`                 | Dashboard                                   |
-| `/admin/login`           | Login form                                  |
-| `/admin/site-settings`   | Site Settings                               |
-| `/admin/nav-menu`        | Navigation Menu Manager                     |
-| `/admin/courses`         | Courses List                                |
-| `/admin/courses/:id`     | Course Editor (10 tabs)                     |
-| `/admin/promo-banner`    | Promo Banner Manager                        |
-| `/admin/alumni`          | Alumni Companies Manager                    |
-| `/admin/tags`            | Tags Manager                                |
-| `/admin/footer`          | Footer Manager                              |
-| `/admin/media`           | Media Library                               |
-| `/admin/admin-users`     | Admin Users Manager                         |
-| `/admin/nav-pages/:id`   | Nav Page Editor (sections + linked courses) |
-| `/admin/home-page`       | Home Page Editor                            |
-| `/admin/pages/:slug`     | Redirect to nav page editor                 |
-| `/admin/blog`            | Blog Manager                                |
-| `/admin/blog/:id`        | Blog Post Editor                            |
-| `/admin/blog/categories` | Blog Categories Manager                     |
+| Route | Page |
+|---|---|
+| `/admin` | Dashboard |
+| `/admin/login` | Login form |
+| `/admin/site-settings` | Site Settings |
+| `/admin/nav-menu` | Navigation Menu Manager |
+| `/admin/courses` | Courses List |
+| `/admin/courses/:id` | Course Editor (10 tabs) |
+| `/admin/promo-banner` | Promo Banner Manager |
+| `/admin/alumni` | Alumni Companies Manager |
+| `/admin/tags` | Tags Manager |
+| `/admin/footer` | Footer Manager |
+| `/admin/media` | Media Library |
+| `/admin/admin-users` | Admin Users Manager |
+| `/admin/nav-pages/:id` | Nav Page Editor (sections + linked courses) |
+| `/admin/home-page` | Home Page Editor |
+| `/admin/pages/:slug` | Redirect to nav page editor |
+| `/admin/blog` | Blog Manager |
+| `/admin/blog/:id` | Blog Post Editor |
+| `/admin/blog/categories` | Blog Categories Manager |
 
 ---
 
 ## Database Schema (22 tables)
 
 ### Content Management
-
-| Table           | Purpose                                                                        |
-| --------------- | ------------------------------------------------------------------------------ |
-| `site_settings` | Logo, contact info, social links (singleton row)                               |
-| `nav_items`     | Navigation tree: top-level items and children via `parent_id` + `parent_label` |
-| `nav_pages`     | Page content per nav item (heading, sections JSON, hero image)                 |
+| Table | Purpose |
+|---|---|
+| `site_settings` | Logo, contact info, social links (singleton row) |
+| `nav_items` | Navigation tree: top-level items and children via `parent_id` + `parent_label` |
+| `nav_pages` | Page content per nav item (heading, sections JSON, hero image) |
 
 ### Courses
-
-| Table             | Purpose                                                            |
-| ----------------- | ------------------------------------------------------------------ |
-| `courses`         | Course metadata, slug, video URL, checklist, nav_item_id FK, stats |
-| `highlights`      | Per-course icon + label cards                                      |
-| `overview_faqs`   | Per-course Q&A with list items                                     |
-| `course_fees`     | Per-course pricing plans with feature list                         |
-| `projects`        | Per-course project titles + descriptions                           |
-| `certifications`  | Per-course cert details (1:1 with course)                          |
-| `faqs`            | Per-course general FAQs                                            |
-| `course_tabs`     | Per-course tab labels + content (rich text JSON)                   |
-| `course_tags`     | M2M: courses ↔ tags                                                |
-| `related_courses` | Curated cross-links between courses                                |
+| Table | Purpose |
+|---|---|
+| `courses` | Course metadata, slug, video URL, checklist, nav_item_id FK, stats |
+| `highlights` | Per-course icon + label cards |
+| `overview_faqs` | Per-course Q&A with list items |
+| `course_fees` | Per-course pricing plans with feature list |
+| `projects` | Per-course project titles + descriptions |
+| `certifications` | Per-course cert details (1:1 with course) |
+| `faqs` | Per-course general FAQs |
+| `course_tabs` | Per-course tab labels + content (rich text JSON) |
+| `course_tags` | M2M: courses ↔ tags |
+| `related_courses` | Curated cross-links between courses |
 
 ### Blog
-
-| Table             | Purpose                                                            |
-| ----------------- | ------------------------------------------------------------------ |
-| `blog_categories` | Category name + slug                                               |
-| `blog_posts`      | Posts with slug, excerpt, content, author, publish state, featured |
-| `blog_post_tags`  | M2M: posts ↔ tags                                                  |
+| Table | Purpose |
+|---|---|
+| `blog_categories` | Category name + slug |
+| `blog_posts` | Posts with slug, excerpt, content, author, publish state, featured |
+| `blog_post_tags` | M2M: posts ↔ tags |
 
 ### Shared
-
-| Table  | Purpose                                   |
-| ------ | ----------------------------------------- |
+| Table | Purpose |
+|---|---|
 | `tags` | Tags shared across courses and blog posts |
 
 ### Site Features
-
-| Table                    | Purpose                                                           |
-| ------------------------ | ----------------------------------------------------------------- |
-| `home_sections`          | DB-driven home page section content (key: hero, highlights, etc.) |
-| `promo_banners`          | Callout banner with heading, subtext, CTA                         |
-| `alumni_companies`       | Partner/hiring company logos                                      |
-| `newsletter_subscribers` | Email addresses from newsletter signups                           |
+| Table | Purpose |
+|---|---|
+| `home_sections` | DB-driven home page section content (key: hero, highlights, etc.) |
+| `promo_banners` | Callout banner with heading, subtext, CTA |
+| `alumni_companies` | Partner/hiring company logos |
+| `newsletter_subscribers` | Email addresses from newsletter signups |
 
 ### Admin
-
-| Table            | Purpose                                                                   |
-| ---------------- | ------------------------------------------------------------------------- |
+| Table | Purpose |
+|---|---|
 | `admin_profiles` | Admin accounts: email, SHA-256 password hash, role (admin/editor/manager) |
 
 ### Indexes
-
 All FK columns indexed. `blog_posts` has a composite index on `(is_published, published_at desc)`. Trigger auto updates `updated_at` on `site_settings`, `nav_pages`, `home_sections`, `blog_posts`.
 
 ---
@@ -197,21 +190,16 @@ All FK columns indexed. `blog_posts` has a composite index on `(is_published, pu
 ## Key Architecture Decisions
 
 ### 1. Navigation System
-
 Top-level nav items are **hardcoded** in `Header.jsx` (9 items: Home, About, Software Learning, Competitive Exam, Services, Training, Career, Blog, Contact). Child items are fetched from the `nav_items` table using `useNavChildren(label)`. Only items with a `parent_label` matching the hardcoded label are returned, supporting a 3-level tree.
 
 ### 2. Home Page
-
 Entirely DB-driven via `home_sections` table. Each row has a `section_key` (hero, highlights, overview, projects, certification, faqs, tabs) mapped to a component. **If no sections exist**, falls back to the first published course with all its related data (highlights, FAQs, etc.).
 
 ### 3. Course Listing
-
 Single page at `/courses`. Groups courses by `nav_item_id` into category sections with filter pill buttons. Supports `?category=` query param and `/courses/category/:slug` route. Uses `useSearchParams` to keep filter state in the URL without full navigation.
 
 ### 4. Course Detail
-
 Modernized 5 column grid hero with:
-
 - Autoplay **muted YouTube video** with mute-toggle button and 4-second hint overlay
 - Stats bar below hero (Level, Duration, Students, Rating)
 - "What You'll Learn" checklist in white cards on gray background
@@ -221,7 +209,6 @@ Modernized 5 column grid hero with:
 YouTube URL parsing supports: `youtube.com/watch?v=`, `youtu.be/`, `youtube.com/embed/`, and `/shorts/` patterns.
 
 ### 5. Blog System
-
 - Dual route: `/blog` (listing) and `/blog/:slug` (single post)
 - Category pills filter via `onChange` callbacks
 - Tag filtering via `useSearchParams` (`?tag=` URL param)
@@ -230,17 +217,13 @@ YouTube URL parsing supports: `youtube.com/watch?v=`, `youtu.be/`, `youtube.com/
 - Sidebar: recent posts, newsletter form, popular tags
 
 ### 6. NavPage (Dynamic Pages)
-
 Fetches nav item by path, then queries for linked courses (direct via `nav_item_id` and children via `parent_id`). Renders sections (text/image/cards/features/cta types) plus course cards. No more "Page Not Found" for nav items with courses.
 
 ### 7. Footer
-
 Built from the `topNav` array exported by `Header.jsx`. Nav items without a `path` (Software Learning, Competitive Exam, Services, Training) become columns; children fetched from DB via `useNavChildren`. Nav items with paths (Home, About, etc.) become a "Quick Links" column. Contact info from `site_settings`.
 
 ### 8. Unified Button
-
 Single `Button` component with:
-
 - **Variants**: primary, primary-lg, secondary, accent, outline, outline-white, ghost, ghost-red, ghost-blue, link, link-add, pill, pill-active, pill-orange
 - **Sizes**: xs, sm, md, lg, xl
 - **Shapes**: pill (full round), md (rounded-lg), sm (rounded-md), square (rounded-lg)
@@ -248,7 +231,6 @@ Single `Button` component with:
 - **Aliases**: `orange` → primary, `outlineWhite` → outline-white, `purple` → accent
 
 ### 9. Admin Auth
-
 - Login page at `/admin/login` (no registration)
 - Password hashed client-side with **SHA-256** (Web Crypto API)
 - Matched against `password_hash` in `admin_profiles`
@@ -258,7 +240,6 @@ Single `Button` component with:
 - User dropdown in header shows avatar initial, name, email, role, and Sign Out
 
 ### 10. Admin User Management
-
 - Create users with email, full name, role dropdown (admin/editor/manager), password
 - Password show/hide toggle
 - UUID generated client-side (`uuidv4()` fallback)
@@ -266,19 +247,15 @@ Single `Button` component with:
 - Delete with confirmation dialog
 
 ### 11. Slug Conflict Resolution
-
 When saving blog posts, if the generated slug already exists, auto-appends `-1`, `-2`, etc. until unique.
 
 ### 12. Tag Management
-
 Tags are shared between courses and blog posts via M2M junction tables (`course_tags`, `blog_post_tags`). Blog post editor uses toggle chips for fast selection. Save strategy: delete all then re-insert.
 
 ### 13. Image Uploads
-
 `ImageUploader` component uploads to Supabase Storage `pages` bucket. All admin editors with image fields use this inline uploader. Requires a `pages` bucket with public read policy.
 
 ### 14. Scroll Restoration
-
 `ScrollToTop` component in `App.jsx` scrolls to window top on every route change.
 
 ---
@@ -286,11 +263,9 @@ Tags are shared between courses and blog posts via M2M junction tables (`course_
 ## Admin Panel Pages
 
 ### Dashboard
-
 6 stat cards (Courses, Nav Items, FAQs, Alumni Partners, Tags, Promo Banners) with live counts. Quick create links, content management section cards, and recent courses list with publish/draft badges.
 
 ### Course Editor (10 tabs)
-
 1. Basic Info (title, slug, description, subtitle, rating, learners)
 2. Media (hero image, thumbnail, video URL)
 3. Checklist Items
@@ -303,61 +278,26 @@ Tags are shared between courses and blog posts via M2M junction tables (`course_
 10. Related Courses (curated cross-links)
 
 ### Blog Post Editor
-
 Title, slug (auto-generated), excerpt, content, image, category dropdown, author, featured checkbox, publish toggle + date. Tag picker with searchable toggle chips. Supports multiple selected tags via `blog_post_tags` M2M.
 
 ---
 
-## Setup (monorepo)
-
-This app lives in the LMS monorepo as `apps/landing` (package `@lms/landing`). It has its **own Supabase database** and does not share data or auth with the LMS portal (`apps/web` + `apps/api`).
+## Setup
 
 ### Prerequisites
+- Node.js 18+
+- Supabase project
 
-- Node.js 20+ (repo requirement)
-- pnpm 8+ (corepack)
-- A Supabase project (tables from `schema.sql` or `supabase/migrations`)
-
-### Install dependencies
-
+### Installation
 ```bash
-# From the repo root — installs all workspaces (api, web, landing)
-pnpm install
-```
-
-### Environment
-
-```bash
-# From apps/landing
+npm install
 cp .env.example .env
 # Fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
-```
-
-`.env` is gitignored. The dev mail server also reads `SMTP_EMAIL` / `SMTP_PASSWORD` / `ADMIN_EMAIL` for career-application and newsletter emails.
-
-### Run locally
-
-```bash
-# From the repo root
-pnpm dev:landing
-```
-
-Starts two processes (via `concurrently`):
-
-- **Vite dev server** → http://localhost:5173 (proxies `/api` → :3001)
-- **dev-server.js** → http://localhost:3001 (career application + newsletter email sending)
-
-### Build / lint
-
-```bash
-pnpm build:landing   # vite build → dist/
-pnpm lint:landing    # oxlint
+npm run dev
 ```
 
 ### Database
-
 Run `schema.sql` in Supabase SQL Editor (creates all 22 tables with `IF NOT EXISTS`). Then run seed data if desired. For existing projects with an `admin_profiles` table linked to `auth.users`:
-
 ```sql
 alter table admin_profiles drop constraint if exists admin_profiles_id_fkey;
 alter table admin_profiles alter column id set default gen_random_uuid();
@@ -373,7 +313,6 @@ alter table admin_profiles add constraint admin_profiles_email_key unique (email
 ```
 
 ### First Admin User
-
 ```sql
 -- password: admin123 (SHA-256 hash)
 insert into admin_profiles (id, email, full_name, role, password_hash)
@@ -382,45 +321,21 @@ values (gen_random_uuid(), 'admin@marvelslice.com', 'Admin', 'admin',
 ```
 
 ### Storage Bucket
-
 ```sql
 insert into storage.buckets (id, name, public) values ('pages', 'pages', true);
 create policy "Public access pages" on storage.objects for all using (bucket_id = 'pages');
 ```
 
-### Production deploy
-
-Served as a **static site** by Nginx at `marvelslice.com` (the LMS portal is a separate Nginx route at `lms.marvelslice.com`). Just serve `dist/` after `pnpm build:landing`. `vercel.json` is legacy and not used.
-
-## Updating from upstream
-
-This app is vendored from https://github.com/Lethinkj/marvel-slice via `git subtree`. The upstream repo is registered as the `marvel-slice` git remote.
-
-One command from the repo root pulls the latest upstream and squashes it in (auto-registers the `marvel-slice` remote if it's missing, e.g. on a fresh clone):
-
+### Vercel Deploy
 ```bash
-pnpm update:landing
+# Push to GitHub, import on Vercel
+# Set env vars: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+# No framework config needed — vercel.json provides SPA rewrites
 ```
-
-To pull a specific upstream branch:
-
-```bash
-node scripts/update-landing.mjs <branch>   # default: master
-```
-
-Equivalent manual commands:
-
-```bash
-git fetch marvel-slice
-git subtree pull --prefix apps/landing marvel-slice master --squash
-```
-
-Local changes inside `apps/landing` (e.g. the pnpm `dev` script, the `@lms/landing` package name) will merge or conflict with upstream changes — resolve as normal git conflicts. Always install dependencies from the repo root with pnpm; never `npm install` inside this folder.
 
 ---
 
 ## Environment Variables
-
 ```env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
@@ -429,7 +344,6 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 ---
 
 ## Security Notes
-
 - Admin panel is **open access** — no RLS, no Supabase Auth
 - Simple email/password login hashed client-side with SHA-256
 - Session stored in `localStorage` (not httpOnly cookies)

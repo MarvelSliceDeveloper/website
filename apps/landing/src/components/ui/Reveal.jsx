@@ -1,14 +1,8 @@
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from 'framer-motion';
 import {
-  fadeUp,
-  fadeIn,
-  fadeLeft,
-  fadeRight,
-  scaleIn,
-  staggerContainer,
-  staggerItem,
-  viewportOnce,
-} from "../../lib/motion";
+  fadeUp, fadeIn, fadeLeft, fadeRight, scaleIn,
+  staggerContainer, staggerItem, viewportOnce,
+} from '../../lib/motion';
 
 const VARIANTS = {
   up: fadeUp,
@@ -29,10 +23,10 @@ const VARIANTS = {
  */
 export default function Reveal({
   children,
-  variant = "up",
-  as = "div",
+  variant = 'up',
+  as = 'div',
   delay = 0,
-  className = "",
+  className = '',
   ...props
 }) {
   const reduce = useReducedMotion();
@@ -40,11 +34,7 @@ export default function Reveal({
 
   if (reduce) {
     const Tag = as;
-    return (
-      <Tag className={className} {...props}>
-        {children}
-      </Tag>
-    );
+    return <Tag className={className} {...props}>{children}</Tag>;
   }
 
   return (
@@ -66,17 +56,13 @@ export default function Reveal({
  * Container that staggers its children into view on scroll.
  * Wrap each child in <StaggerItem> (or use variants="staggerItem" motion elements).
  */
-export function Stagger({ children, as = "div", className = "", ...props }) {
+export function Stagger({ children, as = 'div', className = '', ...props }) {
   const reduce = useReducedMotion();
   const MotionTag = motion[as] || motion.div;
 
   if (reduce) {
     const Tag = as;
-    return (
-      <Tag className={className} {...props}>
-        {children}
-      </Tag>
-    );
+    return <Tag className={className} {...props}>{children}</Tag>;
   }
 
   return (
@@ -93,22 +79,13 @@ export function Stagger({ children, as = "div", className = "", ...props }) {
   );
 }
 
-export function StaggerItem({
-  children,
-  as = "div",
-  className = "",
-  ...props
-}) {
+export function StaggerItem({ children, as = 'div', className = '', ...props }) {
   const reduce = useReducedMotion();
   const MotionTag = motion[as] || motion.div;
 
   if (reduce) {
     const Tag = as;
-    return (
-      <Tag className={className} {...props}>
-        {children}
-      </Tag>
-    );
+    return <Tag className={className} {...props}>{children}</Tag>;
   }
 
   return (

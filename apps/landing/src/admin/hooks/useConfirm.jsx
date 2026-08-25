@@ -1,9 +1,9 @@
-import { useState, useCallback, useRef } from "react";
-import ConfirmDialog from "../components/ConfirmDialog";
+import { useState, useCallback, useRef } from 'react';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function useConfirm() {
   const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
   const resolveRef = useRef(null);
 
   const confirm = useCallback((msg) => {

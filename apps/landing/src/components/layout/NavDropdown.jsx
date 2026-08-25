@@ -133,29 +133,23 @@ function DesktopNavItem({
           aria-haspopup="true"
           aria-expanded={isOpen}
           className={`group flex items-center gap-1.5 px-3 py-2 text-sm font-medium whitespace-nowrap rounded-t-md transition-all duration-200 ease-out cursor-pointer ${
-            isOpen
+              isOpen
               ? "text-brand-blue"
               : hasActiveChild
-                ? "text-brand-blue"
-                : "text-gray-500 hover:text-brand-blue"
+              ? "text-brand-blue"
+              : "text-gray-500 hover:text-brand-blue"
           }`}
           onClick={() => (isOpen ? onClose() : onOpen())}
         >
           <span className="relative inline-block pb-[3px]">
-            <span
-              className={`transition-all duration-300 ease-in-out ${
-                isOpen || hasActiveChild ? "text-brand-blue" : ""
-              }`}
-            >
-              {item.label}
-            </span>
-            <span
-              className={`absolute left-0 bottom-0 w-full h-[2px] bg-brand-blue rounded-full origin-left transition-transform duration-300 ease-in-out ${
+            <span className={`transition-all duration-300 ease-in-out ${
                 isOpen || hasActiveChild
-                  ? "scale-x-100"
-                  : "scale-x-0 group-hover:scale-x-100"
-              }`}
-            />
+                ? "text-brand-blue"
+                : ""
+            }`}>{item.label}</span>
+            <span className={`absolute left-0 bottom-0 w-full h-[2px] bg-brand-blue rounded-full origin-left transition-transform duration-300 ease-in-out ${
+                isOpen || hasActiveChild ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+            }`} />
           </span>
           <FiChevronDown
             className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
@@ -169,7 +163,7 @@ function DesktopNavItem({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute left-0 top-full mt-1.5 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.08)] rounded-lg border border-gray-100 py-3 z-50 min-w-[240px]"
+               className="absolute left-0 top-full mt-1.5 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.08)] rounded-lg border border-gray-100 py-3 z-50 min-w-[240px]"
               role="menu"
               data-submenu
             >
@@ -203,11 +197,11 @@ function DesktopNavItem({
         role="menuitem"
         aria-haspopup="true"
         aria-expanded={isOpen}
-        className={`group w-full flex items-center justify-between gap-3 pl-[17px] pr-5 py-2.5 text-sm whitespace-nowrap transition-all duration-200 ease-out cursor-pointer border-l-[3px] ${
-          isOpen
-            ? "border-brand-blue text-brand-blue font-semibold"
-            : "border-transparent text-gray-700 hover:border-brand-blue/50 hover:text-brand-blue"
-        }`}
+          className={`group w-full flex items-center justify-between gap-3 pl-[17px] pr-5 py-2.5 text-sm whitespace-nowrap transition-all duration-200 ease-out cursor-pointer border-l-[3px] ${
+            isOpen
+              ? "border-brand-blue text-brand-blue font-semibold"
+              : "border-transparent text-gray-700 hover:border-brand-blue/50 hover:text-brand-blue"
+          }`}
         onClick={() => (isOpen ? onClose() : onOpen())}
       >
         <span>{item.label}</span>
@@ -344,13 +338,9 @@ export default function NavDropdown({
           >
             <span className="relative inline-block pb-[3px]">
               {item.label}
-              <span
-                className={`absolute left-0 bottom-0 w-full h-[2px] bg-brand-blue rounded-full origin-left transition-transform duration-300 ease-in-out ${
-                  currentPath === item.path
-                    ? "scale-x-100"
-                    : "scale-x-0 group-hover:scale-x-100"
-                }`}
-              />
+              <span className={`absolute left-0 bottom-0 w-full h-[2px] bg-brand-blue rounded-full origin-left transition-transform duration-300 ease-in-out ${
+                currentPath === item.path ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+              }`} />
             </span>
           </Link>
         ) : (

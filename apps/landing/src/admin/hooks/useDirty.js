@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 export default function useDirty(deps, isLoading) {
   const snapshot = useRef(null);

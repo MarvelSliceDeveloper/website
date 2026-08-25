@@ -1,54 +1,21 @@
-import Reveal from "../ui/Reveal";
+import Reveal from '../ui/Reveal';
 import {
-  FiChevronRight,
-  FiBriefcase,
-  FiBookOpen,
-  FiClock,
-  FiVideo,
-  FiCode,
-  FiAward,
-  FiCalendar,
-  FiRefreshCw,
-  FiMessageSquare,
-  FiUsers,
-  FiStar,
-  FiBarChart2,
-  FiGlobe,
-  FiCpu,
-  FiDatabase,
-  FiLayers,
-  FiZap,
-  FiShield,
-  FiTrendingUp,
-  FiMail,
-  FiBell,
-  FiHelpCircle,
-} from "react-icons/fi";
-import Button from "../ui/Button";
+  FiChevronRight, FiBriefcase, FiBookOpen,
+  FiClock, FiVideo, FiCode, FiAward, FiCalendar, FiRefreshCw,
+  FiMessageSquare, FiUsers, FiStar, FiBarChart2, FiGlobe,
+  FiCpu, FiDatabase, FiLayers, FiZap, FiShield, FiTrendingUp,
+  FiMail, FiBell, FiHelpCircle,
+} from 'react-icons/fi';
+import Button from '../ui/Button';
 
 const ICON_MAP = {
-  briefcase: FiBriefcase,
-  book: FiBookOpen,
-  target: FiBarChart2,
-  code: FiCode,
-  star: FiStar,
-  award: FiAward,
-  users: FiUsers,
-  clock: FiClock,
-  video: FiVideo,
-  calendar: FiCalendar,
-  refresh: FiRefreshCw,
-  message: FiMessageSquare,
-  globe: FiGlobe,
-  cpu: FiCpu,
-  database: FiDatabase,
-  layers: FiLayers,
-  zap: FiZap,
-  shield: FiShield,
-  trending: FiTrendingUp,
-  mail: FiMail,
-  bell: FiBell,
-  help: FiHelpCircle,
+  briefcase: FiBriefcase, book: FiBookOpen, target: FiBarChart2,
+  code: FiCode, star: FiStar, award: FiAward, users: FiUsers,
+  clock: FiClock, video: FiVideo, calendar: FiCalendar,
+  refresh: FiRefreshCw, message: FiMessageSquare, globe: FiGlobe,
+  cpu: FiCpu, database: FiDatabase, layers: FiLayers,
+  zap: FiZap, shield: FiShield, trending: FiTrendingUp,
+  mail: FiMail, bell: FiBell, help: FiHelpCircle,
 };
 
 export default function ServicesSection({ section }) {
@@ -56,24 +23,20 @@ export default function ServicesSection({ section }) {
 
   if (!section) return null;
 
-  const heading = section.heading || "Featured Services";
-  const intro = c.intro || "";
-  const leftImageUrl = c.left_image_url || "";
-  const leftHeading =
-    c.left_heading || "Transform Your Future with Industry-Focused Training";
-  const leftDescription = c.left_description || "";
-  const ctaText = c.cta_text || "Explore Our Services";
-  const ctaLink = c.cta_link || "#";
+  const heading = section.heading || 'Featured Services';
+  const intro = c.intro || '';
+  const leftImageUrl = c.left_image_url || '';
+  const leftHeading = c.left_heading || 'Transform Your Future with Industry-Focused Training';
+  const leftDescription = c.left_description || '';
+  const ctaText = c.cta_text || 'Explore Our Services';
+  const ctaLink = c.cta_link || '#';
   const servicesList = c.services_list || [];
 
   return (
     <section className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-fit mx-auto text-center">
-          <Reveal
-            as="h2"
-            className="text-[clamp(1.5rem,3vw,2.25rem)] font-bold text-dark-navy mb-6"
-          >
+          <Reveal as="h2" className="font-bold text-2xl sm:text-3xl text-dark-navy mb-6">
             {heading}
           </Reveal>
           <div className="w-4/5 h-[3px] bg-brand-orange mx-auto mb-6" />
@@ -95,13 +58,9 @@ export default function ServicesSection({ section }) {
             ) : (
               <div className="w-full h-72 rounded-2xl bg-gradient-to-br from-brand-blue to-brand-orange" />
             )}
-            <h3 className="font-bold text-xl mt-6 text-dark-navy text-center sm:text-left">
-              {leftHeading}
-            </h3>
+            <h3 className="font-bold text-xl mt-6 text-dark-navy text-center sm:text-left">{leftHeading}</h3>
             {leftDescription && (
-              <p className="text-text-gray mt-3 text-center sm:text-left">
-                {leftDescription}
-              </p>
+              <p className="text-text-gray mt-3 text-center sm:text-left">{leftDescription}</p>
             )}
             <Button
               variant="accent"
@@ -123,17 +82,11 @@ export default function ServicesSection({ section }) {
                       <Icon className="w-6 h-6 text-brand-orange" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-dark-navy text-base">
-                        {service.title}
-                      </h4>
-                      <p className="text-text-gray text-base mt-1">
-                        {service.description}
-                      </p>
+                      <h4 className="font-semibold text-dark-navy text-base">{service.title}</h4>
+                      <p className="text-text-gray text-base mt-1">{service.description}</p>
                     </div>
                   </div>
-                  {i < servicesList.length - 1 && (
-                    <div className="border-b border-gray-100" />
-                  )}
+                  {i < servicesList.length - 1 && <div className="border-b border-gray-100" />}
                 </div>
               );
             })}

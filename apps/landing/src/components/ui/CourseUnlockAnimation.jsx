@@ -1,11 +1,7 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { FiUnlock, FiZap, FiCheckCircle } from "react-icons/fi";
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiUnlock, FiZap, FiCheckCircle } from 'react-icons/fi';
 
-export default function CourseUnlockAnimation({
-  isUnlocking,
-  onComplete,
-  courseTitle,
-}) {
+export default function CourseUnlockAnimation({ isUnlocking, onComplete, courseTitle }) {
   if (!isUnlocking) return null;
 
   return (
@@ -28,18 +24,13 @@ export default function CourseUnlockAnimation({
         <motion.div
           initial={{ scale: 0.5, opacity: 0.8 }}
           animate={{ scale: 2.8, opacity: 0 }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
           className="absolute w-40 h-40 rounded-full border-2 border-amber-400/80 shadow-[0_0_50px_#ff9f1c] pointer-events-none"
         />
         <motion.div
           initial={{ scale: 0.5, opacity: 0.8 }}
           animate={{ scale: 2.2, opacity: 0 }}
-          transition={{
-            duration: 1.8,
-            delay: 0.4,
-            repeat: Infinity,
-            ease: "easeOut",
-          }}
+          transition={{ duration: 1.8, delay: 0.4, repeat: Infinity, ease: 'easeOut' }}
           className="absolute w-40 h-40 rounded-full border-2 border-orange-500/80 shadow-[0_0_50px_#ff5e00] pointer-events-none"
         />
 
@@ -54,8 +45,8 @@ export default function CourseUnlockAnimation({
               scale: 0.5,
             }}
             animate={{
-              y: [0, i % 2 === 0 ? -120 : 120],
-              x: [0, i % 3 === 0 ? 80 : -80],
+              y: [0, (i % 2 === 0 ? -120 : 120)],
+              x: [0, (i % 3 === 0 ? 80 : -80)],
               opacity: [0, 1, 0],
               scale: [0.5, 1.4, 0.2],
             }}
@@ -63,7 +54,7 @@ export default function CourseUnlockAnimation({
               duration: 2,
               repeat: Infinity,
               delay: i * 0.15,
-              ease: "easeOut",
+              ease: 'easeOut',
             }}
             className="absolute text-amber-400 drop-shadow-[0_0_12px_#ff9f1c]"
           >
@@ -74,7 +65,7 @@ export default function CourseUnlockAnimation({
         {/* Central High-Tech Glowing Unlock Badge */}
         <motion.div
           initial={{ scale: 0.3, rotate: -20, opacity: 0 }}
-          animate={{ scale: [0.3, 1.2, 1], rotate: [-20, 10, 0], opacity: 1 }}
+          animate={{ scale: [0.3, 1.2, 1], rotate: [ -20, 10, 0 ], opacity: 1 }}
           transition={{ duration: 0.8, ease: [0.34, 1.56, 0.64, 1] }}
           className="relative z-10 w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-gradient-to-br from-amber-400 via-brand-orange to-orange-600 p-[3px] shadow-[0_0_60px_rgba(255,159,28,0.7)] mb-8"
         >
@@ -82,12 +73,8 @@ export default function CourseUnlockAnimation({
             {/* Inner Shimmer Reflection */}
             <motion.div
               className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-[-20deg]"
-              animate={{ x: ["-150%", "250%"] }}
-              transition={{
-                repeat: Infinity,
-                duration: 1.2,
-                ease: "easeInOut",
-              }}
+              animate={{ x: ['-150%', '250%'] }}
+              transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
             />
             <motion.div
               animate={{ scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] }}
@@ -107,8 +94,7 @@ export default function CourseUnlockAnimation({
             transition={{ delay: 0.3, duration: 0.5 }}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-400 text-xs sm:text-sm font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(255,159,28,0.3)]"
           >
-            <FiCheckCircle className="w-4 h-4 text-amber-400" /> Course Launch
-            Complete
+            <FiCheckCircle className="w-4 h-4 text-amber-400" /> Course Launch Complete
           </motion.div>
 
           <motion.h2
@@ -127,9 +113,7 @@ export default function CourseUnlockAnimation({
               transition={{ delay: 0.7, duration: 0.6 }}
               className="text-slate-300 text-base sm:text-lg font-medium max-w-md mx-auto"
             >
-              Welcome to{" "}
-              <strong className="text-amber-400">{courseTitle}</strong>. Full
-              curriculum and enrollment now live!
+              Welcome to <strong className="text-amber-400">{courseTitle}</strong>. Full curriculum and enrollment now live!
             </motion.p>
           )}
         </div>

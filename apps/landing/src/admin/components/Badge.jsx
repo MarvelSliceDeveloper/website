@@ -13,16 +13,10 @@ const variants = {
   default: "bg-admin-100 text-admin-700",
 };
 
-export default function Badge({
-  variant = "default",
-  children,
-  className = "",
-}) {
+export default function Badge({ variant = "default", children, className = "" }) {
   const cls = variants[variant] || variants.default;
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${cls} ${className}`}
-    >
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${cls} ${className}`}>
       {children}
     </span>
   );

@@ -1,76 +1,77 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { FiBriefcase } from "react-icons/fi";
-import * as LuIcons from "react-icons/lu";
-import { supabase } from "../lib/supabaseClient";
-import Reveal, { Stagger, StaggerItem } from "../components/ui/Reveal";
-import AccordionItem from "../components/ui/AccordionItem";
-import LearningJourney from "../components/ui/LearningTimeline";
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { FiBriefcase } from 'react-icons/fi';
+import * as LuIcons from 'react-icons/lu';
+import { supabase } from '../lib/supabaseClient';
+import Reveal, { Stagger, StaggerItem } from '../components/ui/Reveal';
+import AccordionItem from '../components/ui/AccordionItem';
+import LearningJourney from '../components/ui/LearningTimeline';
+
 
 const serviceStyles = [
   {
-    accent: "text-orange-500",
-    underline: "bg-orange-500",
-    bg: "bg-orange-50",
-    blob: "bg-orange-50",
-    border: "border-orange-100",
-    dots: "bg-orange-200",
+    accent: 'text-orange-500',
+    underline: 'bg-orange-500',
+    bg: 'bg-orange-50',
+    blob: 'bg-orange-50',
+    border: 'border-orange-100',
+    dots: 'bg-orange-200',
   },
   {
-    accent: "text-blue-500",
-    underline: "bg-blue-500",
-    bg: "bg-blue-50",
-    blob: "bg-blue-50",
-    border: "border-blue-100",
-    dots: "bg-blue-200",
+    accent: 'text-blue-500',
+    underline: 'bg-blue-500',
+    bg: 'bg-blue-50',
+    blob: 'bg-blue-50',
+    border: 'border-blue-100',
+    dots: 'bg-blue-200',
   },
   {
-    accent: "text-emerald-500",
-    underline: "bg-emerald-500",
-    bg: "bg-emerald-50",
-    blob: "bg-emerald-50",
-    border: "border-emerald-100",
-    dots: "bg-emerald-200",
+    accent: 'text-emerald-500',
+    underline: 'bg-emerald-500',
+    bg: 'bg-emerald-50',
+    blob: 'bg-emerald-50',
+    border: 'border-emerald-100',
+    dots: 'bg-emerald-200',
   },
   {
-    accent: "text-violet-500",
-    underline: "bg-violet-500",
-    bg: "bg-violet-50",
-    blob: "bg-violet-50",
-    border: "border-violet-100",
-    dots: "bg-violet-200",
+    accent: 'text-violet-500',
+    underline: 'bg-violet-500',
+    bg: 'bg-violet-50',
+    blob: 'bg-violet-50',
+    border: 'border-violet-100',
+    dots: 'bg-violet-200',
   },
   {
-    accent: "text-pink-500",
-    underline: "bg-pink-500",
-    bg: "bg-pink-50",
-    blob: "bg-pink-50",
-    border: "border-pink-100",
-    dots: "bg-pink-200",
+    accent: 'text-pink-500',
+    underline: 'bg-pink-500',
+    bg: 'bg-pink-50',
+    blob: 'bg-pink-50',
+    border: 'border-pink-100',
+    dots: 'bg-pink-200',
   },
   {
-    accent: "text-cyan-500",
-    underline: "bg-cyan-500",
-    bg: "bg-cyan-50",
-    blob: "bg-cyan-50",
-    border: "border-cyan-100",
-    dots: "bg-cyan-200",
+    accent: 'text-cyan-500',
+    underline: 'bg-cyan-500',
+    bg: 'bg-cyan-50',
+    blob: 'bg-cyan-50',
+    border: 'border-cyan-100',
+    dots: 'bg-cyan-200',
   },
   {
-    accent: "text-indigo-500",
-    underline: "bg-indigo-500",
-    bg: "bg-indigo-50",
-    blob: "bg-indigo-50",
-    border: "border-indigo-100",
-    dots: "bg-indigo-200",
+    accent: 'text-indigo-500',
+    underline: 'bg-indigo-500',
+    bg: 'bg-indigo-50',
+    blob: 'bg-indigo-50',
+    border: 'border-indigo-100',
+    dots: 'bg-indigo-200',
   },
   {
-    accent: "text-teal-500",
-    underline: "bg-teal-500",
-    bg: "bg-teal-50",
-    blob: "bg-teal-50",
-    border: "border-teal-100",
-    dots: "bg-teal-200",
+    accent: 'text-teal-500',
+    underline: 'bg-teal-500',
+    bg: 'bg-teal-50',
+    blob: 'bg-teal-50',
+    border: 'border-teal-100',
+    dots: 'bg-teal-200',
   },
 ];
 
@@ -126,7 +127,7 @@ function ServiceCard({ title, description, icon, colorIdx = 0 }) {
             ${style.accent}
           `}
         >
-          {String(colorIdx + 1).padStart(2, "0")}
+          {String(colorIdx + 1).padStart(2, '0')}
         </span>
 
         <div
@@ -155,13 +156,9 @@ function ServiceCard({ title, description, icon, colorIdx = 0 }) {
         `}
       >
         {IconComp ? (
-          <IconComp
-            className={`h-5 w-5 ${style.accent} transition-transform duration-300 group-hover:scale-110`}
-          />
+          <IconComp className={`h-5 w-5 ${style.accent} transition-transform duration-300 group-hover:scale-110`} />
         ) : (
-          <FiBriefcase
-            className={`h-5 w-5 ${style.accent} transition-transform duration-300 group-hover:scale-110`}
-          />
+          <FiBriefcase className={`h-5 w-5 ${style.accent} transition-transform duration-300 group-hover:scale-110`} />
         )}
       </div>
 
@@ -181,7 +178,10 @@ function ServiceCard({ title, description, icon, colorIdx = 0 }) {
       {/* Decorative dots */}
       <div className="absolute bottom-5 right-6 grid grid-cols-3 gap-1.5 opacity-70">
         {Array.from({ length: 9 }).map((_, i) => (
-          <span key={i} className={`h-1.5 w-1.5 rounded-full ${style.dots}`} />
+          <span
+            key={i}
+            className={`h-1.5 w-1.5 rounded-full ${style.dots}`}
+          />
         ))}
       </div>
     </div>
@@ -192,37 +192,37 @@ export default function ServicesPage() {
   const [faqOpen, setFaqOpen] = useState(null);
 
   const { data: pageData, isLoading } = useQuery({
-    queryKey: ["servicesPage", "nav_pages"],
+    queryKey: ['servicesPage', 'nav_pages'],
     queryFn: async () => {
       try {
         const { data: navItems } = await supabase
-          .from("nav_items")
-          .select("id")
-          .eq("path", "/services")
-          .eq("is_active", true)
+          .from('nav_items')
+          .select('id')
+          .eq('path', '/services')
+          .eq('is_active', true)
           .limit(1);
         const navItem = navItems?.[0];
         if (!navItem) return {};
         const { data: pages } = await supabase
-          .from("nav_pages")
-          .select("*")
-          .eq("nav_item_id", navItem.id)
-          .eq("is_published", true)
+          .from('nav_pages')
+          .select('*')
+          .eq('nav_item_id', navItem.id)
+          .eq('is_published', true)
           .limit(1);
         const page = pages?.[0];
         if (!page) return {};
         const sections = page.sections || [];
-        const cards = sections.find((s) => s.section_type === "cards");
-        const timeline = sections.find((s) => s.section_type === "timeline");
-        const faqsSec = sections.find((s) => s.section_type === "faq_list");
+        const cards = sections.find((s) => s.section_type === 'cards');
+        const timeline = sections.find((s) => s.section_type === 'timeline');
+        const faqsSec = sections.find((s) => s.section_type === 'faq_list');
         return {
-          hero_image: page.hero_image || "",
-          heading: page.heading || "",
-          subheading: page.subheading || "",
+          hero_image: page.hero_image || '',
+          heading: page.heading || '',
+          subheading: page.subheading || '',
           services: cards?.items || [],
           faqs: faqsSec?.items || [],
-          faqHeading: faqsSec?.heading || "Frequently Asked Questions",
-          faqSubheading: faqsSec?.subheading || "",
+          faqHeading: faqsSec?.heading || 'Frequently Asked Questions',
+          faqSubheading: faqsSec?.subheading || '',
           timeline: timeline || null,
         };
       } catch {
@@ -240,25 +240,13 @@ export default function ServicesPage() {
     );
   }
 
-  const {
-    hero_image,
-    heading,
-    subheading,
-    services = [],
-    faqs = [],
-    faqHeading,
-    faqSubheading,
-    timeline = null,
-  } = pageData || {};
+  const { hero_image, heading, subheading, services = [], faqs = [], faqHeading, faqSubheading, timeline = null } = pageData || {};
 
   return (
     <div className="bg-white">
       {hero_image && (
-        <Reveal
-          variant="fadeIn"
-          className="w-full max-w-[1900px] mx-auto h-auto sm:h-[400px] lg:h-[400px] overflow-hidden"
-        >
-          <img src={hero_image} alt="" className="w-full h-full object-cover" />
+        <Reveal variant="fadeIn" className="w-full max-w-[1900px] mx-auto">
+          <img src={hero_image} alt="" className="w-full h-auto" />
         </Reveal>
       )}
 
@@ -299,7 +287,7 @@ export default function ServicesPage() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <Reveal as="div" className="mb-4 text-center">
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-blue-700">
-                {faqHeading || "Frequently Asked Questions"}
+                {faqHeading || 'Frequently Asked Questions'}
               </h2>
               <div className="mx-auto mt-3 h-1 w-16 rounded-full bg-brand-orange" />
               {faqSubheading && (
@@ -316,9 +304,7 @@ export default function ServicesPage() {
                     isOpen={faqOpen === i}
                     onToggle={() => setFaqOpen(faqOpen === i ? null : i)}
                   >
-                    <p className="text-gray-500 text-base leading-relaxed">
-                      {faq.answer}
-                    </p>
+                    <p className="text-gray-500 text-base leading-relaxed">{faq.answer}</p>
                   </AccordionItem>
                 </StaggerItem>
               ))}

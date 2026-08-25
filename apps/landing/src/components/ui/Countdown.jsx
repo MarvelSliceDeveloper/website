@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
 function getTimeLeft(target) {
   const diff = new Date(target).getTime() - Date.now();
@@ -12,7 +12,7 @@ function getTimeLeft(target) {
   };
 }
 
-export default function Countdown({ target, onFinish, className = "" }) {
+export default function Countdown({ target, onFinish, className = '' }) {
   const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(target));
 
   useEffect(() => {
@@ -34,14 +34,12 @@ export default function Countdown({ target, onFinish, className = "" }) {
     return () => clearInterval(interval);
   }, [target, onFinish]);
 
-  const pad = (n) => String(n).padStart(2, "0");
+  const pad = (n) => String(n).padStart(2, '0');
 
   if (!timeLeft) {
     return (
       <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
-        <p className="text-emerald-700 font-bold text-base">
-          🚀 Course is Now Live!
-        </p>
+        <p className="text-emerald-700 font-bold text-base">🚀 Course is Now Live!</p>
       </div>
     );
   }
@@ -49,21 +47,14 @@ export default function Countdown({ target, onFinish, className = "" }) {
   return (
     <div className={`grid grid-cols-4 gap-3 ${className}`}>
       {[
-        { label: "Days", value: timeLeft?.days ?? 0 },
-        { label: "Hours", value: pad(timeLeft?.hours ?? 0) },
-        { label: "Minutes", value: pad(timeLeft?.minutes ?? 0) },
-        { label: "Seconds", value: pad(timeLeft?.seconds ?? 0) },
+        { label: 'Days', value: timeLeft?.days ?? 0 },
+        { label: 'Hours', value: pad(timeLeft?.hours ?? 0) },
+        { label: 'Minutes', value: pad(timeLeft?.minutes ?? 0) },
+        { label: 'Seconds', value: pad(timeLeft?.seconds ?? 0) },
       ].map((box) => (
-        <div
-          key={box.label}
-          className="bg-gray-50 rounded-xl border border-gray-100 py-4 text-center"
-        >
-          <div className="text-[28px] leading-none font-bold text-brand-orange tabular-nums">
-            {box.value}
-          </div>
-          <div className="text-[11px] text-gray-400 mt-2 uppercase tracking-wider">
-            {box.label}
-          </div>
+        <div key={box.label} className="bg-gray-50 rounded-xl border border-gray-100 py-4 text-center">
+          <div className="text-[28px] leading-none font-bold text-brand-orange tabular-nums">{box.value}</div>
+          <div className="text-[11px] text-gray-400 mt-2 uppercase tracking-wider">{box.label}</div>
         </div>
       ))}
     </div>
