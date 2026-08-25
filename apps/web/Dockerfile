@@ -40,6 +40,7 @@ ENV PORT=3000
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 # Standalone output preserves the monorepo path (apps/web/server.js)
 COPY --from=builder /app/apps/web/.next/standalone/apps/web ./
+COPY --from=builder /app/apps/web/.next/standalone/node_modules ./node_modules
 COPY --from=builder /app/apps/web/.next/static ./.next/static
 COPY --from=builder /app/apps/web/public ./public
 USER nodejs
