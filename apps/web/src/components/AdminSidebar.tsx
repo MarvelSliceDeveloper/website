@@ -30,6 +30,7 @@ import {
   IconHeartHandshake,
   IconUserShare,
   IconSparkles,
+  IconTag,
 } from "@tabler/icons-react";
 
 import type { NavItem, NavItemChild } from "@/components/shared/SidebarTypes";
@@ -540,6 +541,15 @@ export default function AdminSidebar({
                 label: "Maintenance Mode",
                 href: "/admin/maintenance",
                 icon: IconAlarmSmoke as React.ComponentType<{
+                  size?: number | string;
+                  stroke?: number | string;
+                  className?: string;
+                }>,
+              },
+              {
+                label: "Version",
+                href: "/admin/version",
+                icon: IconTag as React.ComponentType<{
                   size?: number | string;
                   stroke?: number | string;
                   className?: string;
