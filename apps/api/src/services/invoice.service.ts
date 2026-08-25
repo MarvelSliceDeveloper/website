@@ -32,7 +32,7 @@ interface InvoiceData {
 
 // ── Company details — pull from env so this file has no hardcoded
 // company data. Fill these into your .env for a real letterhead.
-const COMPANY_NAME = process.env.EMAIL_FROM_NAME || "LMS Portal";
+const COMPANY_NAME = process.env.EMAIL_FROM_NAME || "MarvelSlice LMS";
 const COMPANY_ADDRESS = process.env.COMPANY_ADDRESS || "";
 const COMPANY_GSTIN = process.env.COMPANY_GSTIN || "";
 const COMPANY_EMAIL = process.env.COMPANY_SUPPORT_EMAIL || "";

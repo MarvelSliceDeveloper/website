@@ -38,8 +38,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
 
   title: {
-    default: "LMS Portal — Learn, Teach, Grow",
-    template: "%s · LMS Portal", // child pages get "Page · LMS Portal"
+    default: "MarvelSlice LMS — Learn, Teach, Grow",
+    template: "%s · MarvelSlice LMS", // child pages get "Page · MarvelSlice LMS"
   },
   description:
     "A modern learning management system with live sessions, a course marketplace, and Microsoft Teams integration.",
@@ -47,8 +47,8 @@ export const metadata: Metadata = {
   // ── Open Graph ──────────────────────────────────────────────────────────────
   openGraph: {
     type: "website",
-    siteName: "LMS Portal",
-    title: "LMS Portal — Learn, Teach, Grow",
+    siteName: "MarvelSlice LMS",
+    title: "MarvelSlice LMS — Learn, Teach, Grow",
     description:
       "Live sessions, course marketplace, and Microsoft Teams integration — all in one place.",
     url: BASE_URL,
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
         url: "/og-image.png", // 1200 × 630 recommended
         width: 1200,
         height: 630,
-        alt: "LMS Portal preview",
+        alt: "MarvelSlice LMS preview",
       },
     ],
     locale: "en_US",
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
   // ── Twitter / X Card ────────────────────────────────────────────────────────
   twitter: {
     card: "summary_large_image",
-    title: "LMS Portal — Learn, Teach, Grow",
+    title: "MarvelSlice LMS — Learn, Teach, Grow",
     description:
       "Live sessions, course marketplace, and Microsoft Teams integration — all in one place.",
     images: ["/og-image.png"],

@@ -66,12 +66,12 @@ describe("emailService.getSubjectForType", () => {
 
   it("returns default subject for unknown type", () => {
     const subject = emailService.getSubjectForType("UNKNOWN_TYPE", {});
-    expect(subject).toBe("Notification from LMS Portal");
+    expect(subject).toBe("Notification from MarvelSlice LMS");
   });
 
   it("returns default subject for CUSTOM_NOTIFICATION without title", () => {
     const subject = emailService.getSubjectForType("CUSTOM_NOTIFICATION", {});
-    expect(subject).toBe("Notification from LMS Portal");
+    expect(subject).toBe("Notification from MarvelSlice LMS");
   });
 });
 
@@ -119,6 +119,6 @@ describe("emailService.getTextForType", () => {
 
   it("returns default text for unknown type", () => {
     const text = emailService.getTextForType("UNKNOWN_TYPE", {});
-    expect(text).toBe("You have a new notification from LMS Portal.");
+    expect(text).toBe("You have a new notification from MarvelSlice LMS.");
   });
 });

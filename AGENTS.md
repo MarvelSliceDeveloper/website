@@ -1,4 +1,4 @@
-# LMS Portal - Agent Instructions
+# MarvelSlice LMS - Agent Instructions
 
 ## Project Overview
 
@@ -467,7 +467,7 @@ Default: page=1, limit=20 (max 100).
 ### Frontend Page Titles
 
 - **Server Components**: Add `export const metadata: Metadata = { title: "Name" }`
-- **Client Components**: Add `usePageTitle("Name")` from `@/lib/use-page-title` (sets `document.title` using the root layout template "%s · LMS Portal")
+- **Client Components**: Add `usePageTitle("Name")` from `@/lib/use-page-title` (sets `document.title` using the root layout template "%s · MarvelSlice LMS")
 
 ### Frontend error.tsx / loading.tsx
 

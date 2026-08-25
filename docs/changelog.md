@@ -705,7 +705,7 @@ Added automatic invoice PDF generation and attachment to the welcome email sent 
 - Updated `apps/api/src/services/email.service.ts` — Added `attachment` support to `SendEmailOptions` and Brevo API call. Updated `sendWelcomeEmail()` to accept optional `invoice` data, generate PDF, and attach as base64
 - Updated `apps/api/src/modules/payments/payment.service.ts` — Removed pre-payment welcome email from `createGuestUser()` (sent before payment). Now sends welcome email with invoice PDF only after successful enrollment/consent in `enrollInBatch()` and `createConsentEnrollment()`
 - Updated `packages/email-templates/src/emails/WelcomeEmail.tsx` — Updated body text to reference purchase and attached invoice
-- Email subject changed to "Welcome to LMS Portal — Purchase Confirmation" with additional "purchase" tag
+- Email subject changed to "Welcome to MarvelSlice LMS — Purchase Confirmation" with additional "purchase" tag
 
 **Files created:** `apps/api/src/services/invoice.service.ts`
 **Files modified:** `email.service.ts`, `payment.service.ts`, `WelcomeEmail.tsx`

@@ -18,7 +18,7 @@ Implemented automatic invoice PDF generation and attachment to the welcome email
 - Passes `attachment` to Brevo `sendTransacEmail` call (base64-encoded content + filename)
 - `sendWelcomeEmail()` now accepts optional `invoice` data
 - Generates invoice PDF and attaches as `invoice-{paymentId}.pdf`
-- Updated subject to "Welcome to LMS Portal — Purchase Confirmation"
+- Updated subject to "Welcome to MarvelSlice LMS — Purchase Confirmation"
 - Added "purchase" tag
 
 ### 3. Payment Service (`apps/api/src/modules/payments/payment.service.ts`)

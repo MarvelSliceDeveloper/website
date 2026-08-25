@@ -1,4 +1,4 @@
-# LMS Portal
+# MarvelSlice LMS
 
 A unified Learning Management System monorepo containing three independent applications plus shared packages:
 
@@ -173,7 +173,7 @@ LMS/
 
 ## Feature Highlights
 
-### LMS Portal (`apps/web` + `apps/api`)
+### MarvelSlice LMS (`apps/web` + `apps/api`)
 
 - **Roles**: Super Admin, Admin, Instructor, Student (JWT role hierarchy)
 - **Course builder**: modules, lessons (video with YouTube auto-metadata), quizzes, assignments, study materials, free-preview lessons

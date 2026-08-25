@@ -109,7 +109,7 @@ router.post("/:id/test", async (req: AuthRequest, res: Response) => {
     const payload = {
       event: "test",
       timestamp: new Date().toISOString(),
-      message: "This is a test webhook from LMS Portal",
+      message: "This is a test webhook from MarvelSlice LMS",
       source: "lms-api",
     };
 

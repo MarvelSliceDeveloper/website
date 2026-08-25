@@ -20,7 +20,7 @@ export default function WelcomeEmail({
   credentials,
 }: WelcomeEmailProps) {
   return (
-    <BaseLayout previewText={`Welcome to LMS Portal, ${userName}!`}>
+    <BaseLayout previewText={`Welcome to MarvelSlice LMS, ${userName}!`}>
       <Section style={bodyStyle}>
         <Heading style={headingStyle}>Welcome, {userName}!</Heading>
         <Text style={textStyle}>

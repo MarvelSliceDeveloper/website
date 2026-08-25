@@ -1,4 +1,4 @@
-# LMS Portal — Project Overview
+# MarvelSlice LMS — Project Overview
 
 A **full-featured Learning Management System** built as a pnpm Turborepo monorepo. Three portals (Admin, Instructor, Student) manage the complete learning lifecycle: courses, live sessions (Microsoft Teams), assignments, mentorship, certificates, and payments.
 

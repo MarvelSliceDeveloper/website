@@ -1,4 +1,4 @@
-# Contributing to LMS Portal
+# Contributing to MarvelSlice LMS
 
 First off, thanks for taking the time to contribute!
 

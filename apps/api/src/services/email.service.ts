@@ -93,7 +93,7 @@ async function resolveAttachment(
 
 function getSenderConfig() {
   return {
-    name: process.env.EMAIL_FROM_NAME || "LMS Portal",
+    name: process.env.EMAIL_FROM_NAME || "MarvelSlice LMS",
     email: process.env.EMAIL_FROM_EMAIL || "noreply@localhost",
   };
 }
@@ -246,9 +246,9 @@ export const emailService = {
 
       return this.sendEmail({
         to: [{ email: user.email, name: user.name }],
-        subject: "Welcome to LMS Portal — Purchase Confirmation",
+        subject: "Welcome to MarvelSlice LMS — Purchase Confirmation",
         html,
-        text: `Hi ${user.name},\n\nWelcome to LMS Portal! Your account has been created successfully.${credsText}${invoiceText}\n\nBest regards,\nLMS Portal Team`,
+        text: `Hi ${user.name},\n\nWelcome to MarvelSlice LMS! Your account has been created successfully.${credsText}${invoiceText}\n\nBest regards,\nMarvelSlice LMS Team`,
         tags: ["welcome", "onboarding", "purchase"],
         attachment,
       });
@@ -293,8 +293,8 @@ export const emailService = {
       return this.sendEmail({
         to: [{ email: user.email, name: user.name }],
         subject: `Invoice — ${user.invoice.packageName}`,
-        html: `<p>Hi ${user.name},</p><p>Your payment for <strong>${user.invoice.packageName}</strong> has been received successfully.</p><p>Your invoice is attached to this email. Please keep it for your records.</p><p>You will receive your login credentials once your batch enrollment is confirmed.</p><p>Best regards,<br/>LMS Portal Team</p>`,
-        text: `Hi ${user.name},\n\nYour payment for ${user.invoice.packageName} has been received successfully.\n\nYour invoice is attached to this email. Please keep it for your records.\n\nYou will receive your login credentials once your batch enrollment is confirmed.\n\nBest regards,\nLMS Portal Team`,
+        html: `<p>Hi ${user.name},</p><p>Your payment for <strong>${user.invoice.packageName}</strong> has been received successfully.</p><p>Your invoice is attached to this email. Please keep it for your records.</p><p>You will receive your login credentials once your batch enrollment is confirmed.</p><p>Best regards,<br/>MarvelSlice LMS Team</p>`,
+        text: `Hi ${user.name},\n\nYour payment for ${user.invoice.packageName} has been received successfully.\n\nYour invoice is attached to this email. Please keep it for your records.\n\nYou will receive your login credentials once your batch enrollment is confirmed.\n\nBest regards,\nMarvelSlice LMS Team`,
         tags: ["invoice", "payment"],
         attachment,
       });
@@ -323,9 +323,9 @@ export const emailService = {
 
       return this.sendEmail({
         to: [{ email: user.email, name: user.name }],
-        subject: "Reset Your Password — LMS Portal",
+        subject: "Reset Your Password — MarvelSlice LMS",
         html,
-        text: `Hi ${user.name},\n\nWe received a request to reset your password. Click the link below to choose a new password:\n\n${user.resetLink}\n\nThis link expires in 15 minutes.\n\nIf you did not request this, you can safely ignore this email.\n\nBest regards,\nLMS Portal Team`,
+        text: `Hi ${user.name},\n\nWe received a request to reset your password. Click the link below to choose a new password:\n\n${user.resetLink}\n\nThis link expires in 15 minutes.\n\nIf you did not request this, you can safely ignore this email.\n\nBest regards,\nMarvelSlice LMS Team`,
         tags: ["password-reset"],
       });
     } catch (error: unknown) {
@@ -457,11 +457,11 @@ export const emailService = {
       case "SUPPORT_TICKET_STATUS_CHANGED":
         return `Support Ticket Update — ${(data.label as string) || ""}`;
       case "CUSTOM_NOTIFICATION":
-        return (data.title as string) || "Notification from LMS Portal";
+        return (data.title as string) || "Notification from MarvelSlice LMS";
       case "INTERN_SESSION_SCHEDULED":
         return `Intern Class Scheduled — ${(data.sessionTitle as string) || ""}`;
       default:
-        return "Notification from LMS Portal";
+        return "Notification from MarvelSlice LMS";
     }
   },
 
@@ -493,7 +493,7 @@ export const emailService = {
       case "INTERN_SESSION_SCHEDULED":
         return `An online class has been scheduled for you. Session: ${data.sessionTitle || ""}, Time: ${data.scheduledAt || ""}. Join URL: ${data.joinUrl || ""}`;
       default:
-        return `You have a new notification from LMS Portal.`;
+        return `You have a new notification from MarvelSlice LMS.`;
     }
   },
 };

@@ -68,7 +68,7 @@ Generated from codebase analysis on 2026-07-23.
 | Issue                             | Details                                                                                             |
 | --------------------------------- | --------------------------------------------------------------------------------------------------- |
 | **Missing error.tsx/loading.tsx** | Most admin route segments lack them (users, batches, packages, sessions, settings, etc.)            |
-| **Missing SEO metadata**          | No page-specific titles — all child pages render as " · LMS Portal"                                 |
+| **Missing SEO metadata**          | No page-specific titles — all child pages render as " · MarvelSlice LMS"                                 |
 | **`key={i}` on dynamic lists**    | 39 instances of array index as key — breaks React reconciliation on reorder                         |
 | **1462-line component**           | `CourseContentView.tsx` is monolithic and should be split                                           |
 | **Missing form labels**           | Login, set-password, forgot-password, reset-password have no `<label htmlFor>` — screen-reader only |

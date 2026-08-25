@@ -2,7 +2,7 @@
 
 > Prefer Docker? See [docker-implementation.md](docker-implementation.md).
 >
-> This guide runs the LMS Portal directly on Ubuntu **without containers**:
+> This guide runs the MarvelSlice LMS directly on Ubuntu **without containers**:
 > Node.js + PostgreSQL + Redis installed on the system, apps managed by PM2,
 > nginx as the reverse proxy. Every command is explained.
 

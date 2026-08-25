@@ -120,7 +120,7 @@ export function useRazorpayPayment() {
             key: orderData.keyId,
             amount: orderData.amount,
             currency: orderData.currency,
-            name: "LMS Portal",
+            name: "MarvelSlice LMS",
             description: pkgName,
             order_id: orderData.orderId,
             handler: async function (response: RazorpayResponse) {

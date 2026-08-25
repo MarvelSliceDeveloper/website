@@ -6,7 +6,7 @@
 
 ## What this doc covers
 
-This document explains how to deploy the LMS Portal to your own server (a VPS —
+This document explains how to deploy the MarvelSlice LMS to your own server (a VPS —
 DigitalOcean, Hetzner, OVH, Vultr, etc.) using **Docker Compose**. It covers:
 
 1. The architecture and how the pieces fit together

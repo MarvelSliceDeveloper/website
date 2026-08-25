@@ -30,7 +30,7 @@ export const twoFactorController = {
       const secret = generateSecret();
       const uri = generateURI({
         label: user.email,
-        issuer: "LMS Portal",
+        issuer: "MarvelSlice LMS",
         secret,
       });
 

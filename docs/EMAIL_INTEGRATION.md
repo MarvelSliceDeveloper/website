@@ -2,7 +2,7 @@
 
 ## Overview
 
-The LMS Portal integrates **Brevo** (formerly Sendinblue) as its email delivery provider, using **React Email** for template authoring. All in-app notifications automatically trigger corresponding HTML emails when configured.
+The MarvelSlice LMS integrates **Brevo** (formerly Sendinblue) as its email delivery provider, using **React Email** for template authoring. All in-app notifications automatically trigger corresponding HTML emails when configured.
 
 ---
 
@@ -55,7 +55,7 @@ BREVO_API_KEY=xkeysib-your-api-key-here
 # Sender Configuration
 # NOTE: For free accounts, use your Brevo login email as EMAIL_FROM_EMAIL
 # You can customize EMAIL_FROM_NAME to anything
-EMAIL_FROM_NAME=LMS Portal
+EMAIL_FROM_NAME=MarvelSlice LMS
 EMAIL_FROM_EMAIL=your-personal-email@gmail.com
 ```
 
@@ -63,7 +63,7 @@ EMAIL_FROM_EMAIL=your-personal-email@gmail.com
 
 - `EMAIL_FROM_EMAIL` must match your Brevo account email OR be a verified sender
 - For testing, use your personal email (Gmail, Outlook, etc.)
-- You can customize `EMAIL_FROM_NAME` to "LMS Portal" or any name
+- You can customize `EMAIL_FROM_NAME` to "MarvelSlice LMS" or any name
 
 ### Step 3: Seed Notification Preferences
 
@@ -92,7 +92,7 @@ All templates are React Email components in `packages/email-templates/`:
 
 | Template                     | Trigger                      | Subject                             |
 | ---------------------------- | ---------------------------- | ----------------------------------- |
-| `WelcomeEmail`               | User registration            | "Welcome to LMS Portal!"            |
+| `WelcomeEmail`               | User registration            | "Welcome to MarvelSlice LMS!"            |
 | `SessionScheduled`           | Live session created         | "Live Session Scheduled — {course}" |
 | `SessionCancelled`           | Live session cancelled       | "Session Cancelled — {course}"      |
 | `RecordingAvailable`         | Recording uploaded           | "Recording Available — {course}"    |
@@ -151,7 +151,7 @@ curl -X POST http://localhost:4000/api/auth/register \
   }'
 ```
 
-Check your inbox for "Welcome to LMS Portal!" email.
+Check your inbox for "Welcome to MarvelSlice LMS!" email.
 
 ### Method 2: Admin Creates User (Welcome Email)
 
@@ -175,7 +175,7 @@ curl -X POST http://localhost:4000/api/users \
   }'
 ```
 
-Check your inbox for "Welcome to LMS Portal!" email.
+Check your inbox for "Welcome to MarvelSlice LMS!" email.
 
 ### Method 3: Using the Web UI
 
@@ -209,7 +209,7 @@ curl -X POST https://api.brevo.com/v3/smtp/email \
   -H "api-key: xkeysib-your-api-key-here" \
   -H "Content-Type: application/json" \
   -d '{
-    "sender": {"name": "LMS Portal", "email": "your-email@gmail.com"},
+    "sender": {"name": "MarvelSlice LMS", "email": "your-email@gmail.com"},
     "to": [{"email": "your-email@gmail.com"}],
     "subject": "Test from Brevo",
     "htmlContent": "<h1>Hello!</h1><p>This is a test email from Brevo API.</p>"

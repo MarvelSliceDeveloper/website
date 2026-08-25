@@ -26,7 +26,7 @@ const sampleData: Record<string, string> = {
   supportTicketId: "TKT-001",
   ticketSubject: "Course Access Issue",
   adminName: "Admin User",
-  platformName: "LMS Portal",
+  platformName: "MarvelSlice LMS",
 };
 
 // GET / — List all email templates

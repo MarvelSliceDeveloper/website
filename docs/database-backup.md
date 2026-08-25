@@ -2,7 +2,7 @@
 
 ## Overview
 
-The LMS Portal uses PostgreSQL (via Docker). This document covers backup and restoration procedures.
+The MarvelSlice LMS uses PostgreSQL (via Docker). This document covers backup and restoration procedures.
 
 The app also ships a built-in backup system under **SuperAdmin → Settings → Backup & Restore**:
 

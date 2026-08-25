@@ -1,6 +1,6 @@
-# LMS Portal — Frontend Design Guide
+# MarvelSlice LMS — Frontend Design Guide
 
-This document catalogs and outlines the frontend design system, user interfaces, navigation architectures, and styling patterns used across the LMS Portal client application (`apps/web`).
+This document catalogs and outlines the frontend design system, user interfaces, navigation architectures, and styling patterns used across the MarvelSlice LMS client application (`apps/web`).
 
 ---
 
@@ -63,7 +63,7 @@ The student portal is a header-centric workspace that adapts dynamically to the 
 ```
 
 1. **Dynamic Back Button**: Retractable (`IconArrowLeft`) with state-controlled display (`showBack` prop). It smoothly transitions opacity and bounds to keep spacing clean when hidden.
-2. **Brand Branding**: Centered or left-aligned Logo combining an icon (`IconSchool` wrapped in a gradient box `bg-linear-to-br from-primary to-violet-600`) and modern bold text (`LMS Portal`).
+2. **Brand Branding**: Centered or left-aligned Logo combining an icon (`IconSchool` wrapped in a gradient box `bg-linear-to-br from-primary to-violet-600`) and modern bold text (`MarvelSlice LMS`).
 3. **Responsive Breadcrumb Path**: Tracks the view stack. Intermediary breadcrumbs function as buttons allowing students to jump backward seamlessly. Labels are safely capped using CSS truncation (`max-w-30 truncate`) to prevent wrap breakage on tablet screens.
 4. **Light/Dark Toggle**: A standard button that dynamically updates the `data-theme` attribute on the document root element and saves the value inside `localStorage`.
 5. **Real-time Notifications Bell**:

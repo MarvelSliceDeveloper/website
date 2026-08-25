@@ -31,7 +31,7 @@ const BUILD_TIME = process.env.BUILD_TIME || new Date().toISOString();
 const GIT_COMMIT =
   process.env.GIT_COMMIT || process.env.VERCEL_GIT_COMMIT_SHA || "unknown";
 const NODE_ENV = process.env.NODE_ENV || "development";
-const APP_NAME = "LMS Portal";
+const APP_NAME = "MarvelSlice LMS";
 
 export interface VersionInfo {
   name: string;

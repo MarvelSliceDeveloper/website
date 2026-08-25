@@ -11,7 +11,7 @@ import {
 } from "@react-email/components";
 
 const WEB_URL = process.env.WEB_URL || "http://localhost:3000";
-const COMPANY_NAME = process.env.EMAIL_FROM_NAME || "LMS Portal";
+const COMPANY_NAME = process.env.EMAIL_FROM_NAME || "MarvelSlice LMS";
 
 interface ResetPasswordEmailProps {
   userName: string;
