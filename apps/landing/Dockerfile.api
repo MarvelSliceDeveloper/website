@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Minimal image for the landing contact/career form email API (dev-server.js).
 # Only needs Node + nodemailer.
-FROM node:20-alpine
+FROM node:22-alpine
 WORKDIR /app
 
 COPY apps/landing/dev-server.js ./dev-server.js
