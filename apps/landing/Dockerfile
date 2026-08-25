@@ -12,7 +12,7 @@ COPY packages/ packages/
 RUN pnpm install --frozen-lockfile
 
 # ─── Builder ───
-FROM base AS builder
+FROM deps AS builder
 # The landing SPA reads these VITE_* vars at build time. They are passed as
 # build args from docker-compose.prod.yml (which reads them from .env.production).
 ARG VITE_GA_MEASUREMENT_ID
@@ -21,8 +21,6 @@ ARG VITE_SUPABASE_ANON_KEY
 ENV VITE_GA_MEASUREMENT_ID=$VITE_GA_MEASUREMENT_ID
 ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
 ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/landing/node_modules ./apps/landing/node_modules
 COPY apps/landing ./apps/landing
 RUN pnpm --filter marvel-slice build
 
