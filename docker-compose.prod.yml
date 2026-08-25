@@ -12,8 +12,10 @@ services:
     image: nginx:alpine
     container_name: lms-nginx
     ports:
-      - "80:80"
-      - "443:443"
+      # Host 80/443 are taken by Apache/Webuzo — map Docker nginx to 8080/8443
+      # and put Apache as reverse proxy in front (see docs/apache-proxy.md)
+      - "127.0.0.1:8080:80"
+      - "127.0.0.1:8443:443"
     volumes:
       - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
       - ./deploy/nginx/htpasswd:/etc/nginx/htpasswd:ro
