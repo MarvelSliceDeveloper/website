@@ -2,7 +2,7 @@
 # Build context = repo root (monorepo). Use: docker build -f apps/api/Dockerfile .
 FROM node:22-alpine AS base
 RUN apk add --no-cache dumb-init
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@11.1.1 --activate
 WORKDIR /app
 
 # ─── Dependencies ───
@@ -12,7 +12,7 @@ COPY apps/api/package.json apps/api/package.json
 COPY apps/web/package.json apps/web/package.json
 COPY apps/landing/package.json apps/landing/package.json
 COPY packages/ packages/
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm install --frozen-lockfile
 
 # ─── Builder ───
 FROM base AS builder
