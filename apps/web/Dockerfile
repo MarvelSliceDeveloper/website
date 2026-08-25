@@ -9,9 +9,10 @@ FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web/package.json apps/web/package.json
 COPY apps/api/package.json apps/api/package.json
+COPY apps/api/prisma ./apps/api/prisma
 COPY apps/landing/package.json apps/landing/package.json
 COPY packages/ packages/
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # ─── Builder ───
 FROM base AS builder
