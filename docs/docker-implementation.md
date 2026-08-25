@@ -225,6 +225,20 @@ htpasswd -cB deploy/nginx/htpasswd admin
   so you don't overwrite the first user).
 - `deploy/nginx/htpasswd` is **gitignored**, so it never gets committed.
 
+### 2.6 Landing page env (build-time + landing-api)
+
+The landing site is a static Vite SPA plus a small contact-form email API
+(`landing-api`):
+
+- **`landing-api`** (runtime, via `env_file`) needs `SMTP_EMAIL`,
+  `SMTP_PASSWORD`, and `ADMIN_EMAIL` — already listed in Part 2.4. The contact /
+  enquiry forms POST to relative `/api/*` paths, which nginx routes to
+  `landing-api:3001`, so **no extra URL env is required**.
+- **`landing` SPA** (build-time) bakes in `VITE_GA_MEASUREMENT_ID`,
+  `VITE_SUPABASE_URL`, and `VITE_SUPABASE_ANON_KEY` from `.env.production`. These
+  are passed as Docker **build args** (see `apps/landing/Dockerfile`), so set
+  them in `.env.production` *before* running `docker compose build`.
+
 ---
 
 ## Part 3 — First boot: get SSL certificates (one-time)
