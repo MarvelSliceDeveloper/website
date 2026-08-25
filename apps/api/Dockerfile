@@ -16,9 +16,7 @@ COPY packages/ packages/
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # ─── Builder ───
-FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages ./packages
+FROM deps AS builder
 COPY apps/api ./apps/api
 ARG GIT_COMMIT=unknown
 ARG BUILD_TIME=unknown
