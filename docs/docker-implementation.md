@@ -48,7 +48,8 @@ Your setup uses **two domains** pointing at one server:
                            postgres:5432  redis:6379
 ```
 
-Six containers are started:
+Eight containers are started (the last two — pgAdmin and Portainer — are
+optional management UIs, covered in [Part 5½](#management-uis--pgadmin--portainer)):
 
 | Container     | Runs                              | Listens on               |
 | ------------- | --------------------------------- | ------------------------ |
@@ -60,6 +61,8 @@ Six containers are started:
 | `postgres`    | Database                          | internal 5432            |
 | `redis`       | Cache / realtime pub-sub          | internal 6379            |
 | `certbot`     | Let's Encrypt SSL renewals        | none (runs periodically) |
+| `pgadmin`     | pgAdmin 4 — Postgres admin web UI | internal 80 (no host port) |
+| `portainer`   | Portainer — Docker visual GUI     | internal 9000 (no host port) |
 
 ## Prerequisites
 
@@ -75,10 +78,16 @@ Six containers are started:
 Log in to your DNS provider (where you bought the domain, or Cloudflare, etc.)
 and create two **A records**:
 
-| Host  | Type | Value (your VPS public IP)    |
-| ----- | ---- | ----------------------------- |
-| `www` | A    | `203.0.113.10` (your real IP) |
-| `lms` | A    | `203.0.113.10` (same IP)      |
+| Host       | Type | Value (your VPS public IP)    |
+| ---------- | ---- | ----------------------------- |
+| `www`      | A    | `203.0.113.10` (your real IP) |
+| `lms`      | A    | `203.0.113.10` (same IP)      |
+| `pgadmin`  | A    | `203.0.113.10` (same IP)      |
+| `portainer`| A    | `203.0.113.10` (same IP)      |
+
+> The `pgadmin` and `portainer` subdomains serve the management UIs (see
+> [Part 5½](#management-uis--pgadmin--portainer)). They share the same SAN
+> certificate issued in Part 3, so no extra cert step is needed.
 
 > A **DNS A record** says "this hostname → this IP address". Both hostnames go to
 > the same VPS; nginx tells them apart by the `Host` header.
@@ -190,10 +199,31 @@ At minimum, replace these placeholders (the file has comments explaining each):
 | `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET`                   | Razorpay keys                                          | Razorpay dashboard        |
 | `YOUTUBE_API_KEY`                                           | YouTube Data API key                                   | Google Cloud Console      |
 | `IMAGE_NAME`                                                | `your-username/lms-portal`                             | your GitHub repo          |
+| `PGADMIN_EMAIL`                                             | `admin@marvelslice.com`                                | pgAdmin login email       |
+| `PGADMIN_PASSWORD`                                          | Strong password for pgAdmin                           | `openssl rand -base64 24` |
 | `API_URL`, `WEB_URL`, `NEXT_PUBLIC_API_URL`, `NEXTAUTH_URL` | `https://lms.marvelslice.com` (+ `/api` for `API_URL`) | already correct           |
 
 > `openssl rand -base64 24` — generates 24 random bytes encoded as base64 text.
 > Good for passwords. The output looks like `fK3m...==`.
+
+### 2.5 Create the management-UI basic-auth file (required)
+
+pgAdmin and Portainer are protected by an nginx `auth_basic` prompt that reads
+`/etc/nginx/htpasswd` (mounted from `deploy/nginx/htpasswd`). **nginx will fail
+to start if this file is missing**, so create it now:
+
+```bash
+mkdir -p deploy/nginx
+# Install htpasswd on Debian/Ubuntu first if needed:
+apt install -y apache2-utils
+htpasswd -cB deploy/nginx/htpasswd admin
+```
+
+- `htpasswd -cB` — create (`-c`) a bcrypt-hashed (`-B`) password file for user
+  `admin`. You'll be prompted for a password — use a strong, unique one.
+- Add more users with `htpasswd -B deploy/nginx/htpasswd <username>` (omit `-c`
+  so you don't overwrite the first user).
+- `deploy/nginx/htpasswd` is **gitignored**, so it never gets committed.
 
 ---
 
@@ -258,7 +288,7 @@ docker compose -f docker-compose.prod.yml up -d
 
 - Now the real `nginx.prod.conf` is used (HTTPS + ACME route for renewals).
 - This builds and starts **all** containers (api, web, landing, landing-api,
-  postgres, redis, nginx, certbot).
+  postgres, redis, nginx, certbot, **pgadmin**, **portainer**).
 
 ### 3.4 Check it's working
 
@@ -302,6 +332,43 @@ Default accounts (change passwords after first login!):
 | Admin      | `admin@lms.local`      | `admin123`      |
 | Instructor | `instructor@lms.local` | `instructor123` |
 | Student    | `student@lms.local`    | `student123`    |
+
+---
+
+## Management UIs — pgAdmin & Portainer
+
+Two optional-but-recommended web tools are included in the Compose stack so you
+can manage the database and the Docker engine from a browser. They are **not**
+exposed on any host port — nginx reverse-proxies them over HTTPS on their own
+subdomains, in front of which sits **HTTP basic auth** (`auth_basic`).
+
+| Tool       | URL                                     | What it's for                                       |
+| ---------- | --------------------------------------- | --------------------------------------------------- |
+| pgAdmin    | `https://pgadmin.lms.marvelslice.com`   | Web UI to browse / query the Postgres database      |
+| Portainer  | `https://portainer.lms.marvelslice.com` | Visual GUI for managing Docker (containers, volumes, images) |
+
+To reach them you need all three of:
+
+1. **DNS A records** for `pgadmin` and `portainer` → your VPS IP (Part 0).
+2. The **basic-auth file** `deploy/nginx/htpasswd` (Part 2.5).
+3. The **`PGADMIN_EMAIL` / `PGADMIN_PASSWORD`** env vars in `.env.production` (Part 2.4).
+
+Both containers start automatically with `docker compose ... up -d` (they are
+defined in `docker-compose.prod.yml`). On first open:
+
+- **pgAdmin** — log in with `PGADMIN_EMAIL` / `PGADMIN_PASSWORD`, then register
+  the server: Host = `postgres`, Port = `5432`, User = `POSTGRES_USER`,
+  Password = `POSTGRES_PASSWORD`, DB = `POSTGRES_DB`.
+- **Portainer** — the basic-auth prompt is followed by Portainer's own admin
+  user setup (it mounts the Docker socket, so it can manage the whole engine).
+
+> ⚠️ **Security:** the basic-auth prompt is the *only* thing between the public
+> internet and these admin tools. Use a strong, unique `deploy/nginx/htpasswd`
+> password **and** a separate strong `PGADMIN_PASSWORD`.
+>
+> The full walkthrough (creating the basic-auth user, the pgAdmin connection, and
+> Portainer's first-admin setup) is in
+> [docs/prod-management-tools.md](prod-management-tools.md).
 
 ---
 
@@ -440,6 +507,9 @@ docker run --rm -v lms-prod_uploads_data:/data -v /opt/lms/backups:/backup alpin
 | Uploads fail                                              | Volume missing permissions     | `docker compose logs api`; check `uploads_data` volume exists            |
 | Port 5432/6379 conflict on host                           | Another Postgres/Redis running | Our containers don't expose DB ports to the host; nothing conflicts      |
 | Container won't start, "port already allocated"           | Something on host:80/443       | `ss -tlnp                                                                | grep -E ':(80 | 443)'` to find the process |
+| `403` on `pgadmin`/`portainer` subdomain                  | Missing/empty `deploy/nginx/htpasswd` | Create the file (Part 2.5), then `docker compose -f docker-compose.prod.yml restart nginx` |
+| `pgadmin`/`portainer` subdomain won't load               | DNS A record missing or cert not issued | Add `pgadmin`/`portainer` A records (Part 0); both share the SAN cert from Part 3 |
+| Portainer shows no containers                            | Docker socket not mounted            | Ensure `/var/run/docker.sock` is mounted (it is by default in `docker-compose.prod.yml`) |
 
 ### Key file reference
 
@@ -457,6 +527,8 @@ docker run --rm -v lms-prod_uploads_data:/data -v /opt/lms/backups:/backup alpin
 | `apps/landing/Dockerfile.api`     | Landing contact-form email server            |
 | `apps/landing/nginx.landing.conf` | Static serving inside the landing container  |
 | `.github/workflows/ci-cd.yml`     | Test → build → deploy pipeline               |
+| `deploy/nginx/htpasswd`           | HTTP basic-auth creds for pgAdmin/Portainer (gitignored) |
+| `docs/prod-management-tools.md`   | Deep-dive: pgAdmin + Portainer setup         |
 
 ## Verification checklist
 
@@ -467,5 +539,7 @@ docker run --rm -v lms-prod_uploads_data:/data -v /opt/lms/backups:/backup alpin
 - [ ] `https://lms.marvelslice.com` loads and you can log in
 - [ ] `/health` returns 200
 - [ ] Seed data loaded (admin user works)
+- [ ] `pgadmin.lms.marvelslice.com` and `portainer.lms.marvelslice.com` resolve
+- [ ] Management UIs reachable behind basic auth
 - [ ] UptimeRobot or similar monitors `/health`
 - [ ] Daily DB backup scheduled (see `docs/database-backup.md`)
