@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
 import {
   IconBell,
   IconSettings,
@@ -44,19 +43,7 @@ export default function Header({
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [appVersion, setAppVersion] = useState<string | null>(null);
   const notifRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const envVer = process.env.NEXT_PUBLIC_APP_VERSION;
-    if (envVer) setAppVersion(`v${envVer}`);
-    api
-      .get<{ version: string }>("/api/version")
-      .then((d) => {
-        if (d?.version) setAppVersion(`v${d.version}`);
-      })
-      .catch(() => {});
-  }, []);
 
   const settingsHref = inboxHref.replace("/inbox", "/settings");
 
@@ -164,23 +151,6 @@ export default function Header({
             <span className="text-primary ml-0.5">Slice</span>
           </span>
         </div>
-
-        {/* Version badge — admin links to /admin/version, others show plain badge */}
-        {inboxHref.startsWith("/admin") ? (
-          <Link
-            href="/admin/version"
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-mono font-medium text-muted-foreground hover:bg-card-hover hover:text-foreground transition-colors"
-            title={appVersion ? `Version ${appVersion} — view details` : "View version"}
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-success" />
-            {appVersion ?? "v1.0.1"}
-          </Link>
-        ) : (
-          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-mono font-medium text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-success" />
-            {appVersion ?? "v1.0.1"}
-          </span>
-        )}
 
         <div className="flex-1" />
 

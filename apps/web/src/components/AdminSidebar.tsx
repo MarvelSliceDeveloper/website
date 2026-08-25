@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { api } from "@/lib/api";
 import { useUnreadCounts } from "@/hooks/useUnreadCounts";
 import {
   IconBook,
@@ -320,18 +319,6 @@ export default function AdminSidebar({
   const pathname = usePathname();
   const isSuperAdmin = userRole === "SUPER_ADMIN";
   const unreadCounts = useUnreadCounts();
-  const [appVersion, setAppVersion] = useState<string | null>(null);
-
-  useEffect(() => {
-    const envVer = process.env.NEXT_PUBLIC_APP_VERSION;
-    if (envVer) setAppVersion(`v${envVer}`);
-    api
-      .get<{ version: string }>("/api/version")
-      .then((d) => {
-        if (d?.version) setAppVersion(`v${d.version}`);
-      })
-      .catch(() => {});
-  }, []);
 
   const sidebarItems = [
     {
@@ -774,25 +761,6 @@ export default function AdminSidebar({
           />
         ))}
       </nav>
-
-      {/* Version footer */}
-      <div
-        className={`border-t border-border px-3 py-2.5 ${collapsed ? "text-center" : ""}`}
-      >
-        <Link
-          href="/admin/version"
-          className={`flex items-center gap-2 text-[11px] text-muted-foreground hover:text-foreground transition-colors ${collapsed ? "justify-center" : ""}`}
-          title={appVersion ? `Version ${appVersion}` : "Version"}
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-success shrink-0" />
-          {!collapsed && (
-            <span className="font-mono font-medium">
-              {appVersion ?? "v1.0.1"}
-            </span>
-          )}
-          {!collapsed && <span className="truncate">· LMS</span>}
-        </Link>
-      </div>
     </aside>
   );
 }
