@@ -15,9 +15,7 @@ COPY packages/ packages/
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # ─── Builder ───
-FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages ./packages
+FROM deps AS builder
 COPY apps/web ./apps/web
 ARG NEXT_PUBLIC_API_URL=https://lms.marvelslice.com
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
