@@ -1,6 +1,10 @@
 import { prisma } from "../utils/prisma";
 
-type AlertEvent = "health.failed" | "health.recovered" | "backup.failed" | "backup.completed";
+type AlertEvent =
+  | "health.failed"
+  | "health.recovered"
+  | "backup.failed"
+  | "backup.completed";
 
 export const alertingService = {
   async fire(event: AlertEvent, payload: Record<string, unknown>) {
@@ -38,7 +42,9 @@ export const alertingService = {
 
     const failures = results.filter((r) => r.status === "rejected");
     if (failures.length > 0) {
-      console.error(`[alerting] ${failures.length}/${matching.length} webhook(s) failed for event "${event}"`);
+      console.error(
+        `[alerting] ${failures.length}/${matching.length} webhook(s) failed for event "${event}"`,
+      );
     }
 
     return { sent: matching.length, failed: failures.length };

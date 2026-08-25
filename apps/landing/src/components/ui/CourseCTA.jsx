@@ -1,17 +1,17 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import ModularCTAButton from './ModularCTAButton';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import ModularCTAButton from "./ModularCTAButton";
 
 export { ModularCTAButton };
 
 function useReducedMotion() {
   const [shouldReduce, setShouldReduce] = useState(false);
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     setShouldReduce(mediaQuery.matches);
     const handleChange = (e) => setShouldReduce(e.matches);
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
   return shouldReduce;
 }
@@ -21,7 +21,12 @@ function DynamicBackground({ background, shouldReduceMotion }) {
 
   let bgStr = String(background).trim();
   // Ensure relative URLs start with '/' so browser resolves from domain root
-  if (bgStr && !bgStr.startsWith('http') && !bgStr.startsWith('/') && !bgStr.startsWith('data:')) {
+  if (
+    bgStr &&
+    !bgStr.startsWith("http") &&
+    !bgStr.startsWith("/") &&
+    !bgStr.startsWith("data:")
+  ) {
     bgStr = `/${bgStr}`;
   }
 
@@ -36,7 +41,7 @@ function DynamicBackground({ background, shouldReduceMotion }) {
       <div
         className="cta-background absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url("${bgStr}")`
+          backgroundImage: `url("${bgStr}")`,
         }}
       />
 
@@ -44,7 +49,8 @@ function DynamicBackground({ background, shouldReduceMotion }) {
       <div
         className="cta-overlay absolute inset-0"
         style={{
-          background: 'linear-gradient(90deg, rgba(3, 5, 26, 0.90) 0%, rgba(3, 5, 26, 0.72) 48%, rgba(3, 5, 26, 0.40) 100%)'
+          background:
+            "linear-gradient(90deg, rgba(3, 5, 26, 0.90) 0%, rgba(3, 5, 26, 0.72) 48%, rgba(3, 5, 26, 0.40) 100%)",
         }}
       />
     </motion.div>
@@ -66,23 +72,47 @@ export default function CourseCTA({
   href,
   onClick,
   onCtaClick,
-  className = ''
+  className = "",
 }) {
   const shouldReduceMotion = useReducedMotion();
 
   // Purely DB-Driven Content (No hardcoded fallback text or background)
-  const finalHeading = ctaHeading || cta_heading || course?.cta_heading || course?.ctaHeading || '';
-  const finalDescription = ctaDescription || cta_description || course?.cta_description || course?.ctaDescription || '';
-  const finalButtonText = buttonText || cta_text || course?.cta_text || course?.cta_left || '';
-  const finalBackground = background || ctaBackground || cta_background_image || course?.cta_background_image || course?.ctaBackground || course?.background_image || null;
+  const finalHeading =
+    ctaHeading ||
+    cta_heading ||
+    course?.cta_heading ||
+    course?.ctaHeading ||
+    "";
+  const finalDescription =
+    ctaDescription ||
+    cta_description ||
+    course?.cta_description ||
+    course?.ctaDescription ||
+    "";
+  const finalButtonText =
+    buttonText || cta_text || course?.cta_text || course?.cta_left || "";
+  const finalBackground =
+    background ||
+    ctaBackground ||
+    cta_background_image ||
+    course?.cta_background_image ||
+    course?.ctaBackground ||
+    course?.background_image ||
+    null;
 
   const finalHref = href || course?.cta_link || undefined;
-  const handleButtonClick = onClick || (onCtaClick ? () => onCtaClick(finalButtonText) : undefined);
+  const handleButtonClick =
+    onClick || (onCtaClick ? () => onCtaClick(finalButtonText) : undefined);
 
   return (
-    <section className={`relative w-full max-w-[1900px] mx-auto min-h-[350px] lg:min-h-[400px] overflow-hidden my-6 sm:my-10 flex items-center rounded-none ${className}`}>
+    <section
+      className={`relative w-full max-w-[1900px] mx-auto min-h-[350px] lg:min-h-[400px] overflow-hidden my-6 sm:my-10 flex items-center rounded-none ${className}`}
+    >
       {/* Background & Overlay Layer (Directly from DB background value) */}
-      <DynamicBackground background={finalBackground} shouldReduceMotion={shouldReduceMotion} />
+      <DynamicBackground
+        background={finalBackground}
+        shouldReduceMotion={shouldReduceMotion}
+      />
 
       {/* Two-Column Layout Container */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
@@ -93,11 +123,14 @@ export default function CourseCTA({
               <motion.h2
                 initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeOut" }}
+                transition={{
+                  duration: shouldReduceMotion ? 0 : 0.6,
+                  ease: "easeOut",
+                }}
                 className="text-white font-extrabold tracking-tight leading-[1.1] max-w-[800px] text-left"
                 style={{
-                  fontSize: 'clamp(1.8rem, 3.2vw, 3.2rem)',
-                  textWrap: 'balance'
+                  fontSize: "clamp(1.8rem, 3.2vw, 3.2rem)",
+                  textWrap: "balance",
                 }}
               >
                 {finalHeading}
@@ -108,10 +141,14 @@ export default function CourseCTA({
               <motion.p
                 initial={shouldReduceMotion ? false : { opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: "easeOut", delay: 0.1 }}
+                transition={{
+                  duration: shouldReduceMotion ? 0 : 0.6,
+                  ease: "easeOut",
+                  delay: 0.1,
+                }}
                 className="text-slate-300 font-normal leading-relaxed max-w-[620px] text-left"
                 style={{
-                  fontSize: 'clamp(0.95rem, 1.2vw, 1.1rem)'
+                  fontSize: "clamp(0.95rem, 1.2vw, 1.1rem)",
                 }}
               >
                 {finalDescription}
@@ -126,7 +163,9 @@ export default function CourseCTA({
                 text={finalButtonText}
                 href={finalHref}
                 onClick={handleButtonClick}
-                ariaLabel={finalHeading ? `Apply for ${finalHeading}` : finalButtonText}
+                ariaLabel={
+                  finalHeading ? `Apply for ${finalHeading}` : finalButtonText
+                }
               />
             )}
           </div>

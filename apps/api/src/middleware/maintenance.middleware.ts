@@ -52,7 +52,9 @@ export async function maintenanceMiddleware(
     if (cache.enabled) {
       return res.status(503).json({
         error: "maintenance",
-        message: cache.message || "Platform is under maintenance. Please try again later.",
+        message:
+          cache.message ||
+          "Platform is under maintenance. Please try again later.",
       });
     }
 

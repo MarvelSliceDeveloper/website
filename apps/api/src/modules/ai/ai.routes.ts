@@ -41,21 +41,27 @@ const generateLimiter = rateLimit({
   limit: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: "Too many AI requests. Please wait a moment and try again." },
+  message: {
+    error: "Too many AI requests. Please wait a moment and try again.",
+  },
 });
 
 router.use(requireAuth);
 
 // ─── SUPER_ADMIN: configuration management ───────────────────────────────────
 
-router.get("/status", requireSuperAdmin, async (req: Request, res: Response) => {
-  try {
-    res.json(await getAIStatus());
-  } catch (err: unknown) {
-    const { statusCode, body } = handleControllerError(err, (req as any).log);
-    res.status(statusCode).json(body);
-  }
-});
+router.get(
+  "/status",
+  requireSuperAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      res.json(await getAIStatus());
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
+    }
+  },
+);
 
 const apiKeyBodySchema = z.object({
   apiKey: z.string().min(20).max(200),
@@ -64,52 +70,71 @@ const modelBodySchema = z.object({
   model: z.enum(ALLOWED_AI_MODELS),
 });
 
-router.post("/api-key", requireSuperAdmin, async (req: Request, res: Response) => {
-  try {
-    const parsed = apiKeyBodySchema.safeParse(req.body);
-    if (!parsed.success) {
-      throw new AppError(400, "apiKey is required");
+router.post(
+  "/api-key",
+  requireSuperAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const parsed = apiKeyBodySchema.safeParse(req.body);
+      if (!parsed.success) {
+        throw new AppError(400, "apiKey is required");
+      }
+      await saveGeminiApiKey(parsed.data.apiKey);
+      res.json({ message: "API key saved" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
-    await saveGeminiApiKey(parsed.data.apiKey);
-    res.json({ message: "API key saved" });
-  } catch (err: unknown) {
-    const { statusCode, body } = handleControllerError(err, (req as any).log);
-    res.status(statusCode).json(body);
-  }
-});
+  },
+);
 
-router.delete("/api-key", requireSuperAdmin, async (req: Request, res: Response) => {
-  try {
-    await deleteGeminiApiKey();
-    res.json({ message: "API key removed" });
-  } catch (err: unknown) {
-    const { statusCode, body } = handleControllerError(err, (req as any).log);
-    res.status(statusCode).json(body);
-  }
-});
-
-router.post("/model", requireSuperAdmin, async (req: Request, res: Response) => {
-  try {
-    const parsed = modelBodySchema.safeParse(req.body);
-    if (!parsed.success) {
-      throw new AppError(400, `model must be one of: ${ALLOWED_AI_MODELS.join(", ")}`);
+router.delete(
+  "/api-key",
+  requireSuperAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      await deleteGeminiApiKey();
+      res.json({ message: "API key removed" });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
     }
-    await saveAIModel(parsed.data.model);
-    res.json({ message: `Model set to ${parsed.data.model}` });
-  } catch (err: unknown) {
-    const { statusCode, body } = handleControllerError(err, (req as any).log);
-    res.status(statusCode).json(body);
-  }
-});
+  },
+);
 
-router.post("/health-check", requireSuperAdmin, async (req: Request, res: Response) => {
-  try {
-    res.json(await healthCheck());
-  } catch (err: unknown) {
-    const { statusCode, body } = handleControllerError(err, (req as any).log);
-    res.status(statusCode).json(body);
-  }
-});
+router.post(
+  "/model",
+  requireSuperAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const parsed = modelBodySchema.safeParse(req.body);
+      if (!parsed.success) {
+        throw new AppError(
+          400,
+          `model must be one of: ${ALLOWED_AI_MODELS.join(", ")}`,
+        );
+      }
+      await saveAIModel(parsed.data.model);
+      res.json({ message: `Model set to ${parsed.data.model}` });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
+    }
+  },
+);
+
+router.post(
+  "/health-check",
+  requireSuperAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      res.json(await healthCheck());
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      res.status(statusCode).json(body);
+    }
+  },
+);
 
 // ─── ADMIN / INSTRUCTOR: content generation ──────────────────────────────────
 
@@ -145,7 +170,10 @@ router.post(
     try {
       const parsed = generateBodySchema.safeParse(req.body);
       if (!parsed.success) {
-        throw new AppError(400, "Invalid request: type and prompt are required");
+        throw new AppError(
+          400,
+          "Invalid request: type and prompt are required",
+        );
       }
       const result = await generate(
         parsed.data.type as AIGenerationType,
@@ -174,7 +202,10 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       if (!req.file) {
-        throw new AppError(400, "Attach the question paper PDF to generate from");
+        throw new AppError(
+          400,
+          "Attach the question paper PDF to generate from",
+        );
       }
       const parsed = pdfNoteSchema.safeParse(req.body);
       const result = await generateAssignmentFromPdf({

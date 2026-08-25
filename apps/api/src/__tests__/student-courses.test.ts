@@ -78,9 +78,7 @@ describe("Student Courses — /api/courses routes", () => {
 
     for (const entry of enrolled) {
       const candidateId = entry.courseId || entry.id;
-      const contentRes = await agent.get(
-        `/api/courses/${candidateId}/content`,
-      );
+      const contentRes = await agent.get(`/api/courses/${candidateId}/content`);
       if (contentRes.status !== 200) continue;
       const content = contentRes.body;
       const lesson = (content.modules ?? [])
@@ -121,9 +119,7 @@ describe("Student Courses — /api/courses routes", () => {
       expect(res.body).toHaveProperty("courses");
       expect(Array.isArray(res.body.courses)).toBe(true);
       expect(
-        res.body.courses.some(
-          (c: { id?: string }) => c.id === courseId,
-        ),
+        res.body.courses.some((c: { id?: string }) => c.id === courseId),
       ).toBe(true);
     });
   });
@@ -197,9 +193,7 @@ describe("Student Courses — /api/courses routes", () => {
 
   describe("GET /api/courses/:courseId/progress", () => {
     it("returns completion progress summary", async () => {
-      const res = await studentAgent.get(
-        `/api/courses/${courseId}/progress`,
-      );
+      const res = await studentAgent.get(`/api/courses/${courseId}/progress`);
 
       expect(res.status).toBe(200);
       expect(typeof res.body.isComplete).toBe("boolean");
@@ -262,7 +256,9 @@ describe("Student Courses — /api/courses routes", () => {
     });
 
     it("returns 404 for unknown quiz", async () => {
-      const res = await studentAgent.get("/api/courses/quizzes/no-such-quiz/questions");
+      const res = await studentAgent.get(
+        "/api/courses/quizzes/no-such-quiz/questions",
+      );
       expect(res.status).toBe(404);
     });
   });
@@ -352,7 +348,9 @@ describe("Student Courses — /api/courses routes", () => {
     }, 30000);
 
     it("returns 400 when courseId is missing", async () => {
-      const { agent, csrfToken } = await createFreshStudent(`enroll-a-${Date.now()}`);
+      const { agent, csrfToken } = await createFreshStudent(
+        `enroll-a-${Date.now()}`,
+      );
       const res = await agent
         .post("/api/courses/enroll")
         .set("X-CSRF-Token", csrfToken)
@@ -361,7 +359,9 @@ describe("Student Courses — /api/courses routes", () => {
     });
 
     it("creates a PENDING enrollment request for a fresh student", async () => {
-      const { agent, csrfToken } = await createFreshStudent(`enroll-b-${Date.now()}`);
+      const { agent, csrfToken } = await createFreshStudent(
+        `enroll-b-${Date.now()}`,
+      );
       const res = await agent
         .post("/api/courses/enroll")
         .set("X-CSRF-Token", csrfToken)
@@ -374,7 +374,9 @@ describe("Student Courses — /api/courses routes", () => {
     });
 
     it("rejects duplicate enrollment with 400", async () => {
-      const { agent, csrfToken } = await createFreshStudent(`enroll-c-${Date.now()}`);
+      const { agent, csrfToken } = await createFreshStudent(
+        `enroll-c-${Date.now()}`,
+      );
       const first = await agent
         .post("/api/courses/enroll")
         .set("X-CSRF-Token", csrfToken)
@@ -399,7 +401,9 @@ describe("Student Courses — /api/courses routes", () => {
     });
 
     it("returns 404 for unknown/unpublished course", async () => {
-      const { agent, csrfToken } = await createFreshStudent(`enroll-d-${Date.now()}`);
+      const { agent, csrfToken } = await createFreshStudent(
+        `enroll-d-${Date.now()}`,
+      );
 
       const missing = await agent
         .post("/api/courses/enroll")
@@ -419,6 +423,8 @@ describe("Student Courses — /api/courses routes", () => {
     });
     const ids = users.map((u) => u.id);
     if (ids.length === 0) return;
-    await prisma.enrollmentRequest.deleteMany({ where: { userId: { in: ids } } });
+    await prisma.enrollmentRequest.deleteMany({
+      where: { userId: { in: ids } },
+    });
   });
 });

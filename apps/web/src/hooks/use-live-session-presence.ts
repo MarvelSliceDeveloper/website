@@ -23,20 +23,17 @@ export function useLiveSessionPresence() {
     }
   }, []);
 
-  const start = useCallback(
-    (sessionId: string) => {
-      sessionIdRef.current = sessionId;
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-      timerRef.current = setInterval(() => {
-        const id = sessionIdRef.current;
-        if (!id) return;
-        api.post(`/api/attendance/${id}/heartbeat`).catch(() => undefined);
-      }, HEARTBEAT_INTERVAL_MS);
-    },
-    [],
-  );
+  const start = useCallback((sessionId: string) => {
+    sessionIdRef.current = sessionId;
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    timerRef.current = setInterval(() => {
+      const id = sessionIdRef.current;
+      if (!id) return;
+      api.post(`/api/attendance/${id}/heartbeat`).catch(() => undefined);
+    }, HEARTBEAT_INTERVAL_MS);
+  }, []);
 
   useEffect(() => stop, [stop]);
 

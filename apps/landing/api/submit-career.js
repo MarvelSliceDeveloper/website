@@ -1,7 +1,7 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: "gmail",
   auth: {
     user: process.env.SMTP_EMAIL,
     pass: process.env.SMTP_PASSWORD,
@@ -9,26 +9,27 @@ const transporter = nodemailer.createTransport({
 });
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { full_name, email, phone, position, category, description, file_url } = req.body;
+  const { full_name, email, phone, position, category, description, file_url } =
+    req.body;
 
   const adminEmail = process.env.ADMIN_EMAIL;
   if (!adminEmail || !process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
     return res.status(200).json({ success: true });
   }
 
-  const submittedAt = new Date().toLocaleString('en-US', {
-    dateStyle: 'long',
-    timeStyle: 'short',
-    timeZone: 'Asia/Kolkata',
+  const submittedAt = new Date().toLocaleString("en-US", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "Asia/Kolkata",
   });
 
   const fileLink = file_url
     ? `<a href="${file_url}" target="_blank" style="color: #1E56C7;">View Document</a>`
-    : 'No file uploaded';
+    : "No file uploaded";
 
   const html = `
     <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb;">
@@ -38,13 +39,13 @@ export default async function handler(req, res) {
       </div>
       <div style="padding: 24px 32px;">
         <table style="width: 100%; border-collapse: collapse;">
-          ${row('Full Name', full_name)}
-          ${row('Email', email)}
-          ${row('Phone', phone)}
-          ${row('Position', position || '\u2014')}
-          ${row('Category', category || '\u2014')}
-          ${row('Description', (description || '\u2014').replace(/\n/g, '<br>'))}
-          ${row('Document', fileLink)}
+          ${row("Full Name", full_name)}
+          ${row("Email", email)}
+          ${row("Phone", phone)}
+          ${row("Position", position || "\u2014")}
+          ${row("Category", category || "\u2014")}
+          ${row("Description", (description || "\u2014").replace(/\n/g, "<br>"))}
+          ${row("Document", fileLink)}
         </table>
       </div>
       <div style="padding: 16px 32px; background: #F5F6F8; font-size: 12px; color: #5F6B7A; text-align: center; border-top: 1px solid #e5e7eb;">
@@ -81,11 +82,11 @@ export default async function handler(req, res) {
     await transporter.sendMail({
       from: `"Marvel Slice" <${process.env.SMTP_EMAIL}>`,
       to: email,
-      subject: 'Application Received — Marvel Slice',
+      subject: "Application Received — Marvel Slice",
       html: autoReplyHtml,
     });
   } catch (emailError) {
-    console.error('Email send failed:', emailError);
+    console.error("Email send failed:", emailError);
   }
 
   return res.status(200).json({ success: true });

@@ -31,7 +31,9 @@ router.get("/", async (req: Request, res: Response) => {
 
     // Admin users are only visible to super admins
     if ((req as AuthRequest).user?.role !== UserRole.SUPER_ADMIN) {
-      where.role = { in: [UserRole.STUDENT, UserRole.INSTRUCTOR, UserRole.INTERN] };
+      where.role = {
+        in: [UserRole.STUDENT, UserRole.INSTRUCTOR, UserRole.INTERN],
+      };
     }
 
     if (role && typeof role === "string") {
@@ -200,7 +202,16 @@ router.get("/:id", async (req: Request, res: Response) => {
 // Creates a new user account
 router.post("/", async (req: Request, res: Response) => {
   try {
-    const { name, email, password, role, packageId, batchId, designation, internFieldId } = req.body;
+    const {
+      name,
+      email,
+      password,
+      role,
+      packageId,
+      batchId,
+      designation,
+      internFieldId,
+    } = req.body;
 
     if (!name || !email || !password || !role) {
       return res
@@ -337,10 +348,22 @@ router.post("/", async (req: Request, res: Response) => {
 router.patch("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, email, role, packageId, batchId, designation, internFieldId } = req.body;
+    const {
+      name,
+      email,
+      role,
+      packageId,
+      batchId,
+      designation,
+      internFieldId,
+    } = req.body;
 
     const hasUserFields =
-      name || email || role || designation !== undefined || internFieldId !== undefined;
+      name ||
+      email ||
+      role ||
+      designation !== undefined ||
+      internFieldId !== undefined;
     const hasEnrollmentFields =
       packageId !== undefined || batchId !== undefined;
 
@@ -353,7 +376,9 @@ router.patch("/:id", async (req: Request, res: Response) => {
 
     if (
       role &&
-      !["STUDENT", "INSTRUCTOR", "ADMIN", "SUPER_ADMIN", "INTERN"].includes(role)
+      !["STUDENT", "INSTRUCTOR", "ADMIN", "SUPER_ADMIN", "INTERN"].includes(
+        role,
+      )
     ) {
       return res.status(400).json({ error: "Invalid user role" });
     }
@@ -431,7 +456,8 @@ router.patch("/:id", async (req: Request, res: Response) => {
       if (name) updateData.name = name;
       if (email) updateData.email = email;
       if (role) updateData.role = role;
-      if (designation !== undefined) updateData.designation = designation || null;
+      if (designation !== undefined)
+        updateData.designation = designation || null;
       if (internFieldId !== undefined) {
         updateData.internFieldId =
           typeof internFieldId === "string" ? internFieldId : null;

@@ -11,13 +11,18 @@ export const metadata = {
 async function getMaintenanceMessage(): Promise<string> {
   try {
     const apiUrl =
-      process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://localhost:4000";
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.API_URL ||
+      "http://localhost:4000";
     const res = await fetch(`${apiUrl}/api/maintenance-status`, {
       cache: "no-store",
       signal: AbortSignal.timeout(3000),
     });
     if (res.ok) {
-      const data = (await res.json()) as { enabled?: boolean; message?: string };
+      const data = (await res.json()) as {
+        enabled?: boolean;
+        message?: string;
+      };
       return data.message || "";
     }
   } catch {
@@ -66,7 +71,10 @@ export default async function MaintenancePage() {
       {/* panel */}
       <div
         className="relative w-full max-w-lg border border-dashed px-8 py-12 sm:px-14 sm:py-16"
-        style={{ borderColor: "rgba(143,168,201,0.45)", backgroundColor: "rgba(15,35,56,0.55)" }}
+        style={{
+          borderColor: "rgba(143,168,201,0.45)",
+          backgroundColor: "rgba(15,35,56,0.55)",
+        }}
       >
         {/* corner registration marks */}
         {[
@@ -90,7 +98,11 @@ export default async function MaintenancePage() {
         {/* status stamp */}
         <div
           className="absolute -top-4 right-6 -rotate-6 select-none border px-3 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.2em]"
-          style={{ borderColor: "#FFB627", color: "#FFB627", backgroundColor: "#0F2338" }}
+          style={{
+            borderColor: "#FFB627",
+            color: "#FFB627",
+            backgroundColor: "#0F2338",
+          }}
         >
           Status · Maintenance
         </div>
@@ -134,10 +146,16 @@ export default async function MaintenancePage() {
         >
           Under Maintenance
         </h1>
-        <div className="mx-auto my-4 h-px w-16" style={{ backgroundColor: "#3D5C7D" }} />
+        <div
+          className="mx-auto my-4 h-px w-16"
+          style={{ backgroundColor: "#3D5C7D" }}
+        />
 
         {/* body copy */}
-        <p className="mx-auto max-w-sm text-center text-sm leading-relaxed" style={{ color: "#93AFC9" }}>
+        <p
+          className="mx-auto max-w-sm text-center text-sm leading-relaxed"
+          style={{ color: "#93AFC9" }}
+        >
           {message
             ? message
             : "Scheduled work is underway. The team is verifying every system before reopening access — thanks for your patience while we finish the checks."}
@@ -148,12 +166,18 @@ export default async function MaintenancePage() {
           className="mx-auto mt-8 flex max-w-xs items-center gap-2 border px-4 py-2 font-mono text-xs"
           style={{ borderColor: "rgba(143,168,201,0.35)", color: "#8FA8C4" }}
         >
-          <span className="bp-blink h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: "#FFB627" }} />
+          <span
+            className="bp-blink h-1.5 w-1.5 shrink-0 rounded-full"
+            style={{ backgroundColor: "#FFB627" }}
+          />
           <span>running system checks&hellip;</span>
         </div>
 
         {/* footer */}
-        <div className="mt-10 flex flex-col items-center gap-3 text-center text-xs" style={{ color: "#6E88A3" }}>
+        <div
+          className="mt-10 flex flex-col items-center gap-3 text-center text-xs"
+          style={{ color: "#6E88A3" }}
+        >
           <p>Need help now? Contact support.</p>
           <Link
             href="/login"

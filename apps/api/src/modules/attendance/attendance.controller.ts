@@ -37,9 +37,7 @@ export const attendanceController = {
         sessionId,
       );
 
-      return res
-        .status(200)
-        .json({ message: "Session left", attendance });
+      return res.status(200).json({ message: "Session left", attendance });
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
       return res.status(statusCode).json(body);

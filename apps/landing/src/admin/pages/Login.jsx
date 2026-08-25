@@ -1,36 +1,36 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { trackLogin } from '../../lib/analytics';
-import { SubmitButton } from '../components/FormButtons';
-import { FiEye, FiEyeOff } from 'react-icons/fi';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { trackLogin } from "../../lib/analytics";
+import { SubmitButton } from "../components/FormButtons";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 export default function Login() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) navigate('/admin', { replace: true });
+    if (user) navigate("/admin", { replace: true });
   }, [user, navigate]);
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setError('');
+    setError("");
     if (!email.trim() || !password.trim()) {
-      setError('Email and password are required');
+      setError("Email and password are required");
       return;
     }
     setLoading(true);
     try {
       await login(email.trim(), password);
-      trackLogin('admin');
-      navigate('/admin', { replace: true });
+      trackLogin("admin");
+      navigate("/admin", { replace: true });
     } catch (err) {
       setError(err.message);
     }
@@ -42,10 +42,15 @@ export default function Login() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-black">Marvel Slice</h1>
-          <p className="text-neutral-500 text-sm mt-1">Sign in to the admin panel</p>
+          <p className="text-neutral-500 text-sm mt-1">
+            Sign in to the admin panel
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-admin-200 shadow-sm p-6 space-y-5">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-xl border border-admin-200 shadow-sm p-6 space-y-5"
+        >
           {error && (
             <div className="p-3 bg-destructive-50 border border-destructive-200 rounded-lg text-sm text-destructive-700">
               {error}
@@ -53,7 +58,9 @@ export default function Login() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1.5">Email</label>
+            <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+              Email
+            </label>
             <input
               type="email"
               value={email}
@@ -65,10 +72,12 @@ export default function Login() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1.5">Password</label>
+            <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+              Password
+            </label>
             <div className="relative">
               <input
-                type={showPw ? 'text' : 'password'}
+                type={showPw ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password"
@@ -79,12 +88,22 @@ export default function Login() {
                 onClick={() => setShowPw(!showPw)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-admin-400 hover:text-admin-600 transition-colors"
               >
-                {showPw ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                {showPw ? (
+                  <FiEyeOff className="w-4 h-4" />
+                ) : (
+                  <FiEye className="w-4 h-4" />
+                )}
               </button>
             </div>
           </div>
 
-          <SubmitButton type="submit" saving={loading} savingLabel="Signing in..." label="Sign In" className="w-full" />
+          <SubmitButton
+            type="submit"
+            saving={loading}
+            savingLabel="Signing in..."
+            label="Sign In"
+            className="w-full"
+          />
         </form>
       </div>
     </div>

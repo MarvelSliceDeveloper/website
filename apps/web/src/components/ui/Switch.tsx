@@ -17,12 +17,16 @@ export function Switch({
   size = "md",
   label,
 }: SwitchProps) {
-  const trackSizes =
-    size === "sm" ? "h-5 w-9" : "h-6 w-11";
-  const thumbSizes =
-    size === "sm" ? "h-4 w-4" : "h-5 w-5";
+  const trackSizes = size === "sm" ? "h-5 w-9" : "h-6 w-11";
+  const thumbSizes = size === "sm" ? "h-4 w-4" : "h-5 w-5";
   const thumbOffset =
-    size === "sm" ? (checked ? "translate-x-4" : "translate-x-0.5") : (checked ? "translate-x-[22px]" : "translate-x-0.5");
+    size === "sm"
+      ? checked
+        ? "translate-x-4"
+        : "translate-x-0.5"
+      : checked
+        ? "translate-x-[22px]"
+        : "translate-x-0.5";
 
   return (
     <button

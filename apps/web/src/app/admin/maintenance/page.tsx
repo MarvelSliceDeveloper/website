@@ -7,7 +7,12 @@ import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { useApiQuery } from "@/lib/query";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { IconShieldCheck, IconShieldOff, IconRefresh, IconAlarmSmoke } from "@tabler/icons-react";
+import {
+  IconShieldCheck,
+  IconShieldOff,
+  IconRefresh,
+  IconAlarmSmoke,
+} from "@tabler/icons-react";
 
 interface MaintenanceStatus {
   enabled: boolean;
@@ -36,9 +41,7 @@ export default function MaintenancePage() {
       api.put<MaintenanceStatus>("/api/admin/maintenance", body),
     onSuccess: (data) => {
       toast.success(
-        data.enabled
-          ? "Maintenance mode enabled"
-          : "Maintenance mode disabled",
+        data.enabled ? "Maintenance mode enabled" : "Maintenance mode disabled",
       );
       void maintenanceQuery.refetch();
     },
@@ -57,7 +60,9 @@ export default function MaintenancePage() {
       <AdminPageHeader
         title="Maintenance Mode"
         description="Enable platform-wide maintenance mode to restrict public access."
-        breadcrumbs={[{ label: "Maintenance Mode", href: "/admin/maintenance" }]}
+        breadcrumbs={[
+          { label: "Maintenance Mode", href: "/admin/maintenance" },
+        ]}
         action={
           <button
             onClick={() => void maintenanceQuery.refetch()}
@@ -138,7 +143,9 @@ export default function MaintenancePage() {
               />
               <span>
                 Status:{" "}
-                {status.enabled ? "Maintenance mode ON" : "Maintenance mode OFF"}
+                {status.enabled
+                  ? "Maintenance mode ON"
+                  : "Maintenance mode OFF"}
               </span>
             </div>
             <button

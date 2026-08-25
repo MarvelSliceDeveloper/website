@@ -25,7 +25,10 @@ router.get("/", async (_req: AuthRequest, res: Response) => {
     return res.json(parsed);
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to get maintenance status",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get maintenance status",
     });
   }
 });
@@ -40,13 +43,24 @@ router.put("/", async (req: AuthRequest, res: Response) => {
     await prisma.systemSetting.upsert({
       where: { key: MAINTENANCE_KEY },
       update: { value },
-      create: { key: MAINTENANCE_KEY, value, type: "json", description: "Maintenance mode toggle" },
+      create: {
+        key: MAINTENANCE_KEY,
+        value,
+        type: "json",
+        description: "Maintenance mode toggle",
+      },
     });
     resetMaintenanceCache();
-    return res.json({ enabled: !!enabled, message: typeof message === "string" ? message : "" });
+    return res.json({
+      enabled: !!enabled,
+      message: typeof message === "string" ? message : "",
+    });
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to update maintenance status",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to update maintenance status",
     });
   }
 });

@@ -76,7 +76,8 @@ export default function AnnouncementsPage() {
       targetType: string;
       targetRole: string;
       targetIds: string[];
-    }) => api.post<{ notifiedCount: number }>("/api/admin/announcements", payload),
+    }) =>
+      api.post<{ notifiedCount: number }>("/api/admin/announcements", payload),
     onSuccess: (res) => {
       toast.success(`Announcement sent to ${res.notifiedCount} user(s)`);
       setTitle("");
@@ -258,8 +259,7 @@ export default function AnnouncementsPage() {
             </div>
           )}
 
-          {(targetType === "BATCH" ||
-            targetType === "INSTRUCTOR_BATCH") && (
+          {(targetType === "BATCH" || targetType === "INSTRUCTOR_BATCH") && (
             <div>
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {targetType === "INSTRUCTOR_BATCH"

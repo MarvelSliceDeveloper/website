@@ -44,7 +44,11 @@ export async function getStudentEnrollmentDate(
   if (enrollment) return enrollment.appliedAt;
 
   const pec = await prisma.packageEnrollmentCourse.findFirst({
-    where: { batchId, courseId, enrollment: { userId: studentId, status: "APPROVED" } },
+    where: {
+      batchId,
+      courseId,
+      enrollment: { userId: studentId, status: "APPROVED" },
+    },
     select: { enrollment: { select: { createdAt: true } } },
   });
   if (pec) return pec.enrollment.createdAt;

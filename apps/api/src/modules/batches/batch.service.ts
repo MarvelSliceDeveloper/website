@@ -172,9 +172,7 @@ export const batchService = {
           instructor.role !== "ADMIN" &&
           instructor.role !== "SUPER_ADMIN"
         ) {
-          throw new Error(
-            `User ${instructor.name} is not an instructor`,
-          );
+          throw new Error(`User ${instructor.name} is not an instructor`);
         }
       }
     }
@@ -212,14 +210,23 @@ export const batchService = {
         course: { select: { id: true, title: true } },
         instructor: { select: { id: true, name: true, email: true } },
         package: { select: { id: true, name: true } },
-        courseMentors: { include: { mentor: { select: { id: true, name: true, email: true } }, course: { select: { id: true, title: true } } } },
+        courseMentors: {
+          include: {
+            mentor: { select: { id: true, name: true, email: true } },
+            course: { select: { id: true, title: true } },
+          },
+        },
       },
     });
 
     // Create BatchCourseMentor records for each course-instructor assignment
     if (data.courseInstructors?.length) {
       const mentorsToCreate = data.courseInstructors
-        .filter((ci) => ci.instructorId && packageCourses.some((pc) => pc.course.id === ci.courseId))
+        .filter(
+          (ci) =>
+            ci.instructorId &&
+            packageCourses.some((pc) => pc.course.id === ci.courseId),
+        )
         .map((ci) => ({
           batchId: batch.id,
           courseId: ci.courseId,
@@ -254,7 +261,12 @@ export const batchService = {
         course: { select: { id: true, title: true } },
         instructor: { select: { id: true, name: true, email: true } },
         package: { select: { id: true, name: true } },
-        courseMentors: { include: { mentor: { select: { id: true, name: true, email: true } }, course: { select: { id: true, title: true } } } },
+        courseMentors: {
+          include: {
+            mentor: { select: { id: true, name: true, email: true } },
+            course: { select: { id: true, title: true } },
+          },
+        },
       },
     });
   },

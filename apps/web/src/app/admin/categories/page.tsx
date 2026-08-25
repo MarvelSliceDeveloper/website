@@ -129,7 +129,8 @@ export default function AdminCategoriesPage() {
   const existingNames = new Set(categories.map((c) => c.name.toLowerCase()));
   const query = formName.trim().toLowerCase();
   const suggestions = SUGGESTED_CATEGORIES.filter(
-    (c) => !existingNames.has(c.toLowerCase()) && c.toLowerCase().includes(query),
+    (c) =>
+      !existingNames.has(c.toLowerCase()) && c.toLowerCase().includes(query),
   ).slice(0, 24);
 
   return (

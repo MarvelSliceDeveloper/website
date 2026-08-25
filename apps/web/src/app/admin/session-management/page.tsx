@@ -144,7 +144,10 @@ export default function SessionManagementPage() {
       {loading ? (
         <div className="animate-pulse space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-16 rounded-xl bg-card border border-border" />
+            <div
+              key={i}
+              className="h-16 rounded-xl bg-card border border-border"
+            />
           ))}
         </div>
       ) : sessions.length === 0 ? (
@@ -192,7 +195,8 @@ export default function SessionManagementPage() {
                       {SessionIcon(s.userAgent)}
                       <span>
                         {formatDevice(s.userAgent)}
-                        {formatBrowser(s.userAgent) && ` · ${formatBrowser(s.userAgent)}`}
+                        {formatBrowser(s.userAgent) &&
+                          ` · ${formatBrowser(s.userAgent)}`}
                       </span>
                     </div>
                   </td>

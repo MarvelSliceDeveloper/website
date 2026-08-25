@@ -7,14 +7,26 @@ import { handleControllerError } from "../../utils/errors";
 const createNoteSchema = z.object({
   courseId: z.string().min(1, "courseId is required"),
   moduleId: z.string().min(1).optional(),
-  title: z.string().max(200, "Title must be 200 characters or fewer").optional(),
-  body: z.string().max(50000, "Body must be 50,000 characters or fewer").optional(),
+  title: z
+    .string()
+    .max(200, "Title must be 200 characters or fewer")
+    .optional(),
+  body: z
+    .string()
+    .max(50000, "Body must be 50,000 characters or fewer")
+    .optional(),
   isSticky: z.boolean().optional(),
 });
 
 const updateNoteSchema = z.object({
-  title: z.string().max(200, "Title must be 200 characters or fewer").optional(),
-  body: z.string().max(50000, "Body must be 50,000 characters or fewer").optional(),
+  title: z
+    .string()
+    .max(200, "Title must be 200 characters or fewer")
+    .optional(),
+  body: z
+    .string()
+    .max(50000, "Body must be 50,000 characters or fewer")
+    .optional(),
   isSticky: z.boolean().optional(),
 });
 
@@ -62,7 +74,9 @@ export const notesController = {
         return res.status(401).json({ error: "Authentication required" });
       const parsed = createNoteSchema.safeParse(req.body);
       if (!parsed.success) {
-        const errors = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join(", ");
+        const errors = parsed.error.issues
+          .map((i) => `${i.path.join(".")}: ${i.message}`)
+          .join(", ");
         return res.status(400).json({ error: errors });
       }
       const { courseId, moduleId, title, body, isSticky } = parsed.data;
@@ -87,7 +101,9 @@ export const notesController = {
         return res.status(401).json({ error: "Authentication required" });
       const parsed = updateNoteSchema.safeParse(req.body);
       if (!parsed.success) {
-        const errors = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join(", ");
+        const errors = parsed.error.issues
+          .map((i) => `${i.path.join(".")}: ${i.message}`)
+          .join(", ");
         return res.status(400).json({ error: errors });
       }
       const { title, body, isSticky } = parsed.data;

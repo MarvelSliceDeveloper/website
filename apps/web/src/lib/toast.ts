@@ -38,7 +38,9 @@ export async function withLoadingToast<T>(
   promise: Promise<T>,
   messages: {
     loading: string;
-    success: (data: T) => string | { message: string; type?: "success" | "error" } | void;
+    success: (
+      data: T,
+    ) => string | { message: string; type?: "success" | "error" } | void;
     error?: (err: unknown) => string;
   },
 ): Promise<T> {

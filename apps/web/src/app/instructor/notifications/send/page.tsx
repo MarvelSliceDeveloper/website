@@ -38,9 +38,9 @@ export default function InstructorSendNotificationPage() {
   const [sending, setSending] = useState(false);
   const [confirmShow, setConfirmShow] = useState(false);
 
-  const [emailTemplates, setEmailTemplates] = useState<
-    EmailTemplateOption[]
-  >([]);
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplateOption[]>(
+    [],
+  );
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
 
   useEffect(() => {
@@ -73,7 +73,9 @@ export default function InstructorSendNotificationPage() {
           targetIds: Array.from(selectedBatchIds),
           title: title.trim(),
           message: message.trim(),
-          ...(selectedTemplateId ? { emailTemplateId: selectedTemplateId } : {}),
+          ...(selectedTemplateId
+            ? { emailTemplateId: selectedTemplateId }
+            : {}),
         },
       );
       toast.success(res.message || `Sent to ${res.count} users`);
@@ -103,7 +105,12 @@ export default function InstructorSendNotificationPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <AdminPageHeader
         title="Send Notification"
-        breadcrumbs={[{ label: "Send Notification", href: "/instructor/notifications/send" }]}
+        breadcrumbs={[
+          {
+            label: "Send Notification",
+            href: "/instructor/notifications/send",
+          },
+        ]}
         role="Instructor"
         description="Send a custom notification to students in your batches."
       />
@@ -192,7 +199,8 @@ export default function InstructorSendNotificationPage() {
         {/* Email Template selector */}
         <div>
           <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Email Template <span className="text-xs text-muted">(optional)</span>
+            Email Template{" "}
+            <span className="text-xs text-muted">(optional)</span>
           </label>
           <Select
             value={selectedTemplateId}

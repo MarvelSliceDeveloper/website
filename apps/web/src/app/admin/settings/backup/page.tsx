@@ -3,7 +3,14 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { IconDatabase, IconDownload, IconUpload, IconTrash, IconRefresh, IconAlertTriangle } from "@tabler/icons-react";
+import {
+  IconDatabase,
+  IconDownload,
+  IconUpload,
+  IconTrash,
+  IconRefresh,
+  IconAlertTriangle,
+} from "@tabler/icons-react";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { usePageTitle } from "@/lib/use-page-title";
 import { useApiQuery } from "@/lib/query";
@@ -104,7 +111,9 @@ export default function BackupPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Backup & Restore</h1>
-          <p className="text-foreground/60 mt-1">Create, download, and restore database backups</p>
+          <p className="text-foreground/60 mt-1">
+            Create, download, and restore database backups
+          </p>
         </div>
         <div className="flex gap-2">
           <button
@@ -135,10 +144,14 @@ export default function BackupPage() {
 
       <div className="glass-card rounded-xl p-4 border border-amber-500/20 bg-amber-500/5">
         <div className="flex items-start gap-3">
-          <IconAlertTriangle size={20} className="text-amber-500 shrink-0 mt-0.5" />
+          <IconAlertTriangle
+            size={20}
+            className="text-amber-500 shrink-0 mt-0.5"
+          />
           <p className="text-sm text-foreground/60">
-            Restoring a backup will overwrite the current database. This action cannot be undone.
-            A safety backup of the current database is created automatically before restoring.
+            Restoring a backup will overwrite the current database. This action
+            cannot be undone. A safety backup of the current database is created
+            automatically before restoring.
           </p>
         </div>
       </div>
@@ -149,25 +162,44 @@ export default function BackupPage() {
         <div className="glass-card rounded-xl p-12 text-center">
           <IconDatabase size={40} className="mx-auto text-foreground/20 mb-3" />
           <p className="text-foreground/60">No backups yet</p>
-          <p className="text-sm text-foreground/40">Create your first backup using the button above</p>
+          <p className="text-sm text-foreground/40">
+            Create your first backup using the button above
+          </p>
         </div>
       ) : (
         <div className="glass-card rounded-xl overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border text-left">
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-foreground/60">Filename</th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-foreground/60">Size</th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-foreground/60">Created</th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-foreground/60">Actions</th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-foreground/60">
+                  Filename
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-foreground/60">
+                  Size
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-foreground/60">
+                  Created
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-foreground/60">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {backups.map((b) => (
-                <tr key={b.filename} className="border-b border-border/50 last:border-0">
-                  <td className="px-4 py-3 text-sm text-foreground/80">{b.filename}</td>
-                  <td className="px-4 py-3 text-sm text-foreground/60">{formatSize(b.size)}</td>
-                  <td className="px-4 py-3 text-sm text-foreground/60">{new Date(b.createdAt).toLocaleString()}</td>
+                <tr
+                  key={b.filename}
+                  className="border-b border-border/50 last:border-0"
+                >
+                  <td className="px-4 py-3 text-sm text-foreground/80">
+                    {b.filename}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground/60">
+                    {formatSize(b.size)}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-foreground/60">
+                    {new Date(b.createdAt).toLocaleString()}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
                       <a

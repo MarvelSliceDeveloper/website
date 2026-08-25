@@ -44,13 +44,13 @@ Applied via `prisma db push` (repo convention, no migration files). DB confirmed
 
 ### 4. API endpoints (`apps/api/src/modules/attendance/attendance.routes.ts`)
 
-| Method | Route | Auth | Description |
-| ------ | ----- | ---- | ----------- |
-| `POST` | `/api/attendance/:sessionId/join` | user | join (existing) |
-| `POST` | `/api/attendance/:sessionId/leave` | user | leave (existing) |
-| `POST` | `/api/attendance/:sessionId/heartbeat` | user | presence ping (called every ~45s from session page) |
-| `GET` | `/api/attendance/:sessionId/stats` | ADMIN/INSTRUCTOR | session engagement stats |
-| `GET` | `/api/attendance/:sessionId` | ADMIN/INSTRUCTOR | attendee list |
+| Method | Route                                  | Auth             | Description                                         |
+| ------ | -------------------------------------- | ---------------- | --------------------------------------------------- |
+| `POST` | `/api/attendance/:sessionId/join`      | user             | join (existing)                                     |
+| `POST` | `/api/attendance/:sessionId/leave`     | user             | leave (existing)                                    |
+| `POST` | `/api/attendance/:sessionId/heartbeat` | user             | presence ping (called every ~45s from session page) |
+| `GET`  | `/api/attendance/:sessionId/stats`     | ADMIN/INSTRUCTOR | session engagement stats                            |
+| `GET`  | `/api/attendance/:sessionId`           | ADMIN/INSTRUCTOR | attendee list                                       |
 
 **Deviation:** the planned `GET /api/admin/sessions/stats?batchId&courseId&from&to` cross-session endpoint was not added as a separate route. Cross-session aggregates ride on `GET /api/sessions` (see `listSessions` below), which the admin list page consumes directly.
 

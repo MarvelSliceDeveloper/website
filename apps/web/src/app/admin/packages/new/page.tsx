@@ -16,7 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SUGGESTED_PACKAGE_NAMES, getRelatedCourseIds } from "@/lib/suggestions";
+import {
+  SUGGESTED_PACKAGE_NAMES,
+  getRelatedCourseIds,
+} from "@/lib/suggestions";
 import type { PackagedCourse } from "@/lib/suggestions";
 import Link from "next/link";
 
@@ -151,10 +154,7 @@ export default function CreatePackagePage() {
             <label className="mb-1.5 block text-sm font-medium text-foreground">
               Name <span className="text-danger">*</span>
             </label>
-            <Select
-              value={name}
-              onValueChange={(val) => setName(val || "")}
-            >
+            <Select value={name} onValueChange={(val) => setName(val || "")}>
               <SelectTrigger className="field w-full">
                 <SelectValue placeholder="-- Select a package name --" />
               </SelectTrigger>
@@ -162,15 +162,15 @@ export default function CreatePackagePage() {
                 <SelectItem value="">
                   <span>-- Select a package name --</span>
                 </SelectItem>
-                {packageNameOptions.filter((n) => n !== name).map((n) => (
-                  <SelectItem key={n} value={n}>
-                    {n}
-                  </SelectItem>
-                ))}
+                {packageNameOptions
+                  .filter((n) => n !== name)
+                  .map((n) => (
+                    <SelectItem key={n} value={n}>
+                      {n}
+                    </SelectItem>
+                  ))}
                 {name &&
-                  !(packageNameOptions as readonly string[]).includes(
-                    name,
-                  ) && (
+                  !(packageNameOptions as readonly string[]).includes(name) && (
                     <SelectItem value={name}>{name}</SelectItem>
                   )}
               </SelectContent>
@@ -234,93 +234,93 @@ export default function CreatePackagePage() {
               Courses <span className="text-danger">*</span>
             </h2>
 
-          {loadingCourses ? (
-            <div className="space-y-2">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border"
-                />
-              ))}
-            </div>
-          ) : (
-            <>
-              <div>
-                <label className="mb-1.5 block text-xs text-muted-foreground">
-                  Courses matching this package were auto-selected below. You
-                  can add more or remove any course.
-                </label>
-                <Select onValueChange={addCourse}>
-                  <SelectTrigger className="field w-full">
-                    <SelectValue placeholder="-- Add a course --" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {unselectedCourses.length === 0 ? (
-                      <SelectItem value="none" disabled>
-                        All courses added
-                      </SelectItem>
-                    ) : (
-                      unselectedCourses.map((course) => (
-                        <SelectItem key={course.id} value={course.id}>
-                          {course.title}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {selectedCourses.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Selected courses ({selectedCourses.length})
-                  </p>
-                  <div className="space-y-1.5">
-                    {selectedCourses.map((course, index) => (
-                      <div
-                        key={course.id}
-                        className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-primary/10 text-[10px] font-bold text-primary">
-                            {index + 1}
-                          </span>
-                          <span className="text-sm font-medium text-foreground">
-                            {course.title}
-                          </span>
-                          {relatedCourseIds.includes(course.id) && (
-                            <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
-                              Related
-                            </span>
-                          )}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeCourse(course.id)}
-                          className="text-muted hover:text-danger transition-colors"
-                        >
-                          <IconX size={16} stroke={1.5} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {selectedCourses.length === 0 && (
-                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-8 text-center">
-                  <IconPackage
-                    size={32}
-                    stroke={1.2}
-                    className="mb-2 text-muted"
+            {loadingCourses ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="h-10 w-full animate-pulse rounded-lg bg-card-hover border border-border"
                   />
-                  <p className="text-sm text-muted-foreground">
-                    No courses selected yet
-                  </p>
+                ))}
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="mb-1.5 block text-xs text-muted-foreground">
+                    Courses matching this package were auto-selected below. You
+                    can add more or remove any course.
+                  </label>
+                  <Select onValueChange={addCourse}>
+                    <SelectTrigger className="field w-full">
+                      <SelectValue placeholder="-- Add a course --" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {unselectedCourses.length === 0 ? (
+                        <SelectItem value="none" disabled>
+                          All courses added
+                        </SelectItem>
+                      ) : (
+                        unselectedCourses.map((course) => (
+                          <SelectItem key={course.id} value={course.id}>
+                            {course.title}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
-              )}
-            </>
-          )}
+
+                {selectedCourses.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Selected courses ({selectedCourses.length})
+                    </p>
+                    <div className="space-y-1.5">
+                      {selectedCourses.map((course, index) => (
+                        <div
+                          key={course.id}
+                          className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-primary/10 text-[10px] font-bold text-primary">
+                              {index + 1}
+                            </span>
+                            <span className="text-sm font-medium text-foreground">
+                              {course.title}
+                            </span>
+                            {relatedCourseIds.includes(course.id) && (
+                              <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                                Related
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeCourse(course.id)}
+                            className="text-muted hover:text-danger transition-colors"
+                          >
+                            <IconX size={16} stroke={1.5} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedCourses.length === 0 && (
+                  <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-8 text-center">
+                    <IconPackage
+                      size={32}
+                      stroke={1.2}
+                      className="mb-2 text-muted"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      No courses selected yet
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
 
@@ -331,7 +331,10 @@ export default function CreatePackagePage() {
           </Link>
           <button
             type="submit"
-            disabled={createMutation.isPending || (!isInternship && selectedCourseIds.length === 0)}
+            disabled={
+              createMutation.isPending ||
+              (!isInternship && selectedCourseIds.length === 0)
+            }
             className="btn-primary w-full text-sm flex items-center gap-1.5"
           >
             {createMutation.isPending ? (

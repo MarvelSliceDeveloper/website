@@ -394,7 +394,11 @@ export default function AdminCouponsPage() {
           <div className="flex items-center gap-2 pt-2 border-t border-border">
             <button
               onClick={handleCreate}
-              disabled={createMutation.isPending || !formTitle.trim() || !formDiscountValue}
+              disabled={
+                createMutation.isPending ||
+                !formTitle.trim() ||
+                !formDiscountValue
+              }
               className="btn-primary text-xs py-2 disabled:opacity-40"
             >
               {createMutation.isPending ? "Adding..." : "Add Coupon"}

@@ -118,13 +118,7 @@ function InstructorMentorshipContent() {
   });
 
   const completeMutation = useMutation({
-    mutationFn: ({
-      ticketId,
-      notes,
-    }: {
-      ticketId: string;
-      notes?: string;
-    }) =>
+    mutationFn: ({ ticketId, notes }: { ticketId: string; notes?: string }) =>
       api.patch(`/api/mentorship/tickets/${ticketId}/complete`, {
         notes: notes || undefined,
       }),
@@ -186,7 +180,12 @@ function InstructorMentorshipContent() {
   };
 
   const handleCancel = async (ticketId: string) => {
-    if (!(await confirmDelete({ title: "Cancel Request", message: "Cancel this mentorship request?" })))
+    if (
+      !(await confirmDelete({
+        title: "Cancel Request",
+        message: "Cancel this mentorship request?",
+      }))
+    )
       return;
     cancelMutation.mutate(ticketId);
   };

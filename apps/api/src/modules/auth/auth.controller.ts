@@ -85,7 +85,15 @@ export const authController = {
       }
 
       // Log successful login
-      const loginResult = result as { accessToken: string; user: { userId: string; name: string; mustChangePassword: boolean; onboardingComplete: boolean } };
+      const loginResult = result as {
+        accessToken: string;
+        user: {
+          userId: string;
+          name: string;
+          mustChangePassword: boolean;
+          onboardingComplete: boolean;
+        };
+      };
       prisma.loginLog
         .create({
           data: {
@@ -119,7 +127,9 @@ export const authController = {
           where: { userId: req.user.userId, logoutAt: null },
           data: { logoutAt: new Date() },
         })
-        .catch((err) => console.error("[auth] Failed to update logoutAt:", err));
+        .catch((err) =>
+          console.error("[auth] Failed to update logoutAt:", err),
+        );
     }
     res.clearCookie("accessToken");
     return res.status(200).json({ message: "Logged out successfully" });

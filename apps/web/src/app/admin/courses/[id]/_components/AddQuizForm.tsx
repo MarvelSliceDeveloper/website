@@ -169,7 +169,9 @@ export default function AddQuizForm({
           { label: String(row[3] ?? "").trim(), isCorrect: false },
           { label: String(row[4] ?? "").trim(), isCorrect: false },
         ];
-        const answer = String(row[5] ?? "").trim().toUpperCase();
+        const answer = String(row[5] ?? "")
+          .trim()
+          .toUpperCase();
 
         if (!question || options.every((o) => !o.label)) {
           skipped++;
@@ -177,7 +179,15 @@ export default function AddQuizForm({
         }
 
         const answerIndex =
-          answer === "A" ? 0 : answer === "B" ? 1 : answer === "C" ? 2 : answer === "D" ? 3 : -1;
+          answer === "A"
+            ? 0
+            : answer === "B"
+              ? 1
+              : answer === "C"
+                ? 2
+                : answer === "D"
+                  ? 3
+                  : -1;
         if (answerIndex >= 0) {
           options[answerIndex] = { ...options[answerIndex], isCorrect: true };
         }
@@ -211,9 +221,7 @@ export default function AddQuizForm({
     setHasMcq(true);
     setHasAssignment(false);
     setHasCoding(false);
-    setQuestions([
-      { text: "", options: [{ label: "", isCorrect: false }] },
-    ]);
+    setQuestions([{ text: "", options: [{ label: "", isCorrect: false }] }]);
     setAssignmentInstructions("");
     setAssignmentPdfUrl("");
     setCodingPrompt("");
@@ -338,7 +346,11 @@ export default function AddQuizForm({
   );
 
   const formContent = (
-    <form id="add-quiz-form" onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+    <form
+      id="add-quiz-form"
+      onSubmit={handleSubmit}
+      className="space-y-4 max-h-[70vh] overflow-y-auto pr-2"
+    >
       <div className="space-y-2">
         <label className="text-xs font-medium text-muted-foreground">
           Title
@@ -402,7 +414,9 @@ export default function AddQuizForm({
                 type="text"
                 value={aiTopic}
                 onChange={(e) => setAiTopic(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAiGenerate())}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), handleAiGenerate())
+                }
                 placeholder="Optional — anything specific to focus on?"
                 className="field w-full text-xs"
               />
@@ -416,7 +430,9 @@ export default function AddQuizForm({
               type="number"
               value={aiCount}
               onChange={(e) =>
-                setAiCount(Math.min(Math.max(parseInt(e.target.value) || 5, 1), 30))
+                setAiCount(
+                  Math.min(Math.max(parseInt(e.target.value) || 5, 1), 30),
+                )
               }
               min={1}
               max={30}
@@ -426,7 +442,10 @@ export default function AddQuizForm({
             <button
               type="button"
               onClick={handleAiGenerate}
-              disabled={aiGenerate.isPending || (!aiTopic.trim() && !moduleTitle?.trim())}
+              disabled={
+                aiGenerate.isPending ||
+                (!aiTopic.trim() && !moduleTitle?.trim())
+              }
               className="flex items-center gap-1 rounded-md border border-violet-300/60 bg-violet-50 px-2.5 py-1.5 text-[11px] font-semibold text-violet-700 transition-colors hover:bg-violet-100 disabled:opacity-50"
             >
               {aiGenerate.isPending ? "Generating…" : "Generate with AI"}
@@ -660,7 +679,13 @@ export default function AddQuizForm({
   );
 
   return (
-    <FormModal open={open} onClose={close} title="Add Quiz" size="xl" footer={footer}>
+    <FormModal
+      open={open}
+      onClose={close}
+      title="Add Quiz"
+      size="xl"
+      footer={footer}
+    >
       {formContent}
     </FormModal>
   );

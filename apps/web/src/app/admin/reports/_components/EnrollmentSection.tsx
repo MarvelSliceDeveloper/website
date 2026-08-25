@@ -30,14 +30,23 @@ export default function EnrollmentSection({
             <Chart
               key={`pkg-${timeRange}-${pkgVals.join(",")}`}
               options={{
-                chart: { type: "bar", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "bar",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: [COLORS.primary],
                 plotOptions: { bar: { borderRadius: 4, columnWidth: "60%" } },
                 xaxis: {
                   categories: pkgLabels,
-                  labels: { style: { colors: COLORS.muted, fontSize: "11px" }, rotate: -20 },
+                  labels: {
+                    style: { colors: COLORS.muted, fontSize: "11px" },
+                    rotate: -20,
+                  },
                 },
-                yaxis: { labels: { style: { colors: COLORS.muted, fontSize: "11px" } } },
+                yaxis: {
+                  labels: { style: { colors: COLORS.muted, fontSize: "11px" } },
+                },
                 grid: { borderColor: COLORS.grid },
                 tooltip: { theme: "light" },
                 dataLabels: { enabled: false },
@@ -61,14 +70,27 @@ export default function EnrollmentSection({
             <Chart
               key={`growth-${timeRange}-${growthVals.join(",")}`}
               options={{
-                chart: { type: "area", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "area",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: [COLORS.primary],
-                fill: { type: "gradient", gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0 } },
+                fill: {
+                  type: "gradient",
+                  gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.3,
+                    opacityTo: 0,
+                  },
+                },
                 xaxis: {
                   categories: growthLabels,
                   labels: { style: { colors: COLORS.muted, fontSize: "11px" } },
                 },
-                yaxis: { labels: { style: { colors: COLORS.muted, fontSize: "11px" } } },
+                yaxis: {
+                  labels: { style: { colors: COLORS.muted, fontSize: "11px" } },
+                },
                 grid: { borderColor: COLORS.grid },
                 tooltip: { theme: "light" },
                 dataLabels: { enabled: false },

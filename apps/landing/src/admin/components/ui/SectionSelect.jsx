@@ -1,9 +1,13 @@
-import React from 'react';
+import React from "react";
 
 export default function SectionSelect({ items = [], value, onChange, label }) {
   return (
     <div className="lg:hidden mb-4">
-      {label && <label className="block text-sm font-medium text-neutral-700 mb-1">{label}</label>}
+      {label && (
+        <label className="block text-sm font-medium text-neutral-700 mb-1">
+          {label}
+        </label>
+      )}
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}

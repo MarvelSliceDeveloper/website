@@ -14,9 +14,11 @@ import { ConfirmDialogProvider } from "@/components/ui/ConfirmDialog";
 // Redirect to login when the session expires (API returns 401). This replaces
 // per-page `router.push("/login")` checks on auth failures.
 function isUnauthorized(error: unknown): boolean {
-  const res = (error as {
-    response?: { status?: number };
-  }).response;
+  const res = (
+    error as {
+      response?: { status?: number };
+    }
+  ).response;
   return res?.status === 401;
 }
 

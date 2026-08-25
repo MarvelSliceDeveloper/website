@@ -97,30 +97,35 @@ router.get("/:courseId/progress", async (req: AuthRequest, res: Response) => {
 });
 
 // POST /api/courses/lessons/:lessonId/progress — save watch progress for a lesson
-router.post("/lessons/:lessonId/progress", async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user!.userId;
-    const { lessonId } = req.params;
-    const { watchedSeconds, completed } = req.body ?? {};
+router.post(
+  "/lessons/:lessonId/progress",
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.user!.userId;
+      const { lessonId } = req.params;
+      const { watchedSeconds, completed } = req.body ?? {};
 
-    if (watchedSeconds === undefined && completed !== true) {
-      return res
-        .status(400)
-        .json({ error: "watchedSeconds is required (or pass completed: true)" });
+      if (watchedSeconds === undefined && completed !== true) {
+        return res
+          .status(400)
+          .json({
+            error: "watchedSeconds is required (or pass completed: true)",
+          });
+      }
+
+      const progress = await updateLessonProgress(
+        userId,
+        lessonId,
+        watchedSeconds,
+        completed === true,
+      );
+      return res.status(200).json({ progress });
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
-
-    const progress = await updateLessonProgress(
-      userId,
-      lessonId,
-      watchedSeconds,
-      completed === true,
-    );
-    return res.status(200).json({ progress });
-  } catch (err: unknown) {
-    const { statusCode, body } = handleControllerError(err, (req as any).log);
-    return res.status(statusCode).json(body);
-  }
-});
+  },
+);
 
 // POST /api/courses/enroll — student submits enrollment request for a course
 router.post("/enroll", async (req: AuthRequest, res: Response) => {
@@ -316,21 +321,21 @@ router.get(
 
       const quiz = certModule.quizzes[0] ?? null;
       let quizWithQuestions: {
+        id: string;
+        title: string;
+        passingScore: number;
+        timeLimitMin: number | null;
+        hasMcq: boolean;
+        hasAssignment: boolean;
+        assignmentInstructions: string | null;
+        questionCount: number;
+        questions: Array<{
           id: string;
-          title: string;
-          passingScore: number;
-          timeLimitMin: number | null;
-          hasMcq: boolean;
-          hasAssignment: boolean;
-          assignmentInstructions: string | null;
-          questionCount: number;
-          questions: Array<{
-            id: string;
-            questionText: string;
-            orderIndex: number;
-            options: Array<{ id: string; optionText: string }>;
-          }>;
-        } | null = null;
+          questionText: string;
+          orderIndex: number;
+          options: Array<{ id: string; optionText: string }>;
+        }>;
+      } | null = null;
       if (quiz) {
         const questions = quiz.questions.map((q, qIdx) => {
           const rawOptions = q.options as Array<{
@@ -369,7 +374,10 @@ router.get(
           })
         : null;
 
-      const eligibility = await getCertificationExamEligibility(userId, courseId);
+      const eligibility = await getCertificationExamEligibility(
+        userId,
+        courseId,
+      );
 
       return res.json({
         module: { id: certModule.id, title: certModule.title },

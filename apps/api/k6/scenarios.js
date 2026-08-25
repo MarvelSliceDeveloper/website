@@ -53,10 +53,7 @@ function loginCheck(role, res) {
 
 export function adminFlow() {
   // Each VU logs in with its own cookie jar (setup() cookies don't propagate)
-  loginCheck(
-    "admin",
-    login(http, BASE_URL, "admin@lms.local", "admin123"),
-  );
+  loginCheck("admin", login(http, BASE_URL, "admin@lms.local", "admin123"));
 
   // Admin: manage mentorship, view all courses, view stats
   http.get(`${BASE_URL}/api/mentorship/tickets`, {

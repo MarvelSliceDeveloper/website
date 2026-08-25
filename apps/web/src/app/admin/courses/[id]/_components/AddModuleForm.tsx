@@ -85,7 +85,11 @@ export default function AddModuleForm({
         size="md"
         footer={footer}
       >
-        <form id="add-module-form" onSubmit={handleSubmit} className="space-y-4">
+        <form
+          id="add-module-form"
+          onSubmit={handleSubmit}
+          className="space-y-4"
+        >
           <div className="space-y-2">
             <label className="text-xs font-medium text-muted-foreground">
               Title

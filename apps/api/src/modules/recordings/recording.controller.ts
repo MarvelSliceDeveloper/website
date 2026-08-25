@@ -54,7 +54,10 @@ export const recordingController = {
   async updateProgress(req: AuthRequest, res: Response) {
     try {
       const { recordingId, watchedSeconds, completed } = req.body;
-      if (!recordingId || (watchedSeconds === undefined && completed !== true)) {
+      if (
+        !recordingId ||
+        (watchedSeconds === undefined && completed !== true)
+      ) {
         return res
           .status(400)
           .json({ error: "recordingId and watchedSeconds are required" });

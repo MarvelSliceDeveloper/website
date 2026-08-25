@@ -55,7 +55,7 @@ const ROLE_HIERARCHY: UserRole[] = [
 ];
 
 const ROLE_LEVEL = new Map<UserRole, number>(
-  ROLE_HIERARCHY.map((role, idx) => [role, idx])
+  ROLE_HIERARCHY.map((role, idx) => [role, idx]),
 );
 
 const VALID_ROLES = new Set<string>(Object.values(UserRole));
@@ -68,7 +68,7 @@ function satisfiesRole(role: UserRole, allowed: UserRole[]): boolean {
   if (roleLevel === undefined) return false; // unknown role: no implicit access
 
   const minAllowedLevel = Math.min(
-    ...allowed.map((r) => ROLE_LEVEL.get(r) ?? Infinity)
+    ...allowed.map((r) => ROLE_LEVEL.get(r) ?? Infinity),
   );
 
   return roleLevel < minAllowedLevel;
@@ -84,9 +84,7 @@ function extractToken(req: Request): string | undefined {
   return undefined;
 }
 
-function verifyAndBuildUser(
-  token: string
-): AuthRequest["user"] | undefined {
+function verifyAndBuildUser(token: string): AuthRequest["user"] | undefined {
   const payload = jwt.verify(token, getJwtSecret(), {
     algorithms: ["HS256"],
   }) as jwt.JwtPayload & AuthRequest["user"];
@@ -110,7 +108,7 @@ function verifyAndBuildUser(
 }
 
 function sessionExpired(
-  payload: jwt.JwtPayload & AuthRequest["user"]
+  payload: jwt.JwtPayload & AuthRequest["user"],
 ): boolean {
   const iat = payload.iat;
   if (payload.sessionTimeoutMin && iat) {
@@ -163,8 +161,14 @@ export const requireAuth = async (
     };
 
     // Verify admin session is still active (non-blocking for backward compat)
-    if (req.user && (req.user.role === UserRole.ADMIN || req.user.role === UserRole.SUPER_ADMIN)) {
-      const tokenPayload = jwt.decode(token) as jwt.JwtPayload & { sessionId?: string } | null;
+    if (
+      req.user &&
+      (req.user.role === UserRole.ADMIN ||
+        req.user.role === UserRole.SUPER_ADMIN)
+    ) {
+      const tokenPayload = jwt.decode(token) as
+        | (jwt.JwtPayload & { sessionId?: string })
+        | null;
       if (tokenPayload?.sessionId) {
         try {
           const session = await prisma.adminSession.findUnique({
@@ -172,16 +176,20 @@ export const requireAuth = async (
             select: { active: true },
           });
           if (!session || !session.active) {
-            return res.status(401).json({ error: "Session has been terminated" });
+            return res
+              .status(401)
+              .json({ error: "Session has been terminated" });
           }
           // Update lastActiveAt periodically (once per minute)
           const now = Math.floor(Date.now() / 60000);
           const lastUpdate = Math.floor((payload.iat || 0) / 60);
           if (now > lastUpdate) {
-            prisma.adminSession.update({
-              where: { id: tokenPayload.sessionId },
-              data: { lastActiveAt: new Date() },
-            }).catch(() => {});
+            prisma.adminSession
+              .update({
+                where: { id: tokenPayload.sessionId },
+                data: { lastActiveAt: new Date() },
+              })
+              .catch(() => {});
           }
         } catch {
           // If session check fails, allow request through (degraded mode)

@@ -82,7 +82,7 @@ export default function QuizCard({
   };
   const [title, setTitle] = useState(quiz.title);
   const [daysFromEnrollment, setDaysFromEnrollment] = useState(
-    quiz.daysFromEnrollment?.toString() ?? ""
+    quiz.daysFromEnrollment?.toString() ?? "",
   );
   const [passingScore, setPassingScore] = useState(quiz.passingScore ?? 65);
   const [examType, setExamType] = useState<string>(quiz.examType ?? "MCQ");
@@ -269,7 +269,10 @@ export default function QuizCard({
 
   const editFooter = (
     <>
-      <button onClick={cancelEdit} className="btn-secondary text-xs px-3 py-1.5">
+      <button
+        onClick={cancelEdit}
+        className="btn-secondary text-xs px-3 py-1.5"
+      >
         Cancel
       </button>
       <button
@@ -309,198 +312,197 @@ export default function QuizCard({
         />
       </div>
 
-        {/* MCQ Section */}
-        {hasMcq && (
-          <div className="space-y-4 rounded-xl border border-[#e4e2f5] bg-white p-3">
-            <h5 className="text-xs font-semibold uppercase tracking-wider text-[#4f63f0]">
-              MCQ Questions
-            </h5>
-            {questions.map((q, qIndex) => (
-              <div
-                key={qIndex}
-                className="space-y-2 rounded-lg border border-[#e4e2f5] p-3"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-[#8b8da3]">
-                    Question {qIndex + 1}
-                  </span>
-                  {questions.length > 1 && (
-                    <button
-                      onClick={() => removeQuestion(qIndex)}
-                      className="p-1 text-[#8b8da3] hover:text-danger"
-                    >
-                      <IconX size={14} />
-                    </button>
-                  )}
-                </div>
-
-                <input
-                  type="text"
-                  value={q.text}
-                  onChange={(e) => {
-                    setQuestions(
-                      questions.map((question, i) =>
-                        i === qIndex
-                          ? { ...question, text: e.target.value }
-                          : question,
-                      ),
-                    );
-                  }}
-                  placeholder="Enter question"
-                  className="field"
-                />
-
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase tracking-wider text-[#8b8da3]">
-                    Options
-                  </label>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name={`edit-correct-${qIndex}`}
-                        checked={opt.isCorrect}
-                        onChange={() => setCorrectOption(qIndex, oIndex)}
-                        className="h-4 w-4 accent-[#4f63f0]"
-                      />
-                      <input
-                        type="text"
-                        value={opt.label}
-                        onChange={(e) => {
-                          setQuestions(
-                            questions.map((question, qi) =>
-                              qi === qIndex
-                                ? {
-                                    ...question,
-                                    options: question.options.map(
-                                      (option, oi) =>
-                                        oi === oIndex
-                                          ? { ...option, label: e.target.value }
-                                          : option,
-                                    ),
-                                  }
-                                : question,
-                            ),
-                          );
-                        }}
-                        placeholder={`Option ${oIndex + 1}`}
-                        className="field flex-1"
-                      />
-                      {q.options.length > 1 && (
-                        <button
-                          onClick={() => removeOption(qIndex, oIndex)}
-                          className="p-1 text-[#8b8da3] hover:text-danger"
-                        >
-                          <IconX size={14} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  <button
-                    onClick={() => addOption(qIndex)}
-                    className="mt-1 flex items-center gap-1 text-xs text-[#4f63f0] hover:text-[#3f52e0]"
-                  >
-                    <IconPlus size={12} /> Add Option
-                  </button>
-                </div>
-              </div>
-            ))}
-            <button
-              onClick={addQuestion}
-              className="flex items-center gap-1 text-xs text-[#4f63f0] hover:text-[#3f52e0]"
+      {/* MCQ Section */}
+      {hasMcq && (
+        <div className="space-y-4 rounded-xl border border-[#e4e2f5] bg-white p-3">
+          <h5 className="text-xs font-semibold uppercase tracking-wider text-[#4f63f0]">
+            MCQ Questions
+          </h5>
+          {questions.map((q, qIndex) => (
+            <div
+              key={qIndex}
+              className="space-y-2 rounded-lg border border-[#e4e2f5] p-3"
             >
-              <IconPlus size={12} /> Add Question
-            </button>
-          </div>
-        )}
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-[#8b8da3]">
+                  Question {qIndex + 1}
+                </span>
+                {questions.length > 1 && (
+                  <button
+                    onClick={() => removeQuestion(qIndex)}
+                    className="p-1 text-[#8b8da3] hover:text-danger"
+                  >
+                    <IconX size={14} />
+                  </button>
+                )}
+              </div>
 
-        {/* Assignment Section */}
-        {hasAssignment && (
-          <div className="space-y-3 rounded-xl border border-[#e4e2f5] bg-white p-3">
-            <h5 className="text-xs font-semibold uppercase tracking-wider text-blue-500">
-              Assignment / Practical Task
-            </h5>
-            <RichEditor
-              content={assignmentInstructions}
-              onChange={setAssignmentInstructions}
-              placeholder="Enter assignment instructions..."
-              minHeight="150px"
-            />
-            <input
-              type="text"
-              value={assignmentPdfUrl}
-              onChange={(e) => setAssignmentPdfUrl(e.target.value)}
-              placeholder="Question PDF URL (e.g. /uploads/assignments/question.pdf)"
-              className="field text-xs"
-            />
-          </div>
-        )}
+              <input
+                type="text"
+                value={q.text}
+                onChange={(e) => {
+                  setQuestions(
+                    questions.map((question, i) =>
+                      i === qIndex
+                        ? { ...question, text: e.target.value }
+                        : question,
+                    ),
+                  );
+                }}
+                placeholder="Enter question"
+                className="field"
+              />
 
-        {/* Coding Test Cases Section */}
-        {hasCoding && (
-          <div className="space-y-3 rounded-xl border border-[#e4e2f5] bg-white p-3">
-            <h5 className="text-xs font-semibold uppercase tracking-wider text-emerald-500">
-              Coding Problem & Testcases
-            </h5>
-            <RichEditor
-              content={codingPrompt}
-              onChange={setCodingPrompt}
-              placeholder="Coding problem description..."
-              minHeight="150px"
-            />
-            {testCases.map((tc, tcIdx) => (
-              <div
-                key={tcIdx}
-                className="grid grid-cols-1 gap-2 rounded-lg border border-[#e4e2f5]/80 p-2 md:grid-cols-2"
-              >
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-wider text-[#8b8da3]">
+                  Options
+                </label>
+                {q.options.map((opt, oIndex) => (
+                  <div key={oIndex} className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name={`edit-correct-${qIndex}`}
+                      checked={opt.isCorrect}
+                      onChange={() => setCorrectOption(qIndex, oIndex)}
+                      className="h-4 w-4 accent-[#4f63f0]"
+                    />
+                    <input
+                      type="text"
+                      value={opt.label}
+                      onChange={(e) => {
+                        setQuestions(
+                          questions.map((question, qi) =>
+                            qi === qIndex
+                              ? {
+                                  ...question,
+                                  options: question.options.map((option, oi) =>
+                                    oi === oIndex
+                                      ? { ...option, label: e.target.value }
+                                      : option,
+                                  ),
+                                }
+                              : question,
+                          ),
+                        );
+                      }}
+                      placeholder={`Option ${oIndex + 1}`}
+                      className="field flex-1"
+                    />
+                    {q.options.length > 1 && (
+                      <button
+                        onClick={() => removeOption(qIndex, oIndex)}
+                        className="p-1 text-[#8b8da3] hover:text-danger"
+                      >
+                        <IconX size={14} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  onClick={() => addOption(qIndex)}
+                  className="mt-1 flex items-center gap-1 text-xs text-[#4f63f0] hover:text-[#3f52e0]"
+                >
+                  <IconPlus size={12} /> Add Option
+                </button>
+              </div>
+            </div>
+          ))}
+          <button
+            onClick={addQuestion}
+            className="flex items-center gap-1 text-xs text-[#4f63f0] hover:text-[#3f52e0]"
+          >
+            <IconPlus size={12} /> Add Question
+          </button>
+        </div>
+      )}
+
+      {/* Assignment Section */}
+      {hasAssignment && (
+        <div className="space-y-3 rounded-xl border border-[#e4e2f5] bg-white p-3">
+          <h5 className="text-xs font-semibold uppercase tracking-wider text-blue-500">
+            Assignment / Practical Task
+          </h5>
+          <RichEditor
+            content={assignmentInstructions}
+            onChange={setAssignmentInstructions}
+            placeholder="Enter assignment instructions..."
+            minHeight="150px"
+          />
+          <input
+            type="text"
+            value={assignmentPdfUrl}
+            onChange={(e) => setAssignmentPdfUrl(e.target.value)}
+            placeholder="Question PDF URL (e.g. /uploads/assignments/question.pdf)"
+            className="field text-xs"
+          />
+        </div>
+      )}
+
+      {/* Coding Test Cases Section */}
+      {hasCoding && (
+        <div className="space-y-3 rounded-xl border border-[#e4e2f5] bg-white p-3">
+          <h5 className="text-xs font-semibold uppercase tracking-wider text-emerald-500">
+            Coding Problem & Testcases
+          </h5>
+          <RichEditor
+            content={codingPrompt}
+            onChange={setCodingPrompt}
+            placeholder="Coding problem description..."
+            minHeight="150px"
+          />
+          {testCases.map((tc, tcIdx) => (
+            <div
+              key={tcIdx}
+              className="grid grid-cols-1 gap-2 rounded-lg border border-[#e4e2f5]/80 p-2 md:grid-cols-2"
+            >
+              <input
+                type="text"
+                value={tc.input}
+                onChange={(e) => {
+                  setTestCases(
+                    testCases.map((t, i) =>
+                      i === tcIdx ? { ...t, input: e.target.value } : t,
+                    ),
+                  );
+                }}
+                placeholder="Input"
+                className="field text-xs"
+              />
+              <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  value={tc.input}
+                  value={tc.expectedOutput}
                   onChange={(e) => {
                     setTestCases(
                       testCases.map((t, i) =>
-                        i === tcIdx ? { ...t, input: e.target.value } : t,
+                        i === tcIdx
+                          ? { ...t, expectedOutput: e.target.value }
+                          : t,
                       ),
                     );
                   }}
-                  placeholder="Input"
-                  className="field text-xs"
+                  placeholder="Expected Output"
+                  className="field flex-1 text-xs"
                 />
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={tc.expectedOutput}
-                    onChange={(e) => {
-                      setTestCases(
-                        testCases.map((t, i) =>
-                          i === tcIdx
-                            ? { ...t, expectedOutput: e.target.value }
-                            : t,
-                        ),
-                      );
-                    }}
-                    placeholder="Expected Output"
-                    className="field flex-1 text-xs"
-                  />
-                  {testCases.length > 1 && (
-                    <button
-                      onClick={() => removeTestCase(tcIdx)}
-                      className="p-1 text-[#8b8da3] hover:text-danger"
-                    >
-                      <IconTrash size={14} />
-                    </button>
-                  )}
-                </div>
+                {testCases.length > 1 && (
+                  <button
+                    onClick={() => removeTestCase(tcIdx)}
+                    className="p-1 text-[#8b8da3] hover:text-danger"
+                  >
+                    <IconTrash size={14} />
+                  </button>
+                )}
               </div>
-            ))}
-            <button
-              onClick={addTestCase}
-              className="flex items-center gap-1 text-xs text-emerald-500"
-            >
-              <IconPlus size={12} /> Add Test Case
-            </button>
-          </div>
-        )}
+            </div>
+          ))}
+          <button
+            onClick={addTestCase}
+            className="flex items-center gap-1 text-xs text-emerald-500"
+          >
+            <IconPlus size={12} /> Add Test Case
+          </button>
+        </div>
+      )}
     </>
   );
 
@@ -511,95 +513,96 @@ export default function QuizCard({
         ? `Due ${new Date(quiz.dueDate).toLocaleDateString()}`
         : null;
 
-  const questionCount = quiz.hasMcq !== false ? quiz.questions?.length ?? 0 : 0;
+  const questionCount =
+    quiz.hasMcq !== false ? (quiz.questions?.length ?? 0) : 0;
 
   return (
     <>
-    <div className="group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 hover:border-[#cfcbe8] hover:bg-[#f8f7fd]">
-      <div className="flex shrink-0 flex-col">
-        <button
-          onClick={onMoveUp}
-          disabled={!canMoveUp}
-          className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#8b5cf6] hover:bg-[#f3efff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
-          title="Move up"
-        >
-          <IconChevronUp size={13} />
-        </button>
-        <button
-          onClick={onMoveDown}
-          disabled={!canMoveDown}
-          className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#8b5cf6] hover:bg-[#f3efff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
-          title="Move down"
-        >
-          <IconChevronDown size={13} />
-        </button>
-      </div>
-
-      <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg bg-[#f0eaff] text-[#8b5cf6]">
-        <IconClipboardText size={13} />
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <p className="truncate text-[13px] font-medium text-[#1f2233]">
-            {quiz.title}
-          </p>
+      <div className="group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 hover:border-[#cfcbe8] hover:bg-[#f8f7fd]">
+        <div className="flex shrink-0 flex-col">
           <button
-            onClick={copyId}
-            className="inline-flex items-center gap-1 rounded-md border border-[#e4e2f5] bg-[#f8f7fd] px-1.5 py-0.5 text-[10px] font-mono text-[#8b8da3] transition-colors hover:border-[#cfcbe8] hover:text-[#1f2233]"
-            title="Copy quiz ID"
+            onClick={onMoveUp}
+            disabled={!canMoveUp}
+            className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#8b5cf6] hover:bg-[#f3efff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+            title="Move up"
           >
-            {copied ? (
-              <>
-                <IconCheck size={10} className="text-emerald-500" />
-                Copied!
-              </>
-            ) : (
-              <>
-                <IconCopy size={10} />
-                {quiz.id.slice(0, 8)}
-              </>
+            <IconChevronUp size={13} />
+          </button>
+          <button
+            onClick={onMoveDown}
+            disabled={!canMoveDown}
+            className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#8b5cf6] hover:bg-[#f3efff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+            title="Move down"
+          >
+            <IconChevronDown size={13} />
+          </button>
+        </div>
+
+        <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg bg-[#f0eaff] text-[#8b5cf6]">
+          <IconClipboardText size={13} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="truncate text-[13px] font-medium text-[#1f2233]">
+              {quiz.title}
+            </p>
+            <button
+              onClick={copyId}
+              className="inline-flex items-center gap-1 rounded-md border border-[#e4e2f5] bg-[#f8f7fd] px-1.5 py-0.5 text-[10px] font-mono text-[#8b8da3] transition-colors hover:border-[#cfcbe8] hover:text-[#1f2233]"
+              title="Copy quiz ID"
+            >
+              {copied ? (
+                <>
+                  <IconCheck size={10} className="text-emerald-500" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <IconCopy size={10} />
+                  {quiz.id.slice(0, 8)}
+                </>
+              )}
+            </button>
+            {quiz.hasAssignment && (
+              <span className="whitespace-nowrap rounded-full bg-blue-50 px-1.5 py-0.5 text-[9px] font-semibold text-blue-500">
+                Assignment
+              </span>
             )}
-          </button>
-          {quiz.hasAssignment && (
-            <span className="whitespace-nowrap rounded-full bg-blue-50 px-1.5 py-0.5 text-[9px] font-semibold text-blue-500">
-              Assignment
-            </span>
-          )}
-          {quiz.hasCoding && (
-            <span className="whitespace-nowrap rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-500">
-              Coding
-            </span>
+            {quiz.hasCoding && (
+              <span className="whitespace-nowrap rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-500">
+                Coding
+              </span>
+            )}
+          </div>
+          {dueLabel && (
+            <p className="mt-0.5 text-[10.5px] text-[#8b8da3]">{dueLabel}</p>
           )}
         </div>
-        {dueLabel && (
-          <p className="mt-0.5 text-[10.5px] text-[#8b8da3]">{dueLabel}</p>
-        )}
-      </div>
 
-      <div className="flex shrink-0 items-center gap-2">
-        {quiz.hasMcq !== false && (
-          <span className="whitespace-nowrap text-[11.5px] text-[#8b8da3]">
-            {questionCount} Questions
-          </span>
-        )}
-        <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-          <button
-            onClick={() => setEditing(true)}
-            className="rounded-md px-1.5 py-1 text-[10px] font-medium text-[#4f63f0] transition-colors hover:bg-[#4f63f0]/10"
-          >
-            Edit
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={deleteMutation.isPending}
-            className="rounded-md p-1 text-[#8b8da3] transition-colors hover:bg-danger/12 hover:text-danger"
-          >
-            <IconTrash size={12} />
-          </button>
+        <div className="flex shrink-0 items-center gap-2">
+          {quiz.hasMcq !== false && (
+            <span className="whitespace-nowrap text-[11.5px] text-[#8b8da3]">
+              {questionCount} Questions
+            </span>
+          )}
+          <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+            <button
+              onClick={() => setEditing(true)}
+              className="rounded-md px-1.5 py-1 text-[10px] font-medium text-[#4f63f0] transition-colors hover:bg-[#4f63f0]/10"
+            >
+              Edit
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+              className="rounded-md p-1 text-[#8b8da3] transition-colors hover:bg-danger/12 hover:text-danger"
+            >
+              <IconTrash size={12} />
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
       {editing && (
         <FormModal

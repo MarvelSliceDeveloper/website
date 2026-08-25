@@ -34,7 +34,9 @@ router.get("/", async (req: AuthRequest, res: Response) => {
     if (courseId || instructorId) {
       where.assignment = {
         ...(courseId ? { courseId: courseId as string } : {}),
-        ...(instructorId ? { batch: { instructorId: instructorId as string } } : {}),
+        ...(instructorId
+          ? { batch: { instructorId: instructorId as string } }
+          : {}),
       };
     }
 
@@ -77,7 +79,9 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       student: item.student,
       assignment: { id: item.assignment.id, title: item.assignment.title },
       course: item.assignment.course,
-      batch: item.assignment.batch ? { id: item.assignment.batch.id, name: item.assignment.batch.name } : null,
+      batch: item.assignment.batch
+        ? { id: item.assignment.batch.id, name: item.assignment.batch.name }
+        : null,
       instructor: item.assignment.batch?.instructor ?? null,
       fileUrl: item.answerFileUrl,
       grade: item.grade,
@@ -104,7 +108,12 @@ router.get("/stats", async (req: AuthRequest, res: Response) => {
     const total = pending + graded;
 
     const rows = await prisma.$queryRaw<
-      Array<{ instructorId: string; name: string; pending: bigint; graded: bigint }>
+      Array<{
+        instructorId: string;
+        name: string;
+        pending: bigint;
+        graded: bigint;
+      }>
     >`
       SELECT
         u.id AS "instructorId",

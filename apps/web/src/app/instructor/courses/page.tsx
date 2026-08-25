@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { IconBook, IconChevronRight, IconClipboardList, IconUsers } from "@tabler/icons-react";
+import {
+  IconBook,
+  IconChevronRight,
+  IconClipboardList,
+  IconUsers,
+} from "@tabler/icons-react";
 import { usePageTitle } from "@/lib/use-page-title";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Skeleton } from "@/components/shared/Skeleton";
@@ -24,11 +29,7 @@ export default function InstructorCoursesPage() {
   // Fetches courses from the instructor-specific endpoint.
   // /api/instructor/courses returns unique courses from the instructor's assigned batches.
   useEffect(() => {
-    Promise.all([
-      api
-        .get<Course[]>("/api/instructor/courses")
-        .catch(() => []),
-    ])
+    Promise.all([api.get<Course[]>("/api/instructor/courses").catch(() => [])])
       .then(([coursesRes]) => {
         setCourses(Array.isArray(coursesRes) ? coursesRes : []);
       })

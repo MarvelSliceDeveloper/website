@@ -1,6 +1,7 @@
 # Plan: Instructor Management System
 
 ## Overview
+
 Build full instructor management: profile model, admin CRUD, onboarding flow, super admin verification, assignment review queue.
 
 ---
@@ -58,6 +59,7 @@ enum InstructorStatus {
 ```
 
 ### Instructor onboarding flag
+
 - Add `instructorOnboardingComplete Boolean @default(false)` to User model
 - When instructor logs in and profile is NOT filled, redirect to `/instructor/onboarding`
 - After profile saved + super admin approves, set to true
@@ -68,36 +70,36 @@ enum InstructorStatus {
 
 ### Admin Instructor Management (`/api/admin/instructors`)
 
-| Method | Route | Auth | Description |
-|--------|-------|------|-------------|
-| GET | `/api/admin/instructors` | ADMIN/SUPER_ADMIN | List instructors with workload (paginated) |
-| GET | `/api/admin/instructors/:id` | ADMIN/SUPER_ADMIN | Get instructor detail + profile |
-| POST | `/api/admin/instructors` | SUPER_ADMIN only | Create instructor account (generates credentials) |
-| PUT | `/api/admin/instructors/:id` | ADMIN/SUPER_ADMIN | Update instructor profile fields |
-| PUT | `/api/admin/instructors/:id/verify` | SUPER_ADMIN only | Approve/reject instructor profile |
-| PUT | `/api/admin/instructors/:id/status` | SUPER_ADMIN only | Activate/deactivate instructor |
-| DELETE | `/api/admin/instructors/:id` | SUPER_ADMIN only | Soft-delete instructor |
-| GET | `/api/admin/instructors/:id/login-history` | ADMIN/SUPER_ADMIN | Login logs |
-| GET | `/api/admin/instructors/:id/sessions` | ADMIN/SUPER_ADMIN | Live sessions + attendance |
-| GET | `/api/admin/instructors/:id/assignments` | ADMIN/SUPER_ADMIN | Assignment activity |
-| GET | `/api/admin/instructors/:id/mentorship` | ADMIN/SUPER_ADMIN | Mentorship tickets |
-| GET | `/api/admin/instructors/:id/performance` | ADMIN/SUPER_ADMIN | Performance metrics |
+| Method | Route                                      | Auth              | Description                                       |
+| ------ | ------------------------------------------ | ----------------- | ------------------------------------------------- |
+| GET    | `/api/admin/instructors`                   | ADMIN/SUPER_ADMIN | List instructors with workload (paginated)        |
+| GET    | `/api/admin/instructors/:id`               | ADMIN/SUPER_ADMIN | Get instructor detail + profile                   |
+| POST   | `/api/admin/instructors`                   | SUPER_ADMIN only  | Create instructor account (generates credentials) |
+| PUT    | `/api/admin/instructors/:id`               | ADMIN/SUPER_ADMIN | Update instructor profile fields                  |
+| PUT    | `/api/admin/instructors/:id/verify`        | SUPER_ADMIN only  | Approve/reject instructor profile                 |
+| PUT    | `/api/admin/instructors/:id/status`        | SUPER_ADMIN only  | Activate/deactivate instructor                    |
+| DELETE | `/api/admin/instructors/:id`               | SUPER_ADMIN only  | Soft-delete instructor                            |
+| GET    | `/api/admin/instructors/:id/login-history` | ADMIN/SUPER_ADMIN | Login logs                                        |
+| GET    | `/api/admin/instructors/:id/sessions`      | ADMIN/SUPER_ADMIN | Live sessions + attendance                        |
+| GET    | `/api/admin/instructors/:id/assignments`   | ADMIN/SUPER_ADMIN | Assignment activity                               |
+| GET    | `/api/admin/instructors/:id/mentorship`    | ADMIN/SUPER_ADMIN | Mentorship tickets                                |
+| GET    | `/api/admin/instructors/:id/performance`   | ADMIN/SUPER_ADMIN | Performance metrics                               |
 
 ### Instructor Onboarding (`/api/instructor/profile`)
 
-| Method | Route | Auth | Description |
-|--------|-------|------|-------------|
-| GET | `/api/instructor/profile` | requireAuth + INSTRUCTOR | Get own profile |
-| PUT | `/api/instructor/profile` | requireAuth + INSTRUCTOR | Save/update own profile |
-| POST | `/api/instructor/profile/upload-photo` | requireAuth + INSTRUCTOR | Upload profile photo |
-| POST | `/api/instructor/profile/upload-resume` | requireAuth + INSTRUCTOR | Upload resume PDF |
+| Method | Route                                   | Auth                     | Description             |
+| ------ | --------------------------------------- | ------------------------ | ----------------------- |
+| GET    | `/api/instructor/profile`               | requireAuth + INSTRUCTOR | Get own profile         |
+| PUT    | `/api/instructor/profile`               | requireAuth + INSTRUCTOR | Save/update own profile |
+| POST   | `/api/instructor/profile/upload-photo`  | requireAuth + INSTRUCTOR | Upload profile photo    |
+| POST   | `/api/instructor/profile/upload-resume` | requireAuth + INSTRUCTOR | Upload resume PDF       |
 
 ### Assignment Review Queue (`/api/admin/assignments/review`)
 
-| Method | Route | Auth | Description |
-|--------|-------|------|-------------|
-| GET | `/api/admin/assignments/review` | ADMIN/SUPER_ADMIN | List all pending submissions across all instructors |
-| GET | `/api/admin/assignments/review/stats` | ADMIN/SUPER_ADMIN | Review queue stats (pending/total/graded) |
+| Method | Route                                 | Auth              | Description                                         |
+| ------ | ------------------------------------- | ----------------- | --------------------------------------------------- |
+| GET    | `/api/admin/assignments/review`       | ADMIN/SUPER_ADMIN | List all pending submissions across all instructors |
+| GET    | `/api/admin/assignments/review/stats` | ADMIN/SUPER_ADMIN | Review queue stats (pending/total/graded)           |
 
 ---
 
@@ -105,21 +107,21 @@ enum InstructorStatus {
 
 ### Admin Pages
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/admin/instructors` | List/Workload | Table of all instructors with workload info |
-| `/admin/instructors/new` | Create Form | Create instructor account form |
-| `/admin/instructors/:id` | Profile Page | Tabbed profile: Overview, Login History, Sessions, Courses, Assignments, Mentorship, Performance |
-| `/admin/instructors/:id/edit` | Edit Form | Edit instructor profile fields |
-| `/admin/instructors/:id/verify` | Verify | Super admin verification modal/page |
-| `/admin/assignments/review` | Review Queue | All pending submissions across instructors |
+| Route                           | Page          | Description                                                                                      |
+| ------------------------------- | ------------- | ------------------------------------------------------------------------------------------------ |
+| `/admin/instructors`            | List/Workload | Table of all instructors with workload info                                                      |
+| `/admin/instructors/new`        | Create Form   | Create instructor account form                                                                   |
+| `/admin/instructors/:id`        | Profile Page  | Tabbed profile: Overview, Login History, Sessions, Courses, Assignments, Mentorship, Performance |
+| `/admin/instructors/:id/edit`   | Edit Form     | Edit instructor profile fields                                                                   |
+| `/admin/instructors/:id/verify` | Verify        | Super admin verification modal/page                                                              |
+| `/admin/assignments/review`     | Review Queue  | All pending submissions across instructors                                                       |
 
 ### Instructor Pages
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/instructor/onboarding` | Profile Form | First-time profile creation (after login) |
-| `/instructor/profile` | View/Edit Profile | Settings tab for profile management |
+| Route                    | Page              | Description                               |
+| ------------------------ | ----------------- | ----------------------------------------- |
+| `/instructor/onboarding` | Profile Form      | First-time profile creation (after login) |
+| `/instructor/profile`    | View/Edit Profile | Settings tab for profile management       |
 
 ---
 
@@ -150,13 +152,13 @@ enum InstructorStatus {
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `apps/api/src/modules/admin/instructors/instructors.routes.ts` | Admin instructor API |
-| `apps/api/src/modules/instructor/profile.routes.ts` | Instructor own profile API |
-| `apps/web/src/app/admin/instructors/page.tsx` | Instructor list |
-| `apps/web/src/app/admin/instructors/new/page.tsx` | Create instructor |
-| `apps/web/src/app/admin/instructors/[id]/page.tsx` | Instructor profile with tabs |
-| `apps/web/src/app/admin/instructors/[id]/edit/page.tsx` | Edit instructor |
-| `apps/web/src/app/admin/assignments/review/page.tsx` | Assignment review queue |
-| `apps/web/src/app/instructor/onboarding/page.tsx` | Onboarding form |
+| File                                                           | Purpose                      |
+| -------------------------------------------------------------- | ---------------------------- |
+| `apps/api/src/modules/admin/instructors/instructors.routes.ts` | Admin instructor API         |
+| `apps/api/src/modules/instructor/profile.routes.ts`            | Instructor own profile API   |
+| `apps/web/src/app/admin/instructors/page.tsx`                  | Instructor list              |
+| `apps/web/src/app/admin/instructors/new/page.tsx`              | Create instructor            |
+| `apps/web/src/app/admin/instructors/[id]/page.tsx`             | Instructor profile with tabs |
+| `apps/web/src/app/admin/instructors/[id]/edit/page.tsx`        | Edit instructor              |
+| `apps/web/src/app/admin/assignments/review/page.tsx`           | Assignment review queue      |
+| `apps/web/src/app/instructor/onboarding/page.tsx`              | Onboarding form              |

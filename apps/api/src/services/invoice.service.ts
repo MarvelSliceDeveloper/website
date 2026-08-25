@@ -82,7 +82,9 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
     doc.text(COMPANY_ADDRESS, margin, metaY, { maxWidth: contentWidth * 0.55 });
     metaY += 4;
   }
-  const contactLine = [COMPANY_EMAIL, COMPANY_WEBSITE].filter(Boolean).join("  •  ");
+  const contactLine = [COMPANY_EMAIL, COMPANY_WEBSITE]
+    .filter(Boolean)
+    .join("  •  ");
   if (contactLine) doc.text(contactLine, margin, metaY);
   if (COMPANY_GSTIN) doc.text(`GSTIN: ${COMPANY_GSTIN}`, margin, metaY + 4);
 
@@ -95,10 +97,16 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...TEXT_MUTED);
-  doc.text(`Invoice #: ${data.invoiceNumber}`, pageWidth - margin, y + 11, { align: "right" });
-  doc.text(`Date: ${formatDate(data.date)}`, pageWidth - margin, y + 15.5, { align: "right" });
+  doc.text(`Invoice #: ${data.invoiceNumber}`, pageWidth - margin, y + 11, {
+    align: "right",
+  });
+  doc.text(`Date: ${formatDate(data.date)}`, pageWidth - margin, y + 15.5, {
+    align: "right",
+  });
   if (data.dueDate) {
-    doc.text(`Due: ${formatDate(data.dueDate)}`, pageWidth - margin, y + 20, { align: "right" });
+    doc.text(`Due: ${formatDate(data.dueDate)}`, pageWidth - margin, y + 20, {
+      align: "right",
+    });
   }
 
   y += 30;
@@ -125,13 +133,14 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
   doc.setTextColor(...TEXT_MUTED);
   doc.text(data.userEmail, margin, y + 11.5);
   if (data.userAddress) {
-    doc.text(data.userAddress, margin, y + 16.5, { maxWidth: contentWidth * 0.55 });
+    doc.text(data.userAddress, margin, y + 16.5, {
+      maxWidth: contentWidth * 0.55,
+    });
   }
 
   // Status badge, right-aligned
   if (data.paymentStatus) {
-    const statusColor: Record<string, [number, number, number]> =
-    {
+    const statusColor: Record<string, [number, number, number]> = {
       PAID: [22, 130, 90],
       PENDING: [180, 130, 20],
       REFUNDED: [150, 60, 60],
@@ -151,17 +160,24 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
     doc.setTextColor(...TEXT_MUTED);
-    doc.text(`via ${data.paymentMethod}`, pageWidth - margin, y + 7, { align: "right" });
+    doc.text(`via ${data.paymentMethod}`, pageWidth - margin, y + 7, {
+      align: "right",
+    });
   }
 
   y += 26;
 
   // ── Line items table ──────────────────────────────────────
   const netAmount = data.amount - data.discountAmount;
-  const taxAmount = data.taxRate ? Math.round((netAmount * data.taxRate) / 100) : 0;
+  const taxAmount = data.taxRate
+    ? Math.round((netAmount * data.taxRate) / 100)
+    : 0;
   const grandTotal = netAmount + taxAmount;
 
-  const rows: (string | { content: string; styles?: Record<string, unknown> })[][] = [
+  const rows: (
+    | string
+    | { content: string; styles?: Record<string, unknown> }
+  )[][] = [
     [
       {
         content: data.packageDescription
@@ -216,7 +232,9 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
     doc.setTextColor(...TEXT_MUTED);
     doc.text("Discount", labelX, y);
     doc.setTextColor(22, 130, 90);
-    doc.text(`- ${formatPrice(data.discountAmount)}`, totalsX, y, { align: "right" });
+    doc.text(`- ${formatPrice(data.discountAmount)}`, totalsX, y, {
+      align: "right",
+    });
     y += 6;
   }
 
@@ -255,9 +273,15 @@ export function generateInvoicePdf(data: InvoiceData): Buffer {
     footerY + 6,
   );
   if (COMPANY_EMAIL) {
-    doc.text(`Questions about this invoice? Contact ${COMPANY_EMAIL}`, margin, footerY + 10.5);
+    doc.text(
+      `Questions about this invoice? Contact ${COMPANY_EMAIL}`,
+      margin,
+      footerY + 10.5,
+    );
   }
-  doc.text(`${COMPANY_NAME}`, pageWidth - margin, footerY + 6, { align: "right" });
+  doc.text(`${COMPANY_NAME}`, pageWidth - margin, footerY + 6, {
+    align: "right",
+  });
 
   return Buffer.from(doc.output("arraybuffer"));
 }

@@ -287,14 +287,17 @@ test.describe("Admin Portal — Workflows", () => {
     const csrfToken = await getCsrfToken(page);
     const pkgName = `E2E Package ${Date.now()}`;
 
-    const createRes = await page.request.post(`${API_BASE}/api/admin/packages`, {
-      headers: { "x-csrf-token": csrfToken },
-      data: {
-        name: pkgName,
-        slug: `e2e-pkg-${Date.now()}`,
-        description: "E2E test package",
+    const createRes = await page.request.post(
+      `${API_BASE}/api/admin/packages`,
+      {
+        headers: { "x-csrf-token": csrfToken },
+        data: {
+          name: pkgName,
+          slug: `e2e-pkg-${Date.now()}`,
+          description: "E2E test package",
+        },
       },
-    });
+    );
     expect(createRes.status()).toBe(201);
     const pkg = await createRes.json();
     const pkgId = pkg.id || pkg.package?.id;
@@ -311,11 +314,15 @@ test.describe("Admin Portal — Workflows", () => {
     if (await newBtn.isVisible()) {
       await newBtn.click();
 
-      const titleInput = page.locator('input[placeholder="Announcement title"]');
+      const titleInput = page.locator(
+        'input[placeholder="Announcement title"]',
+      );
       if (await titleInput.isVisible()) {
         await titleInput.fill(`E2E Announcement ${Date.now()}`);
 
-        const bodyInput = page.locator('textarea[placeholder="Announcement body"]');
+        const bodyInput = page.locator(
+          'textarea[placeholder="Announcement body"]',
+        );
         if (await bodyInput.isVisible()) {
           await bodyInput.fill("This is a test announcement from Playwright.");
         }
@@ -453,7 +460,8 @@ test.describe("Admin API — CRUD spot-checks", () => {
     const listRes = await page.request.get(`${API_BASE}/api/admin/categories`);
     expect(listRes.status()).toBe(200);
     const body = await listRes.json();
-    const categories: Array<{ name: string }> = body.data ?? body.categories ?? [];
+    const categories: Array<{ name: string }> =
+      body.data ?? body.categories ?? [];
     expect(categories.some((c) => c.name === name)).toBe(true);
   });
 

@@ -37,9 +37,12 @@ router.use(requireAuth);
 router.use(requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]));
 
 // Legacy rows may store skills/languages/socialLinks as JSON strings (old seed used JSON.stringify) — normalize to arrays/objects.
-function normalizeProfileFields<T extends { skills?: unknown; languages?: unknown; socialLinks?: unknown } | null | undefined>(
-  profile: T,
-): T {
+function normalizeProfileFields<
+  T extends
+    | { skills?: unknown; languages?: unknown; socialLinks?: unknown }
+    | null
+    | undefined,
+>(profile: T): T {
   if (!profile) return profile;
   const out = { ...profile };
   for (const key of ["skills", "languages"] as const) {
@@ -48,7 +51,10 @@ function normalizeProfileFields<T extends { skills?: unknown; languages?: unknow
       try {
         out[key] = JSON.parse(value) as unknown;
       } catch {
-        out[key] = value.split(",").map((s) => s.trim()).filter(Boolean) as unknown;
+        out[key] = value
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean) as unknown;
       }
     }
   }
@@ -72,7 +78,10 @@ router.get("/", async (req: AuthRequest, res: Response) => {
 
     const statusFilter = req.query.status as string | undefined;
 
-    const where: Record<string, unknown> = { role: UserRole.INSTRUCTOR, deletedAt: null };
+    const where: Record<string, unknown> = {
+      role: UserRole.INSTRUCTOR,
+      deletedAt: null,
+    };
     if (statusFilter) {
       where.instructorProfile = { status: statusFilter };
     }
@@ -92,18 +101,24 @@ router.get("/", async (req: AuthRequest, res: Response) => {
 
     const itemsWithWorkload = await Promise.all(
       items.map(async (user) => {
-        const [activeBatchCount, liveSessionCount, batches] = await Promise.all([
-          prisma.batch.count({
-            where: { instructorId: user.id, status: "ACTIVE", deletedAt: null },
-          }),
-          prisma.liveSession.count({
-            where: { instructorId: user.id, deletedAt: null },
-          }),
-          prisma.batch.findMany({
-            where: { instructorId: user.id, deletedAt: null },
-            select: { id: true },
-          }),
-        ]);
+        const [activeBatchCount, liveSessionCount, batches] = await Promise.all(
+          [
+            prisma.batch.count({
+              where: {
+                instructorId: user.id,
+                status: "ACTIVE",
+                deletedAt: null,
+              },
+            }),
+            prisma.liveSession.count({
+              where: { instructorId: user.id, deletedAt: null },
+            }),
+            prisma.batch.findMany({
+              where: { instructorId: user.id, deletedAt: null },
+              select: { id: true },
+            }),
+          ],
+        );
         const batchIds = batches.map((b) => b.id);
         const [directEnrollments, packageEnrollmentCourses] =
           batchIds.length > 0
@@ -118,7 +133,8 @@ router.get("/", async (req: AuthRequest, res: Response) => {
                 }),
               ])
             : [0, []];
-        const totalStudents = directEnrollments + packageEnrollmentCourses.length;
+        const totalStudents =
+          directEnrollments + packageEnrollmentCourses.length;
         return {
           ...user,
           instructorProfile: normalizeProfileFields(user.instructorProfile),
@@ -151,17 +167,22 @@ router.get("/:id", async (req: AuthRequest, res: Response) => {
       throw new AppError(404, "Instructor not found");
     }
 
-    const [activeBatchCount, liveSessionCount, completedSessionCount] = await Promise.all([
-      prisma.batch.count({
-        where: { instructorId: user.id, status: "ACTIVE", deletedAt: null },
-      }),
-      prisma.liveSession.count({
-        where: { instructorId: user.id, deletedAt: null },
-      }),
-      prisma.liveSession.count({
-        where: { instructorId: user.id, endedAt: { not: null }, deletedAt: null },
-      }),
-    ]);
+    const [activeBatchCount, liveSessionCount, completedSessionCount] =
+      await Promise.all([
+        prisma.batch.count({
+          where: { instructorId: user.id, status: "ACTIVE", deletedAt: null },
+        }),
+        prisma.liveSession.count({
+          where: { instructorId: user.id, deletedAt: null },
+        }),
+        prisma.liveSession.count({
+          where: {
+            instructorId: user.id,
+            endedAt: { not: null },
+            deletedAt: null,
+          },
+        }),
+      ]);
 
     const batches = await prisma.batch.findMany({
       where: { instructorId: user.id, deletedAt: null },
@@ -201,12 +222,12 @@ router.get("/:id", async (req: AuthRequest, res: Response) => {
   }
 });
 
-// ── POST / — Create instructor account (SUPER_ADMIN only) ──
+// ── POST / — Create instructor account (ADMIN + SUPER_ADMIN) ──
 // Admin provides name + email + optional one-time password. If password is
 // empty it is auto-generated. Instructor must change it on first login via
 // POST /api/auth/me/set-password (mustChangePassword=true). Remaining
 // profile fields are filled by the instructor during onboarding.
-router.post("/", requireSuperAdmin, async (req: AuthRequest, res: Response) => {
+router.post("/", async (req: AuthRequest, res: Response) => {
   try {
     const { name, email, password } = req.body;
 
@@ -215,7 +236,9 @@ router.post("/", requireSuperAdmin, async (req: AuthRequest, res: Response) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    const existing = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
     if (existing) {
       throw new AppError(409, "A user with this email already exists");
     }
@@ -224,7 +247,10 @@ router.post("/", requireSuperAdmin, async (req: AuthRequest, res: Response) => {
     if (password?.trim()) {
       const pwdCheck = passwordSchema.safeParse(password);
       if (!pwdCheck.success) {
-        throw new AppError(400, pwdCheck.error.issues[0]?.message ?? "Weak password");
+        throw new AppError(
+          400,
+          pwdCheck.error.issues[0]?.message ?? "Weak password",
+        );
       }
       plainPassword = password;
     } else {
@@ -257,7 +283,9 @@ router.post("/", requireSuperAdmin, async (req: AuthRequest, res: Response) => {
         email: user.email,
         credentials: { email: user.email, password: plainPassword },
       })
-      .catch((err) => console.error("[instructors] Failed to send welcome email:", err));
+      .catch((err) =>
+        console.error("[instructors] Failed to send welcome email:", err),
+      );
 
     // In non-production / when email is not configured, also return the
     // generated password once so the admin can share it manually. Never
@@ -335,7 +363,9 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
         ...(bankIfscCode !== undefined && { bankIfscCode }),
         ...(bankAccountHolderName !== undefined && { bankAccountHolderName }),
         ...(upiId !== undefined && { upiId }),
-        ...(joiningDate !== undefined && { joiningDate: new Date(joiningDate) }),
+        ...(joiningDate !== undefined && {
+          joiningDate: new Date(joiningDate),
+        }),
       },
     });
 
@@ -347,85 +377,101 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
 });
 
 // ── PUT /:id/verify — Verify/reject instructor (SUPER_ADMIN only) ──
-router.put("/:id/verify", requireSuperAdmin, async (req: AuthRequest, res: Response) => {
-  try {
-    const { action, rejectionReason } = req.body;
+router.put(
+  "/:id/verify",
+  requireSuperAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { action, rejectionReason } = req.body;
 
-    if (!action || !["approve", "reject"].includes(action)) {
-      throw new AppError(400, "action must be 'approve' or 'reject'");
+      if (!action || !["approve", "reject"].includes(action)) {
+        throw new AppError(400, "action must be 'approve' or 'reject'");
+      }
+
+      const user = await prisma.user.findFirst({
+        where: {
+          id: req.params.id,
+          role: UserRole.INSTRUCTOR,
+          deletedAt: null,
+        },
+        include: { instructorProfile: true },
+      });
+      if (!user) {
+        throw new AppError(404, "Instructor not found");
+      }
+
+      if (action === "approve") {
+        const [updatedUser] = await Promise.all([
+          prisma.instructorProfile.update({
+            where: { userId: user.id },
+            data: {
+              status: "APPROVED",
+              verifiedById: req.user!.userId,
+              verifiedAt: new Date(),
+              rejectionReason: null,
+            },
+          }),
+          prisma.user.update({
+            where: { id: user.id },
+            data: { instructorOnboardingComplete: true },
+          }),
+        ]);
+        return res.json(updatedUser);
+      }
+
+      const updated = await prisma.instructorProfile.update({
+        where: { userId: user.id },
+        data: {
+          status: "REJECTED",
+          rejectionReason: rejectionReason || null,
+          verifiedById: req.user!.userId,
+          verifiedAt: new Date(),
+        },
+      });
+
+      return res.json(updated);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
-
-    const user = await prisma.user.findFirst({
-      where: { id: req.params.id, role: UserRole.INSTRUCTOR, deletedAt: null },
-      include: { instructorProfile: true },
-    });
-    if (!user) {
-      throw new AppError(404, "Instructor not found");
-    }
-
-    if (action === "approve") {
-      const [updatedUser] = await Promise.all([
-        prisma.instructorProfile.update({
-          where: { userId: user.id },
-          data: {
-            status: "APPROVED",
-            verifiedById: req.user!.userId,
-            verifiedAt: new Date(),
-            rejectionReason: null,
-          },
-        }),
-        prisma.user.update({
-          where: { id: user.id },
-          data: { instructorOnboardingComplete: true },
-        }),
-      ]);
-      return res.json(updatedUser);
-    }
-
-    const updated = await prisma.instructorProfile.update({
-      where: { userId: user.id },
-      data: {
-        status: "REJECTED",
-        rejectionReason: rejectionReason || null,
-        verifiedById: req.user!.userId,
-        verifiedAt: new Date(),
-      },
-    });
-
-    return res.json(updated);
-  } catch (err: unknown) {
-    const { statusCode, body } = handleControllerError(err, (req as any).log);
-    return res.status(statusCode).json(body);
-  }
-});
+  },
+);
 
 // ── PUT /:id/status — Activate/deactivate instructor (SUPER_ADMIN only) ──
-router.put("/:id/status", requireSuperAdmin, async (req: AuthRequest, res: Response) => {
-  try {
-    const { status } = req.body;
+router.put(
+  "/:id/status",
+  requireSuperAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { status } = req.body;
 
-    if (!status || !["ACTIVE", "INACTIVE"].includes(status)) {
-      throw new AppError(400, "status must be 'ACTIVE' or 'INACTIVE'");
+      if (!status || !["ACTIVE", "INACTIVE"].includes(status)) {
+        throw new AppError(400, "status must be 'ACTIVE' or 'INACTIVE'");
+      }
+
+      const user = await prisma.user.findFirst({
+        where: {
+          id: req.params.id,
+          role: UserRole.INSTRUCTOR,
+          deletedAt: null,
+        },
+      });
+      if (!user) {
+        throw new AppError(404, "Instructor not found");
+      }
+
+      const updated = await prisma.instructorProfile.update({
+        where: { userId: user.id },
+        data: { status: status as any },
+      });
+
+      return res.json(updated);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
-
-    const user = await prisma.user.findFirst({
-      where: { id: req.params.id, role: UserRole.INSTRUCTOR, deletedAt: null },
-    });
-    if (!user) {
-      throw new AppError(404, "Instructor not found");
-    }
-
-    const updated = await prisma.instructorProfile.update({
-      where: { userId: user.id },
-      data: { status: status as any },
-    });
-
-    return res.json(updated);
-  } catch (err: unknown) {
-    const { statusCode, body } = handleControllerError(err, (req as any).log);
-    return res.status(statusCode).json(body);
-  }
-});
+  },
+);
 
 // ── DELETE /:id — Soft-delete instructor ──
 router.delete("/:id", async (req: AuthRequest, res: Response) => {
@@ -508,7 +554,9 @@ router.get("/:id/sessions", async (req: AuthRequest, res: Response) => {
           course: { select: { id: true, title: true } },
         },
       }),
-      prisma.liveSession.count({ where: { instructorId: user.id, deletedAt: null } }),
+      prisma.liveSession.count({
+        where: { instructorId: user.id, deletedAt: null },
+      }),
     ]);
 
     return res.json({ items, total, page, limit });
@@ -556,7 +604,9 @@ router.get("/:id/assignments", async (req: AuthRequest, res: Response) => {
           },
         },
       }),
-      prisma.assignment.count({ where: { batchId: { in: batchIds }, deletedAt: null } }),
+      prisma.assignment.count({
+        where: { batchId: { in: batchIds }, deletedAt: null },
+      }),
     ]);
 
     const itemsWithGraded = await Promise.all(
@@ -641,7 +691,11 @@ router.get("/:id/performance", async (req: AuthRequest, res: Response) => {
         where: { instructorId: user.id, deletedAt: null },
       }),
       prisma.liveSession.count({
-        where: { instructorId: user.id, endedAt: { not: null }, deletedAt: null },
+        where: {
+          instructorId: user.id,
+          endedAt: { not: null },
+          deletedAt: null,
+        },
       }),
       prisma.batch.count({
         where: { instructorId: user.id, deletedAt: null },
@@ -676,7 +730,8 @@ router.get("/:id/performance", async (req: AuthRequest, res: Response) => {
       totalStudentsEnrolled,
       avgRating: user.instructorProfile?.rating ?? 0,
       totalStudents: user.instructorProfile?.totalStudents ?? 0,
-      completedSessionsInProfile: user.instructorProfile?.completedSessions ?? 0,
+      completedSessionsInProfile:
+        user.instructorProfile?.completedSessions ?? 0,
     });
   } catch (err: unknown) {
     const { statusCode, body } = handleControllerError(err, (req as any).log);

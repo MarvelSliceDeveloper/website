@@ -46,8 +46,7 @@ export default function RichEditor({
           "bold italic | h2 h3 | bullist numlist | blockquote code | forecolor backcolor | removeformat",
         plugins: ["lists", "code"],
         mobile: {
-          toolbar:
-            "bold italic | bullist numlist | blockquote | removeformat",
+          toolbar: "bold italic | bullist numlist | blockquote | removeformat",
         },
         style_formats: [
           { title: "Bold text", inline: "b" },

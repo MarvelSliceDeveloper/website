@@ -10,7 +10,12 @@ import { useApiQuery } from "@/lib/query";
 import { usePageTitle } from "@/lib/use-page-title";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { IconArrowLeft, IconPlus, IconSparkles, IconX } from "@tabler/icons-react";
+import {
+  IconArrowLeft,
+  IconPlus,
+  IconSparkles,
+  IconX,
+} from "@tabler/icons-react";
 import { useAIGenerate } from "@/lib/use-ai-generate";
 import {
   Select,
@@ -92,7 +97,9 @@ export default function CreateCoursePage() {
             ...(d.title ? { title: d.title } : {}),
             ...(d.description ? { description: d.description } : {}),
             ...(d.category ? { category: d.category } : {}),
-            ...(Array.isArray(d.tags) && d.tags.length ? { tags: [...d.tags] } : {}),
+            ...(Array.isArray(d.tags) && d.tags.length
+              ? { tags: [...d.tags] }
+              : {}),
           }));
           toast.success("Course draft generated — review before adding");
         },
@@ -279,7 +286,9 @@ export default function CreateCoursePage() {
               type="text"
               value={aiTopic}
               onChange={(e) => setAiTopic(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAiGenerate())}
+              onKeyDown={(e) =>
+                e.key === "Enter" && (e.preventDefault(), handleAiGenerate())
+              }
               placeholder="Describe the course you want, e.g. Python for data analysis beginners"
               className="field flex-1 min-w-[220px] text-xs"
             />
@@ -292,7 +301,8 @@ export default function CreateCoursePage() {
               {aiGenerate.isPending ? "Generating…" : "Generate Draft"}
             </button>
             <p className="w-full text-[10px] text-muted-foreground">
-              Fills title, description, category, and tags below — review and edit before adding.
+              Fills title, description, category, and tags below — review and
+              edit before adding.
             </p>
           </div>
 
@@ -317,9 +327,7 @@ export default function CreateCoursePage() {
                   </SelectItem>
                 ))}
                 {form.title &&
-                  !(titleOptions as readonly string[]).includes(
-                    form.title,
-                  ) && (
+                  !(titleOptions as readonly string[]).includes(form.title) && (
                     <SelectItem value={form.title}>{form.title}</SelectItem>
                   )}
               </SelectContent>
@@ -353,7 +361,9 @@ export default function CreateCoursePage() {
                   className="field w-full"
                   required
                 />
-                <p className="text-xs text-muted">JPG, PNG, or WebP. Max 5 MB.</p>
+                <p className="text-xs text-muted">
+                  JPG, PNG, or WebP. Max 5 MB.
+                </p>
               </div>
             </div>
           </div>

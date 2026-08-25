@@ -5,9 +5,8 @@ process.env.DATABASE_URL = env.match(/^DATABASE_URL=(.+)$/m)![1];
 
 async function main() {
   const { prisma } = await import("./src/utils/prisma");
-  const { certificateService } = await import(
-    "./src/modules/certificates/certificate.service"
-  );
+  const { certificateService } =
+    await import("./src/modules/certificates/certificate.service");
 
   const defaultTemplate = await prisma.certificateTemplate.findFirst({
     where: { isDefault: true },
@@ -15,7 +14,9 @@ async function main() {
   console.log("DEFAULT TEMPLATE:", JSON.stringify(defaultTemplate));
 
   if (!defaultTemplate?.pdfTemplateUrl) {
-    console.log("=> No uploaded PDF on the default template (pdfTemplateUrl is null)");
+    console.log(
+      "=> No uploaded PDF on the default template (pdfTemplateUrl is null)",
+    );
   } else {
     const abs = require("path").isAbsolute(defaultTemplate.pdfTemplateUrl)
       ? defaultTemplate.pdfTemplateUrl

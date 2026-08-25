@@ -42,7 +42,9 @@ export default function AddAssignmentForm({
 }: AddAssignmentFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [dueDateMode, setDueDateMode] = useState<"absolute" | "days">("absolute");
+  const [dueDateMode, setDueDateMode] = useState<"absolute" | "days">(
+    "absolute",
+  );
   const [dueDate, setDueDate] = useState("");
   const [daysFromEnrollment, setDaysFromEnrollment] = useState("");
   const [maxPoints, setMaxPoints] = useState(100);
@@ -69,7 +71,8 @@ export default function AddAssignmentForm({
       const d = res.data;
       if (d.description) setDescription(plainTextToHtml(d.description));
       if (!title.trim() && d.title) setTitle(d.title);
-      if (d.maxPoints && Number.isFinite(d.maxPoints)) setMaxPoints(d.maxPoints);
+      if (d.maxPoints && Number.isFinite(d.maxPoints))
+        setMaxPoints(d.maxPoints);
       toast.success("Description written from the PDF — review before saving");
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err)),
@@ -190,15 +193,17 @@ export default function AddAssignmentForm({
         className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1 disabled:opacity-50"
         form="add-assignment-form"
       >
-        {createAssignmentMutation.isPending
-          ? "Adding..."
-          : "Add Assignment"}
+        {createAssignmentMutation.isPending ? "Adding..." : "Add Assignment"}
       </button>
     </>
   );
 
   const formContent = (
-    <form id="add-assignment-form" onSubmit={handleSubmit} className="space-y-4">
+    <form
+      id="add-assignment-form"
+      onSubmit={handleSubmit}
+      className="space-y-4"
+    >
       {/* AI description from uploaded PDF */}
       {pdfSource === "upload" && pdfFile && (
         <div className="flex flex-wrap items-center gap-2 rounded-md border border-violet-300/50 bg-violet-500/5 p-2.5">
@@ -207,7 +212,9 @@ export default function AddAssignmentForm({
             type="text"
             value={aiNote}
             onChange={(e) => setAiNote(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAiFromPdf())}
+            onKeyDown={(e) =>
+              e.key === "Enter" && (e.preventDefault(), handleAiFromPdf())
+            }
             placeholder="Optional — tell the AI what this PDF is about…"
             className="field flex-1 min-w-[180px] text-xs"
           />
@@ -349,7 +356,8 @@ export default function AddAssignmentForm({
           min={1}
         />
         <p className="text-[10px] text-muted-foreground">
-          Number of days after student enrollment when this assignment becomes due.
+          Number of days after student enrollment when this assignment becomes
+          due.
         </p>
       </div>
 
@@ -371,7 +379,13 @@ export default function AddAssignmentForm({
   );
 
   return (
-    <FormModal open={open} onClose={close} title="Add Assignment" size="lg" footer={footer}>
+    <FormModal
+      open={open}
+      onClose={close}
+      title="Add Assignment"
+      size="lg"
+      footer={footer}
+    >
       {formContent}
     </FormModal>
   );

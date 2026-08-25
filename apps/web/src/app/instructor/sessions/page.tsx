@@ -27,7 +27,11 @@ type Session = {
   createdBy: string;
   batchId: string;
   moduleId: string | null;
-  batch: { id: string; name: string; course: { id: string; title: string } | null } | null;
+  batch: {
+    id: string;
+    name: string;
+    course: { id: string; title: string } | null;
+  } | null;
   recording: { id: string } | null;
 };
 
@@ -251,7 +255,10 @@ function SessionsPageContent() {
                     key={session.id}
                     session={session}
                     upcoming
-                    deleting={deleteMutation.isPending && deleteMutation.variables === session.id}
+                    deleting={
+                      deleteMutation.isPending &&
+                      deleteMutation.variables === session.id
+                    }
                     onViewAttendance={handleViewAttendance}
                     onEdit={openEditModal}
                     onDelete={handleDeleteSession}
@@ -274,8 +281,14 @@ function SessionsPageContent() {
                     key={session.id}
                     session={session}
                     upcoming={false}
-                    syncing={syncMutation.isPending && syncMutation.variables === session.id}
-                    deleting={deleteMutation.isPending && deleteMutation.variables === session.id}
+                    syncing={
+                      syncMutation.isPending &&
+                      syncMutation.variables === session.id
+                    }
+                    deleting={
+                      deleteMutation.isPending &&
+                      deleteMutation.variables === session.id
+                    }
                     onSyncRecording={handleSyncRecording}
                     onViewAttendance={handleViewAttendance}
                     onEdit={openEditModal}
@@ -355,13 +368,13 @@ function SessionsPageContent() {
                 >
                   Cancel
                 </button>
-<button
-                    type="submit"
-                    disabled={editMutation.isPending}
-                    className="btn-primary text-xs px-4"
-                  >
-                    {editMutation.isPending ? "Updating..." : "Update Session"}
-                  </button>
+                <button
+                  type="submit"
+                  disabled={editMutation.isPending}
+                  className="btn-primary text-xs px-4"
+                >
+                  {editMutation.isPending ? "Updating..." : "Update Session"}
+                </button>
               </div>
             </form>
           </div>

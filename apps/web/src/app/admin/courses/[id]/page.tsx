@@ -210,7 +210,12 @@ export default function CourseDetailPage() {
   return (
     <div className="space-y-6">
       <div className="mb-3 flex items-center gap-1 text-xs text-muted-foreground">
-        <Link href="/admin/courses" className="hover:text-foreground transition-colors">Courses</Link>
+        <Link
+          href="/admin/courses"
+          className="hover:text-foreground transition-colors"
+        >
+          Courses
+        </Link>
         <IconChevronRight size={14} />
         <span className="text-foreground">{course?.title || "..."}</span>
       </div>
@@ -296,7 +301,9 @@ export default function CourseDetailPage() {
         />
       )}
 
-      {activeTab === "certification" && <CertificationTab courseId={course.id} />}
+      {activeTab === "certification" && (
+        <CertificationTab courseId={course.id} />
+      )}
     </div>
   );
 }

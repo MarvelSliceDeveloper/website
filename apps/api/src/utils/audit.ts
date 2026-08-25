@@ -78,7 +78,11 @@ function resolveEntityType(urlPath: string): string {
 function resolveEntityId(req: Request): string | null {
   const paramId = (req.params as Record<string, string | undefined>).id;
   if (paramId) return paramId;
-  if (req.body && typeof req.body === "object" && typeof req.body.id === "string") {
+  if (
+    req.body &&
+    typeof req.body === "object" &&
+    typeof req.body.id === "string"
+  ) {
     return req.body.id;
   }
   return null;
@@ -104,7 +108,9 @@ export async function logAudit(opts: {
         action: opts.action,
         entityType: opts.entityType,
         entityId: opts.entityId ?? null,
-        details: (opts.details ?? undefined) as Prisma.InputJsonValue | undefined,
+        details: (opts.details ?? undefined) as
+          | Prisma.InputJsonValue
+          | undefined,
         ipAddress: opts.ipAddress ?? null,
         userAgent: opts.userAgent ?? null,
       },
@@ -121,7 +127,11 @@ export async function logAudit(opts: {
  * Runs AFTER the route handler by hooking into `res.on('finish')`, so
  * it only logs successful (2xx) responses.
  */
-export function auditMiddleware(req: Request, res: Response, next: NextFunction) {
+export function auditMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   const action = METHOD_ACTION[req.method];
   if (!action) return next(); // GET/HEAD/OPTIONS — skip
 
@@ -150,7 +160,11 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
       const entityId = resolveEntityId(req);
 
       let details: Record<string, unknown> | undefined;
-      if (req.body && typeof req.body === "object" && Object.keys(req.body).length > 0) {
+      if (
+        req.body &&
+        typeof req.body === "object" &&
+        Object.keys(req.body).length > 0
+      ) {
         details = {
           fields: Object.keys(req.body),
           method: req.method,
@@ -159,7 +173,10 @@ export function auditMiddleware(req: Request, res: Response, next: NextFunction)
       }
 
       const forwarded = req.headers["x-forwarded-for"];
-      const ip = (typeof forwarded === "string" ? forwarded.split(",")[0] : null) || req.ip || null;
+      const ip =
+        (typeof forwarded === "string" ? forwarded.split(",")[0] : null) ||
+        req.ip ||
+        null;
 
       await prisma.auditLog.create({
         data: {

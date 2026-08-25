@@ -52,7 +52,9 @@ async function runBackupJob() {
       pruned.length,
     );
     if (consecutiveFailures > 0) {
-      logger.info("[DatabaseBackupJob] Recovery successful. Resetting failure counter.");
+      logger.info(
+        "[DatabaseBackupJob] Recovery successful. Resetting failure counter.",
+      );
     }
     consecutiveFailures = 0;
   } catch (error: unknown) {
@@ -65,15 +67,19 @@ async function runBackupJob() {
     );
   } finally {
     running = false;
-    const backoff =
-      consecutiveFailures > MAX_FAILURES_BEFORE_BACKOFF ? 2 : 1;
-    const delayMs = msUntilNextScheduledTime(Number(process.env.BACKUP_HOUR) || DEFAULT_HOUR);
+    const backoff = consecutiveFailures > MAX_FAILURES_BEFORE_BACKOFF ? 2 : 1;
+    const delayMs = msUntilNextScheduledTime(
+      Number(process.env.BACKUP_HOUR) || DEFAULT_HOUR,
+    );
     if (consecutiveFailures > MAX_FAILURES_BEFORE_BACKOFF) {
       // Back off to next hour boundary to avoid hammering a down DB.
       const hourDelay = HOURS_BETWEEN_RUNS * 3_600_000 * 0.5;
-      timer = setTimeout(() => {
-        void runBackupJob();
-      }, Math.min(delayMs, hourDelay));
+      timer = setTimeout(
+        () => {
+          void runBackupJob();
+        },
+        Math.min(delayMs, hourDelay),
+      );
       logger.warn(
         "[DatabaseBackupJob] Backing off — next retry in %d min.",
         Math.min(delayMs, hourDelay) / 60000,

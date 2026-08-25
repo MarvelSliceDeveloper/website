@@ -20,7 +20,6 @@ import DataTable from "@/components/admin/DataTable";
 import type { DataTableColumn } from "@/components/admin/DataTable";
 import PaginationBar from "@/components/student/PaginationBar";
 
-
 type Batch = {
   id: string;
   name: string;
@@ -207,9 +206,7 @@ function BatchesPageContent() {
       <AdminPageHeader
         title="Batch Management"
         description={`${total} batch${total !== 1 ? "es" : ""}`}
-        breadcrumbs={[
-          { label: "Batches", href: "/admin/batches" },
-        ]}
+        breadcrumbs={[{ label: "Batches", href: "/admin/batches" }]}
         action={
           <Link href="/admin/batches/new" className="btn-primary">
             + Add Batch
@@ -229,7 +226,9 @@ function BatchesPageContent() {
           ]}
           active={statusFilter}
           onChange={(value) =>
-            router.push(value ? `/admin/batches?status=${value}` : "/admin/batches")
+            router.push(
+              value ? `/admin/batches?status=${value}` : "/admin/batches",
+            )
           }
         />
 

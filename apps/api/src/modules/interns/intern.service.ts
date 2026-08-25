@@ -67,7 +67,13 @@ export const internService = {
   /**
    * Admin — create an internship field.
    */
-  async createInternField(data: { name: string; description?: string; fee?: number; isActive?: boolean; order?: number }) {
+  async createInternField(data: {
+    name: string;
+    description?: string;
+    fee?: number;
+    isActive?: boolean;
+    order?: number;
+  }) {
     const name = data.name.trim();
     if (!name) throw new AppError(400, "Field name is required");
 
@@ -79,7 +85,8 @@ export const internService = {
     const existing = await prisma.internField.findFirst({
       where: { name: { equals: name, mode: "insensitive" }, deletedAt: null },
     });
-    if (existing) throw new AppError(409, "A field with this name already exists");
+    if (existing)
+      throw new AppError(409, "A field with this name already exists");
 
     return prisma.internField.create({
       data: {
@@ -95,7 +102,16 @@ export const internService = {
   /**
    * Admin — update an internship field.
    */
-  async updateInternField(id: string, data: { name?: string; description?: string; fee?: number; isActive?: boolean; order?: number }) {
+  async updateInternField(
+    id: string,
+    data: {
+      name?: string;
+      description?: string;
+      fee?: number;
+      isActive?: boolean;
+      order?: number;
+    },
+  ) {
     const field = await prisma.internField.findUnique({ where: { id } });
     if (!field) throw new AppError(404, "Internship field not found");
 
@@ -103,13 +119,21 @@ export const internService = {
       const name = data.name.trim();
       if (!name) throw new AppError(400, "Field name is required");
       const existing = await prisma.internField.findFirst({
-        where: { name: { equals: name, mode: "insensitive" }, id: { not: id }, deletedAt: null },
+        where: {
+          name: { equals: name, mode: "insensitive" },
+          id: { not: id },
+          deletedAt: null,
+        },
       });
-      if (existing) throw new AppError(409, "A field with this name already exists");
+      if (existing)
+        throw new AppError(409, "A field with this name already exists");
       data.name = name;
     }
 
-    if (data.fee !== undefined && (!Number.isInteger(data.fee) || data.fee < 0)) {
+    if (
+      data.fee !== undefined &&
+      (!Number.isInteger(data.fee) || data.fee < 0)
+    ) {
       throw new AppError(400, "fee must be a non-negative integer (paise)");
     }
 
@@ -167,7 +191,10 @@ export const internService = {
       select: { id: true, name: true, fee: true },
     });
     if (!field) {
-      throw new AppError(400, "The selected field is not available for internship.");
+      throw new AppError(
+        400,
+        "The selected field is not available for internship.",
+      );
     }
     if (!field.fee || field.fee <= 0) {
       throw new AppError(
@@ -203,7 +230,12 @@ export const internService = {
     const intern = user
       ? await prisma.user.update({
           where: { id: user.id },
-          data: { name, phone: phone || null, designation, internFieldId: field.id },
+          data: {
+            name,
+            phone: phone || null,
+            designation,
+            internFieldId: field.id,
+          },
         })
       : await prisma.user.create({
           data: {

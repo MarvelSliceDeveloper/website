@@ -1,23 +1,27 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { FiBookOpen, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import { supabase } from '../../lib/supabaseClient';
+import { useEffect, useRef, useState, useCallback } from "react";
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { FiBookOpen, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { supabase } from "../../lib/supabaseClient";
 
 const SLIDE_MS = 450;
 
 function formatDate(value) {
-  if (!value) return '';
+  if (!value) return "";
   const d = new Date(value);
   if (isNaN(d.getTime())) return value;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function formatTime(value) {
-  if (!value) return '';
+  if (!value) return "";
   const d = new Date(value);
-  if (isNaN(d.getTime())) return '';
-  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
 function ClassCard({ cls }) {
@@ -26,7 +30,7 @@ function ClassCard({ cls }) {
   return (
     <div
       className="relative z-10 h-[168px] w-full flex flex-col bg-white rounded-2xl p-5 border border-[#EAEAEA] transition-transform duration-300 hover:-translate-y-1"
-      style={{ boxShadow: '0 2px 8px rgba(17, 24, 39, 0.05)' }}
+      style={{ boxShadow: "0 2px 8px rgba(17, 24, 39, 0.05)" }}
     >
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-brand-blue">
@@ -52,7 +56,7 @@ function ClassCard({ cls }) {
 
       <div className="mt-auto pt-3">
         <a
-          href={cls.registration_link || '/contact'}
+          href={cls.registration_link || "/contact"}
           className="flex h-9 w-full items-center justify-center rounded-[10px] bg-brand-orange px-4 text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#e0951f]"
         >
           Register Now
@@ -62,20 +66,24 @@ function ClassCard({ cls }) {
   );
 }
 
-export default function UpcomingClassesMiniCarousel({ title = 'Upcoming Classes' }) {
+export default function UpcomingClassesMiniCarousel({
+  title = "Upcoming Classes",
+}) {
   const { data: classes = [] } = useQuery({
-    queryKey: ['upcomingClasses', 'active-mini'],
+    queryKey: ["upcomingClasses", "active-mini"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('upcoming_classes')
-        .select('*')
-        .eq('is_active', true)
-        .order('date_time', { ascending: true });
+        .from("upcoming_classes")
+        .select("*")
+        .eq("is_active", true)
+        .order("date_time", { ascending: true });
       if (error) {
-        if (error.code === '42P01') return [];
+        if (error.code === "42P01") return [];
         throw error;
       }
-      return (data || []).filter((c) => c.date_time).sort((a, b) => new Date(a.date_time) - new Date(b.date_time));
+      return (data || [])
+        .filter((c) => c.date_time)
+        .sort((a, b) => new Date(a.date_time) - new Date(b.date_time));
     },
   });
 
@@ -165,11 +173,16 @@ export default function UpcomingClassesMiniCarousel({ title = 'Upcoming Classes'
       </div>
 
       {count === 0 ? (
-        <p className="text-center text-text-gray text-sm mt-6">New batches will be announced soon.</p>
+        <p className="text-center text-text-gray text-sm mt-6">
+          New batches will be announced soon.
+        </p>
       ) : (
         <>
-          <div className="relative w-full overflow-hidden rounded-2xl mt-4"
-            onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
+          <div
+            className="relative w-full overflow-hidden rounded-2xl mt-4"
+            onTouchStart={(e) => {
+              touchX.current = e.touches[0].clientX;
+            }}
             onTouchEnd={(e) => {
               if (touchX.current == null) return;
               const delta = e.changedTouches[0].clientX - touchX.current;
@@ -185,12 +198,17 @@ export default function UpcomingClassesMiniCarousel({ title = 'Upcoming Classes'
               onTransitionEnd={handleTransitionEnd}
               style={{
                 transform: `translateX(-${index * 100}%)`,
-                transition: noTransition ? 'none' : `transform ${SLIDE_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
-                willChange: 'transform',
+                transition: noTransition
+                  ? "none"
+                  : `transform ${SLIDE_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+                willChange: "transform",
               }}
             >
               {items.map((cls, i) => (
-                <div key={`${cls.id}-${i}`} className="w-full min-w-full shrink-0">
+                <div
+                  key={`${cls.id}-${i}`}
+                  className="w-full min-w-full shrink-0"
+                >
                   <ClassCard cls={cls} />
                 </div>
               ))}
@@ -198,7 +216,10 @@ export default function UpcomingClassesMiniCarousel({ title = 'Upcoming Classes'
           </div>
 
           <div className="flex justify-end mt-3">
-            <Link to="/upcoming-classes" className="inline-flex items-center gap-1 text-brand-orange font-medium text-xs hover:text-[#e0951f] transition-colors">
+            <Link
+              to="/upcoming-classes"
+              className="inline-flex items-center gap-1 text-brand-orange font-medium text-xs hover:text-[#e0951f] transition-colors"
+            >
               View All →
             </Link>
           </div>

@@ -375,7 +375,9 @@ function StatCard({
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
             {label}
           </p>
-          <p className={`mt-1.5 text-2xl font-extrabold tracking-tight ${color}`}>
+          <p
+            className={`mt-1.5 text-2xl font-extrabold tracking-tight ${color}`}
+          >
             {value}
           </p>
         </div>
@@ -566,155 +568,155 @@ function TicketManageModal({
             </div>
           </div>
 
-        {/* Actions */}
-        <div className="space-y-6">
-          {/* Step 1: Assign Mentor */}
-          {ticket.status === "OPEN" && (
-            <div className="border border-border rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-foreground mb-3">
-                Step 1: Assign Mentor
-              </h3>
-              <div className="flex gap-3">
-                <Select
-                  value={selectedMentor}
-                  onValueChange={setSelectedMentor}
-                >
-                  <SelectTrigger className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none">
-                    <SelectValue placeholder="Select a mentor..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mentors.map((mentor) => (
-                      <SelectItem key={mentor.id} value={mentor.id}>
-                        {mentor.name} ({mentor.role})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <button
-                  onClick={handleAssignMentor}
-                  disabled={isSubmitting}
-                  className="btn-primary"
-                >
-                  {isSubmitting ? "Assigning..." : "Assign"}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 2: Schedule / Edit Session */}
-          {(ticket.status === "OPEN" ||
-            ticket.status === "ASSIGNED" ||
-            ticket.status === "SCHEDULED") && (
-            <div className="border border-border rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-foreground mb-3">
-                {ticket.status === "SCHEDULED"
-                  ? "Edit Session"
-                  : ticket.status === "ASSIGNED"
-                    ? "Schedule Session"
-                    : "Step 2: Schedule Session (Optional)"}
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                <div>
-                  <label className="block text-xs text-muted mb-1">
-                    Date & Time
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={scheduledDate}
-                    onChange={(e) => setScheduledDate(e.target.value)}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-muted mb-1">
-                    Teams Join URL (Optional)
-                  </label>
-                  <input
-                    type="url"
-                    value={joinUrl}
-                    onChange={(e) => setJoinUrl(e.target.value)}
-                    placeholder="https://teams.microsoft.com/..."
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
-                  />
-                </div>
-              </div>
-              <button
-                onClick={handleSchedule}
-                disabled={isSubmitting}
-                className="btn-primary w-full"
-              >
-                {isSubmitting ? "Scheduling..." : "Schedule Session"}
-              </button>
-            </div>
-          )}
-
-          {/* Scheduled Session Info */}
-          {ticket.scheduledAt && (
-            <div className="border border-success/30 bg-success/10 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-success mb-2">
-                Session Scheduled
-              </h3>
-              <p className="text-sm text-foreground">
-                Date: {new Date(ticket.scheduledAt).toLocaleString()}
-              </p>
-              {ticket.joinUrl && (
-                <a
-                  href={ticket.joinUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-primary hover:text-primary-hover underline mt-1 inline-block"
-                >
-                  Join URL: {ticket.joinUrl.substring(0, 50)}...
-                </a>
-              )}
-            </div>
-          )}
-
-          {/* Notes */}
-          {ticket.status !== "COMPLETED" && ticket.status !== "CANCELLED" && (
-            <div className="border border-border rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold text-foreground">
-                  Session Notes
+          {/* Actions */}
+          <div className="space-y-6">
+            {/* Step 1: Assign Mentor */}
+            {ticket.status === "OPEN" && (
+              <div className="border border-border rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-foreground mb-3">
+                  Step 1: Assign Mentor
                 </h3>
+                <div className="flex gap-3">
+                  <Select
+                    value={selectedMentor}
+                    onValueChange={setSelectedMentor}
+                  >
+                    <SelectTrigger className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none">
+                      <SelectValue placeholder="Select a mentor..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {mentors.map((mentor) => (
+                        <SelectItem key={mentor.id} value={mentor.id}>
+                          {mentor.name} ({mentor.role})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <button
+                    onClick={handleAssignMentor}
+                    disabled={isSubmitting}
+                    className="btn-primary"
+                  >
+                    {isSubmitting ? "Assigning..." : "Assign"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Schedule / Edit Session */}
+            {(ticket.status === "OPEN" ||
+              ticket.status === "ASSIGNED" ||
+              ticket.status === "SCHEDULED") && (
+              <div className="border border-border rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-foreground mb-3">
+                  {ticket.status === "SCHEDULED"
+                    ? "Edit Session"
+                    : ticket.status === "ASSIGNED"
+                      ? "Schedule Session"
+                      : "Step 2: Schedule Session (Optional)"}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <label className="block text-xs text-muted mb-1">
+                      Date & Time
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={scheduledDate}
+                      onChange={(e) => setScheduledDate(e.target.value)}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted mb-1">
+                      Teams Join URL (Optional)
+                    </label>
+                    <input
+                      type="url"
+                      value={joinUrl}
+                      onChange={(e) => setJoinUrl(e.target.value)}
+                      placeholder="https://teams.microsoft.com/..."
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                    />
+                  </div>
+                </div>
                 <button
-                  onClick={() => setShowNotesInput((v) => !v)}
-                  className="text-xs text-primary hover:underline"
+                  onClick={handleSchedule}
+                  disabled={isSubmitting}
+                  className="btn-primary w-full"
                 >
-                  {showNotesInput ? "Hide" : "Add notes"}
+                  {isSubmitting ? "Scheduling..." : "Schedule Session"}
                 </button>
               </div>
-              {showNotesInput && (
-                <textarea
-                  value={completionNotes}
-                  onChange={(e) => setCompletionNotes(e.target.value)}
-                  placeholder="Add resolution notes, feedback, or key takeaways..."
-                  rows={3}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none resize-none"
-                />
-              )}
-            </div>
-          )}
+            )}
 
-          {/* Complete / Cancel Buttons */}
-          {ticket.status !== "COMPLETED" && ticket.status !== "CANCELLED" && (
-            <div className="flex gap-3">
-              <button
-                onClick={handleComplete}
-                disabled={isSubmitting}
-                className="flex-1 rounded-lg bg-success px-4 py-2 text-sm font-medium text-white hover:bg-success/90 disabled:opacity-50 transition-colors cursor-pointer"
-              >
-                Mark Complete
-              </button>
-              <button
-                onClick={handleCancel}
-                disabled={isSubmitting}
-                className="flex-1 rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white hover:bg-danger/90 disabled:opacity-50 transition-colors cursor-pointer"
-              >
-                Cancel Request
-              </button>
-            </div>
-          )}
+            {/* Scheduled Session Info */}
+            {ticket.scheduledAt && (
+              <div className="border border-success/30 bg-success/10 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-success mb-2">
+                  Session Scheduled
+                </h3>
+                <p className="text-sm text-foreground">
+                  Date: {new Date(ticket.scheduledAt).toLocaleString()}
+                </p>
+                {ticket.joinUrl && (
+                  <a
+                    href={ticket.joinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:text-primary-hover underline mt-1 inline-block"
+                  >
+                    Join URL: {ticket.joinUrl.substring(0, 50)}...
+                  </a>
+                )}
+              </div>
+            )}
+
+            {/* Notes */}
+            {ticket.status !== "COMPLETED" && ticket.status !== "CANCELLED" && (
+              <div className="border border-border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Session Notes
+                  </h3>
+                  <button
+                    onClick={() => setShowNotesInput((v) => !v)}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    {showNotesInput ? "Hide" : "Add notes"}
+                  </button>
+                </div>
+                {showNotesInput && (
+                  <textarea
+                    value={completionNotes}
+                    onChange={(e) => setCompletionNotes(e.target.value)}
+                    placeholder="Add resolution notes, feedback, or key takeaways..."
+                    rows={3}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none resize-none"
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Complete / Cancel Buttons */}
+            {ticket.status !== "COMPLETED" && ticket.status !== "CANCELLED" && (
+              <div className="flex gap-3">
+                <button
+                  onClick={handleComplete}
+                  disabled={isSubmitting}
+                  className="flex-1 rounded-lg bg-success px-4 py-2 text-sm font-medium text-white hover:bg-success/90 disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                  Mark Complete
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={isSubmitting}
+                  className="flex-1 rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white hover:bg-danger/90 disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                  Cancel Request
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

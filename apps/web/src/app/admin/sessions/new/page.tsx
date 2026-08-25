@@ -126,8 +126,7 @@ export default function ScheduleSessionPage() {
 
   const defaultInstructorId = selectedBatch?.instructor?.id || "";
 
-  const effectiveInstructorId =
-    selectedInstructorId || defaultInstructorId;
+  const effectiveInstructorId = selectedInstructorId || defaultInstructorId;
 
   const update = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -186,8 +185,7 @@ export default function ScheduleSessionPage() {
       endDateTime: end.toISOString(),
       customJoinUrl: form.customJoinUrl || undefined,
       instructorOverride:
-        effectiveInstructorId &&
-        effectiveInstructorId !== defaultInstructorId
+        effectiveInstructorId && effectiveInstructorId !== defaultInstructorId
           ? effectiveInstructorId
           : undefined,
     });
@@ -272,7 +270,9 @@ export default function ScheduleSessionPage() {
                     <SelectItem key={batch.id} value={batch.id}>
                       {batch.name} —{" "}
                       {batch.course?.title ??
-                        (batch.package?.name ? `${batch.package.name} Package` : "N/A")}
+                        (batch.package?.name
+                          ? `${batch.package.name} Package`
+                          : "N/A")}
                       {batch.instructor
                         ? ` (Instructor: ${batch.instructor.name})`
                         : " (No instructor)"}
@@ -480,10 +480,7 @@ export default function ScheduleSessionPage() {
 
         {/* Submit Buttons */}
         <div className="flex items-center justify-end gap-3">
-          <Link
-            href="/admin/sessions"
-            className="btn-secondary text-sm"
-          >
+          <Link href="/admin/sessions" className="btn-secondary text-sm">
             Cancel
           </Link>
           <button
@@ -534,7 +531,10 @@ export default function ScheduleSessionPage() {
               </span>
             </p>
             <div className="flex flex-wrap items-center gap-2">
-              <Select value={selectedBatchId} onValueChange={setSelectedBatchId}>
+              <Select
+                value={selectedBatchId}
+                onValueChange={setSelectedBatchId}
+              >
                 <SelectTrigger className="w-72">
                   <SelectValue placeholder="Select a batch..." />
                 </SelectTrigger>
@@ -580,9 +580,7 @@ export default function ScheduleSessionPage() {
             />
           </label>
           {excelFile && (
-            <span className="text-sm text-foreground">
-              {excelFile.name}
-            </span>
+            <span className="text-sm text-foreground">{excelFile.name}</span>
           )}
         </div>
 

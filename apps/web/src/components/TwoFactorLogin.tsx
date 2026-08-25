@@ -68,8 +68,7 @@ export default function TwoFactorLogin({
     <div
       className="flex flex-1 items-center justify-center px-4 py-10 sm:px-8"
       style={{
-        animation:
-          "login-card-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both",
+        animation: "login-card-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both",
       }}
     >
       <div className="w-full max-w-[420px]">

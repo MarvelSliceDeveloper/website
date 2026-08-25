@@ -28,11 +28,7 @@ interface DialogState extends ConfirmDialogOptions {
   resolve: (value: boolean) => void;
 }
 
-export function ConfirmDialogProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DialogState | null>(null);
 
   const confirm = useCallback<ConfirmFn>((options) => {
@@ -73,7 +69,9 @@ export function ConfirmDialogProvider({
             <div className="flex items-start gap-3 px-5 pt-5">
               <div
                 className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                  danger ? "bg-danger/10 text-danger" : "bg-primary/10 text-primary"
+                  danger
+                    ? "bg-danger/10 text-danger"
+                    : "bg-primary/10 text-primary"
                 }`}
               >
                 <IconAlertTriangle size={20} />
@@ -103,7 +101,11 @@ export function ConfirmDialogProvider({
               </button>
               <button
                 onClick={() => close(true)}
-                className={danger ? "btn-danger text-sm px-3.5 py-1.5" : "btn-primary text-sm px-3.5 py-1.5"}
+                className={
+                  danger
+                    ? "btn-danger text-sm px-3.5 py-1.5"
+                    : "btn-primary text-sm px-3.5 py-1.5"
+                }
               >
                 {state.confirmLabel ?? (danger ? "Delete" : "Confirm")}
               </button>

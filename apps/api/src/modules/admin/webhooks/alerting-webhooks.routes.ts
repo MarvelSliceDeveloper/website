@@ -20,7 +20,8 @@ router.get("/", async (_req: AuthRequest, res: Response) => {
     return res.json({ webhooks });
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to fetch webhooks",
+      error:
+        error instanceof Error ? error.message : "Failed to fetch webhooks",
     });
   }
 });
@@ -29,10 +30,14 @@ router.post("/", async (req: AuthRequest, res: Response) => {
   try {
     const { name, url, events, active } = req.body;
     if (!name || !url || !events) {
-      return res.status(400).json({ error: "name, url, and events are required" });
+      return res
+        .status(400)
+        .json({ error: "name, url, and events are required" });
     }
     if (!Array.isArray(events)) {
-      return res.status(400).json({ error: "events must be an array of strings" });
+      return res
+        .status(400)
+        .json({ error: "events must be an array of strings" });
     }
 
     const webhook = await prisma.notificationWebhook.create({
@@ -41,7 +46,8 @@ router.post("/", async (req: AuthRequest, res: Response) => {
     return res.status(201).json({ webhook });
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to create webhook",
+      error:
+        error instanceof Error ? error.message : "Failed to create webhook",
     });
   }
 });
@@ -51,7 +57,9 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { name, url, events, active } = req.body;
 
-    const existing = await prisma.notificationWebhook.findUnique({ where: { id } });
+    const existing = await prisma.notificationWebhook.findUnique({
+      where: { id },
+    });
     if (!existing) return res.status(404).json({ error: "Webhook not found" });
 
     const webhook = await prisma.notificationWebhook.update({
@@ -66,7 +74,8 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
     return res.json({ webhook });
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to update webhook",
+      error:
+        error instanceof Error ? error.message : "Failed to update webhook",
     });
   }
 });
@@ -74,14 +83,17 @@ router.put("/:id", async (req: AuthRequest, res: Response) => {
 router.delete("/:id", async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const existing = await prisma.notificationWebhook.findUnique({ where: { id } });
+    const existing = await prisma.notificationWebhook.findUnique({
+      where: { id },
+    });
     if (!existing) return res.status(404).json({ error: "Webhook not found" });
 
     await prisma.notificationWebhook.delete({ where: { id } });
     return res.json({ message: "Webhook deleted successfully" });
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to delete webhook",
+      error:
+        error instanceof Error ? error.message : "Failed to delete webhook",
     });
   }
 });
@@ -89,7 +101,9 @@ router.delete("/:id", async (req: AuthRequest, res: Response) => {
 router.post("/:id/test", async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const webhook = await prisma.notificationWebhook.findUnique({ where: { id } });
+    const webhook = await prisma.notificationWebhook.findUnique({
+      where: { id },
+    });
     if (!webhook) return res.status(404).json({ error: "Webhook not found" });
 
     const payload = {

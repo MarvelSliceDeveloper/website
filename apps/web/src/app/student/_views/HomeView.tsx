@@ -193,7 +193,9 @@ export default function HomeView({
   async function handleReferralSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!studentEmail) {
-      toast.error("Unable to identify your account. Please refresh and try again.");
+      toast.error(
+        "Unable to identify your account. Please refresh and try again.",
+      );
       return;
     }
     setReferralSubmitting(true);
@@ -287,12 +289,14 @@ export default function HomeView({
           ].map((action, idx) => {
             const colorClasses = {
               blue: "border-brand-blue/20 bg-gradient-to-br from-white via-brand-blue/[0.04] to-brand-blue/[0.1] hover:from-brand-blue/[0.06] hover:to-brand-blue/[0.15] hover:border-brand-blue/40 hover:shadow-brand-blue/10 hover:shadow-lg text-brand-blue",
-              orange: "border-brand-orange/20 bg-gradient-to-br from-white via-brand-orange/[0.04] to-brand-orange/[0.1] hover:from-brand-orange/[0.06] hover:to-brand-orange/[0.15] hover:border-brand-orange/40 hover:shadow-brand-orange/10 hover:shadow-lg text-brand-orange",
+              orange:
+                "border-brand-orange/20 bg-gradient-to-br from-white via-brand-orange/[0.04] to-brand-orange/[0.1] hover:from-brand-orange/[0.06] hover:to-brand-orange/[0.15] hover:border-brand-orange/40 hover:shadow-brand-orange/10 hover:shadow-lg text-brand-orange",
             }[action.color];
 
             const iconBg = {
               blue: "bg-gradient-to-br from-brand-blue-tint to-brand-blue/20 text-brand-blue border border-brand-blue/10",
-              orange: "bg-gradient-to-br from-brand-orange-tint to-brand-orange/20 text-brand-orange border border-brand-orange/10",
+              orange:
+                "bg-gradient-to-br from-brand-orange-tint to-brand-orange/20 text-brand-orange border border-brand-orange/10",
             }[action.color];
 
             return (
@@ -559,7 +563,10 @@ export default function HomeView({
                                   iconClassName="h-1/2 w-1/2 object-contain"
                                   forceIcon
                                   fallback={
-                                    <IconBook size={22} className="text-success" />
+                                    <IconBook
+                                      size={22}
+                                      className="text-success"
+                                    />
                                   }
                                 />
                               </div>
@@ -691,7 +698,10 @@ export default function HomeView({
                                 iconClassName="h-1/2 w-1/2 object-contain"
                                 forceIcon
                                 fallback={
-                                  <IconBook size={22} className="text-primary" />
+                                  <IconBook
+                                    size={22}
+                                    className="text-primary"
+                                  />
                                 }
                               />
                             </div>
@@ -811,9 +821,7 @@ export default function HomeView({
                       disabled={referralSubmitting}
                       className="w-full bg-orange-600 cursor-pointer text-white  rounded-2xl py-2.5 text-sm font-semibold hover:bg-orange-600/80 transition-colors mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {referralSubmitting
-                        ? "Submitting..."
-                        : "Submit Referral"}
+                      {referralSubmitting ? "Submitting..." : "Submit Referral"}
                     </button>
                   </form>
                 </div>

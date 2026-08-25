@@ -36,28 +36,34 @@ interestField String[]  // ["Frontend","Backend","Cybersecurity", ...]
 ## Touch Points
 
 ### 1. Enums & shared types
+
 - `apps/api/prisma/schema.prisma` — add `INTERN` to `Role`
 - `packages/types/src/index.ts` — add `INTERN = "INTERN"` to `UserRole`
 
 ### 2. Auth / guards
+
 - `apps/api/src/middleware/auth.middleware.ts` — add `INTERN` to `VALID_ROLES`; decide hierarchy (INTERN is lowest, do NOT inherit into admin surfaces). Keep hierarchy `[SUPER_ADMIN, ADMIN, INSTRUCTOR, STUDENT]`; add `INTERN` at bottom.
 - `apps/api/src/app.ts` — no login route changes needed.
 
 ### 3. Catalogue intern form + payment
+
 - `apps/web/src/app/catalogue/[slug]/_components/RazorpayCheckoutWidget.tsx` — add optional "Apply as Intern" path or an intern package card that collects name, phone, email, designation, interest fields, then opens Razorpay.
 - `apps/api/src/modules/payments/payment.service.ts` — `createGuestUser` gains a `role` param; interns created with `role: "INTERN"` + designation/interest fields. Also new intern signup endpoint.
 - `apps/api/src/modules/payments/payment.routes.ts` — new `POST /api/payments/intern` (public, CSRF-exempt) creating the intern user + Razorpay order.
 
 ### 4. Admin — intern management
+
 - `apps/web/src/app/admin/users/page.tsx` — add `INTERN` role filter chip + badge + columns for designation / interest fields.
 - `apps/api/src/modules/users/user.routes.ts` — allow `INTERN` in role validation arrays; GET users already returns all roles.
 - `apps/web/src/components/AdminSidebar.tsx` — add an "Interns" section linking to filtered users view (`/admin/users?role=INTERN`).
 
 ### 5. Scheduling for interns
+
 - New intern scheduling: reuse `LiveSession` with a new `InternSession` model OR an `internTarget` field. Simplest: a new `InternSession` model (title, description, scheduledAt, joinUrl, targetField? — null = all). Reuse Teams meeting creation + notifications.
 - Admin UI: `apps/web/src/app/admin/sessions/intern/page.tsx` or an "Intern Sessions" section with "all / by field" selector.
 
 ### 6. Notifications with attachments
+
 - `apps/api/src/modules/notifications/notification.service.ts` — support `INTERN` target type + attachment upload (zip/pdf) stored via multer; `Notification.metadata` stores `attachmentUrl`.
 - `apps/web/src/app/admin/notifications/send/page.tsx` — add "INTERN" target option + file upload.
 - Notification email renders attachment link.

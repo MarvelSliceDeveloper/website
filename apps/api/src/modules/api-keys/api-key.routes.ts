@@ -22,9 +22,7 @@ router.get("/youtube-status", (_req: AuthRequest, res: Response) => {
   const apiKey = process.env.YOUTUBE_API_KEY;
   return res.json({
     configured: !!apiKey,
-    masked: apiKey
-      ? apiKey.slice(0, 4) + "..." + apiKey.slice(-4)
-      : null,
+    masked: apiKey ? apiKey.slice(0, 4) + "..." + apiKey.slice(-4) : null,
   });
 });
 

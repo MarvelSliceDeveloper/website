@@ -1,9 +1,6 @@
 import { Router } from "express";
 import { internController } from "./intern.controller";
-import {
-  requireAuth,
-  requireRole,
-} from "../../middleware/auth.middleware";
+import { requireAuth, requireRole } from "../../middleware/auth.middleware";
 import { UserRole } from "@lms/types";
 
 // ── Public intern application routes (mounted at /api/interns) ──
@@ -44,13 +41,7 @@ adminInternRouter.delete(
 );
 
 // GET /api/admin/interns/assignments?sheetId=... — fetch sheet data
-adminInternRouter.get(
-  "/assignments",
-  internController.getAssignmentSheet,
-);
+adminInternRouter.get("/assignments", internController.getAssignmentSheet);
 
 // GET /api/admin/interns/assignments/tabs?sheetId=... — list available tabs
-adminInternRouter.get(
-  "/assignments/tabs",
-  internController.listSheetTabs,
-);
+adminInternRouter.get("/assignments/tabs", internController.listSheetTabs);

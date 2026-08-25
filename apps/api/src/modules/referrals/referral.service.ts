@@ -34,7 +34,10 @@ export const referralService = {
   },
 
   // Student: Submit a new referral
-  async createReferral(userId: string, input: z.infer<typeof CreateReferralSchema>) {
+  async createReferral(
+    userId: string,
+    input: z.infer<typeof CreateReferralSchema>,
+  ) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, name: true, email: true },
@@ -70,7 +73,10 @@ export const referralService = {
     const referral = await prisma.referral.findUnique({ where: { id } });
     if (!referral) throw new AppError(404, "Referral not found");
     if (referral.status === "COUPON_SENT" && status !== "COUPON_SENT") {
-      throw new AppError(400, "Cannot change a referral that already has a coupon");
+      throw new AppError(
+        400,
+        "Cannot change a referral that already has a coupon",
+      );
     }
 
     return prisma.referral.update({

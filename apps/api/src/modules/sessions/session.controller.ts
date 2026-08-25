@@ -88,7 +88,7 @@ export const sessionController = {
     }
   },
 
-   // DELETE /api/sessions/:id — cancels or deletes a session
+  // DELETE /api/sessions/:id — cancels or deletes a session
   async cancel(req: AuthRequest, res: Response) {
     try {
       if (!req.user)
@@ -177,14 +177,12 @@ export const sessionController = {
             title,
             startDateTime,
             endDateTime,
-            customJoinUrl:
-              row.customJoinUrl
-                ? String(row.customJoinUrl).trim()
-                : undefined,
-            instructorOverride:
-              row.instructorOverride
-                ? String(row.instructorOverride).trim()
-                : undefined,
+            customJoinUrl: row.customJoinUrl
+              ? String(row.customJoinUrl).trim()
+              : undefined,
+            instructorOverride: row.instructorOverride
+              ? String(row.instructorOverride).trim()
+              : undefined,
           });
 
           if (!parseResult.success) {
@@ -253,7 +251,10 @@ export const sessionController = {
         "Content-Type",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       );
-      res.setHeader("Content-Disposition", 'attachment; filename="sessions-template.xlsx"');
+      res.setHeader(
+        "Content-Disposition",
+        'attachment; filename="sessions-template.xlsx"',
+      );
       res.send(buffer);
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);

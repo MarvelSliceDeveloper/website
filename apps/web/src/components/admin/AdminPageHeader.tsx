@@ -5,7 +5,7 @@ interface AdminPageHeaderProps {
   title: string;
   description?: string;
   action?: ReactNode;
-  breadcrumbs?: { label: string; href: string }[];
+  breadcrumbs?: { label: string; href?: string }[];
   role?: string;
 }
 
@@ -21,14 +21,21 @@ export function AdminPageHeader({
       {breadcrumbs && breadcrumbs.length > 0 && (
         <div className="mb-3 flex items-center gap-1 text-xs text-muted-foreground">
           {breadcrumbs.map((crumb, index) => (
-            <span key={crumb.href} className="flex items-center gap-1">
+            <span
+              key={crumb.href ?? crumb.label}
+              className="flex items-center gap-1"
+            >
               {index > 0 && <IconChevronRight size={14} />}
-              <a
-                href={crumb.href}
-                className="hover:text-foreground transition-colors"
-              >
-                {crumb.label}
-              </a>
+              {crumb.href ? (
+                <a
+                  href={crumb.href}
+                  className="hover:text-foreground transition-colors"
+                >
+                  {crumb.label}
+                </a>
+              ) : (
+                <span className="text-foreground">{crumb.label}</span>
+              )}
             </span>
           ))}
         </div>

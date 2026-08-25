@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -12,13 +11,30 @@ const TARGET = process.argv[2] ?? "master";
 
 function run(cmd) {
   console.log(`\n$ ${cmd}`);
-  execSync(cmd, { stdio: "inherit", cwd: ROOT });
+  try {
+    execSync(cmd, { stdio: "inherit", cwd: ROOT });
+  } catch (err) {
+    // err.status = exit code, err.signal = if killed by signal
+    console.error(`\n✖ Command failed: ${cmd}`);
+    if (err.status !== undefined) {
+      console.error(`  Exit code: ${err.status}`);
+    }
+    if (err.signal) {
+      console.error(`  Killed by signal: ${err.signal}`);
+    }
+    if (err.message) {
+      console.error(`  Reason: ${err.message}`);
+    }
+    process.exit(err.status ?? 1);
+  }
 }
 
 function runSilent(cmd) {
   try {
     return execSync(cmd, { cwd: ROOT, stdio: "pipe" }).toString().trim();
-  } catch {
+  } catch (err) {
+    // Uncomment to debug why a silent check failed:
+    // console.error(`(silent) ${cmd} -> ${err.stderr?.toString() ?? err.message}`);
     return "";
   }
 }
@@ -62,7 +78,6 @@ run(`git subtree pull --prefix ${PREFIX} ${REMOTE} ${TARGET} --squash`);
 
 console.log(`
 Landing site updated from upstream (${REMOTE}/${TARGET}).
-
 If git reported conflicts, resolve them, then commit the merge. Local changes
 inside ${PREFIX} (e.g. the pnpm dev script) are intentional and may need to be
 re-applied after resolving. Always install deps from the repo root with pnpm.

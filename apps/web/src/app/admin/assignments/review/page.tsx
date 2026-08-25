@@ -110,7 +110,8 @@ export default function AssignmentReviewPage() {
   const [filterStatus, setFilterStatus] = useState("ALL");
 
   const [gradeModalOpen, setGradeModalOpen] = useState(false);
-  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [selectedSubmission, setSelectedSubmission] =
+    useState<Submission | null>(null);
   const [gradeInput, setGradeInput] = useState("");
   const [feedbackInput, setFeedbackInput] = useState("");
 
@@ -233,7 +234,7 @@ export default function AssignmentReviewPage() {
                 {statsLoading ? (
                   <span className="h-7 w-16 block animate-pulse bg-border rounded" />
                 ) : (
-                  stats?.pending ?? "\u2014"
+                  (stats?.pending ?? "\u2014")
                 )}
               </p>
             </div>
@@ -252,7 +253,7 @@ export default function AssignmentReviewPage() {
                 {statsLoading ? (
                   <span className="h-7 w-16 block animate-pulse bg-border rounded" />
                 ) : (
-                  stats?.graded ?? "\u2014"
+                  (stats?.graded ?? "\u2014")
                 )}
               </p>
             </div>
@@ -271,7 +272,7 @@ export default function AssignmentReviewPage() {
                 {statsLoading ? (
                   <span className="h-7 w-16 block animate-pulse bg-border rounded" />
                 ) : (
-                  stats?.total ?? "\u2014"
+                  (stats?.total ?? "\u2014")
                 )}
               </p>
             </div>
@@ -294,7 +295,10 @@ export default function AssignmentReviewPage() {
               const gradedPct = total > 0 ? (inst.graded / total) * 100 : 0;
               const pendingPct = total > 0 ? (inst.pending / total) * 100 : 0;
               return (
-                <div key={inst.instructorId} className="flex items-center gap-4">
+                <div
+                  key={inst.instructorId}
+                  className="flex items-center gap-4"
+                >
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-xs font-bold text-primary">
                     {inst.name.charAt(0).toUpperCase()}
                   </div>
@@ -407,7 +411,8 @@ export default function AssignmentReviewPage() {
                 {filteredSubmissions.map((sub) => {
                   const cfg = statusConfig[sub.status] ?? {
                     label: sub.status,
-                    classes: "bg-muted/15 text-muted-foreground border-muted/25",
+                    classes:
+                      "bg-muted/15 text-muted-foreground border-muted/25",
                   };
                   return (
                     <tr
@@ -455,9 +460,7 @@ export default function AssignmentReviewPage() {
                           className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cfg.classes}`}
                         >
                           {sub.status === "GRADED" && <IconCheck size={10} />}
-                          {sub.status === "PENDING" && (
-                            <IconX size={10} />
-                          )}
+                          {sub.status === "PENDING" && <IconX size={10} />}
                           {cfg.label}
                         </span>
                       </td>

@@ -25,22 +25,30 @@ describe("Admin Features: Backup, Alerting Webhooks", () => {
     });
 
     it("registers GET /list", () => {
-      const route = routes.find((r) => r.path === "/list" && r.method === "GET");
+      const route = routes.find(
+        (r) => r.path === "/list" && r.method === "GET",
+      );
       expect(route).toBeDefined();
     });
 
     it("registers POST /restore", () => {
-      const route = routes.find((r) => r.path === "/restore" && r.method === "POST");
+      const route = routes.find(
+        (r) => r.path === "/restore" && r.method === "POST",
+      );
       expect(route).toBeDefined();
     });
 
     it("registers DELETE /:filename", () => {
-      const route = routes.find((r) => r.path === "/:filename" && r.method === "DELETE");
+      const route = routes.find(
+        (r) => r.path === "/:filename" && r.method === "DELETE",
+      );
       expect(route).toBeDefined();
     });
 
     it("registers GET /download/:filename", () => {
-      const route = routes.find((r) => r.path === "/download/:filename" && r.method === "GET");
+      const route = routes.find(
+        (r) => r.path === "/download/:filename" && r.method === "GET",
+      );
       expect(route).toBeDefined();
     });
   });
@@ -64,12 +72,16 @@ describe("Admin Features: Backup, Alerting Webhooks", () => {
     });
 
     it("registers DELETE /:id", () => {
-      const route = routes.find((r) => r.path === "/:id" && r.method === "DELETE");
+      const route = routes.find(
+        (r) => r.path === "/:id" && r.method === "DELETE",
+      );
       expect(route).toBeDefined();
     });
 
     it("registers POST /:id/test", () => {
-      const route = routes.find((r) => r.path === "/:id/test" && r.method === "POST");
+      const route = routes.find(
+        (r) => r.path === "/:id/test" && r.method === "POST",
+      );
       expect(route).toBeDefined();
     });
   });

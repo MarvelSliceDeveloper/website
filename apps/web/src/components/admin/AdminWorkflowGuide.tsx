@@ -32,7 +32,10 @@ export function AdminWorkflowGuide({ activeStep }: AdminWorkflowGuideProps) {
   const toggleCollapse = () => {
     const nextState = !isCollapsed;
     setIsCollapsed(nextState);
-    localStorage.setItem("lms_admin_workflow_guide_collapsed", String(nextState));
+    localStorage.setItem(
+      "lms_admin_workflow_guide_collapsed",
+      String(nextState),
+    );
   };
 
   if (!mounted) return null;
@@ -53,7 +56,8 @@ export function AdminWorkflowGuide({ activeStep }: AdminWorkflowGuideProps) {
               </span>
             </h3>
             <p className="text-xs text-muted-foreground">
-              Follow this 3-step pipeline to publish courses, bundle packages, and enroll student batches.
+              Follow this 3-step pipeline to publish courses, bundle packages,
+              and enroll student batches.
             </p>
           </div>
         </div>
@@ -99,9 +103,15 @@ export function AdminWorkflowGuide({ activeStep }: AdminWorkflowGuideProps) {
                   </span>
                   <IconBook
                     size={18}
-                    className={activeStep === 1 ? "text-primary" : "text-muted-foreground"}
+                    className={
+                      activeStep === 1
+                        ? "text-primary"
+                        : "text-muted-foreground"
+                    }
                   />
-                  <h4 className="text-xs font-bold text-foreground">1. Create & Edit Course</h4>
+                  <h4 className="text-xs font-bold text-foreground">
+                    1. Create & Edit Course
+                  </h4>
                 </div>
                 {activeStep === 1 && (
                   <span className="text-[10px] font-bold text-primary uppercase tracking-wide">
@@ -116,15 +126,25 @@ export function AdminWorkflowGuide({ activeStep }: AdminWorkflowGuideProps) {
 
               <div className="space-y-1.5 text-xs text-foreground bg-background/50 rounded-md p-2.5 border border-border/40 mb-3">
                 <div className="flex items-start gap-1">
-                  <span className="font-semibold text-primary text-[11px] shrink-0">Stage A:</span>
+                  <span className="font-semibold text-primary text-[11px] shrink-0">
+                    Stage A:
+                  </span>
                   <span>
-                    Fill initial details: Title<span className="text-danger font-bold">*</span>, Description<span className="text-danger font-bold">*</span>, Thumbnail Image<span className="text-danger font-bold">*</span>, Category.
+                    Fill initial details: Title
+                    <span className="text-danger font-bold">*</span>,
+                    Description<span className="text-danger font-bold">*</span>,
+                    Thumbnail Image
+                    <span className="text-danger font-bold">*</span>, Category.
                   </span>
                 </div>
                 <div className="flex items-start gap-1">
-                  <span className="font-semibold text-primary text-[11px] shrink-0">Stage B:</span>
+                  <span className="font-semibold text-primary text-[11px] shrink-0">
+                    Stage B:
+                  </span>
                   <span>
-                    Open the created course to add <strong>Modules</strong>, <strong>Video Lessons</strong>, <strong>Quizzes</strong>, & <strong>Assignments</strong>.
+                    Open the created course to add <strong>Modules</strong>,{" "}
+                    <strong>Video Lessons</strong>, <strong>Quizzes</strong>, &{" "}
+                    <strong>Assignments</strong>.
                   </span>
                 </div>
               </div>
@@ -158,9 +178,15 @@ export function AdminWorkflowGuide({ activeStep }: AdminWorkflowGuideProps) {
                   </span>
                   <IconPackage
                     size={18}
-                    className={activeStep === 2 ? "text-primary" : "text-muted-foreground"}
+                    className={
+                      activeStep === 2
+                        ? "text-primary"
+                        : "text-muted-foreground"
+                    }
                   />
-                  <h4 className="text-xs font-bold text-foreground">2. Bundle into Package</h4>
+                  <h4 className="text-xs font-bold text-foreground">
+                    2. Bundle into Package
+                  </h4>
                 </div>
                 {activeStep === 2 && (
                   <span className="text-[10px] font-bold text-primary uppercase tracking-wide">
@@ -170,12 +196,18 @@ export function AdminWorkflowGuide({ activeStep }: AdminWorkflowGuideProps) {
               </div>
 
               <p className="text-xs text-muted-foreground mb-2.5 leading-relaxed">
-                Group one or multiple completed courses together for catalog selling & subscription tiers.
+                Group one or multiple completed courses together for catalog
+                selling & subscription tiers.
               </p>
 
               <div className="space-y-1 text-xs text-foreground bg-background/50 rounded-md p-2.5 border border-border/40 mb-3">
                 <p>
-                  <strong>Mandatory fields:</strong> Package Title<span className="text-danger font-bold">*</span>, Included Courses<span className="text-danger font-bold">*</span>, Selling Price<span className="text-danger font-bold">*</span>, Access Validity<span className="text-danger font-bold">*</span>.
+                  <strong>Mandatory fields:</strong> Package Title
+                  <span className="text-danger font-bold">*</span>, Included
+                  Courses<span className="text-danger font-bold">*</span>,
+                  Selling Price<span className="text-danger font-bold">*</span>,
+                  Access Validity
+                  <span className="text-danger font-bold">*</span>.
                 </p>
               </div>
 
@@ -208,9 +240,15 @@ export function AdminWorkflowGuide({ activeStep }: AdminWorkflowGuideProps) {
                   </span>
                   <IconUsers
                     size={18}
-                    className={activeStep === 3 ? "text-primary" : "text-muted-foreground"}
+                    className={
+                      activeStep === 3
+                        ? "text-primary"
+                        : "text-muted-foreground"
+                    }
                   />
-                  <h4 className="text-xs font-bold text-foreground">3. Schedule & Enroll Batch</h4>
+                  <h4 className="text-xs font-bold text-foreground">
+                    3. Schedule & Enroll Batch
+                  </h4>
                 </div>
                 {activeStep === 3 && (
                   <span className="text-[10px] font-bold text-primary uppercase tracking-wide">
@@ -220,12 +258,17 @@ export function AdminWorkflowGuide({ activeStep }: AdminWorkflowGuideProps) {
               </div>
 
               <p className="text-xs text-muted-foreground mb-2.5 leading-relaxed">
-                Assign students to scheduled cohorts with start/end dates, live sessions, and instructors.
+                Assign students to scheduled cohorts with start/end dates, live
+                sessions, and instructors.
               </p>
 
               <div className="space-y-1 text-xs text-foreground bg-background/50 rounded-md p-2.5 border border-border/40 mb-3">
                 <p>
-                  <strong>Mandatory fields:</strong> Batch Name<span className="text-danger font-bold">*</span>, Linked Course/Package<span className="text-danger font-bold">*</span>, Start Date<span className="text-danger font-bold">*</span>, Instructors<span className="text-danger font-bold">*</span>.
+                  <strong>Mandatory fields:</strong> Batch Name
+                  <span className="text-danger font-bold">*</span>, Linked
+                  Course/Package<span className="text-danger font-bold">*</span>
+                  , Start Date<span className="text-danger font-bold">*</span>,
+                  Instructors<span className="text-danger font-bold">*</span>.
                 </p>
               </div>
 
@@ -241,7 +284,9 @@ export function AdminWorkflowGuide({ activeStep }: AdminWorkflowGuideProps) {
           <div className="mt-3 flex items-center gap-2 text-[11px] text-muted">
             <IconInfoCircle size={14} className="text-primary shrink-0" />
             <span>
-              Note: Fields marked with <span className="text-danger font-bold">*</span> are required when creating any Course, Package, or Batch.
+              Note: Fields marked with{" "}
+              <span className="text-danger font-bold">*</span> are required when
+              creating any Course, Package, or Batch.
             </span>
           </div>
         </div>

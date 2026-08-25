@@ -21,7 +21,8 @@ describe("Batches — Admin CRUD", () => {
   let instructorId: string;
   let createdBatchId: string;
 
-  const uniqueName = () => `Int Test Batch ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const uniqueName = () =>
+    `Int Test Batch ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
   beforeAll(async () => {
     const admin = await loginAs("ADMIN");
@@ -39,7 +40,9 @@ describe("Batches — Admin CRUD", () => {
     expect(courses.length).toBeGreaterThan(0);
     courseId = courses[0].id;
 
-    const instructorsRes = await adminAgent.get("/api/admin/batches/instructors");
+    const instructorsRes = await adminAgent.get(
+      "/api/admin/batches/instructors",
+    );
     expect(instructorsRes.status).toBe(200);
     const instructors = Array.isArray(instructorsRes.body)
       ? instructorsRes.body

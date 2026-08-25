@@ -70,9 +70,13 @@ export default function CourseDetailsTab({
           setForm((p) => ({
             ...p,
             ...(d.title ? { title: d.title } : {}),
-            ...(d.description ? { description: plainTextToHtml(d.description) } : {}),
+            ...(d.description
+              ? { description: plainTextToHtml(d.description) }
+              : {}),
             ...(d.category ? { category: d.category } : {}),
-            ...(Array.isArray(d.tags) && d.tags.length ? { tags: [...d.tags] } : {}),
+            ...(Array.isArray(d.tags) && d.tags.length
+              ? { tags: [...d.tags] }
+              : {}),
             ...(Array.isArray(d.objectives) && d.objectives.length
               ? { learningObjectives: [...d.objectives] }
               : {}),
@@ -118,81 +122,81 @@ export default function CourseDetailsTab({
 
     // Auto-fill category based on title keywords
     const categoryMap: Record<string, string> = {
-      "javascript": "Programming",
-      "typescript": "Programming",
-      "react": "Web Development",
+      javascript: "Programming",
+      typescript: "Programming",
+      react: "Web Development",
       "next.js": "Web Development",
-      "nextjs": "Web Development",
+      nextjs: "Web Development",
       "node.js": "Web Development",
-      "node": "Web Development",
-      "python": "Data Science",
-      "java": "Programming",
+      node: "Web Development",
+      python: "Data Science",
+      java: "Programming",
       "c++": "Programming",
       "c#": "Programming",
-      "php": "Programming",
-      "ruby": "Programming",
-      "go": "Programming",
-      "rust": "Programming",
-      "swift": "Programming",
-      "kotlin": "Programming",
-      "django": "Web Development",
-      "flask": "Web Development",
-      "express": "Web Development",
-      "html": "Web Development",
-      "css": "Web Development",
+      php: "Programming",
+      ruby: "Programming",
+      go: "Programming",
+      rust: "Programming",
+      swift: "Programming",
+      kotlin: "Programming",
+      django: "Web Development",
+      flask: "Web Development",
+      express: "Web Development",
+      html: "Web Development",
+      css: "Web Development",
       "tailwind css": "Web Development",
-      "sql": "Database Design",
-      "postgresql": "Database Design",
-      "mongodb": "Database Design",
-      "mysql": "Database Design",
-      "redis": "Database Design",
+      sql: "Database Design",
+      postgresql: "Database Design",
+      mongodb: "Database Design",
+      mysql: "Database Design",
+      redis: "Database Design",
       "machine learning": "Machine Learning & AI",
       "deep learning": "Machine Learning & AI",
       "artificial intelligence": "Machine Learning & AI",
       "data science": "Machine Learning & AI",
       "data analysis": "Machine Learning & AI",
       "big data": "Machine Learning & AI",
-      "pandas": "Machine Learning & AI",
-      "numpy": "Machine Learning & AI",
+      pandas: "Machine Learning & AI",
+      numpy: "Machine Learning & AI",
       "computer vision": "Machine Learning & AI",
-      "nlp": "Machine Learning & AI",
-      "docker": "DevOps & Cloud",
-      "kubernetes": "DevOps & Cloud",
-      "aws": "DevOps & Cloud",
-      "azure": "DevOps & Cloud",
-      "gcp": "DevOps & Cloud",
+      nlp: "Machine Learning & AI",
+      docker: "DevOps & Cloud",
+      kubernetes: "DevOps & Cloud",
+      aws: "DevOps & Cloud",
+      azure: "DevOps & Cloud",
+      gcp: "DevOps & Cloud",
       "cloud computing": "DevOps & Cloud",
-      "devops": "DevOps & Cloud",
-      "git": "DevOps & Cloud",
-      "github": "DevOps & Cloud",
+      devops: "DevOps & Cloud",
+      git: "DevOps & Cloud",
+      github: "DevOps & Cloud",
       "ci/cd": "DevOps & Cloud",
-      "cybersecurity": "Cybersecurity",
-      "networking": "Networking",
-      "blockchain": "Blockchain & Web3",
-      "web3": "Blockchain & Web3",
-      "api": "Programming",
-      "rest": "Programming",
-      "graphql": "Programming",
-      "microservices": "Programming",
+      cybersecurity: "Cybersecurity",
+      networking: "Networking",
+      blockchain: "Blockchain & Web3",
+      web3: "Blockchain & Web3",
+      api: "Programming",
+      rest: "Programming",
+      graphql: "Programming",
+      microservices: "Programming",
       "mobile development": "Mobile Development",
-      "android": "Mobile Development",
-      "ios": "Mobile Development",
-      "flutter": "Mobile Development",
+      android: "Mobile Development",
+      ios: "Mobile Development",
+      flutter: "Mobile Development",
       "react native": "Mobile Development",
       "ui/ux": "Design & UI/UX",
-      "figma": "Design & UI/UX",
+      figma: "Design & UI/UX",
       "graphic design": "Design & UI/UX",
       "game development": "Game Development",
-      "unity": "Game Development",
+      unity: "Game Development",
       "digital marketing": "Marketing",
-      "seo": "Marketing",
+      seo: "Marketing",
       "social media": "Marketing",
-      "finance": "Business & Finance",
-      "accounting": "Business & Finance",
-      "excel": "Business & Finance",
+      finance: "Business & Finance",
+      accounting: "Business & Finance",
+      excel: "Business & Finance",
       "project management": "Project Management",
-      "leadership": "Project Management",
-      "communication": "Project Management",
+      leadership: "Project Management",
+      communication: "Project Management",
       "interview prep": "Project Management",
     };
 
@@ -284,7 +288,9 @@ export default function CourseDetailsTab({
           type="text"
           value={aiTopic}
           onChange={(e) => setAiTopic(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAiGenerate())}
+          onKeyDown={(e) =>
+            e.key === "Enter" && (e.preventDefault(), handleAiGenerate())
+          }
           placeholder="Describe the course you want, e.g. Python for data analysis beginners"
           className="field flex-1 min-w-[220px] text-xs"
         />
@@ -320,14 +326,12 @@ export default function CourseDetailsTab({
               <span>-- Select a title --</span>
             </SelectItem>
             {titleOptions.map((title) => (
-                <SelectItem key={title} value={title}>
-                  {title}
-                </SelectItem>
-              ))}
+              <SelectItem key={title} value={title}>
+                {title}
+              </SelectItem>
+            ))}
             {form.title &&
-              !(titleOptions as readonly string[]).includes(
-                form.title,
-              ) && (
+              !(titleOptions as readonly string[]).includes(form.title) && (
                 <SelectItem value={form.title}>{form.title}</SelectItem>
               )}
           </SelectContent>
@@ -423,9 +427,7 @@ export default function CourseDetailsTab({
                 !(categoryOptions as readonly string[]).includes(
                   form.category,
                 ) && (
-                  <SelectItem value={form.category}>
-                    {form.category}
-                  </SelectItem>
+                  <SelectItem value={form.category}>{form.category}</SelectItem>
                 )}
             </SelectContent>
           </Select>
@@ -454,7 +456,9 @@ export default function CourseDetailsTab({
         </div>
         <div className="flex gap-2">
           <Select
-            onValueChange={(val) => setForm((p) => ({ ...p, tags: [...p.tags, val] }))}
+            onValueChange={(val) =>
+              setForm((p) => ({ ...p, tags: [...p.tags, val] }))
+            }
           >
             <SelectTrigger className="field">
               <SelectValue placeholder="-- Select a tag --" />

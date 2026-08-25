@@ -162,7 +162,13 @@ export default function SettingsPage() {
   const loading = preferencesQuery.isPending;
 
   const toggleMutation = useMutation({
-    mutationFn: async ({ type, enabled }: { type: string; enabled: boolean }) => {
+    mutationFn: async ({
+      type,
+      enabled,
+    }: {
+      type: string;
+      enabled: boolean;
+    }) => {
       await api.patch("/api/notifications/preferences", { type, enabled });
       return { type, enabled };
     },
@@ -174,9 +180,9 @@ export default function SettingsPage() {
       const label = TYPE_CONFIG[type]?.label || type;
       toast.success(`${label} ${enabled ? "enabled" : "disabled"}`);
       // Reflect the new value in the cached preferences so the switch updates.
-      queryClient.setQueryData<
-        { preferences: { type: string; enabled: boolean }[] }
-      >(["student", "notification-preferences"], (old) => {
+      queryClient.setQueryData<{
+        preferences: { type: string; enabled: boolean }[];
+      }>(["student", "notification-preferences"], (old) => {
         const prefs = old?.preferences ?? [];
         const existing = prefs.find((p) => p.type === type);
         return {
@@ -244,7 +250,15 @@ export default function SettingsPage() {
 
   // ── Profile panel ──────────────────────────────────────────────────
 
-  function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | null | undefined }) {
+  function InfoRow({
+    icon,
+    label,
+    value,
+  }: {
+    icon: React.ReactNode;
+    label: string;
+    value: string | null | undefined;
+  }) {
     if (!value) return null;
     return (
       <div className="flex items-center gap-3 text-sm">
@@ -286,9 +300,21 @@ export default function SettingsPage() {
             <p className="text-sm font-medium text-foreground border-b border-border/50 pb-2">
               Account Details
             </p>
-            <InfoRow icon={<IconUser size={15} />} label="Name" value={studentName} />
-            <InfoRow icon={<IconMail size={15} />} label="Email" value={studentEmail} />
-            <InfoRow icon={<IconShield size={15} />} label="Role" value={studentRole.toLowerCase()} />
+            <InfoRow
+              icon={<IconUser size={15} />}
+              label="Name"
+              value={studentName}
+            />
+            <InfoRow
+              icon={<IconMail size={15} />}
+              label="Email"
+              value={studentEmail}
+            />
+            <InfoRow
+              icon={<IconShield size={15} />}
+              label="Role"
+              value={studentRole.toLowerCase()}
+            />
           </div>
 
           {/* Contact Info */}
@@ -296,14 +322,40 @@ export default function SettingsPage() {
             <p className="text-sm font-medium text-foreground border-b border-border/50 pb-2">
               Contact Information
             </p>
-            <InfoRow icon={<IconPhone size={15} />} label="Phone" value={studentPhone} />
-            <InfoRow icon={<IconClockHour4 size={15} />} label="Time Zone" value={studentTimezone ? getTimezoneLabel(studentTimezone) : null} />
-            <InfoRow icon={<IconMapPin size={15} />} label="Address" value={studentAddress} />
-            <InfoRow icon={<IconBuildingSkyscraper size={15} />} label="State" value={studentState} />
-            <InfoRow icon={<IconFlag size={15} />} label="Country" value={studentCountry} />
-            {!studentPhone && !studentTimezone && !studentAddress && !studentState && !studentCountry && (
-              <p className="text-xs text-muted-foreground italic">No contact details added yet.</p>
-            )}
+            <InfoRow
+              icon={<IconPhone size={15} />}
+              label="Phone"
+              value={studentPhone}
+            />
+            <InfoRow
+              icon={<IconClockHour4 size={15} />}
+              label="Time Zone"
+              value={studentTimezone ? getTimezoneLabel(studentTimezone) : null}
+            />
+            <InfoRow
+              icon={<IconMapPin size={15} />}
+              label="Address"
+              value={studentAddress}
+            />
+            <InfoRow
+              icon={<IconBuildingSkyscraper size={15} />}
+              label="State"
+              value={studentState}
+            />
+            <InfoRow
+              icon={<IconFlag size={15} />}
+              label="Country"
+              value={studentCountry}
+            />
+            {!studentPhone &&
+              !studentTimezone &&
+              !studentAddress &&
+              !studentState &&
+              !studentCountry && (
+                <p className="text-xs text-muted-foreground italic">
+                  No contact details added yet.
+                </p>
+              )}
           </div>
 
           {/* Payment History Summary */}
@@ -316,20 +368,34 @@ export default function SettingsPage() {
             ) : (
               <div className="space-y-2">
                 {payments.slice(0, 5).map((p) => (
-                  <div key={p.id} className="flex items-center justify-between rounded-lg border border-border/60 bg-card-hover/40 px-3 py-2.5">
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between rounded-lg border border-border/60 bg-card-hover/40 px-3 py-2.5"
+                  >
                     <div>
-                      <p className="text-sm font-medium text-foreground">{p.package?.name ?? "Package"}</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {p.package?.name ?? "Package"}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(p.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                        {new Date(p.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-semibold text-foreground">
-                        {p.currency === "INR" ? "₹" : p.currency} {(p.amount / 100).toLocaleString("en-IN")}
+                        {p.currency === "INR" ? "₹" : p.currency}{" "}
+                        {(p.amount / 100).toLocaleString("en-IN")}
                       </p>
-                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                        p.status === "PAID" ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"
-                      }`}>
+                      <span
+                        className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                          p.status === "PAID"
+                            ? "bg-emerald-500/10 text-emerald-600"
+                            : "bg-amber-500/10 text-amber-600"
+                        }`}
+                      >
                         {p.status}
                       </span>
                     </div>

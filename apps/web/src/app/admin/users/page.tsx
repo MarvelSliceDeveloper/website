@@ -309,14 +309,7 @@ export default function AdminUsersPage() {
       return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
     };
 
-    const header = [
-      "S.No",
-      "Name",
-      "Email",
-      "Phone",
-      "Package(s)",
-      "Status",
-    ];
+    const header = ["S.No", "Name", "Email", "Phone", "Package(s)", "Status"];
     const rows = filtered.map((u, index) => [
       index + 1,
       u.name,
@@ -435,9 +428,7 @@ export default function AdminUsersPage() {
       <AdminPageHeader
         title="Students"
         description={`${totalStudents} registered students`}
-        breadcrumbs={[
-          { label: "Students", href: "/admin/users" },
-        ]}
+        breadcrumbs={[{ label: "Students", href: "/admin/users" }]}
         action={
           <button
             onClick={() => setShowModal(true)}
@@ -605,9 +596,7 @@ export default function AdminUsersPage() {
               </label>
               <Select
                 value={form.batchId || ""}
-                onValueChange={(value) =>
-                  setForm({ ...form, batchId: value })
-                }
+                onValueChange={(value) => setForm({ ...form, batchId: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a batch..." />
@@ -830,7 +819,10 @@ export default function AdminUsersPage() {
                     <span>{viewUser.phone || "—"}</span>
                   </div>
                   <div className="flex items-start gap-2.5 text-sm text-foreground">
-                    <IconHome size={16} className="shrink-0 text-muted mt-0.5" />
+                    <IconHome
+                      size={16}
+                      className="shrink-0 text-muted mt-0.5"
+                    />
                     <span>{viewUser.address || "—"}</span>
                   </div>
                   <div className="flex items-center gap-2.5 text-sm text-foreground">
@@ -913,7 +905,9 @@ export default function AdminUsersPage() {
                               {qa.status === "PENDING"
                                 ? "Pending"
                                 : qa.submittedAt
-                                  ? new Date(qa.submittedAt).toLocaleDateString()
+                                  ? new Date(
+                                      qa.submittedAt,
+                                    ).toLocaleDateString()
                                   : "Not submitted"}
                             </p>
                           </div>

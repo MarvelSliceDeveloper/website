@@ -239,7 +239,10 @@ export default function CertificationExamView({
         <p className="text-sm text-muted mb-4">
           No certification exam has been configured for this course yet.
         </p>
-        <button onClick={onBack} className="btn-secondary inline-flex items-center gap-2">
+        <button
+          onClick={onBack}
+          className="btn-secondary inline-flex items-center gap-2"
+        >
           <IconArrowLeft className="h-4 w-4" />
           Back to Course
         </button>
@@ -288,7 +291,10 @@ export default function CertificationExamView({
             </div>
           )}
 
-          <button onClick={onBack} className="btn-primary px-8 py-3 text-base font-semibold">
+          <button
+            onClick={onBack}
+            className="btn-primary px-8 py-3 text-base font-semibold"
+          >
             Back to Course
           </button>
         </div>
@@ -337,9 +343,7 @@ export default function CertificationExamView({
             </div>
             <div className="rounded-lg bg-muted/30 p-4">
               <p className="text-2xl font-bold text-foreground">
-                {data.quiz.timeLimitMin
-                  ? `${data.quiz.timeLimitMin}m`
-                  : "None"}
+                {data.quiz.timeLimitMin ? `${data.quiz.timeLimitMin}m` : "None"}
               </p>
               <p className="text-xs text-muted">Time Limit</p>
             </div>
@@ -465,7 +469,10 @@ export default function CertificationExamView({
 
         <div className="space-y-6">
           {data.quiz.questions.map((question, idx) => (
-            <div key={question.id} className="rounded-lg border border-border/50 p-4">
+            <div
+              key={question.id}
+              className="rounded-lg border border-border/50 p-4"
+            >
               <p className="text-sm font-medium text-foreground mb-3">
                 <span className="text-amber-500 font-bold mr-2">
                   Q{idx + 1}.

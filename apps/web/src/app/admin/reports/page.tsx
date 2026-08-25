@@ -26,28 +26,31 @@ export default function ReportsOverviewPage() {
   });
 
   // ── Derived values ──
-  const courseLabels = (data?.studentsPerCourse ?? []).map((d) => d.courseTitle);
+  const courseLabels = (data?.studentsPerCourse ?? []).map(
+    (d) => d.courseTitle,
+  );
   const courseVals = (data?.studentsPerCourse ?? []).map((d) => d.count);
   const revenueVals = (data?.monthlyRevenue ?? []).map((d) => d.amount);
   const paymentStatusRows = data?.paymentStatusDistribution ?? [];
 
   const totalStudents =
-    (data?.userRoleDistribution ?? []).find((u) => u.role === "STUDENT")?.count ??
-    0;
+    (data?.userRoleDistribution ?? []).find((u) => u.role === "STUDENT")
+      ?.count ?? 0;
   const totalRevenue = revenueVals.reduce((a, b) => a + b, 0);
   const derivedArpu =
-    data?.arpu ?? (totalStudents > 0 ? Math.round(totalRevenue / totalStudents) : 0);
+    data?.arpu ??
+    (totalStudents > 0 ? Math.round(totalRevenue / totalStudents) : 0);
   const refundRow = paymentStatusRows.find((p) => p.status === "REFUNDED");
-  const derivedRefundRate = data?.refundRate ?? (refundRow ? refundRow.count : 0);
+  const derivedRefundRate =
+    data?.refundRate ?? (refundRow ? refundRow.count : 0);
 
   const kpis = [
     {
       label: "Total Learners",
       value: totalStudents,
       prev:
-        (prevData?.userRoleDistribution ?? []).find(
-          (u) => u.role === "STUDENT",
-        )?.count ?? null,
+        (prevData?.userRoleDistribution ?? []).find((u) => u.role === "STUDENT")
+          ?.count ?? null,
     },
     {
       label: "Courses",
@@ -83,8 +86,7 @@ export default function ReportsOverviewPage() {
     },
     {
       label: "Pending Payments",
-      value:
-        paymentStatusRows.find((p) => p.status === "PENDING")?.count ?? 0,
+      value: paymentStatusRows.find((p) => p.status === "PENDING")?.count ?? 0,
     },
     {
       label: "Total Enrollments",

@@ -49,73 +49,73 @@ The landing site and the LMS are **fully independent** — no shared data, auth,
 
 ### LMS — Frontend (`apps/web`)
 
-| Layer | Technology |
-| --- | --- |
-| **Framework** | Next.js 16 (App Router) |
-| **UI** | React 19, Tailwind CSS 4 |
-| **Charts** | ApexCharts, Recharts |
-| **Calendar** | FullCalendar 6 |
-| **Rich text** | TinyMCE, Tiptap |
-| **Video player** | Plyr |
-| **Icons** | Tabler Icons |
-| **PDF generation** | jsPDF + jspdf-autotable |
-| **Realtime** | Socket.io client |
+| Layer              | Technology               |
+| ------------------ | ------------------------ |
+| **Framework**      | Next.js 16 (App Router)  |
+| **UI**             | React 19, Tailwind CSS 4 |
+| **Charts**         | ApexCharts, Recharts     |
+| **Calendar**       | FullCalendar 6           |
+| **Rich text**      | TinyMCE, Tiptap          |
+| **Video player**   | Plyr                     |
+| **Icons**          | Tabler Icons             |
+| **PDF generation** | jsPDF + jspdf-autotable  |
+| **Realtime**       | Socket.io client         |
 | **Error tracking** | Sentry (`@sentry/react`) |
-| **Notifications** | Sonner |
+| **Notifications**  | Sonner                   |
 
 ### LMS — Backend (`apps/api`)
 
-| Layer | Technology |
-| --- | --- |
-| **Runtime** | Node.js 20+ |
-| **Framework** | Express 4 |
-| **ORM** | Prisma 5 (PostgreSQL, 46 models) |
-| **Validation** | Zod |
-| **Auth** | JWT (httpOnly cookies), bcryptjs, Microsoft OAuth (Teams/Graph), TOTP |
-| **Payments** | Razorpay (amounts in paise, guest user auto-creation) |
-| **Email** | Brevo API + React Email templates |
-| **Files** | Multer, static serving at `/uploads/` |
-| **Cache / realtime** | Redis, Socket.io |
-| **Security** | CSRF (double-csrf), express-rate-limit |
-| **PDF** | jsPDF, pdf-lib (certificates) |
-| **Logging** | pino |
-| **Testing** | Vitest, Supertest |
-| **Error tracking** | Sentry (`@sentry/node`) |
+| Layer                | Technology                                                            |
+| -------------------- | --------------------------------------------------------------------- |
+| **Runtime**          | Node.js 20+                                                           |
+| **Framework**        | Express 4                                                             |
+| **ORM**              | Prisma 5 (PostgreSQL, 46 models)                                      |
+| **Validation**       | Zod                                                                   |
+| **Auth**             | JWT (httpOnly cookies), bcryptjs, Microsoft OAuth (Teams/Graph), TOTP |
+| **Payments**         | Razorpay (amounts in paise, guest user auto-creation)                 |
+| **Email**            | Brevo API + React Email templates                                     |
+| **Files**            | Multer, static serving at `/uploads/`                                 |
+| **Cache / realtime** | Redis, Socket.io                                                      |
+| **Security**         | CSRF (double-csrf), express-rate-limit                                |
+| **PDF**              | jsPDF, pdf-lib (certificates)                                         |
+| **Logging**          | pino                                                                  |
+| **Testing**          | Vitest, Supertest                                                     |
+| **Error tracking**   | Sentry (`@sentry/node`)                                               |
 
 ### Landing Site (`apps/landing`)
 
-| Layer | Technology |
-| --- | --- |
-| **Framework** | React 19 + Vite 8 |
-| **Routing** | React Router v6 |
-| **Server state** | TanStack Query v5 |
-| **Styling** | Tailwind CSS 4 |
-| **UI / Animation** | Headless UI, Framer Motion, React Icons |
-| **Backend** | Supabase (own Postgres + Storage + REST) |
-| **Email** | Nodemailer / Resend (dev mail server) |
-| **PDF** | jsPDF + jspdf-autotable |
-| **Linting** | Oxlint |
-| **Deploy** | Static site (Nginx) at `marvelslice.com` |
+| Layer              | Technology                               |
+| ------------------ | ---------------------------------------- |
+| **Framework**      | React 19 + Vite 8                        |
+| **Routing**        | React Router v6                          |
+| **Server state**   | TanStack Query v5                        |
+| **Styling**        | Tailwind CSS 4                           |
+| **UI / Animation** | Headless UI, Framer Motion, React Icons  |
+| **Backend**        | Supabase (own Postgres + Storage + REST) |
+| **Email**          | Nodemailer / Resend (dev mail server)    |
+| **PDF**            | jsPDF + jspdf-autotable                  |
+| **Linting**        | Oxlint                                   |
+| **Deploy**         | Static site (Nginx) at `marvelslice.com` |
 
 ### Shared Packages (`packages/`)
 
-| Package | Purpose |
-| --- | --- |
+| Package                | Purpose                                                            |
+| ---------------------- | ------------------------------------------------------------------ |
 | `@lms/email-templates` | 14 React Email templates (welcome, reset password, invoices, etc.) |
-| `@lms/types` | Shared TypeScript types |
-| `@lms/utils` | Shared utilities (feature flags, etc.) |
+| `@lms/types`           | Shared TypeScript types                                            |
+| `@lms/utils`           | Shared utilities (feature flags, etc.)                             |
 
 ### Infra & Tooling
 
-| Tool | Purpose |
-| --- | --- |
-| pnpm (>= 8) | Package manager (workspaces) |
-| Turborepo | Monorepo build orchestration |
-| Docker Compose | Local Postgres (5433) + Redis (6379) |
-| Husky + commitlint | Git hooks + conventional commits |
-| Prettier / ESLint | Formatting / linting |
-| TypeScript | Static typing across packages |
-| Vitest / Playwright / k6 | Unit, integration, E2E, load tests |
+| Tool                     | Purpose                              |
+| ------------------------ | ------------------------------------ |
+| pnpm (>= 8)              | Package manager (workspaces)         |
+| Turborepo                | Monorepo build orchestration         |
+| Docker Compose           | Local Postgres (5433) + Redis (6379) |
+| Husky + commitlint       | Git hooks + conventional commits     |
+| Prettier / ESLint        | Formatting / linting                 |
+| TypeScript               | Static typing across packages        |
+| Vitest / Playwright / k6 | Unit, integration, E2E, load tests   |
 
 ---
 
@@ -174,6 +174,7 @@ LMS/
 ## Feature Highlights
 
 ### LMS Portal (`apps/web` + `apps/api`)
+
 - **Roles**: Super Admin, Admin, Instructor, Student (JWT role hierarchy)
 - **Course builder**: modules, lessons (video with YouTube auto-metadata), quizzes, assignments, study materials, free-preview lessons
 - **Student portal**: dashboard, course content player, quizzes, assignments, certificates, notes, attendance, recordings
@@ -186,6 +187,7 @@ LMS/
 - **i18n ready**: locales in `next.config.ts`, translation files in `apps/web/messages/`
 
 ### Landing Site (`apps/landing`)
+
 - DB-driven home page, course listing grouped by category, rich course detail pages with video
 - Blog system (categories, tags, search), dynamic nav pages (about, contact, career)
 - Full admin CMS: nav menu, course editor (10 tabs), home page, promo banners, alumni, media library, footer, admin users, blog
@@ -251,12 +253,12 @@ pnpm build:landing
 
 After `pnpm prisma:reset`:
 
-| Role | Email | Password |
-| --- | --- | --- |
+| Role        | Email                | Password      |
+| ----------- | -------------------- | ------------- |
 | Super Admin | superadmin@lms.local | superadmin123 |
-| Admin | admin@lms.local | admin123 |
-| Instructor | instructor@lms.local | instructor123 |
-| Student | student@lms.local | student123 |
+| Admin       | admin@lms.local      | admin123      |
+| Instructor  | instructor@lms.local | instructor123 |
+| Student     | student@lms.local    | student123    |
 
 ---
 
@@ -287,27 +289,27 @@ SENTRY_DSN=...
 
 ## Scripts
 
-| Command | Description |
-| --- | --- |
-| `pnpm dev` | Start API (4000) + Web (3000) via Turbo |
-| `pnpm dev:api` / `pnpm dev:web` | Start a single app |
-| `pnpm dev:landing` | Landing site dev server (5173) |
-| `pnpm build` | Build all packages |
-| `pnpm build:api` / `pnpm build:web` / `pnpm build:landing` | Build a single app |
-| `pnpm lint` / `pnpm lint:fix` | Lint all packages |
-| `pnpm typecheck` | TypeScript check |
-| `pnpm test` | Unit tests (Vitest) |
-| `pnpm test:integration` | Integration tests |
-| `pnpm test:e2e` | E2E tests (Playwright) |
-| `pnpm test:all` | All test suites |
-| `pnpm test:load` | Load tests (k6) |
-| `pnpm format` / `pnpm format:check` | Prettier format |
-| `pnpm prisma:reset` | Reset DB + seed |
-| `pnpm prisma:migrate` | Run Prisma migrations |
-| `pnpm prisma:seed` | Seed only |
-| `pnpm prisma:studio` | Open Prisma Studio |
-| `pnpm prisma:generate` | Regenerate Prisma client |
-| `pnpm clean` | Clean build outputs |
+| Command                                                    | Description                             |
+| ---------------------------------------------------------- | --------------------------------------- |
+| `pnpm dev`                                                 | Start API (4000) + Web (3000) via Turbo |
+| `pnpm dev:api` / `pnpm dev:web`                            | Start a single app                      |
+| `pnpm dev:landing`                                         | Landing site dev server (5173)          |
+| `pnpm build`                                               | Build all packages                      |
+| `pnpm build:api` / `pnpm build:web` / `pnpm build:landing` | Build a single app                      |
+| `pnpm lint` / `pnpm lint:fix`                              | Lint all packages                       |
+| `pnpm typecheck`                                           | TypeScript check                        |
+| `pnpm test`                                                | Unit tests (Vitest)                     |
+| `pnpm test:integration`                                    | Integration tests                       |
+| `pnpm test:e2e`                                            | E2E tests (Playwright)                  |
+| `pnpm test:all`                                            | All test suites                         |
+| `pnpm test:load`                                           | Load tests (k6)                         |
+| `pnpm format` / `pnpm format:check`                        | Prettier format                         |
+| `pnpm prisma:reset`                                        | Reset DB + seed                         |
+| `pnpm prisma:migrate`                                      | Run Prisma migrations                   |
+| `pnpm prisma:seed`                                         | Seed only                               |
+| `pnpm prisma:studio`                                       | Open Prisma Studio                      |
+| `pnpm prisma:generate`                                     | Regenerate Prisma client                |
+| `pnpm clean`                                               | Clean build outputs                     |
 
 ---
 

@@ -157,9 +157,13 @@ class GoogleSheetsService {
       try {
         return await this.fetchSheetViaApi(spreadsheetId, gid, apiKey);
       } catch (apiErr: unknown) {
-        const csvMsg = csvErr instanceof Error ? csvErr.message : String(csvErr);
-        const apiMsg = apiErr instanceof Error ? apiErr.message : String(apiErr);
-        throw new Error(`Could not load sheet data. CSV: ${csvMsg} | API: ${apiMsg}`);
+        const csvMsg =
+          csvErr instanceof Error ? csvErr.message : String(csvErr);
+        const apiMsg =
+          apiErr instanceof Error ? apiErr.message : String(apiErr);
+        throw new Error(
+          `Could not load sheet data. CSV: ${csvMsg} | API: ${apiMsg}`,
+        );
       }
     }
   }
@@ -376,8 +380,10 @@ class GoogleSheetsService {
       try {
         return await this.getSpreadsheetMetadataViaApi(spreadsheetId, apiKey);
       } catch (apiErr: unknown) {
-        const htmlMsg = htmlErr instanceof Error ? htmlErr.message : String(htmlErr);
-        const apiMsg = apiErr instanceof Error ? apiErr.message : String(apiErr);
+        const htmlMsg =
+          htmlErr instanceof Error ? htmlErr.message : String(htmlErr);
+        const apiMsg =
+          apiErr instanceof Error ? apiErr.message : String(apiErr);
         throw new Error(
           `Could not read spreadsheet tabs. htmlview: ${htmlMsg} | API: ${apiMsg}`,
         );
@@ -429,13 +435,16 @@ class GoogleSheetsService {
     // Spreadsheet title lives in <title>Name - Google Sheets</title>
     const titleMatch = html.match(/<title>(.*?)<\/title>/i);
     const spreadsheetTitle = titleMatch
-      ? decodeHtmlEntities_(titleMatch[1]).replace(/\s*-\s*Google (Sheets|Drive)\s*$/i, "").trim()
+      ? decodeHtmlEntities_(titleMatch[1])
+          .replace(/\s*-\s*Google (Sheets|Drive)\s*$/i, "")
+          .trim()
       : "Untitled Spreadsheet";
 
     // Tab bar entries look like:
     // <li id="sheet-button-1847293056" ...><span ...>Batch A</span></li>
     const tabs: SheetTab[] = [];
-    const tabRegex = /id="sheet-button-(\d+)"[^>]*>[\s\S]*?<span[^>]*>([^<]*)<\/span>/g;
+    const tabRegex =
+      /id="sheet-button-(\d+)"[^>]*>[\s\S]*?<span[^>]*>([^<]*)<\/span>/g;
     let match: RegExpExecArray | null;
     while ((match = tabRegex.exec(html)) !== null) {
       const gid = match[1];
@@ -562,7 +571,12 @@ class GoogleSheetsService {
     );
     const updated = [
       ...filtered,
-      { id: sheet.id, name: sheet.name, gid, addedAt: new Date().toISOString() },
+      {
+        id: sheet.id,
+        name: sheet.name,
+        gid,
+        addedAt: new Date().toISOString(),
+      },
     ];
 
     await prisma.systemSetting.upsert({

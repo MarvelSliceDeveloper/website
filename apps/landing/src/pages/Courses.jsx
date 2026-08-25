@@ -65,9 +65,17 @@ const CATEGORY_ICONS = {
 const DEFAULT_ICON = FiBookOpen;
 
 const nodeSlug = (node) =>
-  node.path ? node.path.replace(/.*\//, "") : node.label.toLowerCase().replace(/\s+/g, "-");
+  node.path
+    ? node.path.replace(/.*\//, "")
+    : node.label.toLowerCase().replace(/\s+/g, "-");
 
-function MobileCatList({ parentTree, activeCategory, countFor, onSelectParent, onSelectChild }) {
+function MobileCatList({
+  parentTree,
+  activeCategory,
+  countFor,
+  onSelectParent,
+  onSelectChild,
+}) {
   const [expanded, setExpanded] = useState(null);
 
   return (
@@ -97,26 +105,38 @@ function MobileCatList({ parentTree, activeCategory, countFor, onSelectParent, o
             >
               <span className="flex items-center gap-2 min-w-0 flex-1">
                 <span className="w-[18px] h-[18px] flex items-center justify-center shrink-0">
-                  <Icon className={`w-4 h-4 ${isParentActive ? "text-brand-blue" : "text-gray-400"}`} />
+                  <Icon
+                    className={`w-4 h-4 ${isParentActive ? "text-brand-blue" : "text-gray-400"}`}
+                  />
                 </span>
-                <span className="truncate min-w-0 max-w-full">{parentNode.label}</span>
+                <span className="truncate min-w-0 max-w-full">
+                  {parentNode.label}
+                </span>
               </span>
               <span className="flex items-center gap-1.5 shrink-0">
-                <span className={`text-[10px] font-medium tabular-nums leading-none px-1.5 py-0.5 rounded-full ${
-                  isParentActive ? "bg-brand-blue/15 text-brand-blue" : "text-gray-400"
-                }`}>
+                <span
+                  className={`text-[10px] font-medium tabular-nums leading-none px-1.5 py-0.5 rounded-full ${
+                    isParentActive
+                      ? "bg-brand-blue/15 text-brand-blue"
+                      : "text-gray-400"
+                  }`}
+                >
                   {parentNode.totalCount}
                 </span>
                 {hasChildren && (
-                  <FiChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 ease-out ${open ? "rotate-90" : ""} ${
-                    isParentActive ? "text-brand-blue" : "text-gray-400"
-                  }`} />
+                  <FiChevronRight
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ease-out ${open ? "rotate-90" : ""} ${
+                      isParentActive ? "text-brand-blue" : "text-gray-400"
+                    }`}
+                  />
                 )}
               </span>
             </button>
             <div
               className={`grid transition-all duration-200 ease-out ${
-                open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                open
+                  ? "grid-rows-[1fr] opacity-100"
+                  : "grid-rows-[0fr] opacity-0"
               }`}
             >
               <div className="overflow-hidden">
@@ -124,7 +144,8 @@ function MobileCatList({ parentTree, activeCategory, countFor, onSelectParent, o
                   <div className="border-t border-gray-100 ml-[22px] pl-[13px]">
                     {parentNode.children.map((child) => {
                       const childSlug = nodeSlug(child);
-                      const ChildIcon = CATEGORY_ICONS[child.label] || DEFAULT_ICON;
+                      const ChildIcon =
+                        CATEGORY_ICONS[child.label] || DEFAULT_ICON;
                       const isChildActive = activeCategory === childSlug;
                       return (
                         <button
@@ -139,9 +160,13 @@ function MobileCatList({ parentTree, activeCategory, countFor, onSelectParent, o
                         >
                           <span className="flex items-center gap-2 min-w-0 flex-1">
                             <span className="w-[14px] h-[14px] flex items-center justify-center shrink-0">
-                              <ChildIcon className={`w-3.5 h-3.5 ${isChildActive ? "text-brand-blue" : "text-gray-400"}`} />
+                              <ChildIcon
+                                className={`w-3.5 h-3.5 ${isChildActive ? "text-brand-blue" : "text-gray-400"}`}
+                              />
                             </span>
-                            <span className="truncate min-w-0 max-w-full">{child.label}</span>
+                            <span className="truncate min-w-0 max-w-full">
+                              {child.label}
+                            </span>
                           </span>
                           <span className="text-[10px] font-medium text-gray-400 tabular-nums leading-none shrink-0">
                             {countFor(child.id)}
@@ -183,13 +208,23 @@ function Pagination({ page, total, onPage }) {
         } else {
           pages.push(1);
           if (page > 3) pages.push("...");
-          for (let i = Math.max(2, page - 1); i <= Math.min(last - 1, page + 1); i++) pages.push(i);
+          for (
+            let i = Math.max(2, page - 1);
+            i <= Math.min(last - 1, page + 1);
+            i++
+          )
+            pages.push(i);
           if (page < last - 2) pages.push("...");
           pages.push(last);
         }
         return pages.map((p, idx) =>
           p === "..." ? (
-            <span key={`ellipsis-${idx}`} className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-xs text-slate-400">…</span>
+            <span
+              key={`ellipsis-${idx}`}
+              className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-xs text-slate-400"
+            >
+              …
+            </span>
           ) : (
             <button
               key={p}
@@ -207,7 +242,7 @@ function Pagination({ page, total, onPage }) {
             >
               {p}
             </button>
-          )
+          ),
         );
       })()}
       <button
@@ -266,7 +301,9 @@ function CourseListItem({ course }) {
           )}
         </div>
       </div>
-      <span className="text-sm font-semibold text-brand-orange shrink-0">View Course &rarr;</span>
+      <span className="text-sm font-semibold text-brand-orange shrink-0">
+        View Course &rarr;
+      </span>
     </Link>
   );
 }
@@ -546,9 +583,7 @@ export default function Courses() {
           <span className="flex items-center gap-1.5 shrink-0">
             <span
               className={`text-xs font-semibold tabular-nums px-2 py-0.5 rounded-full ${
-                isParentActive
-                  ? "bg-blue-100 text-blue-700"
-                  : "text-gray-400"
+                isParentActive ? "bg-blue-100 text-blue-700" : "text-gray-400"
               }`}
             >
               {parentNode.totalCount}
@@ -715,7 +750,8 @@ export default function Courses() {
               <div className="hidden sm:block mb-6 text-center lg:text-left">
                 <h1 className="text-2xl lg:text-3xl font-extrabold text-[#1B365D] tracking-tight mb-1">
                   Find Your Courses related to{" "}
-                  {parents.find((p) => p.slug === parentParam)?.label || "Software Learning"}
+                  {parents.find((p) => p.slug === parentParam)?.label ||
+                    "Software Learning"}
                 </h1>
                 {activeNavId && (
                   <p className="text-lg lg:text-xl font-bold text-slate-600">
@@ -787,8 +823,12 @@ export default function Courses() {
                     <div className="flex items-start gap-2">
                       <FiFilter className="w-4 h-4 text-[#f59e0b] shrink-0 mt-0.5" />
                       <div>
-                        <h4 className="text-xs font-bold text-slate-900 leading-tight">Filter Courses</h4>
-                        <p className="text-[11px] text-slate-500 font-medium leading-tight mt-0.5">No courses available in this category</p>
+                        <h4 className="text-xs font-bold text-slate-900 leading-tight">
+                          Filter Courses
+                        </h4>
+                        <p className="text-[11px] text-slate-500 font-medium leading-tight mt-0.5">
+                          No courses available in this category
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -853,7 +893,9 @@ export default function Courses() {
                 </div>
 
                 <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1.5 text-center">
-                  {search ? `No courses match "${search}"` : "No Courses Available"}
+                  {search
+                    ? `No courses match "${search}"`
+                    : "No Courses Available"}
                 </h3>
 
                 <p className="text-slate-500 text-xs sm:text-sm leading-relaxed text-center">

@@ -251,7 +251,9 @@ export default function AdminRefundsPage() {
             <button
               onClick={resetForm}
               className="btn-secondary text-sm"
-              disabled={createRefundMutation.isPending || lookupMutation.isPending}
+              disabled={
+                createRefundMutation.isPending || lookupMutation.isPending
+              }
             >
               Cancel
             </button>
@@ -346,7 +348,9 @@ export default function AdminRefundsPage() {
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {lookupResult.user.email}
-                  {lookupResult.user.phone ? ` · ${lookupResult.user.phone}` : ""}
+                  {lookupResult.user.phone
+                    ? ` · ${lookupResult.user.phone}`
+                    : ""}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Package: {lookupResult.package?.name ?? "—"}
@@ -461,11 +465,15 @@ export default function AdminRefundsPage() {
                 {refunds.map((refund) => {
                   const cfg = statusConfig[refund.status] ?? {
                     label: refund.status,
-                    classes: "bg-muted/15 text-muted-foreground border-muted/25",
+                    classes:
+                      "bg-muted/15 text-muted-foreground border-muted/25",
                   };
                   const payer = refund.payment?.user;
                   return (
-                    <tr key={refund.id} className="hover:bg-card-hover transition-colors">
+                    <tr
+                      key={refund.id}
+                      className="hover:bg-card-hover transition-colors"
+                    >
                       <td className="py-3 pr-3">
                         {payer ? (
                           <div>
@@ -483,7 +491,8 @@ export default function AdminRefundsPage() {
                       </td>
                       <td className="py-3 pr-3">
                         <span className="font-mono text-foreground font-medium">
-                          {refund.payment?.razorpayPaymentId ?? refund.paymentId}
+                          {refund.payment?.razorpayPaymentId ??
+                            refund.paymentId}
                         </span>
                         {refund.razorpayRefundId && (
                           <span className="block text-[10px] text-muted-foreground">
@@ -498,19 +507,24 @@ export default function AdminRefundsPage() {
                         <span
                           className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cfg.classes}`}
                         >
-                          {refund.status === "COMPLETED" && <IconCheck size={10} />}
+                          {refund.status === "COMPLETED" && (
+                            <IconCheck size={10} />
+                          )}
                           {(refund.status === "CANCELLED" ||
-                            refund.status === "REJECTED") && <IconX size={10} />}
+                            refund.status === "REJECTED") && (
+                            <IconX size={10} />
+                          )}
                           {cfg.label}
                         </span>
                       </td>
                       <td className="py-3 pr-3 text-muted-foreground max-w-[180px]">
                         {refund.reason || "—"}
-                        {refund.status === "REJECTED" && refund.rejectionReason && (
-                          <span className="block text-[10px] text-danger">
-                            Rejected: {refund.rejectionReason}
-                          </span>
-                        )}
+                        {refund.status === "REJECTED" &&
+                          refund.rejectionReason && (
+                            <span className="block text-[10px] text-danger">
+                              Rejected: {refund.rejectionReason}
+                            </span>
+                          )}
                       </td>
                       <td className="py-3 pr-3">
                         {refund.initiatedBy ? (

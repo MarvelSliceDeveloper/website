@@ -85,8 +85,7 @@ export default function AIIntegrationPage() {
   });
 
   const healthMutation = useMutation({
-    mutationFn: () =>
-      api.post<HealthResult>("/api/admin/ai/health-check", {}),
+    mutationFn: () => api.post<HealthResult>("/api/admin/ai/health-check", {}),
     onSuccess: (res) => {
       if (res.ok) {
         toast.success(`Gemini is healthy (${res.latencyMs ?? "?"} ms)`);
@@ -256,7 +255,9 @@ export default function AIIntegrationPage() {
           <button
             type="button"
             onClick={() => saveKeyMutation.mutate()}
-            disabled={saveKeyMutation.isPending || apiKeyInput.trim().length < 20}
+            disabled={
+              saveKeyMutation.isPending || apiKeyInput.trim().length < 20
+            }
             className="btn-primary text-xs px-4 disabled:opacity-50"
           >
             {saveKeyMutation.isPending ? "Saving…" : "Save Key"}

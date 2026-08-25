@@ -18,10 +18,7 @@ export type { OnlineMeeting, CreateMeetingRequest } from "./graph.meetings";
 export { getCalendarView, createCalendarEvent } from "./graph.calendar";
 export type { CalendarEvent, CreateEventRequest } from "./graph.calendar";
 
-export {
-  getMeetingRecordings,
-  getRecordingContent,
-} from "./graph.recordings";
+export { getMeetingRecordings, getRecordingContent } from "./graph.recordings";
 export type { RecordingSession } from "./graph.recordings";
 
 export {

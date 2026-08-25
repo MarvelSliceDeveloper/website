@@ -275,10 +275,7 @@ export default function SessionDetailPage() {
           )}
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatTile
-            label="Joined"
-            value={stats?.uniqueAttendees ?? "—"}
-          />
+          <StatTile label="Joined" value={stats?.uniqueAttendees ?? "—"} />
           <StatTile label="Live Now" value={stats?.liveNow ?? "—"} />
           <StatTile
             label="Peak Concurrent"
@@ -294,9 +291,7 @@ export default function SessionDetailPage() {
           />
           <StatTile
             label="Attendance Rate"
-            value={
-              stats ? `${stats.attendanceRate}%` : "—"
-            }
+            value={stats ? `${stats.attendanceRate}%` : "—"}
           />
           <StatTile
             label="Qualified"

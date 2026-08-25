@@ -49,7 +49,11 @@ interface InstructorProfileData {
   state: string | null;
   country: string | null;
   languages: string[] | null;
-  socialLinks: { linkedin?: string; github?: string; portfolio?: string } | null;
+  socialLinks: {
+    linkedin?: string;
+    github?: string;
+    portfolio?: string;
+  } | null;
   bankName: string | null;
   bankAccountNumber: string | null;
   bankIfscCode: string | null;
@@ -281,7 +285,9 @@ export default function EditInstructorPage() {
     return {
       designation: form.designation.trim() || undefined,
       qualification: form.qualification.trim() || undefined,
-      experienceYears: form.experienceYears ? Number(form.experienceYears) : undefined,
+      experienceYears: form.experienceYears
+        ? Number(form.experienceYears)
+        : undefined,
       skills: skills.length ? skills : undefined,
       currentlyEmployed: form.currentlyEmployed || undefined,
       companyName: form.companyName.trim() || undefined,
@@ -403,21 +409,9 @@ export default function EditInstructorPage() {
             type="tel"
             placeholder="+1 234 567 890"
           />
-          <Field
-            label="City"
-            field="city"
-            placeholder="City"
-          />
-          <Field
-            label="State"
-            field="state"
-            placeholder="State"
-          />
-          <Field
-            label="Country"
-            field="country"
-            placeholder="Country"
-          />
+          <Field label="City" field="city" placeholder="City" />
+          <Field label="State" field="state" placeholder="State" />
+          <Field label="Country" field="country" placeholder="Country" />
           <div className="md:col-span-2">
             <Field
               label="Bio"
@@ -482,11 +476,7 @@ export default function EditInstructorPage() {
             field="bankAccountHolderName"
             placeholder="Name on bank account"
           />
-          <Field
-            label="UPI ID"
-            field="upiId"
-            placeholder="name@upi"
-          />
+          <Field label="UPI ID" field="upiId" placeholder="name@upi" />
         </CardSection>
 
         <div className="flex items-center justify-end gap-3">

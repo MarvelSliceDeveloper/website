@@ -270,202 +270,200 @@ export default function InstructorCourseDetailPage() {
         />
       ) : (
         <>
-      {course.learningObjectives && course.learningObjectives.length > 0 && (
-        <div className="glass-card p-5 space-y-3">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <IconTarget size={16} className="text-primary" />
-            Learning Objectives
-          </h3>
-          <ul className="space-y-1.5">
-            {course.learningObjectives.map((obj, i) => (
-              <li
-                key={i}
-                className="flex items-start gap-2 text-sm text-muted-foreground"
-              >
-                <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60" />
-                {obj}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+          {course.learningObjectives &&
+            course.learningObjectives.length > 0 && (
+              <div className="glass-card p-5 space-y-3">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <IconTarget size={16} className="text-primary" />
+                  Learning Objectives
+                </h3>
+                <ul className="space-y-1.5">
+                  {course.learningObjectives.map((obj, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start gap-2 text-sm text-muted-foreground"
+                    >
+                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60" />
+                      {obj}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-      <div className="space-y-4">
-        <h2 className="text-base font-semibold text-foreground">
-          Course Content
-        </h2>
-
-        {course.modules.length === 0 ? (
-          <div className="glass-card p-10 text-center space-y-3">
-            <IconClipboardList
-              size={36}
-              className="mx-auto text-muted"
-            />
-            <p className="text-sm font-medium text-foreground">
-              No modules yet
-            </p>
-            <p className="text-xs text-muted-foreground">
-              This course has no content modules.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {course.modules.map((mod) => {
-              const itemCount =
-                mod.lessons.length +
-                mod.quizzes.length +
-                mod.assignments.length;
-              return (
-                <div
-                  key={mod.id}
-                  className="glass-card border border-border/80 overflow-hidden"
-                >
-                  <div className="flex items-center justify-between p-4 border-b border-border/50">
-                    <div>
-                      <h3 className="font-semibold text-foreground">
-                        {mod.order}. {mod.title}
-                      </h3>
-                      {mod.description && (
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {mod.description}
-                        </p>
-                      )}
-                    </div>
-                    <span className="text-xs text-muted">
-                      {itemCount} item{itemCount !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-
-                  {mod.lessons.length > 0 && (
-                    <div className="border-b border-border/30 last:border-b-0">
-                      {mod.lessons.map((lesson) => (
-                        <div
-                          key={lesson.id}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors"
-                        >
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 shrink-0">
-                            <IconPlayerPlay
-                              size={14}
-                              className="text-primary"
-                            />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-foreground truncate">
-                              {lesson.title}
-                            </p>
-                            {lesson.durationSeconds && (
-                              <p className="text-xs text-muted">
-                                <IconClock
-                                  size={10}
-                                  className="inline mr-0.5"
-                                />
-                                {formatDuration(lesson.durationSeconds)}
-                              </p>
-                            )}
-                          </div>
-                          {lesson.isFreePreview && (
-                            <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded">
-                              Free
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {mod.quizzes.length > 0 && (
-                    <div className="border-b border-border/30 last:border-b-0">
-                      {mod.quizzes.map((quiz) => (
-                        <div
-                          key={quiz.id}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors"
-                        >
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500/10 shrink-0">
-                            <IconListCheck
-                              size={14}
-                              className="text-amber-500"
-                            />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-foreground truncate">
-                              {quiz.title}
-                            </p>
-                            <p className="text-xs text-muted">
-                              {quiz.questions.length} question
-                              {quiz.questions.length !== 1 ? "s" : ""}
-                              {quiz.passingScore
-                                ? ` · Pass: ${quiz.passingScore}%`
-                                : ""}
-                              {quiz.timeLimitMin
-                                ? ` · ${quiz.timeLimitMin} min`
-                                : ""}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {mod.assignments.length > 0 && (
-                    <div className="last:border-b-0">
-                      {mod.assignments.map((assignment) => (
-                        <div
-                          key={assignment.id}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors"
-                        >
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/10 shrink-0">
-                            <IconFileSpreadsheet
-                              size={14}
-                              className="text-blue-500"
-                            />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-foreground truncate">
-                              {assignment.title}
-                            </p>
-                            <p className="text-xs text-muted">
-                              {assignment.maxPoints} point
-                              {assignment.maxPoints !== 1 ? "s" : ""}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          )}
-        </div>
-
-        {recordings.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-base font-semibold text-foreground">
-              Batch Recordings
+              Course Content
             </h2>
-            <div className="space-y-2">
-              {recordings.map((rec) => (
-                <div
-                  key={rec.id}
-                  className="glass-card flex items-center gap-4 p-4 border border-border/80"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 shrink-0">
-                    <IconVideo size={18} className="text-primary" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {rec.title}
-                    </p>
-                    <p className="text-xs text-muted">
-                      {rec.batchName} · {formatDuration(rec.duration)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+
+            {course.modules.length === 0 ? (
+              <div className="glass-card p-10 text-center space-y-3">
+                <IconClipboardList size={36} className="mx-auto text-muted" />
+                <p className="text-sm font-medium text-foreground">
+                  No modules yet
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  This course has no content modules.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {course.modules.map((mod) => {
+                  const itemCount =
+                    mod.lessons.length +
+                    mod.quizzes.length +
+                    mod.assignments.length;
+                  return (
+                    <div
+                      key={mod.id}
+                      className="glass-card border border-border/80 overflow-hidden"
+                    >
+                      <div className="flex items-center justify-between p-4 border-b border-border/50">
+                        <div>
+                          <h3 className="font-semibold text-foreground">
+                            {mod.order}. {mod.title}
+                          </h3>
+                          {mod.description && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {mod.description}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted">
+                          {itemCount} item{itemCount !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+
+                      {mod.lessons.length > 0 && (
+                        <div className="border-b border-border/30 last:border-b-0">
+                          {mod.lessons.map((lesson) => (
+                            <div
+                              key={lesson.id}
+                              className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors"
+                            >
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 shrink-0">
+                                <IconPlayerPlay
+                                  size={14}
+                                  className="text-primary"
+                                />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium text-foreground truncate">
+                                  {lesson.title}
+                                </p>
+                                {lesson.durationSeconds && (
+                                  <p className="text-xs text-muted">
+                                    <IconClock
+                                      size={10}
+                                      className="inline mr-0.5"
+                                    />
+                                    {formatDuration(lesson.durationSeconds)}
+                                  </p>
+                                )}
+                              </div>
+                              {lesson.isFreePreview && (
+                                <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded">
+                                  Free
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {mod.quizzes.length > 0 && (
+                        <div className="border-b border-border/30 last:border-b-0">
+                          {mod.quizzes.map((quiz) => (
+                            <div
+                              key={quiz.id}
+                              className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors"
+                            >
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500/10 shrink-0">
+                                <IconListCheck
+                                  size={14}
+                                  className="text-amber-500"
+                                />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium text-foreground truncate">
+                                  {quiz.title}
+                                </p>
+                                <p className="text-xs text-muted">
+                                  {quiz.questions.length} question
+                                  {quiz.questions.length !== 1 ? "s" : ""}
+                                  {quiz.passingScore
+                                    ? ` · Pass: ${quiz.passingScore}%`
+                                    : ""}
+                                  {quiz.timeLimitMin
+                                    ? ` · ${quiz.timeLimitMin} min`
+                                    : ""}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {mod.assignments.length > 0 && (
+                        <div className="last:border-b-0">
+                          {mod.assignments.map((assignment) => (
+                            <div
+                              key={assignment.id}
+                              className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors"
+                            >
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/10 shrink-0">
+                                <IconFileSpreadsheet
+                                  size={14}
+                                  className="text-blue-500"
+                                />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium text-foreground truncate">
+                                  {assignment.title}
+                                </p>
+                                <p className="text-xs text-muted">
+                                  {assignment.maxPoints} point
+                                  {assignment.maxPoints !== 1 ? "s" : ""}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        )}
+
+          {recordings.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-base font-semibold text-foreground">
+                Batch Recordings
+              </h2>
+              <div className="space-y-2">
+                {recordings.map((rec) => (
+                  <div
+                    key={rec.id}
+                    className="glass-card flex items-center gap-4 p-4 border border-border/80"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 shrink-0">
+                      <IconVideo size={18} className="text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {rec.title}
+                      </p>
+                      <p className="text-xs text-muted">
+                        {rec.batchName} · {formatDuration(rec.duration)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

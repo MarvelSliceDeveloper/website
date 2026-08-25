@@ -12,11 +12,20 @@ export const batchMentorService = {
     const batch = await prisma.batch.findUnique({ where: { id: batchId } });
     if (!batch) throw new AppError(404, "Batch not found");
 
-    const course = await prisma.course.findUnique({ where: { id: data.courseId } });
+    const course = await prisma.course.findUnique({
+      where: { id: data.courseId },
+    });
     if (!course) throw new AppError(404, "Course not found");
 
-    const mentor = await prisma.user.findUnique({ where: { id: data.mentorId } });
-    if (!mentor || (mentor.role !== "INSTRUCTOR" && mentor.role !== "ADMIN" && mentor.role !== "SUPER_ADMIN")) {
+    const mentor = await prisma.user.findUnique({
+      where: { id: data.mentorId },
+    });
+    if (
+      !mentor ||
+      (mentor.role !== "INSTRUCTOR" &&
+        mentor.role !== "ADMIN" &&
+        mentor.role !== "SUPER_ADMIN")
+    ) {
       throw new AppError(400, "User is not an instructor or admin");
     }
 

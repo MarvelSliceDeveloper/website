@@ -215,9 +215,7 @@ export default function CourseContentView({
     null,
   );
   // Single-expand accordion: only one module's id (or null) is ever "open".
-  const [expandedModuleId, setExpandedModuleId] = useState<string | null>(
-    null,
-  );
+  const [expandedModuleId, setExpandedModuleId] = useState<string | null>(null);
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -285,9 +283,7 @@ export default function CourseContentView({
   );
   const data = contentQuery.data ?? null;
   const loading = contentQuery.isPending;
-  const error = contentQuery.isError
-    ? getErrorMessage(contentQuery.error)
-    : "";
+  const error = contentQuery.isError ? getErrorMessage(contentQuery.error) : "";
 
   // Certification exam status — fetched only when the course has a cert module.
   const hasCertModule = Boolean(
@@ -598,58 +594,60 @@ export default function CourseContentView({
       queryClient.setQueryData<CourseContentData>(
         ["student", "course-content", courseId],
         (prev) => {
-        if (!prev) return prev;
+          if (!prev) return prev;
 
-        const recordings = patch.recording
-          ? prev.recordings.map((r) =>
-              r.id === patch.recording!.id ? { ...r, ...patch.recording! } : r,
-            )
-          : prev.recordings;
-
-        const modules = prev.modules.map((m) => {
-          const lessons = patch.lesson
-            ? m.lessons.map((l) =>
-                l.id === patch.lesson!.id ? { ...l, ...patch.lesson! } : l,
+          const recordings = patch.recording
+            ? prev.recordings.map((r) =>
+                r.id === patch.recording!.id
+                  ? { ...r, ...patch.recording! }
+                  : r,
               )
-            : m.lessons;
-          const moduleRecordings = recordings.filter(
-            (r) => r.moduleId === m.id,
-          );
-          const videoLessons = lessons.filter(
-            (l) => l.videoUrl || l.videoEmbedId,
-          );
-          const totalItems = moduleRecordings.length + videoLessons.length;
-          const completedItems =
-            moduleRecordings.filter((r) => r.isCompleted).length +
-            videoLessons.filter((l) => l.isCompleted).length;
-          return {
-            ...m,
-            lessons,
-            completionPercent:
-              totalItems > 0
-                ? Math.round((completedItems / totalItems) * 100)
-                : 0,
-          };
-        });
+            : prev.recordings;
 
-        const progressPercentages = [
-          ...recordings.map((r) => r.watchedPercent),
-          ...modules.flatMap((m) =>
-            m.lessons
-              .filter((l) => l.videoUrl || l.videoEmbedId)
-              .map((l) => l.watchedPercent ?? 0),
-          ),
-        ];
-        const overallProgress =
-          progressPercentages.length > 0
-            ? Math.round(
-                progressPercentages.reduce((s, p) => s + p, 0) /
-                  progressPercentages.length,
-              )
-            : 0;
+          const modules = prev.modules.map((m) => {
+            const lessons = patch.lesson
+              ? m.lessons.map((l) =>
+                  l.id === patch.lesson!.id ? { ...l, ...patch.lesson! } : l,
+                )
+              : m.lessons;
+            const moduleRecordings = recordings.filter(
+              (r) => r.moduleId === m.id,
+            );
+            const videoLessons = lessons.filter(
+              (l) => l.videoUrl || l.videoEmbedId,
+            );
+            const totalItems = moduleRecordings.length + videoLessons.length;
+            const completedItems =
+              moduleRecordings.filter((r) => r.isCompleted).length +
+              videoLessons.filter((l) => l.isCompleted).length;
+            return {
+              ...m,
+              lessons,
+              completionPercent:
+                totalItems > 0
+                  ? Math.round((completedItems / totalItems) * 100)
+                  : 0,
+            };
+          });
 
-        return { ...prev, modules, recordings, overallProgress };
-      },
+          const progressPercentages = [
+            ...recordings.map((r) => r.watchedPercent),
+            ...modules.flatMap((m) =>
+              m.lessons
+                .filter((l) => l.videoUrl || l.videoEmbedId)
+                .map((l) => l.watchedPercent ?? 0),
+            ),
+          ];
+          const overallProgress =
+            progressPercentages.length > 0
+              ? Math.round(
+                  progressPercentages.reduce((s, p) => s + p, 0) /
+                    progressPercentages.length,
+                )
+              : 0;
+
+          return { ...prev, modules, recordings, overallProgress };
+        },
       );
     },
     [courseId, queryClient],
@@ -1043,374 +1041,382 @@ export default function CourseContentView({
           />
         </div>
       </div>
-      {d.modules.filter((m) => !m.isCertificationModule).map((module, mIdx) => {
-        const isExpanded = expandedModuleId === module.id;
-        const isActiveModule = module.id === selectedModuleId;
-        const totalSeconds = module.lessons.reduce(
-          (s, l) => s + (l.durationSeconds ?? 0),
-          0,
-        );
-        const itemCount =
-          module.lessons.length +
-          module.quizzes.length +
-          module.assignments.length +
-          (module.practicals?.length ?? 0);
+      {d.modules
+        .filter((m) => !m.isCertificationModule)
+        .map((module, mIdx) => {
+          const isExpanded = expandedModuleId === module.id;
+          const isActiveModule = module.id === selectedModuleId;
+          const totalSeconds = module.lessons.reduce(
+            (s, l) => s + (l.durationSeconds ?? 0),
+            0,
+          );
+          const itemCount =
+            module.lessons.length +
+            module.quizzes.length +
+            module.assignments.length +
+            (module.practicals?.length ?? 0);
 
-        return (
-          <div
-            key={module.id}
-            className={`rounded-xl border overflow-hidden transition-colors ${
-              isExpanded || isActiveModule
-                ? "border-primary/40"
-                : "border-border"
-            }`}
-          >
-            <button
-              onClick={() => toggleModule(module.id)}
-              className={`w-full flex items-start justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
-                isActiveModule ? "bg-primary/5" : ""
+          return (
+            <div
+              key={module.id}
+              className={`rounded-xl border overflow-hidden transition-colors ${
+                isExpanded || isActiveModule
+                  ? "border-primary/40"
+                  : "border-border"
               }`}
-              aria-expanded={isExpanded}
             >
-              <span className="min-w-0">
-                <span className="block text-[13px] font-semibold leading-snug text-foreground">
-                  Module {mIdx + 1} – {module.title}
-                </span>
-                <span className="block text-[11px] mt-0.5 text-muted-foreground">
-                  {itemCount} {itemCount === 1 ? "item" : "items"}
-                  {totalSeconds ? ` · ${formatMinutes(totalSeconds)}` : ""}
-                </span>
-                {module.completionPercent > 0 && (
-                  <span className="mt-1.5 flex items-center gap-1.5">
-                    <span className="h-1 w-16 overflow-hidden rounded-full bg-border">
-                      <span
-                        className="block h-full rounded-full bg-emerald-500"
-                        style={{ width: `${module.completionPercent}%` }}
-                      />
-                    </span>
-                    <span className="text-[10px] font-semibold text-emerald-600">
-                      {module.completionPercent}% complete
-                    </span>
-                  </span>
-                )}
-              </span>
-              <IconChevronDown
-                size={16}
-                className={`shrink-0 mt-0.5 text-muted-foreground transition-transform duration-200 ${
-                  isExpanded ? "rotate-180" : ""
+              <button
+                onClick={() => toggleModule(module.id)}
+                className={`w-full flex items-start justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                  isActiveModule ? "bg-primary/5" : ""
                 }`}
-              />
-            </button>
+                aria-expanded={isExpanded}
+              >
+                <span className="min-w-0">
+                  <span className="block text-[13px] font-semibold leading-snug text-foreground">
+                    Module {mIdx + 1} – {module.title}
+                  </span>
+                  <span className="block text-[11px] mt-0.5 text-muted-foreground">
+                    {itemCount} {itemCount === 1 ? "item" : "items"}
+                    {totalSeconds ? ` · ${formatMinutes(totalSeconds)}` : ""}
+                  </span>
+                  {module.completionPercent > 0 && (
+                    <span className="mt-1.5 flex items-center gap-1.5">
+                      <span className="h-1 w-16 overflow-hidden rounded-full bg-border">
+                        <span
+                          className="block h-full rounded-full bg-emerald-500"
+                          style={{ width: `${module.completionPercent}%` }}
+                        />
+                      </span>
+                      <span className="text-[10px] font-semibold text-emerald-600">
+                        {module.completionPercent}% complete
+                      </span>
+                    </span>
+                  )}
+                </span>
+                <IconChevronDown
+                  size={16}
+                  className={`shrink-0 mt-0.5 text-muted-foreground transition-transform duration-200 ${
+                    isExpanded ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
 
-            {isExpanded && (
-              <ul className="pb-2 pt-1 border-t border-border/60">
-                {buildUnifiedList(module).map((item, idx) => {
-                  if (item.type === "LESSON") {
-                    const lesson = item.data;
-                    const active =
-                      lesson.id === selectedLessonId && !selectedRecordingId;
-                    const isBookmarked = bookmarks.includes(lesson.id);
-                    return (
-                      <li key={lesson.id} className="px-2 py-0.5">
-                        <button
-                          onClick={() => selectLesson(lesson, module.id)}
-                          className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
-                            active
-                              ? "bg-primary/10 border-primary/30 font-medium"
-                              : "border-border hover:bg-primary/10"
-                          }`}
-                          aria-current={active ? "page" : undefined}
-                        >
-                          <span
-                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+              {isExpanded && (
+                <ul className="pb-2 pt-1 border-t border-border/60">
+                  {buildUnifiedList(module).map((item, idx) => {
+                    if (item.type === "LESSON") {
+                      const lesson = item.data;
+                      const active =
+                        lesson.id === selectedLessonId && !selectedRecordingId;
+                      const isBookmarked = bookmarks.includes(lesson.id);
+                      return (
+                        <li key={lesson.id} className="px-2 py-0.5">
+                          <button
+                            onClick={() => selectLesson(lesson, module.id)}
+                            className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
                               active
-                                ? "bg-brand-blue border-brand-blue"
-                                : lesson.isCompleted
-                                  ? "bg-emerald-500 border-emerald-500"
-                                  : "border-border bg-transparent"
+                                ? "bg-primary/10 border-primary/30 font-medium"
+                                : "border-border hover:bg-primary/10"
                             }`}
+                            aria-current={active ? "page" : undefined}
                           >
-                            {lesson.isCompleted ? (
-                              <IconCheck size={12} className="text-white" />
-                            ) : (
-                              <IconVideo
-                                size={11}
-                                className={
+                            <span
+                              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                                active
+                                  ? "bg-brand-blue border-brand-blue"
+                                  : lesson.isCompleted
+                                    ? "bg-emerald-500 border-emerald-500"
+                                    : "border-border bg-transparent"
+                              }`}
+                            >
+                              {lesson.isCompleted ? (
+                                <IconCheck size={12} className="text-white" />
+                              ) : (
+                                <IconVideo
+                                  size={11}
+                                  className={
+                                    active
+                                      ? "text-white ml-px"
+                                      : "text-muted-foreground"
+                                  }
+                                />
+                              )}
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span
+                                className={`block text-xs truncate ${
                                   active
-                                    ? "text-white ml-px"
+                                    ? "text-foreground font-medium"
+                                    : "text-muted-foreground"
+                                }`}
+                              >
+                                {idx + 1}. {lesson.title}
+                              </span>
+                              {!lesson.isCompleted &&
+                              typeof lesson.watchedPercent === "number" &&
+                              lesson.watchedPercent > 0 ? (
+                                <span className="mt-1 block h-1 w-full overflow-hidden rounded-full bg-muted">
+                                  <span
+                                    className="block h-full rounded-full bg-primary"
+                                    style={{
+                                      width: `${lesson.watchedPercent}%`,
+                                    }}
+                                  />
+                                </span>
+                              ) : null}
+                            </span>
+                            {lesson.durationSeconds ? (
+                              <span className="text-[10px] shrink-0 text-muted-foreground/70">
+                                {formatMinutes(lesson.durationSeconds)}
+                              </span>
+                            ) : null}
+                            <span
+                              role="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleBookmark(lesson.id);
+                              }}
+                              className={`text-[10px] shrink-0 ${
+                                isBookmarked
+                                  ? "text-primary"
+                                  : "text-transparent"
+                              }`}
+                            >
+                              ●
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    }
+
+                    if (item.type === "QUIZ") {
+                      const quiz = item.data;
+                      const isActive = selectedQuizId === quiz.id;
+                      return (
+                        <li key={quiz.id} className="px-2 py-0.5">
+                          <button
+                            onClick={() => selectQuiz(quiz.id)}
+                            className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                              isActive
+                                ? "bg-primary/10 border-primary/30 font-medium"
+                                : "border-border hover:bg-primary/10"
+                            }`}
+                            aria-current={isActive ? "page" : undefined}
+                          >
+                            <span
+                              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                                isActive
+                                  ? "bg-brand-blue border-brand-blue"
+                                  : "border-border bg-transparent"
+                              }`}
+                            >
+                              <IconClipboardCheck
+                                size={12}
+                                className={
+                                  isActive
+                                    ? "text-white"
                                     : "text-muted-foreground"
                                 }
                               />
-                            )}
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span
-                              className={`block text-xs truncate ${
-                                active
-                                  ? "text-foreground font-medium"
-                                  : "text-muted-foreground"
-                              }`}
-                            >
-                              {idx + 1}. {lesson.title}
                             </span>
-                            {!lesson.isCompleted &&
-                            typeof lesson.watchedPercent === "number" &&
-                            lesson.watchedPercent > 0 ? (
-                              <span className="mt-1 block h-1 w-full overflow-hidden rounded-full bg-muted">
-                                <span
-                                  className="block h-full rounded-full bg-primary"
-                                  style={{ width: `${lesson.watchedPercent}%` }}
-                                />
-                              </span>
-                            ) : null}
-                          </span>
-                          {lesson.durationSeconds ? (
-                            <span className="text-[10px] shrink-0 text-muted-foreground/70">
-                              {formatMinutes(lesson.durationSeconds)}
-                            </span>
-                          ) : null}
-                          <span
-                            role="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleBookmark(lesson.id);
-                            }}
-                            className={`text-[10px] shrink-0 ${
-                              isBookmarked ? "text-primary" : "text-transparent"
-                            }`}
-                          >
-                            ●
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  }
-
-                  if (item.type === "QUIZ") {
-                    const quiz = item.data;
-                    const isActive = selectedQuizId === quiz.id;
-                    return (
-                      <li key={quiz.id} className="px-2 py-0.5">
-                        <button
-                          onClick={() => selectQuiz(quiz.id)}
-                          className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
-                            isActive
-                              ? "bg-primary/10 border-primary/30 font-medium"
-                              : "border-border hover:bg-primary/10"
-                          }`}
-                          aria-current={isActive ? "page" : undefined}
-                        >
-                          <span
-                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
-                              isActive
-                                ? "bg-brand-blue border-brand-blue"
-                                : "border-border bg-transparent"
-                            }`}
-                          >
-                            <IconClipboardCheck
-                              size={12}
-                              className={
-                                isActive
-                                  ? "text-white"
-                                  : "text-muted-foreground"
-                              }
-                            />
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span
-                              className={`block text-xs truncate ${
-                                isActive
-                                  ? "text-foreground font-medium"
-                                  : "text-muted-foreground"
-                              }`}
-                            >
-                              {idx + 1}. {quiz.title}
-                            </span>
-                          </span>
-                          {quiz.dueDate &&
-                          new Date(quiz.dueDate).getTime() < Date.now() ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-danger/10 text-danger shrink-0">
-                              <IconClock size={9} />
-                              Due
-                            </span>
-                          ) : (
-                            <span className="text-[10px] shrink-0 text-muted-foreground/70">
-                              {quiz.questionCount}Q
-                            </span>
-                          )}
-                        </button>
-                      </li>
-                    );
-                  }
-
-                  if (item.type === "ASSIGNMENT") {
-                    const assignment = item.data;
-                    const isActive = selectedAssignmentId === assignment.id;
-                    return (
-                      <li key={assignment.id} className="px-2 py-0.5">
-                        <button
-                          onClick={() => selectAssignment(assignment)}
-                          className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
-                            isActive
-                              ? "bg-primary/10 border-primary/30 font-medium"
-                              : "border-border hover:bg-primary/10"
-                          }`}
-                          aria-current={isActive ? "page" : undefined}
-                        >
-                          <span
-                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
-                              isActive
-                                ? "bg-brand-blue border-brand-blue"
-                                : "border-border bg-transparent"
-                            }`}
-                          >
-                            <IconFileSpreadsheet
-                              size={12}
-                              className={
-                                isActive
-                                  ? "text-white"
-                                  : "text-muted-foreground"
-                              }
-                            />
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span
-                              className={`block text-xs truncate ${
-                                isActive
-                                  ? "text-foreground font-medium"
-                                  : "text-muted-foreground"
-                              }`}
-                            >
-                              {idx + 1}. {assignment.title}
-                            </span>
-                          </span>
-                          <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
-                            {assignment.dueDate
-                              ? new Date(assignment.dueDate).toLocaleDateString(
-                                  "en-IN",
-                                  { day: "numeric", month: "short" },
-                                )
-                              : "No due date"}
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  }
-
-                  if (item.type === "PRACTICAL") {
-                    const practical = item.data;
-                    const isActive = selectedPracticalId === practical.id;
-                    return (
-                      <li key={practical.id} className="px-2 py-0.5">
-                        <button
-                          onClick={() => selectPractical(practical.id)}
-                          className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
-                            isActive
-                              ? "bg-primary/10 border-primary/30 font-medium"
-                              : "border-border hover:bg-primary/10"
-                          }`}
-                          aria-current={isActive ? "page" : undefined}
-                        >
-                          <span
-                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
-                              isActive
-                                ? "bg-brand-blue border-brand-blue"
-                                : "border-border bg-transparent"
-                            }`}
-                          >
-                            <IconDeviceSpeaker
-                              size={12}
-                              className={
-                                isActive
-                                  ? "text-white"
-                                  : "text-muted-foreground"
-                              }
-                            />
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span
-                              className={`block text-xs truncate ${
-                                isActive
-                                  ? "text-foreground font-medium"
-                                  : "text-muted-foreground"
-                              }`}
-                            >
-                              {idx + 1}. {practical.title}
-                            </span>
-                          </span>
-                          <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
-                            Practical
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  }
-
-                  return null;
-                })}
-
-                {module.lessons.some(
-                  (l) => l.resources && l.resources.length > 0,
-                ) && (
-                  <>
-                    {module.lessons
-                      .filter((l) => l.resources && l.resources.length > 0)
-                      .flatMap((l) =>
-                        (l.resources ?? []).map((r) => {
-                          const isActive = selectedResource?.url === r.url;
-                          return (
-                            <li
-                              key={`${l.id}-resource-${r.url}`}
-                              className="px-2 py-0.5"
-                            >
-                              <button
-                                onClick={() => selectResource(r.name, r.url)}
-                                className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                            <span className="min-w-0 flex-1">
+                              <span
+                                className={`block text-xs truncate ${
                                   isActive
-                                    ? "bg-primary/10 border-primary/30 font-medium"
-                                    : "border-border hover:bg-primary/10"
+                                    ? "text-foreground font-medium"
+                                    : "text-muted-foreground"
                                 }`}
-                                aria-current={isActive ? "page" : undefined}
                               >
-                                <span
-                                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                                {idx + 1}. {quiz.title}
+                              </span>
+                            </span>
+                            {quiz.dueDate &&
+                            new Date(quiz.dueDate).getTime() < Date.now() ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-danger/10 text-danger shrink-0">
+                                <IconClock size={9} />
+                                Due
+                              </span>
+                            ) : (
+                              <span className="text-[10px] shrink-0 text-muted-foreground/70">
+                                {quiz.questionCount}Q
+                              </span>
+                            )}
+                          </button>
+                        </li>
+                      );
+                    }
+
+                    if (item.type === "ASSIGNMENT") {
+                      const assignment = item.data;
+                      const isActive = selectedAssignmentId === assignment.id;
+                      return (
+                        <li key={assignment.id} className="px-2 py-0.5">
+                          <button
+                            onClick={() => selectAssignment(assignment)}
+                            className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                              isActive
+                                ? "bg-primary/10 border-primary/30 font-medium"
+                                : "border-border hover:bg-primary/10"
+                            }`}
+                            aria-current={isActive ? "page" : undefined}
+                          >
+                            <span
+                              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                                isActive
+                                  ? "bg-brand-blue border-brand-blue"
+                                  : "border-border bg-transparent"
+                              }`}
+                            >
+                              <IconFileSpreadsheet
+                                size={12}
+                                className={
+                                  isActive
+                                    ? "text-white"
+                                    : "text-muted-foreground"
+                                }
+                              />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span
+                                className={`block text-xs truncate ${
+                                  isActive
+                                    ? "text-foreground font-medium"
+                                    : "text-muted-foreground"
+                                }`}
+                              >
+                                {idx + 1}. {assignment.title}
+                              </span>
+                            </span>
+                            <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
+                              {assignment.dueDate
+                                ? new Date(
+                                    assignment.dueDate,
+                                  ).toLocaleDateString("en-IN", {
+                                    day: "numeric",
+                                    month: "short",
+                                  })
+                                : "No due date"}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    }
+
+                    if (item.type === "PRACTICAL") {
+                      const practical = item.data;
+                      const isActive = selectedPracticalId === practical.id;
+                      return (
+                        <li key={practical.id} className="px-2 py-0.5">
+                          <button
+                            onClick={() => selectPractical(practical.id)}
+                            className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
+                              isActive
+                                ? "bg-primary/10 border-primary/30 font-medium"
+                                : "border-border hover:bg-primary/10"
+                            }`}
+                            aria-current={isActive ? "page" : undefined}
+                          >
+                            <span
+                              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
+                                isActive
+                                  ? "bg-brand-blue border-brand-blue"
+                                  : "border-border bg-transparent"
+                              }`}
+                            >
+                              <IconDeviceSpeaker
+                                size={12}
+                                className={
+                                  isActive
+                                    ? "text-white"
+                                    : "text-muted-foreground"
+                                }
+                              />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span
+                                className={`block text-xs truncate ${
+                                  isActive
+                                    ? "text-foreground font-medium"
+                                    : "text-muted-foreground"
+                                }`}
+                              >
+                                {idx + 1}. {practical.title}
+                              </span>
+                            </span>
+                            <span className="text-[10px] flex-shrink-0 text-muted-foreground/70">
+                              Practical
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    }
+
+                    return null;
+                  })}
+
+                  {module.lessons.some(
+                    (l) => l.resources && l.resources.length > 0,
+                  ) && (
+                    <>
+                      {module.lessons
+                        .filter((l) => l.resources && l.resources.length > 0)
+                        .flatMap((l) =>
+                          (l.resources ?? []).map((r) => {
+                            const isActive = selectedResource?.url === r.url;
+                            return (
+                              <li
+                                key={`${l.id}-resource-${r.url}`}
+                                className="px-2 py-0.5"
+                              >
+                                <button
+                                  onClick={() => selectResource(r.name, r.url)}
+                                  className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
                                     isActive
-                                      ? "bg-brand-blue border-brand-blue"
-                                      : "border-border bg-transparent"
+                                      ? "bg-primary/10 border-primary/30 font-medium"
+                                      : "border-border hover:bg-primary/10"
                                   }`}
+                                  aria-current={isActive ? "page" : undefined}
                                 >
-                                  <IconFile
-                                    size={12}
-                                    className={
-                                      isActive
-                                        ? "text-white"
-                                        : "text-muted-foreground"
-                                    }
-                                  />
-                                </span>
-                                <span className="min-w-0 flex-1">
                                   <span
-                                    className={`block text-xs truncate ${
+                                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${
                                       isActive
-                                        ? "text-foreground font-medium"
-                                        : "text-muted-foreground"
+                                        ? "bg-brand-blue border-brand-blue"
+                                        : "border-border bg-transparent"
                                     }`}
                                   >
-                                    {r.name}
+                                    <IconFile
+                                      size={12}
+                                      className={
+                                        isActive
+                                          ? "text-white"
+                                          : "text-muted-foreground"
+                                      }
+                                    />
                                   </span>
-                                </span>
-                              </button>
-                            </li>
-                          );
-                        }),
-                      )}
-                  </>
-                )}
-              </ul>
-            )}
-          </div>
-        );
-      })}
+                                  <span className="min-w-0 flex-1">
+                                    <span
+                                      className={`block text-xs truncate ${
+                                        isActive
+                                          ? "text-foreground font-medium"
+                                          : "text-muted-foreground"
+                                      }`}
+                                    >
+                                      {r.name}
+                                    </span>
+                                  </span>
+                                </button>
+                              </li>
+                            );
+                          }),
+                        )}
+                    </>
+                  )}
+                </ul>
+              )}
+            </div>
+          );
+        })}
       {renderCertificationSection()}
     </div>
   );
@@ -1730,8 +1736,7 @@ export default function CourseContentView({
                       onClick={() => {
                         if (item.type === "LESSON")
                           selectLesson(item.data as CourseLesson, module.id);
-                        else if (item.type === "QUIZ")
-                          selectQuiz(item.data.id);
+                        else if (item.type === "QUIZ") selectQuiz(item.data.id);
                         else if (item.type === "ASSIGNMENT")
                           selectAssignment(item.data);
                         else if (item.type === "PRACTICAL")

@@ -158,7 +158,9 @@ export const studentService = {
         },
         select: { assignmentId: true, extendedDueDate: true },
       });
-      const extMap = new Map(extensions.map((e) => [e.assignmentId!, e.extendedDueDate]));
+      const extMap = new Map(
+        extensions.map((e) => [e.assignmentId!, e.extendedDueDate]),
+      );
 
       for (const assignment of assignments) {
         const submission = assignment.submissions[0];
@@ -384,16 +386,14 @@ export const studentService = {
     ]);
 
     const uniqueBatchIds = [
-      ...new Set(
-        [
-          ...packageEnrollments.flatMap((pe) =>
-            pe.courses.map((c) => c.batchId).filter(Boolean),
-          ),
-          ...individualEnrollments
-            .map((e) => e.batchId)
-            .filter((b): b is string => Boolean(b)),
-        ],
-      ),
+      ...new Set([
+        ...packageEnrollments.flatMap((pe) =>
+          pe.courses.map((c) => c.batchId).filter(Boolean),
+        ),
+        ...individualEnrollments
+          .map((e) => e.batchId)
+          .filter((b): b is string => Boolean(b)),
+      ]),
     ] as string[];
 
     const batchData = await prisma.batch.findMany({
@@ -466,20 +466,17 @@ export const studentService = {
         const totalSeconds = session.recording.duration ?? 1;
         const watchedPercent = session.recording.progress[0]?.completedAt
           ? 100
-          : Math.min(
-            100,
-            Math.round((watchedSeconds / totalSeconds) * 100),
-          );
+          : Math.min(100, Math.round((watchedSeconds / totalSeconds) * 100));
 
         if (watchedPercent > 0 && watchedPercent < 100) {
           items.push({
             recordingId: session.recording.id,
             batchId,
             courseTitle,
-            dayLabel: `Day ${items.filter(
-              (i) => i.batchId === batchId && i.recordingId,
-            ).length + 1
-              }`,
+            dayLabel: `Day ${
+              items.filter((i) => i.batchId === batchId && i.recordingId)
+                .length + 1
+            }`,
             watchedPercent,
             thumbnail,
           });
@@ -516,13 +513,12 @@ export const studentService = {
           const watchedPercent = lesson.progress[0]?.completedAt
             ? 100
             : Math.min(
-              100,
-              Math.round(
-                (watchedSeconds /
-                  Math.max(1, lesson.durationSeconds ?? 1)) *
                 100,
-              ),
-            );
+                Math.round(
+                  (watchedSeconds / Math.max(1, lesson.durationSeconds ?? 1)) *
+                    100,
+                ),
+              );
 
           if (watchedPercent > 0 && watchedPercent < 100) {
             items.push({
@@ -565,8 +561,7 @@ export const studentService = {
       if (!enrollment.batchId) continue;
       const batch = batchMap.get(enrollment.batchId);
       if (!batch) continue;
-      const courseTitle =
-        batch.course?.title ?? "Course";
+      const courseTitle = batch.course?.title ?? "Course";
       const thumbnail = batch.course?.thumbnailUrl || "📚";
 
       pushRecordingItems(
@@ -632,7 +627,8 @@ export const studentService = {
             : null,
         grade: sub.grade ?? null,
         feedback: sub.feedback ?? null,
-        submittedAt: sub.gradedAt?.toISOString() ?? sub.submittedAt.toISOString(),
+        submittedAt:
+          sub.gradedAt?.toISOString() ?? sub.submittedAt.toISOString(),
       });
     }
 
@@ -666,7 +662,8 @@ export const studentService = {
         moduleName: attempt.quiz.module?.title ?? "—",
         score: attempt.score ?? null,
         total: attempt.total ?? null,
-        percentage: attempt.percentage != null ? Math.round(attempt.percentage) : null,
+        percentage:
+          attempt.percentage != null ? Math.round(attempt.percentage) : null,
         grade: attempt.isPassed ? "PASS" : "FAIL",
         feedback: null,
         submittedAt: attempt.submittedAt?.toISOString() ?? null,
@@ -727,7 +724,10 @@ export const studentService = {
     for (const pe of packageEnrollments) {
       for (const pec of pe.courses) {
         // Only include package courses that are visible in the batch
-        if (!pec.batch || pec.batch.courseVisibility.some((cv) => cv.courseId === pec.courseId)) {
+        if (
+          !pec.batch ||
+          pec.batch.courseVisibility.some((cv) => cv.courseId === pec.courseId)
+        ) {
           if (pec.courseId) allCourseIds.add(pec.courseId);
         }
       }
@@ -771,7 +771,10 @@ export const studentService = {
     for (const pe of packageEnrollments) {
       for (const pec of pe.courses) {
         // Skip hidden courses — must pass visibility check
-        if (pec.batch && !pec.batch.courseVisibility.some((cv) => cv.courseId === pec.courseId)) {
+        if (
+          pec.batch &&
+          !pec.batch.courseVisibility.some((cv) => cv.courseId === pec.courseId)
+        ) {
           continue;
         }
         if (!existingCourseIds.has(pec.courseId)) {
@@ -782,7 +785,9 @@ export const studentService = {
               id: `${pe.id}_${pec.courseId}`,
               batchId: pec.batchId || undefined,
               course: courseObj,
-              batch: pec.batch ? { id: pec.batch.id, name: pec.batch.name } : null,
+              batch: pec.batch
+                ? { id: pec.batch.id, name: pec.batch.name }
+                : null,
             });
           }
         }
@@ -809,48 +814,42 @@ export const studentService = {
     // Core, fast sections only. Heavy sections (overdue assignments, results,
     // continue learning) are served by their own endpoints and fetched on the
     // client in parallel so the dashboard renders progressively.
-    const [
-      enrolled,
-      sessions,
-      calendarEvents,
-      tickets,
-      certificatesCount,
-    ] = await Promise.all([
-      // Enrolled courses
-      this.getEnrolledSummary(userId).catch(() => []),
+    const [enrolled, sessions, calendarEvents, tickets, certificatesCount] =
+      await Promise.all([
+        // Enrolled courses
+        this.getEnrolledSummary(userId).catch(() => []),
 
-      // Live sessions
-      sessionService.listSessions({ studentId: userId }).catch(() => []),
+        // Live sessions
+        sessionService.listSessions({ studentId: userId }).catch(() => []),
 
-      // Calendar events (scoped to the student's own batches/mentorship)
-      getEventsForUser(
-        new Date().toISOString(),
-        new Date(Date.now() + 30 * 86400000).toISOString(),
-        userId,
-      ).catch(() => []),
+        // Calendar events (scoped to the student's own batches/mentorship)
+        getEventsForUser(
+          new Date().toISOString(),
+          new Date(Date.now() + 30 * 86400000).toISOString(),
+          userId,
+        ).catch(() => []),
 
-      // Mentorship tickets
-      prisma.mentorshipTicket
-        .findMany({
-          where: { studentId: userId },
-          orderBy: { createdAt: "desc" },
-          take: 5,
-        })
-        .catch(() => []),
+        // Mentorship tickets
+        prisma.mentorshipTicket
+          .findMany({
+            where: { studentId: userId },
+            orderBy: { createdAt: "desc" },
+            take: 5,
+          })
+          .catch(() => []),
 
-      // Cheap certificate count — the heavy completion map lives on-demand in
-      // GET /api/certificates (CertificatesView fetches it on mount).
-      prisma.certificate
-        .count({ where: { userId } })
-        .catch(() => 0),
-    ]);
+        // Cheap certificate count — the heavy completion map lives on-demand in
+        // GET /api/certificates (CertificatesView fetches it on mount).
+        prisma.certificate.count({ where: { userId } }).catch(() => 0),
+      ]);
 
     return {
       enrolled: Array.isArray(enrolled) ? enrolled : [],
       sessions: Array.isArray(sessions) ? sessions : [],
       calendarEvents: Array.isArray(calendarEvents) ? calendarEvents : [],
       tickets: Array.isArray(tickets) ? tickets : [],
-      certificatesCount: typeof certificatesCount === "number" ? certificatesCount : 0,
+      certificatesCount:
+        typeof certificatesCount === "number" ? certificatesCount : 0,
     };
   },
 };

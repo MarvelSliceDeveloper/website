@@ -1,25 +1,32 @@
-import { useState, useEffect, useRef } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiClock, FiLoader, FiX, FiCheckCircle, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import Reveal from '../ui/Reveal';
-import { supabase } from '../../lib/supabaseClient';
-import { trackRegister } from '../../lib/analytics';
-import { formatDateTime } from '../../lib/datetime';
+import { useState, useEffect, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiClock,
+  FiLoader,
+  FiX,
+  FiCheckCircle,
+  FiChevronLeft,
+  FiChevronRight,
+} from "react-icons/fi";
+import Reveal from "../ui/Reveal";
+import { supabase } from "../../lib/supabaseClient";
+import { trackRegister } from "../../lib/analytics";
+import { formatDateTime } from "../../lib/datetime";
 
 export default function UpcomingClassesSection({ section }) {
   const queryClient = useQueryClient();
   const { data: classes = [] } = useQuery({
-    queryKey: ['upcomingClasses', 'active'],
+    queryKey: ["upcomingClasses", "active"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('upcoming_classes')
-        .select('id, course_name, date_time, is_active')
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true })
-        .order('created_at', { ascending: true });
+        .from("upcoming_classes")
+        .select("id, course_name, date_time, is_active")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
       if (error) {
-        if (error.code === '42P01') return [];
+        if (error.code === "42P01") return [];
         throw error;
       }
       return data || [];
@@ -27,9 +34,9 @@ export default function UpcomingClassesSection({ section }) {
   });
 
   const [selectedClass, setSelectedClass] = useState(null);
-  const [formName, setFormName] = useState('');
-  const [formEmail, setFormEmail] = useState('');
-  const [formPhone, setFormPhone] = useState('');
+  const [formName, setFormName] = useState("");
+  const [formEmail, setFormEmail] = useState("");
+  const [formPhone, setFormPhone] = useState("");
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -49,8 +56,8 @@ export default function UpcomingClassesSection({ section }) {
       setVisibleCount(w >= 1024 ? 3 : w >= 640 ? 2 : 1);
     }
     update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
 
   useEffect(() => {
@@ -100,15 +107,17 @@ export default function UpcomingClassesSection({ section }) {
 
   if (!section) return null;
 
-  const heading = section.heading || '';
-  const subheading = section.subheading || '';
+  const heading = section.heading || "";
+  const subheading = section.subheading || "";
 
   if (!heading && classes.length === 0) return null;
 
   function closeModal() {
     if (submitting) return;
     setSelectedClass(null);
-    setFormName(''); setFormEmail(''); setFormPhone('');
+    setFormName("");
+    setFormEmail("");
+    setFormPhone("");
     setErrors({});
     setShowSuccess(false);
   }
@@ -116,35 +125,42 @@ export default function UpcomingClassesSection({ section }) {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!selectedClass?.id) {
-      setErrors({ form: 'Invalid class. Please refresh the page and try again.' });
+      setErrors({
+        form: "Invalid class. Please refresh the page and try again.",
+      });
       return;
     }
     const errs = {};
-    if (!formName.trim()) errs.name = 'Please enter your name';
-    if (!formEmail.trim()) errs.email = 'Please enter your email';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formEmail.trim())) errs.email = 'Please enter a valid email';
-    if (!formPhone.trim()) errs.phone = 'Please enter your phone number';
+    if (!formName.trim()) errs.name = "Please enter your name";
+    if (!formEmail.trim()) errs.email = "Please enter your email";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formEmail.trim()))
+      errs.email = "Please enter a valid email";
+    if (!formPhone.trim()) errs.phone = "Please enter your phone number";
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
     setSubmitting(true);
-    const { error } = await supabase.from('upcoming_class_registrations').insert({
-      upcoming_class_id: selectedClass.id,
-      course_name: selectedClass.course_name,
-      full_name: formName.trim(),
-      email: formEmail.trim(),
-      phone: formPhone.trim(),
-    });
+    const { error } = await supabase
+      .from("upcoming_class_registrations")
+      .insert({
+        upcoming_class_id: selectedClass.id,
+        course_name: selectedClass.course_name,
+        full_name: formName.trim(),
+        email: formEmail.trim(),
+        phone: formPhone.trim(),
+      });
     if (error) {
-      console.error('Registration insert failed:', error);
-      setErrors({ form: 'Submission failed. Please try again.' });
+      console.error("Registration insert failed:", error);
+      setErrors({ form: "Submission failed. Please try again." });
       setSubmitting(false);
       return;
     }
     trackRegister(selectedClass.course_name);
-    queryClient.invalidateQueries({ queryKey: ['upcomingClassRegistrations'] });
+    queryClient.invalidateQueries({ queryKey: ["upcomingClassRegistrations"] });
     setSubmitting(false);
     setShowSuccess(true);
-    setFormName(''); setFormEmail(''); setFormPhone('');
+    setFormName("");
+    setFormEmail("");
+    setFormPhone("");
     setErrors({});
   }
 
@@ -155,23 +171,37 @@ export default function UpcomingClassesSection({ section }) {
           <div className="text-center">
             <div className="inline-flex flex-col items-center">
               {heading && (
-                <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy">{heading}</h2>
+                <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy">
+                  {heading}
+                </h2>
               )}
               <div className="mt-3 h-[3px] bg-brand-orange rounded-full w-4/5" />
             </div>
             {subheading && (
-              <p className="text-text-gray text-base sm:text-lg leading-relaxed mt-4 mb-10">{subheading}</p>
+              <p className="text-text-gray text-base sm:text-lg leading-relaxed mt-4 mb-10">
+                {subheading}
+              </p>
             )}
           </div>
         </Reveal>
 
-        {classes.length > 0 && (
-          isSlider ? (
-            <div className="relative mx-auto w-full mt-16" onMouseEnter={stopAutoScroll} onMouseLeave={() => { if (isSlider) startAutoScroll(); }}>
+        {classes.length > 0 &&
+          (isSlider ? (
+            <div
+              className="relative mx-auto w-full mt-16"
+              onMouseEnter={stopAutoScroll}
+              onMouseLeave={() => {
+                if (isSlider) startAutoScroll();
+              }}
+            >
               <div className="overflow-hidden">
                 <motion.div
                   animate={{ x: `-${pos * (100 / visible)}%` }}
-                  transition={animate ? { duration: 0.5, ease: 'easeInOut' } : { duration: 0 }}
+                  transition={
+                    animate
+                      ? { duration: 0.5, ease: "easeInOut" }
+                      : { duration: 0 }
+                  }
                   onAnimationComplete={() => {
                     if (isSlider && pos >= n) {
                       setAnimate(false);
@@ -181,9 +211,15 @@ export default function UpcomingClassesSection({ section }) {
                   className="flex"
                 >
                   {doubled.map((cls, i) => (
-                    <div key={`${cls.id}-${i}`} className="shrink-0 px-3" style={{ width: `${100 / visible}%` }}>
+                    <div
+                      key={`${cls.id}-${i}`}
+                      className="shrink-0 px-3"
+                      style={{ width: `${100 / visible}%` }}
+                    >
                       <div className="group w-full bg-white rounded-xl p-5 flex flex-col shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 h-full">
-                        <h4 className="text-dark-navy text-xl font-medium">{cls.course_name}</h4>
+                        <h4 className="text-dark-navy text-xl font-medium">
+                          {cls.course_name}
+                        </h4>
                         {cls.date_time && (
                           <p className="text-text-gray text-[15px] mt-3">
                             {formatDateTime(cls.date_time)}
@@ -226,7 +262,7 @@ export default function UpcomingClassesSection({ section }) {
                     type="button"
                     aria-label={`Go to class ${i + 1}`}
                     onClick={() => jumpTo(i)}
-                    className={`h-2 rounded-full transition-all cursor-pointer ${i === pos % n ? 'w-6 bg-brand-orange' : 'w-2 bg-gray-300 hover:bg-gray-400'}`}
+                    className={`h-2 rounded-full transition-all cursor-pointer ${i === pos % n ? "w-6 bg-brand-orange" : "w-2 bg-gray-300 hover:bg-gray-400"}`}
                   />
                 ))}
               </div>
@@ -234,8 +270,13 @@ export default function UpcomingClassesSection({ section }) {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center mx-auto w-full mt-16">
               {classes.map((cls) => (
-                <div key={cls.id} className="group w-full bg-white rounded-xl p-5 flex flex-col shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200">
-                  <h4 className="text-dark-navy text-xl font-medium">{cls.course_name}</h4>
+                <div
+                  key={cls.id}
+                  className="group w-full bg-white rounded-xl p-5 flex flex-col shadow-lg border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-200"
+                >
+                  <h4 className="text-dark-navy text-xl font-medium">
+                    {cls.course_name}
+                  </h4>
                   {cls.date_time && (
                     <p className="text-text-gray text-[15px] mt-3">
                       {formatDateTime(cls.date_time)}
@@ -252,8 +293,7 @@ export default function UpcomingClassesSection({ section }) {
                 </div>
               ))}
             </div>
-          )
-        )}
+          ))}
       </div>
 
       {/* Register Popup */}
@@ -270,7 +310,7 @@ export default function UpcomingClassesSection({ section }) {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: 'spring', duration: 0.5 }}
+              transition={{ type: "spring", duration: 0.5 }}
               className="bg-white rounded-2xl shadow-2xl max-w-md w-full relative"
               onClick={(e) => e.stopPropagation()}
             >
@@ -286,9 +326,12 @@ export default function UpcomingClassesSection({ section }) {
                   <div className="w-16 h-16 mx-auto rounded-full bg-green-50 flex items-center justify-center mb-4">
                     <FiCheckCircle className="w-8 h-8 text-green-500" />
                   </div>
-                  <h3 className="text-xl font-bold text-[#1A1A2E] mb-2">Registration Successful!</h3>
+                  <h3 className="text-xl font-bold text-[#1A1A2E] mb-2">
+                    Registration Successful!
+                  </h3>
                   <p className="text-sm text-neutral-500 leading-relaxed mb-6">
-                    Thank you for registering for {selectedClass.course_name}. We will reach out to you shortly.
+                    Thank you for registering for {selectedClass.course_name}.
+                    We will reach out to you shortly.
                   </p>
                   <button
                     onClick={closeModal}
@@ -300,8 +343,12 @@ export default function UpcomingClassesSection({ section }) {
               ) : (
                 <>
                   <div className="px-6 pt-6 pb-4 border-b border-gray-100">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-brand-orange mb-1">Upcoming Class</p>
-                    <h3 className="text-lg font-bold text-[#1A1A2E]">{selectedClass.course_name}</h3>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-brand-orange mb-1">
+                      Upcoming Class
+                    </p>
+                    <h3 className="text-lg font-bold text-[#1A1A2E]">
+                      {selectedClass.course_name}
+                    </h3>
                     {selectedClass.date_time && (
                       <p className="flex items-center gap-2 text-text-gray text-xs mt-1">
                         <FiClock className="w-3.5 h-3.5 shrink-0 text-brand-orange" />
@@ -311,28 +358,86 @@ export default function UpcomingClassesSection({ section }) {
                   </div>
                   <form onSubmit={handleSubmit} className="p-6 space-y-3">
                     <div>
-                      <label className="block text-xs font-semibold text-neutral-600 mb-1">Your Name <span className="text-destructive-500">*</span></label>
-                      <input type="text" placeholder="Your Name" value={formName} onChange={(e) => { setFormName(e.target.value); if (errors.name) setErrors((p) => ({ ...p, name: undefined })); }} required
-                        className={`w-full px-4 py-2.5 border text-xs bg-white rounded-lg outline-none placeholder-gray-400 focus:ring-2 focus:ring-brand-blue/30 transition-all ${errors.name ? 'border-red-400 ring-2 ring-red-100' : 'border-gray-200 focus:border-brand-blue'}`} />
-                      {errors.name && <p className="!text-red-600 text-xs mt-1">{errors.name}</p>}
+                      <label className="block text-xs font-semibold text-neutral-600 mb-1">
+                        Your Name{" "}
+                        <span className="text-destructive-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Your Name"
+                        value={formName}
+                        onChange={(e) => {
+                          setFormName(e.target.value);
+                          if (errors.name)
+                            setErrors((p) => ({ ...p, name: undefined }));
+                        }}
+                        required
+                        className={`w-full px-4 py-2.5 border text-xs bg-white rounded-lg outline-none placeholder-gray-400 focus:ring-2 focus:ring-brand-blue/30 transition-all ${errors.name ? "border-red-400 ring-2 ring-red-100" : "border-gray-200 focus:border-brand-blue"}`}
+                      />
+                      {errors.name && (
+                        <p className="!text-red-600 text-xs mt-1">
+                          {errors.name}
+                        </p>
+                      )}
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-neutral-600 mb-1">Email Address <span className="text-destructive-500">*</span></label>
-                      <input type="email" placeholder="your@email.com" value={formEmail} onChange={(e) => { setFormEmail(e.target.value); if (errors.email) setErrors((p) => ({ ...p, email: undefined })); }} required
-                        className={`w-full px-4 py-2.5 border text-xs bg-white rounded-lg outline-none placeholder-gray-400 focus:ring-2 focus:ring-brand-blue/30 transition-all ${errors.email ? 'border-red-400 ring-2 ring-red-100' : 'border-gray-200 focus:border-brand-blue'}`} />
-                      {errors.email && <p className="!text-red-600 text-xs mt-1">{errors.email}</p>}
+                      <label className="block text-xs font-semibold text-neutral-600 mb-1">
+                        Email Address{" "}
+                        <span className="text-destructive-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        placeholder="your@email.com"
+                        value={formEmail}
+                        onChange={(e) => {
+                          setFormEmail(e.target.value);
+                          if (errors.email)
+                            setErrors((p) => ({ ...p, email: undefined }));
+                        }}
+                        required
+                        className={`w-full px-4 py-2.5 border text-xs bg-white rounded-lg outline-none placeholder-gray-400 focus:ring-2 focus:ring-brand-blue/30 transition-all ${errors.email ? "border-red-400 ring-2 ring-red-100" : "border-gray-200 focus:border-brand-blue"}`}
+                      />
+                      {errors.email && (
+                        <p className="!text-red-600 text-xs mt-1">
+                          {errors.email}
+                        </p>
+                      )}
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-neutral-600 mb-1">Phone Number <span className="text-destructive-500">*</span></label>
-                      <input type="tel" placeholder="Your Phone Number" value={formPhone} onChange={(e) => { setFormPhone(e.target.value); if (errors.phone) setErrors((p) => ({ ...p, phone: undefined })); }} required
-                        className={`w-full px-4 py-2.5 border text-xs bg-white rounded-lg outline-none placeholder-gray-400 focus:ring-2 focus:ring-brand-blue/30 transition-all ${errors.phone ? 'border-red-400 ring-2 ring-red-100' : 'border-gray-200 focus:border-brand-blue'}`} />
-                      {errors.phone && <p className="!text-red-600 text-xs mt-1">{errors.phone}</p>}
+                      <label className="block text-xs font-semibold text-neutral-600 mb-1">
+                        Phone Number{" "}
+                        <span className="text-destructive-500">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="Your Phone Number"
+                        value={formPhone}
+                        onChange={(e) => {
+                          setFormPhone(e.target.value);
+                          if (errors.phone)
+                            setErrors((p) => ({ ...p, phone: undefined }));
+                        }}
+                        required
+                        className={`w-full px-4 py-2.5 border text-xs bg-white rounded-lg outline-none placeholder-gray-400 focus:ring-2 focus:ring-brand-blue/30 transition-all ${errors.phone ? "border-red-400 ring-2 ring-red-100" : "border-gray-200 focus:border-brand-blue"}`}
+                      />
+                      {errors.phone && (
+                        <p className="!text-red-600 text-xs mt-1">
+                          {errors.phone}
+                        </p>
+                      )}
                     </div>
-                    {errors.form && <p className="!text-red-600 text-xs">{errors.form}</p>}
-                    <button type="submit" disabled={submitting}
-                      className="w-full flex items-center justify-center gap-2 py-3 bg-brand-orange text-white font-semibold rounded-lg hover:bg-brand-orange/90 transition-colors disabled:opacity-70 text-sm">
-                      {submitting ? <FiLoader className="w-4 h-4 animate-spin" /> : null}
-                      {submitting ? 'Submitting...' : 'Confirm Registration'}
+                    {errors.form && (
+                      <p className="!text-red-600 text-xs">{errors.form}</p>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="w-full flex items-center justify-center gap-2 py-3 bg-brand-orange text-white font-semibold rounded-lg hover:bg-brand-orange/90 transition-colors disabled:opacity-70 text-sm"
+                    >
+                      {submitting ? (
+                        <FiLoader className="w-4 h-4 animate-spin" />
+                      ) : null}
+                      {submitting ? "Submitting..." : "Confirm Registration"}
                     </button>
                   </form>
                 </>

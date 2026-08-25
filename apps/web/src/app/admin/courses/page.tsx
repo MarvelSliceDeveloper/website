@@ -111,7 +111,12 @@ function CoursesPageContent() {
   });
 
   const handleDelete = async (id: string, title: string) => {
-    if (!(await confirmDelete({ title: "Archive Course", message: `Archive "${title}"? Students will lose access.` })))
+    if (
+      !(await confirmDelete({
+        title: "Archive Course",
+        message: `Archive "${title}"? Students will lose access.`,
+      }))
+    )
       return;
     deleteMutation.mutate(id);
   };
@@ -292,9 +297,7 @@ function CoursesPageContent() {
       <AdminPageHeader
         title="Course Management"
         description={`${total} course${total !== 1 ? "s" : ""} total`}
-        breadcrumbs={[
-          { label: "Courses", href: "/admin/courses" },
-        ]}
+        breadcrumbs={[{ label: "Courses", href: "/admin/courses" }]}
         action={
           <Link href="/admin/courses/new" className="btn-primary">
             + Add Course

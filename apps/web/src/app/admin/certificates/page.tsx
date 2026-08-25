@@ -232,11 +232,10 @@ function CertificatesTab() {
   const certificatesQuery = useApiQuery<{
     certificates: Certificate[];
     total: number;
-  }>(
-    ["admin", "certificates", page],
-    "/api/admin/certificates",
-    { page: String(page), limit: String(limit) },
-  );
+  }>(["admin", "certificates", page], "/api/admin/certificates", {
+    page: String(page),
+    limit: String(limit),
+  });
   const certificates = certificatesQuery.data?.certificates ?? [];
   const total = certificatesQuery.data?.total ?? 0;
   const loading = certificatesQuery.isPending;
@@ -649,10 +648,7 @@ function TemplatesTab() {
     mutationFn: () => {
       const formData = new FormData();
       formData.append("pdf", pdfFile!);
-      formData.append(
-        "pdfTemplateFields",
-        JSON.stringify(pdfTemplateFields),
-      );
+      formData.append("pdfTemplateFields", JSON.stringify(pdfTemplateFields));
       return api.post<{ template: CertificateTemplate }>(
         `/api/admin/certificate-templates/${editingId!}/upload-pdf`,
         formData,
@@ -677,9 +673,7 @@ function TemplatesTab() {
 
   const removePdfMutation = useMutation({
     mutationFn: (templateId: string) =>
-      api.delete(
-        `/api/admin/certificate-templates/${templateId}/pdf-template`,
-      ),
+      api.delete(`/api/admin/certificate-templates/${templateId}/pdf-template`),
     onSuccess: () => {
       toast.success("PDF template removed");
       setForm((f) => ({ ...f, pdfTemplateType: "uploadedPdf" }));
@@ -882,7 +876,7 @@ function TemplatesTab() {
                 <span className="text-[10px] text-muted ml-1">Colors</span>
               </div>
 
-            {/* Certificate Preview */}
+              {/* Certificate Preview */}
               {hasUploadedPdf(template) ? (
                 <div className="mt-3 relative w-full aspect-[1.414/1] min-h-[180px] overflow-hidden rounded-lg border border-border/60 bg-white">
                   <iframe
@@ -1285,24 +1279,26 @@ function TemplatesTab() {
                     </div>
 
                     <div
-                       ref={previewRef}
-                       onClick={handlePreviewClick}
-                       className="relative w-full max-h-[75vh] mx-auto overflow-hidden rounded-xl border border-border bg-white shadow-sm"
-                       style={{
-                         aspectRatio: pageSize
-                           ? `${pageSize.width} / ${pageSize.height}`
-                           : "595 / 842",
-                          // let height drive width when the page is portrait and
-                         // the panel is wide enough that width-first sizing
-                          // would overflow max-h
-                         width: pageSize && pageSize.height > pageSize.width
+                      ref={previewRef}
+                      onClick={handlePreviewClick}
+                      className="relative w-full max-h-[75vh] mx-auto overflow-hidden rounded-xl border border-border bg-white shadow-sm"
+                      style={{
+                        aspectRatio: pageSize
+                          ? `${pageSize.width} / ${pageSize.height}`
+                          : "595 / 842",
+                        // let height drive width when the page is portrait and
+                        // the panel is wide enough that width-first sizing
+                        // would overflow max-h
+                        width:
+                          pageSize && pageSize.height > pageSize.width
                             ? "auto"
                             : "100%",
-                          height: pageSize && pageSize.height > pageSize.width
+                        height:
+                          pageSize && pageSize.height > pageSize.width
                             ? "75vh"
                             : "auto",
-                       }}
-                     >
+                      }}
+                    >
                       <iframe
                         src={`${pdfPreviewUrl}#toolbar=0&view=Fit`}
                         title="Certificate PDF preview"

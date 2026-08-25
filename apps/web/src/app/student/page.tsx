@@ -230,7 +230,11 @@ function assemblePortalData(
           courseTitle,
           instructor: s.batch?.instructor?.name || "TBD",
           batchLabel: s.batch?.name || "—",
-          status: computeSessionStatus(s.scheduledAt, s.scheduledEndAt, s.status),
+          status: computeSessionStatus(
+            s.scheduledAt,
+            s.scheduledEndAt,
+            s.status,
+          ),
           scheduledAt: s.scheduledAt,
           endDateTime:
             s.scheduledEndAt ||
@@ -252,7 +256,8 @@ function assemblePortalData(
       stats: {
         enrolledCount: enrolledCourses.length,
         completedCount: 0,
-        liveTodayCount: mappedSessions.filter((s) => s.status === "LIVE").length,
+        liveTodayCount: mappedSessions.filter((s) => s.status === "LIVE")
+          .length,
         certificatesCount: summaryData.certificatesCount ?? 0,
       },
       overdueAssignments: overdueItems,
@@ -976,9 +981,7 @@ function StudentPortalContent() {
         );
 
       case "CERTIFICATES":
-        return (
-          <CertificatesView onCertificateClaimed={loadData} />
-        );
+        return <CertificatesView onCertificateClaimed={loadData} />;
 
       case "COURSE_DETAIL": {
         const courseId = currentView.params?.courseId ?? "";

@@ -1,10 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
-import { FiClock, FiCalendar, FiArrowRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import Reveal from '../ui/Reveal';
-import { supabase } from '../../lib/supabaseClient';
-import { formatDateTime } from '../../lib/datetime';
+import { useState, useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import {
+  FiClock,
+  FiCalendar,
+  FiArrowRight,
+  FiChevronLeft,
+  FiChevronRight,
+} from "react-icons/fi";
+import Reveal from "../ui/Reveal";
+import { supabase } from "../../lib/supabaseClient";
+import { formatDateTime } from "../../lib/datetime";
 
 const GAP = 24;
 
@@ -16,7 +22,11 @@ function CourseCard({ course }) {
     >
       <div className="relative w-full h-44 bg-gradient-to-br from-brand-blue to-brand-orange">
         {course.hero_image_url ? (
-          <img src={course.hero_image_url} alt={course.title} className="w-full h-full object-cover" />
+          <img
+            src={course.hero_image_url}
+            alt={course.title}
+            className="w-full h-full object-cover"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <FiCalendar className="w-8 h-8 text-white/70" />
@@ -37,7 +47,8 @@ function CourseCard({ course }) {
           </p>
         )}
         <span className="inline-flex items-center gap-1.5 mt-4 text-brand-blue text-xs font-semibold">
-          View Details <FiArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          View Details{" "}
+          <FiArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
         </span>
       </div>
     </Link>
@@ -46,20 +57,20 @@ function CourseCard({ course }) {
 
 export default function UpcomingCoursesSection({ section }) {
   const { data: courses = [] } = useQuery({
-    queryKey: ['upcomingCourses', 'coming-soon'],
+    queryKey: ["upcomingCourses", "coming-soon"],
     queryFn: async () => {
       try {
-        await supabase.rpc('promote_upcoming_courses');
+        await supabase.rpc("promote_upcoming_courses");
       } catch {
         // RPC is optional; ignore if not available
       }
       const { data, error } = await supabase
-        .from('courses')
-        .select('id, title, slug, start_date, status, hero_image_url')
-        .eq('status', 'Coming Soon')
-        .order('start_date', { ascending: true, nullsLast: true });
+        .from("courses")
+        .select("id, title, slug, start_date, status, hero_image_url")
+        .eq("status", "Coming Soon")
+        .order("start_date", { ascending: true, nullsLast: true });
       if (error) {
-        if (error.code === '42P01') return [];
+        if (error.code === "42P01") return [];
         throw error;
       }
       return data || [];
@@ -90,7 +101,8 @@ export default function UpcomingCoursesSection({ section }) {
   }, [N]);
 
   const visible = trackW >= 1024 ? 4 : trackW >= 768 ? 2 : 1;
-  const slideW = trackW > 0 && isSlider ? (trackW - (visible - 1) * GAP) / visible : 0;
+  const slideW =
+    trackW > 0 && isSlider ? (trackW - (visible - 1) * GAP) / visible : 0;
   const pages = Math.ceil(N / visible);
   const page = isSlider ? Math.floor(index / visible) % pages : 0;
   const items = isSlider ? [...courses, ...courses, ...courses] : [];
@@ -131,8 +143,8 @@ export default function UpcomingCoursesSection({ section }) {
     }
   }
 
-  const heading = section?.heading || '';
-  const subheading = section?.subheading || '';
+  const heading = section?.heading || "";
+  const subheading = section?.subheading || "";
 
   if (!heading && courses.length === 0) return null;
 
@@ -144,12 +156,16 @@ export default function UpcomingCoursesSection({ section }) {
             <div className="text-center sm:text-left">
               <div className="inline-flex flex-col items-center sm:items-start">
                 {heading && (
-                  <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy">{heading}</h2>
+                  <h2 className="font-bold text-2xl sm:text-3xl text-dark-navy">
+                    {heading}
+                  </h2>
                 )}
                 <div className="mt-3 h-[3px] bg-brand-orange rounded-full w-4/5" />
               </div>
               {subheading && (
-                <p className="text-text-gray text-base sm:text-lg leading-relaxed mt-4">{subheading}</p>
+                <p className="text-text-gray text-base sm:text-lg leading-relaxed mt-4">
+                  {subheading}
+                </p>
               )}
             </div>
             {isSlider && (
@@ -175,8 +191,8 @@ export default function UpcomingCoursesSection({ section }) {
           </div>
         </Reveal>
 
-        {courses.length > 0 && (
-          isSlider ? (
+        {courses.length > 0 &&
+          (isSlider ? (
             <div className="relative mt-8">
               <div className="overflow-hidden" ref={containerRef}>
                 <div
@@ -185,12 +201,18 @@ export default function UpcomingCoursesSection({ section }) {
                   style={{
                     gap: `${GAP}px`,
                     transform: `translateX(-${index * (slideW + GAP)}px)`,
-                    transition: noTransition ? 'none' : `transform 600ms cubic-bezier(0.22, 1, 0.36, 1)`,
-                    willChange: 'transform',
+                    transition: noTransition
+                      ? "none"
+                      : `transform 600ms cubic-bezier(0.22, 1, 0.36, 1)`,
+                    willChange: "transform",
                   }}
                 >
                   {items.map((course, i) => (
-                    <div key={`${course.id}-${i}`} className="shrink-0" style={{ width: `${slideW}px` }}>
+                    <div
+                      key={`${course.id}-${i}`}
+                      className="shrink-0"
+                      style={{ width: `${slideW}px` }}
+                    >
                       <CourseCard course={course} />
                     </div>
                   ))}
@@ -203,7 +225,7 @@ export default function UpcomingCoursesSection({ section }) {
                     type="button"
                     aria-label={`Go to course page ${i + 1}`}
                     onClick={() => setIndex(i * visible)}
-                    className={`h-2 rounded-full transition-all cursor-pointer ${i === page ? 'w-6 bg-brand-orange' : 'w-2 bg-gray-300 hover:bg-gray-400'}`}
+                    className={`h-2 rounded-full transition-all cursor-pointer ${i === page ? "w-6 bg-brand-orange" : "w-2 bg-gray-300 hover:bg-gray-400"}`}
                   />
                 ))}
               </div>
@@ -214,8 +236,7 @@ export default function UpcomingCoursesSection({ section }) {
                 <CourseCard key={course.id} course={course} />
               ))}
             </div>
-          )
-        )}
+          ))}
       </div>
     </section>
   );

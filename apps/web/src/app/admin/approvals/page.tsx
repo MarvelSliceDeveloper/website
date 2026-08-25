@@ -327,7 +327,10 @@ export default function ApprovalsPage() {
                         </div>
                       ) : (
                         <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-2xl border-2 border-border bg-muted shadow-lg">
-                          <IconPhoto size={36} className="text-muted-foreground" />
+                          <IconPhoto
+                            size={36}
+                            className="text-muted-foreground"
+                          />
                         </div>
                       )}
                       <div className="flex-1 text-center sm:text-left min-w-0">
@@ -362,14 +365,53 @@ export default function ApprovalsPage() {
                       <div className="glass-card p-5 space-y-3 lg:col-span-2">
                         <Section title="Professional Info">
                           <Field label="Bio" value={profile.bio} longText />
-                          <Field label="Designation" value={profile.designation} />
-                          <Field label="Qualification" value={profile.qualification} />
-                          <Field label="Experience" value={profile.experienceYears != null ? `${profile.experienceYears} years` : null} />
-                          <Field label="Skills" value={Array.isArray(profile.skills) ? profile.skills.join(", ") : null} />
-                          <Field label="Currently Employed" value={profile.currentlyEmployed != null ? (profile.currentlyEmployed ? "Yes" : "No") : null} />
+                          <Field
+                            label="Designation"
+                            value={profile.designation}
+                          />
+                          <Field
+                            label="Qualification"
+                            value={profile.qualification}
+                          />
+                          <Field
+                            label="Experience"
+                            value={
+                              profile.experienceYears != null
+                                ? `${profile.experienceYears} years`
+                                : null
+                            }
+                          />
+                          <Field
+                            label="Skills"
+                            value={
+                              Array.isArray(profile.skills)
+                                ? profile.skills.join(", ")
+                                : null
+                            }
+                          />
+                          <Field
+                            label="Currently Employed"
+                            value={
+                              profile.currentlyEmployed != null
+                                ? profile.currentlyEmployed
+                                  ? "Yes"
+                                  : "No"
+                                : null
+                            }
+                          />
                           <Field label="Company" value={profile.companyName} />
-                          <Field label="Available Time" value={profile.availableTime} />
-                          <Field label="Languages" value={Array.isArray(profile.languages) ? profile.languages.join(", ") : null} />
+                          <Field
+                            label="Available Time"
+                            value={profile.availableTime}
+                          />
+                          <Field
+                            label="Languages"
+                            value={
+                              Array.isArray(profile.languages)
+                                ? profile.languages.join(", ")
+                                : null
+                            }
+                          />
                         </Section>
                       </div>
 
@@ -377,10 +419,26 @@ export default function ApprovalsPage() {
                       <div className="glass-card p-5 space-y-3">
                         <Section title="Contact Details">
                           <Field label="Phone" value={profile.phone} />
-                          <Field label="LinkedIn" value={profile.socialLinks?.linkedin} isLink />
-                          <Field label="GitHub" value={profile.socialLinks?.github} isLink />
-                          <Field label="Portfolio" value={profile.socialLinks?.portfolio} isLink />
-                          <Field label="Address" value={profile.address} fullWidth />
+                          <Field
+                            label="LinkedIn"
+                            value={profile.socialLinks?.linkedin}
+                            isLink
+                          />
+                          <Field
+                            label="GitHub"
+                            value={profile.socialLinks?.github}
+                            isLink
+                          />
+                          <Field
+                            label="Portfolio"
+                            value={profile.socialLinks?.portfolio}
+                            isLink
+                          />
+                          <Field
+                            label="Address"
+                            value={profile.address}
+                            fullWidth
+                          />
                           <Field label="City" value={profile.city} />
                           <Field label="State" value={profile.state} />
                           <Field label="Country" value={profile.country} />
@@ -391,9 +449,18 @@ export default function ApprovalsPage() {
                       <div className="glass-card p-5 space-y-3">
                         <Section title="Bank Information">
                           <Field label="Bank Name" value={profile.bankName} />
-                          <Field label="Account Number" value={profile.bankAccountNumber} />
-                          <Field label="IFSC Code" value={profile.bankIfscCode} />
-                          <Field label="Account Holder" value={profile.bankAccountHolderName} />
+                          <Field
+                            label="Account Number"
+                            value={profile.bankAccountNumber}
+                          />
+                          <Field
+                            label="IFSC Code"
+                            value={profile.bankIfscCode}
+                          />
+                          <Field
+                            label="Account Holder"
+                            value={profile.bankAccountHolderName}
+                          />
                           <Field label="UPI ID" value={profile.upiId} />
                         </Section>
 
@@ -417,7 +484,9 @@ export default function ApprovalsPage() {
                 ) : (
                   <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                     <IconPhoto size={40} stroke={1.2} />
-                    <p className="mt-3 text-sm">No profile details submitted.</p>
+                    <p className="mt-3 text-sm">
+                      No profile details submitted.
+                    </p>
                   </div>
                 )}
               </div>
@@ -441,7 +510,10 @@ export default function ApprovalsPage() {
                     </div>
                     <div className="flex gap-3 justify-end">
                       <button
-                        onClick={() => { setShowRejectInput(false); setRejectionReason(""); }}
+                        onClick={() => {
+                          setShowRejectInput(false);
+                          setRejectionReason("");
+                        }}
                         className="btn-secondary text-sm px-5 py-2.5"
                         disabled={actionLoading}
                       >

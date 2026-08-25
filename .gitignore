@@ -7,9 +7,16 @@
 .omo/*
 
 # ─────────────────────────────────
+# AI / Agent Tooling (do not commit local agent configs)
+# ─────────────────────────────────
+.claude/
+.opencode/
+.agents/
+.agent/
+
+# ─────────────────────────────────
 # Dependencies
 # ─────────────────────────────────
-.opencode/
 node_modules/
 .pnpm-store/
 
@@ -80,6 +87,9 @@ blob-report/
 /docker-data/
 /pgdata/
 /redisdata/
+
+# nginx basic-auth credentials for management UIs (pgAdmin/Portainer) — gitignored
+deploy/nginx/htpasswd
 
 # ─────────────────────────────────
 # IDE / Editor

@@ -31,7 +31,13 @@ const defaults = {
  *   app.get("/api/foo", cacheMiddleware({ maxAge: 600 }), handler);
  */
 export function cacheMiddleware(opts: CacheOptions = {}) {
-  const { maxAge, scope, staleWhileRevalidate, staleWhileRevalidateSeconds, vary } = {
+  const {
+    maxAge,
+    scope,
+    staleWhileRevalidate,
+    staleWhileRevalidateSeconds,
+    vary,
+  } = {
     ...defaults,
     ...opts,
   };
@@ -88,7 +94,7 @@ export function cacheMiddleware(opts: CacheOptions = {}) {
         const directives = [scope, `max-age=${maxAge}`];
         if (staleWhileRevalidate) {
           directives.push(
-            `stale-while-revalidate=${staleWhileRevalidateSeconds ?? maxAge * 2}`
+            `stale-while-revalidate=${staleWhileRevalidateSeconds ?? maxAge * 2}`,
           );
         }
         res.setHeader("Cache-Control", directives.join(", "));

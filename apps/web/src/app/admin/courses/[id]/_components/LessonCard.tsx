@@ -73,7 +73,9 @@ export default function LessonCard({
   const handleAiDescription = () => {
     const lessonTitle = editForm.title.trim();
     if (!lessonTitle) {
-      toast.error("Enter the lesson title first so the AI knows what to write about");
+      toast.error(
+        "Enter the lesson title first so the AI knows what to write about",
+      );
       return;
     }
     aiGenerate.mutate(
@@ -95,7 +97,10 @@ export default function LessonCard({
             toast.error("AI returned an empty description");
             return;
           }
-          setEditForm((p) => ({ ...p, description: plainTextToHtml(res.data.description) }));
+          setEditForm((p) => ({
+            ...p,
+            description: plainTextToHtml(res.data.description),
+          }));
           toast.success("Description written — review before saving");
         },
         onError: (err: unknown) => toast.error(getErrorMessage(err)),
@@ -243,9 +248,7 @@ export default function LessonCard({
         </div>
         <RichEditor
           content={editForm.description}
-          onChange={(html) =>
-            setEditForm((p) => ({ ...p, description: html }))
-          }
+          onChange={(html) => setEditForm((p) => ({ ...p, description: html }))}
           placeholder="Description"
           minHeight="150px"
         />
@@ -289,74 +292,72 @@ export default function LessonCard({
 
   return (
     <>
-    <div
-      className="group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 hover:border-[#cfcbe8] hover:bg-[#f8f7fd]"
-    >
-      <div className="flex shrink-0 flex-col">
-        <button
-          onClick={onMoveUp}
-          disabled={!canMoveUp}
-          className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#4f63f0] hover:bg-[#e8ecff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
-          title="Move up"
-        >
-          <IconChevronUp size={13} />
-        </button>
-        <button
-          onClick={onMoveDown}
-          disabled={!canMoveDown}
-          className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#4f63f0] hover:bg-[#e8ecff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
-          title="Move down"
-        >
-          <IconChevronDown size={13} />
-        </button>
-      </div>
-
-      <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg bg-[#e8ecff] text-[#4f63f0]">
-        {contentType === "youtube" ? (
-          <IconBrandYoutube size={14} />
-        ) : (
-          <IconPlayerPlay size={13} fill="currentColor" />
-        )}
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-semibold text-black dark:text-white">
-          {lesson.title}
-        </p>
-        {lesson.description && (
-          <p className="mt-0.5 truncate text-[10.5px] text-[#8b8da3]">
-            {lesson.description}
-          </p>
-        )}
-      </div>
-
-      <div className="flex shrink-0 items-center gap-2">
-        {lesson.isFreePreview && (
-          <span className="whitespace-nowrap rounded-full bg-[#e8ecff] px-2 py-0.5 text-[9.5px] font-semibold text-[#4f63f0]">
-            Free
-          </span>
-        )}
-        {durationLabel && (
-          <span className="whitespace-nowrap text-[11.5px] text-[#8b8da3]">
-            {durationLabel}
-          </span>
-        )}
-        <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 hover:border-[#cfcbe8] hover:bg-[#f8f7fd]">
+        <div className="flex shrink-0 flex-col">
           <button
-            onClick={startEditing}
-            className="rounded-md px-1.5 py-1 text-[10px] font-medium text-[#4f63f0] transition-colors hover:bg-[#4f63f0]/10"
+            onClick={onMoveUp}
+            disabled={!canMoveUp}
+            className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#4f63f0] hover:bg-[#e8ecff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+            title="Move up"
           >
-            Edit
+            <IconChevronUp size={13} />
           </button>
           <button
-            onClick={handleDelete}
-            className="rounded-md p-1 text-[#8b8da3] transition-colors hover:bg-danger/12 hover:text-danger"
+            onClick={onMoveDown}
+            disabled={!canMoveDown}
+            className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#4f63f0] hover:bg-[#e8ecff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+            title="Move down"
           >
-            <IconTrash size={12} />
+            <IconChevronDown size={13} />
           </button>
         </div>
+
+        <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg bg-[#e8ecff] text-[#4f63f0]">
+          {contentType === "youtube" ? (
+            <IconBrandYoutube size={14} />
+          ) : (
+            <IconPlayerPlay size={13} fill="currentColor" />
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-semibold text-black dark:text-white">
+            {lesson.title}
+          </p>
+          {lesson.description && (
+            <p className="mt-0.5 truncate text-[10.5px] text-[#8b8da3]">
+              {lesson.description}
+            </p>
+          )}
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          {lesson.isFreePreview && (
+            <span className="whitespace-nowrap rounded-full bg-[#e8ecff] px-2 py-0.5 text-[9.5px] font-semibold text-[#4f63f0]">
+              Free
+            </span>
+          )}
+          {durationLabel && (
+            <span className="whitespace-nowrap text-[11.5px] text-[#8b8da3]">
+              {durationLabel}
+            </span>
+          )}
+          <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+            <button
+              onClick={startEditing}
+              className="rounded-md px-1.5 py-1 text-[10px] font-medium text-[#4f63f0] transition-colors hover:bg-[#4f63f0]/10"
+            >
+              Edit
+            </button>
+            <button
+              onClick={handleDelete}
+              className="rounded-md p-1 text-[#8b8da3] transition-colors hover:bg-danger/12 hover:text-danger"
+            >
+              <IconTrash size={12} />
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
 
       {editing && (
         <FormModal

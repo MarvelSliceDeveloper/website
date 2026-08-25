@@ -2,7 +2,10 @@ import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware";
 import { internService } from "./intern.service";
 import { notificationService } from "../notifications/notification.service";
-import { googleSheetsService, type SavedSheet } from "../../services/google-sheets.service";
+import {
+  googleSheetsService,
+  type SavedSheet,
+} from "../../services/google-sheets.service";
 import { handleControllerError } from "../../utils/errors";
 
 export const internController = {
@@ -13,11 +16,17 @@ export const internController = {
       if (!program) {
         return res
           .status(200)
-          .json({ program: null, message: "Internship applications are closed." });
+          .json({
+            program: null,
+            message: "Internship applications are closed.",
+          });
       }
       return res.status(200).json({ program });
     } catch (err: unknown) {
-      const { statusCode, body } = handleControllerError(err, (_req as any).log);
+      const { statusCode, body } = handleControllerError(
+        err,
+        (_req as any).log,
+      );
       return res.status(statusCode).json(body);
     }
   },
@@ -28,7 +37,10 @@ export const internController = {
       const fields = await internService.getInternFields();
       return res.status(200).json({ fields });
     } catch (err: unknown) {
-      const { statusCode, body } = handleControllerError(err, (_req as any).log);
+      const { statusCode, body } = handleControllerError(
+        err,
+        (_req as any).log,
+      );
       return res.status(statusCode).json(body);
     }
   },
@@ -52,7 +64,9 @@ export const internController = {
       if (!fieldId || typeof fieldId !== "string") {
         return res
           .status(400)
-          .json({ error: "fieldId is required — each intern selects one field" });
+          .json({
+            error: "fieldId is required — each intern selects one field",
+          });
       }
 
       const result = await internService.createInternOrder({
@@ -92,7 +106,10 @@ export const internController = {
       const fields = await internService.listInternFields();
       return res.status(200).json({ fields });
     } catch (err: unknown) {
-      const { statusCode, body } = handleControllerError(err, (_req as any).log);
+      const { statusCode, body } = handleControllerError(
+        err,
+        (_req as any).log,
+      );
       return res.status(statusCode).json(body);
     }
   },
@@ -150,11 +167,7 @@ export const internController = {
   async updateProgramFee(req: AuthRequest, res: Response) {
     try {
       const { fee } = req.body;
-      if (
-        typeof fee !== "number" ||
-        !Number.isInteger(fee) ||
-        fee < 0
-      ) {
+      if (typeof fee !== "number" || !Number.isInteger(fee) || fee < 0) {
         return res
           .status(400)
           .json({ error: "fee must be a non-negative integer (paise)" });
@@ -170,13 +183,22 @@ export const internController = {
   // Admin — create intern session (online class), then notify interns
   async createInternSession(req: AuthRequest, res: Response) {
     try {
-      const { title, description, scheduledAt, scheduledEndAt, joinUrl, targetFieldId } = req.body;
+      const {
+        title,
+        description,
+        scheduledAt,
+        scheduledEndAt,
+        joinUrl,
+        targetFieldId,
+      } = req.body;
 
       if (!title || typeof title !== "string" || !title.trim()) {
         return res.status(400).json({ error: "title is required" });
       }
       if (!scheduledAt || isNaN(new Date(scheduledAt).getTime())) {
-        return res.status(400).json({ error: "scheduledAt is a required valid date" });
+        return res
+          .status(400)
+          .json({ error: "scheduledAt is a required valid date" });
       }
 
       const session = await internService.createInternSession({
@@ -223,7 +245,10 @@ export const internController = {
   async deleteInternSession(req: AuthRequest, res: Response) {
     try {
       const { id } = req.params;
-      const session = await internService.deleteInternSession(id, req.user!.userId);
+      const session = await internService.deleteInternSession(
+        id,
+        req.user!.userId,
+      );
       return res.status(200).json(session);
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
@@ -237,7 +262,10 @@ export const internController = {
       const sheets = await googleSheetsService.getSavedSheets();
       return res.status(200).json({ sheets });
     } catch (err: unknown) {
-      const { statusCode, body } = handleControllerError(err, (_req as any).log);
+      const { statusCode, body } = handleControllerError(
+        err,
+        (_req as any).log,
+      );
       return res.status(statusCode).json(body);
     }
   },
@@ -276,10 +304,10 @@ export const internController = {
   },
 
   // ─────────────────────────────────────────────────────────────────────────
-// REPLACE these two handlers inside your existing intern.controller.ts
-// (the rest of the file — listInterns, createInternField, etc. — stays
-// exactly as it is; only getAssignmentSheet and listSheetTabs change).
-// ─────────────────────────────────────────────────────────────────────────
+  // REPLACE these two handlers inside your existing intern.controller.ts
+  // (the rest of the file — listInterns, createInternField, etc. — stays
+  // exactly as it is; only getAssignmentSheet and listSheetTabs change).
+  // ─────────────────────────────────────────────────────────────────────────
 
   // Admin — fetch assignment tracker data for a given sheet ID + optional gid
   async getAssignmentSheet(req: AuthRequest, res: Response) {
@@ -302,7 +330,11 @@ export const internController = {
       }
 
       const bypassCache = String(req.query.refresh ?? "") === "1";
-      const data = await googleSheetsService.fetchSheet(id, sheetGid, bypassCache);
+      const data = await googleSheetsService.fetchSheet(
+        id,
+        sheetGid,
+        bypassCache,
+      );
       return res.status(200).json(data);
     } catch (err: unknown) {
       const { statusCode, body } = handleControllerError(err, (req as any).log);
@@ -317,7 +349,9 @@ export const internController = {
       const { sheetId } = req.query;
       const id = typeof sheetId === "string" ? sheetId.trim() : null;
       if (!id) {
-        return res.status(400).json({ error: "sheetId query parameter is required" });
+        return res
+          .status(400)
+          .json({ error: "sheetId query parameter is required" });
       }
       const metadata = await googleSheetsService.listSheetTabs(
         id,

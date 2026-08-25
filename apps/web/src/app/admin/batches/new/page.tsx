@@ -99,9 +99,9 @@ export default function CreateBatchPage() {
       })),
     [packageCoursesQuery.data],
   );
-  const [courseInstructors, setCourseInstructors] = useState<CourseInstructor[]>(
-    [],
-  );
+  const [courseInstructors, setCourseInstructors] = useState<
+    CourseInstructor[]
+  >([]);
 
   useEffect(() => {
     setCourseInstructors(
@@ -114,7 +114,9 @@ export default function CreateBatchPage() {
 
   const updateCourseInstructor = (courseId: string, instructorId: string) =>
     setCourseInstructors((prev) =>
-      prev.map((ci) => (ci.courseId === courseId ? { ...ci, instructorId } : ci)),
+      prev.map((ci) =>
+        ci.courseId === courseId ? { ...ci, instructorId } : ci,
+      ),
     );
 
   const errors = useMemo(() => {
@@ -139,7 +141,7 @@ export default function CreateBatchPage() {
 
   const isValid = Object.keys(errors).length === 0;
 
-    const createBatchMutation = useMutation({
+  const createBatchMutation = useMutation({
     mutationFn: async () => {
       const body: Record<string, unknown> = {
         packageId: form.packageId,
@@ -260,54 +262,54 @@ export default function CreateBatchPage() {
               <input
                 type="date"
                 value={form.startDate}
-              onChange={(e) => update("startDate", e.target.value)}
-              className="field"
-            />
-            {showError("startDate")}
+                onChange={(e) => update("startDate", e.target.value)}
+                className="field"
+              />
+              {showError("startDate")}
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
+                End Date <span className="text-danger">*</span>
+              </label>
+              <input
+                type="date"
+                value={form.endDate}
+                onChange={(e) => update("endDate", e.target.value)}
+                className="field"
+              />
+              {showError("endDate")}
+            </div>
           </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
-              End Date <span className="text-danger">*</span>
-            </label>
-            <input
-              type="date"
-              value={form.endDate}
-              onChange={(e) => update("endDate", e.target.value)}
-              className="field"
-            />
-            {showError("endDate")}
-          </div>
-        </div>
 
-        {/* Max Students + Description */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Max Students
-            </label>
-            <input
-              type="number"
-              value={form.maxStudents}
-              onChange={(e) => update("maxStudents", e.target.value)}
-              placeholder="Leave empty for unlimited"
-              className="field"
-              min={1}
-            />
-            {showError("maxStudents")}
+          {/* Max Students + Description */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
+                Max Students
+              </label>
+              <input
+                type="number"
+                value={form.maxStudents}
+                onChange={(e) => update("maxStudents", e.target.value)}
+                placeholder="Leave empty for unlimited"
+                className="field"
+                min={1}
+              />
+              {showError("maxStudents")}
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
+                Description
+              </label>
+              <input
+                type="text"
+                value={form.description}
+                onChange={(e) => update("description", e.target.value)}
+                placeholder="Optional notes"
+                className="field"
+              />
+            </div>
           </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">
-              Description
-            </label>
-            <input
-              type="text"
-              value={form.description}
-              onChange={(e) => update("description", e.target.value)}
-              placeholder="Optional notes"
-              className="field"
-            />
-          </div>
-        </div>
         </div>
 
         {/* Per-Course Instructors */}
@@ -321,9 +323,14 @@ export default function CreateBatchPage() {
             </p>
             <div className="divide-y divide-border/50">
               {packageCourses.map((pc, idx) => {
-                const ci = courseInstructors.find((c) => c.courseId === pc.courseId);
+                const ci = courseInstructors.find(
+                  (c) => c.courseId === pc.courseId,
+                );
                 return (
-                  <div key={pc.courseId} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
+                  <div
+                    key={pc.courseId}
+                    className="flex items-center gap-4 py-3 first:pt-0 last:pb-0"
+                  >
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                       <span className="text-xs font-bold">{idx + 1}</span>
                     </div>
@@ -335,7 +342,9 @@ export default function CreateBatchPage() {
                     <div className="w-64 shrink-0">
                       <Select
                         value={ci?.instructorId ?? ""}
-                        onValueChange={(v) => updateCourseInstructor(pc.courseId, v)}
+                        onValueChange={(v) =>
+                          updateCourseInstructor(pc.courseId, v)
+                        }
                       >
                         <SelectTrigger className="field w-full">
                           <SelectValue placeholder="Select instructor" />
@@ -368,7 +377,9 @@ export default function CreateBatchPage() {
               <input
                 type="number"
                 value={form.defaultDaysToComplete}
-                onChange={(e) => update("defaultDaysToComplete", e.target.value)}
+                onChange={(e) =>
+                  update("defaultDaysToComplete", e.target.value)
+                }
                 placeholder="e.g. 30"
                 className="field w-full"
                 min={1}

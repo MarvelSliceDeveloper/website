@@ -119,8 +119,7 @@ export default function AdminSessionsPage() {
   };
 
   const deleteMutation = useMutation({
-    mutationFn: (sessionId: string) =>
-      api.delete(`/api/sessions/${sessionId}`),
+    mutationFn: (sessionId: string) => api.delete(`/api/sessions/${sessionId}`),
     onSuccess: () => {
       void sessionsQuery.refetch();
     },

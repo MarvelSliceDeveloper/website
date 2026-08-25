@@ -69,7 +69,10 @@ export const dashboardController = {
           },
         }),
         prisma.packageEnrollment.findMany({
-          where: { status: "APPROVED", ...(hasDateFilter ? { createdAt: dateFilter } : {}) },
+          where: {
+            status: "APPROVED",
+            ...(hasDateFilter ? { createdAt: dateFilter } : {}),
+          },
           select: { createdAt: true },
           orderBy: { createdAt: "asc" },
         }),
@@ -80,7 +83,12 @@ export const dashboardController = {
         }),
         prisma.payment.findMany({
           where: { status: "PAID", ...(paymentWhere ?? {}) },
-          select: { amount: true, createdAt: true, packageId: true, userId: true },
+          select: {
+            amount: true,
+            createdAt: true,
+            packageId: true,
+            userId: true,
+          },
           orderBy: { createdAt: "asc" },
         }),
         prisma.payment.groupBy({
@@ -274,7 +282,7 @@ export const dashboardController = {
             _count: { id: true },
           }),
           prisma.$queryRaw<Array<{ month: string; activeStudents: bigint }>>(
-            Prisma.sql`SELECT TO_CHAR("loginAt", 'YYYY-MM') as month, COUNT(DISTINCT "userId") as "activeStudents" FROM "loginLog" WHERE "loginAt" >= ${sixMonthsAgo} GROUP BY TO_CHAR("loginAt", 'YYYY-MM') ORDER BY month ASC`
+            Prisma.sql`SELECT TO_CHAR("loginAt", 'YYYY-MM') as month, COUNT(DISTINCT "userId") as "activeStudents" FROM "loginLog" WHERE "loginAt" >= ${sixMonthsAgo} GROUP BY TO_CHAR("loginAt", 'YYYY-MM') ORDER BY month ASC`,
           ),
           prisma.quizAttempt.groupBy({
             by: ["quizId"],
@@ -327,7 +335,7 @@ export const dashboardController = {
       const videoDropOffRaw = await prisma.$queryRaw<
         Array<{ bucket: string; count: bigint }>
       >(
-        Prisma.sql`SELECT CASE WHEN ("watchedSeconds"::float / NULLIF(r."duration", 0) * 100) < 25 THEN '0-25' WHEN ("watchedSeconds"::float / NULLIF(r."duration", 0) * 100) < 50 THEN '25-50' WHEN ("watchedSeconds"::float / NULLIF(r."duration", 0) * 100) < 75 THEN '50-75' ELSE '75-100' END as bucket, COUNT(*) as count FROM "progress" p LEFT JOIN "recording" r ON p."recordingId" = r."id" GROUP BY 1`
+        Prisma.sql`SELECT CASE WHEN ("watchedSeconds"::float / NULLIF(r."duration", 0) * 100) < 25 THEN '0-25' WHEN ("watchedSeconds"::float / NULLIF(r."duration", 0) * 100) < 50 THEN '25-50' WHEN ("watchedSeconds"::float / NULLIF(r."duration", 0) * 100) < 75 THEN '50-75' ELSE '75-100' END as bucket, COUNT(*) as count FROM "progress" p LEFT JOIN "recording" r ON p."recordingId" = r."id" GROUP BY 1`,
       );
 
       const videoDropOffMap = new Map(
@@ -337,7 +345,10 @@ export const dashboardController = {
         { bucket: "0 - 25%", count: videoDropOffMap.get("0-25") || 0 },
         { bucket: "25 - 50%", count: videoDropOffMap.get("25-50") || 0 },
         { bucket: "50 - 75%", count: videoDropOffMap.get("50-75") || 0 },
-        { bucket: "75 - 100% (Completed)", count: videoDropOffMap.get("75-100") || 0 },
+        {
+          bucket: "75 - 100% (Completed)",
+          count: videoDropOffMap.get("75-100") || 0,
+        },
       ];
 
       res.json({
@@ -358,9 +369,21 @@ export const dashboardController = {
           quizScoreAverages.length > 0
             ? quizScoreAverages
             : [
-                { quizTitle: "Intro to Python Quiz", averageScorePct: 84, attemptsCount: 42 },
-                { quizTitle: "React Fundamentals MCQ", averageScorePct: 78, attemptsCount: 35 },
-                { quizTitle: "Database Design Assessment", averageScorePct: 91, attemptsCount: 29 },
+                {
+                  quizTitle: "Intro to Python Quiz",
+                  averageScorePct: 84,
+                  attemptsCount: 42,
+                },
+                {
+                  quizTitle: "React Fundamentals MCQ",
+                  averageScorePct: 78,
+                  attemptsCount: 35,
+                },
+                {
+                  quizTitle: "Database Design Assessment",
+                  averageScorePct: 91,
+                  attemptsCount: 29,
+                },
               ],
       });
     } catch (err: unknown) {

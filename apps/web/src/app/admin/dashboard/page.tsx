@@ -104,8 +104,7 @@ function SuperAdminDashboard() {
   const totalAdmins = roleDist.find((r) => r.role === "ADMIN")?.count ?? 0;
   const totalInstructors =
     roleDist.find((r) => r.role === "INSTRUCTOR")?.count ?? 0;
-  const totalStudents =
-    roleDist.find((r) => r.role === "STUDENT")?.count ?? 0;
+  const totalStudents = roleDist.find((r) => r.role === "STUDENT")?.count ?? 0;
 
   const trashTotal = Object.values(trashQuery.data?.trash ?? {}).reduce(
     (sum: number, arr: unknown[]) => sum + arr.length,
@@ -403,7 +402,9 @@ function AdminDashboard() {
     activeBatches: batchesQuery.data
       ? (batchesQuery.data.batches?.length ?? 0)
       : null,
-    liveSessions: sessionsQuery.data ? sessionsQuery.data.sessions.length : null,
+    liveSessions: sessionsQuery.data
+      ? sessionsQuery.data.sessions.length
+      : null,
     totalStudents: usersQuery.data
       ? (usersQuery.data.users ?? []).filter((user) => user.role === "STUDENT")
           .length
@@ -517,7 +518,11 @@ function AdminDashboard() {
               </div>
             ) : (
               <>
-                <stat.icon size={22} stroke={1.5} className="text-muted-foreground mb-3" />
+                <stat.icon
+                  size={22}
+                  stroke={1.5}
+                  className="text-muted-foreground mb-3"
+                />
                 <p className="mt-1.5 text-2xl font-extrabold tracking-tight text-foreground">
                   {stat.value === null ? "\u2014" : String(stat.value)}
                 </p>

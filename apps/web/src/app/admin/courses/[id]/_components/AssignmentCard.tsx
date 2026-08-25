@@ -54,7 +54,7 @@ export default function AssignmentCard({
   const [title, setTitle] = useState(assignment.title);
   const [description, setDescription] = useState(assignment.description || "");
   const [dueDateMode, setDueDateMode] = useState<"absolute" | "days">(
-    assignment.daysFromEnrollment != null ? "days" : "absolute"
+    assignment.daysFromEnrollment != null ? "days" : "absolute",
   );
   const [dueDate, setDueDate] = useState(
     assignment.dueDate
@@ -62,7 +62,7 @@ export default function AssignmentCard({
       : "",
   );
   const [daysFromEnrollment, setDaysFromEnrollment] = useState(
-    assignment.daysFromEnrollment?.toString() ?? ""
+    assignment.daysFromEnrollment?.toString() ?? "",
   );
   const [maxPoints, setMaxPoints] = useState(assignment.maxPoints);
   const [questionPdfUrl, setQuestionPdfUrl] = useState(
@@ -102,18 +102,15 @@ export default function AssignmentCard({
         savedPdfUrl = questionPdfUrl.trim() || undefined;
       }
 
-      await api.put(
-        `/api/admin/courses/modules/assignments/${assignment.id}`,
-        {
-          title,
-          description,
-          dueDate: undefined,
-          daysFromEnrollment:
-            daysFromEnrollment !== "" ? Number(daysFromEnrollment) : null,
-          maxPoints,
-          questionPdfUrl: savedPdfUrl,
-        },
-      );
+      await api.put(`/api/admin/courses/modules/assignments/${assignment.id}`, {
+        title,
+        description,
+        dueDate: undefined,
+        daysFromEnrollment:
+          daysFromEnrollment !== "" ? Number(daysFromEnrollment) : null,
+        maxPoints,
+        questionPdfUrl: savedPdfUrl,
+      });
     },
     onSuccess: () => {
       toast.success("Assignment updated successfully");
@@ -166,9 +163,7 @@ export default function AssignmentCard({
 
   const deleteMutation = useMutation({
     mutationFn: () =>
-      api.delete(
-        `/api/admin/courses/modules/assignments/${assignment.id}`,
-      ),
+      api.delete(`/api/admin/courses/modules/assignments/${assignment.id}`),
     onSuccess: () => {
       toast.success("Assignment deleted successfully");
       onUpdate();
@@ -200,7 +195,10 @@ export default function AssignmentCard({
 
   const editFooter = (
     <>
-      <button onClick={cancelEdit} className="btn-secondary text-xs px-3 py-1.5">
+      <button
+        onClick={cancelEdit}
+        className="btn-secondary text-xs px-3 py-1.5"
+      >
         Cancel
       </button>
       <button
@@ -226,142 +224,144 @@ export default function AssignmentCard({
         />
       </div>
 
-        <div className="space-y-2">
-          <label className="text-xs font-medium">Description</label>
-          <RichEditor
-            content={description}
-            onChange={setDescription}
-            placeholder="Enter description"
-            minHeight="150px"
-          />
-        </div>
+      <div className="space-y-2">
+        <label className="text-xs font-medium">Description</label>
+        <RichEditor
+          content={description}
+          onChange={setDescription}
+          placeholder="Enter description"
+          minHeight="150px"
+        />
+      </div>
 
+      <div className="space-y-2">
+        <label className="text-xs font-medium">
+          Due Date (Days After Enrollment)
+        </label>
+        <input
+          type="number"
+          value={daysFromEnrollment}
+          onChange={(e) => setDaysFromEnrollment(e.target.value)}
+          placeholder="e.g. 10"
+          className="field"
+          min={1}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="text-xs font-medium">Due Date (Days After Enrollment)</label>
+          <label className="text-xs font-medium">Max Points</label>
           <input
             type="number"
-            value={daysFromEnrollment}
-            onChange={(e) => setDaysFromEnrollment(e.target.value)}
-            placeholder="e.g. 10"
-            className="field"
+            value={maxPoints}
+            onChange={(e) => setMaxPoints(parseInt(e.target.value) || 100)}
             min={1}
+            className="field"
           />
         </div>
+      </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="text-xs font-medium">Max Points</label>
-            <input
-              type="number"
-              value={maxPoints}
-              onChange={(e) => setMaxPoints(parseInt(e.target.value) || 100)}
-              min={1}
-              className="field"
-            />
-          </div>
+      <div className="space-y-2">
+        <label className="text-xs font-medium">Question Paper Source</label>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setPdfSource("drive")}
+            className={`flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+              pdfSource === "drive"
+                ? "border-[#4f63f0]/50 bg-[#4f63f0]/10 text-[#4f63f0]"
+                : "border-[#e4e2f5] text-[#8b8da3] hover:bg-[#f5f4fd]"
+            }`}
+          >
+            <IconLink size={14} />
+            Google Drive Link
+          </button>
+          <button
+            type="button"
+            onClick={() => setPdfSource("upload")}
+            className={`flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+              pdfSource === "upload"
+                ? "border-[#4f63f0]/50 bg-[#4f63f0]/10 text-[#4f63f0]"
+                : "border-[#e4e2f5] text-[#8b8da3] hover:bg-[#f5f4fd]"
+            }`}
+          >
+            <IconUpload size={14} />
+            Upload PDF
+          </button>
         </div>
+        <p className="text-[10px] text-[#8b8da3]">
+          Provide either a Google Drive link or upload a PDF, not both.
+        </p>
+      </div>
 
+      {pdfSource === "drive" ? (
         <div className="space-y-2">
-          <label className="text-xs font-medium">Question Paper Source</label>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setPdfSource("drive")}
-              className={`flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
-                pdfSource === "drive"
-                  ? "border-[#4f63f0]/50 bg-[#4f63f0]/10 text-[#4f63f0]"
-                  : "border-[#e4e2f5] text-[#8b8da3] hover:bg-[#f5f4fd]"
-              }`}
-            >
-              <IconLink size={14} />
-              Google Drive Link
-            </button>
-            <button
-              type="button"
-              onClick={() => setPdfSource("upload")}
-              className={`flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
-                pdfSource === "upload"
-                  ? "border-[#4f63f0]/50 bg-[#4f63f0]/10 text-[#4f63f0]"
-                  : "border-[#e4e2f5] text-[#8b8da3] hover:bg-[#f5f4fd]"
-              }`}
-            >
-              <IconUpload size={14} />
-              Upload PDF
-            </button>
-          </div>
+          <label className="text-xs font-medium">Google Drive PDF Link</label>
+          <input
+            key="drive-link"
+            type="url"
+            value={questionPdfUrl}
+            onChange={(e) => setQuestionPdfUrl(e.target.value)}
+            placeholder="https://drive.google.com/file/d/.../preview"
+            className="field text-xs"
+          />
           <p className="text-[10px] text-[#8b8da3]">
-            Provide either a Google Drive link or upload a PDF, not both.
+            Paste a Google Drive embed URL to render the PDF inline for students
           </p>
         </div>
-
-        {pdfSource === "drive" ? (
-          <div className="space-y-2">
-            <label className="text-xs font-medium">Google Drive PDF Link</label>
-            <input
-              key="drive-link"
-              type="url"
-              value={questionPdfUrl}
-              onChange={(e) => setQuestionPdfUrl(e.target.value)}
-              placeholder="https://drive.google.com/file/d/.../preview"
-              className="field text-xs"
-            />
-            <p className="text-[10px] text-[#8b8da3]">
-              Paste a Google Drive embed URL to render the PDF inline for students
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <label className="text-xs font-medium">PDF Upload</label>
-            <input
-              key="pdf-file"
-              ref={fileRef}
-              type="file"
-              accept=".pdf,application/pdf"
-              onChange={handlePdfSelect}
-              className="hidden"
-            />
-            {pdfName ? (
-              <div className="flex items-center gap-2 rounded-md border border-violet-500/30 bg-violet-500/10 px-2.5 py-1.5">
-                <IconFile size={14} className="text-violet-600 shrink-0" />
-                <span className="text-xs text-[#1f2233] truncate flex-1">
-                  {pdfName}
-                </span>
-                <button
-                  type="button"
-                  onClick={clearPdf}
-                  className="text-[#8b8da3] hover:text-danger"
-                >
-                  <IconX size={12} />
-                </button>
-              </div>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  className="w-full flex items-center justify-center gap-1.5 rounded-md border border-dashed border-[#e4e2f5] px-3 py-2 text-xs text-[#8b8da3] hover:bg-violet-500/10 hover:text-violet-600 hover:border-violet-500/30 transition-colors"
-                >
-                  <IconFile size={13} />
-                  Upload PDF (max 10 MB)
-                </button>
-                {assignment.questionPdfUrl && !pdfName && (
-                  <p className="text-[10px] text-[#8b8da3]">
-                    Current:{" "}
-                    <a
-                      href={assignment.questionPdfUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#2563eb] underline"
-                    >
-                      view PDF
-                    </a>{" "}
-                    — upload a new file to replace it.
-                  </p>
-                )}
-              </>
-            )}
-          </div>
-        )}
+      ) : (
+        <div className="space-y-2">
+          <label className="text-xs font-medium">PDF Upload</label>
+          <input
+            key="pdf-file"
+            ref={fileRef}
+            type="file"
+            accept=".pdf,application/pdf"
+            onChange={handlePdfSelect}
+            className="hidden"
+          />
+          {pdfName ? (
+            <div className="flex items-center gap-2 rounded-md border border-violet-500/30 bg-violet-500/10 px-2.5 py-1.5">
+              <IconFile size={14} className="text-violet-600 shrink-0" />
+              <span className="text-xs text-[#1f2233] truncate flex-1">
+                {pdfName}
+              </span>
+              <button
+                type="button"
+                onClick={clearPdf}
+                className="text-[#8b8da3] hover:text-danger"
+              >
+                <IconX size={12} />
+              </button>
+            </div>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="w-full flex items-center justify-center gap-1.5 rounded-md border border-dashed border-[#e4e2f5] px-3 py-2 text-xs text-[#8b8da3] hover:bg-violet-500/10 hover:text-violet-600 hover:border-violet-500/30 transition-colors"
+              >
+                <IconFile size={13} />
+                Upload PDF (max 10 MB)
+              </button>
+              {assignment.questionPdfUrl && !pdfName && (
+                <p className="text-[10px] text-[#8b8da3]">
+                  Current:{" "}
+                  <a
+                    href={assignment.questionPdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#2563eb] underline"
+                  >
+                    view PDF
+                  </a>{" "}
+                  — upload a new file to replace it.
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </>
   );
 
@@ -374,86 +374,86 @@ export default function AssignmentCard({
 
   return (
     <>
-    <div className="group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 hover:border-[#cfcbe8] hover:bg-[#f8f7fd]">
-      <div className="flex shrink-0 flex-col">
-        <button
-          onClick={onMoveUp}
-          disabled={!canMoveUp}
-          className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#2563eb] hover:bg-[#eff6ff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
-          title="Move up"
-        >
-          <IconChevronUp size={13} />
-        </button>
-        <button
-          onClick={onMoveDown}
-          disabled={!canMoveDown}
-          className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#2563eb] hover:bg-[#eff6ff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
-          title="Move down"
-        >
-          <IconChevronDown size={13} />
-        </button>
-      </div>
-
-      <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg bg-[#eff6ff] text-[#2563eb]">
-        <IconFileText size={13} />
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <p className="truncate text-[13px] font-medium text-[#1f2233]">
-            {assignment.title}
-          </p>
+      <div className="group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 hover:border-[#cfcbe8] hover:bg-[#f8f7fd]">
+        <div className="flex shrink-0 flex-col">
           <button
-            onClick={copyId}
-            className="group/copy relative inline-flex items-center gap-1 text-[10px] font-mono text-[#8b8da3]/70 transition-colors hover:text-[#1f2233]"
-            title="Copy assignment ID"
+            onClick={onMoveUp}
+            disabled={!canMoveUp}
+            className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#2563eb] hover:bg-[#eff6ff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+            title="Move up"
           >
-            {copied ? (
-              <IconCheck size={10} className="text-emerald-500" />
-            ) : (
-              <IconCopy
-                size={10}
-                className="opacity-0 transition-opacity group-hover/copy:opacity-100"
-              />
-            )}
+            <IconChevronUp size={13} />
           </button>
-          {assignment.questionPdfUrl && (
-            <a
-              href={assignment.questionPdfUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-0.5 text-[9.5px] font-medium text-[#2563eb] underline hover:text-blue-700"
+          <button
+            onClick={onMoveDown}
+            disabled={!canMoveDown}
+            className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#2563eb] hover:bg-[#eff6ff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+            title="Move down"
+          >
+            <IconChevronDown size={13} />
+          </button>
+        </div>
+
+        <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg bg-[#eff6ff] text-[#2563eb]">
+          <IconFileText size={13} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="truncate text-[13px] font-medium text-[#1f2233]">
+              {assignment.title}
+            </p>
+            <button
+              onClick={copyId}
+              className="group/copy relative inline-flex items-center gap-1 text-[10px] font-mono text-[#8b8da3]/70 transition-colors hover:text-[#1f2233]"
+              title="Copy assignment ID"
             >
-              <IconExternalLink size={11} /> PDF
-            </a>
+              {copied ? (
+                <IconCheck size={10} className="text-emerald-500" />
+              ) : (
+                <IconCopy
+                  size={10}
+                  className="opacity-0 transition-opacity group-hover/copy:opacity-100"
+                />
+              )}
+            </button>
+            {assignment.questionPdfUrl && (
+              <a
+                href={assignment.questionPdfUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-0.5 text-[9.5px] font-medium text-[#2563eb] underline hover:text-blue-700"
+              >
+                <IconExternalLink size={11} /> PDF
+              </a>
+            )}
+          </div>
+          {dueLabel && (
+            <p className="mt-0.5 text-[10.5px] text-[#8b8da3]">{dueLabel}</p>
           )}
         </div>
-        {dueLabel && (
-          <p className="mt-0.5 text-[10.5px] text-[#8b8da3]">{dueLabel}</p>
-        )}
-      </div>
 
-      <div className="flex shrink-0 items-center gap-2">
-        <span className="whitespace-nowrap text-[11.5px] text-[#8b8da3]">
-          {assignment.maxPoints} Pts
-        </span>
-        <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-          <button
-            onClick={() => setEditing(true)}
-            className="rounded-md px-1.5 py-1 text-[10px] font-medium text-[#4f63f0] transition-colors hover:bg-[#4f63f0]/10"
-          >
-            Edit
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={deleteMutation.isPending}
-            className="rounded-md p-1 text-[#8b8da3] transition-colors hover:bg-danger/12 hover:text-danger"
-          >
-            <IconTrash size={12} />
-          </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="whitespace-nowrap text-[11.5px] text-[#8b8da3]">
+            {assignment.maxPoints} Pts
+          </span>
+          <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+            <button
+              onClick={() => setEditing(true)}
+              className="rounded-md px-1.5 py-1 text-[10px] font-medium text-[#4f63f0] transition-colors hover:bg-[#4f63f0]/10"
+            >
+              Edit
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+              className="rounded-md p-1 text-[#8b8da3] transition-colors hover:bg-danger/12 hover:text-danger"
+            >
+              <IconTrash size={12} />
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
       {editing && (
         <FormModal

@@ -97,6 +97,7 @@ import {
   internRouter,
   adminInternRouter,
 } from "./modules/interns/intern.routes";
+import { versionRouter } from "./modules/version/version.routes";
 import { uploadsRoot, ensureUploadsDir } from "./utils/uploads";
 
 const logger = pino({
@@ -166,6 +167,7 @@ const csrfExemptPaths = [
   "/api/webhooks/",
   "/api/csrf-token",
   "/api/maintenance-status",
+  "/api/version",
   "/health",
   "/api/payments/create-order",
   "/api/payments/verify",
@@ -367,8 +369,8 @@ app.use("/api/youtube", youtubeRouter);
 app.use("/api/admin/ai", aiRouter);
 
 // ── Payments & Coupons ──
-  app.use("/api/coupons", couponRouter);
-  app.use("/api/referrals", referralRouter);
+app.use("/api/coupons", couponRouter);
+app.use("/api/referrals", referralRouter);
 app.use("/api/payments", paymentRouter);
 app.use("/api/admin/payments", adminPaymentRouter);
 
@@ -392,6 +394,9 @@ app.use("/api/admin/backup", backupRouter);
 
 // ── Admin Session Management (kill / terminate) ──
 app.use("/api/admin/sessions", sessionsRouter);
+
+// ── Version (public + super admin details) ──
+app.use("/api/version", versionRouter);
 
 // ── Alerting Webhooks ──
 app.use("/api/admin/alerting-webhooks", alertingWebhooksRouter);

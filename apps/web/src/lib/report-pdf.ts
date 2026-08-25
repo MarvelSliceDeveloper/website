@@ -108,12 +108,9 @@ export function buildReportPdf(opts: PdfOptions): Promise<void> {
     doc.setFontSize(7.5);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(COLORS.muted[0], COLORS.muted[1], COLORS.muted[2]);
-    doc.text(
-      `Page ${i} of ${totalPages}`,
-      pageWidth - margin,
-      pageHeight - 8,
-      { align: "right" },
-    );
+    doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 8, {
+      align: "right",
+    });
   }
 
   const filename = `LMS-${scope}-Report-${opts.timeRange}-${new Date().toISOString().slice(0, 10)}.pdf`;

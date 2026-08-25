@@ -20,14 +20,13 @@ const superAdminPrefixes = [
   "/admin/refunds/approvals",
 ];
 
-const bypassRoutes = [
-  "/login",
-  "/maintenance",
-  "/_next",
-  "/api/",
-];
+const bypassRoutes = ["/login", "/maintenance", "/_next", "/api/"];
 
-let maintenanceCache: { enabled: boolean; message: string; expiresAt: number } | null = null;
+let maintenanceCache: {
+  enabled: boolean;
+  message: string;
+  expiresAt: number;
+} | null = null;
 
 async function checkMaintenanceStatus(requestUrl: string): Promise<boolean> {
   const now = Date.now();
@@ -35,10 +34,13 @@ async function checkMaintenanceStatus(requestUrl: string): Promise<boolean> {
     return maintenanceCache.enabled;
   }
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://localhost:4000"}/api/maintenance-status`, {
-      method: "GET",
-      signal: AbortSignal.timeout(2000),
-    });
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://localhost:4000"}/api/maintenance-status`,
+      {
+        method: "GET",
+        signal: AbortSignal.timeout(2000),
+      },
+    );
     if (res.ok) {
       const data = await res.json();
       maintenanceCache = {

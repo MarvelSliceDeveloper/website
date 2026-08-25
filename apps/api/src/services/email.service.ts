@@ -80,11 +80,7 @@ async function resolveAttachment(
 
     const fs = await import("fs");
     const path = await import("path");
-    const fullPath = path.join(
-      uploadsRoot,
-      "notifications",
-      filename,
-    );
+    const fullPath = path.join(uploadsRoot, "notifications", filename);
 
     if (!fs.existsSync(fullPath)) return undefined;
     const content = fs.readFileSync(fullPath).toString("base64");
@@ -395,9 +391,7 @@ export const emailService = {
     attachmentName?: string,
   ): Promise<boolean> {
     if (!isConfigured()) {
-      console.warn(
-        "[email] BREVO_API_KEY not set — skipping template email",
-      );
+      console.warn("[email] BREVO_API_KEY not set — skipping template email");
       return false;
     }
 

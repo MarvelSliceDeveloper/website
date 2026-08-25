@@ -9,6 +9,7 @@ The login history table (`apps/web/src/app/admin/users/login-history/page.tsx`) 
 **Fix:** Include the `user` relation (id, name, email) in the Prisma query; display `user.name` + `user.email` in the table.
 
 **Files:**
+
 - `apps/api/src/modules/logs/login-history.routes.ts` — added `include: { user: { select: { id, name, email } } }`
 - `apps/web/src/app/admin/users/login-history/page.tsx` — column header "User ID" → "User"; cell renders name + email
 
@@ -19,6 +20,7 @@ The logout handler (`auth.controller.ts`) only cleared the cookie and returned 2
 **Root cause:** The `POST /api/auth/logout` route had no `requireAuth` middleware, so `req.user` was unavailable and the controller had no way to know which login session to close.
 
 **Fix:**
+
 - `apps/api/src/modules/auth/auth.routes.ts` — added `requireAuth` to the logout route
 - `apps/api/src/modules/auth/auth.controller.ts` — logout handler now runs `prisma.loginLog.updateMany({ where: { userId, logoutAt: null }, data: { logoutAt: new Date() } })` before clearing the cookie (fire-and-forget, mirrors the login logging pattern)
 

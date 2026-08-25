@@ -16,6 +16,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./deploy/nginx/htpasswd:/etc/nginx/htpasswd:ro
       - certbot-webroot:/var/www/certbot:ro
       - certbot-conf:/etc/letsencrypt:ro
     depends_on:
@@ -117,6 +118,32 @@ services:
     restart: unless-stopped
     networks: [lms-network]
 
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: lms-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@marvelslice.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: "True"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [lms-network]
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: lms-portainer
+    command: -H unix:///var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    restart: unless-stopped
+    networks: [lms-network]
+
   certbot:
     build:
       context: .
@@ -137,6 +164,8 @@ volumes:
   uploads_data:
   certbot-webroot:
   certbot-conf:
+  pgadmin_data:
+  portainer_data:
 
 networks:
   lms-network:

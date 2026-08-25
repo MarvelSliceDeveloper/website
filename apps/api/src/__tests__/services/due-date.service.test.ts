@@ -28,21 +28,13 @@ describe("resolveEffectiveDueDate", () => {
 
   it("returns enrollmentDate + 0 days when daysFromEnrollment is 0", () => {
     // This is the bug fix: 0 is a valid value meaning "due on enrollment day"
-    const result = resolveEffectiveDueDate(
-      absoluteDueDate,
-      0,
-      enrollmentDate,
-    );
+    const result = resolveEffectiveDueDate(absoluteDueDate, 0, enrollmentDate);
     expect(result).not.toBeNull();
     expect(result!.toISOString()).toBe("2025-01-01T00:00:00.000Z");
   });
 
   it("returns enrollmentDate + N days when daysFromEnrollment is positive", () => {
-    const result = resolveEffectiveDueDate(
-      absoluteDueDate,
-      14,
-      enrollmentDate,
-    );
+    const result = resolveEffectiveDueDate(absoluteDueDate, 14, enrollmentDate);
     expect(result).not.toBeNull();
     expect(result!.toISOString()).toBe("2025-01-15T00:00:00.000Z");
   });
@@ -66,11 +58,7 @@ describe("resolveEffectiveDueDate", () => {
   });
 
   it("returns absoluteDueDate when enrollmentDate is null", () => {
-    const result = resolveEffectiveDueDate(
-      absoluteDueDate,
-      14,
-      null,
-    );
+    const result = resolveEffectiveDueDate(absoluteDueDate, 14, null);
     expect(result).toBe(absoluteDueDate);
   });
 
@@ -96,38 +84,22 @@ describe("getEffectiveDueDate", () => {
   const absoluteDueDate = new Date("2025-06-01T00:00:00Z");
 
   it("returns enrollmentDate + 0 days when daysFromEnrollment is 0", () => {
-    const result = getEffectiveDueDate(
-      enrollmentDate,
-      0,
-      absoluteDueDate,
-    );
+    const result = getEffectiveDueDate(enrollmentDate, 0, absoluteDueDate);
     expect(result.toISOString()).toBe("2025-01-01T00:00:00.000Z");
   });
 
   it("returns enrollmentDate + N days when daysFromEnrollment is positive", () => {
-    const result = getEffectiveDueDate(
-      enrollmentDate,
-      14,
-      absoluteDueDate,
-    );
+    const result = getEffectiveDueDate(enrollmentDate, 14, absoluteDueDate);
     expect(result.toISOString()).toBe("2025-01-15T00:00:00.000Z");
   });
 
   it("returns absoluteDueDate when daysFromEnrollment is null", () => {
-    const result = getEffectiveDueDate(
-      enrollmentDate,
-      null,
-      absoluteDueDate,
-    );
+    const result = getEffectiveDueDate(enrollmentDate, null, absoluteDueDate);
     expect(result).toBe(absoluteDueDate);
   });
 
   it("returns absoluteDueDate when enrollmentDate is null", () => {
-    const result = getEffectiveDueDate(
-      null,
-      14,
-      absoluteDueDate,
-    );
+    const result = getEffectiveDueDate(null, 14, absoluteDueDate);
     expect(result).toBe(absoluteDueDate);
   });
 

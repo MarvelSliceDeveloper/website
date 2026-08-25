@@ -55,10 +55,9 @@ export const reconcileAttendanceJob = {
             0,
             Math.floor((leftAt.getTime() - record.joinedAt.getTime()) / 1000),
           );
-          const qualified =
-            actualMs > 0 && durationSeconds >= actualMs / 2000;
+          const qualified = actualMs > 0 && durationSeconds >= actualMs / 2000;
 
-        await prisma.attendance.update({
+          await prisma.attendance.update({
             where: { id: record.id },
             data: {
               leftAt,
@@ -114,10 +113,7 @@ export const reconcileAttendanceJob = {
     if (intervalId) return;
     const actualInterval = intervalMs ?? BASE_INTERVAL;
     void this.runReconcile();
-    intervalId = setInterval(
-      () => void this.runReconcile(),
-      actualInterval,
-    );
+    intervalId = setInterval(() => void this.runReconcile(), actualInterval);
   },
 
   /** Stop the background interval poller. */

@@ -3,11 +3,7 @@
 import { useState } from "react";
 import { toast, getErrorMessage } from "@/lib/toast";
 import { api } from "@/lib/api";
-import {
-  IconPlus,
-  IconSparkles,
-  IconLoader2,
-} from "@tabler/icons-react";
+import { IconPlus, IconSparkles, IconLoader2 } from "@tabler/icons-react";
 import { FormModal } from "@/components/admin/FormModal";
 import { useAIGenerate } from "@/lib/use-ai-generate";
 import type { AIModuleContext } from "./types";
@@ -158,7 +154,9 @@ export default function AIModuleGenerator({
                 type="number"
                 value={count}
                 onChange={(e) =>
-                  setCount(Math.min(Math.max(parseInt(e.target.value) || 5, 2), 12))
+                  setCount(
+                    Math.min(Math.max(parseInt(e.target.value) || 5, 2), 12),
+                  )
                 }
                 min={2}
                 max={12}
@@ -205,9 +203,14 @@ export default function AIModuleGenerator({
                 Proposed modules — review and edit below before adding
               </p>
               {proposed.map((m, i) => (
-                <div key={i} className="space-y-1.5 rounded-md border border-border/70 bg-muted/20 p-2.5">
+                <div
+                  key={i}
+                  className="space-y-1.5 rounded-md border border-border/70 bg-muted/20 p-2.5"
+                >
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-muted">{i + 1}</span>
+                    <span className="text-[10px] font-bold text-muted">
+                      {i + 1}
+                    </span>
                     <input
                       type="text"
                       value={m.title}
@@ -222,7 +225,9 @@ export default function AIModuleGenerator({
                     />
                     <button
                       type="button"
-                      onClick={() => setProposed((prev) => prev.filter((_, pi) => pi !== i))}
+                      onClick={() =>
+                        setProposed((prev) => prev.filter((_, pi) => pi !== i))
+                      }
                       className="p-1 text-muted hover:text-danger"
                       aria-label={`Remove module ${i + 1}`}
                     >

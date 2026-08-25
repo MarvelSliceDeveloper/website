@@ -51,7 +51,9 @@ export default function AddLessonForm({
 
   const handleAiDescription = () => {
     if (!title.trim()) {
-      toast.error("Enter the lesson title first so the AI knows what to write about");
+      toast.error(
+        "Enter the lesson title first so the AI knows what to write about",
+      );
       return;
     }
     aiGenerate.mutate(

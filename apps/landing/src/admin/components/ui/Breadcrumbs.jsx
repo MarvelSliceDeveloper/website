@@ -102,7 +102,10 @@ function buildCrumbs(parts) {
       crumbs.push({ label: ent.list, path: null });
       return crumbs;
     }
-    crumbs.push({ label: ent.parentLabel || ent.list, path: ent.parent || "/admin/" + root });
+    crumbs.push({
+      label: ent.parentLabel || ent.list,
+      path: ent.parent || "/admin/" + root,
+    });
     const second = parts[1];
     if (createSlugs.has(second)) {
       crumbs.push({ label: ent.new, path: null });
@@ -122,18 +125,26 @@ function buildCrumbs(parts) {
   // Generic fallback
   return parts.map((p, i) => ({
     label: capitalize(p),
-    path: i === parts.length - 1 ? null : "/admin/" + parts.slice(0, i + 1).join("/"),
+    path:
+      i === parts.length - 1
+        ? null
+        : "/admin/" + parts.slice(0, i + 1).join("/"),
   }));
 }
 
 export default function Breadcrumbs({ className = "" }) {
   const { pathname } = useLocation();
-  const parts = pathname.split("/").filter(Boolean).filter(p => p !== "admin");
+  const parts = pathname
+    .split("/")
+    .filter(Boolean)
+    .filter((p) => p !== "admin");
   const crumbs = buildCrumbs(parts);
 
   if (crumbs.length === 0) {
     return (
-    <nav className={`flex flex-wrap items-center gap-1.5 text-xs text-neutral-500 min-w-0 ${className}`}>
+      <nav
+        className={`flex flex-wrap items-center gap-1.5 text-xs text-neutral-500 min-w-0 ${className}`}
+      >
         <span className="text-blue-600 font-medium">Dashboard</span>
         <FiChevronRight className="w-3 h-3 text-neutral-300" />
       </nav>
@@ -141,17 +152,31 @@ export default function Breadcrumbs({ className = "" }) {
   }
 
   return (
-    <nav className={`flex flex-wrap items-center gap-1.5 text-xs text-neutral-500 min-w-0 ${className}`}>
-      <Link to="/admin" className="hover:text-neutral-700 transition-colors font-medium">Dashboard</Link>
+    <nav
+      className={`flex flex-wrap items-center gap-1.5 text-xs text-neutral-500 min-w-0 ${className}`}
+    >
+      <Link
+        to="/admin"
+        className="hover:text-neutral-700 transition-colors font-medium"
+      >
+        Dashboard
+      </Link>
       {crumbs.map((c, i) => {
         const isLast = i === crumbs.length - 1;
         return (
           <span key={i} className="flex items-center gap-1.5">
             <FiChevronRight className="w-3 h-3 text-neutral-300" />
             {isLast || !c.path ? (
-              <span className="text-blue-600 font-medium truncate max-w-[200px]">{c.label}</span>
+              <span className="text-blue-600 font-medium truncate max-w-[200px]">
+                {c.label}
+              </span>
             ) : (
-              <Link to={c.path} className="hover:text-neutral-700 transition-colors truncate max-w-[150px] font-medium">{c.label}</Link>
+              <Link
+                to={c.path}
+                className="hover:text-neutral-700 transition-colors truncate max-w-[150px] font-medium"
+              >
+                {c.label}
+              </Link>
             )}
           </span>
         );

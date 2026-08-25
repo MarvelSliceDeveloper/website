@@ -1,11 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import {
-  COLORS,
-  PAYMENT_STATUS_COLORS,
-  formatINR,
-} from "@/lib/report-utils";
+import { COLORS, PAYMENT_STATUS_COLORS, formatINR } from "@/lib/report-utils";
 import type { DashboardChartData } from "@/lib/api-types";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
@@ -26,13 +22,15 @@ export default function PaymentsSection({
   const paymentStatusCounts = paymentStatusRows.map((d) => d.count);
 
   const totalStudents =
-    (data?.userRoleDistribution ?? []).find((u) => u.role === "STUDENT")?.count ??
-    0;
+    (data?.userRoleDistribution ?? []).find((u) => u.role === "STUDENT")
+      ?.count ?? 0;
   const totalRevenue = revenueVals.reduce((a, b) => a + b, 0);
   const derivedArpu =
-    data?.arpu ?? (totalStudents > 0 ? Math.round(totalRevenue / totalStudents) : 0);
+    data?.arpu ??
+    (totalStudents > 0 ? Math.round(totalRevenue / totalStudents) : 0);
   const refundRow = paymentStatusRows.find((p) => p.status === "REFUNDED");
-  const derivedRefundRate = data?.refundRate ?? (refundRow ? refundRow.count : 0);
+  const derivedRefundRate =
+    data?.refundRate ?? (refundRow ? refundRow.count : 0);
 
   return (
     <div>
@@ -48,10 +46,24 @@ export default function PaymentsSection({
             <Chart
               key={`revenue-${timeRange}-${revenueVals.join(",")}`}
               options={{
-                chart: { type: "area", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "area",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: [COLORS.success],
-                fill: { type: "gradient", gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0 } },
-                xaxis: { categories: revenueLabels, labels: { style: { colors: COLORS.muted, fontSize: "11px" } } },
+                fill: {
+                  type: "gradient",
+                  gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.3,
+                    opacityTo: 0,
+                  },
+                },
+                xaxis: {
+                  categories: revenueLabels,
+                  labels: { style: { colors: COLORS.muted, fontSize: "11px" } },
+                },
                 yaxis: {
                   labels: {
                     style: { colors: COLORS.muted, fontSize: "11px" },
@@ -59,7 +71,10 @@ export default function PaymentsSection({
                   },
                 },
                 grid: { borderColor: COLORS.grid },
-                tooltip: { theme: "light", y: { formatter: (v: number) => formatINR(v) } },
+                tooltip: {
+                  theme: "light",
+                  y: { formatter: (v: number) => formatINR(v) },
+                },
                 dataLabels: { enabled: false },
                 stroke: { width: 2 },
               }}
@@ -82,13 +97,21 @@ export default function PaymentsSection({
             <Chart
               key={`paystatus-${timeRange}-${paymentStatusCounts.join(",")}`}
               options={{
-                chart: { type: "donut", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "donut",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: paymentStatusLabels.map(
                   (s) => PAYMENT_STATUS_COLORS[s] ?? COLORS.muted,
                 ),
                 labels: paymentStatusLabels,
                 plotOptions: { pie: { donut: { size: "65%" } } },
-                legend: { position: "bottom", fontSize: "12px", labels: { colors: "var(--muted-foreground)" } },
+                legend: {
+                  position: "bottom",
+                  fontSize: "12px",
+                  labels: { colors: "var(--muted-foreground)" },
+                },
                 tooltip: { theme: "light" },
                 dataLabels: { enabled: false },
               }}
@@ -111,12 +134,19 @@ export default function PaymentsSection({
             <Chart
               key={`revpkg-${timeRange}-${revPkgVals.join(",")}`}
               options={{
-                chart: { type: "bar", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "bar",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: [COLORS.warning],
                 plotOptions: { bar: { borderRadius: 4, columnWidth: "60%" } },
                 xaxis: {
                   categories: revPkgLabels,
-                  labels: { style: { colors: COLORS.muted, fontSize: "11px" }, rotate: -20 },
+                  labels: {
+                    style: { colors: COLORS.muted, fontSize: "11px" },
+                    rotate: -20,
+                  },
                 },
                 yaxis: {
                   labels: {
@@ -125,7 +155,10 @@ export default function PaymentsSection({
                   },
                 },
                 grid: { borderColor: COLORS.grid },
-                tooltip: { theme: "light", y: { formatter: (v: number) => formatINR(v) } },
+                tooltip: {
+                  theme: "light",
+                  y: { formatter: (v: number) => formatINR(v) },
+                },
                 dataLabels: { enabled: false },
               }}
               series={[{ name: "Revenue", data: revPkgVals }]}

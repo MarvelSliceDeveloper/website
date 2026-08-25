@@ -222,27 +222,25 @@ function getOptionState(
 // Plain radio-style marker (empty ring / filled dot), no numbers, no icons —
 // matches a simple exam-style options list. Card / text handle the row
 // background + label color; ring / dot handle the radio circle itself.
-const OPTION_STATE_STYLES: Record<
-  OptionState,
-  { card: string; text: string }
-> = {
-  default: {
-    card: "border-border/60 hover:border-border",
-    text: "text-foreground",
-  },
-  selected: {
-    card: "border-primary/60 bg-primary/5",
-    text: "text-foreground",
-  },
-  correct: {
-    card: "border-[#158A5C]/30 bg-[#158A5C]/10",
-    text: "text-[#158A5C]",
-  },
-  wrong: {
-    card: "border-[#D6293A]/30 bg-[#D6293A]/10",
-    text: "text-[#D6293A]",
-  },
-};
+const OPTION_STATE_STYLES: Record<OptionState, { card: string; text: string }> =
+  {
+    default: {
+      card: "border-border/60 hover:border-border",
+      text: "text-foreground",
+    },
+    selected: {
+      card: "border-primary/60 bg-primary/5",
+      text: "text-foreground",
+    },
+    correct: {
+      card: "border-[#158A5C]/30 bg-[#158A5C]/10",
+      text: "text-[#158A5C]",
+    },
+    wrong: {
+      card: "border-[#D6293A]/30 bg-[#D6293A]/10",
+      text: "text-[#D6293A]",
+    },
+  };
 
 export default function QuizContent({
   quizData,
@@ -322,7 +320,7 @@ export default function QuizContent({
     setPhase("intro");
   };
 
-// ── Intro ────────────────────────────────────────────────────────────
+  // ── Intro ────────────────────────────────────────────────────────────
   if (phase === "intro") {
     const isOverdue = quizData.dueDate
       ? new Date(quizData.dueDate).getTime() < new Date().getTime()
@@ -485,7 +483,6 @@ export default function QuizContent({
   // ── Active (one question at a time) ─────────────────────────────────
   return (
     <div className="space-y-5">
-
       {currentQuestion && (
         <div className="space-y-4 pt-4">
           <div className="flex items-start justify-between gap-3">
@@ -506,8 +503,8 @@ export default function QuizContent({
               // flags are frequently withheld by the API before grading.
               const graded = quizSubmitted
                 ? quizResult?.answers.find(
-                  (a) => a.questionId === currentQuestion.id,
-                )
+                    (a) => a.questionId === currentQuestion.id,
+                  )
                 : undefined;
 
               return currentQuestion.options.map((opt, optIdx) => {
@@ -543,10 +540,22 @@ export default function QuizContent({
                         state === "default"
                           ? { borderColor: "#d1d5db", color: "#6b7086" }
                           : state === "selected"
-                            ? { backgroundColor: "var(--primary)", color: "#fff", borderColor: "var(--primary)" }
+                            ? {
+                                backgroundColor: "var(--primary)",
+                                color: "#fff",
+                                borderColor: "var(--primary)",
+                              }
                             : state === "correct"
-                              ? { backgroundColor: "#158A5C", color: "#fff", borderColor: "#158A5C" }
-                              : { backgroundColor: "#D6293A", color: "#fff", borderColor: "#D6293A" }
+                              ? {
+                                  backgroundColor: "#158A5C",
+                                  color: "#fff",
+                                  borderColor: "#158A5C",
+                                }
+                              : {
+                                  backgroundColor: "#D6293A",
+                                  color: "#fff",
+                                  borderColor: "#D6293A",
+                                }
                       }
                     >
                       {letter}

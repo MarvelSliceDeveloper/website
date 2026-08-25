@@ -66,8 +66,11 @@ describe("ai.service", () => {
       mockPrisma.systemSetting.upsert.mockResolvedValue({});
       await saveGeminiApiKey("AIzaSY-test-api-key-1234567890");
 
-      const encrypted = mockPrisma.systemSetting.upsert.mock.calls[0][0].update.value;
-      mockPrisma.systemSetting.findUnique.mockResolvedValue({ value: encrypted });
+      const encrypted =
+        mockPrisma.systemSetting.upsert.mock.calls[0][0].update.value;
+      mockPrisma.systemSetting.findUnique.mockResolvedValue({
+        value: encrypted,
+      });
 
       const status = await getAIStatus();
       expect(status.configured).toBe(true);
@@ -127,10 +130,13 @@ describe("ai.service", () => {
         return {};
       });
       await saveGeminiApiKey("AIzaSY-test-api-key-1234567890");
-      mockPrisma.systemSetting.findUnique.mockImplementation(async ({ where }) => {
-        if (where.key === "ai_gemini_api_key") return { value: savedEncrypted };
-        return null; // no model override → default
-      });
+      mockPrisma.systemSetting.findUnique.mockImplementation(
+        async ({ where }) => {
+          if (where.key === "ai_gemini_api_key")
+            return { value: savedEncrypted };
+          return null; // no model override → default
+        },
+      );
 
       mockGenerateContent.mockResolvedValue(
         geminiJsonResponse({
@@ -149,7 +155,9 @@ describe("ai.service", () => {
         }),
       );
 
-      const result = await generate("QUIZ", "python basics", { questionCount: 1 });
+      const result = await generate("QUIZ", "python basics", {
+        questionCount: 1,
+      });
       expect(result.type).toBe("QUIZ");
       expect(result.model).toBe(DEFAULT_AI_MODEL);
       const data = result.data as { title: string; questions: unknown[] };
@@ -169,14 +177,18 @@ describe("ai.service", () => {
         return {};
       });
       await saveGeminiApiKey("AIzaSY-test-api-key-1234567890");
-      mockPrisma.systemSetting.findUnique.mockImplementation(async ({ where }) => {
-        if (where.key === "ai_gemini_api_key") return { value: savedEncrypted };
-        return null;
-      });
+      mockPrisma.systemSetting.findUnique.mockImplementation(
+        async ({ where }) => {
+          if (where.key === "ai_gemini_api_key")
+            return { value: savedEncrypted };
+          return null;
+        },
+      );
 
       mockGenerateContent.mockResolvedValue(
         geminiJsonResponse({
-          description: "A lesson covering loop fundamentals including for, while, and comprehension syntax.",
+          description:
+            "A lesson covering loop fundamentals including for, while, and comprehension syntax.",
         }),
       );
 
@@ -193,8 +205,12 @@ describe("ai.service", () => {
       const config = mockGenerateContent.mock.calls[0][0].config;
       expect(config.systemInstruction).toContain("Python for Data Analysis");
       expect(config.systemInstruction).toContain('Module: "Control Flow"');
-      expect(config.systemInstruction).toContain("Module description: If/else, loops, and comprehensions");
-      expect(config.systemInstruction).toContain("1. Python Basics — Variables and types");
+      expect(config.systemInstruction).toContain(
+        "Module description: If/else, loops, and comprehensions",
+      );
+      expect(config.systemInstruction).toContain(
+        "1. Python Basics — Variables and types",
+      );
       expect(config.systemInstruction).toContain("2. Data Structures");
     });
 

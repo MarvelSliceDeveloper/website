@@ -17,7 +17,12 @@ async function main() {
   });
   console.log("TEMPLATES:", JSON.stringify(templates));
 
-  const uploadsDir = path.resolve(__dirname, "..", "uploads", "certificate-templates");
+  const uploadsDir = path.resolve(
+    __dirname,
+    "..",
+    "uploads",
+    "certificate-templates",
+  );
   console.log("UPLOADS DIR:", uploadsDir, "EXISTS:", fs.existsSync(uploadsDir));
   if (fs.existsSync(uploadsDir)) {
     console.log("FILES:", JSON.stringify(fs.readdirSync(uploadsDir)));

@@ -128,9 +128,7 @@ export default function SecuritySettings() {
             <IconShield size={20} />
           </div>
           <div className="flex-1">
-            <p className="font-semibold text-foreground">
-              Backup Codes
-            </p>
+            <p className="font-semibold text-foreground">Backup Codes</p>
             <p className="text-sm text-muted-foreground">
               Save these codes in a safe place. You can use them to log in if
               you lose access to your authenticator app.

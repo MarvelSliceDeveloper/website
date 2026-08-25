@@ -211,10 +211,11 @@ export default function StudentSupportPage() {
                 className={`flex ${msg.sender.role === "ADMIN" ? "justify-start" : "justify-end"}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${msg.sender.role === "ADMIN"
-                    ? "bg-card-hover text-foreground border border-border/60 rounded-tl-md"
-                    : "bg-primary text-white rounded-tr-md"
-                    }`}
+                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
+                    msg.sender.role === "ADMIN"
+                      ? "bg-card-hover text-foreground border border-border/60 rounded-tl-md"
+                      : "bg-primary text-white rounded-tr-md"
+                  }`}
                 >
                   <p className="text-[10px] font-semibold mb-1 opacity-60 uppercase tracking-wider">
                     {msg.sender.role === "ADMIN" ? "Admin" : "You"}
@@ -500,18 +501,21 @@ export default function StudentSupportPage() {
                       openTicket(t.id);
                       setShowForm(false);
                     }}
-                    className={`w-full text-left rounded-xl border-l-4 p-4 transition-all hover:-translate-y-0.5 ${BORDER_CLASSES[t.status] || "border-l-muted/20"
-                      } ${selectedTicket?.id === t.id
+                    className={`w-full text-left rounded-xl border-l-4 p-4 transition-all hover:-translate-y-0.5 ${
+                      BORDER_CLASSES[t.status] || "border-l-muted/20"
+                    } ${
+                      selectedTicket?.id === t.id
                         ? "border-primary/40 bg-primary/5 shadow-sm shadow-primary/5"
                         : "border-border/60 bg-card hover:bg-card-hover hover:border-border"
-                      }`}
+                    }`}
                   >
                     <div className="flex items-start gap-3.5">
                       <div
-                        className={`flex h-9 w-9 items-center justify-center rounded-full shrink-0 mt-0.5 ${selectedTicket?.id === t.id
-                          ? "bg-primary/20 text-primary"
-                          : "bg-primary/10 text-primary"
-                          }`}
+                        className={`flex h-9 w-9 items-center justify-center rounded-full shrink-0 mt-0.5 ${
+                          selectedTicket?.id === t.id
+                            ? "bg-primary/20 text-primary"
+                            : "bg-primary/10 text-primary"
+                        }`}
                       >
                         <IconHelp size={16} />
                       </div>

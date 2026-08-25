@@ -39,9 +39,7 @@ router.get("/packages", async (_req: AuthRequest, res: Response) => {
   } catch (error: unknown) {
     return res.status(500).json({
       error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch packages",
+        error instanceof Error ? error.message : "Failed to fetch packages",
     });
   }
 });
@@ -60,23 +58,14 @@ router.get("/batches", async (_req: AuthRequest, res: Response) => {
     return res.json({ batches });
   } catch (error: unknown) {
     return res.status(500).json({
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to fetch batches",
+      error: error instanceof Error ? error.message : "Failed to fetch batches",
     });
   }
 });
 
 router.post("/", async (req: AuthRequest, res: Response) => {
   try {
-    const {
-      title,
-      body,
-      targetType,
-      targetRole,
-      targetIds,
-    } = req.body;
+    const { title, body, targetType, targetRole, targetIds } = req.body;
 
     if (!title || typeof title !== "string" || !title.trim()) {
       return res.status(400).json({ error: "Title is required" });
@@ -93,10 +82,7 @@ router.post("/", async (req: AuthRequest, res: Response) => {
           ? targetIds
           : [];
 
-    if (
-      effectiveTargetType !== "ROLE" &&
-      effectiveTargetIds.length === 0
-    ) {
+    if (effectiveTargetType !== "ROLE" && effectiveTargetIds.length === 0) {
       return res
         .status(400)
         .json({ error: "targetIds is required for this target type" });

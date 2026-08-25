@@ -39,9 +39,9 @@ describe("Student Portal — /api/student routes", () => {
       // satisfiesRole inherits downward per ROLE_HIERARCHY:
       // ADMIN and INSTRUCTOR outrank STUDENT, so they are NOT rejected.
       const { agent: instructorAgent } = await loginAs("INSTRUCTOR");
-      expect(
-        (await instructorAgent.get("/api/student/summary")).status,
-      ).toBe(200);
+      expect((await instructorAgent.get("/api/student/summary")).status).toBe(
+        200,
+      );
 
       const { agent: adminAgent } = await loginAs("ADMIN");
       expect((await adminAgent.get("/api/student/summary")).status).toBe(200);

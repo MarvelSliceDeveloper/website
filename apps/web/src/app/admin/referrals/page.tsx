@@ -232,7 +232,10 @@ export default function AdminReferralsPage() {
               size={40}
               className="mx-auto mb-3 text-muted-foreground/40"
             />
-            <p>No referrals yet. When a student submits a referral it will appear here.</p>
+            <p>
+              No referrals yet. When a student submits a referral it will appear
+              here.
+            </p>
           </div>
         ) : filteredReferrals.length === 0 ? (
           <div className="py-12 text-center text-sm text-muted-foreground">
@@ -451,7 +454,9 @@ export default function AdminReferralsPage() {
                     min="0"
                     step="any"
                     placeholder={
-                      couponDiscountType === "PERCENTAGE" ? "e.g. 10" : "e.g. 500"
+                      couponDiscountType === "PERCENTAGE"
+                        ? "e.g. 10"
+                        : "e.g. 500"
                     }
                     value={couponDiscountValue}
                     onChange={(e) => setCouponDiscountValue(e.target.value)}
@@ -513,9 +518,7 @@ export default function AdminReferralsPage() {
             <div className="flex items-center gap-2 pt-2 border-t border-border">
               <button
                 onClick={handleSendCoupon}
-                disabled={
-                  sendCouponMutation.isPending || !couponDiscountValue
-                }
+                disabled={sendCouponMutation.isPending || !couponDiscountValue}
                 className="btn-primary text-xs py-2 disabled:opacity-40"
               >
                 {sendCouponMutation.isPending

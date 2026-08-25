@@ -94,7 +94,10 @@ function SentTab() {
               className="group flex items-start gap-3 rounded-xl border border-border/60 bg-card/50 p-4 transition-colors"
             >
               <div className="mt-0.5">
-                <NotificationIcon type={n.type || "CUSTOM_NOTIFICATION"} withContainer={false} />
+                <NotificationIcon
+                  type={n.type || "CUSTOM_NOTIFICATION"}
+                  withContainer={false}
+                />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
@@ -111,7 +114,8 @@ function SentTab() {
                 </p>
                 <p className="mt-1 text-[11px] text-muted">
                   {timeAgo(n.createdAt)} · {n.recipientCount} recipient
-                  {n.recipientCount !== 1 ? "s" : ""} · {n.targetType.replace(/_/g, " ")}
+                  {n.recipientCount !== 1 ? "s" : ""} ·{" "}
+                  {n.targetType.replace(/_/g, " ")}
                 </p>
               </div>
             </div>
@@ -122,13 +126,7 @@ function SentTab() {
   );
 }
 
-function SectionTitle({
-  title,
-  count,
-}: {
-  title: string;
-  count?: number;
-}) {
+function SectionTitle({ title, count }: { title: string; count?: number }) {
   return (
     <div className="mb-3 flex items-center gap-2">
       <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
@@ -262,16 +260,24 @@ function NotificationsTab() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-3">
-                <p className={`text-[15px] font-bold ${n.read ? "text-foreground/80" : "text-foreground"}`}>
+                <p
+                  className={`text-[15px] font-bold ${n.read ? "text-foreground/80" : "text-foreground"}`}
+                >
                   {n.title || n.type.replace(/_/g, " ")}
                 </p>
-                {!n.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary animate-pulse" />}
+                {!n.read && (
+                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary animate-pulse" />
+                )}
               </div>
-              <p className={`mt-1 text-sm leading-relaxed line-clamp-2 ${n.read ? "text-muted-foreground" : "text-foreground/90"}`}>
+              <p
+                className={`mt-1 text-sm leading-relaxed line-clamp-2 ${n.read ? "text-muted-foreground" : "text-foreground/90"}`}
+              >
                 {n.message}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-3">
-                <span className="text-[11px] text-muted">{timeAgo(n.createdAt)}</span>
+                <span className="text-[11px] text-muted">
+                  {timeAgo(n.createdAt)}
+                </span>
                 <span className="inline-flex items-center rounded-full border border-border/60 bg-card-hover/60 px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                   {n.type.replace(/_/g, " ")}
                 </span>

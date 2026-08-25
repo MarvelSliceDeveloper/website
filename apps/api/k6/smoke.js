@@ -33,12 +33,7 @@ export default function () {
   check(me, { "me status 200": (r) => r.status === 200 });
 
   // 4. Student login + authenticated enrolled courses
-  const studentLogin = login(
-    http,
-    BASE_URL,
-    "student@lms.local",
-    "student123",
-  );
+  const studentLogin = login(http, BASE_URL, "student@lms.local", "student123");
   check(studentLogin, { "student login status 200": (r) => r.status === 200 });
 
   const enrolled = http.get(`${BASE_URL}/api/courses/enrolled`, {

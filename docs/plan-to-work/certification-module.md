@@ -16,6 +16,7 @@ Add a **dedicated Certification Module** at the course level — a special modul
 ### 1. Database Changes (Prisma Schema)
 
 **Module model** — add certification flag:
+
 ```prisma
 model Module {
   ...existing fields...
@@ -24,6 +25,7 @@ model Module {
 ```
 
 **Quiz model** — add timer:
+
 ```prisma
 model Quiz {
   ...existing fields...
@@ -34,16 +36,19 @@ model Quiz {
 ### 2. Backend Changes
 
 #### A. Course Service
+
 - When creating a course, auto-create a certification module (or allow admin to designate one)
 - Ensure only ONE certification module per course
 - Certification module appears at the end of the module list (highest order)
 
 #### B. Quiz Service
+
 - Add `durationMinutes` field to quiz creation/update
 - Enforce timer on quiz attempts when `durationMinutes` is set
 - Auto-submit when time expires
 
 #### C. Certificate Completion Service
+
 - Update `getCourseContentProgress()` to check certification module separately
 - If course has a certification module:
   - Certificate issued ONLY when certification quiz is passed (60%+)
@@ -52,6 +57,7 @@ model Quiz {
   - Keep existing behavior (all modules must be completed)
 
 #### D. New API Endpoints
+
 - `POST /api/admin/courses/:courseId/certification-module` — create/get certification module
 - `PUT /api/admin/courses/:courseId/certification-module` — update certification module settings
 - `GET /api/student/courses/:courseId/certification` — get certification exam details + status
@@ -59,6 +65,7 @@ model Quiz {
 ### 3. Admin UX Changes
 
 #### Course Builder — New "Certification" Tab
+
 - Add a 4th tab: "Content" | "Sessions" | "Recordings" | **"Certification"**
 - Certification tab shows:
   - Toggle: "Enable Certification Exam" (on/off)
@@ -68,6 +75,7 @@ model Quiz {
   - Preview of what students will see
 
 #### Course Content Tab
+
 - Certification module appears at the END of the module list
 - Visually distinct (gold/amber badge, lock icon)
 - Cannot be deleted like regular modules
@@ -76,6 +84,7 @@ model Quiz {
 ### 4. Student UX Changes
 
 #### Course Content View
+
 - After completing all regular modules, show "Certification Exam" section
 - Prominent CTA: "Take Certification Exam"
 - Exam page shows:
@@ -85,6 +94,7 @@ model Quiz {
   - Submit button
 
 #### Results
+
 - Show pass/fail with score
 - If passed (60%+): Certificate auto-issued, show "Download Certificate" CTA
 - If failed: Show "Retake Exam" option (with cooldown if configured)
@@ -105,18 +115,18 @@ async function checkAndIssueCertificate(userId, courseId) {
     const quiz = await prisma.quiz.findFirst({
       where: { moduleId: certModule.id, isSpecialExam: true }
     });
-    
+
     if (!quiz) return { issued: false, reason: "No certification exam found" };
-    
+
     const attempt = await prisma.quizAttempt.findFirst({
       where: { userId, quizId: quiz.id, status: { not: "PENDING" } },
       orderBy: { percentage: "desc" }
     });
-    
+
     if (!attempt || attempt.percentage < 60) {
       return { issued: false, reason: "Certification exam not passed" };
     }
-    
+
     // Passed! Issue certificate
     await prisma.certificate.create({ ... });
     return { issued: true };
@@ -138,6 +148,7 @@ async function checkAndIssueCertificate(userId, courseId) {
 ## Files to Modify
 
 ### Backend
+
 - `apps/api/prisma/schema.prisma` — Add new fields
 - `apps/api/src/modules/courses/course.service.ts` — Certification module logic
 - `apps/api/src/modules/courses/quiz.service.ts` — Timer + duration
@@ -145,6 +156,7 @@ async function checkAndIssueCertificate(userId, courseId) {
 - `apps/api/src/modules/certificates/certificate.routes.ts` — New endpoints
 
 ### Frontend
+
 - `apps/web/src/app/admin/courses/[id]/page.tsx` — Add Certification tab
 - `apps/web/src/app/admin/courses/[id]/_components/CertificationTab.tsx` — NEW
 - `apps/web/src/app/student/_views/_comps/CertificationExamView.tsx` — NEW

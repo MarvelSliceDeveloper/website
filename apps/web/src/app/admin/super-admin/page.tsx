@@ -127,6 +127,11 @@ export default function SuperAdminPage() {
       href: "/admin/session-management",
       desc: "Monitor and terminate admin sessions (kill button)",
     },
+    {
+      label: "Version",
+      href: "/admin/version",
+      desc: "App version, build info & changelog",
+    },
   ];
 
   return (

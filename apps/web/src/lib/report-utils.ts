@@ -145,7 +145,11 @@ function drawBarChart(
       ctx.textAlign = "left";
       ctx.fillStyle = "#1f2937";
       ctx.font = "bold 11px sans-serif";
-      ctx.fillText(`${Math.round(values[i])}${suffix}`, padL + bw + 6, yPos + bh / 2 + 4);
+      ctx.fillText(
+        `${Math.round(values[i])}${suffix}`,
+        padL + bw + 6,
+        yPos + bh / 2 + 4,
+      );
     }
     return c.toDataURL("image/png");
   }
@@ -387,7 +391,10 @@ class ReportPdfBuilder {
     this.doc.setFont("helvetica", "normal");
     this.doc.setTextColor(60, 66, 82);
     lines.forEach((line) => {
-      const wrapped = this.doc.splitTextToSize(`•  ${line}`, this.pageWidth - 44);
+      const wrapped = this.doc.splitTextToSize(
+        `•  ${line}`,
+        this.pageWidth - 44,
+      );
       this.checkBreak(PAGE_BREAK_Y);
       this.doc.text(wrapped, 24, this.y);
       this.y += wrapped.length * 5 + 2;
@@ -427,7 +434,11 @@ class ReportPdfBuilder {
               ? [240, 93, 125]
               : [139, 147, 174];
         const arrow =
-          delta.direction === "up" ? "▲" : delta.direction === "down" ? "▼" : "—";
+          delta.direction === "up"
+            ? "▲"
+            : delta.direction === "down"
+              ? "▼"
+              : "—";
         this.doc.setFontSize(7.5);
         this.doc.setFont("helvetica", "bold");
         this.doc.setTextColor(badgeColor[0], badgeColor[1], badgeColor[2]);
@@ -454,7 +465,11 @@ class ReportPdfBuilder {
     this.y += h + 6;
   }
 
-  table(head: string[], body: string[][], columnStyles?: Record<number, { cellWidth: number }>) {
+  table(
+    head: string[],
+    body: string[][],
+    columnStyles?: Record<number, { cellWidth: number }>,
+  ) {
     autoTable(this.doc, {
       startY: this.y,
       head: [head],
@@ -509,10 +524,18 @@ class ReportPdfBuilder {
     this.doc.text(opts.coverTitle, 20, this.pageHeight / 2 - 10);
     this.doc.setFontSize(13);
     this.doc.setFont("helvetica", "normal");
-    this.doc.text(`Reporting Period: ${opts.periodLabel}`, 20, this.pageHeight / 2 + 5);
+    this.doc.text(
+      `Reporting Period: ${opts.periodLabel}`,
+      20,
+      this.pageHeight / 2 + 5,
+    );
 
     this.doc.setFontSize(9.5);
-    this.doc.text(`Generated on ${opts.generatedDate}`, 20, this.pageHeight - 40);
+    this.doc.text(
+      `Generated on ${opts.generatedDate}`,
+      20,
+      this.pageHeight - 40,
+    );
     this.doc.setFontSize(8);
     this.doc.text(
       "This is an automatically generated report. All figures reflect platform data as of the generation date.",

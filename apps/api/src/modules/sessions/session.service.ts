@@ -208,7 +208,9 @@ export const sessionService = {
           select: { batchId: true },
         }),
         prisma.packageEnrollmentCourse.findMany({
-          where: { enrollment: { userId: filters.studentId, status: "APPROVED" } },
+          where: {
+            enrollment: { userId: filters.studentId, status: "APPROVED" },
+          },
           select: { batchId: true },
         }),
       ]);

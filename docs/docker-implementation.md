@@ -1,7 +1,7 @@
 # Docker Deployment Guide (Production)
 
 > **Beginner-friendly.** Every command in this guide is explained so you know what
-> it does — not just *that* it works. If you'd rather run the app **without Docker**,
+> it does — not just _that_ it works. If you'd rather run the app **without Docker**,
 > see [manual-server-setup.md](manual-server-setup.md).
 
 ## What this doc covers
@@ -20,10 +20,10 @@ DigitalOcean, Hetzner, OVH, Vultr, etc.) using **Docker Compose**. It covers:
 
 Your setup uses **two domains** pointing at one server:
 
-| Domain | What it serves |
-|--------|----------------|
+| Domain                | What it serves                                       |
+| --------------------- | ---------------------------------------------------- |
 | `www.marvelslice.com` | The public marketing/landing site (Vite + React SPA) |
-| `lms.marvelslice.com` | The LMS app (Next.js web + Express API) |
+| `lms.marvelslice.com` | The LMS app (Next.js web + Express API)              |
 
 ```
                           Internet
@@ -50,16 +50,16 @@ Your setup uses **two domains** pointing at one server:
 
 Six containers are started:
 
-| Container | Runs | Listens on |
-|-----------|------|------------|
-| `nginx` | Reverse proxy + SSL termination | host 80/443 |
-| `api` | Express + Prisma API | internal 4000 |
-| `web` | Next.js app (standalone build) | internal 3000 |
-| `landing` | Static landing site via nginx | internal 80 |
-| `landing-api` | Landing contact form email server | internal 3001 |
-| `postgres` | Database | internal 5432 |
-| `redis` | Cache / realtime pub-sub | internal 6379 |
-| `certbot` | Let's Encrypt SSL renewals | none (runs periodically) |
+| Container     | Runs                              | Listens on               |
+| ------------- | --------------------------------- | ------------------------ |
+| `nginx`       | Reverse proxy + SSL termination   | host 80/443              |
+| `api`         | Express + Prisma API              | internal 4000            |
+| `web`         | Next.js app (standalone build)    | internal 3000            |
+| `landing`     | Static landing site via nginx     | internal 80              |
+| `landing-api` | Landing contact form email server | internal 3001            |
+| `postgres`    | Database                          | internal 5432            |
+| `redis`       | Cache / realtime pub-sub          | internal 6379            |
+| `certbot`     | Let's Encrypt SSL renewals        | none (runs periodically) |
 
 ## Prerequisites
 
@@ -75,10 +75,10 @@ Six containers are started:
 Log in to your DNS provider (where you bought the domain, or Cloudflare, etc.)
 and create two **A records**:
 
-| Host | Type | Value (your VPS public IP) |
-|------|------|-----------------------------|
-| `www` | A | `203.0.113.10` (your real IP) |
-| `lms` | A | `203.0.113.10` (same IP) |
+| Host  | Type | Value (your VPS public IP)    |
+| ----- | ---- | ----------------------------- |
+| `www` | A    | `203.0.113.10` (your real IP) |
+| `lms` | A    | `203.0.113.10` (same IP)      |
 
 > A **DNS A record** says "this hostname → this IP address". Both hostnames go to
 > the same VPS; nginx tells them apart by the `Host` header.
@@ -175,22 +175,22 @@ nano .env.production
 
 At minimum, replace these placeholders (the file has comments explaining each):
 
-| Key | What to put | How to generate |
-|-----|-------------|-----------------|
-| `POSTGRES_PASSWORD` | Strong DB password | `openssl rand -base64 24` |
-| `JWT_SECRET` | Random 64-char string | `openssl rand -base64 48` |
-| `CSRF_SECRET` | Random 64-char string | `openssl rand -base64 48` |
-| `NEXTAUTH_SECRET` | Random 64-char string | `openssl rand -base64 48` |
-| `TOKEN_ENCRYPTION_KEY` | Random 32-byte base64 | `openssl rand -base64 32` |
-| `MS_WEBHOOK_CLIENT_STATE` | Random 64-char string | `openssl rand -base64 48` |
-| `BREVO_API_KEY` | Your Brevo API key | from Brevo dashboard |
-| `EMAIL_FROM_EMAIL` | `noreply@lms.marvelslice.com` | — |
-| `SMTP_EMAIL` / `SMTP_PASSWORD` | Gmail SMTP for landing forms | Gmail app password |
-| `ADMIN_EMAIL` | Your admin inbox | — |
-| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | Razorpay keys | Razorpay dashboard |
-| `YOUTUBE_API_KEY` | YouTube Data API key | Google Cloud Console |
-| `IMAGE_NAME` | `your-username/lms-portal` | your GitHub repo |
-| `API_URL`, `WEB_URL`, `NEXT_PUBLIC_API_URL`, `NEXTAUTH_URL` | `https://lms.marvelslice.com` (+ `/api` for `API_URL`) | already correct |
+| Key                                                         | What to put                                            | How to generate           |
+| ----------------------------------------------------------- | ------------------------------------------------------ | ------------------------- |
+| `POSTGRES_PASSWORD`                                         | Strong DB password                                     | `openssl rand -base64 24` |
+| `JWT_SECRET`                                                | Random 64-char string                                  | `openssl rand -base64 48` |
+| `CSRF_SECRET`                                               | Random 64-char string                                  | `openssl rand -base64 48` |
+| `NEXTAUTH_SECRET`                                           | Random 64-char string                                  | `openssl rand -base64 48` |
+| `TOKEN_ENCRYPTION_KEY`                                      | Random 32-byte base64                                  | `openssl rand -base64 32` |
+| `MS_WEBHOOK_CLIENT_STATE`                                   | Random 64-char string                                  | `openssl rand -base64 48` |
+| `BREVO_API_KEY`                                             | Your Brevo API key                                     | from Brevo dashboard      |
+| `EMAIL_FROM_EMAIL`                                          | `noreply@lms.marvelslice.com`                          | —                         |
+| `SMTP_EMAIL` / `SMTP_PASSWORD`                              | Gmail SMTP for landing forms                           | Gmail app password        |
+| `ADMIN_EMAIL`                                               | Your admin inbox                                       | —                         |
+| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET`                   | Razorpay keys                                          | Razorpay dashboard        |
+| `YOUTUBE_API_KEY`                                           | YouTube Data API key                                   | Google Cloud Console      |
+| `IMAGE_NAME`                                                | `your-username/lms-portal`                             | your GitHub repo          |
+| `API_URL`, `WEB_URL`, `NEXT_PUBLIC_API_URL`, `NEXTAUTH_URL` | `https://lms.marvelslice.com` (+ `/api` for `API_URL`) | already correct           |
 
 > `openssl rand -base64 24` — generates 24 random bytes encoded as base64 text.
 > Good for passwords. The output looks like `fK3m...==`.
@@ -297,11 +297,11 @@ docker compose -f docker-compose.prod.yml exec api npx prisma db seed
 
 Default accounts (change passwords after first login!):
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | `admin@lms.local` | `admin123` |
+| Role       | Email                  | Password        |
+| ---------- | ---------------------- | --------------- |
+| Admin      | `admin@lms.local`      | `admin123`      |
 | Instructor | `instructor@lms.local` | `instructor123` |
-| Student | `student@lms.local` | `student123` |
+| Student    | `student@lms.local`    | `student123`    |
 
 ---
 
@@ -376,10 +376,10 @@ To enable it:
 1. Push the repo to GitHub (the workflow file is already there).
 2. In your repo: **Settings → Secrets and variables → Actions → New repository secret**:
 
-| Secret | Value |
-|--------|-------|
-| `VPS_HOST` | Your VPS IP (`203.0.113.10`) |
-| `VPS_USER` | `root` (or your SSH user) |
+| Secret        | Value                                                         |
+| ------------- | ------------------------------------------------------------- |
+| `VPS_HOST`    | Your VPS IP (`203.0.113.10`)                                  |
+| `VPS_USER`    | `root` (or your SSH user)                                     |
 | `VPS_SSH_KEY` | Your **private** SSH key (the content of `~/.ssh/id_ed25519`) |
 
 3. On the VPS, make sure `docker compose` can pull from GHCR. Public images need
@@ -431,32 +431,32 @@ docker run --rm -v lms-prod_uploads_data:/data -v /opt/lms/backups:/backup alpin
 
 ## Part 8 — Troubleshooting
 
-| Problem | Likely cause | Fix |
-|---------|--------------|-----|
-| `ERR_CONNECTION_REFUSED` on `https://lms.marvelslice.com` | Nginx not started / firewall | Check `docker compose ps`; open ports 80/443 in your provider's firewall |
-| `Welcome to nginx` default page | Server block mismatch | Verify DNS A records point to the VPS IP |
-| `certbot ... HTTP-01` error | Port 80 blocked | Run with bootstrap config; check firewall |
-| API returns 503 on `/health` | DB not ready/migrated | `docker compose logs api` — check `prisma db push` output |
-| Uploads fail | Volume missing permissions | `docker compose logs api`; check `uploads_data` volume exists |
-| Port 5432/6379 conflict on host | Another Postgres/Redis running | Our containers don't expose DB ports to the host; nothing conflicts |
-| Container won't start, "port already allocated" | Something on host:80/443 | `ss -tlnp | grep -E ':(80|443)'` to find the process |
+| Problem                                                   | Likely cause                   | Fix                                                                      |
+| --------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------ | ------------- | -------------------------- |
+| `ERR_CONNECTION_REFUSED` on `https://lms.marvelslice.com` | Nginx not started / firewall   | Check `docker compose ps`; open ports 80/443 in your provider's firewall |
+| `Welcome to nginx` default page                           | Server block mismatch          | Verify DNS A records point to the VPS IP                                 |
+| `certbot ... HTTP-01` error                               | Port 80 blocked                | Run with bootstrap config; check firewall                                |
+| API returns 503 on `/health`                              | DB not ready/migrated          | `docker compose logs api` — check `prisma db push` output                |
+| Uploads fail                                              | Volume missing permissions     | `docker compose logs api`; check `uploads_data` volume exists            |
+| Port 5432/6379 conflict on host                           | Another Postgres/Redis running | Our containers don't expose DB ports to the host; nothing conflicts      |
+| Container won't start, "port already allocated"           | Something on host:80/443       | `ss -tlnp                                                                | grep -E ':(80 | 443)'` to find the process |
 
 ### Key file reference
 
-| File | Purpose |
-|------|---------|
-| `docker-compose.prod.yml` | Production stack definition |
-| `docker-compose.bootstrap.yml` | One-time override for initial SSL issuance |
-| `nginx.prod.conf` | HTTPS reverse proxy (both domains) |
-| `nginx.prod.bootstrap.conf` | HTTP-only config for the first boot |
-| `.env.production.example` | Template for `.env.production` |
-| `apps/api/Dockerfile` | API image (multi-stage) |
-| `apps/api/entrypoint.sh` | Runs `prisma db push` then starts the server |
-| `apps/web/Dockerfile` | Next.js standalone image |
-| `apps/landing/Dockerfile` | Landing static image |
-| `apps/landing/Dockerfile.api` | Landing contact-form email server |
-| `apps/landing/nginx.landing.conf` | Static serving inside the landing container |
-| `.github/workflows/ci-cd.yml` | Test → build → deploy pipeline |
+| File                              | Purpose                                      |
+| --------------------------------- | -------------------------------------------- |
+| `docker-compose.prod.yml`         | Production stack definition                  |
+| `docker-compose.bootstrap.yml`    | One-time override for initial SSL issuance   |
+| `nginx.prod.conf`                 | HTTPS reverse proxy (both domains)           |
+| `nginx.prod.bootstrap.conf`       | HTTP-only config for the first boot          |
+| `.env.production.example`         | Template for `.env.production`               |
+| `apps/api/Dockerfile`             | API image (multi-stage)                      |
+| `apps/api/entrypoint.sh`          | Runs `prisma db push` then starts the server |
+| `apps/web/Dockerfile`             | Next.js standalone image                     |
+| `apps/landing/Dockerfile`         | Landing static image                         |
+| `apps/landing/Dockerfile.api`     | Landing contact-form email server            |
+| `apps/landing/nginx.landing.conf` | Static serving inside the landing container  |
+| `.github/workflows/ci-cd.yml`     | Test → build → deploy pipeline               |
 
 ## Verification checklist
 

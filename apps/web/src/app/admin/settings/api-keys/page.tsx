@@ -47,7 +47,10 @@ export default function ApiKeysPage() {
   const youtubeStatusQuery = useApiQuery<{
     configured: boolean;
     masked: string | null;
-  }>(["admin", "api-keys", "youtube-status"], "/api/admin/api-keys/youtube-status");
+  }>(
+    ["admin", "api-keys", "youtube-status"],
+    "/api/admin/api-keys/youtube-status",
+  );
   const youtubeStatus = youtubeStatusQuery.isPending
     ? null
     : (youtubeStatusQuery.data ?? { configured: false, masked: null });
@@ -283,8 +286,8 @@ export default function ApiKeysPage() {
               />
             </div>
             <p className="text-[10px] text-foreground/50">
-              The key value itself cannot be changed — generate a new key if
-              you need to rotate it.
+              The key value itself cannot be changed — generate a new key if you
+              need to rotate it.
             </p>
             <div className="flex items-center gap-2">
               <button

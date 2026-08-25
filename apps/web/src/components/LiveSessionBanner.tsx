@@ -85,9 +85,7 @@ export default function LiveSessionBanner({
 
   const pollSessions = useCallback(async () => {
     try {
-      const data = await api.get<{ sessions: LiveSession[] }>(
-        "/api/sessions",
-      );
+      const data = await api.get<{ sessions: LiveSession[] }>("/api/sessions");
       setLiveSessions(data.sessions || []);
     } catch {
       // Silent fail — banner will hide if sessions become stale
@@ -166,7 +164,9 @@ export default function LiveSessionBanner({
             <p className="text-xs font-medium opacity-90 mt-0.5 flex items-center gap-1.5">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-white/80" />
               Starts in{" "}
-              <span className="font-mono font-bold">{formatCountdown(msUntilStart)}</span>
+              <span className="font-mono font-bold">
+                {formatCountdown(msUntilStart)}
+              </span>
             </p>
           )}
         </div>
@@ -175,10 +175,11 @@ export default function LiveSessionBanner({
       <button
         onClick={handleJoin}
         disabled={!hasUrl && !onJoin}
-        className={`shrink-0 inline-flex items-center justify-center gap-2 bg-white text-slate-900 hover:bg-slate-50 font-extrabold rounded-xl px-5 py-2.5 text-sm shadow-md transition-all duration-200 active:scale-95 ${!hasUrl && !onJoin
-          ? "opacity-75 cursor-not-allowed"
-          : "cursor-pointer hover:shadow-lg hover:translate-y-[-1px]"
-          }`}
+        className={`shrink-0 inline-flex items-center justify-center gap-2 bg-white text-slate-900 hover:bg-slate-50 font-extrabold rounded-xl px-5 py-2.5 text-sm shadow-md transition-all duration-200 active:scale-95 ${
+          !hasUrl && !onJoin
+            ? "opacity-75 cursor-not-allowed"
+            : "cursor-pointer hover:shadow-lg hover:translate-y-[-1px]"
+        }`}
         title={!hasUrl ? "Meeting link pending instructor release" : undefined}
       >
         {isLive ? (

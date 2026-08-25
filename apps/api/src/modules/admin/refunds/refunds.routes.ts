@@ -90,7 +90,8 @@ router.get("/", async (req: AuthRequest, res: Response) => {
       limit: Number(req.query.limit) || undefined,
     });
 
-    const status = typeof req.query.status === "string" ? req.query.status : undefined;
+    const status =
+      typeof req.query.status === "string" ? req.query.status : undefined;
     const where = status ? { status: status as never } : {};
 
     const [items, total] = await Promise.all([
@@ -227,121 +228,129 @@ router.get("/:id", async (req: AuthRequest, res: Response) => {
  * against Razorpay. On success the refund is marked COMPLETED with the
  * Razorpay refund ID; if Razorpay rejects it, the refund is marked FAILED.
  */
-router.post("/:id/approve", requireSuperAdmin, async (req: AuthRequest, res: Response) => {
-  try {
-    const existing = await prisma.refund.findUnique({
-      where: { id: req.params.id },
-      include: { payment: true },
-    });
-
-    if (!existing) {
-      throw new AppError(404, "Refund not found");
-    }
-    if (existing.status !== "PENDING") {
-      throw new AppError(400, "Only pending refunds can be approved");
-    }
-
-    const approver = {
-      approvedById: req.user!.userId,
-      approvedAt: new Date(),
-    };
-
-    if (!existing.payment.razorpayPaymentId) {
-      const failed = await prisma.refund.update({
-        where: { id: existing.id },
-        data: {
-          ...approver,
-          status: "FAILED",
-          metadata: { error: "Payment has no Razorpay payment ID linked" },
-        },
-        include: refundInclude(),
-      });
-      return res.json(failed);
-    }
-
+router.post(
+  "/:id/approve",
+  requireSuperAdmin,
+  async (req: AuthRequest, res: Response) => {
     try {
-      const razorpay = getRazorpayInstance();
-      const rzrRefund = await razorpay.payments.refund(
-        existing.payment.razorpayPaymentId,
-        { amount: existing.amount },
-      );
+      const existing = await prisma.refund.findUnique({
+        where: { id: req.params.id },
+        include: { payment: true },
+      });
 
-      const processed = await prisma.refund.update({
-        where: { id: existing.id },
-        data: {
-          ...approver,
-          status: "COMPLETED",
-          razorpayRefundId: rzrRefund.id,
-          metadata: {
-            ...((existing.metadata as Record<string, unknown>) ?? {}),
-            razorpayRefundStatus: rzrRefund.status,
+      if (!existing) {
+        throw new AppError(404, "Refund not found");
+      }
+      if (existing.status !== "PENDING") {
+        throw new AppError(400, "Only pending refunds can be approved");
+      }
+
+      const approver = {
+        approvedById: req.user!.userId,
+        approvedAt: new Date(),
+      };
+
+      if (!existing.payment.razorpayPaymentId) {
+        const failed = await prisma.refund.update({
+          where: { id: existing.id },
+          data: {
+            ...approver,
+            status: "FAILED",
+            metadata: { error: "Payment has no Razorpay payment ID linked" },
+          },
+          include: refundInclude(),
+        });
+        return res.json(failed);
+      }
+
+      try {
+        const razorpay = getRazorpayInstance();
+        const rzrRefund = await razorpay.payments.refund(
+          existing.payment.razorpayPaymentId,
+          { amount: existing.amount },
+        );
+
+        const processed = await prisma.refund.update({
+          where: { id: existing.id },
+          data: {
+            ...approver,
+            status: "COMPLETED",
             razorpayRefundId: rzrRefund.id,
+            metadata: {
+              ...((existing.metadata as Record<string, unknown>) ?? {}),
+              razorpayRefundStatus: rzrRefund.status,
+              razorpayRefundId: rzrRefund.id,
+            },
           },
-        },
-        include: refundInclude(),
-      });
+          include: refundInclude(),
+        });
 
-      return res.json(processed);
-    } catch (razorpayErr: unknown) {
-      const failed = await prisma.refund.update({
-        where: { id: existing.id },
-        data: {
-          ...approver,
-          status: "FAILED",
-          metadata: {
-            error:
-              razorpayErr instanceof Error
-                ? razorpayErr.message
-                : "Razorpay refund request failed",
+        return res.json(processed);
+      } catch (razorpayErr: unknown) {
+        const failed = await prisma.refund.update({
+          where: { id: existing.id },
+          data: {
+            ...approver,
+            status: "FAILED",
+            metadata: {
+              error:
+                razorpayErr instanceof Error
+                  ? razorpayErr.message
+                  : "Razorpay refund request failed",
+            },
           },
-        },
-        include: refundInclude(),
-      });
+          include: refundInclude(),
+        });
 
-      return res.json(failed);
+        return res.json(failed);
+      }
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
-  } catch (err: unknown) {
-    const { statusCode, body } = handleControllerError(err, (req as any).log);
-    return res.status(statusCode).json(body);
-  }
-});
+  },
+);
 
 /**
  * Superadmin rejects a pending refund request. A rejection reason is stored
  * so the requesting admin knows why the refund was declined.
  */
-router.post("/:id/reject", requireSuperAdmin, async (req: AuthRequest, res: Response) => {
-  try {
-    const { reason } = req.body ?? {};
+router.post(
+  "/:id/reject",
+  requireSuperAdmin,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { reason } = req.body ?? {};
 
-    const existing = await prisma.refund.findUnique({
-      where: { id: req.params.id },
-    });
+      const existing = await prisma.refund.findUnique({
+        where: { id: req.params.id },
+      });
 
-    if (!existing) {
-      throw new AppError(404, "Refund not found");
+      if (!existing) {
+        throw new AppError(404, "Refund not found");
+      }
+      if (existing.status !== "PENDING") {
+        throw new AppError(400, "Only pending refunds can be rejected");
+      }
+
+      const refund = await prisma.refund.update({
+        where: { id: existing.id },
+        data: {
+          status: "REJECTED",
+          rejectionReason: reason || null,
+          approvedById: req.user!.userId,
+          approvedAt: new Date(),
+        },
+        include: refundInclude(),
+      });
+
+      return res.json(refund);
+    } catch (err: unknown) {
+      const { statusCode, body } = handleControllerError(err, (req as any).log);
+      return res.status(statusCode).json(body);
     }
-    if (existing.status !== "PENDING") {
-      throw new AppError(400, "Only pending refunds can be rejected");
-    }
-
-    const refund = await prisma.refund.update({
-      where: { id: existing.id },
-      data: {
-        status: "REJECTED",
-        rejectionReason: reason || null,
-        approvedById: req.user!.userId,
-        approvedAt: new Date(),
-      },
-      include: refundInclude(),
-    });
-
-    return res.json(refund);
-  } catch (err: unknown) {
-    const { statusCode, body } = handleControllerError(err, (req as any).log);
-    return res.status(statusCode).json(body);
-  }
-});
+  },
+);
 
 /**
  * Legacy status update — only allows an admin to cancel a pending refund

@@ -113,12 +113,18 @@ export default function WebhooksPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // One-time-reveal secret (from create or rotate). Cleared on dismiss/navigation.
-  const [revealedSecret, setRevealedSecret] = useState<{ webhookId: string; secret: string } | null>(null);
+  const [revealedSecret, setRevealedSecret] = useState<{
+    webhookId: string;
+    secret: string;
+  } | null>(null);
 
   // Which webhook's delivery log panel is expanded
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
 
-  const webhooksQuery = useApiQuery<{ webhooks: Webhook[] }>(QUERY_KEY, "/api/admin/alerting-webhooks");
+  const webhooksQuery = useApiQuery<{ webhooks: Webhook[] }>(
+    QUERY_KEY,
+    "/api/admin/alerting-webhooks",
+  );
   const webhooks = webhooksQuery.data?.webhooks ?? [];
   const loading = webhooksQuery.isPending;
 
@@ -132,12 +138,15 @@ export default function WebhooksPage() {
 
   const deliveriesQuery = useApiQuery<{ deliveries: Delivery[] }>(
     ["admin", "webhooks", expandedLogId, "deliveries"],
-    expandedLogId ? `/api/admin/alerting-webhooks/${expandedLogId}/deliveries` : "",
+    expandedLogId
+      ? `/api/admin/alerting-webhooks/${expandedLogId}/deliveries`
+      : "",
     undefined,
     { enabled: !!expandedLogId },
   );
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: QUERY_KEY });
 
   const toggleEvent = (event: string) => {
     setForm((prev) => ({
@@ -206,7 +215,8 @@ export default function WebhooksPage() {
   };
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/api/admin/alerting-webhooks/${id}`),
+    mutationFn: (id: string) =>
+      api.delete(`/api/admin/alerting-webhooks/${id}`),
     onSuccess: () => {
       toast.success("Webhook deleted");
       invalidate();
@@ -225,13 +235,17 @@ export default function WebhooksPage() {
 
   const testMutation = useMutation({
     mutationFn: (id: string) =>
-      api.post<{ statusCode: number | null; statusText: string; latencyMs: number; ok: boolean }>(
-        `/api/admin/alerting-webhooks/${id}/test`,
-        {},
-      ),
+      api.post<{
+        statusCode: number | null;
+        statusText: string;
+        latencyMs: number;
+        ok: boolean;
+      }>(`/api/admin/alerting-webhooks/${id}/test`, {}),
     onSuccess: (res) => {
       if (res.ok) {
-        toast.success(`Test delivered — ${res.statusCode} ${res.statusText} (${res.latencyMs}ms)`);
+        toast.success(
+          `Test delivered — ${res.statusCode} ${res.statusText} (${res.latencyMs}ms)`,
+        );
       } else {
         toast.error(
           res.statusCode
@@ -245,7 +259,11 @@ export default function WebhooksPage() {
   });
 
   const rotateSecretMutation = useMutation({
-    mutationFn: (id: string) => api.post<{ secret: string }>(`/api/admin/alerting-webhooks/${id}/rotate-secret`, {}),
+    mutationFn: (id: string) =>
+      api.post<{ secret: string }>(
+        `/api/admin/alerting-webhooks/${id}/rotate-secret`,
+        {},
+      ),
     onSuccess: (res, id) => {
       setRevealedSecret({ webhookId: id, secret: res.secret });
       toast.success("Secret rotated — old signing secret is now invalid");
@@ -267,7 +285,9 @@ export default function WebhooksPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Alerting Webhooks</h1>
-          <p className="text-foreground/60 mt-1">Configure webhook endpoints for system alerts</p>
+          <p className="text-foreground/60 mt-1">
+            Configure webhook endpoints for system alerts
+          </p>
         </div>
         <div className="flex gap-2">
           <button
@@ -294,7 +314,8 @@ export default function WebhooksPage() {
       {revealedSecret && (
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 space-y-2">
           <div className="flex items-center gap-2 text-amber-600 text-sm font-semibold">
-            <IconKey size={16} /> Signing secret — copy it now, it won&apos;t be shown again
+            <IconKey size={16} /> Signing secret — copy it now, it won&apos;t be
+            shown again
           </div>
           <div className="flex items-center gap-2">
             <code className="flex-1 text-xs font-mono bg-background border border-border rounded-lg px-3 py-2 overflow-x-auto">
@@ -314,17 +335,23 @@ export default function WebhooksPage() {
             </button>
           </div>
           <p className="text-xs text-foreground/50">
-            Use this to verify the <code>X-Signature</code> header (HMAC-SHA256) on incoming payloads.
+            Use this to verify the <code>X-Signature</code> header (HMAC-SHA256)
+            on incoming payloads.
           </p>
         </div>
       )}
 
       {showForm && (
         <div className="glass-card rounded-xl p-6 space-y-4">
-          <h2 className="font-semibold">{editingId ? "Edit Webhook" : "New Webhook"}</h2>
+          <h2 className="font-semibold">
+            {editingId ? "Edit Webhook" : "New Webhook"}
+          </h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="webhook-name" className="text-xs font-semibold uppercase tracking-wider text-foreground/60 block mb-1">
+              <label
+                htmlFor="webhook-name"
+                className="text-xs font-semibold uppercase tracking-wider text-foreground/60 block mb-1"
+              >
                 Name
               </label>
               <input
@@ -332,20 +359,29 @@ export default function WebhooksPage() {
                 type="text"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className={`w-full rounded-xl border bg-background px-4 py-2.5 text-sm ${formErrors.name ? "border-red-500" : "border-border"
-                  }`}
+                className={`w-full rounded-xl border bg-background px-4 py-2.5 text-sm ${
+                  formErrors.name ? "border-red-500" : "border-border"
+                }`}
                 placeholder="My Webhook"
                 aria-invalid={!!formErrors.name}
-                aria-describedby={formErrors.name ? "webhook-name-error" : undefined}
+                aria-describedby={
+                  formErrors.name ? "webhook-name-error" : undefined
+                }
               />
               {formErrors.name && (
-                <p id="webhook-name-error" className="text-xs text-red-500 mt-1">
+                <p
+                  id="webhook-name-error"
+                  className="text-xs text-red-500 mt-1"
+                >
                   {formErrors.name}
                 </p>
               )}
             </div>
             <div>
-              <label htmlFor="webhook-url" className="text-xs font-semibold uppercase tracking-wider text-foreground/60 block mb-1">
+              <label
+                htmlFor="webhook-url"
+                className="text-xs font-semibold uppercase tracking-wider text-foreground/60 block mb-1"
+              >
                 URL
               </label>
               <input
@@ -353,11 +389,14 @@ export default function WebhooksPage() {
                 type="url"
                 value={form.url}
                 onChange={(e) => setForm({ ...form, url: e.target.value })}
-                className={`w-full rounded-xl border bg-background px-4 py-2.5 text-sm ${formErrors.url ? "border-red-500" : "border-border"
-                  }`}
+                className={`w-full rounded-xl border bg-background px-4 py-2.5 text-sm ${
+                  formErrors.url ? "border-red-500" : "border-border"
+                }`}
                 placeholder="https://hooks.example.com/alert"
                 aria-invalid={!!formErrors.url}
-                aria-describedby={formErrors.url ? "webhook-url-error" : undefined}
+                aria-describedby={
+                  formErrors.url ? "webhook-url-error" : undefined
+                }
               />
               {formErrors.url && (
                 <p id="webhook-url-error" className="text-xs text-red-500 mt-1">
@@ -367,8 +406,14 @@ export default function WebhooksPage() {
             </div>
           </div>
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-foreground/60 block mb-2">Events</span>
-            <div className="flex flex-wrap gap-2" role="group" aria-label="Events to trigger this webhook">
+            <span className="text-xs font-semibold uppercase tracking-wider text-foreground/60 block mb-2">
+              Events
+            </span>
+            <div
+              className="flex flex-wrap gap-2"
+              role="group"
+              aria-label="Events to trigger this webhook"
+            >
               {eventOptions.map((event) => {
                 const selected = form.events.includes(event);
                 return (
@@ -377,20 +422,26 @@ export default function WebhooksPage() {
                     type="button"
                     aria-pressed={selected}
                     onClick={() => toggleEvent(event)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${selected
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-background text-foreground/60 border-border hover:border-primary/50"
-                      }`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                      selected
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background text-foreground/60 border-border hover:border-primary/50"
+                    }`}
                   >
                     {event}
                   </button>
                 );
               })}
             </div>
-            {formErrors.events && <p className="text-xs text-red-500 mt-1">{formErrors.events}</p>}
+            {formErrors.events && (
+              <p className="text-xs text-red-500 mt-1">{formErrors.events}</p>
+            )}
           </div>
           <div className="flex gap-2 justify-end">
-            <button onClick={resetForm} className="px-4 py-2 rounded-xl border border-border text-sm hover:bg-muted/50">
+            <button
+              onClick={resetForm}
+              className="px-4 py-2 rounded-xl border border-border text-sm hover:bg-muted/50"
+            >
               Cancel
             </button>
             <button
@@ -398,7 +449,11 @@ export default function WebhooksPage() {
               disabled={saveMutation.isPending}
               className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-60"
             >
-              {saveMutation.isPending ? "Saving..." : editingId ? "Update" : "Create"}
+              {saveMutation.isPending
+                ? "Saving..."
+                : editingId
+                  ? "Update"
+                  : "Create"}
             </button>
           </div>
         </div>
@@ -410,7 +465,9 @@ export default function WebhooksPage() {
         <div className="glass-card rounded-xl p-12 text-center">
           <IconWebhook size={40} className="mx-auto text-foreground/20 mb-3" />
           <p className="text-foreground/60">No webhooks configured</p>
-          <p className="text-sm text-foreground/40">Add a webhook to receive system alerts</p>
+          <p className="text-sm text-foreground/40">
+            Add a webhook to receive system alerts
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -421,24 +478,44 @@ export default function WebhooksPage() {
                 <div className="p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${!w.active ? "bg-foreground/10" : isUnhealthy ? "bg-red-500/10" : "bg-green-500/10"
-                        }`}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                        !w.active
+                          ? "bg-foreground/10"
+                          : isUnhealthy
+                            ? "bg-red-500/10"
+                            : "bg-green-500/10"
+                      }`}
                     >
-                      <IconBell size={20} className={!w.active ? "text-foreground/40" : isUnhealthy ? "text-red-500" : "text-green-500"} />
+                      <IconBell
+                        size={20}
+                        className={
+                          !w.active
+                            ? "text-foreground/40"
+                            : isUnhealthy
+                              ? "text-red-500"
+                              : "text-green-500"
+                        }
+                      />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-medium truncate">{w.name}</p>
                         {isUnhealthy && (
                           <span className="flex items-center gap-1 text-[10px] font-medium text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded">
-                            <IconAlertTriangle size={10} /> {w.consecutiveFailures} failures in a row
+                            <IconAlertTriangle size={10} />{" "}
+                            {w.consecutiveFailures} failures in a row
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-foreground/60 font-mono truncate max-w-sm">{w.url}</p>
+                      <p className="text-xs text-foreground/60 font-mono truncate max-w-sm">
+                        {w.url}
+                      </p>
                       <div className="flex gap-1.5 mt-1 flex-wrap">
                         {w.events.map((e) => (
-                          <span key={e} className="px-2 py-0.5 bg-primary/5 text-primary rounded text-[10px] font-medium">
+                          <span
+                            key={e}
+                            className="px-2 py-0.5 bg-primary/5 text-primary rounded text-[10px] font-medium"
+                          >
                             {e}
                           </span>
                         ))}
@@ -449,13 +526,18 @@ export default function WebhooksPage() {
                     <button
                       onClick={() => handleToggleActive(w)}
                       disabled={saveMutation.isPending}
-                      className={`text-xs px-2 py-1 rounded-lg font-medium disabled:opacity-60 ${w.active ? "bg-green-500/10 text-green-500" : "bg-foreground/10 text-foreground/40"
-                        }`}
+                      className={`text-xs px-2 py-1 rounded-lg font-medium disabled:opacity-60 ${
+                        w.active
+                          ? "bg-green-500/10 text-green-500"
+                          : "bg-foreground/10 text-foreground/40"
+                      }`}
                     >
                       {w.active ? "Active" : "Disabled"}
                     </button>
                     <button
-                      onClick={() => setExpandedLogId(expandedLogId === w.id ? null : w.id)}
+                      onClick={() =>
+                        setExpandedLogId(expandedLogId === w.id ? null : w.id)
+                      }
                       aria-label={`View delivery history for ${w.name}`}
                       aria-expanded={expandedLogId === w.id}
                       className="text-sm px-2 py-1.5 rounded-lg border border-border hover:bg-muted/50 flex items-center gap-1"
@@ -467,7 +549,8 @@ export default function WebhooksPage() {
                       disabled={testMutation.isPending}
                       className="text-sm px-2 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 flex items-center gap-1 disabled:opacity-60"
                     >
-                      <IconSend size={14} /> {testMutation.isPending ? "Sending..." : "Test"}
+                      <IconSend size={14} />{" "}
+                      {testMutation.isPending ? "Sending..." : "Test"}
                     </button>
                     <button
                       onClick={() => rotateSecretMutation.mutate(w.id)}
@@ -477,7 +560,10 @@ export default function WebhooksPage() {
                     >
                       <IconKey size={14} />
                     </button>
-                    <button onClick={() => handleEdit(w)} className="text-sm px-2 py-1.5 rounded-lg border border-border hover:bg-muted/50">
+                    <button
+                      onClick={() => handleEdit(w)}
+                      className="text-sm px-2 py-1.5 rounded-lg border border-border hover:bg-muted/50"
+                    >
                       Edit
                     </button>
                     <button
@@ -494,9 +580,13 @@ export default function WebhooksPage() {
                 {expandedLogId === w.id && (
                   <div className="border-t border-border bg-muted/20 px-4 py-3">
                     {deliveriesQuery.isPending ? (
-                      <p className="text-xs text-foreground/50">Loading delivery history...</p>
+                      <p className="text-xs text-foreground/50">
+                        Loading delivery history...
+                      </p>
                     ) : (deliveriesQuery.data?.deliveries.length ?? 0) === 0 ? (
-                      <p className="text-xs text-foreground/50">No deliveries yet.</p>
+                      <p className="text-xs text-foreground/50">
+                        No deliveries yet.
+                      </p>
                     ) : (
                       <table className="w-full text-xs">
                         <thead>
@@ -509,14 +599,27 @@ export default function WebhooksPage() {
                         </thead>
                         <tbody>
                           {deliveriesQuery.data!.deliveries.map((d) => (
-                            <tr key={d.id} className="border-t border-border/50">
+                            <tr
+                              key={d.id}
+                              className="border-t border-border/50"
+                            >
                               <td className="py-1.5 font-mono">{d.event}</td>
-                              <td className={`py-1.5 font-medium ${d.ok ? "text-green-500" : "text-red-500"}`}>
+                              <td
+                                className={`py-1.5 font-medium ${d.ok ? "text-green-500" : "text-red-500"}`}
+                              >
                                 {d.statusCode ?? "no response"}
-                                {d.error && <span className="text-foreground/40 font-normal ml-1">— {d.error}</span>}
+                                {d.error && (
+                                  <span className="text-foreground/40 font-normal ml-1">
+                                    — {d.error}
+                                  </span>
+                                )}
                               </td>
-                              <td className="py-1.5 text-foreground/60">{d.latencyMs != null ? `${d.latencyMs}ms` : "—"}</td>
-                              <td className="py-1.5 text-foreground/60">{new Date(d.createdAt).toLocaleString()}</td>
+                              <td className="py-1.5 text-foreground/60">
+                                {d.latencyMs != null ? `${d.latencyMs}ms` : "—"}
+                              </td>
+                              <td className="py-1.5 text-foreground/60">
+                                {new Date(d.createdAt).toLocaleString()}
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -532,7 +635,10 @@ export default function WebhooksPage() {
 
       <div className="text-xs text-foreground/40">
         <p>Available events: {eventOptions.join(", ")}</p>
-        <p>Webhooks receive POST requests with a JSON payload and an X-Signature header (HMAC-SHA256 of the body using your signing secret).</p>
+        <p>
+          Webhooks receive POST requests with a JSON payload and an X-Signature
+          header (HMAC-SHA256 of the body using your signing secret).
+        </p>
       </div>
     </div>
   );

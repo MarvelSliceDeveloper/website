@@ -15,10 +15,7 @@ import { z } from "zod";
 import { AppError } from "../../utils/errors";
 import { UserRole } from "@lms/types";
 import { emailService } from "../../services/email.service";
-import {
-  RegisterSchema,
-  LoginSchema,
-} from "@lms/config";
+import { RegisterSchema, LoginSchema } from "@lms/config";
 
 const JWT_EXPIRY = process.env.JWT_EXPIRY || "7d";
 
@@ -66,7 +63,10 @@ export const authService = {
     return this.generateTokens({ ...user, name: user.name });
   },
 
-  async login(data: z.infer<typeof LoginSchema>, context?: { ip?: string; userAgent?: string }) {
+  async login(
+    data: z.infer<typeof LoginSchema>,
+    context?: { ip?: string; userAgent?: string },
+  ) {
     const { email, password } = data;
 
     // Use case-insensitive lookup so logins are resilient to email casing
@@ -108,7 +108,12 @@ export const authService = {
         return {
           requires2fa: true as const,
           tempToken,
-          user: { userId: user.id, email: user.email, name: user.name, role: user.role },
+          user: {
+            userId: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          },
         };
       }
     }
@@ -138,7 +143,8 @@ export const authService = {
     ip?: string;
     userAgent?: string;
   }) {
-    const isAdmin = user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN;
+    const isAdmin =
+      user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN;
     let sessionId: string | undefined;
 
     if (isAdmin) {

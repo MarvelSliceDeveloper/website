@@ -103,9 +103,7 @@ export default function AdminEmailTemplatesPage() {
 
   const previewMutation = useMutation({
     mutationFn: (id: string) =>
-      api.post<{ html: string }>(
-        `/api/admin/email-templates/${id}/preview`,
-      ),
+      api.post<{ html: string }>(`/api/admin/email-templates/${id}/preview`),
     onSuccess: (data) => {
       setPreviewHtml(data.html);
     },
@@ -134,7 +132,9 @@ export default function AdminEmailTemplatesPage() {
       <AdminPageHeader
         title="Email Templates"
         description="Manage email templates for automated notifications."
-        breadcrumbs={[{ label: "Email Templates", href: "/admin/email-templates" }]}
+        breadcrumbs={[
+          { label: "Email Templates", href: "/admin/email-templates" },
+        ]}
         action={
           <div className="flex items-center gap-2">
             <button
@@ -261,7 +261,10 @@ export default function AdminEmailTemplatesPage() {
                     ? "Create Template"
                     : "Save Changes"}
               </button>
-              <button onClick={cancelEdit} className="btn-secondary text-xs py-2">
+              <button
+                onClick={cancelEdit}
+                className="btn-secondary text-xs py-2"
+              >
                 Cancel
               </button>
             </div>

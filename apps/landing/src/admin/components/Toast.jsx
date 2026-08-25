@@ -22,10 +22,15 @@ function ToastItem({ t, onDone }) {
 
   const Icon = icons[t.type];
   return (
-    <div className={`flex items-center gap-2.5 px-4 py-3 rounded-lg border-l-4 shadow-lg text-sm font-medium animate-in slide-in-from-top ${styles[t.type]}`}>
+    <div
+      className={`flex items-center gap-2.5 px-4 py-3 rounded-lg border-l-4 shadow-lg text-sm font-medium animate-in slide-in-from-top ${styles[t.type]}`}
+    >
       <Icon className="w-4 h-4 shrink-0" />
       <span className="flex-1">{t.message}</span>
-      <button onClick={onDone} className="p-0.5 opacity-60 hover:opacity-100 transition-opacity">
+      <button
+        onClick={onDone}
+        className="p-0.5 opacity-60 hover:opacity-100 transition-opacity"
+      >
         <FiX className="w-3.5 h-3.5" />
       </button>
     </div>
@@ -41,7 +46,9 @@ export function ToastContainer() {
 
   useEffect(() => {
     addToastFn = add;
-    return () => { addToastFn = null; };
+    return () => {
+      addToastFn = null;
+    };
   }, [add]);
 
   const remove = useCallback((id) => {

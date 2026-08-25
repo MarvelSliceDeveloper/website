@@ -20,16 +20,19 @@ onboardingRouter.patch(
 
     const { phone, timezone, address, state, country } = req.body;
 
-    const required: Record<string, string> = { phone, timezone, address, state, country };
+    const required: Record<string, string> = {
+      phone,
+      timezone,
+      address,
+      state,
+      country,
+    };
     const missing = Object.entries(required)
       .filter(([, value]) => typeof value !== "string" || !value.trim())
       .map(([key]) => key);
 
     if (missing.length > 0) {
-      throw new AppError(
-        400,
-        `Missing required fields: ${missing.join(", ")}`,
-      );
+      throw new AppError(400, `Missing required fields: ${missing.join(", ")}`);
     }
 
     const user = await prisma.user.update({

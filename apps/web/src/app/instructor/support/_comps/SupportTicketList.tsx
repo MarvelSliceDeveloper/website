@@ -42,7 +42,7 @@ export default function SupportTicketList({
       .then((data) => {
         setTickets(data.tickets || []);
       })
-      .catch(() => { })
+      .catch(() => {})
       .finally(() => {
         setLoading(false);
       });
@@ -92,10 +92,11 @@ export default function SupportTicketList({
           <button
             key={key}
             onClick={() => setActiveTab(key)}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === key
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === key
                 ? "border-primary text-primary-hover"
                 : "border-transparent text-muted hover:text-foreground"
-              }`}
+            }`}
           >
             {label}
             <span className="text-xs text-muted-foreground/60">

@@ -1,16 +1,16 @@
-import { useState, useRef, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
-import { FiUpload, FiX, FiCopy, FiLink } from 'react-icons/fi';
+import { useState, useRef, useEffect } from "react";
+import { supabase } from "../../lib/supabaseClient";
+import { FiUpload, FiX, FiCopy, FiLink } from "react-icons/fi";
 
 export default function ImageUploader({
-  bucket = 'course-thumbnails',
-  value = '',
+  bucket = "course-thumbnails",
+  value = "",
   onChange,
 }) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(value);
   const [showUrlInput, setShowUrlInput] = useState(false);
-  const [uploadError, setUploadError] = useState('');
+  const [uploadError, setUploadError] = useState("");
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export default function ImageUploader({
     if (!file) return;
 
     setUploading(true);
-    setUploadError('');
+    setUploadError("");
     const filePath = `${Date.now()}-${file.name}`;
 
     const { error } = await supabase.storage
@@ -56,10 +56,10 @@ export default function ImageUploader({
   }
 
   function remove() {
-    setPreview('');
-    onChange('');
+    setPreview("");
+    onChange("");
     setShowUrlInput(false);
-    if (inputRef.current) inputRef.current.value = '';
+    if (inputRef.current) inputRef.current.value = "";
   }
 
   return (
@@ -67,7 +67,7 @@ export default function ImageUploader({
       <div className="flex items-center gap-3 flex-wrap">
         <label className="cursor-pointer flex items-center gap-2 bg-admin-100 hover:bg-admin-200 text-sm px-4 py-2 rounded-md transition-colors">
           <FiUpload className="w-4 h-4" />
-          {uploading ? 'Uploading...' : 'Upload'}
+          {uploading ? "Uploading..." : "Upload"}
           <input
             ref={inputRef}
             type="file"
@@ -81,7 +81,9 @@ export default function ImageUploader({
           type="button"
           onClick={() => setShowUrlInput(!showUrlInput)}
           className={`flex items-center gap-1 text-sm px-3 py-2 rounded-md transition-colors ${
-            showUrlInput ? 'bg-admin-500/10 text-admin-500' : 'text-admin-500 hover:text-admin-500'
+            showUrlInput
+              ? "bg-admin-500/10 text-admin-500"
+              : "text-admin-500 hover:text-admin-500"
           }`}
           title="Paste image URL"
         >
@@ -121,7 +123,7 @@ export default function ImageUploader({
           )}
           <input
             type="text"
-            value={value || ''}
+            value={value || ""}
             onChange={(e) => handleUrlChange(e.target.value)}
             placeholder="Paste image URL here..."
             className="w-full px-3 py-2 border border-admin-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-admin-500"

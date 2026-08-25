@@ -802,7 +802,9 @@ export const notificationService = {
       where: {
         role: "INTERN",
         deletedAt: null,
-        ...(session.targetFieldId ? { internFieldId: session.targetFieldId } : {}),
+        ...(session.targetFieldId
+          ? { internFieldId: session.targetFieldId }
+          : {}),
       },
       select: { id: true, email: true, name: true },
     });
@@ -841,7 +843,8 @@ export const notificationService = {
   /**
    * Notify a student when their assignment is graded.
    */
-  async notifyAssignmentGraded(submissionId: string) {    const submission = await prisma.assignmentSubmission.findUnique({
+  async notifyAssignmentGraded(submissionId: string) {
+    const submission = await prisma.assignmentSubmission.findUnique({
       where: { id: submissionId },
       include: {
         assignment: { select: { title: true } },

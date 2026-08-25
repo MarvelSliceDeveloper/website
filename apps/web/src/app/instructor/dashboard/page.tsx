@@ -112,9 +112,9 @@ export default function InstructorDashboardPage() {
       const results = await Promise.allSettled(
         assignments.map((assignment) =>
           api
-            .get<{ submissions: SubmissionRecord[] }>(
-              `/api/assignments/${assignment.id}/submissions`,
-            )
+            .get<{
+              submissions: SubmissionRecord[];
+            }>(`/api/assignments/${assignment.id}/submissions`)
             .then((res) =>
               (res.submissions || [])
                 .filter((sub) => sub.status === "PENDING")
@@ -163,10 +163,7 @@ export default function InstructorDashboardPage() {
 
   const totalStudents = useMemo(
     () =>
-      batches.reduce(
-        (sum, batch) => sum + (batch._count?.enrollments ?? 0),
-        0,
-      ),
+      batches.reduce((sum, batch) => sum + (batch._count?.enrollments ?? 0), 0),
     [batches],
   );
 
@@ -236,7 +233,9 @@ export default function InstructorDashboardPage() {
           },
           {
             label: "Pending Submissions",
-            value: submissionsQuery.isPending ? undefined : stats.pendingAssignments,
+            value: submissionsQuery.isPending
+              ? undefined
+              : stats.pendingAssignments,
             icon: IconClipboardList,
             color: "amber",
           },
@@ -249,7 +248,8 @@ export default function InstructorDashboardPage() {
                 </p>
                 <p className="text-3xl font-bold text-foreground">
                   {loading || stat.value === undefined ? "\u2014" : stat.value}
-                </p>              </div>
+                </p>{" "}
+              </div>
               <div
                 className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${iconBg[stat.color]} group-hover:scale-110 transition-transform`}
               >
@@ -320,7 +320,7 @@ export default function InstructorDashboardPage() {
                           ? session.course.title
                           : session.batch
                             ? `${session.batch.course?.title ?? "Course"} · ${session.batch.name}`
-                            : session.title ?? "Session"}
+                            : (session.title ?? "Session")}
                       </p>
                     </div>
                   </div>

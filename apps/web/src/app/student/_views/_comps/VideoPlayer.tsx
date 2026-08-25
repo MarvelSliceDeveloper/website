@@ -55,10 +55,7 @@ interface SafePlyrProps {
   initialTime?: number;
 }
 
-type ProgressCallback = (
-  watchedSeconds: number,
-  completed?: boolean,
-) => void;
+type ProgressCallback = (watchedSeconds: number, completed?: boolean) => void;
 
 /**
  * NOTE: this component is intentionally remounted (via a `key` prop from the

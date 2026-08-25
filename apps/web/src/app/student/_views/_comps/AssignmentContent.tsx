@@ -126,8 +126,7 @@ export default function AssignmentContent({
     try {
       const { blob, filename } = await downloadFile(
         downloadTarget(questionPdfUrl),
-        (percent) =>
-          setDownload((d) => (d ? { ...d, progress: percent } : d)),
+        (percent) => setDownload((d) => (d ? { ...d, progress: percent } : d)),
       );
       setDownload((d) => ({
         progress: 100,

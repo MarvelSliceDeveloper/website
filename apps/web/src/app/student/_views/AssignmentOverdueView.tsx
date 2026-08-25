@@ -199,404 +199,405 @@ export default function AssignmentOverdueView({
         <>
           <div className="hidden md:block glass-card border border-border overflow-hidden">
             <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-border bg-card-hover">
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground w-10">
-                    #
-                  </th>
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
-                    Assignment Name
-                  </th>
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
-                    Course
-                  </th>
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
-                    Module
-                  </th>
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
-                    Due Date
-                  </th>
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
-                    Submitted
-                  </th>
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
-                    Mark
-                  </th>
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground text-right">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredItems.map((assignment, idx) => {
-                  const isPending = assignment.status === "PENDING";
-                  const canResubmit =
-                    !isPending &&
-                    new Date(assignment.dueDate).getTime() >
-                      new Date().getTime();
-                  const daysOverdue = isPending
-                    ? Math.floor(
-                        (new Date().getTime() -
-                          new Date(assignment.dueDate).getTime()) /
-                          (1000 * 60 * 60 * 24),
-                      )
-                    : 0;
-                  const isOverdue = daysOverdue > 0;
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-border bg-card-hover">
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground w-10">
+                      #
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
+                      Assignment Name
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
+                      Course
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
+                      Module
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
+                      Due Date
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
+                      Submitted
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
+                      Mark
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-foreground text-right">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredItems.map((assignment, idx) => {
+                    const isPending = assignment.status === "PENDING";
+                    const canResubmit =
+                      !isPending &&
+                      new Date(assignment.dueDate).getTime() >
+                        new Date().getTime();
+                    const daysOverdue = isPending
+                      ? Math.floor(
+                          (new Date().getTime() -
+                            new Date(assignment.dueDate).getTime()) /
+                            (1000 * 60 * 60 * 24),
+                        )
+                      : 0;
+                    const isOverdue = daysOverdue > 0;
 
-                  return (
-                    <tr
-                      key={assignment.id}
-                      className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
-                    >
-                      <td className="px-4 py-3 text-xs text-muted-foreground text-center">
-                        {idx + 1}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-blue-500/15">
-                            <IconFile size={13} className="text-blue-500" />
-                          </span>
-                          <span className="text-sm font-medium text-foreground truncate max-w-[200px]">
-                            {assignment.assignmentName}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">
-                        {assignment.courseName}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">
-                        {assignment.moduleName}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5">
-                          <IconClock
-                            size={13}
-                            className={
-                              isOverdue
-                                ? "text-danger"
-                                : isPending
-                                  ? "text-amber-400"
-                                  : "text-muted-foreground"
-                            }
-                          />
-                          <span
-                            className={`text-xs font-medium ${
-                              isOverdue
-                                ? "text-danger"
-                                : isPending
-                                  ? "text-amber-400"
-                                  : "text-muted-foreground"
-                            }`}
-                          >
-                            {isPending
-                              ? isOverdue
-                                ? `${daysOverdue}d overdue`
+                    return (
+                      <tr
+                        key={assignment.id}
+                        className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                      >
+                        <td className="px-4 py-3 text-xs text-muted-foreground text-center">
+                          {idx + 1}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-blue-500/15">
+                              <IconFile size={13} className="text-blue-500" />
+                            </span>
+                            <span className="text-sm font-medium text-foreground truncate max-w-[200px]">
+                              {assignment.assignmentName}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">
+                          {assignment.courseName}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">
+                          {assignment.moduleName}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <IconClock
+                              size={13}
+                              className={
+                                isOverdue
+                                  ? "text-danger"
+                                  : isPending
+                                    ? "text-amber-400"
+                                    : "text-muted-foreground"
+                              }
+                            />
+                            <span
+                              className={`text-xs font-medium ${
+                                isOverdue
+                                  ? "text-danger"
+                                  : isPending
+                                    ? "text-amber-400"
+                                    : "text-muted-foreground"
+                              }`}
+                            >
+                              {isPending
+                                ? isOverdue
+                                  ? `${daysOverdue}d overdue`
+                                  : new Date(
+                                      assignment.dueDate,
+                                    ).toLocaleDateString("en-IN", {
+                                      day: "numeric",
+                                      month: "short",
+                                    })
                                 : new Date(
                                     assignment.dueDate,
                                   ).toLocaleDateString("en-IN", {
                                     day: "numeric",
                                     month: "short",
-                                  })
-                              : new Date(assignment.dueDate).toLocaleDateString(
-                                  "en-IN",
-                                  {
+                                  })}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          {isPending ? (
+                            <span className="text-xs text-muted-foreground">
+                              —
+                            </span>
+                          ) : (
+                            <span className="text-xs font-medium text-emerald-400">
+                              {assignment.submittedAt
+                                ? new Date(
+                                    assignment.submittedAt,
+                                  ).toLocaleDateString("en-IN", {
                                     day: "numeric",
                                     month: "short",
-                                  },
-                                )}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        {isPending ? (
-                          <span className="text-xs text-muted-foreground">
-                            —
-                          </span>
-                        ) : (
-                          <span className="text-xs font-medium text-emerald-400">
-                            {assignment.submittedAt
-                              ? new Date(
-                                  assignment.submittedAt,
-                                ).toLocaleDateString("en-IN", {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                })
-                              : "—"}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-xs">
-                        {isPending ? (
-                          <span className="text-muted-foreground">—</span>
-                        ) : (
-                          <span className="font-semibold text-emerald-400">
-                            {assignment.grade
-                              ? assignment.totalScore != null
-                                ? `${assignment.grade} (${assignment.totalScore})`
-                                : assignment.grade
-                              : assignment.totalScore != null
-                                ? assignment.totalScore
-                                : "Submitted"}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        {isPending ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500">
-                            Pending
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">
-                            <IconCheck size={11} /> Submitted
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {assignment.courseId && navigate && (
-                            <button
-                              onClick={() =>
-                                navigate({
-                                  view: "COURSE_CONTENT",
-                                  params: {
-                                    courseId: assignment.courseId,
-                                    assignmentId: assignment.id,
-                                  },
-                                })
-                              }
-                              className="btn-ghost text-xs px-2 py-1.5"
-                              title="View in Course"
-                            >
-                              <IconExternalLink size={13} />
-                            </button>
+                                    year: "numeric",
+                                  })
+                                : "—"}
+                            </span>
                           )}
+                        </td>
+                        <td className="px-4 py-3 text-xs">
                           {isPending ? (
-                            <button
-                              onClick={() => handleOpenModal(assignment.id)}
-                              className="btn-primary text-xs px-3 py-1.5"
-                            >
-                              <IconUpload size={13} className="inline mr-1" />
-                              Submit
-                            </button>
+                            <span className="text-muted-foreground">—</span>
                           ) : (
-                            <>
+                            <span className="font-semibold text-emerald-400">
+                              {assignment.grade
+                                ? assignment.totalScore != null
+                                  ? `${assignment.grade} (${assignment.totalScore})`
+                                  : assignment.grade
+                                : assignment.totalScore != null
+                                  ? assignment.totalScore
+                                  : "Submitted"}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {isPending ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500">
+                              Pending
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">
+                              <IconCheck size={11} /> Submitted
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {assignment.courseId && navigate && (
                               <button
                                 onClick={() =>
-                                  handleDownloadSubmission(assignment)
+                                  navigate({
+                                    view: "COURSE_CONTENT",
+                                    params: {
+                                      courseId: assignment.courseId,
+                                      assignmentId: assignment.id,
+                                    },
+                                  })
                                 }
-                                className="btn-ghost text-xs px-3 py-1.5"
-                                title="Download submitted file"
+                                className="btn-ghost text-xs px-2 py-1.5"
+                                title="View in Course"
                               >
-                                <IconDownload
-                                  size={13}
-                                  className="inline mr-1"
-                                />
-                                View
+                                <IconExternalLink size={13} />
                               </button>
-                              {canResubmit && (
+                            )}
+                            {isPending ? (
+                              <button
+                                onClick={() => handleOpenModal(assignment.id)}
+                                className="btn-primary text-xs px-3 py-1.5"
+                              >
+                                <IconUpload size={13} className="inline mr-1" />
+                                Submit
+                              </button>
+                            ) : (
+                              <>
                                 <button
-                                  onClick={() => handleOpenModal(assignment.id)}
-                                  className="btn-secondary text-xs px-3 py-1.5"
-                                  title="Submit a new file (latest is kept)"
+                                  onClick={() =>
+                                    handleDownloadSubmission(assignment)
+                                  }
+                                  className="btn-ghost text-xs px-3 py-1.5"
+                                  title="Download submitted file"
                                 >
-                                  <IconUpload
+                                  <IconDownload
                                     size={13}
                                     className="inline mr-1"
                                   />
-                                  Resubmit
+                                  View
                                 </button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                                {canResubmit && (
+                                  <button
+                                    onClick={() =>
+                                      handleOpenModal(assignment.id)
+                                    }
+                                    className="btn-secondary text-xs px-3 py-1.5"
+                                    title="Submit a new file (latest is kept)"
+                                  >
+                                    <IconUpload
+                                      size={13}
+                                      className="inline mr-1"
+                                    />
+                                    Resubmit
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
 
-        <div className="md:hidden space-y-3">
-          {filteredItems.map((assignment) => {
-            const isPending = assignment.status === "PENDING";
-            const canResubmit =
-              !isPending &&
-              new Date(assignment.dueDate).getTime() >
-                new Date().getTime();
-            const daysOverdue = isPending
-              ? Math.floor(
-                  (new Date().getTime() -
-                    new Date(assignment.dueDate).getTime()) /
-                    (1000 * 60 * 60 * 24),
-                )
-              : 0;
-            const isOverdue = daysOverdue > 0;
-            return (
-              <div
-                key={assignment.id}
-                className="rounded-2xl border border-border bg-card p-4 shadow-sm"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/15">
-                      <IconFile size={16} className="text-blue-500" />
-                    </span>
-                    <p className="truncate text-sm font-semibold text-foreground">
-                      {assignment.assignmentName}
-                    </p>
+          <div className="md:hidden space-y-3">
+            {filteredItems.map((assignment) => {
+              const isPending = assignment.status === "PENDING";
+              const canResubmit =
+                !isPending &&
+                new Date(assignment.dueDate).getTime() > new Date().getTime();
+              const daysOverdue = isPending
+                ? Math.floor(
+                    (new Date().getTime() -
+                      new Date(assignment.dueDate).getTime()) /
+                      (1000 * 60 * 60 * 24),
+                  )
+                : 0;
+              const isOverdue = daysOverdue > 0;
+              return (
+                <div
+                  key={assignment.id}
+                  className="rounded-2xl border border-border bg-card p-4 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/15">
+                        <IconFile size={16} className="text-blue-500" />
+                      </span>
+                      <p className="truncate text-sm font-semibold text-foreground">
+                        {assignment.assignmentName}
+                      </p>
+                    </div>
+                    {isPending ? (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-500">
+                        Pending
+                      </span>
+                    ) : (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">
+                        <IconCheck size={11} /> Submitted
+                      </span>
+                    )}
                   </div>
-                  {isPending ? (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-500">
-                      Pending
-                    </span>
-                  ) : (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">
-                      <IconCheck size={11} /> Submitted
-                    </span>
-                  )}
-                </div>
 
-                <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5 text-xs">
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Course
-                    </p>
-                    <p className="truncate text-foreground">
-                      {assignment.courseName}
-                    </p>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Module
-                    </p>
-                    <p className="truncate text-foreground">
-                      {assignment.moduleName}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Due
-                    </p>
-                    <p
-                      className={
-                        isOverdue
-                          ? "font-semibold text-danger"
-                          : isPending
-                            ? "text-amber-400"
-                            : "text-muted-foreground"
-                      }
-                    >
-                      {isPending
-                        ? isOverdue
-                          ? `${daysOverdue}d overdue`
+                  <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5 text-xs">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Course
+                      </p>
+                      <p className="truncate text-foreground">
+                        {assignment.courseName}
+                      </p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Module
+                      </p>
+                      <p className="truncate text-foreground">
+                        {assignment.moduleName}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Due
+                      </p>
+                      <p
+                        className={
+                          isOverdue
+                            ? "font-semibold text-danger"
+                            : isPending
+                              ? "text-amber-400"
+                              : "text-muted-foreground"
+                        }
+                      >
+                        {isPending
+                          ? isOverdue
+                            ? `${daysOverdue}d overdue`
+                            : assignment.dueDate
+                              ? new Date(assignment.dueDate).toLocaleDateString(
+                                  "en-IN",
+                                  { day: "numeric", month: "short" },
+                                )
+                              : "—"
                           : assignment.dueDate
                             ? new Date(assignment.dueDate).toLocaleDateString(
                                 "en-IN",
                                 { day: "numeric", month: "short" },
                               )
-                            : "—"
-                        : assignment.dueDate
-                          ? new Date(assignment.dueDate).toLocaleDateString(
-                              "en-IN",
-                              { day: "numeric", month: "short" },
-                            )
-                          : "—"}
-                    </p>
+                            : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Submitted
+                      </p>
+                      <p className="text-foreground">
+                        {isPending
+                          ? "—"
+                          : assignment.submittedAt
+                            ? new Date(
+                                assignment.submittedAt,
+                              ).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })
+                            : "—"}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Submitted
-                    </p>
-                    <p className="text-foreground">
+
+                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/60 pt-3">
+                    <span className="text-xs text-muted-foreground">
                       {isPending
                         ? "—"
-                        : assignment.submittedAt
-                          ? new Date(
-                              assignment.submittedAt,
-                            ).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })
-                          : "—"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/60 pt-3">
-                  <span className="text-xs text-muted-foreground">
-                    {isPending
-                      ? "—"
-                      : assignment.grade
-                        ? assignment.totalScore != null
-                          ? `${assignment.grade} (${assignment.totalScore})`
-                          : assignment.grade
-                        : assignment.totalScore != null
-                          ? assignment.totalScore
-                          : "Submitted"}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    {assignment.courseId && navigate && (
-                      <button
-                        onClick={() =>
-                          navigate({
-                            view: "COURSE_CONTENT",
-                            params: {
-                              courseId: assignment.courseId,
-                              assignmentId: assignment.id,
-                            },
-                          })
-                        }
-                        className="btn-ghost px-2 py-1.5 text-xs"
-                        title="View in Course"
-                      >
-                        <IconExternalLink size={13} />
-                      </button>
-                    )}
-                    {isPending ? (
-                      <button
-                        onClick={() => handleOpenModal(assignment.id)}
-                        className="btn-primary px-3 py-1.5 text-xs"
-                      >
-                        <IconUpload size={13} className="mr-1 inline" />
-                        Submit
-                      </button>
-                    ) : (
-                      <>
+                        : assignment.grade
+                          ? assignment.totalScore != null
+                            ? `${assignment.grade} (${assignment.totalScore})`
+                            : assignment.grade
+                          : assignment.totalScore != null
+                            ? assignment.totalScore
+                            : "Submitted"}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {assignment.courseId && navigate && (
                         <button
-                          onClick={() => handleDownloadSubmission(assignment)}
-                          className="btn-ghost px-3 py-1.5 text-xs"
-                          title="Download submitted file"
+                          onClick={() =>
+                            navigate({
+                              view: "COURSE_CONTENT",
+                              params: {
+                                courseId: assignment.courseId,
+                                assignmentId: assignment.id,
+                              },
+                            })
+                          }
+                          className="btn-ghost px-2 py-1.5 text-xs"
+                          title="View in Course"
                         >
-                          <IconDownload size={13} className="mr-1 inline" />
-                          View
+                          <IconExternalLink size={13} />
                         </button>
-                        {canResubmit && (
+                      )}
+                      {isPending ? (
+                        <button
+                          onClick={() => handleOpenModal(assignment.id)}
+                          className="btn-primary px-3 py-1.5 text-xs"
+                        >
+                          <IconUpload size={13} className="mr-1 inline" />
+                          Submit
+                        </button>
+                      ) : (
+                        <>
                           <button
-                            onClick={() => handleOpenModal(assignment.id)}
-                            className="btn-secondary px-3 py-1.5 text-xs"
-                            title="Submit a new file (latest is kept)"
+                            onClick={() => handleDownloadSubmission(assignment)}
+                            className="btn-ghost px-3 py-1.5 text-xs"
+                            title="Download submitted file"
                           >
-                            <IconUpload size={13} className="mr-1 inline" />
-                            Resubmit
+                            <IconDownload size={13} className="mr-1 inline" />
+                            View
                           </button>
-                        )}
-                      </>
-                    )}
+                          {canResubmit && (
+                            <button
+                              onClick={() => handleOpenModal(assignment.id)}
+                              className="btn-secondary px-3 py-1.5 text-xs"
+                              title="Submit a new file (latest is kept)"
+                            >
+                              <IconUpload size={13} className="mr-1 inline" />
+                              Resubmit
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </> ) : (
+              );
+            })}
+          </div>
+        </>
+      ) : (
         <div className="glass-card flex flex-col items-center justify-center py-12 text-center">
           <span className="text-4xl">🎉</span>
           <p className="mt-3 font-semibold text-foreground">

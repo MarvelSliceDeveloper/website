@@ -42,38 +42,39 @@ function useCountUp(target: number, duration = 800) {
   return count;
 }
 
-const TILE_STYLES: Record<string, { bg: string; chip: string; icon: string }> = {
-  blue: {
-    bg: "bg-[radial-gradient(at_bottom_right,var(--color-brand-blue)_0%,transparent_80%)]",
-    chip: "bg-white",
-    icon: "text-brand-blue",
-  },
-  orange: {
-    bg: "bg-[radial-gradient(at_bottom_right,var(--color-brand-amber)_0%,transparent_80%)]",
-    chip: "bg-white",
-    icon: "text-brand-amber",
-  },
-  green: {
-    bg: "bg-[radial-gradient(at_bottom_right,var(--color-success)_0%,transparent_80%)]",
-    chip: "bg-white",
-    icon: "text-success",
-  },
-  indigo: {
-    bg: "bg-[radial-gradient(at_bottom_right,var(--color-brand-indigo)_0%,transparent_80%)]",
-    chip: "bg-white",
-    icon: "text-brand-indigo",
-  },
-  amber: {
-    bg: "bg-[radial-gradient(at_bottom_right,var(--color-brand-amber)_0%,transparent_80%)]",
-    chip: "bg-white",
-    icon: "text-brand-amber",
-  },
-  red: {
-    bg: "bg-[radial-gradient(at_bottom_right,var(--color-danger)_0%,transparent_80%)]",
-    chip: "bg-white",
-    icon: "text-danger",
-  },
-};
+const TILE_STYLES: Record<string, { bg: string; chip: string; icon: string }> =
+  {
+    blue: {
+      bg: "bg-[radial-gradient(at_bottom_right,var(--color-brand-blue)_0%,transparent_80%)]",
+      chip: "bg-white",
+      icon: "text-brand-blue",
+    },
+    orange: {
+      bg: "bg-[radial-gradient(at_bottom_right,var(--color-brand-amber)_0%,transparent_80%)]",
+      chip: "bg-white",
+      icon: "text-brand-amber",
+    },
+    green: {
+      bg: "bg-[radial-gradient(at_bottom_right,var(--color-success)_0%,transparent_80%)]",
+      chip: "bg-white",
+      icon: "text-success",
+    },
+    indigo: {
+      bg: "bg-[radial-gradient(at_bottom_right,var(--color-brand-indigo)_0%,transparent_80%)]",
+      chip: "bg-white",
+      icon: "text-brand-indigo",
+    },
+    amber: {
+      bg: "bg-[radial-gradient(at_bottom_right,var(--color-brand-amber)_0%,transparent_80%)]",
+      chip: "bg-white",
+      icon: "text-brand-amber",
+    },
+    red: {
+      bg: "bg-[radial-gradient(at_bottom_right,var(--color-danger)_0%,transparent_80%)]",
+      chip: "bg-white",
+      icon: "text-danger",
+    },
+  };
 
 function StatTile({ tile, index }: { tile: StudentStatTile; index: number }) {
   const count = useCountUp(tile.value);
@@ -86,7 +87,9 @@ function StatTile({ tile, index }: { tile: StudentStatTile; index: number }) {
       className={`tile-stagger group relative flex flex-col gap-3 overflow-hidden p-5 text-left rounded-2xl border border-hairline bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer ${style.bg}`}
     >
       <div className="relative z-[1] flex items-center justify-between">
-        <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${style.chip} shadow-sm ring-1 ring-black/5`}>
+        <div
+          className={`flex h-12 w-12 items-center justify-center rounded-xl ${style.chip} shadow-sm ring-1 ring-black/5`}
+        >
           <div className={`[&>svg]:size-[22px] ${style.icon}`}>{tile.icon}</div>
         </div>
         {tile.liveBadge ? (

@@ -125,7 +125,8 @@ export default function AddStudyMaterialForm({
       <div className="space-y-4">
         {lessons.length === 0 ? (
           <p className="text-xs text-muted-foreground">
-            Please add at least one lesson to this module before uploading study materials.
+            Please add at least one lesson to this module before uploading study
+            materials.
           </p>
         ) : (
           <>

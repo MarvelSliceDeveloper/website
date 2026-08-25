@@ -177,11 +177,7 @@ export default function InternAssignmentsPage() {
   const loadingTabs = tabsQuery.isPending;
 
   const addSheetMutation = useMutation({
-    mutationFn: (input: {
-      sheetId: string;
-      name?: string;
-      gid?: string;
-    }) =>
+    mutationFn: (input: { sheetId: string; name?: string; gid?: string }) =>
       api.post<{ sheets: SavedSheet[] }>(
         "/api/admin/interns/assignments/sheets",
         {
@@ -191,10 +187,9 @@ export default function InternAssignmentsPage() {
         },
       ),
     onSuccess: (res, variables) => {
-      queryClient.setQueryData(
-        ["admin", "interns", "assignments", "sheets"],
-        { sheets: res.sheets ?? [] },
-      );
+      queryClient.setQueryData(["admin", "interns", "assignments", "sheets"], {
+        sheets: res.sheets ?? [],
+      });
       const key = `${variables.sheetId}|${variables.gid || "0"}`;
       setSelectedSheetId(key);
       setShowAddSheet(false);
@@ -231,10 +226,9 @@ export default function InternAssignmentsPage() {
         `/api/admin/interns/assignments/sheets/${sheetIdValue}?gid=${encodeURIComponent(gidValue)}`,
       ),
     onSuccess: (res, variables) => {
-      queryClient.setQueryData(
-        ["admin", "interns", "assignments", "sheets"],
-        { sheets: res.sheets ?? [] },
-      );
+      queryClient.setQueryData(["admin", "interns", "assignments", "sheets"], {
+        sheets: res.sheets ?? [],
+      });
       const compositeKey = `${variables.sheetId}|${variables.gid}`;
       if (selectedSheetId === compositeKey) setSelectedSheetId(null);
     },
@@ -478,7 +472,9 @@ export default function InternAssignmentsPage() {
           <div className="mt-3 flex gap-2">
             <button
               onClick={handleAddSheet}
-              disabled={addSheetMutation.isPending || !extractSheetId(newSheetId)}
+              disabled={
+                addSheetMutation.isPending || !extractSheetId(newSheetId)
+              }
               className="btn-primary text-xs px-3 py-2"
             >
               {addSheetMutation.isPending ? "Saving..." : "Save Sheet"}

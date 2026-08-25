@@ -45,7 +45,10 @@ async function fetchCsrfToken(): Promise<string> {
     const data = await res.json();
     return data.csrfToken || "";
   } catch (err) {
-    console.warn("[api] CSRF token fetch failed (server offline or proxy error):", err);
+    console.warn(
+      "[api] CSRF token fetch failed (server offline or proxy error):",
+      err,
+    );
     return "";
   }
 }

@@ -132,7 +132,9 @@ function BatchesPageContent() {
                         </span>
                       ))
                     ) : (
-                      <span className="text-xs text-muted-foreground">No course assigned</span>
+                      <span className="text-xs text-muted-foreground">
+                        No course assigned
+                      </span>
                     )}
                   </div>
                 </div>

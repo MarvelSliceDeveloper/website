@@ -118,7 +118,8 @@ export default function AdminTagsPage() {
   const existingNames = new Set(tags.map((t) => t.name.toLowerCase()));
   const query = formName.trim().toLowerCase();
   const suggestions = SUGGESTED_TAGS.filter(
-    (t) => !existingNames.has(t.toLowerCase()) && t.toLowerCase().includes(query),
+    (t) =>
+      !existingNames.has(t.toLowerCase()) && t.toLowerCase().includes(query),
   ).slice(0, 24);
 
   return (

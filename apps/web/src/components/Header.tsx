@@ -275,7 +275,6 @@ export default function Header({
           >
             <IconLogout size={17} stroke={1.8} />
           </button>
-
         </div>
       </div>
     </header>

@@ -96,7 +96,8 @@ export const assignmentController = {
       }
       filename = filename.replace(/[^\w.-]+/g, "_").slice(0, 150);
 
-      const contentType = upstream.headers.get("content-type") ?? "application/octet-stream";
+      const contentType =
+        upstream.headers.get("content-type") ?? "application/octet-stream";
       const contentLength = upstream.headers.get("content-length");
 
       res.status(200);
@@ -107,7 +108,10 @@ export const assignmentController = {
         `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
       );
       if (contentLength) res.setHeader("Content-Length", contentLength);
-      res.setHeader("Access-Control-Expose-Headers", "Content-Length, Content-Disposition, X-Download-Filename");
+      res.setHeader(
+        "Access-Control-Expose-Headers",
+        "Content-Length, Content-Disposition, X-Download-Filename",
+      );
 
       const body = Readable.fromWeb(upstream.body as never);
       body.on("error", () => {

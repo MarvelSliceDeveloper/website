@@ -312,9 +312,7 @@ export default function InstructorCourseContentView({
             {quiz.questions.length}{" "}
             {quiz.questions.length === 1 ? "question" : "questions"}
           </span>
-          {quiz.passingScore ? (
-            <span>Pass: {quiz.passingScore}%</span>
-          ) : null}
+          {quiz.passingScore ? <span>Pass: {quiz.passingScore}%</span> : null}
           {quiz.timeLimitMin ? (
             <span>
               <IconClock size={10} className="inline mr-0.5" />
@@ -338,10 +336,7 @@ export default function InstructorCourseContentView({
       </div>
 
       {quiz.questions.map((q, qi) => (
-        <div
-          key={q.id}
-          className="rounded-xl border border-border bg-card p-5"
-        >
+        <div key={q.id} className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-start justify-between gap-3">
             <p className="text-sm font-semibold text-foreground leading-snug">
               {qi + 1}. {q.text}
@@ -535,17 +530,27 @@ export default function InstructorCourseContentView({
     }
 
     if (selectedResource) {
-      return <StudyMaterialContent name={selectedResource.name} url={selectedResource.url} />;
+      return (
+        <StudyMaterialContent
+          name={selectedResource.name}
+          url={selectedResource.url}
+        />
+      );
     }
 
     return (
       <>
         <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-card border border-border shadow-sm">
-          <VideoPlayer lesson={selectedLesson ? toCourseLesson(selectedLesson) : null} recording={null} />
+          <VideoPlayer
+            lesson={selectedLesson ? toCourseLesson(selectedLesson) : null}
+            recording={null}
+          />
         </div>
         <div className="px-1">
           <h2 className="text-base font-semibold text-foreground mt-4">
-            {selectedLesson?.title ?? selectedModule?.title ?? "Select a lesson"}
+            {selectedLesson?.title ??
+              selectedModule?.title ??
+              "Select a lesson"}
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
             {selectedLesson?.durationSeconds
@@ -698,9 +703,7 @@ export default function InstructorCourseContentView({
                             <IconClipboardCheck
                               size={12}
                               className={
-                                active
-                                  ? "text-white"
-                                  : "text-muted-foreground"
+                                active ? "text-white" : "text-muted-foreground"
                               }
                             />
                           </span>
@@ -749,9 +752,7 @@ export default function InstructorCourseContentView({
                             <IconFileSpreadsheet
                               size={12}
                               className={
-                                active
-                                  ? "text-white"
-                                  : "text-muted-foreground"
+                                active ? "text-white" : "text-muted-foreground"
                               }
                             />
                           </span>
@@ -777,9 +778,7 @@ export default function InstructorCourseContentView({
                     return (
                       <li key={practical.id} className="px-2 py-0.5">
                         <button
-                          onClick={() =>
-                            selectPractical(practical, module.id)
-                          }
+                          onClick={() => selectPractical(practical, module.id)}
                           className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
                             active
                               ? "bg-primary/10 border-primary/30 font-medium"
@@ -797,9 +796,7 @@ export default function InstructorCourseContentView({
                             <IconDeviceSpeaker
                               size={12}
                               className={
-                                active
-                                  ? "text-white"
-                                  : "text-muted-foreground"
+                                active ? "text-white" : "text-muted-foreground"
                               }
                             />
                           </span>
@@ -841,7 +838,10 @@ export default function InstructorCourseContentView({
                             >
                               <button
                                 onClick={() =>
-                                  selectResource(r.name || r.originalName, r.url)
+                                  selectResource(
+                                    r.name || r.originalName,
+                                    r.url,
+                                  )
                                 }
                                 className={`w-full flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${
                                   isActive
@@ -973,7 +973,8 @@ export default function InstructorCourseContentView({
 
   const curPos = getCurrentPosition();
   const unified = selectedModule ? buildUnifiedList(selectedModule) : [];
-  const isAtFirst = (curPos ?? 0) <= 0 && selectedModuleId === course.modules[0]?.id;
+  const isAtFirst =
+    (curPos ?? 0) <= 0 && selectedModuleId === course.modules[0]?.id;
   const isAtLast =
     (curPos ?? 0) >= unified.length - 1 &&
     selectedModuleId === course.modules[course.modules.length - 1]?.id;

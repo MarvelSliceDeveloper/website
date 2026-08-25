@@ -214,7 +214,11 @@ export interface DashboardChartData {
     enrolled: number;
     completed: number;
   }[];
-  paymentStatusDistribution: { status: string; count: number; amount: number }[];
+  paymentStatusDistribution: {
+    status: string;
+    count: number;
+    amount: number;
+  }[];
   arpu: number;
   refundRate: number;
 }

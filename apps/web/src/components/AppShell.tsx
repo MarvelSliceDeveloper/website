@@ -5,9 +5,7 @@ import Header from "./Header";
 
 interface AppShellProps {
   children: React.ReactNode;
-  sidebar: (props: {
-    collapsed: boolean;
-  }) => React.ReactNode;
+  sidebar: (props: { collapsed: boolean }) => React.ReactNode;
   inboxHref: string;
   userName?: string;
   userEmail?: string;

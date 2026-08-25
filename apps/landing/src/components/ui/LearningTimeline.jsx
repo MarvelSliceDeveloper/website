@@ -1,7 +1,7 @@
-import { useRef } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
-import * as LuIcons from 'react-icons/lu';
+import { useRef } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import * as LuIcons from "react-icons/lu";
 import {
   LuClipboardCheck,
   LuBookOpen,
@@ -12,8 +12,8 @@ import {
   LuClipboardList,
   LuShieldCheck,
   LuSparkles,
-} from 'react-icons/lu';
-import { supabase } from '../../lib/supabaseClient';
+} from "react-icons/lu";
+import { supabase } from "../../lib/supabaseClient";
 
 /* ================================================================
    FALLBACK DATA (Used if DB data is loading/empty)
@@ -21,99 +21,101 @@ import { supabase } from '../../lib/supabaseClient';
 
 const FALLBACK_STEPS = [
   {
-    number: '01',
-    title: 'Enroll',
+    number: "01",
+    title: "Enroll",
     description:
-      'Select your program and begin your journey with guided counselor support.',
-    icon: 'ClipboardCheck',
+      "Select your program and begin your journey with guided counselor support.",
+    icon: "ClipboardCheck",
   },
   {
-    number: '02',
-    title: 'Learn',
+    number: "02",
+    title: "Learn",
     description:
-      'Master concepts through live sessions, labs, and expert-led courses.',
-    icon: 'BookOpen',
+      "Master concepts through live sessions, labs, and expert-led courses.",
+    icon: "BookOpen",
   },
   {
-    number: '03',
-    title: 'Build',
+    number: "03",
+    title: "Build",
     description:
-      'Apply skills on real-world projects to build a professional portfolio.',
-    icon: 'Wrench',
+      "Apply skills on real-world projects to build a professional portfolio.",
+    icon: "Wrench",
   },
   {
-    number: '04',
-    title: 'Assess',
+    number: "04",
+    title: "Assess",
     description:
-      'Track growth through evaluations, mock interviews, and feedback.',
-    icon: 'ClipboardCheck',
+      "Track growth through evaluations, mock interviews, and feedback.",
+    icon: "ClipboardCheck",
   },
   {
-    number: '05',
-    title: 'Certify',
+    number: "05",
+    title: "Certify",
     description:
-      'Earn industry-recognized certifications that validate your expertise.',
-    icon: 'Award',
+      "Earn industry-recognized certifications that validate your expertise.",
+    icon: "Award",
   },
   {
-    number: '06',
-    title: 'Succeed',
+    number: "06",
+    title: "Succeed",
     description:
-      'Launch your career with placement support and hiring-partner connections.',
-    icon: 'Rocket',
+      "Launch your career with placement support and hiring-partner connections.",
+    icon: "Rocket",
   },
 ];
 
 const FALLBACK_FEATURES = [
   {
-    icon: 'ClipboardCheck',
-    title: 'Personalized Guidance',
-    description: 'One-on-one counselor support at every stage.',
+    icon: "ClipboardCheck",
+    title: "Personalized Guidance",
+    description: "One-on-one counselor support at every stage.",
   },
   {
-    icon: 'UserCheck',
-    title: 'Hands-on Learning',
-    description: 'Projects & labs to build real industry skills.',
+    icon: "UserCheck",
+    title: "Hands-on Learning",
+    description: "Projects & labs to build real industry skills.",
   },
   {
-    icon: 'ClipboardList',
-    title: 'Career Support',
-    description: 'Resume building, mock interviews & placements.',
+    icon: "ClipboardList",
+    title: "Career Support",
+    description: "Resume building, mock interviews & placements.",
   },
   {
-    icon: 'ShieldCheck',
-    title: 'Lifetime Access',
-    description: 'Access resources & updates even after you succeed.',
+    icon: "ShieldCheck",
+    title: "Lifetime Access",
+    description: "Access resources & updates even after you succeed.",
   },
 ];
 
 const PRESET_COLORS = [
-  { color: '#7C3AED', soft: '#f3f0ff', ring: '#ede9fe' },
-  { color: '#EC4899', soft: '#fdf2f8', ring: '#fce7f3' },
-  { color: '#F59E0B', soft: '#fffbeb', ring: '#fef3c7' },
-  { color: '#06B6D4', soft: '#ecfeff', ring: '#cffafe' },
-  { color: '#3B82F6', soft: '#eff6ff', ring: '#dbeafe' },
-  { color: '#22C55E', soft: '#f0fdf4', ring: '#dcfce7' },
+  { color: "#7C3AED", soft: "#f3f0ff", ring: "#ede9fe" },
+  { color: "#EC4899", soft: "#fdf2f8", ring: "#fce7f3" },
+  { color: "#F59E0B", soft: "#fffbeb", ring: "#fef3c7" },
+  { color: "#06B6D4", soft: "#ecfeff", ring: "#cffafe" },
+  { color: "#3B82F6", soft: "#eff6ff", ring: "#dbeafe" },
+  { color: "#22C55E", soft: "#f0fdf4", ring: "#dcfce7" },
 ];
 
 const COLOR_NAME_MAP = {
-  purple: '#7C3AED',
-  violet: '#7C3AED',
-  pink: '#EC4899',
-  orange: '#F59E0B',
-  amber: '#F59E0B',
-  cyan: '#06B6D4',
-  blue: '#3B82F6',
-  green: '#22C55E',
-  emerald: '#22C55E',
-  red: '#EF4444',
-  indigo: '#6366F1',
-  teal: '#14B8A6',
+  purple: "#7C3AED",
+  violet: "#7C3AED",
+  pink: "#EC4899",
+  orange: "#F59E0B",
+  amber: "#F59E0B",
+  cyan: "#06B6D4",
+  blue: "#3B82F6",
+  green: "#22C55E",
+  emerald: "#22C55E",
+  red: "#EF4444",
+  indigo: "#6366F1",
+  teal: "#14B8A6",
 };
 
 function resolveStepColors(step, index) {
   const preset = PRESET_COLORS[index % PRESET_COLORS.length];
-  const raw = String(step?.colorHex || step?.color || step?.accent || '').trim().toLowerCase();
+  const raw = String(step?.colorHex || step?.color || step?.accent || "")
+    .trim()
+    .toLowerCase();
 
   let color = preset.color;
 
@@ -130,14 +132,20 @@ function resolveStepColors(step, index) {
 
   return {
     color,
-    soft: (typeof step?.soft === 'string' && step.soft.startsWith('#')) ? step.soft : `${color}18`,
-    ring: (typeof step?.ring === 'string' && step.ring.startsWith('#')) ? step.ring : `${color}35`,
+    soft:
+      typeof step?.soft === "string" && step.soft.startsWith("#")
+        ? step.soft
+        : `${color}18`,
+    ring:
+      typeof step?.ring === "string" && step.ring.startsWith("#")
+        ? step.ring
+        : `${color}35`,
   };
 }
 
 function DynamicIcon({ name, fallback: Fallback, className, style }) {
   if (name) {
-    const key = name.startsWith('Lu') ? name : `Lu${name}`;
+    const key = name.startsWith("Lu") ? name : `Lu${name}`;
     const IconComp = LuIcons[key];
     if (IconComp) return <IconComp className={className} style={style} />;
   }
@@ -188,26 +196,26 @@ export default function LearningJourney({ data }) {
   const rm = useReducedMotion();
 
   const { data: fetchedTimeline } = useQuery({
-    queryKey: ['learningJourney', 'nav_pages'],
+    queryKey: ["learningJourney", "nav_pages"],
     queryFn: async () => {
       try {
         const { data: navItems } = await supabase
-          .from('nav_items')
-          .select('id')
-          .eq('path', '/services')
-          .eq('is_active', true)
+          .from("nav_items")
+          .select("id")
+          .eq("path", "/services")
+          .eq("is_active", true)
           .limit(1);
         const navItem = navItems?.[0];
         if (!navItem) return null;
         const { data: pages } = await supabase
-          .from('nav_pages')
-          .select('sections')
-          .eq('nav_item_id', navItem.id)
-          .eq('is_published', true)
+          .from("nav_pages")
+          .select("sections")
+          .eq("nav_item_id", navItem.id)
+          .eq("is_published", true)
           .limit(1);
         const page = pages?.[0];
         const sections = page?.sections || [];
-        return sections.find((s) => s.section_type === 'timeline') || null;
+        return sections.find((s) => s.section_type === "timeline") || null;
       } catch {
         return null;
       }
@@ -218,10 +226,10 @@ export default function LearningJourney({ data }) {
 
   const timelineData = data || fetchedTimeline;
 
-  const heading = timelineData?.heading || 'Your Learning Journey';
+  const heading = timelineData?.heading || "Your Learning Journey";
   const subheading =
     timelineData?.subheading ||
-    'A structured path from enrollment to career success.';
+    "A structured path from enrollment to career success.";
 
   const rawSteps = timelineData?.items?.length
     ? timelineData.items
@@ -234,11 +242,12 @@ export default function LearningJourney({ data }) {
     const colors = resolveStepColors(step, i);
     return {
       ...step,
-      number: step.number || String(i + 1).padStart(2, '0'),
+      number: step.number || String(i + 1).padStart(2, "0"),
       color: colors.color,
       soft: colors.soft,
       ring: colors.ring,
-      FallbackIcon: DEFAULT_STEP_FALLBACK_ICONS[i % DEFAULT_STEP_FALLBACK_ICONS.length],
+      FallbackIcon:
+        DEFAULT_STEP_FALLBACK_ICONS[i % DEFAULT_STEP_FALLBACK_ICONS.length],
     };
   });
 
@@ -248,7 +257,10 @@ export default function LearningJourney({ data }) {
       ...feat,
       color: colors.color,
       soft: colors.soft,
-      FallbackIcon: DEFAULT_FEATURE_FALLBACK_ICONS[i % DEFAULT_FEATURE_FALLBACK_ICONS.length],
+      FallbackIcon:
+        DEFAULT_FEATURE_FALLBACK_ICONS[
+          i % DEFAULT_FEATURE_FALLBACK_ICONS.length
+        ],
     };
   });
 
@@ -317,7 +329,14 @@ export default function LearningJourney({ data }) {
               preserveAspectRatio="none"
             >
               <defs>
-                <linearGradient id="timeline-gradient" x1={startX} y1="0" x2={endX} y2="0" gradientUnits="userSpaceOnUse">
+                <linearGradient
+                  id="timeline-gradient"
+                  x1={startX}
+                  y1="0"
+                  x2={endX}
+                  y2="0"
+                  gradientUnits="userSpaceOnUse"
+                >
                   <stop offset="0%" stopColor="#7C3AED" />
                   <stop offset="20%" stopColor="#EC4899" />
                   <stop offset="40%" stopColor="#F59E0B" />
@@ -332,7 +351,7 @@ export default function LearningJourney({ data }) {
                 initial={rm ? undefined : { pathLength: 0, opacity: 0 }}
                 whileInView={rm ? undefined : { pathLength: 1, opacity: 1 }}
                 viewport={{ once: true, amount: 0.1 }}
-                transition={{ duration: 1.0, ease: 'easeInOut' }}
+                transition={{ duration: 1.0, ease: "easeInOut" }}
                 d={`M ${startX} 20 H ${endX}`}
                 stroke="url(#timeline-gradient)"
                 strokeWidth="2.5"
@@ -344,7 +363,7 @@ export default function LearningJourney({ data }) {
                 initial={rm ? undefined : { pathLength: 0, opacity: 0 }}
                 whileInView={rm ? undefined : { pathLength: 1, opacity: 1 }}
                 viewport={{ once: true, amount: 0.1 }}
-                transition={{ duration: 1.0, delay: 0.7, ease: 'easeInOut' }}
+                transition={{ duration: 1.0, delay: 0.7, ease: "easeInOut" }}
                 d={`M ${endX} 383 H ${startX}`}
                 stroke="url(#timeline-gradient)"
                 strokeWidth="3.5"
@@ -354,7 +373,7 @@ export default function LearningJourney({ data }) {
               {/* 3. Dotted Right Connection */}
               <motion.path
                 initial={rm ? undefined : { opacity: 0 }}
-                whileInView={rm ? undefined : { opacity: 0.20 }}
+                whileInView={rm ? undefined : { opacity: 0.2 }}
                 viewport={{ once: true, amount: 0.1 }}
                 transition={{ duration: 0.6, delay: 0.6 }}
                 d={`M ${endX} 20 H 1240 C 1310 20, 1310 383, 1240 383 H ${endX}`}
@@ -381,7 +400,9 @@ export default function LearningJourney({ data }) {
                 },
               }}
               className="grid gap-6 relative z-10"
-              style={{ gridTemplateColumns: `repeat(${numSteps}, minmax(0, 1fr))` }}
+              style={{
+                gridTemplateColumns: `repeat(${numSteps}, minmax(0, 1fr))`,
+              }}
             >
               {steps.map((step, i) => (
                 <motion.div
@@ -396,7 +417,7 @@ export default function LearningJourney({ data }) {
                             y: 0,
                             scale: 1,
                             transition: {
-                              type: 'spring',
+                              type: "spring",
                               stiffness: 220,
                               damping: 18,
                             },
@@ -408,7 +429,7 @@ export default function LearningJourney({ data }) {
                   {/* Number badge */}
                   <motion.div
                     whileHover={rm ? undefined : { scale: 1.12 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 15 }}
                     className="absolute left-1/2 -translate-x-1/2 z-20 flex items-center justify-center
                                rounded-full text-white text-[12px] font-bold cursor-pointer"
                     style={{
@@ -417,7 +438,7 @@ export default function LearningJourney({ data }) {
                       height: `${BADGE_SIZE}px`,
                       backgroundColor: step.color,
                       boxShadow:
-                        '0 0 0 4px #ffffff, 0 4px 10px rgba(15,23,42,0.08)',
+                        "0 0 0 4px #ffffff, 0 4px 10px rgba(15,23,42,0.08)",
                     }}
                   >
                     {step.number}
@@ -429,15 +450,15 @@ export default function LearningJourney({ data }) {
                     style={{
                       top: `${BADGE_SIZE}px`,
                       height: `${CONNECTOR_H}px`,
-                      width: '1px',
-                      background: 'rgba(148,163,184,0.22)',
+                      width: "1px",
+                      background: "rgba(148,163,184,0.22)",
                     }}
                   />
 
                   {/* White Card */}
                   <motion.div
                     whileHover={rm ? undefined : { y: -6, scale: 1.02 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
                     className="w-full bg-white rounded-[22px] border border-[rgba(226,232,240,0.7)]
                                shadow-[0_10px_30px_rgba(15,23,42,0.055)]
                                pt-[20px] px-5 pb-6
@@ -452,15 +473,19 @@ export default function LearningJourney({ data }) {
                     {/* Icon Circle INSIDE Card */}
                     <motion.div
                       whileHover={rm ? undefined : { scale: 1.1, rotate: 4 }}
-                      transition={{ type: 'spring', stiffness: 350, damping: 15 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 350,
+                        damping: 15,
+                      }}
                       className="flex items-center justify-center rounded-full mb-3 transition-transform duration-300 shrink-0"
                       style={{
-                        width: '52px',
-                        height: '52px',
+                        width: "52px",
+                        height: "52px",
                         backgroundColor: step.soft,
                         border: `2.5px solid ${step.ring}`,
                         boxShadow:
-                          '0 0 0 3px rgba(255,255,255,0.8), 0 5px 14px rgba(15,23,42,0.05)',
+                          "0 0 0 3px rgba(255,255,255,0.8), 0 5px 14px rgba(15,23,42,0.05)",
                       }}
                     >
                       <DynamicIcon
@@ -495,14 +520,19 @@ export default function LearningJourney({ data }) {
                 initial={rm ? undefined : { scaleX: 0 }}
                 whileInView={rm ? undefined : { scaleX: 1 }}
                 viewport={{ once: true, amount: 0.1 }}
-                transition={{ duration: 1.0, delay: 0.7, ease: 'easeInOut' }}
+                transition={{ duration: 1.0, delay: 0.7, ease: "easeInOut" }}
                 className="absolute top-1/2 -translate-y-1/2 h-[3.5px] rounded-full z-0 bg-gradient-to-r from-[#7C3AED] via-[#06B6D4] to-[#22C55E] origin-right"
-                style={{ left: `${(100 / numSteps) * 0.5}%`, right: `${(100 / numSteps) * 0.5}%` }}
+                style={{
+                  left: `${(100 / numSteps) * 0.5}%`,
+                  right: `${(100 / numSteps) * 0.5}%`,
+                }}
               />
 
               <div
                 className="relative grid gap-6 z-10"
-                style={{ gridTemplateColumns: `repeat(${numSteps}, minmax(0, 1fr))` }}
+                style={{
+                  gridTemplateColumns: `repeat(${numSteps}, minmax(0, 1fr))`,
+                }}
               >
                 {steps.map((step, i) => (
                   <div
@@ -517,7 +547,7 @@ export default function LearningJourney({ data }) {
                         rm
                           ? { duration: 0.3 }
                           : {
-                              type: 'spring',
+                              type: "spring",
                               stiffness: 300,
                               damping: 16,
                               delay: (numSteps - 1 - i) * 0.12 + 0.8,
@@ -567,7 +597,7 @@ export default function LearningJourney({ data }) {
                   whileInView={rm ? undefined : { scale: 1, opacity: 1 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{
-                    type: 'spring',
+                    type: "spring",
                     stiffness: 340,
                     damping: 18,
                     delay: i * 0.08 + 0.05,
@@ -600,7 +630,12 @@ export default function LearningJourney({ data }) {
                       initial={rm ? undefined : { scale: 0.8 }}
                       whileInView={rm ? undefined : { scale: 1 }}
                       viewport={{ once: true, amount: 0.2 }}
-                      transition={{ type: 'spring', stiffness: 300, damping: 15, delay: i * 0.08 + 0.15 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 15,
+                        delay: i * 0.08 + 0.15,
+                      }}
                       className="flex items-center justify-center rounded-full shrink-0 w-8 h-8 sm:w-9 sm:h-9 transition-transform duration-300 group-hover:scale-105"
                       style={{
                         backgroundColor: step.soft,
@@ -616,7 +651,10 @@ export default function LearningJourney({ data }) {
                     </motion.div>
 
                     {/* Step Title */}
-                    <h3 className="font-bold text-base sm:text-lg leading-snug truncate" style={{ color: step.color }}>
+                    <h3
+                      className="font-bold text-base sm:text-lg leading-snug truncate"
+                      style={{ color: step.color }}
+                    >
                       {step.title}
                     </h3>
                   </div>
@@ -659,13 +697,13 @@ export default function LearningJourney({ data }) {
                   }}
                   whileHover={rm ? undefined : { y: -2 }}
                   className={`flex items-start gap-3.5 sm:gap-4 py-3.5 sm:py-3 lg:py-1 ${
-                    i === 0 ? 'lg:pr-6' : 'lg:px-6'
+                    i === 0 ? "lg:pr-6" : "lg:px-6"
                   }`}
                 >
                   {/* Colored Icon on Left */}
                   <motion.div
                     whileHover={rm ? undefined : { scale: 1.12, rotate: 4 }}
-                    transition={{ type: 'spring', stiffness: 350, damping: 15 }}
+                    transition={{ type: "spring", stiffness: 350, damping: 15 }}
                     className="flex shrink-0 h-10 w-10 items-center justify-center rounded-full"
                     style={{
                       backgroundColor: feat.soft,

@@ -91,7 +91,9 @@ function buildUnifiedList(mod: Module): UnifiedItem[] {
     }
     for (const assignment of mod.assignments) {
       if (
-        !items.some((i) => i.type === "ASSIGNMENT" && i.data.id === assignment.id)
+        !items.some(
+          (i) => i.type === "ASSIGNMENT" && i.data.id === assignment.id,
+        )
       ) {
         items.push({ type: "ASSIGNMENT", data: assignment });
       }
@@ -328,9 +330,12 @@ export default function ModuleCard({
     mutationFn: async (groupedByLesson: Record<string, string[]>) => {
       const promise = Promise.all(
         Object.entries(groupedByLesson).map(([lessonId, resourceIds]) =>
-          api.patch(`/api/admin/courses/lessons/${lessonId}/resources/reorder`, {
-            resourceIds,
-          }),
+          api.patch(
+            `/api/admin/courses/lessons/${lessonId}/resources/reorder`,
+            {
+              resourceIds,
+            },
+          ),
         ),
       );
       toast.promise(promise, {
@@ -364,7 +369,13 @@ export default function ModuleCard({
   };
 
   const resourceUploadMutation = useMutation({
-    mutationFn: async ({ file, lessonId }: { file: File; lessonId: string }) => {
+    mutationFn: async ({
+      file,
+      lessonId,
+    }: {
+      file: File;
+      lessonId: string;
+    }) => {
       const uploadData = new FormData();
       uploadData.append("resource", file);
       await api.post(
@@ -379,9 +390,7 @@ export default function ModuleCard({
     onError: (err: unknown) => toast.error(getErrorMessage(err)),
   });
 
-  const handleResourceUpload = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleResourceUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -489,9 +498,7 @@ export default function ModuleCard({
                   Passing: {passingScore ?? 60}%
                 </span>
                 <span className="text-muted-foreground">|</span>
-                <span className="text-blue-600">
-                  {timeLimitMin ?? 30} min
-                </span>
+                <span className="text-blue-600">{timeLimitMin ?? 30} min</span>
               </div>
             )}
           </>
@@ -499,108 +506,108 @@ export default function ModuleCard({
 
         {/* Action buttons: direct inline options & expand/edit/delete */}
         <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
-            {certModule ? (
-              <>
+          {certModule ? (
+            <>
+              <button
+                onClick={onAddQuestion}
+                className="flex items-center gap-1.5 rounded-lg border border-amber-300/60 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-amber-400/70 hover:bg-amber-100 hover:shadow"
+              >
+                <IconClipboardText size={14} />
+                Add Question
+              </button>
+              <button
+                data-cert-add-assignment={mod.id}
+                onClick={() => setShowAddAssignment(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-blue-300/60 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-blue-400/70 hover:bg-blue-100 hover:shadow"
+              >
+                <IconFileText size={14} />
+                Add Assignment
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => {
+                  setShowAddLesson(true);
+                  setAddLessonKey((k) => k + 1);
+                }}
+                className="flex items-center gap-1.5 rounded-lg border border-indigo-300/60 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-indigo-400/70 hover:bg-indigo-100 hover:shadow"
+              >
+                <IconVideo size={14} />
+                Lesson
+              </button>
+              <button
+                onClick={() => setShowAddQuiz(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-amber-300/60 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-amber-400/70 hover:bg-amber-100 hover:shadow"
+              >
+                <IconClipboardText size={14} />
+                Quiz
+              </button>
+              <button
+                onClick={() => setShowAddAssignment(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-blue-300/60 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-blue-400/70 hover:bg-blue-100 hover:shadow"
+              >
+                <IconFileText size={14} />
+                Assignment
+              </button>
+              {PRACTICALS_ENABLED && (
                 <button
-                  onClick={onAddQuestion}
-                  className="flex items-center gap-1.5 rounded-lg border border-amber-300/60 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-amber-400/70 hover:bg-amber-100 hover:shadow"
+                  onClick={() => setShowAddPractical(true)}
+                  className="flex items-center gap-1.5 rounded-lg border border-violet-300/60 bg-violet-50 px-2.5 py-1.5 text-xs font-semibold text-violet-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-violet-400/70 hover:bg-violet-100 hover:shadow"
                 >
-                  <IconClipboardText size={14} />
-                  Add Question
+                  <IconBrain size={14} />
+                  Practical
                 </button>
-                <button
-                  data-cert-add-assignment={mod.id}
-                  onClick={() => setShowAddAssignment(true)}
-                  className="flex items-center gap-1.5 rounded-lg border border-blue-300/60 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-blue-400/70 hover:bg-blue-100 hover:shadow"
-                >
-                  <IconFileText size={14} />
-                  Add Assignment
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => {
-                    setShowAddLesson(true);
-                    setAddLessonKey((k) => k + 1);
-                  }}
-                  className="flex items-center gap-1.5 rounded-lg border border-indigo-300/60 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-indigo-400/70 hover:bg-indigo-100 hover:shadow"
-                >
-                  <IconVideo size={14} />
-                  Lesson
-                </button>
-                <button
-                  onClick={() => setShowAddQuiz(true)}
-                  className="flex items-center gap-1.5 rounded-lg border border-amber-300/60 bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-amber-400/70 hover:bg-amber-100 hover:shadow"
-                >
-                  <IconClipboardText size={14} />
-                  Quiz
-                </button>
-                <button
-                  onClick={() => setShowAddAssignment(true)}
-                  className="flex items-center gap-1.5 rounded-lg border border-blue-300/60 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-blue-400/70 hover:bg-blue-100 hover:shadow"
-                >
-                  <IconFileText size={14} />
-                  Assignment
-                </button>
-                {PRACTICALS_ENABLED && (
-                  <button
-                    onClick={() => setShowAddPractical(true)}
-                    className="flex items-center gap-1.5 rounded-lg border border-violet-300/60 bg-violet-50 px-2.5 py-1.5 text-xs font-semibold text-violet-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-violet-400/70 hover:bg-violet-100 hover:shadow"
-                  >
-                    <IconBrain size={14} />
-                    Practical
-                  </button>
-                )}
-                <button
-                  onClick={() => setShowStudyMaterialUpload(true)}
-                  className="flex items-center gap-1.5 rounded-lg border border-emerald-300/60 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-emerald-400/70 hover:bg-emerald-100 hover:shadow"
-                >
-                  <IconFile size={14} />
-                  Study Material
-                </button>
-              </>
-            )}
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="p-1.5 rounded-lg border border-border/80 bg-muted/20 text-foreground hover:bg-muted/50 hover:border-border transition-all duration-200"
-              title={expanded ? "Collapse" : "Expand"}
-            >
-              <IconChevronDown
-                size={18}
-                className={`transition-transform duration-200 ${expanded ? "rotate-180 text-primary" : "text-muted-foreground"}`}
-              />
-            </button>
-            <button
-              onClick={onMoveUp}
-              disabled={!canMoveUp}
-              className="p-1 rounded-lg text-[#a3a1c9] transition-colors hover:text-primary hover:bg-primary/10 disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
-              title="Move module up"
-            >
-              <IconChevronUp size={17} />
-            </button>
-            <button
-              onClick={onMoveDown}
-              disabled={!canMoveDown}
-              className="p-1 rounded-lg text-[#a3a1c9] transition-colors hover:text-primary hover:bg-primary/10 disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
-              title="Move module down"
-            >
-              <IconChevronDown size={17} />
-            </button>
-            <button
-              onClick={() => setEditing(true)}
-              className="text-xs font-medium text-primary hover:text-primary-hover transition-colors px-2.5 py-1 rounded-md hover:bg-primary/12"
-            >
-              Edit
-            </button>
-            <button
-              onClick={handleDelete}
-              className="p-1.5 text-muted hover:text-danger transition-colors rounded-md hover:bg-danger/10"
-              title="Delete module"
-            >
-              <IconTrash size={15} />
-            </button>
-          </div>
+              )}
+              <button
+                onClick={() => setShowStudyMaterialUpload(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-emerald-300/60 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm transition-all duration-150 cursor-pointer hover:border-emerald-400/70 hover:bg-emerald-100 hover:shadow"
+              >
+                <IconFile size={14} />
+                Study Material
+              </button>
+            </>
+          )}
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="p-1.5 rounded-lg border border-border/80 bg-muted/20 text-foreground hover:bg-muted/50 hover:border-border transition-all duration-200"
+            title={expanded ? "Collapse" : "Expand"}
+          >
+            <IconChevronDown
+              size={18}
+              className={`transition-transform duration-200 ${expanded ? "rotate-180 text-primary" : "text-muted-foreground"}`}
+            />
+          </button>
+          <button
+            onClick={onMoveUp}
+            disabled={!canMoveUp}
+            className="p-1 rounded-lg text-[#a3a1c9] transition-colors hover:text-primary hover:bg-primary/10 disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+            title="Move module up"
+          >
+            <IconChevronUp size={17} />
+          </button>
+          <button
+            onClick={onMoveDown}
+            disabled={!canMoveDown}
+            className="p-1 rounded-lg text-[#a3a1c9] transition-colors hover:text-primary hover:bg-primary/10 disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+            title="Move module down"
+          >
+            <IconChevronDown size={17} />
+          </button>
+          <button
+            onClick={() => setEditing(true)}
+            className="text-xs font-medium text-primary hover:text-primary-hover transition-colors px-2.5 py-1 rounded-md hover:bg-primary/12"
+          >
+            Edit
+          </button>
+          <button
+            onClick={handleDelete}
+            className="p-1.5 text-muted hover:text-danger transition-colors rounded-md hover:bg-danger/10"
+            title="Delete module"
+          >
+            <IconTrash size={15} />
+          </button>
+        </div>
       </div>
 
       {/* Module Content (expanded) */}

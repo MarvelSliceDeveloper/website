@@ -52,11 +52,23 @@ export default function ReportExportDropdown({
     setOpen(false);
     try {
       if (kind === "pdf") {
-        await buildReportPdf({ data, scope, timeRange, periodLabel, generatedDate });
+        await buildReportPdf({
+          data,
+          scope,
+          timeRange,
+          periodLabel,
+          generatedDate,
+        });
       } else if (kind === "csv") {
         exportReportCsv({ data, scope, timeRange, periodLabel, generatedDate });
       } else {
-        await exportReportXlsx({ data, scope, timeRange, periodLabel, generatedDate });
+        await exportReportXlsx({
+          data,
+          scope,
+          timeRange,
+          periodLabel,
+          generatedDate,
+        });
       }
     } catch (err) {
       console.error("Report export failed:", err);
@@ -68,7 +80,11 @@ export default function ReportExportDropdown({
   const items: { kind: ExportKind; label: string; icon: React.ReactNode }[] = [
     { kind: "pdf", label: pdfLabel, icon: <IconFileTypePdf size={16} /> },
     { kind: "csv", label: "Download CSV", icon: <IconFileTypeCsv size={16} /> },
-    { kind: "xlsx", label: "Download Excel", icon: <IconFileSpreadsheet size={16} /> },
+    {
+      kind: "xlsx",
+      label: "Download Excel",
+      icon: <IconFileSpreadsheet size={16} />,
+    },
   ];
 
   const activeItem = exporting ? items.find((i) => i.kind === exporting) : null;

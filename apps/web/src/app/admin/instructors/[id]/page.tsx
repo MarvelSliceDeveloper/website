@@ -162,7 +162,9 @@ function StarRating({ rating }: { rating: number }) {
           <IconStar key={star} size={14} className="text-muted" />
         ),
       )}
-      <span className="ml-1 text-xs text-muted-foreground">({rating.toFixed(1)})</span>
+      <span className="ml-1 text-xs text-muted-foreground">
+        ({rating.toFixed(1)})
+      </span>
     </div>
   );
 }
@@ -172,7 +174,13 @@ export default function InstructorDetailPage() {
   const { id } = useParams<{ id: string }>();
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "login-history" | "sessions" | "courses-batches" | "assignments" | "mentorship" | "performance"
+    | "overview"
+    | "login-history"
+    | "sessions"
+    | "courses-batches"
+    | "assignments"
+    | "mentorship"
+    | "performance"
   >("overview");
 
   // Login history
@@ -294,10 +302,26 @@ export default function InstructorDetailPage() {
 
   const tabs = [
     { key: "overview" as const, label: "Overview", icon: IconUser },
-    { key: "login-history" as const, label: "Login History", icon: IconHistory },
-    { key: "sessions" as const, label: "Live Sessions & Attendance", icon: IconVideo },
-    { key: "courses-batches" as const, label: "Courses & Batches", icon: IconBook },
-    { key: "assignments" as const, label: "Assignment Activity", icon: IconFileSpreadsheet },
+    {
+      key: "login-history" as const,
+      label: "Login History",
+      icon: IconHistory,
+    },
+    {
+      key: "sessions" as const,
+      label: "Live Sessions & Attendance",
+      icon: IconVideo,
+    },
+    {
+      key: "courses-batches" as const,
+      label: "Courses & Batches",
+      icon: IconBook,
+    },
+    {
+      key: "assignments" as const,
+      label: "Assignment Activity",
+      icon: IconFileSpreadsheet,
+    },
     { key: "mentorship" as const, label: "Mentorship Log", icon: IconMessage },
     { key: "performance" as const, label: "Performance", icon: IconChartBar },
   ];
@@ -316,7 +340,10 @@ export default function InstructorDetailPage() {
         <p className="text-lg font-semibold text-foreground">
           Instructor not found
         </p>
-        <Link href="/admin/instructors" className="btn-primary mt-4 inline-flex">
+        <Link
+          href="/admin/instructors"
+          className="btn-primary mt-4 inline-flex"
+        >
           Back to Instructors
         </Link>
       </div>
@@ -333,22 +360,23 @@ export default function InstructorDetailPage() {
         ]}
         action={
           <div className="flex gap-2">
-            {currentUserRole === "SUPER_ADMIN" && profile?.status === "PENDING" && (
-              <>
-                <button
-                  onClick={() => handleVerify("approve")}
-                  className="btn-primary text-sm flex items-center gap-1.5"
-                >
-                  <IconCheck size={14} /> Verify
-                </button>
-                <button
-                  onClick={() => setShowRejectDialog(true)}
-                  className="btn-danger text-sm flex items-center gap-1.5"
-                >
-                  <IconX size={14} /> Reject
-                </button>
-              </>
-            )}
+            {currentUserRole === "SUPER_ADMIN" &&
+              profile?.status === "PENDING" && (
+                <>
+                  <button
+                    onClick={() => handleVerify("approve")}
+                    className="btn-primary text-sm flex items-center gap-1.5"
+                  >
+                    <IconCheck size={14} /> Verify
+                  </button>
+                  <button
+                    onClick={() => setShowRejectDialog(true)}
+                    className="btn-danger text-sm flex items-center gap-1.5"
+                  >
+                    <IconX size={14} /> Reject
+                  </button>
+                </>
+              )}
             <Link
               href={`/admin/instructors/${id}/edit`}
               className="btn-secondary text-sm flex items-center gap-1.5"
@@ -413,9 +441,7 @@ export default function InstructorDetailPage() {
                     <IconMail size={14} />
                     {instructor.email}
                   </span>
-                  {profile?.designation && (
-                    <span>{profile.designation}</span>
-                  )}
+                  {profile?.designation && <span>{profile.designation}</span>}
                 </div>
                 {profile && (
                   <div className="mt-2">
@@ -430,15 +456,27 @@ export default function InstructorDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left column */}
             <div className="glass-card p-5 border border-border/80 space-y-4">
-              <h3 className="text-sm font-semibold text-foreground">Professional Info</h3>
+              <h3 className="text-sm font-semibold text-foreground">
+                Professional Info
+              </h3>
               <FieldRow label="Bio" value={profile?.bio} />
               <FieldRow label="Qualification" value={profile?.qualification} />
-              <FieldRow label="Experience" value={profile?.experienceYears ? `${profile.experienceYears} years` : null} />
+              <FieldRow
+                label="Experience"
+                value={
+                  profile?.experienceYears
+                    ? `${profile.experienceYears} years`
+                    : null
+                }
+              />
               <FieldRow label="Skills">
                 {Array.isArray(profile?.skills) && profile.skills.length > 0 ? (
                   <div className="flex flex-wrap gap-1">
                     {profile.skills.map((s) => (
-                      <span key={s} className="inline-flex rounded bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                      <span
+                        key={s}
+                        className="inline-flex rounded bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
+                      >
                         {s}
                       </span>
                     ))}
@@ -448,10 +486,14 @@ export default function InstructorDetailPage() {
                 )}
               </FieldRow>
               <FieldRow label="Languages">
-                {Array.isArray(profile?.languages) && profile.languages.length > 0 ? (
+                {Array.isArray(profile?.languages) &&
+                profile.languages.length > 0 ? (
                   <div className="flex flex-wrap gap-1">
                     {profile.languages.map((l) => (
-                      <span key={l} className="inline-flex rounded bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success">
+                      <span
+                        key={l}
+                        className="inline-flex rounded bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success"
+                      >
                         {l}
                       </span>
                     ))}
@@ -460,34 +502,55 @@ export default function InstructorDetailPage() {
                   <span className="text-muted-foreground">—</span>
                 )}
               </FieldRow>
-              <FieldRow label="Currently Employed" value={profile?.currentlyEmployed ? "Yes" : "No"} />
+              <FieldRow
+                label="Currently Employed"
+                value={profile?.currentlyEmployed ? "Yes" : "No"}
+              />
               <FieldRow label="Company" value={profile?.companyName} />
               <FieldRow label="Available Time" value={profile?.availableTime} />
             </div>
 
             {/* Right column */}
             <div className="glass-card p-5 border border-border/80 space-y-4">
-              <h3 className="text-sm font-semibold text-foreground">Contact & Payment</h3>
+              <h3 className="text-sm font-semibold text-foreground">
+                Contact & Payment
+              </h3>
               <FieldRow label="Phone" value={profile?.phone} />
               <FieldRow label="Address" value={profile?.address} />
               <FieldRow label="City" value={profile?.city} />
               <FieldRow label="State" value={profile?.state} />
               <FieldRow label="Country" value={profile?.country} />
               <FieldRow label="Social Links">
-                {profile?.socialLinks && typeof profile.socialLinks === "object" ? (
+                {profile?.socialLinks &&
+                typeof profile.socialLinks === "object" ? (
                   <div className="flex flex-wrap gap-2">
                     {profile.socialLinks.linkedin && (
-                      <a href={profile.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+                      <a
+                        href={profile.socialLinks.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline"
+                      >
                         LinkedIn
                       </a>
                     )}
                     {profile.socialLinks.github && (
-                      <a href={profile.socialLinks.github} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+                      <a
+                        href={profile.socialLinks.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline"
+                      >
                         GitHub
                       </a>
                     )}
                     {profile.socialLinks.portfolio && (
-                      <a href={profile.socialLinks.portfolio} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+                      <a
+                        href={profile.socialLinks.portfolio}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline"
+                      >
                         Portfolio
                       </a>
                     )}
@@ -502,13 +565,16 @@ export default function InstructorDetailPage() {
                   <div className="text-sm text-foreground">
                     <p>{profile.bankName}</p>
                     <p className="text-xs text-muted-foreground">
-                      {profile.bankAccountHolderName && `${profile.bankAccountHolderName} · `}
+                      {profile.bankAccountHolderName &&
+                        `${profile.bankAccountHolderName} · `}
                       {profile.bankAccountNumber
                         ? `xxxx${profile.bankAccountNumber.slice(-4)}`
                         : ""}
                     </p>
                     {profile.bankIfscCode && (
-                      <p className="text-xs text-muted-foreground">IFSC: {profile.bankIfscCode}</p>
+                      <p className="text-xs text-muted-foreground">
+                        IFSC: {profile.bankIfscCode}
+                      </p>
                     )}
                   </div>
                 ) : (
@@ -516,7 +582,14 @@ export default function InstructorDetailPage() {
                 )}
               </FieldRow>
               <FieldRow label="UPI ID" value={profile?.upiId} />
-              <FieldRow label="Joining Date" value={profile?.joiningDate ? new Date(profile.joiningDate).toLocaleDateString("en-IN") : null} />
+              <FieldRow
+                label="Joining Date"
+                value={
+                  profile?.joiningDate
+                    ? new Date(profile.joiningDate).toLocaleDateString("en-IN")
+                    : null
+                }
+              />
             </div>
           </div>
         </div>
@@ -529,15 +602,22 @@ export default function InstructorDetailPage() {
             <p className="text-sm text-muted-foreground">
               {loginTotal} login{loginTotal !== 1 ? "s" : ""} recorded
             </p>
-            <button onClick={() => void loginHistoryQuery.refetch()} className="btn-secondary text-xs flex items-center gap-1.5">
+            <button
+              onClick={() => void loginHistoryQuery.refetch()}
+              className="btn-secondary text-xs flex items-center gap-1.5"
+            >
               <IconRefresh size={14} /> Refresh
             </button>
           </div>
           <div className="glass-card p-5 border border-border/80">
             {loginLoading ? (
-              <div className="py-12 text-center text-sm text-muted animate-pulse">Loading...</div>
+              <div className="py-12 text-center text-sm text-muted animate-pulse">
+                Loading...
+              </div>
             ) : loginLogs.length === 0 ? (
-              <div className="py-12 text-center text-sm text-muted-foreground">No login history found.</div>
+              <div className="py-12 text-center text-sm text-muted-foreground">
+                No login history found.
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
@@ -551,10 +631,19 @@ export default function InstructorDetailPage() {
                   </thead>
                   <tbody className="divide-y divide-border/40">
                     {loginLogs.map((log) => (
-                      <tr key={log.id} className="hover:bg-card-hover transition-colors">
-                        <td className="py-3 pr-3 font-mono text-[10px] text-muted">{log.ip || "—"}</td>
-                        <td className="py-3 pr-3 text-muted-foreground text-[10px]">{log.deviceInfo || "—"}</td>
-                        <td className="py-3 pr-3 text-muted-foreground max-w-[200px] truncate text-[10px]">{log.userAgent || "—"}</td>
+                      <tr
+                        key={log.id}
+                        className="hover:bg-card-hover transition-colors"
+                      >
+                        <td className="py-3 pr-3 font-mono text-[10px] text-muted">
+                          {log.ip || "—"}
+                        </td>
+                        <td className="py-3 pr-3 text-muted-foreground text-[10px]">
+                          {log.deviceInfo || "—"}
+                        </td>
+                        <td className="py-3 pr-3 text-muted-foreground max-w-[200px] truncate text-[10px]">
+                          {log.userAgent || "—"}
+                        </td>
                         <td className="py-3 text-muted whitespace-nowrap">
                           {new Date(log.loginAt).toLocaleString("en-IN")}
                         </td>
@@ -566,7 +655,12 @@ export default function InstructorDetailPage() {
             )}
           </div>
           {loginTotal > 20 && (
-            <PaginationControls page={loginPage} total={loginTotal} limit={20} onPageChange={setLoginPage} />
+            <PaginationControls
+              page={loginPage}
+              total={loginTotal}
+              limit={20}
+              onPageChange={setLoginPage}
+            />
           )}
         </div>
       )}
@@ -574,12 +668,18 @@ export default function InstructorDetailPage() {
       {/* ── Live Sessions Tab ── */}
       {activeTab === "sessions" && (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">{sessionTotal} session{sessionTotal !== 1 ? "s" : ""}</p>
+          <p className="text-sm text-muted-foreground">
+            {sessionTotal} session{sessionTotal !== 1 ? "s" : ""}
+          </p>
           <div className="glass-card p-5 border border-border/80">
             {sessionLoading ? (
-              <div className="py-12 text-center text-sm text-muted animate-pulse">Loading...</div>
+              <div className="py-12 text-center text-sm text-muted animate-pulse">
+                Loading...
+              </div>
             ) : sessions.length === 0 ? (
-              <div className="py-12 text-center text-sm text-muted-foreground">No sessions found.</div>
+              <div className="py-12 text-center text-sm text-muted-foreground">
+                No sessions found.
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
@@ -596,18 +696,35 @@ export default function InstructorDetailPage() {
                   <tbody className="divide-y divide-border/40">
                     {sessions.map((s) => {
                       const start = new Date(s.scheduledAt);
-                      const end = s.endedAt ? new Date(s.endedAt) : s.scheduledEndAt ? new Date(s.scheduledEndAt) : null;
+                      const end = s.endedAt
+                        ? new Date(s.endedAt)
+                        : s.scheduledEndAt
+                          ? new Date(s.scheduledEndAt)
+                          : null;
                       const duration = end
                         ? `${Math.round((end.getTime() - start.getTime()) / 60000)} min`
                         : "—";
                       return (
-                        <tr key={s.id} className="hover:bg-card-hover transition-colors">
-                          <td className="py-3 pr-3 font-medium text-foreground">{s.title}</td>
-                          <td className="py-3 pr-3 text-muted-foreground">{s.batch?.name || "—"}</td>
-                          <td className="py-3 pr-3 text-muted-foreground">{s.course?.title || "—"}</td>
-                          <td className="py-3 pr-3 text-muted whitespace-nowrap">{start.toLocaleDateString("en-IN")}</td>
+                        <tr
+                          key={s.id}
+                          className="hover:bg-card-hover transition-colors"
+                        >
+                          <td className="py-3 pr-3 font-medium text-foreground">
+                            {s.title}
+                          </td>
+                          <td className="py-3 pr-3 text-muted-foreground">
+                            {s.batch?.name || "—"}
+                          </td>
+                          <td className="py-3 pr-3 text-muted-foreground">
+                            {s.course?.title || "—"}
+                          </td>
+                          <td className="py-3 pr-3 text-muted whitespace-nowrap">
+                            {start.toLocaleDateString("en-IN")}
+                          </td>
                           <td className="py-3 pr-3 text-muted">{duration}</td>
-                          <td className="py-3 text-muted">{s._count.attendance}</td>
+                          <td className="py-3 text-muted">
+                            {s._count.attendance}
+                          </td>
                         </tr>
                       );
                     })}
@@ -617,7 +734,12 @@ export default function InstructorDetailPage() {
             )}
           </div>
           {sessionTotal > 20 && (
-            <PaginationControls page={sessionPage} total={sessionTotal} limit={20} onPageChange={setSessionPage} />
+            <PaginationControls
+              page={sessionPage}
+              total={sessionTotal}
+              limit={20}
+              onPageChange={setSessionPage}
+            />
           )}
         </div>
       )}
@@ -626,14 +748,33 @@ export default function InstructorDetailPage() {
       {activeTab === "courses-batches" && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <StatCard label="Active Batches" value={instructor.activeBatchCount} icon={IconBook} variant="blue" />
-            <StatCard label="Total Sessions" value={instructor.liveSessionCount} icon={IconVideo} variant="green" />
-            <StatCard label="Completed Sessions" value={instructor.completedSessionCount} icon={IconCheck} variant="purple" />
+            <StatCard
+              label="Active Batches"
+              value={instructor.activeBatchCount}
+              icon={IconBook}
+              variant="blue"
+            />
+            <StatCard
+              label="Total Sessions"
+              value={instructor.liveSessionCount}
+              icon={IconVideo}
+              variant="green"
+            />
+            <StatCard
+              label="Completed Sessions"
+              value={instructor.completedSessionCount}
+              icon={IconCheck}
+              variant="purple"
+            />
           </div>
           <p className="text-sm text-muted-foreground">
-            Courses and batches assigned to this instructor are managed from the Batches section.
+            Courses and batches assigned to this instructor are managed from the
+            Batches section.
           </p>
-          <Link href={`/admin/batches?instructorId=${id}`} className="btn-secondary text-sm inline-flex items-center gap-1.5">
+          <Link
+            href={`/admin/batches?instructorId=${id}`}
+            className="btn-secondary text-sm inline-flex items-center gap-1.5"
+          >
             <IconEye size={14} /> View Assigned Batches
           </Link>
         </div>
@@ -642,12 +783,18 @@ export default function InstructorDetailPage() {
       {/* ── Assignment Activity Tab ── */}
       {activeTab === "assignments" && (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">{assignmentTotal} assignment{assignmentTotal !== 1 ? "s" : ""}</p>
+          <p className="text-sm text-muted-foreground">
+            {assignmentTotal} assignment{assignmentTotal !== 1 ? "s" : ""}
+          </p>
           <div className="glass-card p-5 border border-border/80">
             {assignmentLoading ? (
-              <div className="py-12 text-center text-sm text-muted animate-pulse">Loading...</div>
+              <div className="py-12 text-center text-sm text-muted animate-pulse">
+                Loading...
+              </div>
             ) : assignments.length === 0 ? (
-              <div className="py-12 text-center text-sm text-muted-foreground">No assignments found.</div>
+              <div className="py-12 text-center text-sm text-muted-foreground">
+                No assignments found.
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
@@ -665,13 +812,28 @@ export default function InstructorDetailPage() {
                     {assignments.map((a) => {
                       const pending = a._count.submissions - a.gradedCount;
                       return (
-                        <tr key={a.id} className="hover:bg-card-hover transition-colors">
-                          <td className="py-3 pr-3 font-medium text-foreground">{a.title}</td>
-                          <td className="py-3 pr-3 text-muted-foreground">{a.course?.title || "—"}</td>
-                          <td className="py-3 pr-3 text-muted-foreground">{a.batch?.name || "—"}</td>
-                          <td className="py-3 pr-3 text-muted">{a._count.submissions}</td>
-                          <td className="py-3 pr-3 text-success font-medium">{a.gradedCount}</td>
-                          <td className="py-3 text-amber-600 font-medium">{pending}</td>
+                        <tr
+                          key={a.id}
+                          className="hover:bg-card-hover transition-colors"
+                        >
+                          <td className="py-3 pr-3 font-medium text-foreground">
+                            {a.title}
+                          </td>
+                          <td className="py-3 pr-3 text-muted-foreground">
+                            {a.course?.title || "—"}
+                          </td>
+                          <td className="py-3 pr-3 text-muted-foreground">
+                            {a.batch?.name || "—"}
+                          </td>
+                          <td className="py-3 pr-3 text-muted">
+                            {a._count.submissions}
+                          </td>
+                          <td className="py-3 pr-3 text-success font-medium">
+                            {a.gradedCount}
+                          </td>
+                          <td className="py-3 text-amber-600 font-medium">
+                            {pending}
+                          </td>
                         </tr>
                       );
                     })}
@@ -681,7 +843,12 @@ export default function InstructorDetailPage() {
             )}
           </div>
           {assignmentTotal > 20 && (
-            <PaginationControls page={assignmentPage} total={assignmentTotal} limit={20} onPageChange={setAssignmentPage} />
+            <PaginationControls
+              page={assignmentPage}
+              total={assignmentTotal}
+              limit={20}
+              onPageChange={setAssignmentPage}
+            />
           )}
         </div>
       )}
@@ -689,12 +856,18 @@ export default function InstructorDetailPage() {
       {/* ── Mentorship Log Tab ── */}
       {activeTab === "mentorship" && (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">{mentorshipTotal} ticket{mentorshipTotal !== 1 ? "s" : ""}</p>
+          <p className="text-sm text-muted-foreground">
+            {mentorshipTotal} ticket{mentorshipTotal !== 1 ? "s" : ""}
+          </p>
           <div className="glass-card p-5 border border-border/80">
             {mentorshipLoading ? (
-              <div className="py-12 text-center text-sm text-muted animate-pulse">Loading...</div>
+              <div className="py-12 text-center text-sm text-muted animate-pulse">
+                Loading...
+              </div>
             ) : mentorships.length === 0 ? (
-              <div className="py-12 text-center text-sm text-muted-foreground">No mentorship tickets found.</div>
+              <div className="py-12 text-center text-sm text-muted-foreground">
+                No mentorship tickets found.
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
@@ -710,19 +883,30 @@ export default function InstructorDetailPage() {
                   </thead>
                   <tbody className="divide-y divide-border/40">
                     {mentorships.map((m) => (
-                      <tr key={m.id} className="hover:bg-card-hover transition-colors">
+                      <tr
+                        key={m.id}
+                        className="hover:bg-card-hover transition-colors"
+                      >
                         <td className="py-3 pr-3">
                           <div className="flex items-center gap-2">
                             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
                               {m.student.name.charAt(0).toUpperCase()}
                             </div>
-                            <span className="font-medium text-foreground">{m.student.name}</span>
+                            <span className="font-medium text-foreground">
+                              {m.student.name}
+                            </span>
                           </div>
                         </td>
-                        <td className="py-3 pr-3 text-muted-foreground max-w-[160px] truncate">{m.title}</td>
-                        <td className="py-3 pr-3 text-muted-foreground">{m.course?.title || "—"}</td>
+                        <td className="py-3 pr-3 text-muted-foreground max-w-[160px] truncate">
+                          {m.title}
+                        </td>
+                        <td className="py-3 pr-3 text-muted-foreground">
+                          {m.course?.title || "—"}
+                        </td>
                         <td className="py-3 pr-3">
-                          <span className={`inline-flex rounded px-2 py-0.5 text-[10px] font-semibold ${ticketStatusStyles[m.status] || "bg-muted/15 text-muted"}`}>
+                          <span
+                            className={`inline-flex rounded px-2 py-0.5 text-[10px] font-semibold ${ticketStatusStyles[m.status] || "bg-muted/15 text-muted"}`}
+                          >
                             {m.status}
                           </span>
                         </td>
@@ -745,7 +929,12 @@ export default function InstructorDetailPage() {
             )}
           </div>
           {mentorshipTotal > 20 && (
-            <PaginationControls page={mentorshipPage} total={mentorshipTotal} limit={20} onPageChange={setMentorshipPage} />
+            <PaginationControls
+              page={mentorshipPage}
+              total={mentorshipTotal}
+              limit={20}
+              onPageChange={setMentorshipPage}
+            />
           )}
         </div>
       )}
@@ -756,7 +945,10 @@ export default function InstructorDetailPage() {
           {performanceLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="rounded-2xl border border-border bg-card p-4">
+                <div
+                  key={i}
+                  className="rounded-2xl border border-border bg-card p-4"
+                >
                   <div className="h-10 w-10 animate-pulse bg-border rounded-xl" />
                   <div className="h-3 w-24 animate-pulse bg-border mt-3 rounded" />
                   <div className="h-7 w-16 animate-pulse bg-border mt-2 rounded" />
@@ -766,21 +958,65 @@ export default function InstructorDetailPage() {
           ) : performance ? (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard label="Total Sessions" value={performance.totalSessions} icon={IconVideo} variant="blue" />
-                <StatCard label="Completed Sessions" value={performance.completedSessions} icon={IconCheck} variant="green" />
-                <StatCard label="Total Batches" value={performance.totalBatches} icon={IconBook} variant="purple" />
-                <StatCard label="Active Batches" value={performance.activeBatches} icon={IconBook} variant="orange" />
-                <StatCard label="Total Assignments" value={performance.totalAssignments} icon={IconFileSpreadsheet} variant="red" />
-                <StatCard label="Graded Submissions" value={performance.gradedSubmissions} icon={IconCheck} variant="green" />
-                <StatCard label="Students Enrolled" value={performance.totalStudentsEnrolled} icon={IconUser} variant="blue" />
-                <StatCard label="Average Rating" value={performance.avgRating.toFixed(1)} icon={IconStarFilled} variant="orange" />
+                <StatCard
+                  label="Total Sessions"
+                  value={performance.totalSessions}
+                  icon={IconVideo}
+                  variant="blue"
+                />
+                <StatCard
+                  label="Completed Sessions"
+                  value={performance.completedSessions}
+                  icon={IconCheck}
+                  variant="green"
+                />
+                <StatCard
+                  label="Total Batches"
+                  value={performance.totalBatches}
+                  icon={IconBook}
+                  variant="purple"
+                />
+                <StatCard
+                  label="Active Batches"
+                  value={performance.activeBatches}
+                  icon={IconBook}
+                  variant="orange"
+                />
+                <StatCard
+                  label="Total Assignments"
+                  value={performance.totalAssignments}
+                  icon={IconFileSpreadsheet}
+                  variant="red"
+                />
+                <StatCard
+                  label="Graded Submissions"
+                  value={performance.gradedSubmissions}
+                  icon={IconCheck}
+                  variant="green"
+                />
+                <StatCard
+                  label="Students Enrolled"
+                  value={performance.totalStudentsEnrolled}
+                  icon={IconUser}
+                  variant="blue"
+                />
+                <StatCard
+                  label="Average Rating"
+                  value={performance.avgRating.toFixed(1)}
+                  icon={IconStarFilled}
+                  variant="orange"
+                />
               </div>
 
               <div className="glass-card p-5 border border-border/80">
-                <h3 className="text-sm font-semibold text-foreground mb-4">Summary</h3>
+                <h3 className="text-sm font-semibold text-foreground mb-4">
+                  Summary
+                </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                   <div className="space-y-1">
-                    <p className="text-muted-foreground">Session Completion Rate</p>
+                    <p className="text-muted-foreground">
+                      Session Completion Rate
+                    </p>
                     <p className="text-2xl font-bold text-foreground">
                       {performance.totalSessions > 0
                         ? `${Math.round((performance.completedSessions / performance.totalSessions) * 100)}%`
@@ -796,10 +1032,15 @@ export default function InstructorDetailPage() {
                     </p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-muted-foreground">Students per Batch (avg)</p>
+                    <p className="text-muted-foreground">
+                      Students per Batch (avg)
+                    </p>
                     <p className="text-2xl font-bold text-foreground">
                       {performance.activeBatches > 0
-                        ? Math.round(performance.totalStudentsEnrolled / performance.activeBatches)
+                        ? Math.round(
+                            performance.totalStudentsEnrolled /
+                              performance.activeBatches,
+                          )
                         : "—"}
                     </p>
                   </div>
@@ -816,7 +1057,9 @@ export default function InstructorDetailPage() {
       {showRejectDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl bg-card p-6 shadow-2xl border border-border">
-            <h3 className="text-lg font-bold text-foreground">Reject Instructor</h3>
+            <h3 className="text-lg font-bold text-foreground">
+              Reject Instructor
+            </h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Provide a reason the instructor will see on their onboarding page.
             </p>
@@ -829,7 +1072,10 @@ export default function InstructorDetailPage() {
             />
             <div className="mt-5 flex items-center justify-end gap-3">
               <button
-                onClick={() => { setShowRejectDialog(false); setRejectionReason(""); }}
+                onClick={() => {
+                  setShowRejectDialog(false);
+                  setRejectionReason("");
+                }}
                 className="btn-secondary text-sm px-4 py-2"
               >
                 Cancel
@@ -860,9 +1106,16 @@ function FieldRow({
 }) {
   return (
     <div className="flex items-start justify-between gap-4">
-      <span className="text-xs font-medium text-muted-foreground shrink-0 w-32">{label}</span>
+      <span className="text-xs font-medium text-muted-foreground shrink-0 w-32">
+        {label}
+      </span>
       <div className="text-sm text-foreground text-right flex-1">
-        {children ?? (value ? <span>{value}</span> : <span className="text-muted-foreground">—</span>)}
+        {children ??
+          (value ? (
+            <span>{value}</span>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          ))}
       </div>
     </div>
   );

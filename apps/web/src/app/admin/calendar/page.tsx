@@ -67,8 +67,7 @@ export default function AdminCalendarPage() {
     const mapped = sessions.map((s: SessionData) => {
       const courseTitle = s.batch?.course?.title || "Unknown";
       if (!colorMap[courseTitle]) {
-        colorMap[courseTitle] =
-          COURSE_COLORS[colorIdx % COURSE_COLORS.length];
+        colorMap[courseTitle] = COURSE_COLORS[colorIdx % COURSE_COLORS.length];
         colorIdx++;
       }
       const color = colorMap[courseTitle];

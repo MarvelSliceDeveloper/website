@@ -252,74 +252,74 @@ export default function PracticalCard({
 
   return (
     <>
-    <div className="group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 hover:border-[#cfcbe8] hover:bg-[#f8f7fd]">
-      <div className="flex shrink-0 flex-col">
-        <button
-          onClick={onMoveUp}
-          disabled={!canMoveUp}
-          className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#8b5cf6] hover:bg-[#f3efff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
-          title="Move up"
-        >
-          <IconChevronUp size={13} />
-        </button>
-        <button
-          onClick={onMoveDown}
-          disabled={!canMoveDown}
-          className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#8b5cf6] hover:bg-[#f3efff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
-          title="Move down"
-        >
-          <IconChevronDown size={13} />
-        </button>
-      </div>
+      <div className="group flex items-center gap-2.5 rounded-xl border border-[#e4e2f5] bg-white px-2.5 py-2 transition-all duration-200 hover:border-[#cfcbe8] hover:bg-[#f8f7fd]">
+        <div className="flex shrink-0 flex-col">
+          <button
+            onClick={onMoveUp}
+            disabled={!canMoveUp}
+            className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#8b5cf6] hover:bg-[#f3efff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+            title="Move up"
+          >
+            <IconChevronUp size={13} />
+          </button>
+          <button
+            onClick={onMoveDown}
+            disabled={!canMoveDown}
+            className="rounded p-0.5 text-[#a3a1c9] transition-colors hover:text-[#8b5cf6] hover:bg-[#f3efff] disabled:opacity-30 disabled:hover:text-[#a3a1c9] disabled:hover:bg-transparent"
+            title="Move down"
+          >
+            <IconChevronDown size={13} />
+          </button>
+        </div>
 
-      <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg bg-[#f0eaff] text-[#8b5cf6]">
-        <IconBrain size={13} />
-      </div>
+        <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-lg bg-[#f0eaff] text-[#8b5cf6]">
+          <IconBrain size={13} />
+        </div>
 
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-medium text-[#1f2233]">
-          {practical.title}
-        </p>
-        <div className="mt-0.5 flex items-center gap-2">
-          {hasVideo && (
-            <span className="inline-flex items-center gap-0.5 text-[10px] text-[#8b5cf6]">
-              <IconVideo size={10} /> Video
-            </span>
-          )}
-          {hasPdf && (
-            <span className="inline-flex items-center gap-0.5 text-[10px] text-blue-500">
-              <IconFile size={10} /> PDF
-            </span>
-          )}
-          {resourceCount > 0 && (
-            <span className="inline-flex items-center gap-0.5 text-[10px] text-emerald-500">
-              <IconDownload size={10} /> {resourceCount} file
-              {resourceCount !== 1 ? "s" : ""}
-            </span>
-          )}
-          {!hasVideo && !hasPdf && resourceCount === 0 && (
-            <span className="text-[10px] text-[#8b8da3]">No content yet</span>
-          )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-medium text-[#1f2233]">
+            {practical.title}
+          </p>
+          <div className="mt-0.5 flex items-center gap-2">
+            {hasVideo && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] text-[#8b5cf6]">
+                <IconVideo size={10} /> Video
+              </span>
+            )}
+            {hasPdf && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] text-blue-500">
+                <IconFile size={10} /> PDF
+              </span>
+            )}
+            {resourceCount > 0 && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] text-emerald-500">
+                <IconDownload size={10} /> {resourceCount} file
+                {resourceCount !== 1 ? "s" : ""}
+              </span>
+            )}
+            {!hasVideo && !hasPdf && resourceCount === 0 && (
+              <span className="text-[10px] text-[#8b8da3]">No content yet</span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+          <button
+            onClick={() => setEditing(true)}
+            className="rounded-md p-1 text-[#8b8da3] transition-colors hover:bg-[#4f63f0]/10 hover:text-[#4f63f0]"
+            title="Edit"
+          >
+            <IconEdit size={12} />
+          </button>
+          <button
+            onClick={handleDelete}
+            className="rounded-md p-1 text-[#8b8da3] transition-colors hover:bg-danger/10 hover:text-danger"
+            title="Delete"
+          >
+            <IconTrash size={12} />
+          </button>
         </div>
       </div>
-
-      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-        <button
-          onClick={() => setEditing(true)}
-          className="rounded-md p-1 text-[#8b8da3] transition-colors hover:bg-[#4f63f0]/10 hover:text-[#4f63f0]"
-          title="Edit"
-        >
-          <IconEdit size={12} />
-        </button>
-        <button
-          onClick={handleDelete}
-          className="rounded-md p-1 text-[#8b8da3] transition-colors hover:bg-danger/10 hover:text-danger"
-          title="Delete"
-        >
-          <IconTrash size={12} />
-        </button>
-      </div>
-    </div>
 
       {editing && (
         <FormModal

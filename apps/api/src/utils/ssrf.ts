@@ -85,7 +85,10 @@ export async function ssrfSafeFetch(
       const location = res.headers.get("location");
       res.body?.cancel();
       if (!location) {
-        throw new AppError(400, "Redirect response is missing a Location header");
+        throw new AppError(
+          400,
+          "Redirect response is missing a Location header",
+        );
       }
       try {
         current = new URL(location, current);

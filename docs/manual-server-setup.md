@@ -433,22 +433,22 @@ For automated scheduling, see [docs/database-backup.md](database-backup.md).
 
 ## Troubleshooting
 
-| Problem | Likely cause | Fix |
-|---------|--------------|-----|
-| `502 Bad Gateway` | App not running / wrong port | `pm2 status`; check PM2 logs |
-| API 503 on `/health` | DB down | `systemctl status postgresql` |
-| Page loads but no styles | Next.js assets wrong | Restart web: `pm2 restart lms-web` |
-| Contact form emails fail | SMTP not configured | Check `SMTP_EMAIL`/`SMTP_PASSWORD` in `.env` |
-| nginx config error | Typo | `nginx -t` shows the exact line |
-| Port 3000 in use | Another process | `ss -tlnp | grep 3000` |
+| Problem                  | Likely cause                 | Fix                                          |
+| ------------------------ | ---------------------------- | -------------------------------------------- | ---------- |
+| `502 Bad Gateway`        | App not running / wrong port | `pm2 status`; check PM2 logs                 |
+| API 503 on `/health`     | DB down                      | `systemctl status postgresql`                |
+| Page loads but no styles | Next.js assets wrong         | Restart web: `pm2 restart lms-web`           |
+| Contact form emails fail | SMTP not configured          | Check `SMTP_EMAIL`/`SMTP_PASSWORD` in `.env` |
+| nginx config error       | Typo                         | `nginx -t` shows the exact line              |
+| Port 3000 in use         | Another process              | `ss -tlnp                                    | grep 3000` |
 
 ## Comparison: Docker vs manual
 
-| Aspect | Docker guide | Manual guide |
-|--------|--------------|--------------|
-| Setup effort | One command installs everything | More manual steps |
-| Isolation | Full (DB, Redis in containers) | System-wide packages |
-| Updates | `docker compose up -d` | `git pull && build && pm2 restart` |
-| Backups | Volume-based (pg_dump) | Same pg_dump |
-| Resource usage | Slightly higher (containers) | Lower footprint |
-| Recommended for | Beginners / CI-CD | Tighter control / existing DB |
+| Aspect          | Docker guide                    | Manual guide                       |
+| --------------- | ------------------------------- | ---------------------------------- |
+| Setup effort    | One command installs everything | More manual steps                  |
+| Isolation       | Full (DB, Redis in containers)  | System-wide packages               |
+| Updates         | `docker compose up -d`          | `git pull && build && pm2 restart` |
+| Backups         | Volume-based (pg_dump)          | Same pg_dump                       |
+| Resource usage  | Slightly higher (containers)    | Lower footprint                    |
+| Recommended for | Beginners / CI-CD               | Tighter control / existing DB      |

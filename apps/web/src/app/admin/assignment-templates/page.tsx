@@ -32,7 +32,12 @@ export default function AssignmentTemplatesPage() {
         title="Assignment Templates"
         description="Predefined assignment templates. Attach to courses during creation."
         role="Library"
-        breadcrumbs={[{ label: "Assignment Templates", href: "/admin/assignment-templates" }]}
+        breadcrumbs={[
+          {
+            label: "Assignment Templates",
+            href: "/admin/assignment-templates",
+          },
+        ]}
         action={
           <button
             onClick={() => router.push("/admin/assignment-templates/new")}

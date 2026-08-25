@@ -11,11 +11,7 @@ export const MAX_RESUME_BYTES = 10 * 1024 * 1024; // 10 MB
 
 const instructorUploadsDir = ensureUploadsDir("instructors");
 
-const photoMimeTypes = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-]);
+const photoMimeTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 const resumeMimeTypes = new Set([
   "application/pdf",
@@ -45,9 +41,7 @@ function fileFilter(
     }
   } else if (file.fieldname === RESUME_FIELD) {
     if (!resumeMimeTypes.has(file.mimetype)) {
-      return cb(
-        new Error("Resume must be PDF, DOC, DOCX, JPEG, or PNG."),
-      );
+      return cb(new Error("Resume must be PDF, DOC, DOCX, JPEG, or PNG."));
     }
   }
   return cb(null, true);

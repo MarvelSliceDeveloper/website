@@ -41,7 +41,9 @@ describe("extractVideoId", () => {
 
   it("extracts ID when v= is not the first query param", () => {
     expect(
-      extractVideoId("https://www.youtube.com/watch?feature=share&v=dQw4w9WgXcQ"),
+      extractVideoId(
+        "https://www.youtube.com/watch?feature=share&v=dQw4w9WgXcQ",
+      ),
     ).toBe("dQw4w9WgXcQ");
   });
 

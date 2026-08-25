@@ -267,7 +267,15 @@ export default function InstructorSettingsPage() {
     },
   ];
 
-  function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number | null | undefined }) {
+  function InfoRow({
+    icon,
+    label,
+    value,
+  }: {
+    icon: React.ReactNode;
+    label: string;
+    value: string | number | null | undefined;
+  }) {
     if (!value) return null;
     return (
       <div className="flex items-center gap-3 text-sm">
@@ -278,25 +286,54 @@ export default function InstructorSettingsPage() {
     );
   }
 
-  function SectionCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+  function SectionCard({
+    icon,
+    title,
+    children,
+  }: {
+    icon: React.ReactNode;
+    title: string;
+    children: React.ReactNode;
+  }) {
     return (
       <div className="glass-card p-5 space-y-4">
         <div className="flex items-center gap-2.5 pb-2 border-b border-border/50">
           <span className="text-primary">{icon}</span>
           <p className="text-sm font-semibold text-foreground">{title}</p>
         </div>
-        <div className="space-y-2.5">
-          {children}
-        </div>
+        <div className="space-y-2.5">{children}</div>
       </div>
     );
   }
 
   function renderProfile() {
     const p = instructorProfile;
-    const skillsArr = Array.isArray(p?.skills) ? p.skills : typeof p?.skills === "string" ? p.skills.split(",").map(s => s.trim()).filter(Boolean) : [];
-    const langsArr = Array.isArray(p?.languages) ? p.languages : typeof p?.languages === "string" ? p.languages.split(",").map(s => s.trim()).filter(Boolean) : [];
-    const social = p?.socialLinks && typeof p.socialLinks === "string" ? (() => { try { return JSON.parse(p.socialLinks as string); } catch { return {}; } })() : (p?.socialLinks || {});
+    const skillsArr = Array.isArray(p?.skills)
+      ? p.skills
+      : typeof p?.skills === "string"
+        ? p.skills
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+    const langsArr = Array.isArray(p?.languages)
+      ? p.languages
+      : typeof p?.languages === "string"
+        ? p.languages
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [];
+    const social =
+      p?.socialLinks && typeof p.socialLinks === "string"
+        ? (() => {
+            try {
+              return JSON.parse(p.socialLinks as string);
+            } catch {
+              return {};
+            }
+          })()
+        : p?.socialLinks || {};
     return (
       <>
         <div className="flex items-center gap-3 border-b border-border px-6 py-4">
@@ -310,15 +347,17 @@ export default function InstructorSettingsPage() {
             </p>
           </div>
           {p?.status && (
-            <span className={`rounded-full px-3 py-1 text-[11px] font-bold ${
-              p.status === "APPROVED" || p.status === "ACTIVE"
-                ? "bg-green-500/10 text-green-600"
-                : p.status === "PENDING"
-                  ? "bg-amber-500/10 text-amber-600"
-                  : p.status === "REJECTED"
-                    ? "bg-red-500/10 text-red-600"
-                    : "bg-muted text-muted-foreground"
-            }`}>
+            <span
+              className={`rounded-full px-3 py-1 text-[11px] font-bold ${
+                p.status === "APPROVED" || p.status === "ACTIVE"
+                  ? "bg-green-500/10 text-green-600"
+                  : p.status === "PENDING"
+                    ? "bg-amber-500/10 text-amber-600"
+                    : p.status === "REJECTED"
+                      ? "bg-red-500/10 text-red-600"
+                      : "bg-muted text-muted-foreground"
+              }`}
+            >
               {p.status}
             </span>
           )}
@@ -348,18 +387,44 @@ export default function InstructorSettingsPage() {
           </div>
 
           {/* Professional Info */}
-          <SectionCard icon={<IconBriefcase size={18} />} title="Professional Info">
-            <InfoRow icon={<IconUser size={15} />} label="Designation" value={p?.designation} />
-            <InfoRow icon={<IconBook size={15} />} label="Qualification" value={p?.qualification} />
-            <InfoRow icon={<IconStar size={15} />} label="Experience" value={p?.experienceYears ? `${p.experienceYears} years` : null} />
-            <InfoRow icon={<IconClockHour4 size={15} />} label="Available Time" value={p?.availableTime} />
+          <SectionCard
+            icon={<IconBriefcase size={18} />}
+            title="Professional Info"
+          >
+            <InfoRow
+              icon={<IconUser size={15} />}
+              label="Designation"
+              value={p?.designation}
+            />
+            <InfoRow
+              icon={<IconBook size={15} />}
+              label="Qualification"
+              value={p?.qualification}
+            />
+            <InfoRow
+              icon={<IconStar size={15} />}
+              label="Experience"
+              value={p?.experienceYears ? `${p.experienceYears} years` : null}
+            />
+            <InfoRow
+              icon={<IconClockHour4 size={15} />}
+              label="Available Time"
+              value={p?.availableTime}
+            />
             {skillsArr.length > 0 ? (
               <div className="flex items-start gap-3 text-sm">
                 <IconStar size={15} className="shrink-0 mt-0.5 text-muted" />
-                <span className="text-muted-foreground min-w-[100px]">Skills</span>
+                <span className="text-muted-foreground min-w-[100px]">
+                  Skills
+                </span>
                 <div className="flex flex-wrap gap-1.5">
                   {skillsArr.map((s) => (
-                    <span key={s} className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{s}</span>
+                    <span
+                      key={s}
+                      className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                    >
+                      {s}
+                    </span>
                   ))}
                 </div>
               </div>
@@ -367,81 +432,194 @@ export default function InstructorSettingsPage() {
             {langsArr.length > 0 ? (
               <div className="flex items-start gap-3 text-sm">
                 <IconMessage size={15} className="shrink-0 mt-0.5 text-muted" />
-                <span className="text-muted-foreground min-w-[100px]">Languages</span>
+                <span className="text-muted-foreground min-w-[100px]">
+                  Languages
+                </span>
                 <div className="flex flex-wrap gap-1.5">
                   {langsArr.map((l) => (
-                    <span key={l} className="rounded-md bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-600">{l}</span>
+                    <span
+                      key={l}
+                      className="rounded-md bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-600"
+                    >
+                      {l}
+                    </span>
                   ))}
                 </div>
               </div>
             ) : null}
-            <InfoRow icon={<IconCheck size={15} />} label="Employed" value={p?.currentlyEmployed ? "Yes" : p?.currentlyEmployed === false ? "No" : null} />
-            <InfoRow icon={<IconBriefcase size={15} />} label="Company" value={p?.companyName} />
-            <InfoRow icon={<IconFileCheck size={15} />} label="Bio" value={p?.bio} />
+            <InfoRow
+              icon={<IconCheck size={15} />}
+              label="Employed"
+              value={
+                p?.currentlyEmployed
+                  ? "Yes"
+                  : p?.currentlyEmployed === false
+                    ? "No"
+                    : null
+              }
+            />
+            <InfoRow
+              icon={<IconBriefcase size={15} />}
+              label="Company"
+              value={p?.companyName}
+            />
+            <InfoRow
+              icon={<IconFileCheck size={15} />}
+              label="Bio"
+              value={p?.bio}
+            />
           </SectionCard>
 
           {/* Contact Details */}
           <SectionCard icon={<IconMapPin size={18} />} title="Contact Details">
-            <InfoRow icon={<IconPhone size={15} />} label="Phone" value={p?.phone} />
-            <InfoRow icon={<IconMapPin size={15} />} label="Address" value={p?.address} />
-            <InfoRow icon={<IconMapPin size={15} />} label="City" value={p?.city} />
-            <InfoRow icon={<IconMapPin size={15} />} label="State" value={p?.state} />
-            <InfoRow icon={<IconMapPin size={15} />} label="Country" value={p?.country} />
+            <InfoRow
+              icon={<IconPhone size={15} />}
+              label="Phone"
+              value={p?.phone}
+            />
+            <InfoRow
+              icon={<IconMapPin size={15} />}
+              label="Address"
+              value={p?.address}
+            />
+            <InfoRow
+              icon={<IconMapPin size={15} />}
+              label="City"
+              value={p?.city}
+            />
+            <InfoRow
+              icon={<IconMapPin size={15} />}
+              label="State"
+              value={p?.state}
+            />
+            <InfoRow
+              icon={<IconMapPin size={15} />}
+              label="Country"
+              value={p?.country}
+            />
           </SectionCard>
 
           {/* Social Links */}
           {social && (social.linkedin || social.github || social.portfolio) ? (
             <SectionCard icon={<IconWorld size={18} />} title="Social Links">
               {social.linkedin && (
-                <a href={social.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors">
-                  <IconBrandLinkedin size={15} className="shrink-0 text-muted" />
+                <a
+                  href={social.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <IconBrandLinkedin
+                    size={15}
+                    className="shrink-0 text-muted"
+                  />
                   <span className="min-w-[100px]">LinkedIn</span>
-                  <span className="text-foreground font-medium truncate">{social.linkedin}</span>
+                  <span className="text-foreground font-medium truncate">
+                    {social.linkedin}
+                  </span>
                 </a>
               )}
               {social.github && (
-                <a href={social.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors">
+                <a
+                  href={social.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
                   <IconBrandGithub size={15} className="shrink-0 text-muted" />
                   <span className="min-w-[100px]">GitHub</span>
-                  <span className="text-foreground font-medium truncate">{social.github}</span>
+                  <span className="text-foreground font-medium truncate">
+                    {social.github}
+                  </span>
                 </a>
               )}
               {social.portfolio && (
-                <a href={social.portfolio} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors">
+                <a
+                  href={social.portfolio}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
                   <IconWorld size={15} className="shrink-0 text-muted" />
                   <span className="min-w-[100px]">Portfolio</span>
-                  <span className="text-foreground font-medium truncate">{social.portfolio}</span>
+                  <span className="text-foreground font-medium truncate">
+                    {social.portfolio}
+                  </span>
                 </a>
               )}
             </SectionCard>
           ) : null}
 
           {/* Bank Information */}
-          {p?.bankName || p?.bankAccountNumber || p?.bankIfscCode || p?.bankAccountHolderName || p?.upiId ? (
-            <SectionCard icon={<IconBuildingBank size={18} />} title="Bank Information">
-              <InfoRow icon={<IconBuildingBank size={15} />} label="Bank Name" value={p?.bankName} />
-              <InfoRow icon={<IconBuildingBank size={15} />} label="Account Holder" value={p?.bankAccountHolderName} />
-              <InfoRow icon={<IconBuildingBank size={15} />} label="Account Number" value={p?.bankAccountNumber ? `xxxx${p.bankAccountNumber.slice(-4)}` : null} />
-              <InfoRow icon={<IconBuildingBank size={15} />} label="IFSC Code" value={p?.bankIfscCode} />
-              <InfoRow icon={<IconBuildingBank size={15} />} label="UPI ID" value={p?.upiId} />
+          {p?.bankName ||
+          p?.bankAccountNumber ||
+          p?.bankIfscCode ||
+          p?.bankAccountHolderName ||
+          p?.upiId ? (
+            <SectionCard
+              icon={<IconBuildingBank size={18} />}
+              title="Bank Information"
+            >
+              <InfoRow
+                icon={<IconBuildingBank size={15} />}
+                label="Bank Name"
+                value={p?.bankName}
+              />
+              <InfoRow
+                icon={<IconBuildingBank size={15} />}
+                label="Account Holder"
+                value={p?.bankAccountHolderName}
+              />
+              <InfoRow
+                icon={<IconBuildingBank size={15} />}
+                label="Account Number"
+                value={
+                  p?.bankAccountNumber
+                    ? `xxxx${p.bankAccountNumber.slice(-4)}`
+                    : null
+                }
+              />
+              <InfoRow
+                icon={<IconBuildingBank size={15} />}
+                label="IFSC Code"
+                value={p?.bankIfscCode}
+              />
+              <InfoRow
+                icon={<IconBuildingBank size={15} />}
+                label="UPI ID"
+                value={p?.upiId}
+              />
             </SectionCard>
           ) : null}
 
           {/* Photo & Resume */}
-          {(p?.photoUrl || p?.resumeUrl) ? (
+          {p?.photoUrl || p?.resumeUrl ? (
             <SectionCard icon={<IconPhoto size={18} />} title="Documents">
               {p?.photoUrl && (
                 <div className="flex items-center gap-3 text-sm">
                   <IconPhoto size={15} className="shrink-0 text-muted" />
-                  <span className="text-muted-foreground min-w-[100px]">Photo</span>
-                  <img src={p.photoUrl} alt="Profile" className="h-16 w-16 rounded-lg object-cover border border-border" />
+                  <span className="text-muted-foreground min-w-[100px]">
+                    Photo
+                  </span>
+                  <img
+                    src={p.photoUrl}
+                    alt="Profile"
+                    className="h-16 w-16 rounded-lg object-cover border border-border"
+                  />
                 </div>
               )}
               {p?.resumeUrl && (
-                <a href={p.resumeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors">
+                <a
+                  href={p.resumeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
                   <IconFileUpload size={15} className="shrink-0 text-muted" />
                   <span className="min-w-[100px]">Resume</span>
-                  <span className="text-foreground font-medium">View Resume</span>
+                  <span className="text-foreground font-medium">
+                    View Resume
+                  </span>
                 </a>
               )}
             </SectionCard>
@@ -486,7 +664,7 @@ export default function InstructorSettingsPage() {
         <div className="divide-y divide-border/60">
           {NOTIFICATION_TYPES.map((type) => {
             const config = TYPE_CONFIG[type];
-const enabled = preferences[type] ?? true;
+            const enabled = preferences[type] ?? true;
             return (
               <div
                 key={type}

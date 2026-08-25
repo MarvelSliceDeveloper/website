@@ -14,6 +14,7 @@ Replace hand-rolled `useEffect` + `useState` data loading in `apps/web` with Tan
 ## Scope by Phase
 
 ### Phase 1 — Student + Instructor dashboards, all student views
+
 - [x] Instructor dashboard — `apps/web/src/app/instructor/dashboard/page.tsx`
 - [x] Student standalone pages:
   - `apps/web/src/app/student/certificates/page.tsx`
@@ -25,11 +26,13 @@ Replace hand-rolled `useEffect` + `useState` data loading in `apps/web` with Tan
 - [x] Phase 1 sweep: `npx tsc` clean (only 5 pre-existing), eslint 0 errors on `src/app/student/**`, smoke-tested all student/instructor routes (307 = auth guard)
 
 **Phase 1 notes / deliberate decisions:**
-- Transient read-on-click flows (QuizOverdueView's question fetch, CourseContentView's `selectQuiz`, CertificationExamView's phase-machine init, AssignmentOverdueView file download) stay as handler-fetched state — they populate ephemeral in-memory sub-views, so `useQuery` adds no caching value and risks behavior changes. Their *writes* were converted to `useMutation` + `invalidateQueries`.
+
+- Transient read-on-click flows (QuizOverdueView's question fetch, CourseContentView's `selectQuiz`, CertificationExamView's phase-machine init, AssignmentOverdueView file download) stay as handler-fetched state — they populate ephemeral in-memory sub-views, so `useQuery` adds no caching value and risks behavior changes. Their _writes_ were converted to `useMutation` + `invalidateQueries`.
 - Progress saves in CourseContentView (`handleWatchProgress`) are fire-and-forget API posts (telemetry-style, no UI state); the local progress overlay is written via `queryClient.setQueryData` on `["student","course-content",courseId]`.
 - `OnboardingWizardView` (wizard form, one-shot profile setup) deferred to Phase 2 sweep — form state, low value.
 
 ### Phase 2 — Instructor pages (SLIM — high-value only)
+
 User decision 2026-08-14: skip form-heavy pages (settings/onboarding/notifications/support comps/courses). Convert only list/CRUD/messaging/chart pages.
 
 - [x] `instructor/batches/page.tsx` — `["instructor","batches"]` (shares dashboard key)
@@ -41,6 +44,7 @@ User decision 2026-08-14: skip form-heavy pages (settings/onboarding/notificatio
 - [x] Phase 2 sweep: web tsc only 5 pre-existing, eslint 0 errors on `src/app/instructor/**`, smoke-tested all routes (307 = auth guard)
 
 ### Phase 3 — Admin list pages (SLIM — most important only)
+
 User decision 2026-08-14: convert only the most important admin list/CRUD pages. Skip settings/health/audit-logs/static-pages/branding/i18n/cache/trash/etc.
 
 - [x] `admin/certificates/page.tsx` — `["admin","certificates",page]` + `["admin","certificates","stats"]` + `["admin","certificate-templates"]`; revoke/save/default/delete/uploadPdf/removePdf mutations
@@ -59,6 +63,7 @@ User decision 2026-08-14: convert only the most important admin list/CRUD pages.
 - [x] Phase 3 sweep: web tsc only 4 pre-existing, eslint 0 on all 13 admin files, smoke-tested all routes (307)
 
 ### Phase 4 — Remaining admin pages (ALL — user decision 2026-08-14 "everything left")
+
 All remaining admin pages converted (56 pages + `useReportData` hook). Full per-file list in `working.md`.
 
 - [x] Finance/CRM: `payments`, `refunds`, `refunds/approvals`, `coupons`, `packages`, `packages/enrollments`, `packages/new`, `packages/[id]`
@@ -75,6 +80,7 @@ All remaining admin pages converted (56 pages + `useReportData` hook). Full per-
 - [x] Phase 4 sweep: web tsc only 3 pre-existing errors (`courses/new` slug fixed during conversion), eslint 0 across all `src/app/admin/**`, all 64 static admin routes smoke-test 307
 
 ### Out of scope (skip)
+
 - Pure form pages: `login`, `register`, `set-password`, `forgot-password`, `reset-password`, `catalogue/checkout` flows that are single-shot.
 
 ## Rules

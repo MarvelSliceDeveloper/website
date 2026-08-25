@@ -70,11 +70,11 @@ tar -czf "backups/uploads-$(date +%Y-%m-%d).tar.gz" apps/api/uploads
 
 ## Retention Policy
 
-| Data           | Retention          | Notes                      |
-| -------------- | ------------------ | -------------------------- |
+| Data           | Retention           | Notes                                           |
+| -------------- | ------------------- | ----------------------------------------------- |
 | Database dumps | 3 backups (rolling) | App auto-prunes; adjust via `BACKUP_KEEP_COUNT` |
-| Uploads        | 90 days            | Full backup weekly         |
-| Logs           | 90 days            | Managed by logging service |
+| Uploads        | 90 days             | Full backup weekly                              |
+| Logs           | 90 days             | Managed by logging service                      |
 
 ## Notes
 

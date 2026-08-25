@@ -1,11 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useApiQuery } from "@/lib/query";
@@ -220,7 +216,10 @@ export default function CertificatesPage() {
             Certificates & Certification Exams
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            To claim your certificate, you must complete all quizzes, assignments, and certification exams in your course. For package-level certification, all enrolled courses in the package must be completed.
+            To claim your certificate, you must complete all quizzes,
+            assignments, and certification exams in your course. For
+            package-level certification, all enrolled courses in the package
+            must be completed.
           </p>
         </div>
       </div>
@@ -259,7 +258,7 @@ export default function CertificatesPage() {
                     {progress.packageName}
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                      Certification Exam Progress: {progress.passedCount} of{" "}
+                    Certification Exam Progress: {progress.passedCount} of{" "}
                     {progress.totalRequired} required exams passed
                   </p>
                 </div>
@@ -526,9 +525,15 @@ export default function CertificatesPage() {
                           <div className="grid grid-cols-2 gap-2 text-xs">
                             <div className="flex items-center gap-1.5">
                               {d.completedLessons >= d.totalLessons ? (
-                                <IconCheck size={14} className="text-emerald-500 shrink-0" />
+                                <IconCheck
+                                  size={14}
+                                  className="text-emerald-500 shrink-0"
+                                />
                               ) : (
-                                <IconX size={14} className="text-rose-500 shrink-0" />
+                                <IconX
+                                  size={14}
+                                  className="text-rose-500 shrink-0"
+                                />
                               )}
                               <span
                                 className={
@@ -543,9 +548,15 @@ export default function CertificatesPage() {
 
                             <div className="flex items-center gap-1.5">
                               {d.completedQuizzes >= d.totalQuizzes ? (
-                                <IconCheck size={14} className="text-emerald-500 shrink-0" />
+                                <IconCheck
+                                  size={14}
+                                  className="text-emerald-500 shrink-0"
+                                />
                               ) : (
-                                <IconX size={14} className="text-rose-500 shrink-0" />
+                                <IconX
+                                  size={14}
+                                  className="text-rose-500 shrink-0"
+                                />
                               )}
                               <span
                                 className={
@@ -560,9 +571,15 @@ export default function CertificatesPage() {
 
                             <div className="flex items-center gap-1.5">
                               {d.completedAssignments >= d.totalAssignments ? (
-                                <IconCheck size={14} className="text-emerald-500 shrink-0" />
+                                <IconCheck
+                                  size={14}
+                                  className="text-emerald-500 shrink-0"
+                                />
                               ) : (
-                                <IconX size={14} className="text-rose-500 shrink-0" />
+                                <IconX
+                                  size={14}
+                                  className="text-rose-500 shrink-0"
+                                />
                               )}
                               <span
                                 className={
@@ -579,9 +596,15 @@ export default function CertificatesPage() {
                             {d.isExamRequired && (
                               <div className="flex items-center gap-1.5">
                                 {d.isExamPassed ? (
-                                  <IconCheck size={14} className="text-emerald-500 shrink-0" />
+                                  <IconCheck
+                                    size={14}
+                                    className="text-emerald-500 shrink-0"
+                                  />
                                 ) : (
-                                  <IconX size={14} className="text-rose-500 shrink-0" />
+                                  <IconX
+                                    size={14}
+                                    className="text-rose-500 shrink-0"
+                                  />
                                 )}
                                 <span
                                   className={
@@ -590,7 +613,8 @@ export default function CertificatesPage() {
                                       : "text-foreground font-medium"
                                   }
                                 >
-                                  Exam {d.isExamPassed ? "(Passed)" : "(Pending)"}
+                                  Exam{" "}
+                                  {d.isExamPassed ? "(Passed)" : "(Pending)"}
                                 </span>
                               </div>
                             )}

@@ -6,8 +6,17 @@ import { quizController } from "./quiz.controller";
 import { assignmentController } from "./assignment.controller";
 import { practicalController } from "./practical.controller";
 import { uploadCourseThumbnail } from "./course.upload";
-import { uploadLessonResource, uploadPracticalPdf, uploadCertificationPdf, buildCertificationPdfUrl } from "./modules.upload";
-import { requireAuth, requireRole, AuthRequest } from "../../middleware/auth.middleware";
+import {
+  uploadLessonResource,
+  uploadPracticalPdf,
+  uploadCertificationPdf,
+  buildCertificationPdfUrl,
+} from "./modules.upload";
+import {
+  requireAuth,
+  requireRole,
+  AuthRequest,
+} from "../../middleware/auth.middleware";
 import { UserRole } from "@lms/types";
 import { prisma } from "../../utils/prisma";
 import { moduleService } from "./module.service";
@@ -329,12 +338,8 @@ router.get(
   requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
   async (req: AuthRequest, res: Response) => {
     try {
-      const courseId = await courseService.resolveCourseId(
-        req.params.courseId,
-      );
-      const certModule = await moduleService.getCertificationModule(
-        courseId,
-      );
+      const courseId = await courseService.resolveCourseId(req.params.courseId);
+      const certModule = await moduleService.getCertificationModule(courseId);
       return res.json({
         module: certModule
           ? { id: certModule.id, title: certModule.title }
@@ -349,16 +354,16 @@ router.get(
               hasAssignment: certModule.quizzes[0].hasAssignment,
               assignmentInstructions:
                 certModule.quizzes[0].assignmentInstructions,
-              assignmentPdfUrl:
-                certModule.quizzes[0].assignmentPdfUrl,
+              assignmentPdfUrl: certModule.quizzes[0].assignmentPdfUrl,
               questionCount: certModule.quizzes[0].questions.length,
               questions: certModule.quizzes[0].questions.map((q) => ({
                 id: q.id,
                 text: q.text,
-                options: (q.options as Array<{
-                  label: string;
-                  isCorrect: boolean;
-                }>) ?? [],
+                options:
+                  (q.options as Array<{
+                    label: string;
+                    isCorrect: boolean;
+                  }>) ?? [],
               })),
             }
           : null,
@@ -376,12 +381,9 @@ router.put(
   requireRole([UserRole.ADMIN, UserRole.INSTRUCTOR]),
   async (req: AuthRequest, res: Response) => {
     try {
-      const courseId = await courseService.resolveCourseId(
-        req.params.courseId,
-      );
-      const certModule = await moduleService.ensureCertificationModule(
-        courseId,
-      );
+      const courseId = await courseService.resolveCourseId(req.params.courseId);
+      const certModule =
+        await moduleService.ensureCertificationModule(courseId);
       const updated = await moduleService.updateCertificationModule(
         courseId,
         req.body,
@@ -409,19 +411,11 @@ router.post(
       if (!file) {
         return res.status(400).json({ error: "No PDF file uploaded" });
       }
-      const courseId = await courseService.resolveCourseId(
-        req.params.courseId,
-      );
-      const url = buildCertificationPdfUrl(
-        req,
-        courseId,
-        file.filename,
-      );
+      const courseId = await courseService.resolveCourseId(req.params.courseId);
+      const url = buildCertificationPdfUrl(req, courseId, file.filename);
 
       // Update the certification quiz's assignmentPdfUrl
-      const certModule = await moduleService.getCertificationModule(
-        courseId,
-      );
+      const certModule = await moduleService.getCertificationModule(courseId);
       if (certModule?.quizzes[0]) {
         await prisma.quiz.update({
           where: { id: certModule.quizzes[0].id },

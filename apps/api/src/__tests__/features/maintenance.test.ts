@@ -9,14 +9,20 @@ vi.mock("../../utils/prisma", () => ({
 }));
 
 import { prisma } from "../../utils/prisma";
-import { maintenanceMiddleware, resetMaintenanceCache } from "../../middleware/maintenance.middleware";
+import {
+  maintenanceMiddleware,
+  resetMaintenanceCache,
+} from "../../middleware/maintenance.middleware";
 
 function mockReq(path: string) {
   return { path, method: "GET", log: { error: vi.fn() } } as any;
 }
 
 function mockRes() {
-  const res: any = { status: vi.fn().mockReturnThis(), json: vi.fn().mockReturnThis() };
+  const res: any = {
+    status: vi.fn().mockReturnThis(),
+    json: vi.fn().mockReturnThis(),
+  };
   return res;
 }
 

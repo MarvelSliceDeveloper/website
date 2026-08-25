@@ -53,24 +53,29 @@ export const profileController = {
           return res.status(400).json({ error: err.message });
         }
 
-        const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+        const files = req.files as
+          | { [fieldname: string]: Express.Multer.File[] }
+          | undefined;
         const updateData: Record<string, string> = {};
 
         if (files?.[PHOTO_FIELD]?.length) {
-          updateData.photoUrl = buildInstructorFileUrl(req, files[PHOTO_FIELD][0].filename);
+          updateData.photoUrl = buildInstructorFileUrl(
+            req,
+            files[PHOTO_FIELD][0].filename,
+          );
         }
         if (files?.[RESUME_FIELD]?.length) {
-          updateData.resumeUrl = buildInstructorFileUrl(req, files[RESUME_FIELD][0].filename);
+          updateData.resumeUrl = buildInstructorFileUrl(
+            req,
+            files[RESUME_FIELD][0].filename,
+          );
         }
 
         if (Object.keys(updateData).length === 0) {
           return res.status(400).json({ error: "No files uploaded" });
         }
 
-        const profile = await profileService.upsertProfile(
-          userId,
-          updateData,
-        );
+        const profile = await profileService.upsertProfile(userId, updateData);
         return res.json(profile);
       });
     } catch (err: unknown) {

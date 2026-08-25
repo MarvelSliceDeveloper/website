@@ -157,9 +157,7 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
         passingScore,
         timeLimitMin: timeLimitMin ? parseInt(timeLimitMin) : null,
         hasAssignment,
-        assignmentInstructions: hasAssignment
-          ? assignmentInstructions
-          : null,
+        assignmentInstructions: hasAssignment ? assignmentInstructions : null,
         assignmentPdfUrl: hasAssignment ? assignmentPdfUrl || null : null,
         questions: questions.map((q) => ({
           text: q.text,
@@ -264,7 +262,9 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
           { label: String(row[3] ?? "").trim(), isCorrect: false },
           { label: String(row[4] ?? "").trim(), isCorrect: false },
         ];
-        const answer = String(row[5] ?? "").trim().toUpperCase();
+        const answer = String(row[5] ?? "")
+          .trim()
+          .toUpperCase();
 
         if (!question || options.every((o) => !o.label)) {
           skipped++;
@@ -272,7 +272,15 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
         }
 
         const answerIndex =
-          answer === "A" ? 0 : answer === "B" ? 1 : answer === "C" ? 2 : answer === "D" ? 3 : -1;
+          answer === "A"
+            ? 0
+            : answer === "B"
+              ? 1
+              : answer === "C"
+                ? 2
+                : answer === "D"
+                  ? 3
+                  : -1;
         if (answerIndex >= 0) {
           options[answerIndex] = { ...options[answerIndex], isCorrect: true };
         }
@@ -372,8 +380,9 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
           <IconSettings className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
           <p className="text-sm text-muted">
             No certification module exists for this course yet. Configure the
-            exam below and click <span className="font-medium text-foreground">Save Settings</span> to
-            create it — it will always appear as the last module.
+            exam below and click{" "}
+            <span className="font-medium text-foreground">Save Settings</span>{" "}
+            to create it — it will always appear as the last module.
           </p>
         </div>
       )}
@@ -396,7 +405,9 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
 
         <div className="space-y-4">
           <div className="field">
-            <label className="label">Exam Title <span className="text-danger">*</span></label>
+            <label className="label">
+              Exam Title <span className="text-danger">*</span>
+            </label>
             <input
               type="text"
               value={title}
@@ -416,7 +427,9 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
                 min={0}
                 max={100}
                 value={passingScore}
-                onChange={(e) => setPassingScore(parseInt(e.target.value) || 60)}
+                onChange={(e) =>
+                  setPassingScore(parseInt(e.target.value) || 60)
+                }
                 className="input"
               />
               <p className="text-xs text-muted mt-1">
@@ -443,18 +456,18 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
           </div>
 
           <div className="flex justify-end mt-4">
-<button
-            onClick={handleSaveSettings}
-            className="btn-primary inline-flex items-center gap-2"
-            disabled={saveMutation.isPending}
-          >
-            {saveMutation.isPending ? (
-              <IconLoader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <IconSettings className="h-4 w-4" />
-            )}
-            Save Settings
-          </button>
+            <button
+              onClick={handleSaveSettings}
+              className="btn-primary inline-flex items-center gap-2"
+              disabled={saveMutation.isPending}
+            >
+              {saveMutation.isPending ? (
+                <IconLoader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <IconSettings className="h-4 w-4" />
+              )}
+              Save Settings
+            </button>
           </div>
         </div>
       </div>
@@ -471,7 +484,9 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
                 Exam Questions
               </h3>
               <p className="text-xs text-muted">
-                {questions.filter((q) => q.text.trim()).length} MCQ question{questions.filter((q) => q.text.trim()).length !== 1 ? "s" : ""} configured
+                {questions.filter((q) => q.text.trim()).length} MCQ question
+                {questions.filter((q) => q.text.trim()).length !== 1 ? "s" : ""}{" "}
+                configured
               </p>
             </div>
           </div>
@@ -487,23 +502,27 @@ export default function CertificationTab({ courseId }: CertificationTabProps) {
         {/* Quick preview of questions */}
         {questions.filter((q) => q.text.trim()).length > 0 && (
           <div className="space-y-1.5">
-            {questions.filter((q) => q.text.trim()).slice(0, 5).map((q, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/20 text-xs"
-              >
-                <span className="flex h-5 w-5 items-center justify-center rounded bg-amber-500/10 text-[10px] font-bold text-amber-600 shrink-0">
-                  {idx + 1}
-                </span>
-                <span className="text-foreground truncate">{q.text}</span>
-                <span className="text-muted ml-auto shrink-0">
-                  {q.options.length} opts
-                </span>
-              </div>
-            ))}
+            {questions
+              .filter((q) => q.text.trim())
+              .slice(0, 5)
+              .map((q, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/20 text-xs"
+                >
+                  <span className="flex h-5 w-5 items-center justify-center rounded bg-amber-500/10 text-[10px] font-bold text-amber-600 shrink-0">
+                    {idx + 1}
+                  </span>
+                  <span className="text-foreground truncate">{q.text}</span>
+                  <span className="text-muted ml-auto shrink-0">
+                    {q.options.length} opts
+                  </span>
+                </div>
+              ))}
             {questions.filter((q) => q.text.trim()).length > 5 && (
               <p className="text-[10px] text-muted text-center pt-1">
-                +{questions.filter((q) => q.text.trim()).length - 5} more questions
+                +{questions.filter((q) => q.text.trim()).length - 5} more
+                questions
               </p>
             )}
           </div>

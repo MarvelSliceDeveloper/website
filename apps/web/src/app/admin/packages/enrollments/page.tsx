@@ -105,10 +105,7 @@ function CourseBatchSelect({
       <label className="mb-1 block text-xs font-medium text-muted-foreground">
         {courseTitle}
       </label>
-      <Select
-        value={value || ""}
-        onValueChange={(val) => onChange(val || "")}
-      >
+      <Select value={value || ""} onValueChange={(val) => onChange(val || "")}>
         <SelectTrigger className="field w-full">
           <SelectValue placeholder="-- Select Batch --" />
         </SelectTrigger>

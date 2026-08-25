@@ -121,7 +121,8 @@ function StaticPageForm({
     });
   }
 
-  const isValid = title.trim().length > 0 && slug.trim().length > 0 && !slugError;
+  const isValid =
+    title.trim().length > 0 && slug.trim().length > 0 && !slugError;
 
   return (
     <div

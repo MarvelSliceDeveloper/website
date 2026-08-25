@@ -113,9 +113,7 @@ export default function QuizTemplateEditorPage() {
         ? api.post("/api/admin/quiz-templates", payload)
         : api.put(`/api/admin/quiz-templates/${id}`, payload),
     onSuccess: () => {
-      toast.success(
-        isNew ? "Quiz template created" : "Quiz template updated",
-      );
+      toast.success(isNew ? "Quiz template created" : "Quiz template updated");
       void queryClient.invalidateQueries({
         queryKey: ["admin", "quiz-templates"],
       });

@@ -96,7 +96,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-      <html
+    <html
       lang="en"
       // font variables available as CSS custom properties everywhere
       className={`${sora.variable} ${dmSans.variable} h-full antialiased`}

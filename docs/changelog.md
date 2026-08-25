@@ -1,15 +1,39 @@
 # Changelog
 
+## 2026-08-25 — Version Management (Project + Website + SuperAdmin)
+
+Exposes app version (`package.json:1.0.1`) via API and UI with build metadata (commit, build time).
+
+**Backend** `apps/api/src/modules/version/`
+
+- `version.service.ts` reads root `package.json` + `GIT_COMMIT`/`BUILD_TIME` env (injected via Docker `ARG`)
+- `version.routes.ts` — `GET /api/version` public (CSRF-exempt) returns `{name,version,env,commitShort,buildTime}`; `GET /api/version/details` super-admin only adds full `commit` + `changelog` tail
+- `app.ts:157,410` wired router + CSRF exempt; `Dockerfile` (api/web) adds `ARG GIT_COMMIT/BUILD_TIME/NEXT_PUBLIC_APP_VERSION`
+
+**Frontend** `apps/web`
+
+- New `src/app/admin/version/page.tsx` ( + `loading.tsx`/`error.tsx`) — 4 cards (version/env/commit/buildTime) with copy buttons, changelog preview, bump guide; `usePageTitle("Version")`
+- `src/app/admin/super-admin/page.tsx:131` adds Version tool card
+- `src/components/AdminSidebar.tsx:321` sidebar footer shows live version (fetches `/api/version`, falls back to `NEXT_PUBLIC_APP_VERSION`) + link to `/admin/version`
+- `src/components/admin/AdminPageHeader.tsx:4,22` breadcrumbs now support optional `href` (last crumb plain text)
+- `apps/web/package.json:3` synced `0.1.0` → `1.0.1` to match root
+
+**Env/Docs**
+
+- `.env.example` / `.env.production.example` adds `NEXT_PUBLIC_APP_VERSION`, `NEXT_PUBLIC_API_URL`, `GIT_COMMIT`, `BUILD_TIME`
+
 ## 2026-08-23 — AI Integration: Course Module Context for Content & Quiz Generation
 
 When building course content or quizzes the AI can now "see the module". All generation calls now carry the course title/description, the full module list in order, and the current module title/description so the AI stays aligned with the curriculum instead of generating generic content.
 
 ### Backend
+
 - `apps/api/src/services/ai.service.ts` — `AIGenerationContext` adds `modules: Array<{ title: string; description?: string }>`; `contextLines()` renders a numbered `Course modules:` block; `MODULES` prompt avoids duplicating existing modules, `QUIZ` aligns with the curriculum progression, `LESSON_DESCRIPTION` and `ASSIGNMENT` reference the module/course context.
 - `apps/api/src/modules/ai/ai.routes.ts` — Zod `generateBodySchema` now accepts `moduleDescription` (was stripped — bug fix) and `modules: Array<{ title, description? }>`; previously the AI never received module descriptions for quizzes.
 - `apps/api/src/__tests__/services/ai.service.test.ts` — new test: verifies `modules` + `moduleDescription` appear in `systemInstruction`.
 
 ### Frontend
+
 - `apps/web/src/lib/use-ai-generate.ts` — `AIContext` adds `modules?: AIModuleContext[]`.
 - `apps/web/src/app/admin/courses/[id]/_components/types.ts` — adds `AIModuleContext` and `toAIModules()` helper.
 - `apps/web/src/app/admin/courses/[id]/page.tsx` — passes `courseTitle`/`courseDescription` to `ContentTab`.
@@ -21,6 +45,7 @@ When building course content or quizzes the AI can now "see the module". All gen
 - `apps/web/src/app/admin/courses/[id]/_components/CertificationTab.tsx` — sends `courseTitle`/`courseDescription`/`modules` with its `QUIZ` generation and forwards course context into its `ModuleCard`.
 
 ### Verification
+
 - API `tsc --noEmit` clean; API `vitest` 18/18 `ai.service` tests pass.
 - Web `tsc --noEmit` only the 5 pre-existing `QuizOverdueView.tsx` errors (unrelated; `OverdueAssignment` missing `attempts`/`passingScore`).
 
@@ -29,6 +54,7 @@ When building course content or quizzes the AI can now "see the module". All gen
 User decision 2026-08-14: "everything left" — converted every remaining admin page (56 pages + shared `useReportData` hook). Completes the admin migration.
 
 ### Frontend
+
 - Finance/CRM: `payments` (list + revenue), `refunds` (lookup/create mutations + `["auth","me"]` gate), `refunds/approvals` (tab-keyed + approve/reject), `coupons` (create/toggle/delete), `packages` (status-keyed + delete), `packages/enrollments` (shared `CourseBatchSelect` child + approve/reject), `packages/new`, `packages/[id]` (detail + dependent students + status/enroll/approve/reject).
 - Templates/review: `assignment-templates`, `assignment-templates/[id]`, `quiz-templates`, `quiz-templates/[id]` (dependent detail + save/delete with `isLoading` guard so `isNew` editor renders without flash), `email-templates` (save/preview), `assignments/review` (submissions + stats + grade).
 - Users: `users/login-history` (page-keyed), `users/import` (FormData import mutation).
@@ -42,12 +68,14 @@ User decision 2026-08-14: "everything left" — converted every remaining admin 
 - Shared hook: `lib/report-utils.ts` `useReportData` → current + previous-period `useApiQuery`s gated on range (powers `admin/reports`, `admin/reports/course`, `admin/reports/payment`).
 
 ### Notes
+
 - Deliberate exceptions kept as handler-fetch (transient read-on-click): YouTube video-info blur fetch in `LessonCard`/`AddLessonForm`, instructor detail viewer, approvals/users modals.
 - Phase 4 verification: web `tsc` only the 3 pre-existing errors (down from 4 — `courses/new` slug fixed), eslint 0 across all `src/app/admin/**` + `src/lib/report-utils.ts`, all 64 static admin routes smoke-test 307 (auth guard).
 
 ## 2026-08-14 — TanStack Query Migration (Phase 3 complete: admin pages)
 
 ### Frontend
+
 - Converted the most important admin list/CRUD pages (slim scope per user decision 2026-08-14; settings/health/audit-logs/static-pages/branding/i18n/cache/trash/etc. skipped):
   - `admin/certificates/page.tsx` — `["admin","certificates",page]` + `["admin","certificates","stats"]` + `["admin","certificate-templates"]`; revoke/save/set-default/delete/uploadPdf/removePdf mutations (2 tabs).
   - `admin/mentorship/page.tsx` — `["admin","mentorship",...]` tickets/mentors/stats queries + 4 modal mutations (assign/schedule/complete/cancel); `isSubmitting` derived; fixed circular `MentorshipStats` type.
@@ -64,12 +92,14 @@ User decision 2026-08-14: "everything left" — converted every remaining admin 
 - Global `QueryCache.onError` 401→`/login` covers admin reads (no per-page manual redirects needed).
 
 ### Notes
+
 - Deliberate exceptions kept as handler-fetch (transient read-on-click modals): `admin/instructors` detail viewer, `admin/approvals` review modal, `admin/users` profile viewer.
 - Phase 3 verification: web `tsc` only the 4 pre-existing errors (down from 5 — instructors `totalStudents` fixed), eslint 0 across all 13 converted files, all 13 admin routes smoke-test OK (307 = auth guard).
 
 ## 2026-08-14 — TanStack Query Migration (Phase 2 complete: instructor pages)
 
 ### Frontend
+
 - Converted the high-value instructor pages (slim scope per user decision 2026-08-14; form-heavy pages skipped):
   - `instructor/batches/page.tsx` — `["instructor","batches"]` (shares dashboard key); dropped manual load + 401 redirect (global `QueryCache.onError` handles it).
   - `instructor/sessions/page.tsx` — `["instructor","sessions"]`; edit/delete/sync-recording → 3 `useMutation`s; attendance modal stays a handler-fetch (transient).
@@ -79,12 +109,14 @@ User decision 2026-08-14: "everything left" — converted every remaining admin 
   - `instructor/mentorship/page.tsx` — `["instructor","mentorship-tickets"]`; schedule/complete/cancel → 3 `useMutation`s; `processing` derived from `isPending`.
 
 ### Notes
+
 - Skipped (form-heavy / low value): `instructor/settings`, `onboarding`, `notifications/send`, `support` (+`_comps/*`), `courses`.
 - Phase 2 verification: web `tsc` only the 5 pre-existing errors, eslint 0 errors across `src/app/instructor/**`, all 7 instructor routes smoke-test OK (307 = auth guard).
 
 ## 2026-08-14 — TanStack Query Migration (Phase 1: dashboards + student pages)
 
 ### Frontend
+
 - Introduced TanStack Query for data fetching in `apps/web` (`useApiQuery` wrapper in `lib/query.ts`; `QueryClientProvider` in `providers.tsx` with `staleTime 60s`, `retry 1`, `refetchOnWindowFocus false`).
 - Global `QueryCache.onError` redirects to `/login` when the API returns `401`.
 - Converted to queries/mutations (cached reads + `invalidateQueries` instead of manual `loadData()`):
@@ -95,12 +127,14 @@ User decision 2026-08-14: "everything left" — converted every remaining admin 
 - Removed several dead helpers/unused imports found during conversion (`renderTicketCard`, `EmptyState` in support; duplicate `claimPackageCert` copies in certificates).
 
 ### Notes
+
 - `useQuery` (v5) has no `onError`/`onSuccess` options — error/empty states rendered inline; mutations use `onMutate`/`onSuccess`/`onError` lifecycle toasts (sonner `toast.promise` returns a non-Promise type).
 - Phase 1 remaining: student `_views` that fetch on mount (`CourseContentView`, `CertificatesView`, `AssignmentOverdueView`, `QuizOverdueView`, `_comps/*`) — tracked in `working.md`; Phases 2–4 per `docs/plan-to-work/tanstack-query-migration.md`.
 
 ## 2026-08-14 — TanStack Query Migration (Phase 1 complete: student `_views`)
 
 ### Frontend
+
 - Converted the remaining Phase 1 student `_views`:
   - `CourseContentView` — main content fetch → `useApiQuery(["student","course-content",courseId])`; certification status → dependent `useQuery`; progress overlay written via `queryClient.setQueryData`; quiz submit → `useMutation`; retry → `contentQuery.refetch()`.
   - `CertificatesView` — certificates + dependent per-course progress + per-package exam progress queries; claim → `useMutation` invalidating `["student","certificates"]`.
@@ -110,12 +144,14 @@ User decision 2026-08-14: "everything left" — converted every remaining admin 
 - `AssignmentContent` needed no conversion (only a file download + SSR portal guard, no display reads).
 
 ### Notes
+
 - Deliberate exceptions (documented in the plan doc): transient read-on-click flows that populate ephemeral sub-views keep handler-fetched state; their writes are `useMutation`. `OnboardingWizardView` deferred to the Phase 2 sweep.
 - Phase 1 verification: `npx tsc` clean (only 5 pre-existing errors), eslint 0 errors across `src/app/student/**`, all student/instructor routes smoke-test OK.
 
 ## 2026-08-07 - Student Portal Performance Optimization
 
 ### Backend API
+
 - `GET /api/student/summary` slimmed to a **lightweight core** (enrolled, sessions, calendar, tickets, cheap certificate count). Heavy sections (overdue, results, continue-learning) are no longer added; they have their own endpoints and load progressively on the client.
 - `getDashboardSummary` is single-flight cached per-user (`student-summary:${userId}`, 15s TTL).
 - `GET /api/courses/:courseId` (new `getCourseDetail`) — on-demand single-course detail for COURSE_DETAIL; replaces pre-loading the full catalogue.
@@ -123,12 +159,14 @@ User decision 2026-08-14: "everything left" — converted every remaining admin 
 - New composite indexes: `QuizAttempt(userId,status)`, `Quiz(moduleId,dueDate)`, `Assignment(batchId,dueDate)`, `AssignmentSubmission(studentId,status)`, `EnrollmentRequest(userId,status)`, `PackageEnrollment(userId,status)`.
 
 ### Frontend
+
 - `student/page.tsx` — core summary loads first, heavy sections fetched in parallel from their own endpoints (progressive rendering).
 - Removed eager `catalogue` + `certificates` pre-fetch from the summary path.
 - COURSE_DETAIL fetches `GET /api/courses/:courseId` on demand into a `courseDetailCache`.
 - `CertificatesView` self-fetches `GET /api/certificates` on mount with a loading skeleton — the heavy completion map is off the initial load path.
 
 ### Cleanup
+
 - Removed the unused `recommended` widget (backend `getRecommendedCourses` + summary field + frontend type).
 - Removed the unused `certificate?: any` response field in `CertificatesView` (also clears a lint error).
 - Removed the ~100-line legacy fallback block in `fetchPortalData` — summary failure now yields an empty core + the existing `failedSections` warning banner.
@@ -136,12 +174,14 @@ User decision 2026-08-14: "everything left" — converted every remaining admin 
 ## 2026-08-02 — Vitest Security Patch (CVE-2026-47429)
 
 ### Dependencies
+
 - Upgraded `vitest` `^2.1.0` → `^3.2.6` (resolved `3.2.7`) in `apps/api` to fix **CVE-2026-47429** (GHSA-5xrq-8626-4rwp, CVSS 9.8). On Windows, the Vitest UI/API server misused `isFileServingAllowed` for `/__vitest_attachment__`, allowing `\\?\..\` path traversal to read files outside the project; the exposed write/rerun API features (`saveTestFile`, `rerun`) could execute arbitrary scripts. Fixed in vitest `>= 3.2.6` (and `>= 4.1.0`). `@vitest/ui` was not installed, so the UI server surface was absent, but the dependency was still flagged.
 - Full API suite re-run after the major-version bump: 291/292 passing (only the pre-existing quiz-submission message mismatch failure remains).
 
 ## 2026-08-02 — Scaling Hardening & Architectural Cleanup
 
 ### Backend API
+
 - `apps/api/src/utils/prisma.ts` — Prisma pool size is now env-driven (`DATABASE_CONNECTION_LIMIT`, default 10). Default kept below the Supabase session-mode pooler cap (15). `.env.example` updated.
 - `apps/api/src/utils/single-flight-cache.ts` (new) — zero-dep single-flight (promise memoization) on top of `memory-cache`. `GET /api/courses/:courseId/content` now collapses concurrent cache-miss requests into a single DB fetch (30s TTL).
 - `apps/api/src/app.ts` — `app.set("trust proxy", 1)` in production so the global rate limiter sees real client IPs behind nginx (no false 429s); `/health` now probes Postgres with `SELECT 1` (returns 503 when the DB is down).
@@ -150,23 +190,28 @@ User decision 2026-08-14: "everything left" — converted every remaining admin 
 - `apps/api/src/modules/courses/student-course.service.ts` (new) — extracted `getEnrolledCourses`, `getCatalogue`, `loadCourseContent`, `requestEnrollment` from the route layer. `student-course.routes.ts` went from 979 → 331 lines of thin handlers using `handleControllerError`.
 
 ### Frontend
+
 - `apps/web/src/lib/api.ts` — CSRF refresh deduped with `csrfRefreshing` flag so a burst of 403s triggers a single `/api/csrf-token` fetch.
 - `apps/web/src/app/student/page.tsx` — `fetchPortalData` now tracks per-endpoint failures (`failedSections`); partial failures show a dismissible warning banner instead of being silently masked.
 
 ### Shared Package (`packages/config`, new)
+
 - `@lms/config` — shared Zod schemas + inferred types for auth: `RegisterSchema`, `LoginSchema`, `ChangePasswordSchema`, `SetPasswordSchema`, `ForgotPasswordSchema`, `ResetPasswordSchema`, `passwordSchema`, `emailSchema` (+ `LoginInput`/`RegisterInput`/etc. types).
 - API validates all auth request bodies from these schemas (`auth.controller.ts`, `auth.service.ts`).
 - Web consumes the same types (`LoginInput` on `/login`, `SetPasswordInput` on `/set-password`) so frontend/backend types can't drift.
 
 ### Tests
+
 - All auth suites pass with shared schemas: `auth.test.ts`, `auth-extended.test.ts`, `schemas/auth.schema.test.ts`, `notes.test.ts` (48 tests).
 
 ## 2026-07-31 — Live Session Analytics
 
 ### Database (Schema)
+
 - **Attendance**: Added `rejoinCount` (Int @default(0)), `lastSeenAt` (DateTime?), `qualified` (Boolean @default(false))
 
 ### Backend API
+
 - `apps/api/src/services/presence.service.ts` (new) — in-memory presence store (`markPresent`, `liveCount`); Redis presence store deferred (no new deps)
 - `apps/api/src/modules/attendance/attendance.service.ts` — join reopens left records + increments `rejoinCount`; leave computes full-window `durationSeconds` + `qualified` (≥50% of session duration); new `heartbeat`, `getSessionStats` (uniqueAttendees, liveNow, peakConcurrent, avgDurationSeconds, qualifiedCount, lateJoins, earlyLeaves, attendanceRate, totalWatchMinutes), `listForSession`
 - `apps/api/src/modules/attendance/attendance.routes.ts` — `POST /:sessionId/heartbeat`, `GET /:sessionId/stats`, `GET /:sessionId` (ADMIN/INSTRUCTOR)
@@ -175,48 +220,58 @@ User decision 2026-08-14: "everything left" — converted every remaining admin 
 - `apps/api/src/modules/admin/assignments/review.routes.ts` — **bug fix**: `fileUrl` mapped from `answerFileUrl` (was `item.fileUrl`, which doesn't exist on the Prisma result — review page always got `undefined`)
 
 ### Frontend
+
 - `apps/web/src/hooks/use-live-session-presence.ts` (new) — 45s heartbeat while in a live session, auto-stops on unmount, fire-and-forget; wired into `LiveSessionsView`, `HomeView`, `CourseContentView`, `BatchDetailView`
 - `apps/web/src/app/admin/sessions/page.tsx` — Attendees + Avg Duration columns
 - `apps/web/src/app/admin/sessions/[sessionId]/page.tsx` — stats tiles (unique attendees, live now, peak concurrent, avg duration, attendance rate, qualified count) + attendance table with qualified badge / rejoin count
 
 ### Tests
+
 - `apps/api/src/__tests__/services/attendance.service.test.ts` (new) — 15 tests: join (404/403/idempotent/reopen + rejoinCount), leave (400/qualified thresholds/endedAt), heartbeat, stats aggregation, list ordering. All passing.
 
 ### Docs
+
 - `docs/plan-to-work/live-session-analytics.md` → `docs/plan-completed/live-session-analytics.md`
 
 ## 2026-07-31 — Super Admin Dashboard: Flat Square Cards & Stat Card Consistency
 
 ### Frontend
+
 - `apps/web/src/app/admin/dashboard/page.tsx` — User Distribution cards converted from `rounded-2xl` gradient boxes to flat square cards (role-colored icon + value retained)
 - System Stats cards (System Status, API Keys, Activity Logs, Failed Logs, Pending Instructors, Trash) replaced `StatCard` with the inline flat square pattern used by the Admin dashboard
 - "Activity Logs (30d)" no longer renders teal (`purple` variant mapped to accent colors in `StatCard`) — all superadmin stat cards are now uniform
 - Removed unused `StatCard` import
 
 ### Docs
+
 - `docs/plan-completed/superadmin-dashboard-squares.md`
 
 ## 2026-07-31 — Login History: User Name Display & Logout Timestamp
 
 ### Backend API
+
 - `apps/api/src/modules/logs/login-history.routes.ts` — `GET /api/admin/login-history` now includes the `user` relation (id, name, email) so names are returned instead of bare user IDs
 - `apps/api/src/modules/auth/auth.routes.ts` — `POST /api/auth/logout` now requires `requireAuth` middleware so the user identity is available
 - `apps/api/src/modules/auth/auth.controller.ts` — logout handler stamps `logoutAt` on the user's open `LoginLog` records before clearing the cookie
 
 ### Frontend
+
 - `apps/web/src/app/admin/users/login-history/page.tsx` — "User ID" column replaced with "User" showing name + email; `LoginEntry` type extended with `user` object
 
 ### Docs
+
 - `docs/plan-completed/login-history-user-name-logout.md`
 
 ## 2026-07-29 — Admin Security, Maintenance, Backup & Alerting Features
 
 ### Database (Schema)
+
 - **User**: Added `twoFactorEnabled` (Boolean @default(false))
 - **AdminSession** (new): Tracks admin login sessions — id, userId, tokenPrefix, ip, userAgent, deviceInfo, lastActiveAt, expiresAt, active
 - **NotificationWebhook** (new): Webhook endpoints for system alerts — name, url, events (JSON), active, lastFiredAt
 
 ### Session Security
+
 - `apps/api/src/modules/auth/auth.service.ts` — `generateTokens()` now async; creates `AdminSession` for ADMIN/SUPER_ADMIN users and includes `sessionId` in JWT payload
 - `apps/api/src/modules/auth/auth.controller.ts` — login, password change, set password handlers pass `req.ip` + `user-agent` to `generateTokens()`
 - `apps/api/src/middleware/auth.middleware.ts` — `requireAuth` now async (line 123); checks `AdminSession.active` for admin users on every request; periodic `lastActiveAt` update
@@ -224,34 +279,41 @@ User decision 2026-08-14: "everything left" — converted every remaining admin 
 - `apps/api/src/modules/admin/sessions/sessions.routes.ts` — `GET /`, `GET /all`, `POST /:id/kill`, `POST /kill-all` for session management
 
 ### Maintenance Mode
+
 - `apps/api/src/middleware/maintenance.middleware.ts` — 15-second cache; blocks non-admin routes when `maintenance_mode` setting is enabled; skips admin routes, auth, webhooks, health
 - `apps/api/src/modules/admin/maintenance/maintenance.routes.ts` — `GET /` (status), `PUT /` (toggle)
 - Registered in `app.ts` before all other routes
 
 ### Backup & Restore
+
 - `apps/api/src/modules/admin/backup/backup.routes.ts` — `POST /` (pg_dump), `GET /list`, `GET /download/:filename`, `POST /restore` (pg_restore via file upload), `DELETE /:filename`
 - `apps/web/src/app/admin/settings/backup/page.tsx` — create/restore/delete backups, file picker for restore
 
 ### Alerting Webhooks
+
 - `apps/api/src/modules/admin/webhooks/alerting-webhooks.routes.ts` — Full CRUD + `POST /:id/test` for NotificationWebhook
 - `apps/api/src/services/alerting.service.ts` — `fire(event, payload)` dispatches to all matching active webhooks
 - `apps/web/src/app/admin/settings/webhooks/page.tsx` — create/edit/test/delete webhooks with event checkboxes
 
 ### UI/Sidebar Updates
+
 - `apps/web/src/components/AdminSidebar.tsx` — Added "Backup & Restore" and "Alerting Webhooks" under Settings → System
 
 ### Tests (18 new tests, all passing)
+
 - `apps/api/src/__tests__/features/session-security.test.ts` — 4 tests: AdminSession creation for ADMIN/SUPER_ADMIN, skipped for STUDENT, sessionTimeoutMin in JWT
 - `apps/api/src/__tests__/features/maintenance.test.ts` — 4 tests: blocks non-admin, allows through when off, allows admin routes, blocks health
 - `apps/api/src/__tests__/features/admin-features.test.ts` — 10 tests: route registration for Backup (5), Alerting Webhooks (5)
 
 ### Other
+
 - `apps/api/src/app.ts` — mounted `/api/admin/backup`, `/api/admin/alerting-webhooks` routes
 - All route mounts use `requireAuth` + `requireRole([ADMIN, SUPER_ADMIN])` (backup uses `requireSuperAdmin`)
 
 Implemented a complete system for customizable due dates, late submission penalties, batch-level extensions, and course mentor assignment per batch.
 
 ### Database (Schema)
+
 - **Batch**: Added `defaultDaysToComplete` (Int?), `lateSubmissionPenaltyPercent` (Int @default(25))
 - **Assignment**: Added `daysFromEnrollment` (Int?), `allowLateSubmission` (Boolean), `lateSubmissionPenaltyPercent` (Int?), `lateSubmissionGracePeriodHrs` (Int?)
 - **Quiz**: Added same fields as Assignment
@@ -261,6 +323,7 @@ Implemented a complete system for customizable due dates, late submission penalt
 - **BatchCourseMentor** (new): Assigns an instructor as course mentor within a batch
 
 ### Backend API
+
 - `apps/api/src/services/due-date.service.ts` — Due date calculator (relative/absolute), late penalty calculator, enrollment date lookup
 - Batch create/update schemas accept `defaultDaysToComplete`, `lateSubmissionPenaltyPercent`
 - Assignment/Quiz create/update schemas accept `daysFromEnrollment`, `allowLateSubmission`, `lateSubmissionPenaltyPercent`, `lateSubmissionGracePeriodHrs`
@@ -268,6 +331,7 @@ Implemented a complete system for customizable due dates, late submission penalt
 - `POST/GET/DELETE /api/admin/batches/:batchId/mentors` — Course mentor assignment CRUD
 
 ### Frontend
+
 - Batch create form: "Default Days to Complete" + "Late Submission Penalty %" fields
 - Course builder: "Absolute Date" / "Days from Enrollment" toggle on AddAssignmentForm, AddQuizForm, AssignmentCard, QuizCard
 - Late submission toggle with penalty % and grace period hours on all assignment/quiz forms
@@ -275,6 +339,7 @@ Implemented a complete system for customizable due dates, late submission penalt
 - Updated Quiz type in types.ts to include `dueDate`, `daysFromEnrollment`, late submission fields
 
 ### Seed Data
+
 - Default batch (`batch-datascience`) has `defaultDaysToComplete: 30`, `lateSubmissionPenaltyPercent: 25`
 - First python assignment uses `daysFromEnrollment: 14`, `allowLateSubmission: true`
 - First python quiz uses `daysFromEnrollment: 14`, `allowLateSubmission: true`
@@ -284,9 +349,11 @@ Implemented a complete system for customizable due dates, late submission penalt
 Implemented 15 missing UI components to achieve 92% design system compliance.
 
 ### Bug Fix
+
 - **DataTable**: Fixed `rounded-none` → `rounded-xl` on all table containers to match design spec.
 
 ### New Components (`apps/web/src/components/ui/`)
+
 - **Modal** — Generic dialog with overlay, close, escape handling, body scroll lock, zoom animation
 - **Tabs** — Tab navigation with animated underline indicator and count badges
 - **SearchInput** — Search field with icon, debounced onChange, and clear button
@@ -301,9 +368,11 @@ Implemented 15 missing UI components to achieve 92% design system compliance.
 - **FileUpload** — Drag-and-drop file upload with preview and remove
 
 ### New Component (`apps/web/src/components/shared/`)
+
 - **ErrorState** — Error display with icon, title, message, and retry action
 
 ### Verification
+
 - TypeScript: Zero new errors
 - Lint: Zero new errors
 - All components use existing design tokens and patterns

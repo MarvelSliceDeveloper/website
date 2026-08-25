@@ -460,8 +460,8 @@ export default function AdminSettingsPage() {
         <div className="lg:col-span-8 xl:col-span-9 rounded-xl border border-border/60 bg-card overflow-hidden">
           {activeSection === "profile" && renderProfile()}
           {activeSection === "security" && <SecuritySettings />}
-{activeSection === "notifications" && renderNotifications()}
-          </div>
+          {activeSection === "notifications" && renderNotifications()}
+        </div>
       </div>
     </div>
   );

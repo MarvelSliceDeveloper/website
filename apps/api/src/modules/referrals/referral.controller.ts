@@ -48,7 +48,9 @@ export const referralController = {
         status: "PENDING" | "APPROVED" | "REJECTED" | "COUPON_SENT";
         adminNote?: string;
       };
-      if (!["PENDING", "APPROVED", "REJECTED", "COUPON_SENT"].includes(status)) {
+      if (
+        !["PENDING", "APPROVED", "REJECTED", "COUPON_SENT"].includes(status)
+      ) {
         return res.status(400).json({ error: "Invalid status" });
       }
       const updated = await referralService.updateStatus(id, status, adminNote);

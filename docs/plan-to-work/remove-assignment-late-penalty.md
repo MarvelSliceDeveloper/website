@@ -17,6 +17,7 @@
 ### 1. API — Prisma schema (`apps/api/prisma/schema.prisma`)
 
 Remove fields:
+
 - `Batch.lateSubmissionPenaltyPercent` (line 245)
 - `Quiz.lateSubmissionPenaltyPercent`, `Quiz.allowLateSubmission`, `Quiz.lateSubmissionGracePeriodHrs` (471-473)
 - `QuizAttempt.isLate`, `latePenaltyPercent`, `latePenaltyAmount`, `originalPercentage` (517-520)

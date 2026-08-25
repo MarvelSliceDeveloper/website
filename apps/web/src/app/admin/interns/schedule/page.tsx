@@ -8,7 +8,11 @@ import { toast, getErrorMessage } from "@/lib/toast";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { usePageTitle } from "@/lib/use-page-title";
 import { ConfirmModal } from "@/components/admin/ConfirmModal";
-import { IconArrowLeft, IconCalendarPlus, IconTrash } from "@tabler/icons-react";
+import {
+  IconArrowLeft,
+  IconCalendarPlus,
+  IconTrash,
+} from "@tabler/icons-react";
 import Link from "next/link";
 import {
   Select,
@@ -156,7 +160,10 @@ export default function AdminInternSchedulePage() {
           { label: "Schedule", href: "/admin/interns/schedule" },
         ]}
         action={
-          <Link href="/admin/interns" className="btn-secondary text-sm flex items-center gap-1.5">
+          <Link
+            href="/admin/interns"
+            className="btn-secondary text-sm flex items-center gap-1.5"
+          >
             <IconArrowLeft size={16} stroke={1.5} />
             Manage Interns
           </Link>
@@ -328,8 +335,8 @@ export default function AdminInternSchedulePage() {
             </div>
           ) : sessions.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border py-8 text-center text-sm text-muted-foreground">
-              No {status === "ALL" ? "" : status.toLowerCase()}{" "}
-              classes scheduled yet.
+              No {status === "ALL" ? "" : status.toLowerCase()} classes
+              scheduled yet.
             </div>
           ) : (
             <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1">
@@ -356,9 +363,7 @@ export default function AdminInternSchedulePage() {
                             : "bg-emerald-100 text-emerald-700"
                         }`}
                       >
-                        {s.field
-                          ? `${s.field.name} field only`
-                          : "All interns"}
+                        {s.field ? `${s.field.name} field only` : "All interns"}
                       </span>
                       {s.joinUrl && (
                         <a

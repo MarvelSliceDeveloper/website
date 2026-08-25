@@ -33,9 +33,10 @@ router.post("/", async (_req: AuthRequest, res: Response) => {
   } catch (error: unknown) {
     const message =
       error instanceof Error ? error.message : "Failed to create backup";
-    const statusCode = error instanceof Error && "statusCode" in error
-      ? (error as { statusCode: number }).statusCode
-      : 500;
+    const statusCode =
+      error instanceof Error && "statusCode" in error
+        ? (error as { statusCode: number }).statusCode
+        : 500;
     return res.status(statusCode).json({ error: message });
   }
 });
@@ -50,40 +51,48 @@ router.get("/list", async (_req: AuthRequest, res: Response) => {
   }
 });
 
-router.post("/restore", upload.single("file"), async (req: AuthRequest, res: Response) => {
-  try {
-    const file = req.file;
-    if (!file) return res.status(400).json({ error: "Backup file is required" });
-
-    // Safety: snapshot the current DB before overwriting so a restore can be undone.
-    let safetyBackup: { filename: string } | null = null;
+router.post(
+  "/restore",
+  upload.single("file"),
+  async (req: AuthRequest, res: Response) => {
     try {
-      const sb = await createBackup();
-      pruneBackups(BACKUP_KEEP_COUNT);
-      safetyBackup = { filename: sb.filename };
-    } catch (e: unknown) {
-      // If the safety backup fails the DB is likely already broken — proceed but flag it.
-      safetyBackup = null;
-    }
+      const file = req.file;
+      if (!file)
+        return res.status(400).json({ error: "Backup file is required" });
 
-    try {
-      await restoreBackup(file.path);
-      return res.json({
-        message: "Database restored successfully",
-        ...(safetyBackup ? { safetyBackup: safetyBackup.filename } : { warning: "Safety backup could not be created" }),
-      });
-    } finally {
-      fs.rmSync(file.path, { force: true });
+      // Safety: snapshot the current DB before overwriting so a restore can be undone.
+      let safetyBackup: { filename: string } | null = null;
+      try {
+        const sb = await createBackup();
+        pruneBackups(BACKUP_KEEP_COUNT);
+        safetyBackup = { filename: sb.filename };
+      } catch (e: unknown) {
+        // If the safety backup fails the DB is likely already broken — proceed but flag it.
+        safetyBackup = null;
+      }
+
+      try {
+        await restoreBackup(file.path);
+        return res.json({
+          message: "Database restored successfully",
+          ...(safetyBackup
+            ? { safetyBackup: safetyBackup.filename }
+            : { warning: "Safety backup could not be created" }),
+        });
+      } finally {
+        fs.rmSync(file.path, { force: true });
+      }
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to restore backup";
+      const statusCode =
+        error instanceof Error && "statusCode" in error
+          ? (error as { statusCode: number }).statusCode
+          : 500;
+      return res.status(statusCode).json({ error: message });
     }
-  } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "Failed to restore backup";
-    const statusCode = error instanceof Error && "statusCode" in error
-      ? (error as { statusCode: number }).statusCode
-      : 500;
-    return res.status(statusCode).json({ error: message });
-  }
-});
+  },
+);
 
 router.delete("/:filename", async (req: AuthRequest, res: Response) => {
   try {
@@ -92,9 +101,10 @@ router.delete("/:filename", async (req: AuthRequest, res: Response) => {
   } catch (error: unknown) {
     const message =
       error instanceof Error ? error.message : "Failed to delete backup";
-    const statusCode = error instanceof Error && "statusCode" in error
-      ? (error as { statusCode: number }).statusCode
-      : 500;
+    const statusCode =
+      error instanceof Error && "statusCode" in error
+        ? (error as { statusCode: number }).statusCode
+        : 500;
     return res.status(statusCode).json({ error: message });
   }
 });
@@ -112,9 +122,10 @@ router.get("/download/:filename", async (req: AuthRequest, res: Response) => {
   } catch (error: unknown) {
     const message =
       error instanceof Error ? error.message : "Failed to download backup";
-    const statusCode = error instanceof Error && "statusCode" in error
-      ? (error as { statusCode: number }).statusCode
-      : 500;
+    const statusCode =
+      error instanceof Error && "statusCode" in error
+        ? (error as { statusCode: number }).statusCode
+        : 500;
     return res.status(statusCode).json({ error: message });
   }
 });

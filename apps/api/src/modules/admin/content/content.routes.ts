@@ -166,7 +166,9 @@ router.get("/package-names", async (_req: AuthRequest, res: Response) => {
   } catch (error: unknown) {
     return res.status(500).json({
       error:
-        error instanceof Error ? error.message : "Failed to fetch package names",
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch package names",
     });
   }
 });
@@ -182,7 +184,9 @@ router.post("/package-names", async (req: AuthRequest, res: Response) => {
       where: { name: name.trim() },
     });
     if (existing) {
-      return res.status(409).json({ error: "This package name already exists" });
+      return res
+        .status(409)
+        .json({ error: "This package name already exists" });
     }
     const packageName = await prisma.packageName.create({
       data: { name: name.trim(), isActive: isActive ?? true },

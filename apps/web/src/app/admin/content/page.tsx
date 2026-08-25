@@ -276,7 +276,11 @@ export default function AdminContentPage() {
               disabled={saveMutation.isPending || !formName.trim()}
               className="btn-primary text-xs py-2 disabled:opacity-40"
             >
-              {saveMutation.isPending ? "Saving..." : editingId ? "Update" : "Create"}
+              {saveMutation.isPending
+                ? "Saving..."
+                : editingId
+                  ? "Update"
+                  : "Create"}
             </button>
             <button onClick={cancelForm} className="btn-secondary text-xs py-2">
               Cancel
@@ -361,7 +365,8 @@ export default function AdminContentPage() {
                         </td>
                       </>
                     )}
-                    {(activeTab === "titles" || activeTab === "package-names") && (
+                    {(activeTab === "titles" ||
+                      activeTab === "package-names") && (
                       <td className="py-3 pr-3">
                         <StatusBadge active={(item as TitleItem).isActive} />
                       </td>

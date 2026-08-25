@@ -55,7 +55,11 @@ const TABS = [
 ] as const;
 
 const MORE_ITEMS = [
-  { label: "Certificates", href: "/student?view=certificates", icon: IconCertificate },
+  {
+    label: "Certificates",
+    href: "/student?view=certificates",
+    icon: IconCertificate,
+  },
   { label: "Inbox", href: "/student/inbox", icon: IconInbox },
   { label: "Mentorship", href: "/student?view=mentorship", icon: IconUsers },
   { label: "Notes", href: "/student/notes", icon: IconNotes },
@@ -122,7 +126,8 @@ export default function MobileBottomNav({
               (item.href.startsWith("/student?view=")
                 ? item.href.split("view=")[1] === view
                 : pathname === item.href) ||
-              (item.label === "Mentorship" && pathname === "/student/mentorship");
+              (item.label === "Mentorship" &&
+                pathname === "/student/mentorship");
             return (
               <button
                 key={item.label}
@@ -179,9 +184,7 @@ export default function MobileBottomNav({
         <button
           onClick={() => setMoreOpen((v) => !v)}
           className={`flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors ${
-            moreOpen || moreActive
-              ? "text-primary"
-              : "text-muted-foreground"
+            moreOpen || moreActive ? "text-primary" : "text-muted-foreground"
           }`}
           aria-expanded={moreOpen}
         >

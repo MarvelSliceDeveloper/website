@@ -46,7 +46,8 @@ export default function TrashPage() {
   }
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/api/admin/courses/${id}/permanent`),
+    mutationFn: (id: string) =>
+      api.delete(`/api/admin/courses/${id}/permanent`),
     onSuccess: () => {
       toast.success("Course permanently deleted");
       void trashQuery.refetch();

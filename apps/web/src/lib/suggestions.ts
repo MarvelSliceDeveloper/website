@@ -258,9 +258,7 @@ export type SuggestedCourseMeta = {
  * Given a course title, suggest a category and tags based on keyword matches.
  * Category defaults to "" when no keyword matches the title.
  */
-export function getSuggestedCourseMeta(
-  title: string,
-): SuggestedCourseMeta {
+export function getSuggestedCourseMeta(title: string): SuggestedCourseMeta {
   const lowerTitle = title.toLowerCase();
 
   let category = "";
@@ -481,7 +479,8 @@ export function getRelatedCourseIds(
       const text = haystack(course);
       return keywords.some(
         (keyword) =>
-          text.includes(keyword) || course.title.toLowerCase().includes(keyword),
+          text.includes(keyword) ||
+          course.title.toLowerCase().includes(keyword),
       );
     })
     .map((course) => course.id);

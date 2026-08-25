@@ -166,8 +166,10 @@ export const paymentService = {
       where: { id: packageId },
     });
     if (!pkg) throw new AppError(404, "Package not found");
-    if (!pkg.price || pkg.price <= 0) throw new AppError(400, "Package is not priced");
-    if (pkg.status !== "ACTIVE") throw new AppError(400, "Package is not available");
+    if (!pkg.price || pkg.price <= 0)
+      throw new AppError(400, "Package is not priced");
+    if (pkg.status !== "ACTIVE")
+      throw new AppError(400, "Package is not available");
 
     let finalAmount = pkg.price;
     let discountAmount = 0;

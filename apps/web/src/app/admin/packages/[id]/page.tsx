@@ -146,10 +146,7 @@ function CourseBatchSelect({
       <label className="mb-1 block text-xs font-medium text-muted-foreground">
         {courseTitle}
       </label>
-      <Select
-        value={value || ""}
-        onValueChange={(val) => onChange(val || "")}
-      >
+      <Select value={value || ""} onValueChange={(val) => onChange(val || "")}>
         <SelectTrigger className="field w-full">
           <SelectValue placeholder="-- Select Batch --" />
         </SelectTrigger>
@@ -242,9 +239,7 @@ export default function PackageDetailPage({
       }));
       return api.post(`/api/admin/packages/${id}/enroll`, {
         userId,
-        courseBatchAssignments: courseBatchAssignments.filter(
-          (a) => a.batchId,
-        ),
+        courseBatchAssignments: courseBatchAssignments.filter((a) => a.batchId),
       });
     },
     onSuccess: () => {
@@ -269,10 +264,9 @@ export default function PackageDetailPage({
       id: string;
       assignments: { courseId: string; batchId: string }[];
     }) =>
-      api.patch(
-        `/api/admin/package-enrollments/${enrollmentId}/approve`,
-        { courseBatchAssignments: assignments },
-      ),
+      api.patch(`/api/admin/package-enrollments/${enrollmentId}/approve`, {
+        courseBatchAssignments: assignments,
+      }),
     onSuccess: () => {
       toast.success("Enrollment approved");
       setApproveModal(null);

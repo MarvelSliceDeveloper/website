@@ -91,13 +91,7 @@ export default function AdminEnrollmentsPage() {
   }, [approveModal]);
 
   const approveMutation = useMutation({
-    mutationFn: ({
-      id,
-      batchId,
-    }: {
-      id: string;
-      batchId: string;
-    }) =>
+    mutationFn: ({ id, batchId }: { id: string; batchId: string }) =>
       api.patch(`/api/admin/enrollments/${id}/approve`, { batchId }),
     onSuccess: () => {
       toast.success("Enrollment approved and batch assigned");

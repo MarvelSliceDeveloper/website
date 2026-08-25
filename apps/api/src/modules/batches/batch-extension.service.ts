@@ -2,17 +2,23 @@ import { z } from "zod";
 import { prisma } from "../../utils/prisma";
 import { AppError } from "../../utils/errors";
 
-export const CreateExtensionSchema = z.object({
-  assignmentId: z.string().optional(),
-  quizId: z.string().optional(),
-  extendedDueDate: z.string().datetime(),
-  reason: z.string().optional(),
-}).refine(data => data.assignmentId || data.quizId, {
-  message: "Either assignmentId or quizId is required",
-});
+export const CreateExtensionSchema = z
+  .object({
+    assignmentId: z.string().optional(),
+    quizId: z.string().optional(),
+    extendedDueDate: z.string().datetime(),
+    reason: z.string().optional(),
+  })
+  .refine((data) => data.assignmentId || data.quizId, {
+    message: "Either assignmentId or quizId is required",
+  });
 
 export const batchExtensionService = {
-  async create(batchId: string, data: z.infer<typeof CreateExtensionSchema>, grantedById: string) {
+  async create(
+    batchId: string,
+    data: z.infer<typeof CreateExtensionSchema>,
+    grantedById: string,
+  ) {
     const batch = await prisma.batch.findUnique({ where: { id: batchId } });
     if (!batch) throw new AppError(404, "Batch not found");
 
@@ -23,11 +29,14 @@ export const batchExtensionService = {
         where: { id: data.assignmentId },
       });
       if (!assignment) throw new AppError(404, "Assignment not found");
-      if (assignment.batchId !== batchId) throw new AppError(400, "Assignment does not belong to this batch");
+      if (assignment.batchId !== batchId)
+        throw new AppError(400, "Assignment does not belong to this batch");
       originalDueDate = assignment.dueDate;
 
       const existing = await prisma.batchAssignmentExtension.findUnique({
-        where: { batchId_assignmentId: { batchId, assignmentId: data.assignmentId } },
+        where: {
+          batchId_assignmentId: { batchId, assignmentId: data.assignmentId },
+        },
       });
       if (existing) {
         return prisma.batchAssignmentExtension.update({
@@ -46,7 +55,8 @@ export const batchExtensionService = {
         where: { id: data.quizId },
       });
       if (!quiz) throw new AppError(404, "Quiz not found");
-      if (!quiz.dueDate) throw new AppError(400, "Quiz has no due date to extend");
+      if (!quiz.dueDate)
+        throw new AppError(400, "Quiz has no due date to extend");
       originalDueDate = quiz.dueDate;
 
       const existing = await prisma.batchAssignmentExtension.findUnique({
@@ -64,7 +74,8 @@ export const batchExtensionService = {
       }
     }
 
-    if (!originalDueDate) throw new AppError(400, "Could not determine original due date");
+    if (!originalDueDate)
+      throw new AppError(400, "Could not determine original due date");
 
     return prisma.batchAssignmentExtension.create({
       data: {
@@ -105,7 +116,9 @@ export const batchExtensionService = {
     });
     if (!ext) throw new AppError(404, "Extension not found");
 
-    await prisma.batchAssignmentExtension.delete({ where: { id: extensionId } });
+    await prisma.batchAssignmentExtension.delete({
+      where: { id: extensionId },
+    });
     return { deleted: true };
   },
 };

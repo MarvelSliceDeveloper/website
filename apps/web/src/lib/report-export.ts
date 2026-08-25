@@ -56,7 +56,10 @@ export function buildSections(
     sections.push({
       title: "Students per Package",
       headers: ["Package", "Students"],
-      rows: (data.studentsPerPackage ?? []).map((d) => [d.packageName, d.count]),
+      rows: (data.studentsPerPackage ?? []).map((d) => [
+        d.packageName,
+        d.count,
+      ]),
     });
     sections.push({
       title: "Top Courses",
@@ -77,12 +80,18 @@ export function buildSections(
     sections.push({
       title: "Monthly Revenue",
       headers: ["Month", "Revenue (INR)"],
-      rows: (data.monthlyRevenue ?? []).map((d) => [d.month, formatINR(d.amount)]),
+      rows: (data.monthlyRevenue ?? []).map((d) => [
+        d.month,
+        formatINR(d.amount),
+      ]),
     });
     sections.push({
       title: "Revenue by Package",
       headers: ["Package", "Revenue (INR)"],
-      rows: (data.revenueByPackage ?? []).map((d) => [d.packageName, formatINR(d.total)]),
+      rows: (data.revenueByPackage ?? []).map((d) => [
+        d.packageName,
+        formatINR(d.total),
+      ]),
     });
     sections.push({
       title: "Payment Status Breakdown",
@@ -116,8 +125,8 @@ export function buildSections(
 export function buildKpis(data: DashboardChartData): [string, string][] {
   const revenue = (data.monthlyRevenue ?? []).reduce((a, b) => a + b.amount, 0);
   const students =
-    (data.userRoleDistribution ?? []).find((u) => u.role === "STUDENT")?.count ??
-    0;
+    (data.userRoleDistribution ?? []).find((u) => u.role === "STUDENT")
+      ?.count ?? 0;
   const enrollments = (data.studentsPerCourse ?? []).reduce(
     (a, b) => a + b.count,
     0,
@@ -168,9 +177,7 @@ export function exportReportCsv(opts: ExportOptions): void {
   buildSections(data, scope).forEach((section) => {
     lines.push(section.title);
     lines.push(section.headers.map(escapeCsvCell).join(","));
-    section.rows.forEach((row) =>
-      lines.push(row.map(escapeCsvCell).join(",")),
-    );
+    section.rows.forEach((row) => lines.push(row.map(escapeCsvCell).join(",")));
     lines.push("");
   });
 
@@ -229,7 +236,11 @@ export async function exportReportXlsx(opts: ExportOptions): Promise<void> {
   const logo = await loadLogoBase64();
   summary.mergeCells("A1:G4");
   const box = summary.getCell("A1");
-  box.fill = { type: "pattern", pattern: "solid", fgColor: hexToArgb(BRAND.primary) };
+  box.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: hexToArgb(BRAND.primary),
+  };
 
   if (logo) {
     const imgId = workbook.addImage({ base64: logo, extension: "png" });
@@ -256,7 +267,15 @@ export async function exportReportXlsx(opts: ExportOptions): Promise<void> {
   }
   summary.getRow(1).height = 72;
 
-  writeTable(summary, { title: "Key Metrics", headers: ["Metric", "Value"], rows: buildKpis(data).map(([k, v]) => [k, v]) }, 7);
+  writeTable(
+    summary,
+    {
+      title: "Key Metrics",
+      headers: ["Metric", "Value"],
+      rows: buildKpis(data).map(([k, v]) => [k, v]),
+    },
+    7,
+  );
   summary.getColumn(1).width = 28;
   summary.getColumn(2).width = 34;
 
@@ -286,7 +305,11 @@ function writeTable(
   const headerRow = sheet.getRow(startRow);
   headerRow.values = section.headers;
   headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
-  headerRow.fill = { type: "pattern", pattern: "solid", fgColor: hexToArgb(BRAND.primary) };
+  headerRow.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: hexToArgb(BRAND.primary),
+  };
   headerRow.alignment = { vertical: "middle" };
   headerRow.height = 20;
 
@@ -301,7 +324,11 @@ function writeTable(
     if ((i - startRow) % 2 === 0) {
       const r = sheet.getRow(i);
       r.eachCell((cell) => {
-        cell.fill = { type: "pattern", pattern: "solid", fgColor: hexToArgb(BRAND.light) };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: hexToArgb(BRAND.light),
+        };
       });
     }
   }

@@ -182,7 +182,9 @@ test.describe("Student Portal — Content Deep Links", () => {
     const content = await getCourseContent(page, courseId);
     if (!content) return;
     const quiz = (content.modules || [])
-      .flatMap((m: { quizzes?: { id: string; title: string }[] }) => m.quizzes ?? [])
+      .flatMap(
+        (m: { quizzes?: { id: string; title: string }[] }) => m.quizzes ?? [],
+      )
       .find((q: { id: string }) => !!q.id);
     if (!quiz) return;
 

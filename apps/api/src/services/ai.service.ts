@@ -180,7 +180,11 @@ const RESPONSE_SCHEMAS: Record<AIGenerationType, Record<string, unknown>> = {
   },
   ASSIGNMENT: {
     type: Type.OBJECT,
-    properties: { title: str, description: str, maxPoints: { type: Type.INTEGER } },
+    properties: {
+      title: str,
+      description: str,
+      maxPoints: { type: Type.INTEGER },
+    },
     required: ["title", "description", "maxPoints"],
   },
   LESSON_DESCRIPTION: {
@@ -208,21 +212,29 @@ function difficultyLine(ctx: AIGenerationContext): string {
 function contextLines(ctx: AIGenerationContext): string {
   const parts: string[] = [];
   if (ctx.courseTitle) parts.push(`Course: "${ctx.courseTitle}"`);
-  if (ctx.courseDescription) parts.push(`Course description: ${ctx.courseDescription}`);
+  if (ctx.courseDescription)
+    parts.push(`Course description: ${ctx.courseDescription}`);
   if (ctx.modules && ctx.modules.length > 0) {
     parts.push(
       `Course modules:\n${ctx.modules
-        .map((m, i) => `  ${i + 1}. ${m.title}${m.description ? ` — ${m.description}` : ""}`)
+        .map(
+          (m, i) =>
+            `  ${i + 1}. ${m.title}${m.description ? ` — ${m.description}` : ""}`,
+        )
         .join("\n")}`,
     );
   }
   if (ctx.moduleTitle) parts.push(`Module: "${ctx.moduleTitle}"`);
-  if (ctx.moduleDescription) parts.push(`Module description: ${ctx.moduleDescription}`);
+  if (ctx.moduleDescription)
+    parts.push(`Module description: ${ctx.moduleDescription}`);
   if (ctx.lessonTitle) parts.push(`Lesson: "${ctx.lessonTitle}"`);
   return parts.length ? `\n\nContext:\n${parts.join("\n")}` : "";
 }
 
-function buildSystemPrompt(type: AIGenerationType, ctx: AIGenerationContext): string {
+function buildSystemPrompt(
+  type: AIGenerationType,
+  ctx: AIGenerationContext,
+): string {
   switch (type) {
     case "COURSE_OUTLINE":
       return `${BASE_PERSONA}
@@ -332,10 +344,7 @@ async function getGeminiApiKey(): Promise<string | null> {
 
 export async function getAIModel(): Promise<string> {
   const stored = await readSetting(MODEL_SETTING);
-  if (
-    stored &&
-    (ALLOWED_AI_MODELS as readonly string[]).includes(stored)
-  ) {
+  if (stored && (ALLOWED_AI_MODELS as readonly string[]).includes(stored)) {
     return stored;
   }
   return DEFAULT_AI_MODEL;
@@ -376,11 +385,19 @@ export function isAIConfiguredSync(apiKey: string | null): boolean {
 
 // ─── Gemini calls ────────────────────────────────────────────────────────────
 
-function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  label: string,
+): Promise<T> {
   return Promise.race([
     promise,
     new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new AppError(504, `${label} timed out after ${ms / 1000}s`)), ms),
+      setTimeout(
+        () =>
+          reject(new AppError(504, `${label} timed out after ${ms / 1000}s`)),
+        ms,
+      ),
     ),
   ]);
 }
@@ -407,7 +424,9 @@ interface GeminiCallResult {
   model: string;
 }
 
-type GeminiContents = string | Array<{ text?: string; inlineData?: { mimeType: string; data: string } }>;
+type GeminiContents =
+  | string
+  | Array<{ text?: string; inlineData?: { mimeType: string; data: string } }>;
 
 async function callGemini(opts: {
   apiKey: string;
@@ -426,7 +445,10 @@ async function callGemini(opts: {
         systemInstruction: opts.systemInstruction,
         temperature: 0.7,
         ...(opts.responseSchema
-          ? { responseMimeType: "application/json", responseSchema: opts.responseSchema }
+          ? {
+              responseMimeType: "application/json",
+              responseSchema: opts.responseSchema,
+            }
           : {}),
       },
     }),
@@ -497,7 +519,9 @@ export async function generateAssignmentFromPdf(opts: {
       return { type: "ASSIGNMENT", data: result.data, model: usedModel };
     }
     lastError = new Error(
-      result.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "),
+      result.error.issues
+        .map((i) => `${i.path.join(".")}: ${i.message}`)
+        .join("; "),
     );
   }
   throw new AppError(
@@ -540,7 +564,9 @@ export async function generate(
       return { type, data: result.data, model: usedModel };
     }
     lastError = new Error(
-      result.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "),
+      result.error.issues
+        .map((i) => `${i.path.join(".")}: ${i.message}`)
+        .join("; "),
     );
   }
   throw new AppError(
@@ -554,7 +580,8 @@ export interface AIHealthResult {
   model?: string;
   latencyMs?: number;
   error?: string;
-}export async function healthCheck(): Promise<AIHealthResult> {
+}
+export async function healthCheck(): Promise<AIHealthResult> {
   const apiKey = await getGeminiApiKey();
   if (!isAIConfiguredSync(apiKey)) {
     return { ok: false, error: "No Gemini API key configured" };
@@ -571,6 +598,11 @@ export interface AIHealthResult {
     });
     return { ok: true, model, latencyMs: Date.now() - startedAt };
   } catch (err: unknown) {
-    return { ok: false, model, latencyMs: Date.now() - startedAt, error: geminiErrorMessage(err) };
+    return {
+      ok: false,
+      model,
+      latencyMs: Date.now() - startedAt,
+      error: geminiErrorMessage(err),
+    };
   }
 }

@@ -49,10 +49,7 @@ export async function getCourseContentProgress(
   const regularModules = course.modules.filter((m) => !m.isCertificationModule);
   const regularModuleIds = regularModules.map((m) => m.id);
 
-  const totalLessons = regularModules.reduce(
-    (s, m) => s + m.lessons.length,
-    0,
-  );
+  const totalLessons = regularModules.reduce((s, m) => s + m.lessons.length, 0);
 
   const [quizzes, assignments] = await Promise.all([
     prisma.quiz.findMany({
@@ -214,11 +211,16 @@ export async function getCertificationExamEligibility(
   courseId: string,
 ): Promise<CertificationExamEligibility> {
   const progress = await getCourseContentProgress(courseId, userId);
-  const { totalQuizzes, completedQuizzes, totalAssignments, completedAssignments } =
-    progress.details;
+  const {
+    totalQuizzes,
+    completedQuizzes,
+    totalAssignments,
+    completedAssignments,
+  } = progress.details;
 
   const eligible =
-    completedQuizzes >= totalQuizzes && completedAssignments >= totalAssignments;
+    completedQuizzes >= totalQuizzes &&
+    completedAssignments >= totalAssignments;
 
   return {
     eligible,

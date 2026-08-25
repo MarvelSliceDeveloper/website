@@ -301,106 +301,106 @@ export default function StickyNoteWidget({
             : { left: position.x, top: position.y, width, height }
         }
       >
-      {/* Header - drag handle */}
-      <div
-        className="flex items-center justify-between px-3 py-2 border-b border-amber-200/60 cursor-move select-none shrink-0"
-        onMouseDown={handleDragStart}
-        onTouchStart={handleDragStart}
-      >
-        <div className="flex items-center gap-2 min-w-0">
-          <IconPin className="text-amber-600 shrink-0" size={16} />
-          <span className="text-xs font-semibold text-amber-800 truncate">
-            {moduleTitle || "Sticky Notes"}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1.5 shrink-0">
-          {/* Status */}
-          <div className="flex items-center gap-1">
-            {status === "saving" && (
-              <span className="text-[10px] text-amber-700 animate-pulse">
-                Saving...
-              </span>
-            )}
-            {status === "saved" && (
-              <span className="text-[10px] text-emerald-700 flex items-center gap-0.5">
-                <IconCheck size={10} /> Saved
-              </span>
-            )}
-            {status === "error" && (
-              <span className="text-[10px] text-red-700">Saved locally</span>
-            )}
+        {/* Header - drag handle */}
+        <div
+          className="flex items-center justify-between px-3 py-2 border-b border-amber-200/60 cursor-move select-none shrink-0"
+          onMouseDown={handleDragStart}
+          onTouchStart={handleDragStart}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <IconPin className="text-amber-600 shrink-0" size={16} />
+            <span className="text-xs font-semibold text-amber-800 truncate">
+              {moduleTitle || "Sticky Notes"}
+            </span>
           </div>
 
-          {/* Manual save */}
-          <button
-            onClick={handleManualSave}
-            disabled={status === "saving"}
-            className="p-1 rounded text-amber-700/60 hover:text-amber-900 hover:bg-amber-100/50 transition-colors disabled:opacity-40"
-            title="Save now"
-          >
-            <IconDeviceFloppy size={14} />
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Status */}
+            <div className="flex items-center gap-1">
+              {status === "saving" && (
+                <span className="text-[10px] text-amber-700 animate-pulse">
+                  Saving...
+                </span>
+              )}
+              {status === "saved" && (
+                <span className="text-[10px] text-emerald-700 flex items-center gap-0.5">
+                  <IconCheck size={10} /> Saved
+                </span>
+              )}
+              {status === "error" && (
+                <span className="text-[10px] text-red-700">Saved locally</span>
+              )}
+            </div>
 
-          {/* Close */}
-          <button
-            onClick={handleClose}
-            className="p-1 rounded text-amber-700/60 hover:text-red-600 hover:bg-red-50 transition-colors"
-            title="Close"
-          >
-            <IconX size={14} />
-          </button>
-        </div>
-      </div>
+            {/* Manual save */}
+            <button
+              onClick={handleManualSave}
+              disabled={status === "saving"}
+              className="p-1 rounded text-amber-700/60 hover:text-amber-900 hover:bg-amber-100/50 transition-colors disabled:opacity-40"
+              title="Save now"
+            >
+              <IconDeviceFloppy size={14} />
+            </button>
 
-      {/* Editor Area */}
-      <div className="min-h-0 flex-1 overflow-y-auto p-2">
-        {contentLoaded ? (
-          <RichEditor
-            key={noteId || "new"}
-            content={body}
-            onChange={handleContentChange}
-            placeholder="Take notes... (auto-saves)"
-            minHeight="100%"
-            autoFocus={false}
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full text-amber-700/40 text-xs">
-            Loading notes...
+            {/* Close */}
+            <button
+              onClick={handleClose}
+              className="p-1 rounded text-amber-700/60 hover:text-red-600 hover:bg-red-50 transition-colors"
+              title="Close"
+            >
+              <IconX size={14} />
+            </button>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Resize Handle */}
-      <div
-        className="resize-handle absolute bottom-0 right-0 hidden w-5 h-5 cursor-se-resize items-center justify-center text-amber-300/50 hover:text-amber-500 transition-colors md:flex"
-        onMouseDown={handleResizeMouseDown}
-        onTouchStart={handleResizeTouchStart}
-      >
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <path
-            d="M2 12L12 2"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            opacity="0.6"
-          />
-          <path
-            d="M5 12L12 5"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            opacity="0.4"
-          />
-          <path
-            d="M8 12L12 8"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            opacity="0.2"
-          />
-        </svg>
-      </div>
+        {/* Editor Area */}
+        <div className="min-h-0 flex-1 overflow-y-auto p-2">
+          {contentLoaded ? (
+            <RichEditor
+              key={noteId || "new"}
+              content={body}
+              onChange={handleContentChange}
+              placeholder="Take notes... (auto-saves)"
+              minHeight="100%"
+              autoFocus={false}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full text-amber-700/40 text-xs">
+              Loading notes...
+            </div>
+          )}
+        </div>
+
+        {/* Resize Handle */}
+        <div
+          className="resize-handle absolute bottom-0 right-0 hidden w-5 h-5 cursor-se-resize items-center justify-center text-amber-300/50 hover:text-amber-500 transition-colors md:flex"
+          onMouseDown={handleResizeMouseDown}
+          onTouchStart={handleResizeTouchStart}
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path
+              d="M2 12L12 2"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              opacity="0.6"
+            />
+            <path
+              d="M5 12L12 5"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              opacity="0.4"
+            />
+            <path
+              d="M8 12L12 8"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              opacity="0.2"
+            />
+          </svg>
+        </div>
       </div>
     </>
   );

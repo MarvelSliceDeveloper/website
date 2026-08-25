@@ -32,7 +32,8 @@ router.get("/", async (req: AuthRequest, res: Response) => {
     return res.json({ sessions });
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to fetch sessions",
+      error:
+        error instanceof Error ? error.message : "Failed to fetch sessions",
     });
   }
 });
@@ -53,7 +54,8 @@ router.get("/all", async (req: AuthRequest, res: Response) => {
     return res.json({ sessions });
   } catch (error: unknown) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to fetch sessions",
+      error:
+        error instanceof Error ? error.message : "Failed to fetch sessions",
     });
   }
 });

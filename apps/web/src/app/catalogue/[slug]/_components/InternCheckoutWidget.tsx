@@ -233,7 +233,8 @@ export function InternCheckoutWidget({ pkg }: Props) {
     [fields, fieldId],
   );
 
-  const fee = selectedField?.fee && selectedField.fee > 0 ? selectedField.fee : null;
+  const fee =
+    selectedField?.fee && selectedField.fee > 0 ? selectedField.fee : null;
 
   const formatPrice = (amount: number) =>
     `₹${(amount / 100).toLocaleString("en-IN")}`;
@@ -411,8 +412,16 @@ export function InternCheckoutWidget({ pkg }: Props) {
               </p>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { value: "WORKING", label: "Working", icon: <IconBriefcase size={16} /> },
-                  { value: "STUDYING", label: "Studying", icon: <IconSchool size={16} /> },
+                  {
+                    value: "WORKING",
+                    label: "Working",
+                    icon: <IconBriefcase size={16} />,
+                  },
+                  {
+                    value: "STUDYING",
+                    label: "Studying",
+                    icon: <IconSchool size={16} />,
+                  },
                 ].map((opt) => (
                   <button
                     type="button"
@@ -525,7 +534,13 @@ export function InternCheckoutWidget({ pkg }: Props) {
 
             <button
               type="submit"
-              disabled={loading || !designation || !fieldId || !fee || fields.length === 0}
+              disabled={
+                loading ||
+                !designation ||
+                !fieldId ||
+                !fee ||
+                fields.length === 0
+              }
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-hover disabled:opacity-50 disabled:shadow-none"
             >
               {loading
@@ -557,7 +572,8 @@ export function InternCheckoutWidget({ pkg }: Props) {
             <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
             <p className="text-sm font-medium text-foreground">
               {step === "creating_order" && "Setting up your payment..."}
-              {step === "processing_payment" && "Opening secure payment window..."}
+              {step === "processing_payment" &&
+                "Opening secure payment window..."}
               {step === "verifying" && "Verifying your payment..."}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">

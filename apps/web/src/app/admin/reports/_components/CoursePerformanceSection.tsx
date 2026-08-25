@@ -13,7 +13,9 @@ export default function CoursePerformanceSection({
   data: DashboardChartData | null;
   timeRange: string;
 }) {
-  const courseLabels = (data?.studentsPerCourse ?? []).map((d) => d.courseTitle);
+  const courseLabels = (data?.studentsPerCourse ?? []).map(
+    (d) => d.courseTitle,
+  );
   const courseVals = (data?.studentsPerCourse ?? []).map((d) => d.count);
 
   const completionRows = data?.courseCompletion ?? [];
@@ -29,7 +31,13 @@ export default function CoursePerformanceSection({
   const enrolledVals = completionRows.map((d) => d.enrolled);
   const completedVals = completionRows.map((d) => d.completed);
 
-  const donutColors = [COLORS.primary, COLORS.accent, COLORS.success, COLORS.warning, COLORS.danger];
+  const donutColors = [
+    COLORS.primary,
+    COLORS.accent,
+    COLORS.success,
+    COLORS.warning,
+    COLORS.danger,
+  ];
 
   return (
     <div>
@@ -45,11 +53,19 @@ export default function CoursePerformanceSection({
             <Chart
               key={`course-${timeRange}-${courseVals.join(",")}`}
               options={{
-                chart: { type: "bar", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "bar",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: [COLORS.accent],
                 plotOptions: { bar: { borderRadius: 4, horizontal: true } },
-                xaxis: { labels: { style: { colors: COLORS.muted, fontSize: "11px" } } },
-                yaxis: { labels: { style: { colors: COLORS.muted, fontSize: "11px" } } },
+                xaxis: {
+                  labels: { style: { colors: COLORS.muted, fontSize: "11px" } },
+                },
+                yaxis: {
+                  labels: { style: { colors: COLORS.muted, fontSize: "11px" } },
+                },
                 grid: { borderColor: COLORS.grid },
                 tooltip: { theme: "light" },
                 dataLabels: { enabled: false },
@@ -57,7 +73,10 @@ export default function CoursePerformanceSection({
               series={[
                 {
                   name: "Students",
-                  data: courseLabels.map((l, i) => ({ x: l, y: courseVals[i] })),
+                  data: courseLabels.map((l, i) => ({
+                    x: l,
+                    y: courseVals[i],
+                  })),
                 },
               ]}
               type="bar"
@@ -78,7 +97,11 @@ export default function CoursePerformanceSection({
             <Chart
               key={`completion-${timeRange}-${completionRates.join(",")}`}
               options={{
-                chart: { type: "bar", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "bar",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: [COLORS.success],
                 plotOptions: { bar: { borderRadius: 4, horizontal: true } },
                 xaxis: {
@@ -88,9 +111,14 @@ export default function CoursePerformanceSection({
                     formatter: (v: string) => `${v}%`,
                   },
                 },
-                yaxis: { labels: { style: { colors: COLORS.muted, fontSize: "11px" } } },
+                yaxis: {
+                  labels: { style: { colors: COLORS.muted, fontSize: "11px" } },
+                },
                 grid: { borderColor: COLORS.grid },
-                tooltip: { theme: "light", y: { formatter: (v: number) => `${v}%` } },
+                tooltip: {
+                  theme: "light",
+                  y: { formatter: (v: number) => `${v}%` },
+                },
                 dataLabels: { enabled: false },
               }}
               series={[
@@ -120,11 +148,19 @@ export default function CoursePerformanceSection({
             <Chart
               key={`topcourses-${timeRange}-${topVals.join(",")}`}
               options={{
-                chart: { type: "donut", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "donut",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: donutColors,
                 labels: topLabels,
                 plotOptions: { pie: { donut: { size: "65%" } } },
-                legend: { position: "bottom", fontSize: "12px", labels: { colors: "var(--muted-foreground)" } },
+                legend: {
+                  position: "bottom",
+                  fontSize: "12px",
+                  labels: { colors: "var(--muted-foreground)" },
+                },
                 tooltip: { theme: "light" },
                 dataLabels: { enabled: false },
               }}
@@ -147,18 +183,31 @@ export default function CoursePerformanceSection({
             <Chart
               key={`enrvscomp-${timeRange}-${enrolledVals.join(",")}-${completedVals.join(",")}`}
               options={{
-                chart: { type: "bar", toolbar: { show: false }, fontFamily: "inherit" },
+                chart: {
+                  type: "bar",
+                  toolbar: { show: false },
+                  fontFamily: "inherit",
+                },
                 colors: [COLORS.primary, COLORS.success],
                 plotOptions: { bar: { borderRadius: 4, columnWidth: "55%" } },
                 xaxis: {
                   categories: completionLabels,
-                  labels: { style: { colors: COLORS.muted, fontSize: "11px" }, rotate: -20 },
+                  labels: {
+                    style: { colors: COLORS.muted, fontSize: "11px" },
+                    rotate: -20,
+                  },
                 },
-                yaxis: { labels: { style: { colors: COLORS.muted, fontSize: "11px" } } },
+                yaxis: {
+                  labels: { style: { colors: COLORS.muted, fontSize: "11px" } },
+                },
                 grid: { borderColor: COLORS.grid },
                 tooltip: { theme: "light" },
                 dataLabels: { enabled: false },
-                legend: { position: "bottom", fontSize: "12px", labels: { colors: "var(--muted-foreground)" } },
+                legend: {
+                  position: "bottom",
+                  fontSize: "12px",
+                  labels: { colors: "var(--muted-foreground)" },
+                },
               }}
               series={[
                 { name: "Enrolled", data: enrolledVals },

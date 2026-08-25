@@ -2,11 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useApiQuery } from "@/lib/query";
 import {
@@ -143,8 +139,10 @@ function NoteEditorPanel({
 
   function validate(): boolean {
     const next: { courseId?: string; title?: string } = {};
-    if (mode === "create" && !courseId) next.courseId = "Select a course to attach this note to";
-    if (title.length > 200) next.title = "Title must be 200 characters or fewer";
+    if (mode === "create" && !courseId)
+      next.courseId = "Select a course to attach this note to";
+    if (title.length > 200)
+      next.title = "Title must be 200 characters or fewer";
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -223,7 +221,10 @@ function NoteEditorPanel({
                     : "text-muted-foreground hover:bg-card-hover hover:text-warning"
                 }`}
               >
-                <IconStar size={18} className={isSticky ? "fill-current" : ""} />
+                <IconStar
+                  size={18}
+                  className={isSticky ? "fill-current" : ""}
+                />
               </button>
               <button
                 type="button"
@@ -258,7 +259,8 @@ function NoteEditorPanel({
             ) : (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-card-hover/50 px-2.5 py-1 text-xs font-medium text-muted-foreground">
                 <IconBook size={12} />
-                {courses.find((c) => c.id === courseId)?.title || "Unknown course"}
+                {courses.find((c) => c.id === courseId)?.title ||
+                  "Unknown course"}
               </span>
             )}
           </div>
@@ -489,7 +491,11 @@ export default function StudentNotesPage() {
         "text/plain;charset=utf-8",
       );
     } else {
-      downloadTextFile(`${base}.html`, note.body || "", "text/html;charset=utf-8");
+      downloadTextFile(
+        `${base}.html`,
+        note.body || "",
+        "text/html;charset=utf-8",
+      );
     }
     toast.success("Note downloaded");
   }
@@ -836,7 +842,10 @@ export default function StudentNotesPage() {
             body: panel.note.body,
             isSticky: panel.note.isSticky,
           }}
-          meta={{ createdAt: panel.note.createdAt, updatedAt: panel.note.updatedAt }}
+          meta={{
+            createdAt: panel.note.createdAt,
+            updatedAt: panel.note.updatedAt,
+          }}
           saving={saveMutation.isPending}
           deleting={deleteMutation.isPending}
           onClose={() => setPanel(null)}

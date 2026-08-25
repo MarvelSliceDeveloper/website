@@ -394,15 +394,35 @@ export default function StudentPortalShell({
                       </div>
 
                       {[
-                        { label: "Courses", icon: IconBook, href: "/student?view=courses", match: () => pathname === "/student" && searchParams.get("view") === "courses" },
-                        { label: "Inbox", icon: IconInbox, href: "/student/inbox", match: () => pathname.startsWith("/student/inbox") },
-                        { label: "Profile", icon: IconUser, href: "/student/settings", match: () => pathname.startsWith("/student/settings") },
+                        {
+                          label: "Courses",
+                          icon: IconBook,
+                          href: "/student?view=courses",
+                          match: () =>
+                            pathname === "/student" &&
+                            searchParams.get("view") === "courses",
+                        },
+                        {
+                          label: "Inbox",
+                          icon: IconInbox,
+                          href: "/student/inbox",
+                          match: () => pathname.startsWith("/student/inbox"),
+                        },
+                        {
+                          label: "Profile",
+                          icon: IconUser,
+                          href: "/student/settings",
+                          match: () => pathname.startsWith("/student/settings"),
+                        },
                       ].map((item) => {
                         const isActive = item.match();
                         return (
                           <button
                             key={item.label}
-                            onClick={() => { router.push(item.href); setProfileOpen(false); }}
+                            onClick={() => {
+                              router.push(item.href);
+                              setProfileOpen(false);
+                            }}
                             className={`group flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all ${
                               isActive
                                 ? "bg-primary/10 text-primary font-semibold"
@@ -427,7 +447,10 @@ export default function StudentPortalShell({
                           onClick={handleSignOut}
                           className="group flex w-full items-center gap-3 px-4 py-2.5 text-sm text-danger transition-all hover:bg-danger/10"
                         >
-                          <IconLogout size={16} className="shrink-0 text-danger/70 group-hover:text-danger transition-colors" />
+                          <IconLogout
+                            size={16}
+                            className="shrink-0 text-danger/70 group-hover:text-danger transition-colors"
+                          />
                           Logout
                         </button>
                       </div>

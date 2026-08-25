@@ -42,7 +42,13 @@ async function main() {
       designation: "Senior Data Scientist",
       qualification: "M.Tech in Computer Science",
       experienceYears: 8,
-      skills: ["Python", "Machine Learning", "Data Analysis", "SQL", "Deep Learning"],
+      skills: [
+        "Python",
+        "Machine Learning",
+        "Data Analysis",
+        "SQL",
+        "Deep Learning",
+      ],
       currentlyEmployed: true,
       companyName: "TechCorp Solutions",
       availableTime: "20 hrs/week",
@@ -193,26 +199,109 @@ async function main() {
 
   // ─── Categories ─────────────────────────────────────────────────────────────
   const categoryDefinitions = [
-    { name: "Data Science", slug: "data-science", description: "Courses on data analysis, visualization, and machine learning" },
-    { name: "Programming", slug: "programming", description: "Foundational and advanced programming languages and paradigms" },
-    { name: "Web Development", slug: "web-development", description: "Frontend, backend, and full-stack web development" },
-    { name: "Mobile Development", slug: "mobile-development", description: "Building apps for iOS, Android, and cross-platform" },
-    { name: "Machine Learning & AI", slug: "machine-learning-ai", description: "Machine learning, deep learning, and artificial intelligence" },
-    { name: "DevOps & Cloud", slug: "devops-cloud", description: "CI/CD, containers, orchestration, and cloud platforms" },
-    { name: "Cybersecurity", slug: "cybersecurity", description: "Security fundamentals, ethical hacking, and defense" },
-    { name: "Networking", slug: "networking", description: "Computer networking, protocols, and infrastructure" },
-    { name: "Database Design", slug: "database-design", description: "SQL, NoSQL, and data modeling" },
-    { name: "Software Testing", slug: "software-testing", description: "Automated and manual software testing practices" },
-    { name: "Game Development", slug: "game-development", description: "Game engines, design, and game programming" },
-    { name: "Blockchain & Web3", slug: "blockchain-web3", description: "Blockchain, smart contracts, and decentralized apps" },
-    { name: "Design & UI/UX", slug: "design-ui-ux", description: "UI/UX, graphic design, and product design" },
-    { name: "Business & Finance", slug: "business-finance", description: "Entrepreneurship, finance, and accounting" },
-    { name: "Marketing", slug: "marketing", description: "Digital marketing, SEO, and social media" },
-    { name: "Personal Development", slug: "personal-development", description: "Productivity, leadership, and communication" },
-    { name: "Photography & Video", slug: "photography-video", description: "Photography, videography, and editing" },
-    { name: "Music & Audio", slug: "music-audio", description: "Music theory, production, and audio engineering" },
-    { name: "Language Learning", slug: "language-learning", description: "Foreign language courses" },
-    { name: "Health & Fitness", slug: "health-fitness", description: "Wellness, exercise, and nutrition" },
+    {
+      name: "Data Science",
+      slug: "data-science",
+      description:
+        "Courses on data analysis, visualization, and machine learning",
+    },
+    {
+      name: "Programming",
+      slug: "programming",
+      description:
+        "Foundational and advanced programming languages and paradigms",
+    },
+    {
+      name: "Web Development",
+      slug: "web-development",
+      description: "Frontend, backend, and full-stack web development",
+    },
+    {
+      name: "Mobile Development",
+      slug: "mobile-development",
+      description: "Building apps for iOS, Android, and cross-platform",
+    },
+    {
+      name: "Machine Learning & AI",
+      slug: "machine-learning-ai",
+      description:
+        "Machine learning, deep learning, and artificial intelligence",
+    },
+    {
+      name: "DevOps & Cloud",
+      slug: "devops-cloud",
+      description: "CI/CD, containers, orchestration, and cloud platforms",
+    },
+    {
+      name: "Cybersecurity",
+      slug: "cybersecurity",
+      description: "Security fundamentals, ethical hacking, and defense",
+    },
+    {
+      name: "Networking",
+      slug: "networking",
+      description: "Computer networking, protocols, and infrastructure",
+    },
+    {
+      name: "Database Design",
+      slug: "database-design",
+      description: "SQL, NoSQL, and data modeling",
+    },
+    {
+      name: "Software Testing",
+      slug: "software-testing",
+      description: "Automated and manual software testing practices",
+    },
+    {
+      name: "Game Development",
+      slug: "game-development",
+      description: "Game engines, design, and game programming",
+    },
+    {
+      name: "Blockchain & Web3",
+      slug: "blockchain-web3",
+      description: "Blockchain, smart contracts, and decentralized apps",
+    },
+    {
+      name: "Design & UI/UX",
+      slug: "design-ui-ux",
+      description: "UI/UX, graphic design, and product design",
+    },
+    {
+      name: "Business & Finance",
+      slug: "business-finance",
+      description: "Entrepreneurship, finance, and accounting",
+    },
+    {
+      name: "Marketing",
+      slug: "marketing",
+      description: "Digital marketing, SEO, and social media",
+    },
+    {
+      name: "Personal Development",
+      slug: "personal-development",
+      description: "Productivity, leadership, and communication",
+    },
+    {
+      name: "Photography & Video",
+      slug: "photography-video",
+      description: "Photography, videography, and editing",
+    },
+    {
+      name: "Music & Audio",
+      slug: "music-audio",
+      description: "Music theory, production, and audio engineering",
+    },
+    {
+      name: "Language Learning",
+      slug: "language-learning",
+      description: "Foreign language courses",
+    },
+    {
+      name: "Health & Fitness",
+      slug: "health-fitness",
+      description: "Wellness, exercise, and nutrition",
+    },
   ];
 
   const categories = [];
@@ -753,7 +842,9 @@ async function main() {
       create: tpl,
     });
   }
-  console.log("✅ Email templates seeded (welcome, reset-password, notification-default)");
+  console.log(
+    "✅ Email templates seeded (welcome, reset-password, notification-default)",
+  );
 
   // ─── Package (needed before batch) ───────────────────────────────────────────
   const dataSciencePkg = await prisma.coursePackage.upsert({
@@ -897,53 +988,59 @@ async function main() {
     },
   ]);
 
-  await createQuiz(pythonModule1.id, "Python Fundamentals Quiz", 0, [
-    {
-      text: "Which of the following is a mutable data type in Python?",
-      options: [
-        { label: "Tuple", isCorrect: false },
-        { label: "String", isCorrect: false },
-        { label: "List", isCorrect: true },
-        { label: "Integer", isCorrect: false },
-      ],
-    },
-    {
-      text: "What does the `len()` function return?",
-      options: [
-        { label: "Type of object", isCorrect: false },
-        { label: "Length of object", isCorrect: true },
-        { label: "Memory size", isCorrect: false },
-        { label: "Hash value", isCorrect: false },
-      ],
-    },
-    {
-      text: "Which keyword is used to define a function in Python?",
-      options: [
-        { label: "function", isCorrect: false },
-        { label: "def", isCorrect: true },
-        { label: "define", isCorrect: false },
-        { label: "func", isCorrect: false },
-      ],
-    },
-    {
-      text: "What is the output of `print(2 ** 3)`?",
-      options: [
-        { label: "6", isCorrect: false },
-        { label: "8", isCorrect: true },
-        { label: "9", isCorrect: false },
-        { label: "5", isCorrect: false },
-      ],
-    },
-    {
-      text: "Which of the following creates a list in Python?",
-      options: [
-        { label: "{}", isCorrect: false },
-        { label: "[]", isCorrect: true },
-        { label: "()", isCorrect: false },
-        { label: "<>", isCorrect: false },
-      ],
-    },
-  ], { daysFromEnrollment: 14 });
+  await createQuiz(
+    pythonModule1.id,
+    "Python Fundamentals Quiz",
+    0,
+    [
+      {
+        text: "Which of the following is a mutable data type in Python?",
+        options: [
+          { label: "Tuple", isCorrect: false },
+          { label: "String", isCorrect: false },
+          { label: "List", isCorrect: true },
+          { label: "Integer", isCorrect: false },
+        ],
+      },
+      {
+        text: "What does the `len()` function return?",
+        options: [
+          { label: "Type of object", isCorrect: false },
+          { label: "Length of object", isCorrect: true },
+          { label: "Memory size", isCorrect: false },
+          { label: "Hash value", isCorrect: false },
+        ],
+      },
+      {
+        text: "Which keyword is used to define a function in Python?",
+        options: [
+          { label: "function", isCorrect: false },
+          { label: "def", isCorrect: true },
+          { label: "define", isCorrect: false },
+          { label: "func", isCorrect: false },
+        ],
+      },
+      {
+        text: "What is the output of `print(2 ** 3)`?",
+        options: [
+          { label: "6", isCorrect: false },
+          { label: "8", isCorrect: true },
+          { label: "9", isCorrect: false },
+          { label: "5", isCorrect: false },
+        ],
+      },
+      {
+        text: "Which of the following creates a list in Python?",
+        options: [
+          { label: "{}", isCorrect: false },
+          { label: "[]", isCorrect: true },
+          { label: "()", isCorrect: false },
+          { label: "<>", isCorrect: false },
+        ],
+      },
+    ],
+    { daysFromEnrollment: 14 },
+  );
 
   await createAssignment(
     pythonModule1.id,
@@ -1248,13 +1345,17 @@ async function main() {
   // ─── Module 5: Certification Exam ──────────────────────────────────────────
   const pythonCertModule = await upsertModule(pythonCourse.id, {
     title: "Certification Exam",
-    description: "Final certification examination for the Python for Data Science course.",
+    description:
+      "Final certification examination for the Python for Data Science course.",
     order: 4,
     isFreePreview: false,
   });
 
   const existingCertQuiz = await prisma.quiz.findFirst({
-    where: { moduleId: pythonCertModule.id, title: "Python Data Science Certification" },
+    where: {
+      moduleId: pythonCertModule.id,
+      title: "Python Data Science Certification",
+    },
   });
   if (!existingCertQuiz) {
     await prisma.quiz.create({
@@ -1283,7 +1384,10 @@ async function main() {
             {
               text: "What does df.describe() return in Pandas?",
               options: [
-                { label: "Summary statistics of the DataFrame", isCorrect: true },
+                {
+                  label: "Summary statistics of the DataFrame",
+                  isCorrect: true,
+                },
                 { label: "The first 5 rows", isCorrect: false },
                 { label: "Column data types", isCorrect: false },
                 { label: "The DataFrame schema", isCorrect: false },
@@ -1301,10 +1405,16 @@ async function main() {
             {
               text: "In Scikit-learn, what is the purpose of train_test_split?",
               options: [
-                { label: "Split data into training and testing sets", isCorrect: true },
+                {
+                  label: "Split data into training and testing sets",
+                  isCorrect: true,
+                },
                 { label: "Split the model into layers", isCorrect: false },
                 { label: "Split features into categories", isCorrect: false },
-                { label: "Split the dataset into equal parts", isCorrect: false },
+                {
+                  label: "Split the dataset into equal parts",
+                  isCorrect: false,
+                },
               ],
             },
             {
@@ -1564,7 +1674,9 @@ async function main() {
   console.log("   BatchCourseVisibility: Python course visible, others hidden");
   console.log("   Instructor Profile: Demo Instructor (approved)");
   console.log("   Payment + Refund: Sample data available");
-  console.log("   Email Templates: welcome, reset-password, notification-default");
+  console.log(
+    "   Email Templates: welcome, reset-password, notification-default",
+  );
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -1603,8 +1715,7 @@ async function upsertCourse(data: {
       status: "PUBLISHED",
       publishedAt: new Date(),
       thumbnailUrl:
-        data.thumbnailUrl ??
-        `https://picsum.photos/seed/${data.slug}/640/360`,
+        data.thumbnailUrl ?? `https://picsum.photos/seed/${data.slug}/640/360`,
       coverImageUrl:
         data.coverImageUrl ??
         `https://picsum.photos/seed/${data.slug}/1280/720`,

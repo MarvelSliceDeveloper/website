@@ -211,7 +211,7 @@ function WhatYouGet({ pkg }: { pkg: PackageDetail }) {
   const courses = pkg.courses;
   const totalModules = courses.reduce(
     (sum, c) => sum + (c.course.modules?.length ?? 0),
-    0
+    0,
   );
 
   return (
@@ -297,8 +297,16 @@ function WhatYouGet({ pkg }: { pkg: PackageDetail }) {
                 {[
                   { icon: IconBook, value: courses.length, label: "Courses" },
                   { icon: IconStack2, value: totalModules, label: "Modules" },
-                  { icon: IconVideo, value: pkg.totalLessons ?? 0, label: "Lessons" },
-                  { icon: IconBadge, value: pkg.totalQuizzes ?? 0, label: "Quizzes" },
+                  {
+                    icon: IconVideo,
+                    value: pkg.totalLessons ?? 0,
+                    label: "Lessons",
+                  },
+                  {
+                    icon: IconBadge,
+                    value: pkg.totalQuizzes ?? 0,
+                    label: "Quizzes",
+                  },
                 ].map((s) => (
                   <div key={s.label} className="text-center">
                     <s.icon
@@ -306,8 +314,12 @@ function WhatYouGet({ pkg }: { pkg: PackageDetail }) {
                       className="mx-auto mb-1 text-primary"
                       stroke={1.6}
                     />
-                    <p className="text-lg font-bold text-foreground">{s.value}</p>
-                    <p className="text-[11px] text-muted-foreground">{s.label}</p>
+                    <p className="text-lg font-bold text-foreground">
+                      {s.value}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {s.label}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -353,7 +365,10 @@ function Certification({ pkg }: { pkg: PackageDetail }) {
                     key={item}
                     className="flex items-start gap-2.5 text-sm text-foreground"
                   >
-                    <IconSparkles size={16} className="mt-0.5 shrink-0 text-primary" />
+                    <IconSparkles
+                      size={16}
+                      className="mt-0.5 shrink-0 text-primary"
+                    />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -372,10 +387,7 @@ function FAQ({ pkg }: { pkg: PackageDetail }) {
   return (
     <section className="bg-card border-t border-border py-8">
       <div className="mx-auto max-w-3xl px-4">
-        <SectionHeading
-          kicker="FAQs"
-          title="Frequently asked questions"
-        />
+        <SectionHeading kicker="FAQs" title="Frequently asked questions" />
         <div className="space-y-3">
           {FAQS.map((f, i) => {
             const open = openIdx === i;
@@ -400,12 +412,12 @@ function FAQ({ pkg }: { pkg: PackageDetail }) {
                 </button>
                 {open && (
                   <p className="border-t border-border px-5 py-4 text-sm leading-relaxed text-muted-foreground">
-                  {f.q === "What do I get after enrolling?"
-                    ? isInternship
-                      ? "You get 1:1 mentorship, live online sessions, hands-on assignments, and a certificate of completion once you finish all requirements."
-                      : f.a
-                    : f.a}
-                </p>
+                    {f.q === "What do I get after enrolling?"
+                      ? isInternship
+                        ? "You get 1:1 mentorship, live online sessions, hands-on assignments, and a certificate of completion once you finish all requirements."
+                        : f.a
+                      : f.a}
+                  </p>
                 )}
               </div>
             );
@@ -546,11 +558,7 @@ function Hero({ pkg }: { pkg: PackageDetail }) {
                   label="Quizzes"
                   value={String(totalQuizzes)}
                 />
-                <StatPill
-                  icon={IconUsers}
-                  label="Mentors"
-                  value="1:1"
-                />
+                <StatPill icon={IconUsers} label="Mentors" value="1:1" />
               </div>
             )}
 
@@ -559,7 +567,11 @@ function Hero({ pkg }: { pkg: PackageDetail }) {
                 href="#apply"
                 className="nline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20"
               >
-                {isInternship ? "Apply Now" : hasPrice ? "Enroll Now" : "Contact Us"}
+                {isInternship
+                  ? "Apply Now"
+                  : hasPrice
+                    ? "Enroll Now"
+                    : "Contact Us"}
               </a>
               <a
                 href="#courses"

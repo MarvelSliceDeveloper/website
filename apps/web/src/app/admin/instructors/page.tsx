@@ -111,14 +111,35 @@ type InstructorDetail = {
 };
 
 const statusConfig: Record<string, { label: string; classes: string }> = {
-  PENDING: { label: "Pending", classes: "bg-amber-500/15 text-amber-600 border-amber-500/25" },
-  APPROVED: { label: "Approved", classes: "bg-success/15 text-success border-success/25" },
-  REJECTED: { label: "Rejected", classes: "bg-danger/15 text-danger border-danger/25" },
-  ACTIVE: { label: "Active", classes: "bg-blue-500/15 text-blue-600 border-blue-500/25" },
-  INACTIVE: { label: "Inactive", classes: "bg-muted/15 text-muted-foreground border-muted/25" },
+  PENDING: {
+    label: "Pending",
+    classes: "bg-amber-500/15 text-amber-600 border-amber-500/25",
+  },
+  APPROVED: {
+    label: "Approved",
+    classes: "bg-success/15 text-success border-success/25",
+  },
+  REJECTED: {
+    label: "Rejected",
+    classes: "bg-danger/15 text-danger border-danger/25",
+  },
+  ACTIVE: {
+    label: "Active",
+    classes: "bg-blue-500/15 text-blue-600 border-blue-500/25",
+  },
+  INACTIVE: {
+    label: "Inactive",
+    classes: "bg-muted/15 text-muted-foreground border-muted/25",
+  },
 };
 
-const statusFilters = ["ALL", "PENDING", "APPROVED", "ACTIVE", "INACTIVE"] as const;
+const statusFilters = [
+  "ALL",
+  "PENDING",
+  "APPROVED",
+  "ACTIVE",
+  "INACTIVE",
+] as const;
 
 function formatDate(dateStr: string | null | undefined) {
   if (!dateStr || Number.isNaN(new Date(dateStr).getTime())) return "—";
@@ -153,10 +174,16 @@ function StarRating({ rating }: { rating: number }) {
         <IconStar
           key={star}
           size={12}
-          className={star <= Math.round(rating) ? "text-amber-400 fill-amber-400" : "text-muted"}
+          className={
+            star <= Math.round(rating)
+              ? "text-amber-400 fill-amber-400"
+              : "text-muted"
+          }
         />
       ))}
-      <span className="ml-1 text-xs text-muted-foreground">{rating.toFixed(1)}</span>
+      <span className="ml-1 text-xs text-muted-foreground">
+        {rating.toFixed(1)}
+      </span>
     </span>
   );
 }
@@ -168,8 +195,9 @@ export default function AdminInstructorsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
-  const [viewInstructor, setViewInstructor] =
-    useState<InstructorDetail | null>(null);
+  const [viewInstructor, setViewInstructor] = useState<InstructorDetail | null>(
+    null,
+  );
   const [detailLoading, setDetailLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<
     "overview" | "professional" | "contact"
@@ -179,13 +207,7 @@ export default function AdminInstructorsPage() {
   // typing in the box refetches (the original effect missed search changes
   // while on page 1).
   const instructorsQuery = useApiQuery<ApiResponse>(
-    [
-      "admin",
-      "instructors",
-      statusFilter,
-      search.trim() || "all",
-      page,
-    ],
+    ["admin", "instructors", statusFilter, search.trim() || "all", page],
     "/api/admin/instructors",
     {
       page: String(page),
@@ -255,10 +277,14 @@ export default function AdminInstructorsPage() {
       label: "Name",
       render: (_, instructor) => (
         <div className="flex items-center gap-2.5">
-          <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded text-xs font-bold ${getInitialsColor(instructor.name)}`}>
+          <div
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded text-xs font-bold ${getInitialsColor(instructor.name)}`}
+          >
             {instructor.name.charAt(0).toUpperCase()}
           </div>
-          <span className="text-sm font-medium text-foreground">{instructor.name}</span>
+          <span className="text-sm font-medium text-foreground">
+            {instructor.name}
+          </span>
         </div>
       ),
     },
@@ -270,9 +296,14 @@ export default function AdminInstructorsPage() {
       key: "status",
       label: "Status",
       render: (_, instructor) => {
-        const cfg = statusConfig[instructor.status] ?? { label: instructor.status, classes: "bg-muted/15 text-muted-foreground border-muted/25" };
+        const cfg = statusConfig[instructor.status] ?? {
+          label: instructor.status,
+          classes: "bg-muted/15 text-muted-foreground border-muted/25",
+        };
         return (
-          <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cfg.classes}`}>
+          <span
+            className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cfg.classes}`}
+          >
             {instructor.status === "APPROVED" && <IconCheck size={10} />}
             {instructor.status === "REJECTED" && <IconX size={10} />}
             {cfg.label}
@@ -284,48 +315,64 @@ export default function AdminInstructorsPage() {
       key: "designation",
       label: "Designation",
       render: (_, instructor) => (
-        <span className="text-sm text-muted-foreground">{instructor.designation || "—"}</span>
+        <span className="text-sm text-muted-foreground">
+          {instructor.designation || "—"}
+        </span>
       ),
     },
     {
       key: "experience",
       label: "Experience",
       render: (_, instructor) => (
-        <span className="text-sm text-foreground">{instructor.experience ? `${instructor.experience} yrs` : "—"}</span>
+        <span className="text-sm text-foreground">
+          {instructor.experience ? `${instructor.experience} yrs` : "—"}
+        </span>
       ),
     },
     {
       key: "currentCompany",
       label: "Current Company",
       render: (_, instructor) => (
-        <span className="text-sm text-muted-foreground">{instructor.currentCompany || "—"}</span>
+        <span className="text-sm text-muted-foreground">
+          {instructor.currentCompany || "—"}
+        </span>
       ),
     },
     {
       key: "activeBatches",
       label: "Active Batches",
       render: (_, instructor) => (
-        <span className="text-sm font-medium text-foreground">{instructor.activeBatches}</span>
+        <span className="text-sm font-medium text-foreground">
+          {instructor.activeBatches}
+        </span>
       ),
     },
     {
       key: "totalStudents",
       label: "Students",
       render: (_, instructor) => (
-        <span className="text-sm font-medium text-foreground">{instructor.totalStudents}</span>
+        <span className="text-sm font-medium text-foreground">
+          {instructor.totalStudents}
+        </span>
       ),
     },
     {
       key: "rating",
       label: "Rating",
       render: (_, instructor) =>
-        instructor.rating ? <StarRating rating={instructor.rating} /> : <span className="text-sm text-muted-foreground">—</span>,
+        instructor.rating ? (
+          <StarRating rating={instructor.rating} />
+        ) : (
+          <span className="text-sm text-muted-foreground">—</span>
+        ),
     },
     {
       key: "createdAt",
       label: "Joined",
       render: (_, instructor) => (
-        <span className="text-sm text-muted-foreground whitespace-nowrap">{formatDate(instructor.createdAt)}</span>
+        <span className="text-sm text-muted-foreground whitespace-nowrap">
+          {formatDate(instructor.createdAt)}
+        </span>
       ),
     },
     {
@@ -371,8 +418,12 @@ export default function AdminInstructorsPage() {
           { label: "Instructors", href: "/admin/instructors" },
         ]}
         action={
-          <Link href="/admin/instructors/new" className="btn-primary text-sm shadow-md flex items-center gap-1.5">
-            <IconPlus size={16} /> Add Instructor`n          </Link>
+          <Link
+            href="/admin/instructors/new"
+            className="btn-primary text-sm shadow-md flex items-center gap-1.5"
+          >
+            <IconPlus size={16} /> Add Instructor{" "}
+          </Link>
         }
       />
 
@@ -420,12 +471,17 @@ export default function AdminInstructorsPage() {
             variant="glass"
             icon={IconUsers}
             title="No instructors found"
-            description={search || statusFilter !== "ALL" ? "Try adjusting your filters." : "No instructors have been added yet."}
+            description={
+              search || statusFilter !== "ALL"
+                ? "Try adjusting your filters."
+                : "No instructors have been added yet."
+            }
           />
         }
       />
 
-      {viewInstructor && (        <div
+      {viewInstructor && (
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
           onClick={() => setViewInstructor(null)}
           role="dialog"
@@ -450,8 +506,10 @@ export default function AdminInstructorsPage() {
                       <span
                         className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
                           statusConfig[
-                            viewInstructor.instructorProfile?.status ?? "PENDING"
-                          ]?.classes ?? "bg-muted/15 text-muted-foreground border-muted/25"
+                            viewInstructor.instructorProfile?.status ??
+                              "PENDING"
+                          ]?.classes ??
+                          "bg-muted/15 text-muted-foreground border-muted/25"
                         }`}
                       >
                         {viewInstructor.instructorProfile?.status ?? "PENDING"}
@@ -521,194 +579,304 @@ export default function AdminInstructorsPage() {
                   </div>
 
                   <div className="p-5 space-y-5">
-                  {activeTab === "overview" && (
-                  <>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="rounded-lg border border-border bg-card-hover/40 p-3">
-                      <p className="text-[11px] text-muted">Active Batches</p>
-                      <p className="mt-0.5 text-lg font-bold text-foreground">
-                        {viewInstructor.activeBatchCount}
-                      </p>
-                    </div>
-                    <div className="rounded-lg border border-border bg-card-hover/40 p-3">
-                      <p className="text-[11px] text-muted">Live Sessions</p>
-                      <p className="mt-0.5 text-lg font-bold text-foreground">
-                        {viewInstructor.liveSessionCount}
-                      </p>
-                    </div>
-                    <div className="rounded-lg border border-border bg-card-hover/40 p-3">
-                      <p className="text-[11px] text-muted">Completed Sessions</p>
-                      <p className="mt-0.5 text-lg font-bold text-foreground">
-                        {viewInstructor.completedSessionCount}
-                      </p>
-                    </div>
-                    <div className="rounded-lg border border-border bg-card-hover/40 p-3">
-                      <p className="text-[11px] text-muted">Students</p>
-                      <p className="mt-0.5 text-lg font-bold text-foreground">
-                        {viewInstructor.totalStudents}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-border bg-card-hover/30 p-4 space-y-3">
-                    <h4 className="text-xs font-bold uppercase tracking-wide text-muted">
-                      Summary
-                    </h4>
-                    <FieldRow
-                      label="Designation"
-                      value={viewInstructor.instructorProfile?.designation}
-                    />
-                    <FieldRow label="Bio" value={viewInstructor.instructorProfile?.bio} />
-                    <FieldRow
-                      label="Experience"
-                      value={
-                        viewInstructor.instructorProfile?.experienceYears
-                          ? `${viewInstructor.instructorProfile.experienceYears} years`
-                          : null
-                      }
-                    />
-                    <FieldRow
-                      label="Joined"
-                      value={
-                        viewInstructor.instructorProfile?.joiningDate
-                          ? new Date(viewInstructor.instructorProfile.joiningDate).toLocaleDateString("en-IN")
-                          : null
-                      }
-                    />
-                    <FieldRow label="Languages">
-                      {Array.isArray(viewInstructor.instructorProfile?.languages) &&
-                      viewInstructor.instructorProfile!.languages.length > 0 ? (
-                        <div className="flex flex-wrap gap-1 justify-end">
-                          {viewInstructor.instructorProfile!.languages.map((l) => (
-                            <span key={l} className="inline-flex rounded bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success">
-                              {l}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </FieldRow>
-                  </div>
-
-                  </>
-                  )}
-                  {activeTab === "professional" && (
-                  <div className="rounded-xl border border-border bg-card-hover/30 p-4 space-y-3">
-                      <FieldRow label="Bio" value={viewInstructor.instructorProfile?.bio} />
-                      <FieldRow label="Qualification" value={viewInstructor.instructorProfile?.qualification} />
-                      <FieldRow
-                        label="Experience"
-                        value={
-                          viewInstructor.instructorProfile?.experienceYears
-                            ? `${viewInstructor.instructorProfile.experienceYears} years`
-                            : null
-                        }
-                      />
-                      <FieldRow label="Skills">
-                        {Array.isArray(viewInstructor.instructorProfile?.skills) &&
-                        viewInstructor.instructorProfile!.skills.length > 0 ? (
-                          <div className="flex flex-wrap gap-1 justify-end">
-                            {viewInstructor.instructorProfile!.skills.map((s) => (
-                              <span key={s} className="inline-flex rounded bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                                {s}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </FieldRow>
-                      <FieldRow label="Languages">
-                        {Array.isArray(viewInstructor.instructorProfile?.languages) &&
-                        viewInstructor.instructorProfile!.languages.length > 0 ? (
-                          <div className="flex flex-wrap gap-1 justify-end">
-                            {viewInstructor.instructorProfile!.languages.map((l) => (
-                              <span key={l} className="inline-flex rounded bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success">
-                                {l}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </FieldRow>
-                      <FieldRow
-                        label="Currently Employed"
-                        value={
-                          viewInstructor.instructorProfile?.currentlyEmployed
-                            ? "Yes"
-                            : "No"
-                        }
-                      />
-                      <FieldRow label="Company" value={viewInstructor.instructorProfile?.companyName} />
-                      <FieldRow label="Available Time" value={viewInstructor.instructorProfile?.availableTime} />
-                  </div>
-                  )}
-                  {activeTab === "contact" && (
-                  <div className="rounded-xl border border-border bg-card-hover/30 p-4 space-y-3">
-                      <FieldRow label="Phone" value={viewInstructor.instructorProfile?.phone} />
-                      <FieldRow label="Address" value={viewInstructor.instructorProfile?.address} />
-                      <FieldRow label="City" value={viewInstructor.instructorProfile?.city} />
-                      <FieldRow label="State" value={viewInstructor.instructorProfile?.state} />
-                      <FieldRow label="Country" value={viewInstructor.instructorProfile?.country} />
-                      <FieldRow label="Social Links">
-                        {viewInstructor.instructorProfile?.socialLinks &&
-                        typeof viewInstructor.instructorProfile.socialLinks === "object" ? (
-                          <div className="flex flex-wrap gap-2 justify-end">
-                            {viewInstructor.instructorProfile.socialLinks.linkedin && (
-                              <a href={viewInstructor.instructorProfile.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
-                                LinkedIn
-                              </a>
-                            )}
-                            {viewInstructor.instructorProfile.socialLinks.github && (
-                              <a href={viewInstructor.instructorProfile.socialLinks.github} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
-                                GitHub
-                              </a>
-                            )}
-                            {viewInstructor.instructorProfile.socialLinks.portfolio && (
-                              <a href={viewInstructor.instructorProfile.socialLinks.portfolio} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
-                                Portfolio
-                              </a>
-                            )}
-                            {Object.keys(viewInstructor.instructorProfile.socialLinks).length === 0 && "—"}
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </FieldRow>
-                      <FieldRow label="Bank">
-                        {viewInstructor.instructorProfile?.bankName ? (
-                          <div className="text-sm text-foreground">
-                            <p>{viewInstructor.instructorProfile.bankName}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {viewInstructor.instructorProfile.bankAccountHolderName &&
-                                `${viewInstructor.instructorProfile.bankAccountHolderName} · `}
-                              {viewInstructor.instructorProfile.bankAccountNumber
-                                ? `xxxx${viewInstructor.instructorProfile.bankAccountNumber.slice(-4)}`
-                                : ""}
+                    {activeTab === "overview" && (
+                      <>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="rounded-lg border border-border bg-card-hover/40 p-3">
+                            <p className="text-[11px] text-muted">
+                              Active Batches
                             </p>
-                            {viewInstructor.instructorProfile.bankIfscCode && (
-                              <p className="text-xs text-muted-foreground">
-                                IFSC: {viewInstructor.instructorProfile.bankIfscCode}
-                              </p>
-                            )}
+                            <p className="mt-0.5 text-lg font-bold text-foreground">
+                              {viewInstructor.activeBatchCount}
+                            </p>
                           </div>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </FieldRow>
-                      <FieldRow label="UPI ID" value={viewInstructor.instructorProfile?.upiId} />
-                      <FieldRow
-                        label="Joining Date"
-                        value={
-                          viewInstructor.instructorProfile?.joiningDate
-                            ? new Date(viewInstructor.instructorProfile.joiningDate).toLocaleDateString("en-IN")
-                            : null
-                        }
-                      />
-                  </div>
-                  )}
+                          <div className="rounded-lg border border-border bg-card-hover/40 p-3">
+                            <p className="text-[11px] text-muted">
+                              Live Sessions
+                            </p>
+                            <p className="mt-0.5 text-lg font-bold text-foreground">
+                              {viewInstructor.liveSessionCount}
+                            </p>
+                          </div>
+                          <div className="rounded-lg border border-border bg-card-hover/40 p-3">
+                            <p className="text-[11px] text-muted">
+                              Completed Sessions
+                            </p>
+                            <p className="mt-0.5 text-lg font-bold text-foreground">
+                              {viewInstructor.completedSessionCount}
+                            </p>
+                          </div>
+                          <div className="rounded-lg border border-border bg-card-hover/40 p-3">
+                            <p className="text-[11px] text-muted">Students</p>
+                            <p className="mt-0.5 text-lg font-bold text-foreground">
+                              {viewInstructor.totalStudents}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border border-border bg-card-hover/30 p-4 space-y-3">
+                          <h4 className="text-xs font-bold uppercase tracking-wide text-muted">
+                            Summary
+                          </h4>
+                          <FieldRow
+                            label="Designation"
+                            value={
+                              viewInstructor.instructorProfile?.designation
+                            }
+                          />
+                          <FieldRow
+                            label="Bio"
+                            value={viewInstructor.instructorProfile?.bio}
+                          />
+                          <FieldRow
+                            label="Experience"
+                            value={
+                              viewInstructor.instructorProfile?.experienceYears
+                                ? `${viewInstructor.instructorProfile.experienceYears} years`
+                                : null
+                            }
+                          />
+                          <FieldRow
+                            label="Joined"
+                            value={
+                              viewInstructor.instructorProfile?.joiningDate
+                                ? new Date(
+                                    viewInstructor.instructorProfile
+                                      .joiningDate,
+                                  ).toLocaleDateString("en-IN")
+                                : null
+                            }
+                          />
+                          <FieldRow label="Languages">
+                            {Array.isArray(
+                              viewInstructor.instructorProfile?.languages,
+                            ) &&
+                            viewInstructor.instructorProfile!.languages.length >
+                              0 ? (
+                              <div className="flex flex-wrap gap-1 justify-end">
+                                {viewInstructor.instructorProfile!.languages.map(
+                                  (l) => (
+                                    <span
+                                      key={l}
+                                      className="inline-flex rounded bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success"
+                                    >
+                                      {l}
+                                    </span>
+                                  ),
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </FieldRow>
+                        </div>
+                      </>
+                    )}
+                    {activeTab === "professional" && (
+                      <div className="rounded-xl border border-border bg-card-hover/30 p-4 space-y-3">
+                        <FieldRow
+                          label="Bio"
+                          value={viewInstructor.instructorProfile?.bio}
+                        />
+                        <FieldRow
+                          label="Qualification"
+                          value={
+                            viewInstructor.instructorProfile?.qualification
+                          }
+                        />
+                        <FieldRow
+                          label="Experience"
+                          value={
+                            viewInstructor.instructorProfile?.experienceYears
+                              ? `${viewInstructor.instructorProfile.experienceYears} years`
+                              : null
+                          }
+                        />
+                        <FieldRow label="Skills">
+                          {Array.isArray(
+                            viewInstructor.instructorProfile?.skills,
+                          ) &&
+                          viewInstructor.instructorProfile!.skills.length >
+                            0 ? (
+                            <div className="flex flex-wrap gap-1 justify-end">
+                              {viewInstructor.instructorProfile!.skills.map(
+                                (s) => (
+                                  <span
+                                    key={s}
+                                    className="inline-flex rounded bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
+                                  >
+                                    {s}
+                                  </span>
+                                ),
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </FieldRow>
+                        <FieldRow label="Languages">
+                          {Array.isArray(
+                            viewInstructor.instructorProfile?.languages,
+                          ) &&
+                          viewInstructor.instructorProfile!.languages.length >
+                            0 ? (
+                            <div className="flex flex-wrap gap-1 justify-end">
+                              {viewInstructor.instructorProfile!.languages.map(
+                                (l) => (
+                                  <span
+                                    key={l}
+                                    className="inline-flex rounded bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success"
+                                  >
+                                    {l}
+                                  </span>
+                                ),
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </FieldRow>
+                        <FieldRow
+                          label="Currently Employed"
+                          value={
+                            viewInstructor.instructorProfile?.currentlyEmployed
+                              ? "Yes"
+                              : "No"
+                          }
+                        />
+                        <FieldRow
+                          label="Company"
+                          value={viewInstructor.instructorProfile?.companyName}
+                        />
+                        <FieldRow
+                          label="Available Time"
+                          value={
+                            viewInstructor.instructorProfile?.availableTime
+                          }
+                        />
+                      </div>
+                    )}
+                    {activeTab === "contact" && (
+                      <div className="rounded-xl border border-border bg-card-hover/30 p-4 space-y-3">
+                        <FieldRow
+                          label="Phone"
+                          value={viewInstructor.instructorProfile?.phone}
+                        />
+                        <FieldRow
+                          label="Address"
+                          value={viewInstructor.instructorProfile?.address}
+                        />
+                        <FieldRow
+                          label="City"
+                          value={viewInstructor.instructorProfile?.city}
+                        />
+                        <FieldRow
+                          label="State"
+                          value={viewInstructor.instructorProfile?.state}
+                        />
+                        <FieldRow
+                          label="Country"
+                          value={viewInstructor.instructorProfile?.country}
+                        />
+                        <FieldRow label="Social Links">
+                          {viewInstructor.instructorProfile?.socialLinks &&
+                          typeof viewInstructor.instructorProfile
+                            .socialLinks === "object" ? (
+                            <div className="flex flex-wrap gap-2 justify-end">
+                              {viewInstructor.instructorProfile.socialLinks
+                                .linkedin && (
+                                <a
+                                  href={
+                                    viewInstructor.instructorProfile.socialLinks
+                                      .linkedin
+                                  }
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-primary hover:underline"
+                                >
+                                  LinkedIn
+                                </a>
+                              )}
+                              {viewInstructor.instructorProfile.socialLinks
+                                .github && (
+                                <a
+                                  href={
+                                    viewInstructor.instructorProfile.socialLinks
+                                      .github
+                                  }
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-primary hover:underline"
+                                >
+                                  GitHub
+                                </a>
+                              )}
+                              {viewInstructor.instructorProfile.socialLinks
+                                .portfolio && (
+                                <a
+                                  href={
+                                    viewInstructor.instructorProfile.socialLinks
+                                      .portfolio
+                                  }
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-primary hover:underline"
+                                >
+                                  Portfolio
+                                </a>
+                              )}
+                              {Object.keys(
+                                viewInstructor.instructorProfile.socialLinks,
+                              ).length === 0 && "—"}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </FieldRow>
+                        <FieldRow label="Bank">
+                          {viewInstructor.instructorProfile?.bankName ? (
+                            <div className="text-sm text-foreground">
+                              <p>{viewInstructor.instructorProfile.bankName}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {viewInstructor.instructorProfile
+                                  .bankAccountHolderName &&
+                                  `${viewInstructor.instructorProfile.bankAccountHolderName} · `}
+                                {viewInstructor.instructorProfile
+                                  .bankAccountNumber
+                                  ? `xxxx${viewInstructor.instructorProfile.bankAccountNumber.slice(-4)}`
+                                  : ""}
+                              </p>
+                              {viewInstructor.instructorProfile
+                                .bankIfscCode && (
+                                <p className="text-xs text-muted-foreground">
+                                  IFSC:{" "}
+                                  {
+                                    viewInstructor.instructorProfile
+                                      .bankIfscCode
+                                  }
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </FieldRow>
+                        <FieldRow
+                          label="UPI ID"
+                          value={viewInstructor.instructorProfile?.upiId}
+                        />
+                        <FieldRow
+                          label="Joining Date"
+                          value={
+                            viewInstructor.instructorProfile?.joiningDate
+                              ? new Date(
+                                  viewInstructor.instructorProfile.joiningDate,
+                                ).toLocaleDateString("en-IN")
+                              : null
+                          }
+                        />
+                      </div>
+                    )}
                   </div>
                 </>
               )}
@@ -747,9 +915,16 @@ function FieldRow({
 }) {
   return (
     <div className="flex items-start justify-between gap-4">
-      <span className="text-xs font-medium text-muted-foreground shrink-0 w-32">{label}</span>
+      <span className="text-xs font-medium text-muted-foreground shrink-0 w-32">
+        {label}
+      </span>
       <div className="text-sm text-foreground text-right flex-1">
-        {children ?? (value ? <span>{value}</span> : <span className="text-muted-foreground">—</span>)}
+        {children ??
+          (value ? (
+            <span>{value}</span>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          ))}
       </div>
     </div>
   );

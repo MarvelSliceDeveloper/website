@@ -319,12 +319,28 @@ export default function AdminSidebar({
   const pathname = usePathname();
   const isSuperAdmin = userRole === "SUPER_ADMIN";
   const unreadCounts = useUnreadCounts();
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    const envVer = process.env.NEXT_PUBLIC_APP_VERSION;
+    if (envVer) setAppVersion(`v${envVer}`);
+    api
+      .get<{ version: string }>("/api/version")
+      .then((d) => {
+        if (d?.version) setAppVersion(`v${d.version}`);
+      })
+      .catch(() => {});
+  }, []);
 
   const sidebarItems = [
     {
       label: "Main",
       items: [
-        { label: "Dashboard", href: "/admin/dashboard", icon: IconLayoutDashboard },
+        {
+          label: "Dashboard",
+          href: "/admin/dashboard",
+          icon: IconLayoutDashboard,
+        },
       ],
     },
     ...(isSuperAdmin
@@ -445,7 +461,10 @@ export default function AdminSidebar({
                 href: "/admin/users",
                 icon: IconUsers,
                 children: [
-                  { label: "Login History", href: "/admin/users/login-history" },
+                  {
+                    label: "Login History",
+                    href: "/admin/users/login-history",
+                  },
                   { label: "View Students", href: "/admin/users" },
                   { label: "View Instructors", href: "/admin/instructors" },
                 ],
@@ -457,7 +476,10 @@ export default function AdminSidebar({
                 children: [
                   { label: "Manage Interns", href: "/admin/interns" },
                   { label: "Schedule Class", href: "/admin/interns/schedule" },
-                  { label: "Assignment Tracker", href: "/admin/interns/assignments" },
+                  {
+                    label: "Assignment Tracker",
+                    href: "/admin/interns/assignments",
+                  },
                 ],
               },
               {
@@ -465,7 +487,10 @@ export default function AdminSidebar({
                 href: "/admin/session-management",
                 icon: IconShield,
                 children: [
-                  { label: "Active Sessions", href: "/admin/session-management" },
+                  {
+                    label: "Active Sessions",
+                    href: "/admin/session-management",
+                  },
                 ],
               },
             ],
@@ -534,7 +559,10 @@ export default function AdminSidebar({
                   { label: "API Keys", href: "/admin/settings/api-keys" },
                   { label: "Permissions", href: "/admin/settings/permissions" },
                   { label: "Backup & Restore", href: "/admin/settings/backup" },
-                  { label: "Alerting Webhooks", href: "/admin/settings/webhooks" },
+                  {
+                    label: "Alerting Webhooks",
+                    href: "/admin/settings/webhooks",
+                  },
                   { label: "Consent Logs", href: "/admin/consent-logs" },
                   { label: "General", href: "/admin/settings" },
                 ],
@@ -571,7 +599,10 @@ export default function AdminSidebar({
                 children: [
                   { label: "View Sessions", href: "/admin/sessions" },
                   { label: "Schedule Session", href: "/admin/sessions/new" },
-                  { label: "Upcoming", href: "/admin/sessions?status=UPCOMING" },
+                  {
+                    label: "Upcoming",
+                    href: "/admin/sessions?status=UPCOMING",
+                  },
                   { label: "Past", href: "/admin/sessions?status=PAST" },
                 ],
               },
@@ -602,7 +633,10 @@ export default function AdminSidebar({
                     href: "/admin/inbox",
                     unreadKey: "notifications",
                   },
-                  { label: "Send Notification", href: "/admin/notifications/send" },
+                  {
+                    label: "Send Notification",
+                    href: "/admin/notifications/send",
+                  },
                   { label: "Support", href: "/admin/inbox/support" },
                 ],
               },
@@ -663,7 +697,11 @@ export default function AdminSidebar({
                   { label: "Payment Report", href: "/admin/reports/payment" },
                 ],
               },
-              { label: "Calendar", href: "/admin/calendar", icon: IconCalendar },
+              {
+                label: "Calendar",
+                href: "/admin/calendar",
+                icon: IconCalendar,
+              },
             ],
           },
           {
@@ -685,7 +723,10 @@ export default function AdminSidebar({
                 children: [
                   { label: "Manage Interns", href: "/admin/interns" },
                   { label: "Schedule Class", href: "/admin/interns/schedule" },
-                  { label: "Assignment Tracker", href: "/admin/interns/assignments" },
+                  {
+                    label: "Assignment Tracker",
+                    href: "/admin/interns/assignments",
+                  },
                 ],
               },
             ],
@@ -724,6 +765,24 @@ export default function AdminSidebar({
         ))}
       </nav>
 
+      {/* Version footer */}
+      <div
+        className={`border-t border-border px-3 py-2.5 ${collapsed ? "text-center" : ""}`}
+      >
+        <Link
+          href="/admin/version"
+          className={`flex items-center gap-2 text-[11px] text-muted-foreground hover:text-foreground transition-colors ${collapsed ? "justify-center" : ""}`}
+          title={appVersion ? `Version ${appVersion}` : "Version"}
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-success shrink-0" />
+          {!collapsed && (
+            <span className="font-mono font-medium">
+              {appVersion ?? "v1.0.1"}
+            </span>
+          )}
+          {!collapsed && <span className="truncate">· LMS</span>}
+        </Link>
+      </div>
     </aside>
   );
 }

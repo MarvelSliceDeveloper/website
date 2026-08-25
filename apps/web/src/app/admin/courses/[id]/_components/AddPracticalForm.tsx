@@ -214,7 +214,13 @@ export default function AddPracticalForm({
   );
 
   return (
-    <FormModal open={open} onClose={close} title="Add Practical" size="lg" footer={footer}>
+    <FormModal
+      open={open}
+      onClose={close}
+      title="Add Practical"
+      size="lg"
+      footer={footer}
+    >
       {formContent}
     </FormModal>
   );

@@ -126,8 +126,7 @@ export default function InstructorAssignmentsPage() {
     setCourseFilter("ALL");
   };
 
-  const toggleSortDir = () =>
-    setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+  const toggleSortDir = () => setSortDir((d) => (d === "asc" ? "desc" : "asc"));
 
   const [selectedAssignment, setSelectedAssignment] =
     useState<Assignment | null>(null);
@@ -173,10 +172,7 @@ export default function InstructorAssignmentsPage() {
       submissionId: string;
       payload: { grade: number; feedback?: string };
     }) =>
-      api.post(
-        `/api/assignments/submissions/${submissionId}/grade`,
-        payload,
-      ),
+      api.post(`/api/assignments/submissions/${submissionId}/grade`, payload),
     onSuccess: () => {
       toast.success("Submission graded successfully");
       setGradeModal(null);
@@ -258,7 +254,9 @@ export default function InstructorAssignmentsPage() {
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Graded
             </p>
-            <p className="text-2xl font-bold text-success mt-1">{gradedCount}</p>
+            <p className="text-2xl font-bold text-success mt-1">
+              {gradedCount}
+            </p>
           </div>
         </div>
 
@@ -283,12 +281,17 @@ export default function InstructorAssignmentsPage() {
                 <button
                   key={opt}
                   onClick={() => setSubmissionStatusFilter(opt)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${submissionStatusFilter === opt
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card-hover text-muted-foreground hover:text-foreground"
-                    }`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    submissionStatusFilter === opt
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card-hover text-muted-foreground hover:text-foreground"
+                  }`}
                 >
-                  {opt === "ALL" ? "All" : opt === "PENDING" ? "Pending" : "Graded"}
+                  {opt === "ALL"
+                    ? "All"
+                    : opt === "PENDING"
+                      ? "Pending"
+                      : "Graded"}
                 </button>
               ),
             )}
@@ -301,13 +304,8 @@ export default function InstructorAssignmentsPage() {
           </div>
         ) : submissions.length === 0 ? (
           <div className="border border-border bg-card p-12 text-center">
-            <IconUsers
-              size={40}
-              className="mx-auto text-muted/40 mb-3"
-            />
-            <p className="font-semibold text-foreground">
-              No submissions yet
-            </p>
+            <IconUsers size={40} className="mx-auto text-muted/40 mb-3" />
+            <p className="font-semibold text-foreground">No submissions yet</p>
             <p className="text-sm text-muted-foreground mt-1">
               Students haven&apos;t submitted their work yet.
             </p>
@@ -334,10 +332,7 @@ export default function InstructorAssignmentsPage() {
         ) : (
           <div className="space-y-3">
             {filteredSubmissions.map((sub) => (
-              <div
-                key={sub.id}
-                className="border border-border bg-card p-4"
-              >
+              <div key={sub.id} className="border border-border bg-card p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3">
@@ -381,7 +376,10 @@ export default function InstructorAssignmentsPage() {
                         <p className="text-[10px] font-semibold uppercase tracking-wider mb-1">
                           Student Note
                         </p>
-                        <div className="prose prose-xs max-w-none text-foreground/80 [&_p]:my-0.5" dangerouslySetInnerHTML={{ __html: sub.comment }} />
+                        <div
+                          className="prose prose-xs max-w-none text-foreground/80 [&_p]:my-0.5"
+                          dangerouslySetInnerHTML={{ __html: sub.comment }}
+                        />
                       </div>
                     )}
                   </div>
@@ -393,7 +391,9 @@ export default function InstructorAssignmentsPage() {
                         </span>
                         <p className="text-sm font-bold text-foreground mt-1">
                           {sub.totalScore ?? sub.grade}
-                          <span className="text-xs font-normal text-muted-foreground">/100</span>
+                          <span className="text-xs font-normal text-muted-foreground">
+                            /100
+                          </span>
                         </p>
                         {sub.feedback && (
                           <p className="text-xs text-muted-foreground mt-0.5 max-w-[200px] truncate">
@@ -425,7 +425,9 @@ export default function InstructorAssignmentsPage() {
             <div className="glass-card w-full max-w-lg overflow-hidden border border-border shadow-2xl animate-in zoom-in-95 duration-200">
               <div className="flex items-center justify-between border-b border-border bg-card p-4">
                 <div>
-                  <h3 className="font-bold text-foreground">Grade Submission</h3>
+                  <h3 className="font-bold text-foreground">
+                    Grade Submission
+                  </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {gradeModal.student.name} · {gradeModal.student.email}
                   </p>
@@ -461,7 +463,10 @@ export default function InstructorAssignmentsPage() {
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                       Student Note
                     </p>
-                    <div className="text-sm text-foreground/80 prose prose-xs max-w-none [&_p]:my-0.5" dangerouslySetInnerHTML={{ __html: gradeModal.comment }} />
+                    <div
+                      className="text-sm text-foreground/80 prose prose-xs max-w-none [&_p]:my-0.5"
+                      dangerouslySetInnerHTML={{ __html: gradeModal.comment }}
+                    />
                   </div>
                 )}
 
@@ -525,7 +530,9 @@ export default function InstructorAssignmentsPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Assignments"
-        breadcrumbs={[{ label: "Assignments", href: "/instructor/assignments" }]}
+        breadcrumbs={[
+          { label: "Assignments", href: "/instructor/assignments" },
+        ]}
         role="Instructor"
         description="View quizzes and assignments for your courses. Click to grade submissions."
       />
@@ -565,12 +572,17 @@ export default function InstructorAssignmentsPage() {
               <button
                 key={opt}
                 onClick={() => setTypeFilter(opt)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${typeFilter === opt
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card-hover text-muted-foreground hover:text-foreground"
-                  }`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  typeFilter === opt
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card-hover text-muted-foreground hover:text-foreground"
+                }`}
               >
-                {opt === "ALL" ? "All" : opt === "ASSIGNMENT" ? "Assignments" : "Quizzes"}
+                {opt === "ALL"
+                  ? "All"
+                  : opt === "ASSIGNMENT"
+                    ? "Assignments"
+                    : "Quizzes"}
               </button>
             ))}
           </div>
@@ -624,10 +636,7 @@ export default function InstructorAssignmentsPage() {
         </div>
       ) : assignments.length === 0 ? (
         <div className="border border-border bg-card p-12 text-center">
-          <IconClipboardList
-            size={40}
-            className="mx-auto text-muted/40 mb-3"
-          />
+          <IconClipboardList size={40} className="mx-auto text-muted/40 mb-3" />
           <p className="font-semibold text-foreground">No assignments yet</p>
           <p className="text-sm text-muted-foreground mt-1">
             Assignments created for your courses will appear here.

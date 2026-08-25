@@ -24,13 +24,11 @@ describe("Notes", () => {
 
     // Register a fresh student to avoid loginAs race with auth-extended test
     const uniqueEmail = `notes-test-${Date.now()}@lms.local`;
-    const regRes = await request(app)
-      .post("/api/auth/register")
-      .send({
-        name: "Notes Test Student",
-        email: uniqueEmail,
-        password: "StrongPass1",
-      });
+    const regRes = await request(app).post("/api/auth/register").send({
+      name: "Notes Test Student",
+      email: uniqueEmail,
+      password: "StrongPass1",
+    });
     expect(regRes.status).toBe(201);
 
     const loginRes = await request(app)

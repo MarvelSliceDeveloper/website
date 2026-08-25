@@ -701,371 +701,374 @@ export default function QuizOverdueView({
         <>
           <div className="hidden md:block rounded-2xl border border-border/80 bg-card overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-border/70 bg-muted/30">
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground w-10">
-                    #
-                  </th>
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground">
-                    Quiz Name
-                  </th>
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground">
-                    Course & Module
-                  </th>
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground">
-                    Due Date
-                  </th>
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground">
-                    Submitted
-                  </th>
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground">
-                    Status
-                  </th>
-                  <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground text-right">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50">
-                {filteredItems.map((quiz, idx) => {
-                  const isPending = quiz.status === "PENDING";
-                  const passed =
-                    quiz.isPassed ??
-                    (quiz.percentage == null
-                      ? true
-                      : quiz.percentage >= 60);
-                  const dueDateTime = quiz.dueDate
-                    ? new Date(quiz.dueDate).getTime()
-                    : NaN;
-                  const daysOverdue =
-                    isPending && !isNaN(dueDateTime)
-                      ? Math.floor(
-                          (new Date().getTime() - dueDateTime) /
-                            (1000 * 60 * 60 * 24),
-                        )
-                      : 0;
-                  const isOverdue = daysOverdue > 0;
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-border/70 bg-muted/30">
+                    <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground w-10">
+                      #
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground">
+                      Quiz Name
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground">
+                      Course & Module
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground">
+                      Due Date
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground">
+                      Submitted
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground">
+                      Status
+                    </th>
+                    <th className="px-5 py-3.5 text-[11px] font-bold uppercase tracking-wider text-foreground text-right">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {filteredItems.map((quiz, idx) => {
+                    const isPending = quiz.status === "PENDING";
+                    const passed =
+                      quiz.isPassed ??
+                      (quiz.percentage == null ? true : quiz.percentage >= 60);
+                    const dueDateTime = quiz.dueDate
+                      ? new Date(quiz.dueDate).getTime()
+                      : NaN;
+                    const daysOverdue =
+                      isPending && !isNaN(dueDateTime)
+                        ? Math.floor(
+                            (new Date().getTime() - dueDateTime) /
+                              (1000 * 60 * 60 * 24),
+                          )
+                        : 0;
+                    const isOverdue = daysOverdue > 0;
 
-                  return (
-                    <tr
-                      key={quiz.id}
-                      className="hover:bg-muted/20 transition-colors"
-                    >
-                      <td className="px-5 py-4 text-xs text-muted-foreground text-center">
-                        {idx + 1}
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${
-                              isPending
-                                ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
-                                : passed
-                                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500"
-                                  : "bg-danger/10 border-danger/30 text-danger"
-                            }`}
-                          >
-                            {isPending ? (
-                              <IconAlertCircle size={16} />
-                            ) : passed ? (
-                              <IconCheck size={16} />
-                            ) : (
-                              <IconX size={16} />
-                            )}
-                          </span>
-                          <div>
-                            <p className="text-sm font-semibold text-foreground truncate max-w-[240px]">
-                              {quiz.assignmentName}
-                            </p>
+                    return (
+                      <tr
+                        key={quiz.id}
+                        className="hover:bg-muted/20 transition-colors"
+                      >
+                        <td className="px-5 py-4 text-xs text-muted-foreground text-center">
+                          {idx + 1}
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <span
+                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${
+                                isPending
+                                  ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
+                                  : passed
+                                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500"
+                                    : "bg-danger/10 border-danger/30 text-danger"
+                              }`}
+                            >
+                              {isPending ? (
+                                <IconAlertCircle size={16} />
+                              ) : passed ? (
+                                <IconCheck size={16} />
+                              ) : (
+                                <IconX size={16} />
+                              )}
+                            </span>
+                            <div>
+                              <p className="text-sm font-semibold text-foreground truncate max-w-[240px]">
+                                {quiz.assignmentName}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <p className="text-xs font-medium text-foreground">
-                          {quiz.courseName}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {quiz.moduleName}
-                        </p>
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-1.5">
-                          <IconClock
-                            size={14}
-                            className={
-                              isOverdue
-                                ? "text-danger"
-                                : isPending
-                                  ? "text-amber-500"
-                                  : "text-muted-foreground"
-                            }
-                          />
-                          <span
-                            className={`text-xs font-medium ${
-                              isOverdue
-                                ? "text-danger font-semibold"
-                                : isPending
-                                  ? "text-amber-500"
-                                  : "text-muted-foreground"
-                            }`}
-                          >
-                            {isPending
-                              ? isOverdue
-                                ? `${daysOverdue}d overdue`
+                        </td>
+                        <td className="px-5 py-4">
+                          <p className="text-xs font-medium text-foreground">
+                            {quiz.courseName}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {quiz.moduleName}
+                          </p>
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-1.5">
+                            <IconClock
+                              size={14}
+                              className={
+                                isOverdue
+                                  ? "text-danger"
+                                  : isPending
+                                    ? "text-amber-500"
+                                    : "text-muted-foreground"
+                              }
+                            />
+                            <span
+                              className={`text-xs font-medium ${
+                                isOverdue
+                                  ? "text-danger font-semibold"
+                                  : isPending
+                                    ? "text-amber-500"
+                                    : "text-muted-foreground"
+                              }`}
+                            >
+                              {isPending
+                                ? isOverdue
+                                  ? `${daysOverdue}d overdue`
+                                  : quiz.dueDate
+                                    ? new Date(quiz.dueDate).toLocaleDateString(
+                                        "en-IN",
+                                        { day: "numeric", month: "short" },
+                                      )
+                                    : "No due date"
                                 : quiz.dueDate
                                   ? new Date(quiz.dueDate).toLocaleDateString(
                                       "en-IN",
                                       { day: "numeric", month: "short" },
                                     )
-                                  : "No due date"
-                              : quiz.dueDate
-                                ? new Date(quiz.dueDate).toLocaleDateString(
+                                  : "—"}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4">
+                          {isPending ? (
+                            <span className="text-xs text-muted-foreground">
+                              —
+                            </span>
+                          ) : (
+                            <span className="text-xs font-medium text-emerald-500">
+                              {quiz.submittedAt
+                                ? new Date(quiz.submittedAt).toLocaleDateString(
                                     "en-IN",
-                                    { day: "numeric", month: "short" },
+                                    {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric",
+                                    },
                                   )
                                 : "—"}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        {isPending ? (
-                          <span className="text-xs text-muted-foreground">
-                            —
-                          </span>
-                        ) : (
-                          <span className="text-xs font-medium text-emerald-500">
-                            {quiz.submittedAt
-                              ? new Date(
-                                  quiz.submittedAt,
-                                ).toLocaleDateString("en-IN", {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                })
-                              : "—"}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-5 py-4">
-                        {isPending ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/25">
-                            Pending
-                          </span>
-                        ) : passed ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
-                            <IconCheck size={12} />
-                            {quiz.percentage != null
-                              ? `Passed · ${quiz.percentage}%`
-                              : "Passed"}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-danger/15 text-danger border border-danger/25">
-                            <IconX size={12} />
-                            {quiz.percentage != null
-                              ? `Failed · ${quiz.percentage}%`
-                              : "Failed"}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {isPending ? (
-                            <button
-                              onClick={() => handleStartQuiz(quiz.id)}
-                              disabled={loading}
-                              className="btn-primary text-xs px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold shadow-xs hover:shadow-sm transition-all"
-                            >
-                              Start Quiz
-                            </button>
-                          ) : (
-                            <>
-                              {!passed && (
-                                <button
-                                  onClick={() => handleStartQuiz(quiz.id)}
-                                  disabled={loading}
-                                  className="btn-primary text-xs px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold shadow-xs hover:shadow-sm transition-all"
-                                >
-                                  Retake Quiz
-                                </button>
-                              )}
-                              <button
-                                onClick={() => handleViewResult(quiz.id)}
-                                disabled={loading}
-                                className="btn-secondary text-xs px-4 py-2 rounded-xl font-medium border border-border hover:border-violet-500/40 hover:text-violet-500 transition-all"
-                              >
-                                View Results
-                              </button>
-                            </>
+                            </span>
                           )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </td>
+                        <td className="px-5 py-4">
+                          {isPending ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/25">
+                              Pending
+                            </span>
+                          ) : passed ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
+                              <IconCheck size={12} />
+                              {quiz.percentage != null
+                                ? `Passed · ${quiz.percentage}%`
+                                : "Passed"}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-danger/15 text-danger border border-danger/25">
+                              <IconX size={12} />
+                              {quiz.percentage != null
+                                ? `Failed · ${quiz.percentage}%`
+                                : "Failed"}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-5 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {isPending ? (
+                              <button
+                                onClick={() => handleStartQuiz(quiz.id)}
+                                disabled={loading}
+                                className="btn-primary text-xs px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold shadow-xs hover:shadow-sm transition-all"
+                              >
+                                Start Quiz
+                              </button>
+                            ) : (
+                              <>
+                                {!passed && (
+                                  <button
+                                    onClick={() => handleStartQuiz(quiz.id)}
+                                    disabled={loading}
+                                    className="btn-primary text-xs px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold shadow-xs hover:shadow-sm transition-all"
+                                  >
+                                    Retake Quiz
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleViewResult(quiz.id)}
+                                  disabled={loading}
+                                  className="btn-secondary text-xs px-4 py-2 rounded-xl font-medium border border-border hover:border-violet-500/40 hover:text-violet-500 transition-all"
+                                >
+                                  View Results
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
 
-        <div className="md:hidden space-y-3">
-          {filteredItems.map((quiz) => {
-            const isPending = quiz.status === "PENDING";
-            const passed =
-              quiz.isPassed ??
-              (quiz.percentage == null ? true : quiz.percentage >= 60);
-            const daysOverdue = isPending
-              ? Math.floor(
-                  (new Date().getTime() -
-                    new Date(quiz.dueDate).getTime()) /
-                    (1000 * 60 * 60 * 24),
-                )
-              : 0;
-            const isOverdue = daysOverdue > 0;
-            return (
-              <div
-                key={quiz.id}
-                className="rounded-2xl border border-border bg-card p-4 shadow-sm"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${
-                        isPending
-                          ? "border-amber-500/30 bg-amber-500/10 text-amber-500"
-                          : passed
-                            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
-                            : "border-danger/30 bg-danger/10 text-danger"
-                      }`}
-                    >
-                      {isPending ? (
-                        <IconAlertCircle size={16} />
-                      ) : passed ? (
-                        <IconCheck size={16} />
-                      ) : (
-                        <IconX size={16} />
-                      )}
-                    </span>
-                    <p className="truncate text-sm font-semibold text-foreground">
-                      {quiz.assignmentName}
-                    </p>
+          <div className="md:hidden space-y-3">
+            {filteredItems.map((quiz) => {
+              const isPending = quiz.status === "PENDING";
+              const passed =
+                quiz.isPassed ??
+                (quiz.percentage == null ? true : quiz.percentage >= 60);
+              const daysOverdue = isPending
+                ? Math.floor(
+                    (new Date().getTime() - new Date(quiz.dueDate).getTime()) /
+                      (1000 * 60 * 60 * 24),
+                  )
+                : 0;
+              const isOverdue = daysOverdue > 0;
+              return (
+                <div
+                  key={quiz.id}
+                  className="rounded-2xl border border-border bg-card p-4 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${
+                          isPending
+                            ? "border-amber-500/30 bg-amber-500/10 text-amber-500"
+                            : passed
+                              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
+                              : "border-danger/30 bg-danger/10 text-danger"
+                        }`}
+                      >
+                        {isPending ? (
+                          <IconAlertCircle size={16} />
+                        ) : passed ? (
+                          <IconCheck size={16} />
+                        ) : (
+                          <IconX size={16} />
+                        )}
+                      </span>
+                      <p className="truncate text-sm font-semibold text-foreground">
+                        {quiz.assignmentName}
+                      </p>
+                    </div>
+                    {isPending ? (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-500">
+                        Pending
+                      </span>
+                    ) : passed ? (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">
+                        <IconCheck size={11} /> Passed
+                      </span>
+                    ) : (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-danger/15 px-2 py-0.5 text-[11px] font-semibold text-danger">
+                        <IconX size={11} /> Failed
+                      </span>
+                    )}
                   </div>
-                  {isPending ? (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-500">
-                      Pending
-                    </span>
-                  ) : passed ? (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">
-                      <IconCheck size={11} /> Passed
-                    </span>
-                  ) : (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-danger/15 px-2 py-0.5 text-[11px] font-semibold text-danger">
-                      <IconX size={11} /> Failed
-                    </span>
-                  )}
-                </div>
 
-                <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5 text-xs">
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Course
-                    </p>
-                    <p className="truncate text-foreground">
-                      {quiz.courseName}
-                    </p>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Module
-                    </p>
-                    <p className="truncate text-foreground">
-                      {quiz.moduleName}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Due
-                    </p>
-                    <p
-                      className={
-                        isOverdue
-                          ? "font-semibold text-danger"
-                          : isPending
-                            ? "text-amber-400"
-                            : "text-muted-foreground"
-                      }
-                    >
-                      {isPending
-                        ? isOverdue
-                          ? `${daysOverdue}d overdue`
+                  <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5 text-xs">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Course
+                      </p>
+                      <p className="truncate text-foreground">
+                        {quiz.courseName}
+                      </p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Module
+                      </p>
+                      <p className="truncate text-foreground">
+                        {quiz.moduleName}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Due
+                      </p>
+                      <p
+                        className={
+                          isOverdue
+                            ? "font-semibold text-danger"
+                            : isPending
+                              ? "text-amber-400"
+                              : "text-muted-foreground"
+                        }
+                      >
+                        {isPending
+                          ? isOverdue
+                            ? `${daysOverdue}d overdue`
+                            : quiz.dueDate
+                              ? new Date(quiz.dueDate).toLocaleDateString(
+                                  "en-IN",
+                                  { day: "numeric", month: "short" },
+                                )
+                              : "—"
                           : quiz.dueDate
                             ? new Date(quiz.dueDate).toLocaleDateString(
                                 "en-IN",
                                 { day: "numeric", month: "short" },
                               )
-                            : "—"
-                        : quiz.dueDate
-                          ? new Date(quiz.dueDate).toLocaleDateString(
-                              "en-IN",
-                              { day: "numeric", month: "short" },
-                            )
-                          : "—"}
-                    </p>
+                            : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Submitted
+                      </p>
+                      <p className="text-foreground">
+                        {isPending
+                          ? "—"
+                          : quiz.submittedAt
+                            ? new Date(quiz.submittedAt).toLocaleDateString(
+                                "en-IN",
+                                {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                },
+                              )
+                            : "—"}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      Submitted
-                    </p>
-                    <p className="text-foreground">
-                      {isPending
-                        ? "—"
-                        : quiz.submittedAt
-                          ? new Date(quiz.submittedAt).toLocaleDateString(
-                              "en-IN",
-                              { day: "numeric", month: "short", year: "numeric" },
-                            )
-                          : "—"}
-                    </p>
-                  </div>
-                </div>
 
-                <div className="mt-3 flex items-center justify-end gap-2 border-t border-border/60 pt-3">
-                  {isPending ? (
-                    <button
-                      onClick={() => handleStartQuiz(quiz.id)}
-                      disabled={loading}
-                      className="btn-primary px-3 py-1.5 text-xs"
-                    >
-                      <IconPlayerPlay size={13} className="mr-1 inline" />
-                      Start Quiz
-                    </button>
-                  ) : (
-                    <>
+                  <div className="mt-3 flex items-center justify-end gap-2 border-t border-border/60 pt-3">
+                    {isPending ? (
                       <button
                         onClick={() => handleStartQuiz(quiz.id)}
                         disabled={loading}
                         className="btn-primary px-3 py-1.5 text-xs"
                       >
                         <IconPlayerPlay size={13} className="mr-1 inline" />
-                        Retake Quiz
+                        Start Quiz
                       </button>
-                      <button
-                        onClick={() => handleViewResult(quiz.id)}
-                        disabled={loading}
-                        className="btn-secondary px-3 py-1.5 text-xs"
-                        title="View Results"
-                      >
-                        <IconChecklist size={13} className="mr-1 inline" />
-                        Results
-                      </button>
-                    </>
-                  )}
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => handleStartQuiz(quiz.id)}
+                          disabled={loading}
+                          className="btn-primary px-3 py-1.5 text-xs"
+                        >
+                          <IconPlayerPlay size={13} className="mr-1 inline" />
+                          Retake Quiz
+                        </button>
+                        <button
+                          onClick={() => handleViewResult(quiz.id)}
+                          disabled={loading}
+                          className="btn-secondary px-3 py-1.5 text-xs"
+                          title="View Results"
+                        >
+                          <IconChecklist size={13} className="mr-1 inline" />
+                          Results
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </> ) : (
+              );
+            })}
+          </div>
+        </>
+      ) : (
         <div className="rounded-2xl border border-dashed border-border/80 bg-card/50 flex flex-col items-center justify-center py-16 text-center">
           <span className="text-4xl mb-3">🎯</span>
           <p className="font-bold text-base text-foreground">

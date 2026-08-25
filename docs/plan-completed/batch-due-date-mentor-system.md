@@ -3,6 +3,7 @@
 ## Overview
 
 A complete system for:
+
 1. **Relative due dates** — assignments/quizzes get due dates calculated as `enrollmentDate + N days` (configurable per batch)
 2. **Late submission penalty** — configurable percentage deduction (default 25%) for late submissions
 3. **Per-student extensions** — admin can extend deadlines for individual students
@@ -14,49 +15,49 @@ A complete system for:
 
 ### Batch Model — New Fields
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `defaultDaysToComplete` | `Int?` | `null` | Default days-from-enrollment for assignments/quizzes in this batch |
-| `lateSubmissionPenaltyPercent` | `Int` | `25` | Default late penalty for batch (overridable per item) |
+| Field                          | Type   | Default | Description                                                        |
+| ------------------------------ | ------ | ------- | ------------------------------------------------------------------ |
+| `defaultDaysToComplete`        | `Int?` | `null`  | Default days-from-enrollment for assignments/quizzes in this batch |
+| `lateSubmissionPenaltyPercent` | `Int`  | `25`    | Default late penalty for batch (overridable per item)              |
 
 ### Assignment Model — New Fields
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `daysFromEnrollment` | `Int?` | `null` | If set → dueDate = enrollmentDate + daysFromEnrollment; `dueDate` becomes calculated |
-| `lateSubmissionPenaltyPercent` | `Int?` | `null` | Overrides batch default. `null` = use batch default |
-| `allowLateSubmission` | `Boolean` | `false` | Allow submissions after due date (with penalty) |
-| `lateSubmissionGracePeriodHrs` | `Int?` | `null` | Optional max hours past due allowed |
+| Field                          | Type      | Default | Description                                                                          |
+| ------------------------------ | --------- | ------- | ------------------------------------------------------------------------------------ |
+| `daysFromEnrollment`           | `Int?`    | `null`  | If set → dueDate = enrollmentDate + daysFromEnrollment; `dueDate` becomes calculated |
+| `lateSubmissionPenaltyPercent` | `Int?`    | `null`  | Overrides batch default. `null` = use batch default                                  |
+| `allowLateSubmission`          | `Boolean` | `false` | Allow submissions after due date (with penalty)                                      |
+| `lateSubmissionGracePeriodHrs` | `Int?`    | `null`  | Optional max hours past due allowed                                                  |
 
 ### Quiz Model — New Fields
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `daysFromEnrollment` | `Int?` | `null` | Same as Assignment |
-| `lateSubmissionPenaltyPercent` | `Int?` | `null` | Same as Assignment |
-| `allowLateSubmission` | `Boolean` | `false` | Same as Assignment |
-| `lateSubmissionGracePeriodHrs` | `Int?` | `null` | Same as Assignment |
+| Field                          | Type      | Default | Description        |
+| ------------------------------ | --------- | ------- | ------------------ |
+| `daysFromEnrollment`           | `Int?`    | `null`  | Same as Assignment |
+| `lateSubmissionPenaltyPercent` | `Int?`    | `null`  | Same as Assignment |
+| `allowLateSubmission`          | `Boolean` | `false` | Same as Assignment |
+| `lateSubmissionGracePeriodHrs` | `Int?`    | `null`  | Same as Assignment |
 
 ### AssignmentSubmission Model — New Fields
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `isLate` | `Boolean` | `false` | Was this submitted after the due date? |
-| `latePenaltyPercent` | `Int?` | `null` | Penalty applied |
-| `latePenaltyAmount` | `Int?` | `null` | Points deducted |
-| `originalScore` | `Int?` | `null` | Score before penalty |
-| `extensionDeadline` | `DateTime?` | `null` | Per-student extended deadline |
+| Field                | Type        | Default | Description                            |
+| -------------------- | ----------- | ------- | -------------------------------------- |
+| `isLate`             | `Boolean`   | `false` | Was this submitted after the due date? |
+| `latePenaltyPercent` | `Int?`      | `null`  | Penalty applied                        |
+| `latePenaltyAmount`  | `Int?`      | `null`  | Points deducted                        |
+| `originalScore`      | `Int?`      | `null`  | Score before penalty                   |
+| `extensionDeadline`  | `DateTime?` | `null`  | Per-student extended deadline          |
 
 ### QuizAttempt Model — New Fields
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `submittedAt` | `DateTime?` | `null` | When student submitted (distinct from `createdAt` = start) |
-| `isLate` | `Boolean` | `false` | |
-| `latePenaltyPercent` | `Int?` | `null` | |
-| `latePenaltyAmount` | `Int?` | `null` | |
-| `originalPercentage` | `Float?` | `null` | Score before penalty |
-| `extensionDeadline` | `DateTime?` | `null` | |
+| Field                | Type        | Default | Description                                                |
+| -------------------- | ----------- | ------- | ---------------------------------------------------------- |
+| `submittedAt`        | `DateTime?` | `null`  | When student submitted (distinct from `createdAt` = start) |
+| `isLate`             | `Boolean`   | `false` |                                                            |
+| `latePenaltyPercent` | `Int?`      | `null`  |                                                            |
+| `latePenaltyAmount`  | `Int?`      | `null`  |                                                            |
+| `originalPercentage` | `Float?`    | `null`  | Score before penalty                                       |
+| `extensionDeadline`  | `DateTime?` | `null`  |                                                            |
 
 ### New Model: `BatchCourseMentor`
 
@@ -111,6 +112,7 @@ model BatchAssignmentExtension {
 ### 2.1 Batch CRUD Updates
 
 **`POST /api/admin/batches`** — accept new fields:
+
 - `defaultDaysToComplete` (optional int)
 - `lateSubmissionPenaltyPercent` (optional int, default 25)
 
@@ -119,6 +121,7 @@ model BatchAssignmentExtension {
 ### 2.2 Course Builder — Assignment/Quiz API Updates
 
 **`POST /api/admin/courses/modules/:moduleId/assignments`**
+
 - Add `daysFromEnrollment` (optional int)
 - Add `lateSubmissionPenaltyPercent` (optional int)
 - Add `allowLateSubmission` (boolean)
@@ -141,7 +144,7 @@ New service: `apps/api/src/services/due-date-calculator.service.ts`
 function calculateDueDate(
   enrollmentDate: Date,
   daysFromEnrollment: number | null,
-  absoluteDueDate: Date | null
+  absoluteDueDate: Date | null,
 ): Date {
   if (daysFromEnrollment) {
     const d = new Date(enrollmentDate);
@@ -153,6 +156,7 @@ function calculateDueDate(
 ```
 
 **Where to call it:**
+
 - When `EnrollmentRequest` is approved → recalculate due dates for all assignments/quizzes in the batch
 - When `PackageEnrollment` is approved → same
 - When `addStudents` to batch → same
@@ -161,6 +165,7 @@ function calculateDueDate(
 ### 2.4 Late Submission Detection & Penalty
 
 **Assignment submission** (`POST /api/assignments/:id/submit/file`):
+
 1. Get student's enrollment date for the batch
 2. Calculate effective due date (from `daysFromEnrollment` or absolute `dueDate`)
 3. Check `extensionDeadline` on `AssignmentSubmission` (if exists, use that as deadline)
@@ -171,6 +176,7 @@ function calculateDueDate(
    - Store `originalScore`, `latePenaltyPercent`, `latePenaltyAmount`
 
 **Quiz submission** (`POST /api/courses/quizzes/:quizId/submit`):
+
 1. Same logic as above
 2. Store `originalPercentage` before penalty
 3. Apply penalty to final `percentage` and `score`
@@ -179,13 +185,14 @@ function calculateDueDate(
 
 Extensions are granted at the batch level — when extended, ALL students in the batch get the new deadline.
 
-| Method | Route | Description |
-|---|---|---|
-| `POST` | `/api/admin/batches/:batchId/extensions` | Grant batch-level extension for an assignment/quiz |
-| `GET` | `/api/admin/batches/:batchId/extensions` | List extensions for the batch |
+| Method   | Route                                        | Description                                        |
+| -------- | -------------------------------------------- | -------------------------------------------------- |
+| `POST`   | `/api/admin/batches/:batchId/extensions`     | Grant batch-level extension for an assignment/quiz |
+| `GET`    | `/api/admin/batches/:batchId/extensions`     | List extensions for the batch                      |
 | `DELETE` | `/api/admin/batches/:batchId/extensions/:id` | Revoke extension (falls back to original due date) |
 
 Request body:
+
 ```json
 {
   "assignmentId": "string (optional if quizId)",
@@ -197,13 +204,14 @@ Request body:
 
 ### 2.6 Batch Course Mentor API
 
-| Method | Route | Description |
-|---|---|---|
-| `POST` | `/api/admin/batches/:id/mentors` | Assign mentor to a course in the batch |
-| `GET` | `/api/admin/batches/:id/mentors` | List mentors for batch |
-| `DELETE` | `/api/admin/batches/:id/mentors/:mentorId/courses/:courseId` | Remove mentor for a course |
+| Method   | Route                                                        | Description                            |
+| -------- | ------------------------------------------------------------ | -------------------------------------- |
+| `POST`   | `/api/admin/batches/:id/mentors`                             | Assign mentor to a course in the batch |
+| `GET`    | `/api/admin/batches/:id/mentors`                             | List mentors for batch                 |
+| `DELETE` | `/api/admin/batches/:id/mentors/:mentorId/courses/:courseId` | Remove mentor for a course             |
 
 Request body:
+
 ```json
 {
   "courseId": "string",
@@ -212,6 +220,7 @@ Request body:
 ```
 
 **Effect**: When a mentor is assigned to a batch-course combo, they can:
+
 - View student submissions for that course's assignments
 - Grade assignments for that course
 - View quiz results for that course
@@ -221,6 +230,7 @@ Request body:
 Instructor's batch view should filter by their mentor assignments (not just `batch.instructorId`).
 
 Extend `batchController.listBatches` to check:
+
 - If user is INSTRUCTOR → return batches where `instructorId = userId` OR `BatchCourseMentor.mentorId = userId`
 
 ---
@@ -232,6 +242,7 @@ Extend `batchController.listBatches` to check:
 **File:** `apps/web/src/app/admin/batches/new/page.tsx`
 
 Add fields after "Description":
+
 - **Default Days to Complete** — number input, optional (tooltip: "Assignments and quizzes will have due dates calculated as enrollment date + N days")
 - **Late Submission Penalty %** — number input, default 25 (tooltip: "Default penalty applied when submitting after due date")
 
@@ -240,6 +251,7 @@ Add fields after "Description":
 ### 3.2 Course Builder Updates
 
 **AddAssignmentForm.tsx** — Add collapse-able "Advanced" section:
+
 - **Due Date Mode**: Radio/select — "Absolute Date" (existing datetime-local) OR "Days from Enrollment" (number input + label "days after student enrolls")
 - When "Days from Enrollment" is selected, hide the datetime-local dueDate field
 - **Late Submission**: Toggle "Allow Late Submission" (checkbox)
@@ -256,6 +268,7 @@ Add fields after "Description":
 **File:** `apps/web/src/app/admin/batches/[id]/page.tsx`
 
 Add a new "Mentors" tab (4th tab):
+
 - Shows a table: Course Name | Mentor Name | Actions (Remove)
 - "Add Mentor" dropdown: select course + select instructor
 - Only visible for package-level batches (where `packageId` is set)
@@ -263,6 +276,7 @@ Add a new "Mentors" tab (4th tab):
 ### 3.4 Batch Detail — Extensions Tab
 
 Add to the batch detail page:
+
 - Shows table: Assignment/Quiz | Course | Original Due Date | Extended Due Date | Granted By | Actions (Revoke)
 - "Grant Extension" form: select assignment/quiz from the batch, set new deadline, optional reason
 - Extension applies to ALL students in the batch
@@ -272,6 +286,7 @@ Add to the batch detail page:
 When assignments/quizzes are displayed to students, show the calculated due date (based on enrollment date) rather than the raw `dueDate` from the DB.
 
 **Files affected:**
+
 - `AssignmentOverdueView.tsx` — display calculated due date
 - `QuizOverdueView.tsx` — display calculated due date
 - `CourseContentView.tsx` — sidebar shows due dates
@@ -280,6 +295,7 @@ When assignments/quizzes are displayed to students, show the calculated due date
 ### 3.6 Student View — Late Penalty Display
 
 When a student submits late:
+
 - Show warning: "This submission is X days late. A Y% penalty will be applied."
 - After grading: show original score, penalty, and final score
 

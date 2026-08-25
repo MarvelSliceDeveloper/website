@@ -46,8 +46,6 @@ const STEPS = [
   { id: "done", label: "All Set!", title: "Ready to Begin" },
 ] as const;
 
-
-
 const FEATURES = [
   {
     icon: IconBook,
@@ -132,7 +130,9 @@ export default function OnboardingWizardView({
 }: OnboardingWizardViewProps) {
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Partial<Record<keyof ProfileData, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof ProfileData, string>>
+  >({});
   const [profile, setProfile] = useState<ProfileData>(DEFAULT_PROFILE);
 
   function update<K extends keyof ProfileData>(key: K, value: ProfileData[K]) {
@@ -240,7 +240,9 @@ export default function OnboardingWizardView({
         <div className="relative z-10 min-h-[500px] w-full sp-view-enter">
           {step === 0 && <WelcomeStep />}
           {step === 1 && <FeatureTourStep />}
-          {step === 2 && <ProfileStep profile={profile} update={update} errors={errors} />}
+          {step === 2 && (
+            <ProfileStep profile={profile} update={update} errors={errors} />
+          )}
           {step === 3 && <AllSetStep />}
         </div>
 
@@ -389,7 +391,9 @@ function FeatureTourStep() {
                 <h3 className="text-xs sm:text-sm font-bold text-foreground truncate">
                   {f.title}
                 </h3>
-                <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${f.iconBorder} ${f.color}`}>
+                <span
+                  className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${f.iconBorder} ${f.color}`}
+                >
                   {f.badge}
                 </span>
               </div>
@@ -523,7 +527,9 @@ function SearchableSelect({
       .map((g) => ({
         ...g,
         zones: g.zones.filter(
-          (z) => z.label.toLowerCase().includes(q) || z.value.toLowerCase().includes(q),
+          (z) =>
+            z.label.toLowerCase().includes(q) ||
+            z.value.toLowerCase().includes(q),
         ),
       }))
       .filter((g) => g.zones.length > 0);
@@ -534,7 +540,8 @@ function SearchableSelect({
     if (!search) return options;
     const q = search.toLowerCase();
     return options.filter(
-      (o) => o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q),
+      (o) =>
+        o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q),
     );
   }, [options, search]);
 
@@ -555,13 +562,19 @@ function SearchableSelect({
       >
         <span className="shrink-0 text-muted-foreground">{icon}</span>
         <span className="flex-1 truncate">{selectedLabel || placeholder}</span>
-        <IconChevronDown size={15} className={`shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+        <IconChevronDown
+          size={15}
+          className={`shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+        />
       </button>
 
       {open && (
         <div className="absolute z-50 mt-1 w-full rounded-xl border border-border bg-card shadow-xl backdrop-blur-xl overflow-hidden">
           <div className="relative border-b border-border">
-            <IconSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <IconSearch
+              size={15}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
             <input
               type="text"
               value={search}
@@ -575,7 +588,11 @@ function SearchableSelect({
           <div className="max-h-80 overflow-y-auto">
             <button
               type="button"
-              onClick={() => { onChange(""); setOpen(false); setSearch(""); }}
+              onClick={() => {
+                onChange("");
+                setOpen(false);
+                setSearch("");
+              }}
               className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:bg-muted/10 transition-colors"
             >
               {placeholder}
@@ -590,9 +607,15 @@ function SearchableSelect({
                       <button
                         key={z.value}
                         type="button"
-                        onClick={() => { onChange(z.value); setOpen(false); setSearch(""); }}
+                        onClick={() => {
+                          onChange(z.value);
+                          setOpen(false);
+                          setSearch("");
+                        }}
                         className={`w-full text-left px-4 py-2 text-sm transition-colors hover:bg-primary/10 ${
-                          value === z.value ? "bg-primary/10 text-primary font-medium" : "text-foreground"
+                          value === z.value
+                            ? "bg-primary/10 text-primary font-medium"
+                            : "text-foreground"
                         }`}
                       >
                         {z.label}
@@ -604,9 +627,15 @@ function SearchableSelect({
                   <button
                     key={o.value}
                     type="button"
-                    onClick={() => { onChange(o.value); setOpen(false); setSearch(""); }}
+                    onClick={() => {
+                      onChange(o.value);
+                      setOpen(false);
+                      setSearch("");
+                    }}
                     className={`w-full text-left px-4 py-2 text-sm transition-colors hover:bg-primary/10 ${
-                      value === o.value ? "bg-primary/10 text-primary font-medium" : "text-foreground"
+                      value === o.value
+                        ? "bg-primary/10 text-primary font-medium"
+                        : "text-foreground"
                     }`}
                   >
                     {o.label}
@@ -649,7 +678,10 @@ function ProfileStep({
               Phone Number <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <IconPhone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
+              <IconPhone
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10"
+              />
               <input
                 type="tel"
                 value={profile.phone}
@@ -690,7 +722,10 @@ function ProfileStep({
             Address <span className="text-red-500">*</span>
           </label>
           <div className="relative">
-            <IconMapPin size={16} className="absolute left-3 top-3 text-muted-foreground z-10" />
+            <IconMapPin
+              size={16}
+              className="absolute left-3 top-3 text-muted-foreground z-10"
+            />
             <textarea
               value={profile.address}
               onChange={(e) => update("address", e.target.value)}
@@ -715,7 +750,10 @@ function ProfileStep({
             </label>
             <SearchableSelect
               value={profile.country}
-              onChange={(val) => { update("country", val); update("state", ""); }}
+              onChange={(val) => {
+                update("country", val);
+                update("state", "");
+              }}
               options={COUNTRIES.map((c) => ({ label: c.name, value: c.name }))}
               placeholder="Select country"
               searchPlaceholder="Search countries..."
@@ -741,7 +779,10 @@ function ProfileStep({
               />
             ) : (
               <div className="relative">
-                <IconBuildingSkyscraper size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
+                <IconBuildingSkyscraper
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10"
+                />
                 <input
                   type="text"
                   value={profile.state}

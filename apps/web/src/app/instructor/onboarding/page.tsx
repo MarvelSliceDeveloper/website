@@ -86,6 +86,35 @@ const STEPS = [
   { label: "Complete", key: "complete" },
 ];
 
+// Fields instructors MUST provide during onboarding (marked with * and
+// validated on submit). Mobile, address and bank/payout details are required
+// for contact, compliance and earnings payouts.
+const REQUIRED_FIELDS = [
+  "phone",
+  "address",
+  "city",
+  "state",
+  "country",
+  "bio",
+  "bankName",
+  "bankAccountNumber",
+  "bankIfscCode",
+  "bankAccountHolderName",
+] as const;
+
+type FieldKey = keyof ProfileFormData;
+
+const inputBase =
+  "w-full rounded-xl border border-border bg-muted/5 px-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover";
+
+function inputCls(errors: Record<string, string>, key: string) {
+  return `${inputBase} ${
+    errors[key]
+      ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+      : ""
+  }`;
+}
+
 export default function InstructorOnboardingPage() {
   usePageTitle("Instructor Onboarding");
   const router = useRouter();
@@ -94,12 +123,14 @@ export default function InstructorOnboardingPage() {
     useState<OnboardingState>("loading");
   const [rejectionReason, setRejectionReason] = useState<string | null>(null);
   const [form, setForm] = useState<ProfileFormData>(defaultForm);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [existingResume, setExistingResume] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState(false);
 
   const checkStatus = useCallback(async () => {
@@ -193,6 +224,7 @@ export default function InstructorOnboardingPage() {
         upiId: p?.upiId ?? "",
       });
       if (p?.photoUrl) setPhotoPreview(p.photoUrl);
+      setExistingResume(Boolean(p?.resumeUrl));
     } catch {
       toast.error("Failed to load profile");
     }
@@ -222,6 +254,27 @@ export default function InstructorOnboardingPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
+
+    const newErrors: Record<string, string> = {};
+    for (const key of REQUIRED_FIELDS) {
+      if (!String(form[key] ?? "").trim()) {
+        newErrors[key] = "Required";
+      }
+    }
+    if (!photoFile && !photoPreview) {
+      newErrors.photo = "Required";
+    }
+    if (!resumeFile && !existingResume) {
+      newErrors.resume = "Required";
+    }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setSubmitting(false);
+      toast.error("Please fill in all required fields marked with *");
+      return;
+    }
+    setErrors({});
+
     try {
       let photoUrl = "";
       let resumeUrl = "";
@@ -241,7 +294,10 @@ export default function InstructorOnboardingPage() {
         qualification: form.qualification || undefined,
         experienceYears: form.experienceYears || undefined,
         skills: form.skills
-          ? form.skills.split(",").map((s) => s.trim()).filter(Boolean)
+          ? form.skills
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
           : undefined,
         currentlyEmployed: form.currentlyEmployed,
         companyName: form.companyName || undefined,
@@ -252,7 +308,10 @@ export default function InstructorOnboardingPage() {
         state: form.state || undefined,
         country: form.country || undefined,
         languages: form.languages
-          ? form.languages.split(",").map((s) => s.trim()).filter(Boolean)
+          ? form.languages
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
           : undefined,
         socialLinks: {
           ...(form.linkedin && { linkedin: form.linkedin }),
@@ -321,17 +380,11 @@ export default function InstructorOnboardingPage() {
                       : "border border-border bg-muted text-muted-foreground"
                 }`}
               >
-                {i < currentStep ? (
-                  <IconCheck size={16} />
-                ) : (
-                  i + 1
-                )}
+                {i < currentStep ? <IconCheck size={16} /> : i + 1}
               </div>
               <span
                 className={`text-[11px] font-medium ${
-                  i <= currentStep
-                    ? "text-foreground"
-                    : "text-muted-foreground"
+                  i <= currentStep ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
                 {step.label}
@@ -340,9 +393,7 @@ export default function InstructorOnboardingPage() {
             {i < STEPS.length - 1 && (
               <div
                 className={`mx-2 mt-[-1.25rem] h-px w-16 sm:w-24 ${
-                  i < currentStep
-                    ? "bg-primary"
-                    : "bg-border"
+                  i < currentStep ? "bg-primary" : "bg-border"
                 }`}
               />
             )}
@@ -366,17 +417,13 @@ export default function InstructorOnboardingPage() {
         <div
           className="mt-10"
           style={{
-            animation:
-              "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both",
+            animation: "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both",
           }}
         >
           <div className="rounded-2xl bg-card/80 p-1 shadow-[0_8px_60px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-border/60">
             <div className="rounded-[14px] bg-card px-8 py-12 text-center">
               <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-500/10">
-                <IconClockHour4
-                  size={40}
-                  className="text-amber-500"
-                />
+                <IconClockHour4 size={40} className="text-amber-500" />
               </div>
               <h2 className="mt-6 text-xl font-bold text-foreground">
                 Profile Under Review
@@ -410,18 +457,14 @@ export default function InstructorOnboardingPage() {
         <div
           className="mt-10"
           style={{
-            animation:
-              "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both",
+            animation: "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both",
           }}
         >
           <div className="rounded-2xl bg-card/80 p-1 shadow-[0_8px_60px_rgba(0,0,0,0.08)] backdrop-blur-xl border border-border/60">
             <div className="rounded-[14px] bg-card px-8 py-10">
               <div className="text-center">
                 <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-danger/10">
-                  <IconCircleX
-                    size={40}
-                    className="text-danger"
-                  />
+                  <IconCircleX size={40} className="text-danger" />
                 </div>
                 <h2 className="mt-6 text-xl font-bold text-foreground">
                   Profile Rejected
@@ -485,8 +528,7 @@ export default function InstructorOnboardingPage() {
         <div
           className="mt-10"
           style={{
-            animation:
-              "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both",
+            animation: "login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both",
           }}
         >
           <div className="mb-6 text-center">
@@ -511,7 +553,7 @@ export default function InstructorOnboardingPage() {
                       Profile Photo & Resume
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Upload your photo and CV (optional)
+                      Upload your photo and CV
                     </p>
                   </div>
                 </div>
@@ -521,6 +563,7 @@ export default function InstructorOnboardingPage() {
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-foreground">
                       Profile Photo
+                      <span className="ml-0.5 text-red-500">*</span>
                     </label>
                     {photoPreview ? (
                       <div className="relative inline-block">
@@ -531,7 +574,10 @@ export default function InstructorOnboardingPage() {
                         />
                         <button
                           type="button"
-                          onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
+                          onClick={() => {
+                            setPhotoFile(null);
+                            setPhotoPreview(null);
+                          }}
                           className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-danger text-white shadow"
                         >
                           <IconX size={12} />
@@ -539,8 +585,13 @@ export default function InstructorOnboardingPage() {
                       </div>
                     ) : (
                       <label className="flex h-28 w-28 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/5 transition-all hover:border-primary/50 hover:bg-primary/5">
-                        <IconPhoto size={24} className="text-muted-foreground" />
-                        <span className="mt-1 text-[10px] text-muted-foreground">Upload</span>
+                        <IconPhoto
+                          size={24}
+                          className="text-muted-foreground"
+                        />
+                        <span className="mt-1 text-[10px] text-muted-foreground">
+                          Upload
+                        </span>
                         <input
                           type="file"
                           accept="image/jpeg,image/png,image/webp"
@@ -560,11 +611,14 @@ export default function InstructorOnboardingPage() {
                       </label>
                     )}
                   </div>
+                  {errors.photo && (
+                    <p className="mt-1 text-xs text-red-500">{errors.photo}</p>
+                  )}
 
                   {/* Resume */}
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-foreground">
-                      Resume / CV
+                      Resume / CV<span className="ml-0.5 text-red-500">*</span>
                     </label>
                     {resumeFile ? (
                       <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/5 px-4 py-3">
@@ -587,8 +641,13 @@ export default function InstructorOnboardingPage() {
                       </div>
                     ) : (
                       <label className="flex h-28 w-28 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/5 transition-all hover:border-primary/50 hover:bg-primary/5">
-                        <IconFileUpload size={24} className="text-muted-foreground" />
-                        <span className="mt-1 text-[10px] text-muted-foreground">Upload</span>
+                        <IconFileUpload
+                          size={24}
+                          className="text-muted-foreground"
+                        />
+                        <span className="mt-1 text-[10px] text-muted-foreground">
+                          Upload
+                        </span>
                         <input
                           type="file"
                           accept=".pdf,.doc,.docx,image/jpeg,image/png"
@@ -607,6 +666,9 @@ export default function InstructorOnboardingPage() {
                       </label>
                     )}
                   </div>
+                  {errors.resume && (
+                    <p className="mt-1 text-xs text-red-500">{errors.resume}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -631,15 +693,18 @@ export default function InstructorOnboardingPage() {
                 <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="sm:col-span-2">
                     <label className="mb-1.5 block text-xs font-medium text-foreground">
-                      Bio
+                      Bio<span className="ml-0.5 text-red-500">*</span>
                     </label>
                     <textarea
                       value={form.bio}
                       onChange={(e) => update("bio", e.target.value)}
                       rows={3}
-                      className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
+                      className={inputCls(errors, "bio")}
                       placeholder="Tell us about yourself..."
                     />
+                    {errors.bio && (
+                      <p className="mt-1 text-xs text-red-500">{errors.bio}</p>
+                    )}
                   </div>
 
                   <div>
@@ -736,9 +801,7 @@ export default function InstructorOnboardingPage() {
                       <input
                         type="text"
                         value={form.companyName}
-                        onChange={(e) =>
-                          update("companyName", e.target.value)
-                        }
+                        onChange={(e) => update("companyName", e.target.value)}
                         className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
                         placeholder="Current employer"
                       />
@@ -781,15 +844,21 @@ export default function InstructorOnboardingPage() {
                 <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-foreground">
-                      Phone
+                      Mobile Number
+                      <span className="ml-0.5 text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={form.phone}
                       onChange={(e) => update("phone", e.target.value)}
-                      className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
+                      className={inputCls(errors, "phone")}
                       placeholder="+1 234 567 890"
                     />
+                    {errors.phone && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.phone}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -833,54 +902,72 @@ export default function InstructorOnboardingPage() {
 
                   <div className="sm:col-span-2">
                     <label className="mb-1.5 block text-xs font-medium text-foreground">
-                      Address
+                      Address<span className="ml-0.5 text-red-500">*</span>
                     </label>
                     <textarea
                       value={form.address}
                       onChange={(e) => update("address", e.target.value)}
                       rows={2}
-                      className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
+                      className={inputCls(errors, "address")}
                       placeholder="Street address"
                     />
+                    {errors.address && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.address}
+                      </p>
+                    )}
                   </div>
 
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-foreground">
-                      City
+                      City<span className="ml-0.5 text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={form.city}
                       onChange={(e) => update("city", e.target.value)}
-                      className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
+                      className={inputCls(errors, "city")}
                       placeholder="City"
                     />
+                    {errors.city && (
+                      <p className="mt-1 text-xs text-red-500">{errors.city}</p>
+                    )}
                   </div>
 
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-foreground">
-                      State
+                      State<span className="ml-0.5 text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={form.state}
                       onChange={(e) => update("state", e.target.value)}
-                      className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
+                      className={inputCls(errors, "state")}
                       placeholder="State"
                     />
+                    {errors.state && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.state}
+                      </p>
+                    )}
                   </div>
 
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-foreground">
-                      Country
+                      Country<span className="ml-0.5 text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={form.country}
                       onChange={(e) => update("country", e.target.value)}
-                      className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
+                      className={inputCls(errors, "country")}
                       placeholder="Country"
                     />
+                    {errors.country && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.country}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -906,20 +993,26 @@ export default function InstructorOnboardingPage() {
                 <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-foreground">
-                      Bank Name
+                      Bank Name<span className="ml-0.5 text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={form.bankName}
                       onChange={(e) => update("bankName", e.target.value)}
-                      className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
+                      className={inputCls(errors, "bankName")}
                       placeholder="Bank name"
                     />
+                    {errors.bankName && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.bankName}
+                      </p>
+                    )}
                   </div>
 
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-foreground">
                       Bank Account Number
+                      <span className="ml-0.5 text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -927,27 +1020,38 @@ export default function InstructorOnboardingPage() {
                       onChange={(e) =>
                         update("bankAccountNumber", e.target.value)
                       }
-                      className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
+                      className={inputCls(errors, "bankAccountNumber")}
                       placeholder="Account number"
                     />
+                    {errors.bankAccountNumber && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.bankAccountNumber}
+                      </p>
+                    )}
                   </div>
 
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-foreground">
-                      IFSC Code
+                      IFSC Code<span className="ml-0.5 text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={form.bankIfscCode}
                       onChange={(e) => update("bankIfscCode", e.target.value)}
-                      className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
+                      className={inputCls(errors, "bankIfscCode")}
                       placeholder="IFSC code"
                     />
+                    {errors.bankIfscCode && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.bankIfscCode}
+                      </p>
+                    )}
                   </div>
 
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-foreground">
                       Account Holder Name
+                      <span className="ml-0.5 text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -955,9 +1059,14 @@ export default function InstructorOnboardingPage() {
                       onChange={(e) =>
                         update("bankAccountHolderName", e.target.value)
                       }
-                      className="w-full rounded-xl border border-border bg-muted/5 px-4 py-3 text-sm text-foreground outline-none transition-all duration-300 placeholder:text-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/20 hover:border-border-hover"
+                      className={inputCls(errors, "bankAccountHolderName")}
                       placeholder="Name on bank account"
                     />
+                    {errors.bankAccountHolderName && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.bankAccountHolderName}
+                      </p>
+                    )}
                   </div>
 
                   <div>

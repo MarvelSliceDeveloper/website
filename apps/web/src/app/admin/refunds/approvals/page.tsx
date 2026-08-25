@@ -87,8 +87,7 @@ export default function RefundApprovalsPage() {
   const loading = refundsQuery.isPending;
 
   const approveMutation = useMutation({
-    mutationFn: (id: string) =>
-      api.post(`/api/admin/refunds/${id}/approve`),
+    mutationFn: (id: string) => api.post(`/api/admin/refunds/${id}/approve`),
     onSuccess: () => {
       toast.success("Refund approved and processed via Razorpay");
       setApproveId(null);
@@ -200,13 +199,17 @@ export default function RefundApprovalsPage() {
 
                 <div className="rounded-lg border border-border bg-card-hover/40 p-3 text-xs space-y-1">
                   <p className="text-muted-foreground">
-                    <span className="font-medium text-foreground">Payment: </span>
+                    <span className="font-medium text-foreground">
+                      Payment:{" "}
+                    </span>
                     <span className="font-mono">
                       {refund.payment?.razorpayPaymentId ?? refund.paymentId}
                     </span>
                   </p>
                   <p className="text-muted-foreground">
-                    <span className="font-medium text-foreground">Reason: </span>
+                    <span className="font-medium text-foreground">
+                      Reason:{" "}
+                    </span>
                     {refund.reason || "—"}
                   </p>
                   <p className="text-muted-foreground">

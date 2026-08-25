@@ -53,9 +53,7 @@ export const twoFactorController = {
       const { code } = req.body;
 
       if (!code || typeof code !== "string") {
-        return res
-          .status(400)
-          .json({ error: "Verification code is required" });
+        return res.status(400).json({ error: "Verification code is required" });
       }
 
       const twoFactorAuth = await prisma.twoFactorAuth.findUnique({
@@ -67,9 +65,7 @@ export const twoFactorController = {
           .json({ error: "2FA not set up. Please call /setup first." });
       }
       if (twoFactorAuth.verifiedAt) {
-        return res
-          .status(400)
-          .json({ error: "2FA is already verified" });
+        return res.status(400).json({ error: "2FA is already verified" });
       }
 
       const result = await verifyOtp({
@@ -77,9 +73,7 @@ export const twoFactorController = {
         token: code,
       });
       if (!result.valid) {
-        return res
-          .status(400)
-          .json({ error: "Invalid verification code" });
+        return res.status(400).json({ error: "Invalid verification code" });
       }
 
       const backupCodes: string[] = [];
@@ -125,8 +119,7 @@ export const twoFactorController = {
 
       if (!user.passwordHash) {
         return res.status(400).json({
-          error:
-            "Cannot disable 2FA. Account uses SSO authentication.",
+          error: "Cannot disable 2FA. Account uses SSO authentication.",
         });
       }
 
@@ -175,14 +168,10 @@ export const twoFactorController = {
       const { tempToken, code, rememberMe } = req.body;
 
       if (!tempToken || typeof tempToken !== "string") {
-        return res
-          .status(400)
-          .json({ error: "Temporary token is required" });
+        return res.status(400).json({ error: "Temporary token is required" });
       }
       if (!code || typeof code !== "string") {
-        return res
-          .status(400)
-          .json({ error: "Verification code is required" });
+        return res.status(400).json({ error: "Verification code is required" });
       }
 
       let payload: { userId: string; purpose: string };
@@ -238,9 +227,7 @@ export const twoFactorController = {
       }
 
       if (!isValid) {
-        return res
-          .status(400)
-          .json({ error: "Invalid verification code" });
+        return res.status(400).json({ error: "Invalid verification code" });
       }
 
       const tokens = await authService.generateTokens({

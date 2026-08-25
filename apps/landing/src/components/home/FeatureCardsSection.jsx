@@ -1,12 +1,12 @@
-import Reveal from '../ui/Reveal';
-import { FiCheckCircle, FiArrowRight } from 'react-icons/fi';
+import Reveal from "../ui/Reveal";
+import { FiCheckCircle, FiArrowRight } from "react-icons/fi";
 
 export default function FeatureCardsSection({ section }) {
   if (!section) return null;
 
   const cards = section.content?.cards || [];
-  const heading = section.heading || '';
-  const subheading = section.subheading || '';
+  const heading = section.heading || "";
+  const subheading = section.subheading || "";
 
   if (cards.length === 0) return null;
 
@@ -33,18 +33,33 @@ export default function FeatureCardsSection({ section }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-7 sm:gap-8 items-stretch">
           {cards.map((card, i) => {
-            const cardTitle = card.heading || card.title || '';
-            const cardDesc = card.description || card.desc || '';
-            const imageUrl = card.image_url || card.image || card.hero_image_url || '';
-            const categoryBadge = card.category || card.type || card.badge || card.category_name || '';
-            const bullets = card.bullets || card.features || card.highlights || [];
-            const buttonText = card.button_text || card.cta_text || card.button_label || 'Explore';
-            const buttonLink = card.button_link || card.link || card.url || '/courses';
+            const cardTitle = card.heading || card.title || "";
+            const cardDesc = card.description || card.desc || "";
+            const imageUrl =
+              card.image_url || card.image || card.hero_image_url || "";
+            const categoryBadge =
+              card.category ||
+              card.type ||
+              card.badge ||
+              card.category_name ||
+              "";
+            const bullets =
+              card.bullets || card.features || card.highlights || [];
+            const buttonText =
+              card.button_text ||
+              card.cta_text ||
+              card.button_label ||
+              "Explore";
+            const buttonLink =
+              card.button_link || card.link || card.url || "/courses";
 
             return (
-              <Reveal key={i} variant={i % 2 === 0 ? 'right' : 'left'} className="h-full w-full">
+              <Reveal
+                key={i}
+                variant={i % 2 === 0 ? "right" : "left"}
+                className="h-full w-full"
+              >
                 <div className="group relative bg-white rounded-[20px] border border-slate-200/70 shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-xl hover:border-brand-blue/30 hover:-translate-y-1.5 transition-all duration-300 ease-out flex flex-col h-full w-full overflow-hidden">
-                  
                   {/* 1. IMAGE HEADER & BADGE */}
                   <div className="relative w-full aspect-[16/9] sm:aspect-[16/8.5] overflow-hidden bg-slate-100 shrink-0">
                     {imageUrl ? (
@@ -56,7 +71,7 @@ export default function FeatureCardsSection({ section }) {
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-brand-blue/90 to-brand-orange/90 group-hover:scale-[1.03] transition-transform duration-500 ease-out" />
                     )}
-                    
+
                     {/* Subtle Overlay Gradient for Depth */}
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent pointer-events-none" />
 
@@ -91,7 +106,10 @@ export default function FeatureCardsSection({ section }) {
                       {bullets.length > 0 && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 mb-6">
                           {bullets.map((bullet, j) => (
-                            <div key={j} className="flex items-start gap-2 min-w-0">
+                            <div
+                              key={j}
+                              className="flex items-start gap-2 min-w-0"
+                            >
                               <FiCheckCircle className="w-4 h-4 text-brand-orange shrink-0 mt-0.5" />
                               <span className="text-brand-blue text-xs sm:text-sm font-medium leading-tight truncate">
                                 {bullet}
@@ -112,7 +130,6 @@ export default function FeatureCardsSection({ section }) {
                         <FiArrowRight className="w-3.5 h-3.5 text-white group-hover/btn:translate-x-1 transition-transform duration-200 shrink-0" />
                       </a>
                     </div>
-
                   </div>
                 </div>
               </Reveal>

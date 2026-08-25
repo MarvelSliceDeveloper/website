@@ -198,8 +198,7 @@ export default function AdminPackagesPage() {
             <button
               onClick={() => handleDelete(pkg.id, pkg.name)}
               disabled={
-                deleteMutation.isPending &&
-                deleteMutation.variables === pkg.id
+                deleteMutation.isPending && deleteMutation.variables === pkg.id
               }
               className="btn-danger text-xs flex items-center gap-1"
             >
@@ -222,9 +221,7 @@ export default function AdminPackagesPage() {
       <AdminPageHeader
         title="Packages"
         description="Create and manage course bundles for students."
-        breadcrumbs={[
-          { label: "Packages", href: "/admin/packages" },
-        ]}
+        breadcrumbs={[{ label: "Packages", href: "/admin/packages" }]}
         action={
           <Link
             href="/admin/packages/new"

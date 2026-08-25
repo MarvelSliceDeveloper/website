@@ -120,8 +120,7 @@ export const attendanceService = {
       ? (session.endedAt ?? session.scheduledEndAt).getTime() -
         session.scheduledAt.getTime()
       : 0;
-    const qualified =
-      actualMs > 0 && durationSeconds >= actualMs / 2000;
+    const qualified = actualMs > 0 && durationSeconds >= actualMs / 2000;
 
     const updated = await prisma.attendance.update({
       where: { id: record.id },
@@ -181,10 +180,8 @@ export const attendanceService = {
     const avgDurationSeconds =
       withDuration.length > 0
         ? Math.round(
-            withDuration.reduce(
-              (sum, r) => sum + (r.durationSeconds ?? 0),
-              0,
-            ) / withDuration.length,
+            withDuration.reduce((sum, r) => sum + (r.durationSeconds ?? 0), 0) /
+              withDuration.length,
           )
         : 0;
 
@@ -198,8 +195,7 @@ export const attendanceService = {
     const earlyLeaves = records.filter(
       (r) =>
         r.leftAt !== null &&
-        session.scheduledEndAt.getTime() - r.leftAt.getTime() >=
-          EARLY_LEAVE_MS,
+        session.scheduledEndAt.getTime() - r.leftAt.getTime() >= EARLY_LEAVE_MS,
     ).length;
 
     const attendanceRate =

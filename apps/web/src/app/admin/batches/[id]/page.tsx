@@ -373,7 +373,9 @@ export default function BatchDetailPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title={batch.name}
-        description={batch.course?.title ?? batch.package?.name ?? "All Courses"}
+        description={
+          batch.course?.title ?? batch.package?.name ?? "All Courses"
+        }
         breadcrumbs={[
           { label: "Batches", href: "/admin/batches" },
           { label: batch.name, href: "#" },
@@ -413,7 +415,9 @@ export default function BatchDetailPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-border pb-0 overflow-x-auto">
-        {(["students", "sessions", "courses", "extensions", "mentors"] as const).map((t) => (
+        {(
+          ["students", "sessions", "courses", "extensions", "mentors"] as const
+        ).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -648,7 +652,8 @@ export default function BatchDetailPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Grant extensions for assignments/quizzes. Applies to ALL students in the batch.
+              Grant extensions for assignments/quizzes. Applies to ALL students
+              in the batch.
             </p>
             <button
               onClick={() => setShowAddExt(!showAddExt)}
@@ -662,7 +667,9 @@ export default function BatchDetailPage() {
             <div className="glass-card p-4 space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium">Assignment ID (optional)</label>
+                  <label className="text-xs font-medium">
+                    Assignment ID (optional)
+                  </label>
                   <input
                     type="text"
                     value={extAssignmentId}
@@ -672,7 +679,9 @@ export default function BatchDetailPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium">Quiz ID (optional)</label>
+                  <label className="text-xs font-medium">
+                    Quiz ID (optional)
+                  </label>
                   <input
                     type="text"
                     value={extQuizId}
@@ -693,7 +702,9 @@ export default function BatchDetailPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium">Reason (optional)</label>
+                  <label className="text-xs font-medium">
+                    Reason (optional)
+                  </label>
                   <input
                     type="text"
                     value={extReason}
@@ -704,7 +715,12 @@ export default function BatchDetailPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-2">
-                <button onClick={() => setShowAddExt(false)} className="btn-secondary text-xs">Cancel</button>
+                <button
+                  onClick={() => setShowAddExt(false)}
+                  className="btn-secondary text-xs"
+                >
+                  Cancel
+                </button>
                 <button
                   onClick={handleGrantExt}
                   className="btn-primary text-xs"
@@ -720,24 +736,41 @@ export default function BatchDetailPage() {
             <p className="text-sm text-muted animate-pulse">Loading...</p>
           ) : extensions.length === 0 ? (
             <div className="glass-card p-8 text-center">
-              <p className="text-muted-foreground text-sm">No extensions granted yet.</p>
+              <p className="text-muted-foreground text-sm">
+                No extensions granted yet.
+              </p>
             </div>
           ) : (
             <div className="glass-card overflow-hidden rounded-none">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border text-left">
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Item</th>
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Original Due</th>
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Extended To</th>
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Granted By</th>
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Reason</th>
-                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Actions</th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                      Item
+                    </th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                      Original Due
+                    </th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                      Extended To
+                    </th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                      Granted By
+                    </th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                      Reason
+                    </th>
+                    <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
                   {extensions.map((ext: Extension) => (
-                    <tr key={ext.id} className="hover:bg-card-hover/50 transition-colors">
+                    <tr
+                      key={ext.id}
+                      className="hover:bg-card-hover/50 transition-colors"
+                    >
                       <td className="px-5 py-3 text-sm">
                         {ext.assignment?.title || ext.quiz?.title || "—"}
                       </td>
@@ -747,8 +780,12 @@ export default function BatchDetailPage() {
                       <td className="px-5 py-3 text-xs text-warning font-medium">
                         {new Date(ext.extendedDueDate).toLocaleDateString()}
                       </td>
-                      <td className="px-5 py-3 text-xs text-muted">{ext.grantedBy?.name || "—"}</td>
-                      <td className="px-5 py-3 text-xs text-muted">{ext.reason || "—"}</td>
+                      <td className="px-5 py-3 text-xs text-muted">
+                        {ext.grantedBy?.name || "—"}
+                      </td>
+                      <td className="px-5 py-3 text-xs text-muted">
+                        {ext.reason || "—"}
+                      </td>
                       <td className="px-5 py-3">
                         <button
                           onClick={() => revokeExtMutation.mutate(ext.id)}
@@ -792,11 +829,13 @@ export default function BatchDetailPage() {
                     className="field text-xs"
                   >
                     <option value="">Select course...</option>
-                    {(courses.length > 0 ? courses : []).map((c: BatchCourse) => (
-                      <option key={c.courseId} value={c.courseId}>
-                        {c.course.title}
-                      </option>
-                    ))}
+                    {(courses.length > 0 ? courses : []).map(
+                      (c: BatchCourse) => (
+                        <option key={c.courseId} value={c.courseId}>
+                          {c.course.title}
+                        </option>
+                      ),
+                    )}
                   </select>
                 </div>
                 <div className="space-y-1">
@@ -816,12 +855,17 @@ export default function BatchDetailPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-2">
-                <button onClick={() => {
-                  setShowAddMentor(false);
-                  setMentorCourseId("");
-                  setMentorUserId("");
-                  setEditingMentorId(null);
-                }} className="btn-secondary text-xs">Cancel</button>
+                <button
+                  onClick={() => {
+                    setShowAddMentor(false);
+                    setMentorCourseId("");
+                    setMentorUserId("");
+                    setEditingMentorId(null);
+                  }}
+                  className="btn-secondary text-xs"
+                >
+                  Cancel
+                </button>
                 <button
                   onClick={handleMentorSave}
                   className="btn-primary text-xs"
@@ -843,26 +887,47 @@ export default function BatchDetailPage() {
             <div className="space-y-4">
               {mentors.length === 0 ? (
                 <div className="glass-card p-8 text-center">
-                  <p className="text-muted-foreground text-sm">No per-course mentors assigned yet.</p>
+                  <p className="text-muted-foreground text-sm">
+                    No per-course mentors assigned yet.
+                  </p>
                 </div>
               ) : (
                 <div className="glass-card overflow-hidden rounded-none">
-                  <h4 className="px-5 py-3 text-xs font-semibold uppercase text-muted border-b border-border">Course Mentors</h4>
+                  <h4 className="px-5 py-3 text-xs font-semibold uppercase text-muted border-b border-border">
+                    Course Mentors
+                  </h4>
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-border text-left">
-                        <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Course</th>
-                        <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Mentor</th>
-                        <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Email</th>
-                        <th className="px-5 py-3 text-xs font-medium uppercase text-muted">Actions</th>
+                        <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                          Course
+                        </th>
+                        <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                          Mentor
+                        </th>
+                        <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                          Email
+                        </th>
+                        <th className="px-5 py-3 text-xs font-medium uppercase text-muted">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/50">
                       {mentors.map((m: Mentor) => (
-                        <tr key={m.id} className="hover:bg-card-hover/50 transition-colors">
-                          <td className="px-5 py-3 text-sm font-medium">{m.course?.title}</td>
-                          <td className="px-5 py-3 text-sm">{m.mentor?.name}</td>
-                          <td className="px-5 py-3 text-xs text-muted">{m.mentor?.email}</td>
+                        <tr
+                          key={m.id}
+                          className="hover:bg-card-hover/50 transition-colors"
+                        >
+                          <td className="px-5 py-3 text-sm font-medium">
+                            {m.course?.title}
+                          </td>
+                          <td className="px-5 py-3 text-sm">
+                            {m.mentor?.name}
+                          </td>
+                          <td className="px-5 py-3 text-xs text-muted">
+                            {m.mentor?.email}
+                          </td>
                           <td className="px-5 py-3">
                             <div className="flex items-center gap-2">
                               <button
