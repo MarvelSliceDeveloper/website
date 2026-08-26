@@ -6,8 +6,18 @@ import { AppError } from "../../../utils/errors";
 
 const execFileAsync = promisify(execFile);
 
-export const BACKUP_DIR = path.resolve(__dirname, "../../../../backups");
-fs.mkdirSync(BACKUP_DIR, { recursive: true });
+export const BACKUP_DIR = process.env.BACKUP_DIR
+  ? path.resolve(process.env.BACKUP_DIR)
+  : path.resolve(__dirname, "../../backups");
+try {
+  fs.mkdirSync(BACKUP_DIR, { recursive: true });
+} catch (err) {
+  console.warn(
+    `[backup] could not create BACKUP_DIR at ${BACKUP_DIR}: ${
+      err instanceof Error ? err.message : err
+    }`,
+  );
+}
 
 export const BACKUP_KEEP_COUNT = Math.max(
   1,
