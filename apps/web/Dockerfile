@@ -38,22 +38,26 @@ ENV NEXT_PUBLIC_APP_VERSION=$NEXT_PUBLIC_APP_VERSION
 ENV NODE_ENV=production
 ENV PORT=3000
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
-# Standalone output preserves the monorepo path (apps/web/...). Copy it WITHOUT
-# flattening so pnpm's relative symlinks (e.g. apps/web/node_modules/next ->
-# ../../../node_modules/.pnpm/...) keep resolving against the full workspace
-# node_modules copied below. Flattening them (as before) broke the symlink depth
-# and caused "Cannot find module 'next'" on a clean build.
+# Standalone layout varies: with turbopack.root set to repo root, Next emits a
+# FLAT standalone (server.js at root); otherwise it nests under apps/web.
+# Detect either, copy only server.js + .next (skip the standalone's own
+# node_modules — its pnpm symlink depth is wrong after copy). Rely on the full
+# builder node_modules (.pnpm store at the correct depth) for deps.
 COPY --from=builder /app/apps/web/.next/standalone ./standalone_src
 COPY --from=builder /app/node_modules ./node_modules
 RUN set -e; \
-    if [ -d standalone_src/apps/web ]; then cp -r standalone_src/apps/web ./; elif [ -d standalone_src/apps ]; then cp -r standalone_src/apps ./; else echo "WARN: standalone_src structure unexpected"; ls -R standalone_src | head -n 100; fi; \
+    SRC=standalone_src; \
+    if [ -f standalone_src/server.js ]; then SRC=standalone_src; \
+    elif [ -d standalone_src/apps/web ]; then SRC=standalone_src/apps/web; fi; \
+    cp -r "$SRC"/server.js ./ 2>/dev/null || true; \
+    cp -r "$SRC"/.next ./ 2>/dev/null || true; \
     rm -rf standalone_src; \
-    ls -la ./apps/web/node_modules/next 2>&1 | head -n 20 || echo "ERROR: next not found"; \
-    [ -f ./apps/web/server.js ] || { echo "FATAL: apps/web/server.js missing in runner"; exit 1; }; \
+    ls -la ./node_modules/next 2>&1 | head -n 20 || echo "ERROR: next not found in ./node_modules"; \
+    [ -f ./server.js ] || { echo "FATAL: server.js missing in runner"; exit 1; }; \
     node -e "require.resolve('next');console.log('web deps OK')"
-COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=builder /app/apps/web/public ./apps/web/public
+COPY --from=builder /app/apps/web/.next/static ./.next/static
+COPY --from=builder /app/apps/web/public ./public
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 EXPOSE 3000
-CMD ["node", "apps/web/server.js"]
+CMD ["node", "server.js"]
