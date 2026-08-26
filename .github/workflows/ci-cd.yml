@@ -105,6 +105,9 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:${{ github.sha }}
           build-args: |
             NEXT_PUBLIC_API_URL=https://lms.marvelslice.com
+            NEXT_PUBLIC_APP_VERSION=1.0.1
+            GIT_COMMIT=${{ github.sha }}
+            BUILD_TIME=${{ github.run_started_at }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
