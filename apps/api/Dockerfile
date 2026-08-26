@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Build context = repo root (monorepo). Use: docker build -f apps/api/Dockerfile .
 FROM node:22-alpine AS base
-RUN apk add --no-cache dumb-init openssl1.1-compat
+RUN apk add --no-cache dumb-init openssl
 RUN corepack enable && corepack prepare pnpm@11.1.1 --activate
 WORKDIR /app
 
