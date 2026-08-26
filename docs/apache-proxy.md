@@ -52,6 +52,41 @@ a2enmod proxy proxy_http headers alias  # Debian/Ubuntu
 systemctl restart apache2   # or httpd
 ```
 
+## .htaccess alternative (Webuzo / cPanel style)
+
+If you proxy via a per-domain `.htaccess` (`RewriteRule [P]`) instead of a vhost,
+nginx needs the original `Host` header to pick the right `server_name` block.
+**Do NOT use `ProxyPreserveHost On` in `.htaccess`** — it is not permitted in
+`.htaccess` context and makes Apache return 500 for every request. Instead set
+the `Host` header explicitly with `RequestHeader set Host` (allowed in `.htaccess`).
+
+Apex (`marvelslice.com`) — `ProxyPreserveHost` not needed because nginx's default
+server block is landing anyway:
+
+```apache
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !^/\.well-known [NC]
+RewriteRule ^(.*)$ http://127.0.0.1:8080/$1 [P,L]
+```
+
+Subdomain (`lms.marvelslice.com`) — must send `Host: lms.marvelslice.com` so
+nginx routes to the `web` block:
+
+```apache
+RewriteEngine On
+RequestHeader set Host "lms.marvelslice.com"
+RewriteCond %{REQUEST_URI} !^/\.well-known [NC]
+RewriteRule ^(.*)$ http://127.0.0.1:8080/$1 [P,L]
+```
+
+With the correct `Host`, nginx routes correctly:
+- `marvelslice.com` → `landing` block
+- `lms.marvelslice.com` → `web` block
+
+If `RequestHeader` is also rejected in your host's `.htaccess`, fall back to
+**port-based routing**: give the `web` nginx server block its own `listen 8081`
+and point the subdomain `.htaccess` at `http://127.0.0.1:8081/` (no Host needed).
+
 ## Docker side
 
 `docker-compose.prod.yml:14` now:
