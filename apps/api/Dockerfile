@@ -45,7 +45,11 @@ COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=builder /app/packages ./packages
 COPY public ./public
 COPY apps/api/entrypoint.sh ./apps/api/entrypoint.sh
-RUN chmod +x ./apps/api/entrypoint.sh && chown -R nodejs:nodejs /app
+# Ensure Node can resolve workspace root deps from /app/apps/api (pnpm symlinks to /app/node_modules)
+ENV NODE_PATH=/app/node_modules:/app/apps/api/node_modules
+RUN chmod +x ./apps/api/entrypoint.sh && chown -R nodejs:nodejs /app && \
+    ls -la /app/node_modules/dotenv 2>&1 | head -n 5 || echo "WARN: dotenv missing at /app/node_modules"; \
+    ls -la /app/node_modules/.bin/prisma 2>&1 | head -n 5 || echo "WARN: prisma missing"
 USER nodejs
 WORKDIR /app/apps/api
 EXPOSE 4000
