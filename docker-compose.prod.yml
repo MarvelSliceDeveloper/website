@@ -17,6 +17,7 @@ services:
       # If you run without Webuzo (direct SSL), add "127.0.0.1:8443:443" and certbot volumes.
       - "127.0.0.1:8080:80"   # landing default (served when Host isn't lms.marvelslice.com)
       - "127.0.0.1:8081:8081" # LMS subdomain (lms.marvelslice.com) proxied here — no Host dependency
+      - "127.0.0.1:8082:8082" # pgAdmin subdomain (pgadmin.lms.marvelslice.com) proxied here
     volumes:
       - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
       - ./deploy/nginx/htpasswd:/etc/nginx/htpasswd:ro
