@@ -1,7 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Runtime config is injected by the container as window.__ENV__ (from .env.production
+// via the landing entrypoint). Fall back to build-time import.meta.env for local dev.
+const runtimeEnv = (typeof window !== 'undefined' && window.__ENV__) || {};
+const supabaseUrl =
+  runtimeEnv.VITE_SUPABASE_URL ||
+  import.meta.env.VITE_SUPABASE_URL ||
+  'http://localhost:54321';
+const supabaseAnonKey =
+  runtimeEnv.VITE_SUPABASE_ANON_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  'public-anon-key';
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn(
@@ -9,7 +18,4 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-export const supabase = createClient(
-  supabaseUrl || 'http://localhost:54321',
-  supabaseAnonKey || 'public-anon-key'
-);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
