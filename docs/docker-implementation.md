@@ -309,7 +309,8 @@ docker compose -f docker-compose.prod.yml ps
 - `ps` — "process status": lists running containers, their health and ports.
 
 ```bash
-curl -f http://localhost/health
+curl -f http://127.0.0.1:8080/health
+# (Host nginx maps to 127.0.0.1:8080/8443 via Apache/Webuzo; direct api: docker compose -f docker-compose.prod.yml exec api wget -qO- http://localhost:4000/health)
 ```
 
 - `curl -f` — fetch a URL, fail loudly if not HTTP 2xx.
