@@ -37,19 +37,26 @@ RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-COPY --from=builder /app/node_modules ./node_modules
-# Also copy pnpm workspace files so pnpm exec can resolve (fallback path)
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=builder /app/packages ./packages
 COPY public ./public
-COPY apps/api/entrypoint.sh ./apps/api/entrypoint.sh
-# Ensure Node can resolve workspace root deps from /app/apps/api (pnpm symlinks to /app/node_modules)
-ENV NODE_PATH=/app/node_modules:/app/apps/api/node_modules
-RUN chmod +x ./apps/api/entrypoint.sh && chown -R nodejs:nodejs /app && \
-    ls -la /app/node_modules/dotenv 2>&1 | head -n 5 || echo "WARN: dotenv missing at /app/node_modules"; \
+# Install prod deps directly in runner to avoid pnpm symlink copy issues (dotenv not found).
+# Using --prod ensures devDeps are excluded, matching runtime needs.
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts && \
+    ls -la /app/node_modules/dotenv 2>&1 | head -n 5 || echo "WARN: dotenv missing after prod install"; \
     ls -la /app/node_modules/.bin/prisma 2>&1 | head -n 5 || echo "WARN: prisma missing"
+# Copy built artifacts and generated Prisma client (prod install skips generate)
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY apps/api/entrypoint.sh ./apps/api/entrypoint.sh
+# Ensure Node can resolve workspace root deps from /app/apps/api
+ENV NODE_PATH=/app/node_modules:/app/apps/api/node_modules
+RUN chmod +x ./apps/api/entrypoint.sh && chown -R nodejs:nodejs /app
 USER nodejs
 WORKDIR /app/apps/api
 EXPOSE 4000
