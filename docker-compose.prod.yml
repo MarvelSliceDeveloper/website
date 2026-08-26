@@ -55,6 +55,9 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: https://lms.marvelslice.com
+        NEXT_PUBLIC_APP_VERSION: ${NEXT_PUBLIC_APP_VERSION:-1.0.1}
+        GIT_COMMIT: ${GIT_COMMIT:-unknown}
+        BUILD_TIME: ${BUILD_TIME:-unknown}
     image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-your-gh-username/lms}-web:${TAG:-latest}
     container_name: lms-web
     env_file: .env.production
@@ -144,6 +147,10 @@ services:
     image: portainer/portainer-ce:latest
     container_name: lms-portainer
     command: -H unix:///var/run/docker.sock
+    # Server-only: binds to 127.0.0.1 on the VPS. NOT exposed via nginx/public DNS.
+    # Access via SSH tunnel: ssh -L 9000:localhost:9000 root@<VPS_IP> → http://localhost:9000
+    ports:
+      - "127.0.0.1:9000:9000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
