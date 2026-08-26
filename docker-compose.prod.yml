@@ -39,6 +39,7 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${POSTGRES_USER:-lms_prod}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-lms_prod}
       - REDIS_URL=redis://redis:6379
+      - SKIP_DB_PUSH=${SKIP_DB_PUSH:-1}
     volumes:
       - uploads_data:/app/apps/api/uploads
     depends_on:
