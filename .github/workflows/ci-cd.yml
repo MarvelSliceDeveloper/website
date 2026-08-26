@@ -157,7 +157,9 @@ jobs:
             docker compose -f docker-compose.prod.yml pull api web landing landing-api
 
             # Sync database schema (prisma db push — non-destructive)
-            docker compose -f docker-compose.prod.yml run --rm --entrypoint npx api prisma db push --skip-generate
+            # Use the image's pinned Prisma 5.22.0 binary; bare `npx prisma`
+            # fetches 8.0.0-rc.10 where `push` was removed.
+            docker compose -f docker-compose.prod.yml run --rm --entrypoint "/app/node_modules/.bin/prisma" api db push --skip-generate
 
             # Start new containers (rolling update)
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
