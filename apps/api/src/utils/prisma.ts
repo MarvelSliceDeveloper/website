@@ -16,15 +16,14 @@ declare global {
 // never overrides already-set vars, so the nearest .env with the value wins.
 function loadEnv(): void {
   let dir = __dirname;
-  while (true) {
+  const root = path.parse(dir).root;
+  do {
     const envPath = path.join(dir, ".env");
     if (fs.existsSync(envPath)) {
       dotenv.config({ path: envPath });
     }
-    const parent = path.dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
+    dir = path.dirname(dir);
+  } while (dir !== root);
 }
 loadEnv();
 
