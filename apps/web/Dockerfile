@@ -49,7 +49,9 @@ RUN set -e; \
     if [ -d standalone_src/.next ]; then cp -rn standalone_src/.next ./.next 2>/dev/null || true; fi; \
     cp -rn node_modules_fallback/* ./node_modules/ 2>/dev/null || true; \
     rm -rf standalone_src node_modules_fallback; \
-    ls -la ./node_modules/next 2>&1 | head -n 20 || echo "ERROR: next not found in ./node_modules after merge"; ls ./node_modules | head -n 20
+    ls -la ./node_modules/next 2>&1 | head -n 20 || echo "ERROR: next not found in ./node_modules after merge"; \
+    [ -f ./server.js ] || { echo "FATAL: server.js missing in runner"; exit 1; }; \
+    node -e "require.resolve('next');console.log('web deps OK')"
 COPY --from=builder /app/apps/web/.next/static ./.next/static
 COPY --from=builder /app/apps/web/public ./public
 RUN chown -R nodejs:nodejs /app
