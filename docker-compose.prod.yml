@@ -12,15 +12,13 @@ services:
     image: nginx:alpine
     container_name: lms-nginx
     ports:
-      # Host 80/443 are taken by Apache/Webuzo — map Docker nginx to 8080/8443
-      # and put Apache as reverse proxy in front (see docs/apache-proxy.md)
+      # HTTP-only: host Apache/Webuzo terminates SSL and proxies to Docker nginx on 8080.
+      # No 443/certbot needed when Webuzo handles SSL (see docs/apache-proxy.md).
+      # If you run without Webuzo (direct SSL), add "127.0.0.1:8443:443" and certbot volumes.
       - "127.0.0.1:8080:80"
-      - "127.0.0.1:8443:443"
     volumes:
       - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
       - ./deploy/nginx/htpasswd:/etc/nginx/htpasswd:ro
-      - certbot-webroot:/var/www/certbot:ro
-      - certbot-conf:/etc/letsencrypt:ro
     depends_on:
       - api
       - web
@@ -158,19 +156,21 @@ services:
     restart: unless-stopped
     networks: [lms-network]
 
-  certbot:
-    build:
-      context: .
-      dockerfile: deploy/certbot/Dockerfile
-    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-your-gh-username/lms}-certbot:${TAG:-latest}
-    container_name: lms-certbot
-    volumes:
-      - certbot-webroot:/var/www/certbot
-      - certbot-conf:/etc/letsencrypt
-      # Docker socket so certbot can reload nginx after renewal (deploy hook)
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    restart: unless-stopped
-    networks: [lms-network]
+  # Certbot is only needed when Docker nginx terminates SSL directly (no Webuzo/Apache).
+  # When Webuzo handles SSL, this service is unused — Apache proxies HTTPS to nginx:80 on 8080.
+  # Uncomment if you run without Webuzo:
+  # certbot:
+  #   build:
+  #     context: .
+  #     dockerfile: deploy/certbot/Dockerfile
+  #   image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-your-gh-username/lms}-certbot:${TAG:-latest}
+  #   container_name: lms-certbot
+  #   volumes:
+  #     - certbot-webroot:/var/www/certbot
+  #     - certbot-conf:/etc/letsencrypt
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #   restart: unless-stopped
+  #   networks: [lms-network]
 
 volumes:
   postgres_data:

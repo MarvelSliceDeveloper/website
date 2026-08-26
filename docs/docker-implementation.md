@@ -29,7 +29,11 @@ Your setup uses **two domains** pointing at one server:
                           Internet
                              │
                      ┌───────▼───────┐
-                     │  nginx (SSL)  │  ports 80 + 443
+                     │ Apache/Webuzo │  ports 80 + 443 (SSL terminated here)
+                     └───────┬───────┘
+                             │ HTTP proxy to 127.0.0.1:8080
+                     ┌───────▼───────┐
+                     │  nginx (HTTP) │  127.0.0.1:8080 only
                      └───┬───────┬───┘
           www.marvelslice.com   lms.marvelslice.com
                  │                    │
@@ -47,12 +51,13 @@ Your setup uses **two domains** pointing at one server:
                                   │       │
                            postgres:5432  redis:6379
 ```
+> **HTTP-only:** Webuzo/Apache handles SSL and proxies `https://` to Docker nginx on `127.0.0.1:8080`. Docker nginx never sees 443 and needs no certbot. If you run **without** Webuzo (direct VPS), add `127.0.0.1:8443:443` and certbot volumes — see `docs/apache-proxy.md` for the Apache vhost and `nginx.prod.conf` notes.
 
 Ten containers are started (pgAdmin is an optional web management UI; Portainer is server-only via SSH tunnel — both covered in [Part 5½](#management-uis--pgadmin--portainer)):
 
 | Container     | Runs                              | Listens on                        |
 | ------------- | --------------------------------- | --------------------------------- |
-| `nginx`       | Reverse proxy + SSL termination   | host 8080/8443 (via Apache/Webuzo) |
+| `nginx`       | Reverse proxy (HTTP only)         | 127.0.0.1:8080 via Apache/Webuzo  |
 | `api`         | Express + Prisma API              | internal 4000                     |
 | `web`         | Next.js app (standalone build)    | internal 3000                     |
 | `landing`     | Static landing site via nginx     | internal 80                       |
@@ -237,70 +242,23 @@ The landing site is a static Vite SPA plus a small contact-form email API
 
 ---
 
-## Part 3 — First boot: get SSL certificates (one-time)
+## Part 3 — SSL: Webuzo handles it (HTTP-only Docker nginx)
 
-Your `nginx.prod.conf` expects SSL certificate files. On a fresh server those
-don't exist yet, so you'll boot once with the **HTTP-only bootstrap config**,
-ask Let's Encrypt for certificates, then switch to the full HTTPS config.
+**Your server uses Webuzo/Apache on host ports 80/443. Webuzo terminates SSL and reverse-proxies to Docker nginx on `127.0.0.1:8080`.** That means `nginx.prod.conf` is **HTTP-only** (all `server { listen 80 }` blocks) and Docker **does not need certbot** or 443.
 
-### 3.1 Start only nginx with the bootstrap config
+Set up SSL once in Webuzo panel (Let’s Encrypt for `www.marvelslice.com` + `lms.marvelslice.com` + `pgadmin.lms.marvelslice.com`), then point Apache vhosts to `ProxyPass http://127.0.0.1:8080/` per `docs/apache-proxy.md`. No bootstrap / `docker-compose.bootstrap.yml` needed when Webuzo is in front.
 
-```bash
-docker compose -f docker-compose.prod.yml -f docker-compose.bootstrap.yml up -d nginx
-```
+> **Without Webuzo?** If you run Docker nginx directly on 80/443, you do need certbot. Then `nginx.prod.conf` would need `listen 443 ssl` blocks and `certbot` service uncommented in `docker-compose.prod.yml`. In that case follow the old flow: `docker compose -f docker-compose.prod.yml -f docker-compose.bootstrap.yml up -d nginx` → `certbot certonly --webroot ... -d www.marvelslice.com -d lms.marvelslice.com` → `docker compose -f docker-compose.prod.yml up -d`. The `nginx.prod.bootstrap.conf` and `deploy/certbot/` files are kept for that mode.
 
-Breaking it down:
-
-- `docker compose` — the multi-container orchestration command.
-- `-f docker-compose.prod.yml` — use this production compose file.
-- `-f docker-compose.bootstrap.yml` — layer a second file on top (overrides nginx to use the HTTP config).
-- `up` — create and start containers.
-- `-d` — **d**etached: run in the background, don't block the terminal.
-- `nginx` — only start this one service (we need port 80 open for the cert challenge).
-
-> ⚠️ If this fails with "port 80 already in use", stop Apache/nginx already on the
-> server first: `systemctl stop apache2` or `systemctl stop nginx`.
-
-### 3.2 Ask Let's Encrypt for certificates
-
-```bash
-docker compose -f docker-compose.prod.yml -f docker-compose.bootstrap.yml run --rm --entrypoint certbot certbot certonly --webroot -w /var/www/certbot -d www.marvelslice.com -d lms.marvelslice.com --email you@example.com --agree-tos --no-eff-email
-```
-
-- `run --rm certbot` — start the certbot container once, then remove it (`--rm`).
-- `--entrypoint certbot` — override the service's renew-loop entrypoint and run certbot directly.
-- `certonly` — only obtain certificates, don't try to reconfigure nginx.
-- `--webroot -w /var/www/certbot` — prove domain ownership by placing a file in the shared webroot that nginx serves.
-- `-d www.marvelslice.com -d lms.marvelslice.com` — issue one certificate covering **both** domains.
-- `--email` — where Let's Encrypt sends expiry notices.
-- `--agree-tos` — accept the Let's Encrypt terms of service.
-- `--no-eff-email` — don't subscribe to their newsletter.
-
-If it succeeds you'll see `Congratulations!`. Certificates are stored in the
-`certbot-conf` volume (shared with nginx).
-
-Because one SAN certificate covers both domains, the files land under
-`/etc/letsencrypt/live/www.marvelslice.com/fullchain.pem` and `privkey.pem`
-— **both** nginx server blocks in `nginx.prod.conf` reference this same path
-(valid for `lms.marvelslice.com` too, since it's in the certificate).
-
-### 3.3 Switch to the HTTPS config and start everything
-
-```bash
-docker compose -f docker-compose.prod.yml -f docker-compose.bootstrap.yml down
-```
-
-- `down` — stop and remove the bootstrap containers (frees the config mount).
+### 3.1 Start everything (Webuzo mode — no cert step)
 
 ```bash
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-- Now the real `nginx.prod.conf` is used (HTTPS + ACME route for renewals).
-- This builds and starts **all** containers (api, web, landing, landing-api,
-  postgres, redis, nginx, certbot, **pgadmin**, **portainer**).
+- Builds and starts **all** containers (api, web, landing, landing-api, postgres, redis, nginx, **pgadmin**, **portainer**). `certbot` stays commented out — Apache handles renewals.
 
-### 3.4 Check it's working
+### 3.2 Check it's working
 
 ```bash
 docker compose -f docker-compose.prod.yml ps
@@ -310,7 +268,7 @@ docker compose -f docker-compose.prod.yml ps
 
 ```bash
 curl -f http://127.0.0.1:8080/health
-# (Host nginx maps to 127.0.0.1:8080/8443 via Apache/Webuzo; direct api: docker compose -f docker-compose.prod.yml exec api wget -qO- http://localhost:4000/health)
+# (Docker nginx is HTTP-only on 8080; Apache/Webuzo proxies HTTPS to it. Direct api: docker compose -f docker-compose.prod.yml exec api wget -qO- http://localhost:4000/health)
 ```
 
 - `curl -f` — fetch a URL, fail loudly if not HTTP 2xx.
@@ -513,7 +471,7 @@ docker run --rm -v lms-prod_uploads_data:/data -v /opt/lms/backups:/backup alpin
 | Port 5432/6379 conflict on host                           | Another Postgres/Redis running | Our containers don't expose DB ports to the host; nothing conflicts      |
 | Container won't start, "port already allocated"           | Something on host:80/443       | `ss -tlnp                                                                | grep -E ':(80 | 443)'` to find the process |
 | `403` on `pgadmin` subdomain                              | Missing/empty `deploy/nginx/htpasswd` | Create the file (Part 2.5), then `docker compose -f docker-compose.prod.yml restart nginx` |
-| `pgadmin` subdomain won't load                           | DNS A record missing or cert not issued | Add `pgadmin` A record (Part 0); it shares the SAN cert from Part 3 |
+| `pgadmin` subdomain won't load                           | DNS A record missing or Webuzo vhost not proxied | Add `pgadmin` A record (Part 0) and Webuzo Apache `ProxyPass` to `127.0.0.1:8080` (`docs/apache-proxy.md`) |
 | Portainer not reachable on host                          | Not using SSH tunnel                 | Portainer is localhost-only. Use `ssh -L 9000:localhost:9000 root@<VPS_IP>` then open `http://localhost:9000`. Check `ss -tlnp | grep 9000` and `docker compose ps portainer` |
 | Portainer shows no containers                            | Docker socket not mounted            | Ensure `/var/run/docker.sock` is mounted (it is by default in `docker-compose.prod.yml`) |
 
@@ -521,10 +479,10 @@ docker run --rm -v lms-prod_uploads_data:/data -v /opt/lms/backups:/backup alpin
 
 | File                              | Purpose                                      |
 | --------------------------------- | -------------------------------------------- |
-| `docker-compose.prod.yml`         | Production stack definition                  |
-| `docker-compose.bootstrap.yml`    | One-time override for initial SSL issuance   |
-| `nginx.prod.conf`                 | HTTPS reverse proxy (both domains)           |
-| `nginx.prod.bootstrap.conf`       | HTTP-only config for the first boot          |
+| `docker-compose.prod.yml`         | Production stack definition (HTTP-only behind Webuzo) |
+| `docker-compose.bootstrap.yml`    | One-time override for **direct-SSL** mode (no Webuzo) — not needed when Webuzo proxies 8080 |
+| `nginx.prod.conf`                 | HTTP-only reverse proxy (Webuzo terminates SSL) |
+| `nginx.prod.bootstrap.conf`       | HTTP bootstrap for direct-SSL first boot (direct mode only) |
 | `.env.production.example`         | Template for `.env.production`               |
 | `apps/api/Dockerfile`             | API image (multi-stage)                      |
 | `apps/api/entrypoint.sh`          | Runs `prisma db push` then starts the server |
@@ -540,10 +498,10 @@ docker run --rm -v lms-prod_uploads_data:/data -v /opt/lms/backups:/backup alpin
 
 - [ ] DNS A records for `www` and `lms` point to the VPS
 - [ ] `.env.production` created with real secrets
-- [ ] Certificates issued for both domains
-- [ ] `https://www.marvelslice.com` loads the landing page
-- [ ] `https://lms.marvelslice.com` loads and you can log in
-- [ ] `/health` returns 200
+- [ ] Certificates issued in Webuzo (Let’s Encrypt) for `www` + `lms` + `pgadmin`
+- [ ] `https://www.marvelslice.com` loads the landing page (via Apache → 8080)
+- [ ] `https://lms.marvelslice.com` loads and you can log in (via Apache → 8080)
+- [ ] `http://127.0.0.1:8080/health` returns 200 (`curl -f http://127.0.0.1:8080/health`)
 - [ ] Seed data loaded (admin user works)
 - [ ] `pgadmin.lms.marvelslice.com` resolves and is reachable behind basic auth
 - [ ] Portainer reachable via `ssh -L 9000:localhost:9000` → `http://localhost:9000`
