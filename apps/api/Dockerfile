@@ -37,14 +37,25 @@ RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-COPY --from=builder /app/node_modules ./node_modules
-# Also copy pnpm workspace files so pnpm exec can resolve (fallback path)
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
+# Lockfile importers reference these workspaces — keep them so --prod install validates
+COPY --from=builder /app/apps/web/package.json ./apps/web/package.json
+COPY --from=builder /app/apps/landing/package.json ./apps/landing/package.json
 COPY --from=builder /app/packages ./packages
 COPY public ./public
+# Install prod deps directly in runner — never COPY pnpm's symlinked node_modules
+# across stages (symlinks point into .pnpm store; dotenv MODULE_NOT_FOUND otherwise).
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
+# Regenerate Prisma client IN the runner (client must live in THIS stage's .pnpm store;
+# copying /app/node_modules/.prisma from builder fails — pnpm stores it under .pnpm/...)
+RUN npx -y prisma@5.22.0 generate --schema apps/api/prisma/schema.prisma
+# Build-time gate: fail fast if runtime deps unresolvable from apps/api
+RUN cd apps/api && node -e "['dotenv','express','@prisma/client'].forEach(m=>require.resolve(m));console.log('deps OK')"
 COPY apps/api/entrypoint.sh ./apps/api/entrypoint.sh
+# Ensure Node can resolve workspace root deps from /app/apps/api
+ENV NODE_PATH=/app/node_modules:/app/apps/api/node_modules
 RUN chmod +x ./apps/api/entrypoint.sh && chown -R nodejs:nodejs /app
 USER nodejs
 WORKDIR /app/apps/api
