@@ -52,6 +52,27 @@ a2enmod proxy proxy_http headers alias  # Debian/Ubuntu
 systemctl restart apache2   # or httpd
 ```
 
+## .htaccess alternative (Webuzo / cPanel style)
+
+If you proxy via a per-domain `.htaccess` (`RewriteRule [P]`) instead of a vhost,
+**you MUST enable `ProxyPreserveHost On`**. Otherwise Apache rewrites the `Host`
+header to `127.0.0.1:8080`, nginx cannot match any `server_name`, and falls back
+to its FIRST server block (landing) for every domain — so `lms.marvelslice.com`
+also renders the landing SPA instead of the LMS app.
+
+Place this in **both** domain docroots (apex + `lms.marvelslice.com`):
+
+```apache
+RewriteEngine On
+ProxyPreserveHost On
+RewriteCond %{REQUEST_URI} !^/\.well-known [NC]
+RewriteRule ^(.*)$ http://127.0.0.1:8080/$1 [P,L]
+```
+
+With `Host` preserved, nginx routes correctly:
+- `marvelslice.com` → `landing` block
+- `lms.marvelslice.com` → `web` block
+
 ## Docker side
 
 `docker-compose.prod.yml:14` now:
