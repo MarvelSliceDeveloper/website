@@ -74,8 +74,8 @@ services:
       dockerfile: apps/landing/Dockerfile
       args:
         VITE_GA_MEASUREMENT_ID: ${VITE_GA_MEASUREMENT_ID:-}
-        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-}
-        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:-}
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:?Set VITE_SUPABASE_URL in .env.production and build with --env-file .env.production}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:?Set VITE_SUPABASE_ANON_KEY in .env.production and build with --env-file .env.production}
     image: ${REGISTRY:-ghcr.io}/${IMAGE_NAME:-your-gh-username/lms}-landing:${TAG:-latest}
     container_name: lms-landing
     depends_on:
