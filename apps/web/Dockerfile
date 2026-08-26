@@ -38,23 +38,22 @@ ENV NEXT_PUBLIC_APP_VERSION=$NEXT_PUBLIC_APP_VERSION
 ENV NODE_ENV=production
 ENV PORT=3000
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
-# Standalone output preserves the monorepo path (apps/web/server.js) when turbopack.root is set.
-# Next 16 standalone may be at apps/web/.next/standalone OR at root .next/standalone — handle both.
+# Standalone output preserves the monorepo path (apps/web/...). Copy it WITHOUT
+# flattening so pnpm's relative symlinks (e.g. apps/web/node_modules/next ->
+# ../../../node_modules/.pnpm/...) keep resolving against the full workspace
+# node_modules copied below. Flattening them (as before) broke the symlink depth
+# and caused "Cannot find module 'next'" on a clean build.
 COPY --from=builder /app/apps/web/.next/standalone ./standalone_src
-COPY --from=builder /app/node_modules ./node_modules_fallback
+COPY --from=builder /app/node_modules ./node_modules
 RUN set -e; \
-    mkdir -p ./node_modules; \
-    if [ -d standalone_src/apps/web ]; then cp -r standalone_src/apps/web/* ./; elif [ -d standalone_src/apps ]; then cp -r standalone_src/* ./; else echo "WARN: standalone_src structure unexpected"; ls -R standalone_src | head -n 100; fi; \
-    if [ -d standalone_src/node_modules ]; then cp -rn standalone_src/node_modules/* ./node_modules/ 2>/dev/null || true; fi; \
-    if [ -d standalone_src/.next ]; then cp -rn standalone_src/.next ./.next 2>/dev/null || true; fi; \
-    cp -rn node_modules_fallback/* ./node_modules/ 2>/dev/null || true; \
-    rm -rf standalone_src node_modules_fallback; \
-    ls -la ./node_modules/next 2>&1 | head -n 20 || echo "ERROR: next not found in ./node_modules after merge"; \
-    [ -f ./server.js ] || { echo "FATAL: server.js missing in runner"; exit 1; }; \
+    if [ -d standalone_src/apps/web ]; then cp -r standalone_src/apps/web ./; elif [ -d standalone_src/apps ]; then cp -r standalone_src/apps ./; else echo "WARN: standalone_src structure unexpected"; ls -R standalone_src | head -n 100; fi; \
+    rm -rf standalone_src; \
+    ls -la ./apps/web/node_modules/next 2>&1 | head -n 20 || echo "ERROR: next not found"; \
+    [ -f ./apps/web/server.js ] || { echo "FATAL: apps/web/server.js missing in runner"; exit 1; }; \
     node -e "require.resolve('next');console.log('web deps OK')"
-COPY --from=builder /app/apps/web/.next/static ./.next/static
-COPY --from=builder /app/apps/web/public ./public
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder /app/apps/web/public ./apps/web/public
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["node", "apps/web/server.js"]
