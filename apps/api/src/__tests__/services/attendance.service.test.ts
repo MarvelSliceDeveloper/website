@@ -14,6 +14,9 @@ const mockPrisma = vi.hoisted(() => ({
     create: vi.fn(),
     update: vi.fn(),
   },
+  packageEnrollmentCourse: {
+    findFirst: vi.fn(),
+  },
 }));
 
 vi.mock("../../utils/prisma", () => ({ prisma: mockPrisma }));
@@ -34,6 +37,11 @@ describe("attendanceService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     presenceService.clear(SESSION_ID);
+    // Default for the package-enrollment fallback queried in recordAttendance
+    // when direct batch enrollments are empty — without this the test's
+    // `await expect(...).rejects.toMatchObject({statusCode:403})` hits a
+    // TypeError on `undefined.findFirst` instead of the intended AppError.
+    mockPrisma.packageEnrollmentCourse.findFirst.mockResolvedValue(null);
   });
 
   describe("recordAttendance", () => {
