@@ -62,6 +62,9 @@ async function main() {
   sqlOutput += `-- Excludes training tables, customer submissions, and private data\n`;
   sqlOutput += `-- ============================================================================\n\n`;
 
+  sqlOutput += `-- Disable triggers & foreign key constraints during bulk seed import\n`;
+  sqlOutput += `SET session_replication_role = 'replica';\n\n`;
+
   for (const tableName of TABLES) {
     try {
       console.log(`Fetching ${tableName}...`);
@@ -73,6 +76,15 @@ async function main() {
       if (!data || data.length === 0) {
         console.log(`No rows in ${tableName}.`);
         continue;
+      }
+
+      // If table is self-referencing (e.g. nav_items), sort parent rows (parent_id IS NULL) first
+      if (tableName === 'nav_items') {
+        data.sort((a, b) => {
+          if (!a.parent_id && b.parent_id) return -1;
+          if (a.parent_id && !b.parent_id) return 1;
+          return 0;
+        });
       }
 
       sqlOutput += `-- ----------------------------------------------------------------------------\n`;
@@ -93,6 +105,9 @@ async function main() {
     }
   }
 
+  sqlOutput += `-- Re-enable triggers & foreign key constraints after seed import\n`;
+  sqlOutput += `SET session_replication_role = 'origin';\n`;
+
   const backupDir = path.join(process.cwd(), 'backup');
   if (!fs.existsSync(backupDir)) {
     fs.mkdirSync(backupDir, { recursive: true });
@@ -100,7 +115,7 @@ async function main() {
 
   const outputFile = path.join(backupDir, 'seed.sql');
   fs.writeFileSync(outputFile, sqlOutput, 'utf8');
-  console.log(`Extraction complete! Seed SQL generated at: ${outputFile}`);
+  console.log(`Extraction complete! Seed SQL regenerated at: ${outputFile}`);
 }
 
 main();

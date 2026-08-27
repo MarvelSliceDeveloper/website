@@ -18,10 +18,19 @@ create table if not exists site_settings (
   logo_url text,
   contact_email text,
   contact_phone text,
+  address text,
+  working_hours jsonb default '{}',
   blog_hero_image text,
+  blog_heading text,
+  blog_subheading text,
   social_links jsonb default '{}',
   updated_at timestamptz default now()
 );
+alter table site_settings add column if not exists address text;
+alter table site_settings add column if not exists working_hours jsonb default '{}';
+alter table site_settings add column if not exists blog_hero_image text;
+alter table site_settings add column if not exists blog_heading text;
+alter table site_settings add column if not exists blog_subheading text;
 
 -- 2. Navigation items
 create table if not exists nav_items (
@@ -77,9 +86,6 @@ alter table courses add column if not exists cta_link text;
 alter table courses add column if not exists cta_phone text;
 alter table courses add column if not exists cta_background_image text;
 alter table courses add column if not exists start_date timestamptz;
-alter table projects add column if not exists difficulty text;
-alter table projects add column if not exists technologies jsonb default '[]';
-alter table certifications add column if not exists skills_earned jsonb default '[]';
 
 -- 4. Key highlights per course
 create table if not exists highlights (
@@ -108,9 +114,13 @@ create table if not exists projects (
   course_id uuid references courses(id) on delete cascade not null,
   title text not null,
   description text,
+  difficulty text,
+  technologies jsonb default '[]',
   sort_order int default 0
 );
 create index if not exists idx_projects_course on projects(course_id);
+alter table projects add column if not exists difficulty text;
+alter table projects add column if not exists technologies jsonb default '[]';
 
 -- 8. Certification per course
 create table if not exists certifications (
@@ -120,8 +130,10 @@ create table if not exists certifications (
   image_url text,
   certificate_image_url text,
   recognized_companies jsonb default '[]',
+  skills_earned jsonb default '[]',
   unique(course_id)
 );
+alter table certifications add column if not exists skills_earned jsonb default '[]';
 
 -- 9. Alumni companies
 create table if not exists alumni_companies (
@@ -174,10 +186,14 @@ create table if not exists nav_pages (
   subheading text,
   hero_image text,
   sections jsonb default '[]',
+  form_config jsonb default '{}',
+  hero_config jsonb default '{}',
   is_published boolean default true,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+alter table nav_pages add column if not exists form_config jsonb default '{}';
+alter table nav_pages add column if not exists hero_config jsonb default '{}';
 
 -- 17. Home page sections
 create table if not exists home_sections (
@@ -221,13 +237,6 @@ create index if not exists idx_courses_created_at on public.courses(created_at d
 create index if not exists idx_courses_slug on public.courses(slug);
 create index if not exists idx_courses_status on public.courses(status);
 create index if not exists idx_blog_posts_slug on public.blog_posts(slug);
-create index if not exists idx_contact_submissions_unread on public.contact_submissions(is_read, created_at desc);
-create index if not exists idx_banking_enquiries_unread on public.banking_enquiries(is_read, created_at desc);
-create index if not exists idx_brochure_downloads_unread on public.brochure_downloads(is_read, created_at desc);
-create index if not exists idx_form_submissions_unread on public.form_submissions(is_read, created_at desc);
-create index if not exists idx_career_submissions_unread on public.career_submissions(is_read, created_at desc);
-create index if not exists idx_career_contact_submissions_unread on public.career_contact_submissions(is_read, created_at desc);
-create index if not exists idx_about_submissions_unread on public.about_submissions(is_read, created_at desc);
 
 -- 20. Blog post–Tag M2M
 create table if not exists blog_post_tags (
@@ -284,8 +293,21 @@ create table if not exists career_submissions (
   is_read boolean default false,
   created_at timestamptz default now()
 );
+create index if not exists idx_career_submissions_unread on public.career_submissions(is_read, created_at desc);
 
--- 23a. Career "Contact Us" form submissions (like contact_submissions)
+-- 23a. Contact submissions form
+create table if not exists contact_submissions (
+  id uuid primary key default gen_random_uuid(),
+  full_name text not null,
+  email text not null,
+  phone text,
+  message text,
+  is_read boolean default false,
+  created_at timestamptz default now()
+);
+create index if not exists idx_contact_submissions_unread on public.contact_submissions(is_read, created_at desc);
+
+-- 23b. Career "Contact Us" form submissions
 create table if not exists career_contact_submissions (
   id uuid primary key default gen_random_uuid(),
   full_name text not null,
@@ -294,6 +316,7 @@ create table if not exists career_contact_submissions (
   is_read boolean default false,
   created_at timestamptz default now()
 );
+create index if not exists idx_career_contact_submissions_unread on public.career_contact_submissions(is_read, created_at desc);
 
 alter table career_contact_submissions enable row level security;
 do $$ begin
@@ -515,6 +538,7 @@ declare
   v_admin public.admin_profiles%rowtype;
   v_failed_attempts integer;
   v_clean_email text;
+  v_client_ip text;
 begin
   v_clean_email := lower(trim(coalesce(p_email, '')));
 
@@ -522,19 +546,29 @@ begin
     return null;
   end if;
 
-  -- Rate limiting check: max 5 failed attempts in 15 mins
+  -- Extract client IP address from HTTP headers
+  begin
+    v_client_ip := nullif(split_part(current_setting('request.headers', true)::json->>'x-forwarded-for', ',', 1), '');
+  exception when others then
+    v_client_ip := '127.0.0.1';
+  end;
+  if v_client_ip is null then
+    v_client_ip := '127.0.0.1';
+  end if;
+
+  -- Strict IP & Email Rate limiting check: max 5 failed attempts in 15 mins across entire IP or email
   select count(*)
   into v_failed_attempts
   from public.admin_audit_logs
-  where email = v_clean_email
+  where (ip_address = v_client_ip or email = v_clean_email)
     and event = 'login_failure'
     and created_at > now() - interval '15 minutes';
 
   if v_failed_attempts >= 5 then
-    insert into public.admin_audit_logs (email, event, metadata)
-    values (v_clean_email, 'login_lockout', jsonb_build_object('reason', 'Excessive failed login attempts', 'attempt_count', v_failed_attempts));
+    insert into public.admin_audit_logs (email, ip_address, event, metadata)
+    values (v_clean_email, v_client_ip, 'ip_lockout', jsonb_build_object('reason', 'Entire IP address blocked due to excessive failed attempts', 'ip', v_client_ip, 'attempt_count', v_failed_attempts));
     
-    raise exception 'Account locked due to multiple failed login attempts. Please try again in 15 minutes.';
+    raise exception 'Your IP address (%s) has been temporarily blocked due to multiple failed login attempts. Please try again in 15 minutes.', v_client_ip;
   end if;
 
   -- Pure READ-ONLY Bcrypt verification
@@ -545,14 +579,15 @@ begin
     and password_hash = crypt(p_password, password_hash);
 
   if v_admin.id is null then
-    insert into public.admin_audit_logs (email, event)
-    values (v_clean_email, 'login_failure');
+    insert into public.admin_audit_logs (email, ip_address, event)
+    values (v_clean_email, v_client_ip, 'login_failure');
     
     return null;
   end if;
 
-  insert into public.admin_audit_logs (admin_id, email, event)
-  values (v_admin.id, v_clean_email, 'login_success');
+  -- Log successful login
+  insert into public.admin_audit_logs (admin_id, email, ip_address, event)
+  values (v_admin.id, v_clean_email, v_client_ip, 'login_success');
 
   return jsonb_build_object(
     'id', v_admin.id,
@@ -1028,7 +1063,7 @@ end $$;
 create table if not exists job_openings (
   id uuid primary key default gen_random_uuid(),
   title text not null,
-  department text not null,
+  department text,
   location text,
   type text,
   experience text,
@@ -1039,6 +1074,7 @@ create table if not exists job_openings (
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+alter table job_openings alter column department drop not null;
 
 -- 29. Career page content table (hero, section headings, form config)
 create table if not exists career_page_content (
@@ -1397,5 +1433,30 @@ begin
         
     end loop;
 end $$;
+
+-- Internships table definition
+create table if not exists public.internships (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  role_category_id uuid references role_categories(id) on delete set null,
+  location text,
+  type text default 'Internship',
+  duration text,
+  stipend text,
+  experience text,
+  apply_url text,
+  description text,
+  is_active boolean default true,
+  sort_order int default 0,
+  created_at timestamptz default now()
+);
+
+alter table public.internships enable row level security;
+
+create policy "Allow public select internships" on public.internships for select using (true);
+create policy "Allow public insert internships" on public.internships for insert with check (true);
+create policy "Allow public update internships" on public.internships for update using (true);
+create policy "Allow public delete internships" on public.internships for delete using (true);
+
 
 

@@ -105,6 +105,7 @@ declare
   v_admin public.admin_profiles%rowtype;
   v_failed_attempts integer;
   v_clean_email text;
+  v_client_ip text;
 begin
   v_clean_email := lower(trim(coalesce(p_email, '')));
 
@@ -113,22 +114,32 @@ begin
     return null;
   end if;
 
-  -- 2. Brute-force rate limiting check (15 minute window, max 5 failed attempts)
+  -- Extract client IP address from HTTP headers
+  begin
+    v_client_ip := nullif(split_part(current_setting('request.headers', true)::json->>'x-forwarded-for', ',', 1), '');
+  exception when others then
+    v_client_ip := '127.0.0.1';
+  end;
+  if v_client_ip is null then
+    v_client_ip := '127.0.0.1';
+  end if;
+
+  -- 2. Strict IP & Email Rate limiting check: max 5 failed attempts in 15 mins across entire IP or email
   select count(*)
   into v_failed_attempts
   from public.admin_audit_logs
-  where email = v_clean_email
+  where (ip_address = v_client_ip or email = v_clean_email)
     and event = 'login_failure'
     and created_at > now() - interval '15 minutes';
 
   if v_failed_attempts >= 5 then
-    insert into public.admin_audit_logs (email, event, metadata)
-    values (v_clean_email, 'login_lockout', jsonb_build_object('reason', 'Excessive failed login attempts', 'attempt_count', v_failed_attempts));
+    insert into public.admin_audit_logs (email, ip_address, event, metadata)
+    values (v_clean_email, v_client_ip, 'ip_lockout', jsonb_build_object('reason', 'Entire IP address blocked due to excessive failed attempts', 'ip', v_client_ip, 'attempt_count', v_failed_attempts));
     
-    raise exception 'Account locked due to multiple failed login attempts. Please try again in 15 minutes.';
+    raise exception 'Your IP address (%) has been temporarily blocked due to multiple failed login attempts. Please try again in 15 minutes.', v_client_ip;
   end if;
 
-  -- 3. Strict READ-ONLY Bcrypt verification
+  -- 3. Pure READ-ONLY Bcrypt verification
   select * into v_admin
   from public.admin_profiles
   where lower(trim(email)) = v_clean_email
@@ -137,15 +148,15 @@ begin
 
   if v_admin.id is null then
     -- Log failure (Generic response prevents account enumeration)
-    insert into public.admin_audit_logs (email, event)
-    values (v_clean_email, 'login_failure');
+    insert into public.admin_audit_logs (email, ip_address, event)
+    values (v_clean_email, v_client_ip, 'login_failure');
     
     return null;
   end if;
 
   -- 4. Log successful login
-  insert into public.admin_audit_logs (admin_id, email, event)
-  values (v_admin.id, v_clean_email, 'login_success');
+  insert into public.admin_audit_logs (admin_id, email, ip_address, event)
+  values (v_admin.id, v_clean_email, v_client_ip, 'login_success');
 
   -- 5. Return ONLY non-sensitive profile fields (never password_hash)
   return jsonb_build_object(
